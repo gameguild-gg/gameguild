@@ -5,10 +5,9 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// <summary>
 ///     Event raised when a subscription downgrade is processed
 /// </summary>
-public sealed class SubscriptionDowngradedEvent : DomainEvent
-{
+public sealed class SubscriptionDowngradedEvent : DomainEvent {
     public SubscriptionDowngradedEvent(Guid subscriptionId, Guid tenantId, Guid oldPlanId, Guid newPlanId, Money priceDifference)
-    {
+      : base(subscriptionId, "Subscription") {
         SubscriptionId = subscriptionId;
         TenantId = tenantId;
         OldPlanId = oldPlanId;

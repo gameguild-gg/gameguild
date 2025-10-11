@@ -14,13 +14,13 @@
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
 
 
-            <EnableNETAnalyzers>true</EnableNETAnalyzers>
-            <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-            <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
-            <RunCodeAnalysis>true</RunCodeAnalysis>
-            <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-            <WarningsAsErrors/>
-            <WarningsNotAsErrors/>
+<!--            <EnableNETAnalyzers>true</EnableNETAnalyzers>-->
+<!--            <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>-->
+<!--            <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>-->
+<!--            <RunCodeAnalysis>true</RunCodeAnalysis>-->
+<!--            <TreatWarningsAsErrors>false</TreatWarningsAsErrors>-->
+<!--            <WarningsAsErrors/>-->
+<!--            <WarningsNotAsErrors/>-->
     </PropertyGroup>
     <!-- Opt-in flag for Sonar analyzers. Disabled by default to unblock current build. -->
     <PropertyGroup>

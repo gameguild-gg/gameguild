@@ -7,36 +7,32 @@ namespace GameGuild.Modules.Credentials;
 ///     Repository implementation for credential data access operations
 ///     Adapter implementation following hexagonal architecture principles
 /// </summary>
-public class CredentialRepository(ApplicationDbContext context) : ICredentialRepository
-{
+public class CredentialRepository(ApplicationDbContext context) : ICredentialRepository {
     private readonly ApplicationDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
+
+    public IQueryable<Credential> AsQueryable() { return _context.Credentials.AsQueryable(); }
 
     public async Task<Credential?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) { return await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken); }
 
-    public async Task<Credential?> GetByIdWithUserAsync(Guid id, CancellationToken cancellationToken = default)
-    {
+    public async Task<Credential?> GetByIdWithUserAsync(Guid id, CancellationToken cancellationToken = default) {
         return await _context.Credentials.Include(c => c.User).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 
-    public async Task<Credential?> GetByIdIncludingDeletedAsync(Guid id, CancellationToken cancellationToken = default)
-    {
+    public async Task<Credential?> GetByIdIncludingDeletedAsync(Guid id, CancellationToken cancellationToken = default) {
         return await _context.Credentials.IgnoreQueryFilters().Include(c => c.User).FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
     }
 
     public async Task<IEnumerable<Credential>> GetAllAsync(CancellationToken cancellationToken = default) { return await _context.Credentials.Include(c => c.User).ToListAsync(cancellationToken); }
 
-    public async Task<IEnumerable<Credential>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken = default)
-    {
+    public async Task<IEnumerable<Credential>> GetAllIncludingDeletedAsync(CancellationToken cancellationToken = default) {
         return await _context.Credentials.IgnoreQueryFilters().Include(c => c.User).ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<Credential>> GetDeletedAsync(CancellationToken cancellationToken = default)
-    {
+    public async Task<IEnumerable<Credential>> GetDeletedAsync(CancellationToken cancellationToken = default) {
         return await _context.Credentials.IgnoreQueryFilters().Where(c => c.DeletedAt != null).Include(c => c.User).ToListAsync(cancellationToken);
     }
 
-    public async Task<(IEnumerable<Credential> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
-    {
+    public async Task<(IEnumerable<Credential> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default) {
         var query = _context.Credentials.Include(c => c.User);
         int totalCount = await query.CountAsync(cancellationToken);
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
@@ -44,35 +40,29 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
         return (items, totalCount);
     }
 
-    public async Task<IEnumerable<Credential>> FindAsync(Expression<Func<Credential, bool>> predicate, CancellationToken cancellationToken = default)
-    {
+    public async Task<IEnumerable<Credential>> FindAsync(Expression<Func<Credential, bool>> predicate, CancellationToken cancellationToken = default) {
         return await _context.Credentials.Where(predicate).Include(c => c.User).ToListAsync(cancellationToken);
     }
 
-    public async Task<Credential?> FirstOrDefaultAsync(Expression<Func<Credential, bool>> predicate, CancellationToken cancellationToken = default)
-    {
+    public async Task<Credential?> FirstOrDefaultAsync(Expression<Func<Credential, bool>> predicate, CancellationToken cancellationToken = default) {
         return await _context.Credentials.Include(c => c.User).FirstOrDefaultAsync(predicate, cancellationToken);
     }
 
     public async Task<bool> AnyAsync(Expression<Func<Credential, bool>> predicate, CancellationToken cancellationToken = default) { return await _context.Credentials.AnyAsync(predicate, cancellationToken); }
 
-    public async Task<int> CountAsync(Expression<Func<Credential, bool>>? predicate = null, CancellationToken cancellationToken = default)
-    {
+    public async Task<int> CountAsync(Expression<Func<Credential, bool>>? predicate = null, CancellationToken cancellationToken = default) {
         return predicate == null ? await _context.Credentials.CountAsync(cancellationToken) : await _context.Credentials.CountAsync(predicate, cancellationToken);
     }
 
-    public async Task<IEnumerable<Credential>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
-    {
+    public async Task<IEnumerable<Credential>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default) {
         return await _context.Credentials.Where(c => c.UserId == userId).ToListAsync(cancellationToken);
     }
 
-    public async Task<Credential?> GetByUserIdAndTypeAsync(Guid userId, string type, CancellationToken cancellationToken = default)
-    {
+    public async Task<Credential?> GetByUserIdAndTypeAsync(Guid userId, string type, CancellationToken cancellationToken = default) {
         return await _context.Credentials.Include(c => c.User).FirstOrDefaultAsync(c => c.UserId == userId && c.Type == type, cancellationToken);
     }
 
-    public async Task<Credential> AddAsync(Credential entity, CancellationToken cancellationToken = default)
-    {
+    public async Task<Credential> AddAsync(Credential entity, CancellationToken cancellationToken = default) {
         _context.Credentials.Add(entity);
         await _context.SaveChangesAsync(cancellationToken);
 
@@ -82,14 +72,12 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
         return entity;
     }
 
-    public async Task AddRangeAsync(IEnumerable<Credential> entities, CancellationToken cancellationToken = default)
-    {
+    public async Task AddRangeAsync(IEnumerable<Credential> entities, CancellationToken cancellationToken = default) {
         _context.Credentials.AddRange(entities);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<Credential> UpdateAsync(Credential entity, CancellationToken cancellationToken = default)
-    {
+    public async Task<Credential> UpdateAsync(Credential entity, CancellationToken cancellationToken = default) {
         Credential? existingCredential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == entity.Id, cancellationToken);
 
         if (existingCredential == null) throw new InvalidOperationException($"Credential with ID {entity.Id} not found");
@@ -110,61 +98,51 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
         return existingCredential;
     }
 
-    public async Task UpdateRangeAsync(IEnumerable<Credential> entities, CancellationToken cancellationToken = default)
-    {
+    public async Task UpdateRangeAsync(IEnumerable<Credential> entities, CancellationToken cancellationToken = default) {
         _context.Credentials.UpdateRange(entities);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RemoveAsync(Credential entity, CancellationToken cancellationToken = default)
-    {
+    public async Task RemoveAsync(Credential entity, CancellationToken cancellationToken = default) {
         _context.Credentials.Remove(entity);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task RemoveAsync(Guid id, CancellationToken cancellationToken = default)
-    {
+    public async Task RemoveAsync(Guid id, CancellationToken cancellationToken = default) {
         // Include deleted entities to allow hard deletion of soft-deleted credentials
         Credential? credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
-        if (credential != null)
-        {
+        if (credential != null) {
             _context.Credentials.Remove(credential);
             await _context.SaveChangesAsync(cancellationToken);
         }
     }
 
-    public async Task RemoveRangeAsync(IEnumerable<Credential> entities, CancellationToken cancellationToken = default)
-    {
+    public async Task RemoveRangeAsync(IEnumerable<Credential> entities, CancellationToken cancellationToken = default) {
         _context.Credentials.RemoveRange(entities);
         await _context.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
-    {
+    public async Task SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default) {
         Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
-        if (credential != null)
-        {
+        if (credential != null) {
             credential.SoftDelete();
             await _context.SaveChangesAsync(cancellationToken);
         }
     }
 
-    public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default)
-    {
+    public async Task RestoreAsync(Guid id, CancellationToken cancellationToken = default) {
         // Need to include deleted entities to find soft-deleted credentials
         Credential? credential = await _context.Credentials.IgnoreQueryFilters().FirstOrDefaultAsync(c => c.Id == id && c.DeletedAt != null, cancellationToken);
 
-        if (credential != null)
-        {
+        if (credential != null) {
             credential.Restore();
             await _context.SaveChangesAsync(cancellationToken);
         }
     }
 
-    public async Task<bool> MarkAsUsedAsync(Guid id, CancellationToken cancellationToken = default)
-    {
+    public async Task<bool> MarkAsUsedAsync(Guid id, CancellationToken cancellationToken = default) {
         Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (credential == null) return false;
@@ -175,8 +153,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
         return true;
     }
 
-    public async Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default)
-    {
+    public async Task<bool> ActivateAsync(Guid id, CancellationToken cancellationToken = default) {
         Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (credential == null) return false;
@@ -187,8 +164,7 @@ public class CredentialRepository(ApplicationDbContext context) : ICredentialRep
         return true;
     }
 
-    public async Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default)
-    {
+    public async Task<bool> DeactivateAsync(Guid id, CancellationToken cancellationToken = default) {
         Credential? credential = await _context.Credentials.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 
         if (credential == null) return false;

@@ -5,8 +5,7 @@ namespace GameGuild.Modules.Tenants;
 /// <summary>
 ///     Resource types that can be tracked for usage
 /// </summary>
-public enum ResourceType
-{
+public enum ResourceType {
     Users,
     Storage,
     ApiCalls,
@@ -22,8 +21,7 @@ public enum ResourceType
 [Table("usage_tracking")]
 [Index(nameof(TenantId), nameof(ResourceType), IsUnique = true)]
 [Index(nameof(LastUpdatedAt))]
-public class UsageTracking : EntityBase
-{
+public class UsageTracking : EntityBase {
     /// <summary> ID of the tenant </summary>
     [Required]
     public new Guid? TenantId { get; set; }
@@ -66,30 +64,26 @@ public class UsageTracking : EntityBase
     public long RemainingCapacity => UsageLimit == -1 ? long.MaxValue : Math.Max(0, UsageLimit - CurrentUsage);
 
     /// <summary> Increment usage by amount </summary>
-    public void IncrementUsage(long amount)
-    {
+    public void IncrementUsage(long amount) {
         CurrentUsage += amount;
         LastUpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary> Reset usage to zero and start new period </summary>
-    public void ResetUsage()
-    {
+    public void ResetUsage() {
         CurrentUsage = 0;
         PeriodStartedAt = DateTime.UtcNow;
         LastUpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary> Update the usage limit </summary>
-    public void UpdateLimit(long newLimit)
-    {
+    public void UpdateLimit(long newLimit) {
         UsageLimit = newLimit;
         LastUpdatedAt = DateTime.UtcNow;
     }
 
     /// <summary> Check if within limit (with optional buffer percentage) </summary>
-    public bool IsWithinLimit(decimal bufferPercentage = 0)
-    {
+    public bool IsWithinLimit(decimal bufferPercentage = 0) {
         if (UsageLimit == -1) return true;
         var threshold = UsageLimit * (1 - bufferPercentage / 100);
         return CurrentUsage < threshold;

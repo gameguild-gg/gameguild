@@ -8,8 +8,7 @@ namespace GameGuild;
 ///   and IConcurrencyControlled interfaces.
 /// </summary>
 /// <typeparam name="TKey"> The type of the entity's identifier </typeparam>
-public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomainEvents, IAuditable, IConcurrencyControlled where TKey : IEquatable<TKey>
-{
+public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomainEvents, IAuditable, IConcurrencyControlled where TKey : IEquatable<TKey> {
     private readonly List<IDomainEvent> _domainEvents = [];
 
     /// <summary> Default constructor </summary>
@@ -19,11 +18,16 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomai
     /// <param name="partial"> Partial entity data to initialize with </param>
     protected EntityBase(object partial) : this() { SetPropertiesFromObject(partial); }
 
+    private Guid? _tenantId;
+
     /// <summary> The tenant this entity belongs to (null if global) </summary>
     public virtual Tenant? Tenant { get; set; }
 
     /// <summary> Unique identifier that associates the entity with a specific tenant in a multi-tenant system </summary>
-    public virtual Guid? TenantId { get => Tenant?.Id; }
+    public virtual Guid? TenantId {
+        get => Tenant?.Id ?? _tenantId;
+        set => _tenantId = value;
+    }
 
     /// <summary> Whether the entity is global (not tenant-specific) </summary>
     public virtual bool IsGlobal { get => Tenant == null; }
@@ -60,8 +64,7 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomai
     public virtual void Touch() { UpdatedAt = DateTime.UtcNow; }
 
     /// <summary> Soft-delete the entity by setting DeletedAt timestamp </summary>
-    public virtual void SoftDelete()
-    {
+    public virtual void SoftDelete() {
         if (IsDeleted) return;
 
         DeletedAt = DateTime.UtcNow;
@@ -69,8 +72,7 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomai
     }
 
     /// <summary> Restore a soft-deleted entity by clearing DeletedAt timestamp </summary>
-    public virtual void Restore()
-    {
+    public virtual void Restore() {
         if (!IsDeleted) return;
 
         DeletedAt = null;
@@ -93,22 +95,18 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomai
 
     /// <summary> Sets multiple properties from a dictionary (useful for partial updates) </summary>
     /// <param name="properties"> Dictionary of property names and values </param>
-    public virtual void SetProperties(Dictionary<string, object?> properties)
-    {
+    public virtual void SetProperties(Dictionary<string, object?> properties) {
         var entityType = GetType();
 
-        foreach (var property in properties)
-        {
+        foreach (var property in properties) {
             var propertyInfo = entityType.GetProperty(property.Key);
 
             if (propertyInfo == null || !propertyInfo.CanWrite) continue;
 
-            try
-            {
+            try {
                 var value = property.Value;
 
-                if (value != null && value.GetType() != propertyInfo.PropertyType)
-                {
+                if (value != null && value.GetType() != propertyInfo.PropertyType) {
                     var targetType = Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType;
                     value = Convert.ChangeType(value, targetType);
                 }
@@ -117,8 +115,7 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomai
 
                 if (property.Key != nameof(CreatedAt)) { Touch(); }
             }
-            catch (Exception)
-            {
+            catch (Exception) {
                 // Silently ignore conversion errors
             }
         }
@@ -126,13 +123,11 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomai
 
     /// <summary> Gets a dictionary representation of the entity's current state </summary>
     /// <returns> Dictionary with property names and values </returns>
-    public virtual Dictionary<string, object?> ToDictionary()
-    {
+    public virtual Dictionary<string, object?> ToDictionary() {
         var result = new Dictionary<string, object?>();
         var properties = GetType().GetProperties();
 
-        foreach (var property in properties)
-        {
+        foreach (var property in properties) {
             if (property.CanRead) { result[property.Name] = property.GetValue(this); }
         }
 
@@ -140,38 +135,32 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomai
     }
 
     /// <summary> Override for better debugging and logging </summary>
-    public override string ToString()
-    {
+    public override string ToString() {
         var deletedStatus = IsDeleted ? " (DELETED)" : "";
 
         return $"{GetType().Name} {{ Id = {Id}, Version = {Version}, CreatedAt = {CreatedAt:yyyy-MM-dd HH:mm:ss}, UpdatedAt = {UpdatedAt:yyyy-MM-dd HH:mm:ss}{deletedStatus} }}";
     }
 
-    private void SetPropertiesFromObject(object partial)
-    {
+    private void SetPropertiesFromObject(object partial) {
         var properties = partial.GetType().GetProperties();
         var entityType = GetType();
 
-        foreach (var sourceProperty in properties)
-        {
+        foreach (var sourceProperty in properties) {
             var targetProperty = entityType.GetProperty(sourceProperty.Name);
 
             if (targetProperty == null || !targetProperty.CanWrite) continue;
 
-            try
-            {
+            try {
                 var value = sourceProperty.GetValue(partial);
 
-                if (value != null && value.GetType() != targetProperty.PropertyType)
-                {
+                if (value != null && value.GetType() != targetProperty.PropertyType) {
                     var targetType = Nullable.GetUnderlyingType(targetProperty.PropertyType) ?? targetProperty.PropertyType;
                     value = Convert.ChangeType(value, targetType);
                 }
 
                 targetProperty.SetValue(this, value);
             }
-            catch (Exception)
-            {
+            catch (Exception) {
                 // Silently ignore conversion errors
             }
         }
@@ -179,18 +168,15 @@ public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomai
 }
 
 /// <summary> Base entity class that provides common properties and functionality for all domain entities. Uses Guid as the default identifier type. </summary>
-public class EntityBase : EntityBase<Guid>, IEntity
-{
+public class EntityBase : EntityBase<Guid>, IEntity {
     /// <summary> Default constructor </summary>
-    protected EntityBase()
-    {
+    protected EntityBase() {
         if (Id == Guid.Empty) { Id = Guid.NewGuid(); }
     }
 
     /// <summary> Constructor for partial initialization (useful for updates) </summary>
     /// <param name="partial"> Partial entity data to initialize with </param>
-    protected EntityBase(object partial) : base(partial)
-    {
+    protected EntityBase(object partial) : base(partial) {
         if (Id == Guid.Empty) { Id = Guid.NewGuid(); }
     }
 
@@ -198,17 +184,14 @@ public class EntityBase : EntityBase<Guid>, IEntity
     /// <typeparam name="T"> The entity type </typeparam>
     /// <param name="partial"> Initial properties </param>
     /// <returns> New instance of the entity </returns>
-    public static T Create<T>(object partial) where T : EntityBase, new()
-    {
+    public static T Create<T>(object partial) where T : EntityBase, new() {
         var instance = new T();
 
-        switch (partial)
-        {
+        switch (partial) {
             case null: break;
             case Dictionary<string, object?> dict: instance.SetProperties(dict); break;
 
-            default:
-                {
+            default: {
                     var properties = partial.GetType().GetProperties();
                     var propDict = new Dictionary<string, object?>();
 

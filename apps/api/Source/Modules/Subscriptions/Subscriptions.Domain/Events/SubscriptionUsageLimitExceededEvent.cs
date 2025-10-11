@@ -7,14 +7,15 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// </summary>
 public sealed class SubscriptionUsageLimitExceededEvent : DomainEvent
 {
-    public SubscriptionUsageLimitExceededEvent(Guid subscriptionId, Guid tenantId, string limitType, object currentUsage, object limit)
-    {
-        SubscriptionId = subscriptionId;
-        TenantId = tenantId;
-        LimitType = limitType;
-        CurrentUsage = currentUsage;
-        Limit = limit;
-    }
+  public SubscriptionUsageLimitExceededEvent(Guid subscriptionId, Guid tenantId, string limitType, object currentUsage, object limit)
+    : base(subscriptionId, "Subscription")
+  {
+    SubscriptionId = subscriptionId;
+    TenantId = tenantId;
+    LimitType = limitType;
+    CurrentUsage = currentUsage;
+    Limit = limit;
+  }
 
     public Guid SubscriptionId { get; }
 

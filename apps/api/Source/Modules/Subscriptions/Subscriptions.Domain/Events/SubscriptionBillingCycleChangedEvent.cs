@@ -9,15 +9,16 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// </summary>
 public sealed class SubscriptionBillingCycleChangedEvent : DomainEvent
 {
-    public SubscriptionBillingCycleChangedEvent(Guid subscriptionId, Guid tenantId, BillingCycle oldBillingCycle, BillingCycle newBillingCycle, Money oldAmount, Money newAmount)
-    {
-        SubscriptionId = subscriptionId;
-        TenantId = tenantId;
-        OldBillingCycle = oldBillingCycle;
-        NewBillingCycle = newBillingCycle;
-        OldAmount = oldAmount;
-        NewAmount = newAmount;
-    }
+  public SubscriptionBillingCycleChangedEvent(Guid subscriptionId, Guid tenantId, BillingCycle oldBillingCycle, BillingCycle newBillingCycle, Money oldAmount, Money newAmount)
+    : base(subscriptionId, "Subscription")
+  {
+    SubscriptionId = subscriptionId;
+    TenantId = tenantId;
+    OldBillingCycle = oldBillingCycle;
+    NewBillingCycle = newBillingCycle;
+    OldAmount = oldAmount;
+    NewAmount = newAmount;
+  }
 
     public Guid SubscriptionId { get; }
 

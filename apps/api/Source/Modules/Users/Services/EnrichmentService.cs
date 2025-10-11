@@ -8,8 +8,7 @@ namespace GameGuild.Modules.Users.Services;
 /// <summary>
 /// Service interface for behavioral analytics and profile enrichment.
 /// </summary>
-public interface IEnrichmentService
-{
+public interface IEnrichmentService {
     /// <summary>
     /// Ingests a user behavior event.
     /// </summary>
@@ -64,8 +63,7 @@ public interface IEnrichmentService
 /// <summary>
 /// Service implementation for behavioral analytics enrichment.
 /// </summary>
-public sealed class EnrichmentService : IEnrichmentService
-{
+public sealed class EnrichmentService : IEnrichmentService {
     private readonly IRepository<UserBehaviorEvent> _eventRepository;
     private readonly IRepository<ProfileAttribute> _attributeRepository;
     private readonly IRepository<User> _userRepository;
@@ -75,8 +73,7 @@ public sealed class EnrichmentService : IEnrichmentService
         IRepository<UserBehaviorEvent> eventRepository,
         IRepository<ProfileAttribute> attributeRepository,
         IRepository<User> userRepository,
-        ILogger<EnrichmentService> logger)
-    {
+        ILogger<EnrichmentService> logger) {
         _eventRepository = eventRepository;
         _attributeRepository = attributeRepository;
         _userRepository = userRepository;
@@ -88,17 +85,14 @@ public sealed class EnrichmentService : IEnrichmentService
         string eventType,
         Dictionary<string, object> properties,
         string? sessionId = null,
-        string? source = null)
-    {
+        string? source = null) {
         // Validate user exists
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
-        {
+        if (user == null) {
             return Result<UserBehaviorEvent>.Failure("User not found");
         }
 
-        var behaviorEvent = new UserBehaviorEvent
-        {
+        var behaviorEvent = new UserBehaviorEvent {
             Id = Guid.NewGuid(),
             UserId = userId,
             EventType = eventType,
@@ -121,24 +115,19 @@ public sealed class EnrichmentService : IEnrichmentService
         return Result<UserBehaviorEvent>.Success(behaviorEvent);
     }
 
-    public async Task<Result<int>> BatchIngestEventsAsync(List<UserBehaviorEvent> events)
-    {
-        if (!events.Any())
-        {
+    public async Task<Result<int>> BatchIngestEventsAsync(List<UserBehaviorEvent> events) {
+        if (!events.Any()) {
             return Result<int>.Success(0);
         }
 
-        foreach (var behaviorEvent in events)
-        {
-            if (behaviorEvent.Id == Guid.Empty)
-            {
+        foreach (var behaviorEvent in events) {
+            if (behaviorEvent.Id == Guid.Empty) {
                 behaviorEvent.Id = Guid.NewGuid();
             }
             behaviorEvent.CreatedAt = DateTime.UtcNow;
             behaviorEvent.UpdatedAt = DateTime.UtcNow;
 
-            if (!behaviorEvent.ExpiresAt.HasValue)
-            {
+            if (!behaviorEvent.ExpiresAt.HasValue) {
                 behaviorEvent.ExpiresAt = DateTime.UtcNow.AddDays(90);
             }
         }
@@ -150,14 +139,12 @@ public sealed class EnrichmentService : IEnrichmentService
         return Result<int>.Success(events.Count);
     }
 
-    public async Task<Result<List<ProfileAttribute>>> ExtractAttributesAsync(Guid userId)
-    {
+    public async Task<Result<List<ProfileAttribute>>> ExtractAttributesAsync(Guid userId) {
         // Get recent events for the user
         var events = await _eventRepository.FindAsync(
             e => e.UserId == userId && !e.IsProcessed);
 
-        if (!events.Any())
-        {
+        if (!events.Any()) {
             _logger.LogInformation("No unprocessed events for user {UserId}", userId);
             return Result<List<ProfileAttribute>>.Success(new List<ProfileAttribute>());
         }
@@ -165,30 +152,25 @@ public sealed class EnrichmentService : IEnrichmentService
         var extractedAttributes = new List<ProfileAttribute>();
 
         // Extract activity level
-        var activityLevel = CalculateActivityLevel(events);
+        var activityLevel = CalculateActivityLevel(events.ToList());
         extractedAttributes.Add(await CreateOrUpdateAttributeAsync(
             userId, "ActivityLevel", activityLevel, "BehaviorAnalysis", 0.85));
 
         // Extract preferred time of day
-        var preferredTime = CalculatePreferredTimeOfDay(events);
+        var preferredTime = CalculatePreferredTimeOfDay(events.ToList());
         extractedAttributes.Add(await CreateOrUpdateAttributeAsync(
-            userId, "PreferredTimeOfDay", preferredTime, "BehaviorAnalysis", 0.75));
-
-        // Extract most viewed category (if page views exist)
+            userId, "PreferredTimeOfDay", preferredTime, "BehaviorAnalysis", 0.75));        // Extract most viewed category (if page views exist)
         var pageViews = events.Where(e => e.EventType == "PageView").ToList();
-        if (pageViews.Any())
-        {
+        if (pageViews.Any()) {
             var mostViewedCategory = ExtractMostViewedCategory(pageViews);
-            if (!string.IsNullOrEmpty(mostViewedCategory))
-            {
+            if (!string.IsNullOrEmpty(mostViewedCategory)) {
                 extractedAttributes.Add(await CreateOrUpdateAttributeAsync(
                     userId, "PreferredCategory", mostViewedCategory, "BehaviorAnalysis", 0.70));
             }
         }
 
         // Mark events as processed
-        foreach (var behaviorEvent in events)
-        {
+        foreach (var behaviorEvent in events) {
             behaviorEvent.IsProcessed = true;
             behaviorEvent.ProcessedAt = DateTime.UtcNow;
             await _eventRepository.UpdateAsync(behaviorEvent);
@@ -201,10 +183,8 @@ public sealed class EnrichmentService : IEnrichmentService
         return Result<List<ProfileAttribute>>.Success(extractedAttributes);
     }
 
-    public async Task<List<ProfileAttribute>> GetUserAttributesAsync(Guid userId, bool activeOnly = true)
-    {
-        if (activeOnly)
-        {
+    public async Task<List<ProfileAttribute>> GetUserAttributesAsync(Guid userId, bool activeOnly = true) {
+        if (activeOnly) {
             return await _attributeRepository.FindAsync(
                 a => a.UserId == userId && (!a.ExpiresAt.HasValue || a.ExpiresAt > DateTime.UtcNow));
         }
@@ -216,11 +196,9 @@ public sealed class EnrichmentService : IEnrichmentService
         Guid attributeId,
         string newValue,
         double confidence,
-        string? metadata = null)
-    {
+        string? metadata = null) {
         var attribute = await _attributeRepository.GetByIdAsync(attributeId);
-        if (attribute == null)
-        {
+        if (attribute == null) {
             return Result.Failure("Attribute not found");
         }
 
@@ -234,11 +212,9 @@ public sealed class EnrichmentService : IEnrichmentService
         return Result.Success();
     }
 
-    public async Task<Result> DeleteAttributeAsync(Guid attributeId)
-    {
+    public async Task<Result> DeleteAttributeAsync(Guid attributeId) {
         var attribute = await _attributeRepository.GetByIdAsync(attributeId);
-        if (attribute == null)
-        {
+        if (attribute == null) {
             return Result.Failure("Attribute not found");
         }
 
@@ -255,17 +231,14 @@ public sealed class EnrichmentService : IEnrichmentService
         Guid userId,
         DateTime? startDate = null,
         DateTime? endDate = null,
-        int limit = 100)
-    {
+        int limit = 100) {
         var events = await _eventRepository.FindAsync(e => e.UserId == userId);
 
-        if (startDate.HasValue)
-        {
+        if (startDate.HasValue) {
             events = events.Where(e => e.Timestamp >= startDate.Value).ToList();
         }
 
-        if (endDate.HasValue)
-        {
+        if (endDate.HasValue) {
             events = events.Where(e => e.Timestamp <= endDate.Value).ToList();
         }
 
@@ -275,19 +248,16 @@ public sealed class EnrichmentService : IEnrichmentService
             .ToList();
     }
 
-    public async Task<List<ProfileAttribute>> GetAttributesBySourceAsync(Guid userId, string source)
-    {
+    public async Task<List<ProfileAttribute>> GetAttributesBySourceAsync(Guid userId, string source) {
         return await _attributeRepository.FindAsync(
             a => a.UserId == userId && a.Source == source);
     }
 
-    public async Task<double> CalculateAttributeConfidenceAsync(Guid userId, string attributeKey)
-    {
+    public async Task<double> CalculateAttributeConfidenceAsync(Guid userId, string attributeKey) {
         var attribute = await _attributeRepository.FindAsync(
             a => a.UserId == userId && a.AttributeKey == attributeKey);
 
-        if (!attribute.Any())
-        {
+        if (!attribute.Any()) {
             return 0.0;
         }
 
@@ -303,18 +273,15 @@ public sealed class EnrichmentService : IEnrichmentService
         return latest.Confidence * timeFactor * (0.5 + (recalculationFactor * 0.5));
     }
 
-    public async Task<Result<int>> PurgeExpiredEventsAsync()
-    {
+    public async Task<Result<int>> PurgeExpiredEventsAsync() {
         var expiredEvents = await _eventRepository.FindAsync(
             e => e.ExpiresAt.HasValue && e.ExpiresAt < DateTime.UtcNow);
 
-        if (!expiredEvents.Any())
-        {
+        if (!expiredEvents.Any()) {
             return Result<int>.Success(0);
         }
 
-        foreach (var expiredEvent in expiredEvents)
-        {
+        foreach (var expiredEvent in expiredEvents) {
             await _eventRepository.DeleteAsync(expiredEvent);
         }
 
@@ -328,13 +295,11 @@ public sealed class EnrichmentService : IEnrichmentService
         string key,
         string value,
         string source,
-        double confidence)
-    {
+        double confidence) {
         var existing = await _attributeRepository.FindAsync(
             a => a.UserId == userId && a.AttributeKey == key);
 
-        if (existing.Any())
-        {
+        if (existing.Any()) {
             var attribute = existing.First();
             attribute.Update(value, confidence);
             attribute.SetExpiration(TimeSpan.FromDays(30));
@@ -342,8 +307,7 @@ public sealed class EnrichmentService : IEnrichmentService
             return attribute;
         }
 
-        var newAttribute = new ProfileAttribute
-        {
+        var newAttribute = new ProfileAttribute {
             Id = Guid.NewGuid(),
             UserId = userId,
             AttributeKey = key,
@@ -360,14 +324,12 @@ public sealed class EnrichmentService : IEnrichmentService
         return newAttribute;
     }
 
-    private string CalculateActivityLevel(List<UserBehaviorEvent> events)
-    {
+    private string CalculateActivityLevel(List<UserBehaviorEvent> events) {
         var eventCount = events.Count;
         var daySpan = (events.Max(e => e.Timestamp) - events.Min(e => e.Timestamp)).TotalDays + 1;
         var eventsPerDay = eventCount / daySpan;
 
-        return eventsPerDay switch
-        {
+        return eventsPerDay switch {
             >= 50 => "VeryHigh",
             >= 20 => "High",
             >= 5 => "Medium",
@@ -376,16 +338,14 @@ public sealed class EnrichmentService : IEnrichmentService
         };
     }
 
-    private string CalculatePreferredTimeOfDay(List<UserBehaviorEvent> events)
-    {
+    private string CalculatePreferredTimeOfDay(List<UserBehaviorEvent> events) {
         var hourCounts = events
             .GroupBy(e => e.Timestamp.Hour)
             .Select(g => new { Hour = g.Key, Count = g.Count() })
             .OrderByDescending(x => x.Count)
             .First();
 
-        return hourCounts.Hour switch
-        {
+        return hourCounts.Hour switch {
             >= 6 and < 12 => "Morning",
             >= 12 and < 17 => "Afternoon",
             >= 17 and < 22 => "Evening",
@@ -393,24 +353,19 @@ public sealed class EnrichmentService : IEnrichmentService
         };
     }
 
-    private string ExtractMostViewedCategory(List<UserBehaviorEvent> pageViews)
-    {
+    private string ExtractMostViewedCategory(List<UserBehaviorEvent> pageViews) {
         // Parse page URLs to extract categories
         var categories = new Dictionary<string, int>();
 
-        foreach (var view in pageViews)
-        {
-            try
-            {
+        foreach (var view in pageViews) {
+            try {
                 var props = JsonSerializer.Deserialize<Dictionary<string, object>>(view.Properties);
-                if (props != null && props.TryGetValue("category", out var category))
-                {
+                if (props != null && props.TryGetValue("category", out var category)) {
                     var categoryStr = category.ToString() ?? "Unknown";
                     categories[categoryStr] = categories.GetValueOrDefault(categoryStr, 0) + 1;
                 }
             }
-            catch
-            {
+            catch {
                 // Ignore parsing errors
             }
         }

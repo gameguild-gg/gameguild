@@ -14,58 +14,58 @@ namespace GameGuild.Modules.Reputations.Entities;
 [Index(nameof(Points))]
 [Index(nameof(IsActive))]
 public class ReputationAction : Resource {
-    /// <summary>
-    /// Unique identifier for this action type
-    /// </summary>
-    [Required]
-    [MaxLength(100)]
-    public required string ActionType { get; set; }
+  /// <summary>
+  /// Unique identifier for this action type
+  /// </summary>
+  [Required]
+  [MaxLength(100)]
+  public required string ActionType { get; set; }
 
-    /// <summary>
-    /// Display the name for this action
-    /// </summary>
-    [Required]
-    [MaxLength(200)]
-    public required string DisplayName { get; set; }
+  /// <summary>
+  /// Display the name for this action
+  /// </summary>
+  [Required]
+  [MaxLength(200)]
+  public required string DisplayName { get; set; }
 
-    /// <summary>
-    /// Description of what this action represents
-    /// </summary>
-    public string? Description { get; set; }
+  /// <summary>
+  /// Description of what this action represents
+  /// </summary>
+  public string? Description { get; set; }
 
-    /// <summary>
-    /// Points gained/lost when this action is performed
-    /// </summary>
-    public int Points { get; set; }
+  /// <summary>
+  /// Points gained/lost when this action is performed
+  /// </summary>
+  public int Points { get; set; }
 
-    /// <summary>
-    /// The maximum number of times this action can award points per day
-    /// (null for no limit)
-    /// </summary>
-    public int? DailyLimit { get; set; }
+  /// <summary>
+  /// The maximum number of times this action can award points per day
+  /// (null for no limit)
+  /// </summary>
+  public int? DailyLimit { get; set; }
 
-    /// <summary>
-    /// The maximum number of times this action can award points total
-    /// (null for no limit)
-    /// </summary>
-    public int? TotalLimit { get; set; }
+  /// <summary>
+  /// The maximum number of times this action can award points total
+  /// (null for no limit)
+  /// </summary>
+  public int? TotalLimit { get; set; }
 
-    /// <summary>
-    /// Whether this action is currently active
-    /// </summary>
-    public bool IsActive { get; set; } = true;
+  /// <summary>
+  /// Whether this action is currently active
+  /// </summary>
+  public bool IsActive { get; set; } = true;
 
-    /// <summary>
-    /// Minimum reputation tier required to perform this action
-    /// (null for no requirement)
-    /// </summary>
-    [ForeignKey(nameof(RequiredLevelId))]
-    public ReputationTier? RequiredLevel { get; set; }
+  /// <summary>
+  /// Minimum reputation tier required to perform this action
+  /// (null for no requirement)
+  /// </summary>
+  [ForeignKey(nameof(RequiredLevelId))]
+  public ReputationTier? RequiredLevel { get; set; }
 
-    public Guid? RequiredLevelId { get; set; }
+  public Guid? RequiredLevelId { get; set; }
 
-    /// <summary>
-    /// History of when this action was performed
-    /// </summary>
-    public ICollection<UserReputationHistory> ReputationHistory { get; set; } = new List<UserReputationHistory>();
+  /// <summary>
+  /// History of when this action was performed
+  /// </summary>
+  public ICollection<UserReputationHistory> ReputationHistory { get; set; } = new List<UserReputationHistory>();
 }

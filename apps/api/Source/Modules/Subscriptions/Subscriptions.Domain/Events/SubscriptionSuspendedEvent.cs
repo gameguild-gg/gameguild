@@ -5,10 +5,9 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// <summary>
 ///     Event raised when a subscription is suspended
 /// </summary>
-public sealed class SubscriptionSuspendedEvent : DomainEvent
-{
+public sealed class SubscriptionSuspendedEvent : DomainEvent {
     public SubscriptionSuspendedEvent(Guid subscriptionId, Guid tenantId, string? reason = null)
-    {
+      : base(subscriptionId, "Subscription") {
         SubscriptionId = subscriptionId;
         TenantId = tenantId;
         Reason = reason;

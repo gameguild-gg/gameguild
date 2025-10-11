@@ -9,8 +9,7 @@ namespace GameGuild.Modules.Permissions.Entities;
 [Index(nameof(Name), IsUnique = true, Name = "IX_PermissionTemplates_Name")]
 [Index(nameof(Module), Name = "IX_PermissionTemplates_Module")]
 [Index(nameof(IsSystemTemplate), Name = "IX_PermissionTemplates_IsSystemTemplate")]
-public class PermissionTemplate : EntityBase
-{
+public class PermissionTemplate : EntityBase {
     /// <summary>
     /// Template name (must be unique)
     /// </summary>
@@ -60,13 +59,15 @@ public class PermissionTemplate : EntityBase
     /// </summary>
     public Dictionary<string, object>? Metadata { get; set; }
 
+    // Backward compatibility properties
+    public string ResourceType { get; set; } = "*";
+    public string Action { get; set; } = "read";
+
     /// <summary>
     /// Predefined system templates
     /// </summary>
-    public static class SystemTemplates
-    {
-        public static readonly PermissionTemplate TenantAdmin = new()
-        {
+    public static class SystemTemplates {
+        public static readonly PermissionTemplate TenantAdmin = new() {
             Name = "TenantAdmin",
             Description = "Full administrative access to tenant resources",
             Permissions = TenantPermissionConstants.AdminPermissions,
@@ -74,8 +75,7 @@ public class PermissionTemplate : EntityBase
             Category = "Administrative"
         };
 
-        public static readonly PermissionTemplate TenantModerator = new()
-        {
+        public static readonly PermissionTemplate TenantModerator = new() {
             Name = "TenantModerator",
             Description = "Moderation capabilities within tenant",
             Permissions = new[]
@@ -95,8 +95,7 @@ public class PermissionTemplate : EntityBase
             Category = "Moderation"
         };
 
-        public static readonly PermissionTemplate ContentCreator = new()
-        {
+        public static readonly PermissionTemplate ContentCreator = new() {
             Name = "ContentCreator",
             Description = "Create and manage content within tenant",
             Permissions = new[]
@@ -118,8 +117,7 @@ public class PermissionTemplate : EntityBase
             Category = "Content"
         };
 
-        public static readonly PermissionTemplate BasicUser = new()
-        {
+        public static readonly PermissionTemplate BasicUser = new() {
             Name = "BasicUser",
             Description = "Basic user permissions for tenant participation",
             Permissions = new[]
@@ -137,8 +135,7 @@ public class PermissionTemplate : EntityBase
             Category = "Basic"
         };
 
-        public static readonly PermissionTemplate ReadOnly = new()
-        {
+        public static readonly PermissionTemplate ReadOnly = new() {
             Name = "ReadOnly",
             Description = "Read-only access to public content",
             Permissions = new[]
@@ -149,8 +146,7 @@ public class PermissionTemplate : EntityBase
             Category = "Basic"
         };
 
-        public static readonly PermissionTemplate QualityAssurance = new()
-        {
+        public static readonly PermissionTemplate QualityAssurance = new() {
             Name = "QualityAssurance",
             Description = "Quality control and review permissions",
             Permissions = new[]
@@ -172,8 +168,7 @@ public class PermissionTemplate : EntityBase
         /// <summary>
         /// Get all system templates
         /// </summary>
-        public static PermissionTemplate[] GetAll()
-        {
+        public static PermissionTemplate[] GetAll() {
             return new[]
             {
                 TenantAdmin,

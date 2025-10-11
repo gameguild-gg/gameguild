@@ -8,21 +8,17 @@ using System.Text;
 
 namespace GameGuild.Modules.Permissions.Services;
 
-public class PolicyRegistryService : IPolicyRegistryService
-{
+public class PolicyRegistryService : IPolicyRegistryService {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<PolicyRegistryService> _logger;
 
-    public PolicyRegistryService(ApplicationDbContext context, ILogger<PolicyRegistryService> logger)
-    {
+    public PolicyRegistryService(ApplicationDbContext context, ILogger<PolicyRegistryService> logger) {
         _context = context;
         _logger = logger;
     }
 
-    public async Task<Result<PolicyBundle>> CreateBundleAsync(PolicyBundle bundle, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<PolicyBundle>> CreateBundleAsync(PolicyBundle bundle, CancellationToken cancellationToken = default) {
+        try {
             // Calculate content hash
             bundle.ContentHash = CalculateHash(bundle.PolicyData);
             bundle.Status = PolicyBundleStatus.Draft;
@@ -32,23 +28,20 @@ public class PolicyRegistryService : IPolicyRegistryService
             await _context.SaveChangesAsync(cancellationToken);
 
             // Log the action
-            await LogActionAsync(bundle.Id, PolicyRegistryAction.Create, bundle.CreatedBy, true, cancellationToken);
+            await LogActionAsync(bundle.Id, PolicyRegistryAction.Create, bundle.CreatedBy, true, null, cancellationToken);
 
             _logger.LogInformation("Created policy bundle {BundleId} '{Name}' version {Version}", bundle.Id, bundle.Name, bundle.Version);
             return Result<PolicyBundle>.Success(bundle);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to create policy bundle");
             await LogActionAsync(null, PolicyRegistryAction.Create, bundle.CreatedBy, false, ex.Message, cancellationToken);
             return Result<PolicyBundle>.Failure($"Failed to create bundle: {ex.Message}");
         }
     }
 
-    public async Task<Result<PolicyBundle>> UpdateBundleAsync(PolicyBundle bundle, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<PolicyBundle>> UpdateBundleAsync(PolicyBundle bundle, CancellationToken cancellationToken = default) {
+        try {
             var existing = await _context.Set<PolicyBundle>().FirstOrDefaultAsync(b => b.Id == bundle.Id, cancellationToken);
             if (existing == null)
                 return Result<PolicyBundle>.Failure("Bundle not found");
@@ -71,23 +64,20 @@ public class PolicyRegistryService : IPolicyRegistryService
             existing.SignedAt = null;
 
             await _context.SaveChangesAsync(cancellationToken);
-            await LogActionAsync(bundle.Id, PolicyRegistryAction.Update, Guid.Empty, true, cancellationToken);
+            await LogActionAsync(bundle.Id, PolicyRegistryAction.Update, Guid.Empty, true, null, cancellationToken);
 
             _logger.LogInformation("Updated policy bundle {BundleId}", bundle.Id);
             return Result<PolicyBundle>.Success(existing);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to update policy bundle {BundleId}", bundle.Id);
             await LogActionAsync(bundle.Id, PolicyRegistryAction.Update, Guid.Empty, false, ex.Message, cancellationToken);
             return Result<PolicyBundle>.Failure($"Failed to update bundle: {ex.Message}");
         }
     }
 
-    public async Task<Result<PolicyBundle>> SignBundleAsync(Guid bundleId, string privateKey, Guid signedBy, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<PolicyBundle>> SignBundleAsync(Guid bundleId, string privateKey, Guid signedBy, CancellationToken cancellationToken = default) {
+        try {
             var bundle = await _context.Set<PolicyBundle>().FirstOrDefaultAsync(b => b.Id == bundleId, cancellationToken);
             if (bundle == null)
                 return Result<PolicyBundle>.Failure("Bundle not found");
@@ -110,23 +100,20 @@ public class PolicyRegistryService : IPolicyRegistryService
             bundle.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync(cancellationToken);
-            await LogActionAsync(bundleId, PolicyRegistryAction.Sign, signedBy, true, cancellationToken);
+            await LogActionAsync(bundleId, PolicyRegistryAction.Sign, signedBy, true, null, cancellationToken);
 
             _logger.LogInformation("Signed policy bundle {BundleId}", bundleId);
             return Result<PolicyBundle>.Success(bundle);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to sign policy bundle {BundleId}", bundleId);
             await LogActionAsync(bundleId, PolicyRegistryAction.Sign, signedBy, false, ex.Message, cancellationToken);
             return Result<PolicyBundle>.Failure($"Failed to sign bundle: {ex.Message}");
         }
     }
 
-    public async Task<Result<bool>> VerifyBundleSignatureAsync(Guid bundleId, string publicKey, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<bool>> VerifyBundleSignatureAsync(Guid bundleId, string publicKey, CancellationToken cancellationToken = default) {
+        try {
             var bundle = await _context.Set<PolicyBundle>().FirstOrDefaultAsync(b => b.Id == bundleId, cancellationToken);
             if (bundle == null)
                 return Result<bool>.Failure("Bundle not found");
@@ -148,18 +135,15 @@ public class PolicyRegistryService : IPolicyRegistryService
             _logger.LogInformation("Verified signature for policy bundle {BundleId}: {IsValid}", bundleId, isValid);
             return Result<bool>.Success(isValid);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to verify signature for policy bundle {BundleId}", bundleId);
             await LogActionAsync(bundleId, PolicyRegistryAction.Verify, Guid.Empty, false, ex.Message, cancellationToken);
             return Result<bool>.Failure($"Failed to verify signature: {ex.Message}");
         }
     }
 
-    public async Task<Result<PolicyBundle>> ApproveBundleAsync(Guid bundleId, Guid approvedBy, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<PolicyBundle>> ApproveBundleAsync(Guid bundleId, Guid approvedBy, CancellationToken cancellationToken = default) {
+        try {
             var bundle = await _context.Set<PolicyBundle>().FirstOrDefaultAsync(b => b.Id == bundleId, cancellationToken);
             if (bundle == null)
                 return Result<PolicyBundle>.Failure("Bundle not found");
@@ -176,7 +160,7 @@ public class PolicyRegistryService : IPolicyRegistryService
             bundle.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync(cancellationToken);
-            await LogActionAsync(bundleId, PolicyRegistryAction.Approve, approvedBy, true, cancellationToken);
+            await LogActionAsync(bundleId, PolicyRegistryAction.Approve, approvedBy, true, null, cancellationToken);
 
             _logger.LogInformation("Approved policy bundle {BundleId}", bundleId);
             return Result<PolicyBundle>.Success(bundle);
@@ -194,10 +178,8 @@ public class PolicyRegistryService : IPolicyRegistryService
         Guid? tenantId,
         string environment,
         Guid deployedBy,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             var bundle = await _context.Set<PolicyBundle>().FirstOrDefaultAsync(b => b.Id == bundleId, cancellationToken);
             if (bundle == null)
                 return Result<PolicyBundleDeployment>.Failure("Bundle not found");
@@ -205,8 +187,7 @@ public class PolicyRegistryService : IPolicyRegistryService
             if (bundle.Status != PolicyBundleStatus.Approved)
                 return Result<PolicyBundleDeployment>.Failure("Only approved bundles can be deployed");
 
-            var deployment = new PolicyBundleDeployment
-            {
+            var deployment = new PolicyBundleDeployment {
                 BundleId = bundleId,
                 TenantId = tenantId,
                 Environment = environment,
@@ -230,18 +211,15 @@ public class PolicyRegistryService : IPolicyRegistryService
             _logger.LogInformation("Deployed policy bundle {BundleId} to {Environment}", bundleId, environment);
             return Result<PolicyBundleDeployment>.Success(deployment);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to deploy policy bundle {BundleId}", bundleId);
             await LogActionAsync(bundleId, PolicyRegistryAction.Deploy, deployedBy, false, ex.Message, cancellationToken);
             return Result<PolicyBundleDeployment>.Failure($"Failed to deploy bundle: {ex.Message}");
         }
     }
 
-    public async Task<Result> ActivateDeploymentAsync(Guid deploymentId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result> ActivateDeploymentAsync(Guid deploymentId, CancellationToken cancellationToken = default) {
+        try {
             var deployment = await _context.Set<PolicyBundleDeployment>()
                 .Include(d => d.Bundle)
                 .FirstOrDefaultAsync(d => d.Id == deploymentId, cancellationToken);
@@ -254,8 +232,7 @@ public class PolicyRegistryService : IPolicyRegistryService
             deployment.UpdatedAt = DateTime.UtcNow;
 
             // Mark bundle as active
-            if (deployment.Bundle.Status == PolicyBundleStatus.Approved)
-            {
+            if (deployment.Bundle.Status == PolicyBundleStatus.Approved) {
                 deployment.Bundle.Status = PolicyBundleStatus.Active;
                 deployment.Bundle.UpdatedAt = DateTime.UtcNow;
             }
@@ -266,17 +243,14 @@ public class PolicyRegistryService : IPolicyRegistryService
             _logger.LogInformation("Activated deployment {DeploymentId} for bundle {BundleId}", deploymentId, deployment.BundleId);
             return Result.Success();
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to activate deployment {DeploymentId}", deploymentId);
             return Result.Failure($"Failed to activate deployment: {ex.Message}");
         }
     }
 
-    public async Task<Result> RollbackDeploymentAsync(Guid deploymentId, string reason, Guid rolledBackBy, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result> RollbackDeploymentAsync(Guid deploymentId, string reason, Guid rolledBackBy, CancellationToken cancellationToken = default) {
+        try {
             var deployment = await _context.Set<PolicyBundleDeployment>()
                 .FirstOrDefaultAsync(d => d.Id == deploymentId, cancellationToken);
 
@@ -295,18 +269,15 @@ public class PolicyRegistryService : IPolicyRegistryService
             _logger.LogInformation("Rolled back deployment {DeploymentId}: {Reason}", deploymentId, reason);
             return Result.Success();
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to rollback deployment {DeploymentId}", deploymentId);
             await LogActionAsync(null, PolicyRegistryAction.Rollback, rolledBackBy, false, ex.Message, cancellationToken);
             return Result.Failure($"Failed to rollback deployment: {ex.Message}");
         }
     }
 
-    public async Task<Result<PolicyBundle>> GetBundleAsync(Guid bundleId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<PolicyBundle>> GetBundleAsync(Guid bundleId, CancellationToken cancellationToken = default) {
+        try {
             var bundle = await _context.Set<PolicyBundle>()
                 .Include(b => b.Deployments)
                 .FirstOrDefaultAsync(b => b.Id == bundleId, cancellationToken);
@@ -316,8 +287,7 @@ public class PolicyRegistryService : IPolicyRegistryService
 
             return Result<PolicyBundle>.Success(bundle);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to get policy bundle {BundleId}", bundleId);
             return Result<PolicyBundle>.Failure($"Failed to get bundle: {ex.Message}");
         }
@@ -326,10 +296,8 @@ public class PolicyRegistryService : IPolicyRegistryService
     public async Task<Result<List<PolicyBundle>>> ListBundlesAsync(
         PolicyBundleType? type,
         PolicyBundleStatus? status,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             var query = _context.Set<PolicyBundle>().AsQueryable();
 
             if (type.HasValue)
@@ -344,17 +312,14 @@ public class PolicyRegistryService : IPolicyRegistryService
 
             return Result<List<PolicyBundle>>.Success(bundles);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to list policy bundles");
             return Result<List<PolicyBundle>>.Failure($"Failed to list bundles: {ex.Message}");
         }
     }
 
-    public async Task<Result<List<PolicyBundleDeployment>>> GetDeploymentsAsync(Guid bundleId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<List<PolicyBundleDeployment>>> GetDeploymentsAsync(Guid bundleId, CancellationToken cancellationToken = default) {
+        try {
             var deployments = await _context.Set<PolicyBundleDeployment>()
                 .Where(d => d.BundleId == bundleId)
                 .OrderByDescending(d => d.DeployedAt)
@@ -362,22 +327,18 @@ public class PolicyRegistryService : IPolicyRegistryService
 
             return Result<List<PolicyBundleDeployment>>.Success(deployments);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to get deployments for bundle {BundleId}", bundleId);
             return Result<List<PolicyBundleDeployment>>.Failure($"Failed to get deployments: {ex.Message}");
         }
     }
 
-    public async Task<Result<RegistryStatistics>> GetStatisticsAsync(CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<RegistryStatistics>> GetStatisticsAsync(CancellationToken cancellationToken = default) {
+        try {
             var bundles = await _context.Set<PolicyBundle>().ToListAsync(cancellationToken);
             var deployments = await _context.Set<PolicyBundleDeployment>().ToListAsync(cancellationToken);
 
-            var stats = new RegistryStatistics
-            {
+            var stats = new RegistryStatistics {
                 TotalBundles = bundles.Count,
                 ActiveBundles = bundles.Count(b => b.Status == PolicyBundleStatus.Active),
                 TotalDeployments = deployments.Count,
@@ -387,15 +348,13 @@ public class PolicyRegistryService : IPolicyRegistryService
 
             return Result<RegistryStatistics>.Success(stats);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to get registry statistics");
             return Result<RegistryStatistics>.Failure($"Failed to get statistics: {ex.Message}");
         }
     }
 
-    private static string CalculateHash(string content)
-    {
+    private static string CalculateHash(string content) {
         using var sha256 = SHA256.Create();
         var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(content));
         return Convert.ToBase64String(hash);
@@ -407,12 +366,9 @@ public class PolicyRegistryService : IPolicyRegistryService
         Guid performedBy,
         bool success,
         string? details = null,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var log = new PolicyRegistryAuditLog
-            {
+        CancellationToken cancellationToken = default) {
+        try {
+            var log = new PolicyRegistryAuditLog {
                 BundleId = bundleId,
                 Action = action,
                 PerformedBy = performedBy,
@@ -424,8 +380,7 @@ public class PolicyRegistryService : IPolicyRegistryService
             _context.Set<PolicyRegistryAuditLog>().Add(log);
             await _context.SaveChangesAsync(cancellationToken);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogWarning(ex, "Failed to log registry action");
         }
     }

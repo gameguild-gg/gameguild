@@ -6,10 +6,8 @@ namespace GameGuild;
 /// Simplified Result pattern that uses only Error for all failure scenarios.
 /// No more ValidationError, BusinessRuleError, etc. - just Error.
 /// </summary>
-public class Result : IResult
-{
-    public Result(bool isSuccess, Error error)
-    {
+public class Result : IResult {
+    public Result(bool isSuccess, Error error) {
         if (isSuccess && error != Error.None || !isSuccess && error == Error.None) throw new ArgumentException("Invalid error", nameof(error));
 
         IsSuccess = isSuccess;
@@ -49,8 +47,7 @@ public class Result : IResult
 /// <summary>
 /// Result with a value - simplified to only use Error
 /// </summary>
-public class Result<TValue> : Result, IResult<TValue>
-{
+public class Result<TValue> : Result, IResult<TValue> {
     private readonly TValue? _value;
 
     public Result(TValue? value, bool isSuccess, Error error) : base(isSuccess, error) { _value = value; }
@@ -59,6 +56,13 @@ public class Result<TValue> : Result, IResult<TValue>
 
     [NotNull]
     public TValue Value => IsSuccess ? _value! : throw new InvalidOperationException("The value of a failure result can't be accessed.");
+
+    // For backward compatibility
+    [Obsolete("Use Value property instead")]
+    public TValue? Data => IsSuccess ? _value : default;
+
+    [Obsolete("Use Error.Message property instead")]
+    public string? ErrorMessage => Error?.Message;
 
     // Implicit conversions
     public static implicit operator Result<TValue>(TValue? value) => value is not null ? Success(value) : Failure<TValue>(Error.NullValue);

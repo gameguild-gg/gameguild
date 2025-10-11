@@ -7,8 +7,7 @@ namespace GameGuild.Modules.Audit.Entities;
 /// Field-level data access audit for tracking read/write operations on sensitive fields with PII masking.
 /// Enables granular auditing of which fields were accessed, when, and by whom.
 /// </summary>
-public sealed class FieldAccessAudit : EntityBase
-{
+public sealed class FieldAccessAudit : EntityBase {
     public Guid UserId { get; private set; }
     public string EntityType { get; private set; } = string.Empty;
     public Guid EntityId { get; private set; }
@@ -50,10 +49,8 @@ public sealed class FieldAccessAudit : EntityBase
         bool isSensitive,
         SensitivityLevel sensitivityLevel,
         string ipAddress,
-        string userAgent)
-    {
-        return new FieldAccessAudit
-        {
+        string userAgent) {
+        return new FieldAccessAudit {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             UserId = userId,
@@ -70,37 +67,32 @@ public sealed class FieldAccessAudit : EntityBase
         };
     }
 
-    public void SetValues(string? oldValue, string? newValue, string? maskedOldValue, string? maskedNewValue)
-    {
+    public void SetValues(string? oldValue, string? newValue, string? maskedOldValue, string? maskedNewValue) {
         OldValue = oldValue;
         NewValue = newValue;
         MaskedOldValue = maskedOldValue;
         MaskedNewValue = maskedNewValue;
     }
 
-    public void SetAccessContext(string? requestId, string? sessionId, string? apiEndpoint)
-    {
+    public void SetAccessContext(string? requestId, string? sessionId, string? apiEndpoint) {
         RequestId = requestId;
         SessionId = sessionId;
         ApiEndpoint = apiEndpoint;
     }
 
-    public void SetComplianceInfo(string? legalBasis, string? consentId, bool requiresNotification)
-    {
+    public void SetComplianceInfo(string? legalBasis, string? consentId, bool requiresNotification) {
         LegalBasis = legalBasis;
         ConsentId = consentId;
         RequiresNotification = requiresNotification;
     }
 
-    public void MarkNotificationSent()
-    {
+    public void MarkNotificationSent() {
         NotificationSent = true;
         NotificationSentAt = DateTime.UtcNow;
     }
 }
 
-public enum FieldAccessType
-{
+public enum FieldAccessType {
     Read,
     Write,
     Delete,

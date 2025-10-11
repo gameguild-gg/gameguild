@@ -5,10 +5,9 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// <summary>
 ///     Event raised when a subscription plan is changed
 /// </summary>
-public sealed class SubscriptionPlanChangedEvent : DomainEvent
-{
+public sealed class SubscriptionPlanChangedEvent : DomainEvent {
     public SubscriptionPlanChangedEvent(Guid subscriptionId, Guid tenantId, Guid oldPlanId, Guid newPlanId, Money oldAmount, Money newAmount)
-    {
+      : base(subscriptionId, "Subscription") {
         SubscriptionId = subscriptionId;
         TenantId = tenantId;
         OldPlanId = oldPlanId;

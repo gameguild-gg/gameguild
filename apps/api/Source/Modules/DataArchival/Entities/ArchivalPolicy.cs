@@ -5,8 +5,7 @@ namespace GameGuild.Modules.DataArchival.Entities;
 /// <summary>
 /// Represents a data archival policy with tiered storage lifecycle rules.
 /// </summary>
-public class ArchivalPolicy : EntityBase
-{
+public class ArchivalPolicy : EntityBase {
     /// <summary>
     /// Gets or sets the name of the archival policy.
     /// </summary>
@@ -67,27 +66,32 @@ public class ArchivalPolicy : EntityBase
     /// </summary>
     public DateTime? NextExecutionAt { get; set; }
 
+    // Backward compatibility aliases
+    public int RetentionDays { get => DeleteAfterDays ?? 365; set => DeleteAfterDays = value; }
+    public int ArchiveAfterDays { get => ArchiveStorageAfterDays; set => ArchiveStorageAfterDays = value; }
+    public string StorageTier { get; set; } = "Hot";
+    public bool CompressionEnabled { get => CompressOnArchive; set => CompressOnArchive = value; }
+    public bool EncryptionEnabled { get => EncryptOnArchive; set => EncryptOnArchive = value; }
+    public int ExecutionCount { get; set; }
+
     /// <summary>
     /// Determines if data should be moved to cool storage based on age.
     /// </summary>
-    public bool ShouldMoveToCoolStorage(DateTime dataCreatedAt)
-    {
+    public bool ShouldMoveToCoolStorage(DateTime dataCreatedAt) {
         return IsEnabled && (DateTime.UtcNow - dataCreatedAt).TotalDays >= CoolStorageAfterDays;
     }
 
     /// <summary>
     /// Determines if data should be moved to archive storage based on age.
     /// </summary>
-    public bool ShouldMoveToArchiveStorage(DateTime dataCreatedAt)
-    {
+    public bool ShouldMoveToArchiveStorage(DateTime dataCreatedAt) {
         return IsEnabled && (DateTime.UtcNow - dataCreatedAt).TotalDays >= ArchiveStorageAfterDays;
     }
 
     /// <summary>
     /// Determines if data should be deleted based on age.
     /// </summary>
-    public bool ShouldDelete(DateTime dataCreatedAt)
-    {
+    public bool ShouldDelete(DateTime dataCreatedAt) {
         return IsEnabled && DeleteAfterDays.HasValue && (DateTime.UtcNow - dataCreatedAt).TotalDays >= DeleteAfterDays.Value;
     }
 }

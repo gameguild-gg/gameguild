@@ -5,8 +5,10 @@ namespace GameGuild;
 /// <summary> Generic repository interface for domain entities </summary>
 /// <typeparam name="T"> The entity type </typeparam>
 /// <typeparam name="TKey"> The key type </typeparam>
-public interface IRepository<T, in TKey> where T : class, IEntity<TKey> where TKey : IEquatable<TKey>
-{
+public interface IRepository<T, in TKey> where T : class, IEntity<TKey> where TKey : IEquatable<TKey> {
+    /// <summary> Gets the queryable collection for advanced queries </summary>
+    IQueryable<T> AsQueryable();
+
     /// <summary> Gets an entity by its identifier </summary>
     Task<T?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default);
 

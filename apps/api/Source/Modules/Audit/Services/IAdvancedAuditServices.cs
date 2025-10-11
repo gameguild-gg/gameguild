@@ -8,8 +8,7 @@ namespace GameGuild.Modules.Audit.Services;
 /// <summary>
 /// Service for managing tamper-evident audit logs with cryptographic hash chains (WORM storage).
 /// </summary>
-public interface ITamperEvidentAuditService
-{
+public interface ITamperEvidentAuditService {
     Task<Result<TamperEvidentAuditLog>> CreateAuditLogAsync(
         Guid tenantId,
         Guid? userId,
@@ -38,8 +37,7 @@ public interface ITamperEvidentAuditService
 /// Service for cryptographic signing and integrity verification of audit records.
 /// Uses RSA/ECDSA digital signatures with SHA-256 hashing.
 /// </summary>
-public interface ICryptographicSigningService
-{
+public interface ICryptographicSigningService {
     string ComputeContentHash(string content);
     string ComputeChainHash(string contentHash, string previousHash, long sequenceNumber);
     string SignData(string data, string keyId);
@@ -51,8 +49,7 @@ public interface ICryptographicSigningService
 /// <summary>
 /// Service for field-level data access auditing with PII masking and redaction.
 /// </summary>
-public interface IFieldAccessAuditService
-{
+public interface IFieldAccessAuditService {
     Task<Result<FieldAccessAudit>> RecordFieldAccessAsync(
         Guid tenantId,
         Guid userId,
@@ -78,8 +75,7 @@ public interface IFieldAccessAuditService
 /// Service for real-time anomaly detection on privileged operations.
 /// Uses ML-based pattern recognition and rule-based triggers.
 /// </summary>
-public interface IAnomalyDetectionService
-{
+public interface IAnomalyDetectionService {
     Task<Result<AuditAnomaly?>> DetectAnomalyAsync(
         Guid tenantId,
         Guid? userId,
@@ -102,8 +98,7 @@ public interface IAnomalyDetectionService
 /// Service for compliance evidence packaging (SOC2, ISO 27001, GDPR, HIPAA).
 /// Creates tamper-evident packages with digital signatures for regulatory submissions.
 /// </summary>
-public interface ICompliancePackagingService
-{
+public interface ICompliancePackagingService {
     Task<Result<ComplianceEvidencePackage>> CreatePackageAsync(
         Guid tenantId,
         string packageName,
@@ -126,8 +121,7 @@ public interface ICompliancePackagingService
 /// Service for forwarding audit events to SIEM systems (Splunk, ELK, Azure Sentinel).
 /// Supports multiple SIEM integrations with batching and retry logic.
 /// </summary>
-public interface ISiemIntegrationService
-{
+public interface ISiemIntegrationService {
     Task<Result> ForwardToSiemAsync(TamperEvidentAuditLog auditLog, string siemType, CancellationToken cancellationToken = default);
     Task<Result> ForwardBatchAsync(IEnumerable<TamperEvidentAuditLog> auditLogs, string siemType, CancellationToken cancellationToken = default);
     Task<Result<bool>> TestConnectionAsync(string siemType, CancellationToken cancellationToken = default);
@@ -150,9 +144,8 @@ public record ChainVerificationResult(
     int FailedLogs,
     List<string> Errors);
 
-public record AnomalyDetectionResult(
-    bool IsAnomaly,
-    double ConfidenceScore,
-    string? DetectionMethod,
-    string? PatternMatched,
-    Dictionary<string, object> AnomalyData);
+public class AnomalyDetectionResult {
+    public bool IsAnomaly { get; set; }
+    public double ConfidenceScore { get; set; }
+    public List<AuditAnomaly> DetectedAnomalies { get; set; } = new();
+}
