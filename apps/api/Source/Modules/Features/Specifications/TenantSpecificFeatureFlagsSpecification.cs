@@ -12,7 +12,7 @@ public class TenantSpecificFeatureFlagsSpecification : SpecificationBase<Feature
     ///     Initializes a new instance of the <see cref="TenantSpecificFeatureFlagsSpecification"/> class
     /// </summary>
     /// <param name="tenantId">The tenant identifier</param>
-    public TenantSpecificFeatureFlagsSpecification(TenantId tenantId) : base(x => x.TenantId == tenantId)
+    public TenantSpecificFeatureFlagsSpecification(Guid tenantId) : base(x => x.TenantId == tenantId)
     {
         ApplyOrderBy(x => x.Name);
         EnableAsNoTracking();
@@ -22,7 +22,7 @@ public class TenantSpecificFeatureFlagsSpecification : SpecificationBase<Feature
     ///     Initializes a new instance of the <see cref="TenantSpecificFeatureFlagsSpecification"/> class
     /// </summary>
     /// <param name="tenantId">The tenant identifier as string</param>
-    public TenantSpecificFeatureFlagsSpecification(string tenantId) : this(new TenantId(Guid.Parse(tenantId)))
+    public TenantSpecificFeatureFlagsSpecification(string tenantId) : this(Guid.Parse(tenantId))
     {
     }
 }
