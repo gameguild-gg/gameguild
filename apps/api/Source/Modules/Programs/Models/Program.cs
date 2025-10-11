@@ -7,7 +7,7 @@ using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Programs.Entities;
+using EnrollmentStatus = GameGuild.Modules.Programs.Entities.EnrollmentStatus;
 
 
 namespace GameGuild.Modules.Programs;
@@ -26,7 +26,6 @@ namespace GameGuild.Modules.Programs;
 [Table("programs")]
 [Index(nameof(Visibility))]
 [Index(nameof(Status))]
-[Index(nameof(Slug))]
 [Index(nameof(Category))]
 [Index(nameof(Difficulty))]
 public class Program : EntityBase {
