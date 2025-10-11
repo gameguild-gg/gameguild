@@ -16,7 +16,7 @@ public class TenantWebhook : EntityBase
     public string Url { get; private set; } = string.Empty;
 
     [Required]
-    public override Guid? TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
 
     [Required]
     [MaxLength(50)]

@@ -35,10 +35,10 @@ public class TenantMember : EntityBase, ITenantable
     public Guid UserId { get; set; }
 
     /// <summary>
-    ///     ID of the tenant the user belongs to
+    /// ID of the tenant the user belongs to
     /// </summary>
     [Required]
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     ///     Navigation property to the tenant

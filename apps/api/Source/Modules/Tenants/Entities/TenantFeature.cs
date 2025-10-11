@@ -27,10 +27,10 @@ public class TenantFeature : EntityBase, ITenantable
     public TenantFeature(object partial) : base(partial) { }
 
     /// <summary>
-    ///     ID of the tenant this feature belongs to
+    /// ID of the tenant this feature belongs to
     /// </summary>
     [Required]
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     ///     Navigation property to the tenant

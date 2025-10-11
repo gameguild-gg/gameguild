@@ -9,7 +9,7 @@ public class CostAllocationReport : EntityBase
     /// <summary>
     /// Tenant ID for this cost allocation
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     /// Reporting period start date

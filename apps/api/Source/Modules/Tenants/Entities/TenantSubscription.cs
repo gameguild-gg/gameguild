@@ -28,10 +28,10 @@ public class TenantSubscription : EntityBase, ITenantable
     public TenantSubscription(object partial) : base(partial) { }
 
     /// <summary>
-    ///     ID of the tenant this subscription belongs to
+    /// The tenant this subscription belongs to
     /// </summary>
     [Required]
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     ///     Navigation property to the tenant

@@ -10,7 +10,7 @@ public class ResourceUsageTrend : EntityBase
     /// <summary>
     ///     Tenant this trend applies to
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     ///     Type of resource being analyzed
@@ -105,7 +105,7 @@ public class ResourceUsageTrend : EntityBase
     /// </summary>
     public bool IsConcerningPattern()
     {
-        return Pattern is "Anomalous" or "Volatile" || 
+        return Pattern is "Anomalous" or "Volatile" ||
                GrowthRate > 50 || // Growing faster than 50%
                AnomalyCount > 5;  // More than 5 anomalies
     }

@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Payments.Commands;
 /// <summary>
 ///     Handler for UnlockWalletCommand
 /// </summary>
-public class UnlockWalletCommandHandler : IRequestHandler<UnlockWalletCommand>
+public class UnlockWalletCommandHandler : IRequestHandler<UnlockWalletCommand, Unit>
 {
     private readonly IWalletService _walletService;
     private readonly ILogger<UnlockWalletCommandHandler> _logger;
@@ -20,12 +20,14 @@ public class UnlockWalletCommandHandler : IRequestHandler<UnlockWalletCommand>
         _logger = logger;
     }
 
-    public async Task Handle(UnlockWalletCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(UnlockWalletCommand request, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Unlocking wallet for user {UserId}", request.UserId);
 
         await _walletService.UnlockWalletAsync(request.UserId, cancellationToken);
 
         _logger.LogInformation("Wallet unlocked for user {UserId}", request.UserId);
+
+        return Unit.Value;
     }
 }

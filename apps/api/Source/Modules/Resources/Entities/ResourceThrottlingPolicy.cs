@@ -41,7 +41,7 @@ public class ResourceThrottlingPolicy : EntityBase
     /// <summary>
     ///     Tenant this policy applies to
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     ///     Type of resource being throttled
@@ -112,7 +112,7 @@ public class ResourceThrottlingPolicy : EntityBase
         var excessPercentage = usagePercentage - ThrottlingThresholdPercent;
         var maxExcess = 100 - ThrottlingThresholdPercent;
         var delayFactor = excessPercentage / maxExcess;
-        
+
         // Max delay of 5 seconds, scaled by degradation factor
         return (int)(5000 * delayFactor * (double)DegradationFactor);
     }
