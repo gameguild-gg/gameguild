@@ -1,7 +1,7 @@
 using GameGuild.Database;
 using GameGuild.CQRS;
 using System.Text.Json;
-using GameGuild.Modules.Resources.Contexts;
+using GameGuild.Database;
 using GameGuild.Modules.Resources.DTOs;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Resources.Queries;

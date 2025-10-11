@@ -72,16 +72,3 @@ public record EnableTenantWebhookCommand(
 public record DisableTenantWebhookCommand(
     Guid WebhookId
 ) : IRequest<Result<TenantWebhook>>;
-
-// DTOs
-public record WebhookStatistics(
-    Guid WebhookId,
-    int TotalDeliveries,
-    int SuccessfulDeliveries,
-    int FailedDeliveries,
-    int PendingDeliveries,
-    double SuccessRate,
-    DateTime? LastTriggeredAt,
-    DateTime? LastSuccessAt,
-    DateTime? LastFailureAt
-);

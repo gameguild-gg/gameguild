@@ -16,28 +16,25 @@ public class RegisterTenantWebhookHandler : IRequestHandler<RegisterTenantWebhoo
         _repository = repository;
     }
 
-    public async Task<TenantWebhook> Handle(RegisterTenantWebhookCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TenantWebhook>> Handle(RegisterTenantWebhookCommand request, CancellationToken cancellationToken)
     {
         var webhook = new TenantWebhook
         {
             Id = Guid.NewGuid(),
             TenantId = request.TenantId,
-            Name = request.Name,
             Url = request.Url,
-            EventTypes = request.EventTypes.Select(e => e.ToString()).ToArray(),
+            EventType = request.EventType,
             Secret = request.Secret ?? Guid.NewGuid().ToString("N"),
             IsActive = true,
-            RetryPolicy = request.RetryPolicy ?? TenantWebhookRetryPolicy.Exponential,
-            MaxRetries = request.MaxRetries ?? 3,
-            TimeoutSeconds = request.TimeoutSeconds ?? 30,
-            Headers = request.Headers ?? new Dictionary<string, string>(),
+            RetryCount = request.RetryCount,
+            TimeoutSeconds = request.TimeoutSeconds,
+            Headers = request.Headers,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
-        webhook.ValidateWebhook();
-
-        return await _repository.CreateAsync(webhook, cancellationToken);
+        var result = await _repository.CreateAsync(webhook, cancellationToken);
+        return Result<TenantWebhook>.Success(result);
     }
 }
 

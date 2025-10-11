@@ -1,4 +1,5 @@
 using GameGuild.Core.Domain;
+using GameGuild.Modules.Audit.Enums;
 
 namespace GameGuild.Modules.Audit.Entities;
 
@@ -126,18 +127,6 @@ public enum ExportFormat
     Csv = 1,
     Xml = 2,
     Parquet = 3
-}
-
-public enum ComplianceFramework
-{
-    SOC2 = 0,
-    ISO27001 = 1,
-    GDPR = 2,
-    HIPAA = 3,
-    PCI_DSS = 4,
-    CCPA = 5,
-    FedRAMP = 6,
-    NIST = 7
 }
 
 /// <summary>

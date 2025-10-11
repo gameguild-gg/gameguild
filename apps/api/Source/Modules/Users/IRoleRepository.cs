@@ -1,4 +1,5 @@
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Users.Entities;
 
 namespace GameGuild.Modules.Users;
 

@@ -3,6 +3,7 @@ using System.Text;
 using GameGuild.Helpers;
 using GameGuild.Core.Repositories;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Users.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Modules.Users.Services;
