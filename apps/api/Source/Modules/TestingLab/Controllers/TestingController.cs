@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using GameGuild.Core.Domain.Permissions;
 using GameGuild.Modules.Permissions;
+using GameGuild.Modules.TestingLab.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 

@@ -1,3 +1,4 @@
+using GameGuild.Modules.TestingLab.Entities;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Users;
