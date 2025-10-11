@@ -7,6 +7,8 @@ using GameGuild.Database;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Products.Commands;
 using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
