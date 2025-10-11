@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Source.Modules.Products.Models;
+﻿namespace GameGuild.Modules.Products.Models;
 
 /// <summary> EntityBase Framework configuration for PromoCode entity </summary>
 public class PromoCodeConfiguration : IEntityTypeConfiguration<PromoCode> {
