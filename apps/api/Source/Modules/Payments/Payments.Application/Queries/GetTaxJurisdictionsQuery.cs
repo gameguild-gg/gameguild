@@ -1,4 +1,4 @@
-using GameGuild.Modules.Payments.Entities;
+using GameGuild.Modules.Payments.Domain.Entities;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Payments.Queries;
