@@ -16,7 +16,7 @@ namespace GameGuild.Source.Database;
 /// Database seeder for initial data setup following Clean Architecture principles.
 /// Handles creation of essential system data including default tenant, admin user, and permissions.
 /// </summary>
-public class DatabaseSeeder(ApplicationDbContext context, IPermissionService permissionService, IModulePermissionService modulePermissionService, IUserService userService, ITenantService tenantService, ILogger<DatabaseSeeder> logger) : IDatabaseSeeder {
+public class DatabaseSeeder(ApplicationDbContext context, IPermissionService permissionService, IUserService userService, ITenantService tenantService, ILogger<DatabaseSeeder> logger) : IDatabaseSeeder {
   /// <summary>
   /// Main seeding method that orchestrates all database initialization.
   /// Creates the default GameGuild tenant, admin user, and essential permissions.
@@ -35,7 +35,8 @@ public class DatabaseSeeder(ApplicationDbContext context, IPermissionService per
       // await SeedTestingLabDefaultPermissionsAsync();
 
       // Seed module-based permission roles
-      await modulePermissionService.EnsureDefaultRolesExistAsync();
+      // TODO: Implement IModulePermissionService or find replacement
+      // await modulePermissionService.EnsureDefaultRolesExistAsync();
 
       // Fix existing projects without slugs
       await FixProjectsWithoutSlugsAsync();
