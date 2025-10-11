@@ -1,8 +1,8 @@
 using GameGuild.Modules.Programs;
-using GameGuild.Source.Modules.Products.Models;
+using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs.GraphQL;
 
-namespace GameGuild.Source.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary>
 /// GraphQL type definition for ProductProgram junction entity

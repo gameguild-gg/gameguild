@@ -3,7 +3,7 @@ using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Source.Modules.Products.Models;
+namespace GameGuild.Modules.Products.Models;
 
 /// <summary> Resource-specific permissions for Product entities (Layer 3 of DAC permission system) Provides granular permission control for individual products </summary>
 [Table("ProductPermissions")]

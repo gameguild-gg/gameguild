@@ -1,9 +1,9 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
-using GameGuild.Source.Modules.Products.Models;
+using GameGuild.Modules.Products.Models;
 
 
-namespace GameGuild.Source.Modules.Products.Commands;
+namespace GameGuild.Modules.Products.Commands;
 
 /// <summary> Command to create a new product </summary>
 public record CreateProductCommand : IRequest<CreateProductResult> {

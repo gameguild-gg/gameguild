@@ -1,12 +1,12 @@
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Contents;
-using GameGuild.Source.Modules.Products.Commands;
-using GameGuild.Source.Modules.Products.Models;
+using GameGuild.Modules.Products.Commands;
+using GameGuild.Modules.Products.Models;
 using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
 
 
-namespace GameGuild.Source.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> GraphQL mutations for Product module using CQRS pattern </summary>
 [ExtendObjectType<Mutation>]
