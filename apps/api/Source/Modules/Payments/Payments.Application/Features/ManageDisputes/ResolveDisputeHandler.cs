@@ -1,10 +1,11 @@
 using GameGuild.Modules.Payments.Payments.Application.Services;
 using GameGuild.CQRS;
+using MediatR;
 
 namespace GameGuild.Modules.Payments.Payments.Application.Features.ManageDisputes;
 
 /// <summary>Handler for ResolveDisputeCommand</summary>
-public class ResolveDisputeHandler : IRequestHandler<ResolveDisputeCommand>
+public class ResolveDisputeHandler : IRequestHandler<ResolveDisputeCommand, Unit>
 {
     private readonly IDisputeService _disputeService;
 
@@ -13,7 +14,7 @@ public class ResolveDisputeHandler : IRequestHandler<ResolveDisputeCommand>
         _disputeService = disputeService;
     }
 
-    public async Task Handle(ResolveDisputeCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(ResolveDisputeCommand request, CancellationToken cancellationToken)
     {
         await _disputeService.ResolveDisputeAsync(
             request.DisputeId,
@@ -21,5 +22,7 @@ public class ResolveDisputeHandler : IRequestHandler<ResolveDisputeCommand>
             request.Notes,
             request.ResolvedBy,
             cancellationToken);
+
+        return Unit.Value;
     }
 }

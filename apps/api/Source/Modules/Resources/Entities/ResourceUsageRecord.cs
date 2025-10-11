@@ -9,7 +9,7 @@ public class ResourceUsageRecord : EntityBase
     public ResourceUsageType Type { get; set; }
 
     /// <summary> Tenant this usage record belongs to </summary>
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary> Usage count for this period </summary>
     public long Count { get; set; }
@@ -66,7 +66,14 @@ public class ResourceUsageRecord : EntityBase
 
         return new ResourceUsageRecord
         {
-            Type = type, TenantId = tenantId, Count = count, PeriodStart = startOfMonth, PeriodEnd = endOfMonth, AveragePerDay = (double) count / daysInMonth, PeakUsage = peakUsage, PeakUsageDate = peakDate
+            Type = type,
+            TenantId = tenantId,
+            Count = count,
+            PeriodStart = startOfMonth,
+            PeriodEnd = endOfMonth,
+            AveragePerDay = (double)count / daysInMonth,
+            PeakUsage = peakUsage,
+            PeakUsageDate = peakDate
         };
     }
 }
