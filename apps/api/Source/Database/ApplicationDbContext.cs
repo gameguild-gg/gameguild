@@ -141,6 +141,11 @@ public class ApplicationDbContext : DbContext {
 
     public DbSet<SessionProject> SessionProjects => Set<SessionProject>();
 
+    // Subscriptions Module
+    public DbSet<GameGuild.Modules.Subscriptions.Entities.Subscription> Subscriptions => Set<GameGuild.Modules.Subscriptions.Entities.Subscription>();
+
+    public DbSet<GameGuild.Modules.Subscriptions.SubscriptionPlans.Entities.SubscriptionPlan> SubscriptionPlans => Set<GameGuild.Modules.Subscriptions.SubscriptionPlans.Entities.SubscriptionPlan>();
+
     #endregion
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
