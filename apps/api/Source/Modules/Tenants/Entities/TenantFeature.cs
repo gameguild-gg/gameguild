@@ -30,7 +30,7 @@ public class TenantFeature : EntityBase, ITenantable
     ///     ID of the tenant this feature belongs to
     /// </summary>
     [Required]
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary>
     ///     Navigation property to the tenant

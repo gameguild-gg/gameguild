@@ -13,7 +13,7 @@ public class TenantStatistics : EntityBase
 {
     /// <summary> ID of the tenant these statistics belong to </summary>
     [Required]
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary> Navigation property to the tenant </summary>
     [ForeignKey(nameof(TenantId))]

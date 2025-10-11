@@ -7,7 +7,7 @@ namespace GameGuild.Modules.Experiments.Entities;
 /// </summary>
 public class PricingExperiment : EntityBase
 {
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public ExperimentStatus Status { get; set; }

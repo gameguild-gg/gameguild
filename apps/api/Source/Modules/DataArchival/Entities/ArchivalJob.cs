@@ -8,11 +8,6 @@ namespace GameGuild.Modules.DataArchival.Entities;
 public class ArchivalJob : EntityBase
 {
     /// <summary>
-    /// Gets or sets the unique identifier for the archival job.
-    /// </summary>
-    public Guid Id { get; set; }
-
-    /// <summary>
     /// Gets or sets the archival policy ID.
     /// </summary>
     public Guid ArchivalPolicyId { get; set; }

@@ -9,7 +9,7 @@ public class ResourceUsageRecord : EntityBase
     public ResourceUsageType Type { get; set; }
 
     /// <summary> Tenant this usage record belongs to </summary>
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary> Usage count for this period </summary>
     public long Count { get; set; }

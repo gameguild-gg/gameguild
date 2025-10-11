@@ -10,7 +10,7 @@ public class ServiceLevelObjective : EntityBase
     /// <summary>
     /// Gets or sets the tenant ID this SLO belongs to.
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Gets or sets the name of the SLO.

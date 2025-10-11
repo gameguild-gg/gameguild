@@ -9,7 +9,7 @@ public class UsageRetentionPolicy : EntityBase
     /// <summary>
     /// Tenant ID (null for global policies)
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Resource type this policy applies to
@@ -96,7 +96,7 @@ public class ReservedCapacity : EntityBase
     /// <summary>
     /// Tenant ID
     /// </summary>
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary>
     /// Resource type

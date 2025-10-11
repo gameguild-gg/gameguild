@@ -52,7 +52,7 @@ public class FeedbackQualityRating : EntityBase
     /// <summary>
     /// Whether this rating is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Whether this is a positive quality rating

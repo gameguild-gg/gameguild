@@ -44,7 +44,7 @@ public class TestingFeedbackForm : EntityBase
     /// <summary>
     /// Version number of this form
     /// </summary>
-    public int Version { get; set; } = 1;
+    public override int Version { get; set; } = 1;
 
     /// <summary>
     /// Tags for categorization
@@ -62,7 +62,7 @@ public class TestingFeedbackForm : EntityBase
     /// <summary>
     /// Whether this form is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Number of feedback submissions
