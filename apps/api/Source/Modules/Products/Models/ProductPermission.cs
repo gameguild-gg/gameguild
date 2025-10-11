@@ -3,7 +3,7 @@ using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
+using ProductDomainEntity = GameGuild.Modules.Products.Domain.Entities.Product;
 namespace GameGuild.Modules.Products.Models;
 
 /// <summary> Resource-specific permissions for Product entities (Layer 3 of DAC permission system) Provides granular permission control for individual products </summary>
@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Products.Models;
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_ProductPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_ProductPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_ProductPermissions_Expiration")]
-public class ProductPermission : ResourcePermission<ProductEntity> {
+public class ProductPermission : ResourcePermission<ProductDomainEntity> {
   // Public parameterless constructor for EF and GraphQL
   public ProductPermission() : base() { }
 
