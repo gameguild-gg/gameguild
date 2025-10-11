@@ -1,3 +1,4 @@
+using GameGuild.Modules.TestingLab.Entities;
 namespace GameGuild.Modules.TestingLab;
 
 public class GetTestingRequestQueryHandler : ITestingLabQueryHandler<GetTestingRequestQuery, TestingRequest?> {
