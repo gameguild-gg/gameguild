@@ -1,11 +1,10 @@
 using GameGuild.Modules.Payments.Payments.Application.Services;
 using GameGuild.CQRS;
-using MediatR;
 
 namespace GameGuild.Modules.Payments.Payments.Application.Features.ManageDisputes;
 
 /// <summary>Handler for UpdateDisputeStatusCommand</summary>
-public class UpdateDisputeStatusHandler : IRequestHandler<UpdateDisputeStatusCommand, Unit>
+public class UpdateDisputeStatusHandler : ICommandHandler<UpdateDisputeStatusCommand, Unit>
 {
     private readonly IDisputeService _disputeService;
 
