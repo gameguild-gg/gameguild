@@ -68,7 +68,7 @@ public class UpdateTenantArchivalPolicyHandler : IRequestHandler<UpdateTenantArc
 }
 
 // Archive Tenant Handler
-public class ArchiveTenantHandler : IRequestHandler<ArchiveTenantCommand, Result<TenantArchiveRecord>>
+public class ArchiveTenantHandler : IRequestHandler<ArchiveTenantCommand, Result<TenantArchiveDto>>
 {
     private readonly ITenantArchivalService _archivalService;
     private readonly ILogger<ArchiveTenantHandler> _logger;
@@ -79,25 +79,25 @@ public class ArchiveTenantHandler : IRequestHandler<ArchiveTenantCommand, Result
         _logger = logger;
     }
 
-    public async Task<Result<TenantArchiveRecord>> Handle(ArchiveTenantCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TenantArchiveDto>> Handle(ArchiveTenantCommand request, CancellationToken cancellationToken)
     {
         try
         {
             var record = await _archivalService.ArchiveTenantAsync(
                 request.TenantId, request.ArchivedBy, request.Reason);
 
-            return Result<TenantArchiveRecord>.Success(record);
+            return Result<TenantArchiveDto>.Success(record);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error archiving tenant {TenantId}", request.TenantId);
-            return Result<TenantArchiveRecord>.Failure($"Error archiving tenant: {ex.Message}");
+            return Result<TenantArchiveDto>.Failure($"Error archiving tenant: {ex.Message}");
         }
     }
 }
 
 // Restore Tenant Handler
-public class RestoreTenantFromArchiveHandler : IRequestHandler<RestoreTenantFromArchiveCommand, Result<TenantArchiveRecord>>
+public class RestoreTenantFromArchiveHandler : IRequestHandler<RestoreTenantFromArchiveCommand, Result<TenantArchiveDto>>
 {
     private readonly ITenantArchivalService _archivalService;
     private readonly ILogger<RestoreTenantFromArchiveHandler> _logger;
@@ -108,19 +108,19 @@ public class RestoreTenantFromArchiveHandler : IRequestHandler<RestoreTenantFrom
         _logger = logger;
     }
 
-    public async Task<Result<TenantArchiveRecord>> Handle(RestoreTenantFromArchiveCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TenantArchiveDto>> Handle(RestoreTenantFromArchiveCommand request, CancellationToken cancellationToken)
     {
         try
         {
             var record = await _archivalService.RestoreTenantAsync(
                 request.ArchiveRecordId, request.RestoredBy);
 
-            return Result<TenantArchiveRecord>.Success(record);
+            return Result<TenantArchiveDto>.Success(record);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error restoring tenant from archive {ArchiveRecordId}", request.ArchiveRecordId);
-            return Result<TenantArchiveRecord>.Failure($"Error restoring tenant: {ex.Message}");
+            return Result<TenantArchiveDto>.Failure($"Error restoring tenant: {ex.Message}");
         }
     }
 }
@@ -238,7 +238,7 @@ public class GetTenantArchivalPolicyHandler : IRequestHandler<GetTenantArchivalP
 }
 
 // Get Archive Record Handler
-public class GetTenantArchiveRecordHandler : IRequestHandler<GetTenantArchiveRecordQuery, Result<TenantArchiveRecord>>
+public class GetTenantArchiveRecordHandler : IRequestHandler<GetTenantArchiveRecordQuery, Result<TenantArchiveDto>>
 {
     private readonly ITenantArchivalRepository _repository;
     private readonly ILogger<GetTenantArchiveRecordHandler> _logger;
@@ -249,21 +249,21 @@ public class GetTenantArchiveRecordHandler : IRequestHandler<GetTenantArchiveRec
         _logger = logger;
     }
 
-    public async Task<Result<TenantArchiveRecord>> Handle(GetTenantArchiveRecordQuery request, CancellationToken cancellationToken)
+    public async Task<Result<TenantArchiveDto>> Handle(GetTenantArchiveRecordQuery request, CancellationToken cancellationToken)
     {
         try
         {
             var record = await _repository.GetArchiveRecordByTenantIdAsync(request.TenantId, cancellationToken);
             if (record == null)
             {
-                return Result<TenantArchiveRecord>.Failure($"No archive record found for tenant {request.TenantId}");
+                return Result<TenantArchiveDto>.Failure($"No archive record found for tenant {request.TenantId}");
             }
-            return Result<TenantArchiveRecord>.Success(record);
+            return Result<TenantArchiveDto>.Success(record);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting archive record for tenant {TenantId}", request.TenantId);
-            return Result<TenantArchiveRecord>.Failure($"Error getting archive record: {ex.Message}");
+            return Result<TenantArchiveDto>.Failure($"Error getting archive record: {ex.Message}");
         }
     }
 }

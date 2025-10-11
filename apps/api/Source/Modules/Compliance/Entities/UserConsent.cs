@@ -23,11 +23,6 @@ public sealed class UserConsent : EntityBase
     public Guid PolicyVersionId { get; set; }
 
     /// <summary>
-    /// Gets or sets the tenant ID for multi-tenant support.
-    /// </summary>
-    public override Guid? TenantId { get; set; }
-
-    /// <summary>
     /// Gets or sets whether the user consented (true) or declined (false).
     /// </summary>
     public bool IsConsented { get; set; }
