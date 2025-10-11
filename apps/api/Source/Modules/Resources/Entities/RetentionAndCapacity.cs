@@ -96,7 +96,7 @@ public class ReservedCapacity : EntityBase
     /// <summary>
     /// Tenant ID
     /// </summary>
-    public override Guid TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Resource type

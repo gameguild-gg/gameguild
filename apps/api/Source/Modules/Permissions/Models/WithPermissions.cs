@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
-using GameGuild.Modules.Tenants.Entities;
 
 // do not remove this, it's needed for IQueryable extensions
 

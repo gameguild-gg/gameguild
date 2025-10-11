@@ -10,7 +10,7 @@ public class ErrorEvent : EntityBase
     /// <summary>
     /// Gets or sets the tenant ID this error belongs to.
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     /// Gets or sets the unique fingerprint for grouping similar errors.

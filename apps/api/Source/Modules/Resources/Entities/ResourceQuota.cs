@@ -15,7 +15,7 @@ public class ResourceQuota : EntityBase
     /// <summary>
     ///     Tenant this quota applies to
     /// </summary>
-    public override Guid TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     ///     Soft limit amount (warning threshold)

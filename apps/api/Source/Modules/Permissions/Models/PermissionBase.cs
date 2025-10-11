@@ -20,7 +20,7 @@ public abstract class PermissionBase : EntityBase
     public Guid? UserId { get; protected set; }
 
     /// <summary> Tenant ID (null means it's a global permission) </summary>
-    public override Guid? TenantId { get; protected set; }
+    public new Guid? TenantId { get; protected set; }
 
     /// <summary> Permission flags for bits 0-63 </summary>
     [Column(TypeName = "bigint")]

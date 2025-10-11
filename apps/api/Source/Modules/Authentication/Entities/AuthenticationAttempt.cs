@@ -74,7 +74,7 @@ public class AuthenticationAttempt : EntityBase
     /// <summary>
     /// Tenant ID if provided in the request
     /// </summary>
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     /// Whether this attempt was flagged as suspicious
