@@ -1,0 +1,638 @@
+'use client';
+
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import {
+  Activity,
+  BookOpen,
+  CheckSquare,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Edit,
+  Eye,
+  EyeOff,
+  File,
+  FileText,
+  Folder,
+  FolderOpen,
+  GripVertical,
+  HelpCircle,
+  MoreHorizontal,
+  Plus,
+  Redo,
+  Trash2,
+  Undo,
+  Video,
+} from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { type CourseLesson, type CourseModule, useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
+
+// Content type icons
+const CONTENT_TYPE_ICONS = {
+  text: FileText,
+  video: Video,
+  quiz: HelpCircle,
+  assignment: CheckSquare,
+  file: File,
+  interactive: Activity,
+} as const;
+
+// Content type colors
+const CONTENT_TYPE_COLORS = {
+  text: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  video: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  quiz: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+  assignment: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  file: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+  interactive: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
+} as const;
+
+interface ModuleFormData {
+  title: string;
+  description: string;
+  visibility: 'public' | 'private' | 'premium';
+  status: 'draft' | 'published' | 'archived';
+  sortOrder: number;
+  estimatedDuration: number;
+}
+
+interface LessonFormData {
+  title: string;
+  description: string;
+  type: 'text' | 'video' | 'quiz' | 'assignment' | 'file' | 'interactive';
+  visibility: 'public' | 'private' | 'premium';
+  status: 'draft' | 'published' | 'archived';
+  isRequired: boolean;
+  duration: number;
+  sortOrder: number;
+}
+
+const defaultModuleData: ModuleFormData = {
+  title: '',
+  description: '',
+  visibility: 'public',
+  status: 'draft',
+  sortOrder: 0,
+  estimatedDuration: 60,
+};
+
+const defaultLessonData: LessonFormData = {
+  title: '',
+  description: '',
+  type: 'text',
+  visibility: 'public',
+  status: 'draft',
+  isRequired: true,
+  duration: 15,
+  sortOrder: 0,
+};
+
+export function ContentStructureSection() {
+  const { state, dispatch } = useCourseEditor();
+  const [showModuleDialog, setShowModuleDialog] = useState(false);
+  const [showLessonDialog, setShowLessonDialog] = useState(false);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [moduleFormData, setModuleFormData] = useState<ModuleFormData>(defaultModuleData);
+  const [lessonFormData, setLessonFormData] = useState<LessonFormData>(defaultLessonData);
+
+  // Handle adding a new module
+  const handleAddModule = () => {
+    if (!moduleFormData.title.trim()) return;
+
+    const newModule = {
+      title: moduleFormData.title,
+      description: moduleFormData.description,
+      sortOrder: state.content.modules.length,
+      status: moduleFormData.status,
+      visibility: moduleFormData.visibility,
+      lessons: [],
+      submodules: [],
+      estimatedDuration: moduleFormData.estimatedDuration,
+    };
+
+    dispatch({ type: 'ADD_MODULE', module: newModule });
+    setModuleFormData(defaultModuleData);
+    setShowModuleDialog(false);
+  };
+
+  // Handle adding a new lesson
+  const handleAddLesson = () => {
+    if (!lessonFormData.title.trim() || !selectedModuleId) return;
+
+    const newLesson = {
+      title: lessonFormData.title,
+      description: lessonFormData.description,
+      type: lessonFormData.type,
+      content: {},
+      duration: lessonFormData.duration,
+      sortOrder: 0, // Will be calculated in the reducer
+      status: lessonFormData.status,
+      visibility: lessonFormData.visibility,
+      isRequired: lessonFormData.isRequired,
+      prerequisites: [],
+      completionCriteria: {
+        type: 'view' as const,
+      },
+    };
+
+    dispatch({ type: 'ADD_LESSON', moduleId: selectedModuleId, lesson: newLesson });
+    setLessonFormData(defaultLessonData);
+    setShowLessonDialog(false);
+    setSelectedModuleId(null);
+  };
+
+  // Handle module actions
+  const handleModuleAction = (moduleId: string, action: string) => {
+    switch (action) {
+      case 'edit':
+        // TODO: Open edit module dialog
+        break;
+      case 'delete':
+        dispatch({ type: 'REMOVE_MODULE', moduleId });
+        break;
+      case 'duplicate':
+        // TODO: Implement module duplication
+        break;
+      case 'toggle-visibility':
+        dispatch({
+          type: 'UPDATE_MODULE',
+          moduleId,
+          updates: {
+            visibility: state.content.modules.find((m) => m.id === moduleId)?.visibility === 'public' ? 'private' : 'public',
+          },
+        });
+        break;
+      case 'toggle-expanded':
+        dispatch({ type: 'TOGGLE_MODULE_EXPANDED', moduleId });
+        break;
+    }
+  };
+
+  // Handle lesson actions
+  const handleLessonAction = (lessonId: string, action: string) => {
+    switch (action) {
+      case 'edit':
+        // TODO: Open lesson editor
+        break;
+      case 'delete':
+        dispatch({ type: 'REMOVE_LESSON', lessonId });
+        break;
+      case 'duplicate':
+        dispatch({ type: 'DUPLICATE_LESSON', lessonId });
+        break;
+      case 'toggle-visibility':
+        const lesson = state.content.modules.flatMap((m) => m.lessons).find((l) => l.id === lessonId);
+        if (lesson) {
+          dispatch({
+            type: 'UPDATE_LESSON',
+            lessonId,
+            updates: {
+              visibility: lesson.visibility === 'public' ? 'private' : 'public',
+            },
+          });
+        }
+        break;
+    }
+  };
+
+  // Render lesson item
+  const renderLesson = (lesson: CourseLesson, moduleId: string) => {
+    const IconComponent = CONTENT_TYPE_ICONS[lesson.type];
+    const colorClass = CONTENT_TYPE_COLORS[lesson.type];
+
+    return (
+      <div
+        key={lesson.id}
+        className={`group flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-sm ${
+          state.content.selectedItems.includes(lesson.id) ? 'bg-primary/5 border-primary/20' : 'bg-background border-border hover:border-border/60'
+        }`}
+      >
+        {/* Drag handle */}
+        <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab" />
+
+        {/* Content type icon */}
+        <div className={`p-1.5 rounded ${colorClass}`}>
+          <IconComponent className="h-3 w-3" />
+        </div>
+
+        {/* Lesson info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h4 className="text-sm font-medium truncate">{lesson.title}</h4>
+            {lesson.isRequired && (
+              <Badge variant="secondary" className="text-xs">
+                Required
+              </Badge>
+            )}
+            {lesson.visibility === 'private' && <EyeOff className="h-3 w-3 text-muted-foreground" />}
+          </div>
+          {lesson.description && <p className="text-xs text-muted-foreground truncate mt-1">{lesson.description}</p>}
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant="outline" className="text-xs">
+              {lesson.type}
+            </Badge>
+            <span className="text-xs text-muted-foreground">{lesson.duration}m</span>
+            <Badge variant={lesson.status === 'published' ? 'default' : 'secondary'} className="text-xs">
+              {lesson.status}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => handleLessonAction(lesson.id, 'edit')}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Lesson
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleLessonAction(lesson.id, 'duplicate')}>
+              <Copy className="h-4 w-4 mr-2" />
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleLessonAction(lesson.id, 'toggle-visibility')}>
+              {lesson.visibility === 'public' ? (
+                <>
+                  <EyeOff className="h-4 w-4 mr-2" />
+                  Make Private
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Make Public
+                </>
+              )}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => handleLessonAction(lesson.id, 'delete')} className="text-destructive focus:text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    );
+  };
+
+  // Render module item
+  const renderModule = (module: CourseModule) => {
+    const isExpanded = module.isExpanded ?? false;
+    const lessonCount = module.lessons?.length ?? 0;
+    const totalDuration = module.lessons?.reduce((sum, lesson) => sum + lesson.duration, 0) ?? 0;
+
+    return (
+      <div key={module.id} className="border border-border rounded-lg overflow-hidden">
+        {/* Module header */}
+        <div
+          className={`group flex items-center gap-3 p-4 transition-all hover:bg-muted/30 ${
+            state.content.selectedItems.includes(module.id) ? 'bg-primary/5 border-primary/20' : 'bg-background'
+          }`}
+        >
+          {/* Drag handle */}
+          <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab" />
+
+          {/* Expand/collapse button */}
+          <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => handleModuleAction(module.id, 'toggle-expanded')}>
+            {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          </Button>
+
+          {/* Module icon */}
+          <div className="p-1.5 rounded bg-primary/10 text-primary">{isExpanded ? <FolderOpen className="h-4 w-4" /> : <Folder className="h-4 w-4" />}</div>
+
+          {/* Module info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium truncate">{module.title}</h3>
+              {module.visibility === 'private' && <EyeOff className="h-4 w-4 text-muted-foreground" />}
+            </div>
+            {module.description && <p className="text-sm text-muted-foreground truncate mt-1">{module.description}</p>}
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-xs text-muted-foreground">
+                {lessonCount} lesson{lessonCount !== 1 ? 's' : ''}
+              </span>
+              <span className="text-xs text-muted-foreground">~{Math.round(totalDuration)}m</span>
+              <Badge variant={module.status === 'published' ? 'default' : 'secondary'} className="text-xs">
+                {module.status}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Add lesson button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={() => {
+              setSelectedModuleId(module.id);
+              setShowLessonDialog(true);
+            }}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Lesson
+          </Button>
+
+          {/* Module actions */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => handleModuleAction(module.id, 'edit')}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Module
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleModuleAction(module.id, 'duplicate')}>
+                <Copy className="h-4 w-4 mr-2" />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleModuleAction(module.id, 'toggle-visibility')}>
+                {module.visibility === 'public' ? (
+                  <>
+                    <EyeOff className="h-4 w-4 mr-2" />
+                    Make Private
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Make Public
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleModuleAction(module.id, 'delete')} className="text-destructive focus:text-destructive">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Module lessons (when expanded) */}
+        {isExpanded && (
+          <div className="p-4 pt-0 space-y-2 bg-muted/20">
+            {module.lessons && module.lessons.length > 0 ? (
+              module.lessons.map((lesson) => renderLesson(lesson, module.id))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No lessons yet</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => {
+                    setSelectedModuleId(module.id);
+                    setShowLessonDialog(true);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First Lesson
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Course Content</h2>
+          <p className="text-sm text-muted-foreground">Organize your course into modules and lessons</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Undo/Redo */}
+          <Button variant="outline" size="sm" disabled={!state.undoRedo.canUndo} onClick={() => dispatch({ type: 'UNDO' })}>
+            <Undo className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="sm" disabled={!state.undoRedo.canRedo} onClick={() => dispatch({ type: 'REDO' })}>
+            <Redo className="h-4 w-4" />
+          </Button>
+
+          {/* Add Module Button */}
+          <Button onClick={() => setShowModuleDialog(true)} className="bg-gradient-to-r from-primary to-chart-2">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Module
+          </Button>
+        </div>
+      </div>
+
+      {/* Content */}
+      {state.content.modules.length > 0 ? (
+        <div className="space-y-4">{state.content.modules.map(renderModule)}</div>
+      ) : (
+        <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+          <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
+          <h3 className="text-lg font-medium mb-2">No modules yet</h3>
+          <p className="text-muted-foreground mb-4">Start building your course by adding your first module</p>
+          <Button onClick={() => setShowModuleDialog(true)} className="bg-gradient-to-r from-primary to-chart-2">
+            <Plus className="h-4 w-4 mr-2" />
+            Add First Module
+          </Button>
+        </div>
+      )}
+
+      {/* Add Module Dialog */}
+      <Dialog open={showModuleDialog} onOpenChange={setShowModuleDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Module</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                placeholder="Module title..."
+                value={moduleFormData.title}
+                onChange={(e) => setModuleFormData({ ...moduleFormData, title: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                placeholder="Brief description of this module..."
+                value={moduleFormData.description}
+                onChange={(e) => setModuleFormData({ ...moduleFormData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Visibility</label>
+                <select
+                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                  value={moduleFormData.visibility}
+                  onChange={(e) =>
+                    setModuleFormData({
+                      ...moduleFormData,
+                      visibility: e.target.value as 'public' | 'private' | 'premium',
+                    })
+                  }
+                >
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                  <option value="premium">Premium</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <select
+                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                  value={moduleFormData.status}
+                  onChange={(e) =>
+                    setModuleFormData({
+                      ...moduleFormData,
+                      status: e.target.value as 'draft' | 'published' | 'archived',
+                    })
+                  }
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowModuleDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddModule} disabled={!moduleFormData.title.trim()}>
+                Add Module
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Lesson Dialog */}
+      <Dialog open={showLessonDialog} onOpenChange={setShowLessonDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Lesson</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                placeholder="Lesson title..."
+                value={lessonFormData.title}
+                onChange={(e) => setLessonFormData({ ...lessonFormData, title: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                placeholder="Brief description of this lesson..."
+                value={lessonFormData.description}
+                onChange={(e) => setLessonFormData({ ...lessonFormData, description: e.target.value })}
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium">Content Type</label>
+              <select
+                className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                value={lessonFormData.type}
+                onChange={(e) =>
+                  setLessonFormData({
+                    ...lessonFormData,
+                    type: e.target.value as 'text' | 'video' | 'quiz' | 'assignment' | 'file' | 'interactive',
+                  })
+                }
+              >
+                <option value="text">Text/Article</option>
+                <option value="video">Video</option>
+                <option value="quiz">Quiz</option>
+                <option value="assignment">Assignment</option>
+                <option value="file">File/Download</option>
+                <option value="interactive">Interactive</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Duration (minutes)</label>
+                <Input
+                  type="number"
+                  min="1"
+                  value={lessonFormData.duration}
+                  onChange={(e) =>
+                    setLessonFormData({
+                      ...lessonFormData,
+                      duration: parseInt(e.target.value) || 15,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <select
+                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                  value={lessonFormData.status}
+                  onChange={(e) =>
+                    setLessonFormData({
+                      ...lessonFormData,
+                      status: e.target.value as 'draft' | 'published' | 'archived',
+                    })
+                  }
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={lessonFormData.isRequired}
+                  onCheckedChange={(checked) =>
+                    setLessonFormData({
+                      ...lessonFormData,
+                      isRequired: checked,
+                    })
+                  }
+                />
+                <label className="text-sm font-medium">Required lesson</label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowLessonDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddLesson} disabled={!lessonFormData.title.trim()}>
+                Add Lesson
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
