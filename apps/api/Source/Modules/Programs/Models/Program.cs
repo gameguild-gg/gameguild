@@ -6,6 +6,7 @@ using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Programs;
+using GameGuild.Modules.Programs.Models;
 
 
 namespace GameGuild.Modules.Programs;
@@ -27,7 +28,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(Slug))]
 [Index(nameof(Category))]
 [Index(nameof(Difficulty))]
-public class Program : EntityBase<Guid> {
+public class Program : EntityBase {
   /// <summary>
   /// Thumbnail image URL for program display in listings and cards
   /// </summary>

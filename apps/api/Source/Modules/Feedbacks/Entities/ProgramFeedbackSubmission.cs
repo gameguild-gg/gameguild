@@ -2,6 +2,7 @@ using GameGuild.Modules.Users;
 using System.Text.Json;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs.Entities;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
 namespace GameGuild.Modules.Feedbacks.Entities;
 
@@ -15,8 +16,7 @@ namespace GameGuild.Modules.Feedbacks.Entities;
 [Index(nameof(SubmittedAt))]
 [Index(nameof(IsAnonymous))]
 [Index(nameof(Category))]
-public class ProgramFeedbackSubmission : EntityBase
-{
+public class ProgramFeedbackSubmission : EntityBase {
     public Guid UserId { get; set; }
 
     public Guid ProgramId { get; set; }
@@ -68,32 +68,28 @@ public class ProgramFeedbackSubmission : EntityBase
 
     public virtual Program Program { get; set; } = null!;
 
-    public virtual Product? Product { get; set; }
+    public virtual ProductEntity? Product { get; set; }
 
     public virtual ProgramUser ProgramUser { get; set; } = null!;
 
     // Helper methods for JSON feedback data
-    public T? GetFeedbackResponse<T>(string questionId) where T : class
-    {
+    public T? GetFeedbackResponse<T>(string questionId) where T : class {
         if (string.IsNullOrEmpty(FeedbackData)) return null;
 
-        try
-        {
+        try {
             var json = JsonDocument.Parse(FeedbackData);
 
             if (json.RootElement.TryGetProperty(questionId, out var element))
                 return JsonSerializer.Deserialize<T>(element.GetRawText());
         }
-        catch
-        {
+        catch {
             // Handle JSON parsing errors gracefully
         }
 
         return null;
     }
 
-    public void SetFeedbackResponse<T>(string questionId, T value)
-    {
+    public void SetFeedbackResponse<T>(string questionId, T value) {
         var data = string.IsNullOrEmpty(FeedbackData)
             ? new Dictionary<string, object>()
             : JsonSerializer.Deserialize<Dictionary<string, object>>(FeedbackData) ?? new Dictionary<string, object>();

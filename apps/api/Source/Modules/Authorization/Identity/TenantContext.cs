@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Core.Domain.Identity;
+using GameGuild.Modules.Tenants;
 
 
 namespace GameGuild.Authorization.Identity;

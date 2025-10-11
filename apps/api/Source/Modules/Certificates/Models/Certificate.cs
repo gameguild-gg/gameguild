@@ -1,6 +1,7 @@
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Tenants;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
 namespace GameGuild.Modules.Certificates;
 
@@ -57,7 +58,7 @@ public class Certificate : EntityBase, ITenantable {
   // Navigation properties
   public virtual Programs.Program? Program { get; set; }
 
-  public virtual Product? Product { get; set; }
+  public virtual ProductEntity? Product { get; set; }
 
   public virtual ICollection<UserCertificate> UserCertificates { get; set; } = new List<UserCertificate>();
 

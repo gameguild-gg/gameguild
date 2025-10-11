@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using GameGuild.Core.Domain.Permissions;
 using GameGuild.Services;
+using GameGuild.Modules.Permissions;
+using GameGuild.Modules.Resources;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
