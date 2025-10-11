@@ -15,7 +15,7 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
         var openFeatureContext = ConvertToOpenFeatureContext(context);
-        
+
         return openFeatureContext != null
             ? await featureClient.GetBooleanValueAsync(key, defaultValue, openFeatureContext, cancellationToken: ct).ConfigureAwait(false)
             : await featureClient.GetBooleanValueAsync(key, defaultValue, cancellationToken: ct).ConfigureAwait(false);
@@ -60,11 +60,11 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
             return null;
 
         var builder = OpenFeature.Model.EvaluationContext.Builder();
-        
+
         // Convert our domain context to OpenFeature context
         if (!string.IsNullOrEmpty(context.UserId))
             builder.Set("userId", context.UserId);
-            
+
         if (!string.IsNullOrEmpty(context.SessionId))
             builder.Set("sessionId", context.SessionId);
 
@@ -95,6 +95,34 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
         }
 
         return builder.Build();
+    }
+
+    // IFeatureFlagService interface implementation
+    public Task<bool> IsEnabledAsync(string featureKey, Guid? tenantId = null, CancellationToken cancellationToken = default)
+    {
+        var context = tenantId.HasValue ? new EvaluationContext { ["tenantId"] = tenantId.Value.ToString() } : null;
+        return GetBooleanAsync(featureKey, defaultValue: false, context, cancellationToken);
+    }
+
+    public async Task<Models.FeatureAccessResult> GetFeatureAccessAsync(string featureKey, Guid? tenantId = null, CancellationToken cancellationToken = default)
+    {
+        var isEnabled = await IsEnabledAsync(featureKey, tenantId, cancellationToken);
+        return new Models.FeatureAccessResult { IsEnabled = isEnabled, FeatureKey = featureKey };
+    }
+
+    public Task EnableFeatureAsync(Guid featureFlagId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("EnableFeatureAsync requires database repository implementation");
+    }
+
+    public Task DisableFeatureAsync(Guid featureFlagId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("DisableFeatureAsync requires database repository implementation");
+    }
+
+    public Task<IEnumerable<Entities.FeatureFlag>> GetEnabledFeaturesAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GetEnabledFeaturesAsync requires database repository implementation");
     }
 }
 
