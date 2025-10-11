@@ -24,8 +24,6 @@ namespace GameGuild.Modules.Programs;
 /// with support for hierarchical content organization and flexible grading methods.
 /// </remarks>
 [Table("programs")]
-[Index(nameof(Visibility))]
-[Index(nameof(Status))]
 [Index(nameof(Category))]
 [Index(nameof(Difficulty))]
 public class Program : EntityBase {

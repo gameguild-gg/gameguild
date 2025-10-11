@@ -716,6 +716,10 @@ public class TestingController(ITestService testService) : ControllerBase {
 
   #region Module Permission Integration Endpoints
 
+  // NOTE: IModulePermissionService, UserRoleAssignment, and related types don't exist in this codebase
+  // These endpoints are stubs and have been commented out until the proper permission infrastructure exists
+
+  /*
   /// <summary> Check if current user can perform specific Testing Lab actions </summary>
   [HttpGet("permissions/check")]
   public async Task<ActionResult<TestingLabActionPermissions>> CheckTestingLabPermissions([FromServices] IModulePermissionService modulePermissionService, [FromQuery] Guid? tenantId = null) {
@@ -801,6 +805,7 @@ public class TestingController(ITestService testService) : ControllerBase {
 
     return Ok(users);
   }
+  */
 
   // Helper method to get current user ID
   private Guid GetCurrentUserId() {

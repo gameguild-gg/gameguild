@@ -1,3 +1,4 @@
+using GameGuild.Authorization;
 using GameGuild.GraphQL;
 
 
@@ -7,7 +8,7 @@ namespace GameGuild.Modules.Programs;
 [ExtendObjectType<Query>]
 public class ActivityGradeQueries {
   /// <summary> Get grade for a specific content interaction using CQRS pattern Requires Read permission on the parent Program </summary>
-  [RequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Read, "programId")]
   public async Task<ActivityGrade?> GetActivityGrade(Guid programId, Guid contentInteractionId, [Service] IActivityGradeService activityGradeService, [Service] IContentInteractionService contentInteractionService) {
     // Verify the content interaction belongs to the specified program
     var interactions = await contentInteractionService.GetUserInteractionsAsync(Guid.Empty);
