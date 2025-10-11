@@ -143,7 +143,7 @@ public class TestTenantWebhookHandler : IRequestHandler<TestTenantWebhookCommand
 /// <summary>
 /// Handler for retrying a failed webhook delivery.
 /// </summary>
-public class RetryFailedWebhookHandler : IRequestHandler<RetryFailedWebhookCommand, TenantWebhookDelivery>
+public class RetryFailedWebhookHandler : IRequestHandler<RetryFailedWebhookCommand, Result<TenantWebhookDelivery>>
 {
     private readonly ITenantWebhookService _webhookService;
 
@@ -152,16 +152,17 @@ public class RetryFailedWebhookHandler : IRequestHandler<RetryFailedWebhookComma
         _webhookService = webhookService;
     }
 
-    public async Task<TenantWebhookDelivery> Handle(RetryFailedWebhookCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TenantWebhookDelivery>> Handle(RetryFailedWebhookCommand request, CancellationToken cancellationToken)
     {
-        return await _webhookService.RetryFailedDeliveryAsync(request.DeliveryId, cancellationToken);
+        var delivery = await _webhookService.RetryFailedDeliveryAsync(request.DeliveryId, cancellationToken);
+        return Result<TenantWebhookDelivery>.Success(delivery);
     }
 }
 
 /// <summary>
 /// Handler for enabling a tenant webhook.
 /// </summary>
-public class EnableTenantWebhookHandler : IRequestHandler<EnableTenantWebhookCommand, TenantWebhook>
+public class EnableTenantWebhookHandler : IRequestHandler<EnableTenantWebhookCommand, Result<TenantWebhook>>
 {
     private readonly ITenantWebhookRepository _repository;
 
@@ -170,21 +171,22 @@ public class EnableTenantWebhookHandler : IRequestHandler<EnableTenantWebhookCom
         _repository = repository;
     }
 
-    public async Task<TenantWebhook> Handle(EnableTenantWebhookCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TenantWebhook>> Handle(EnableTenantWebhookCommand request, CancellationToken cancellationToken)
     {
         var webhook = await _repository.GetByIdAsync(request.WebhookId, cancellationToken);
         if (webhook == null)
-            throw new InvalidOperationException($"Webhook {request.WebhookId} not found");
+            return Result<TenantWebhook>.Failure($"Webhook {request.WebhookId} not found");
 
         webhook.IsActive = true;
-        return await _repository.UpdateAsync(webhook, cancellationToken);
+        var updatedWebhook = await _repository.UpdateAsync(webhook, cancellationToken);
+        return Result<TenantWebhook>.Success(updatedWebhook);
     }
 }
 
 /// <summary>
 /// Handler for disabling a tenant webhook.
 /// </summary>
-public class DisableTenantWebhookHandler : IRequestHandler<DisableTenantWebhookCommand, TenantWebhook>
+public class DisableTenantWebhookHandler : IRequestHandler<DisableTenantWebhookCommand, Result<TenantWebhook>>
 {
     private readonly ITenantWebhookRepository _repository;
 
@@ -193,21 +195,22 @@ public class DisableTenantWebhookHandler : IRequestHandler<DisableTenantWebhookC
         _repository = repository;
     }
 
-    public async Task<TenantWebhook> Handle(DisableTenantWebhookCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TenantWebhook>> Handle(DisableTenantWebhookCommand request, CancellationToken cancellationToken)
     {
         var webhook = await _repository.GetByIdAsync(request.WebhookId, cancellationToken);
         if (webhook == null)
-            throw new InvalidOperationException($"Webhook {request.WebhookId} not found");
+            return Result<TenantWebhook>.Failure($"Webhook {request.WebhookId} not found");
 
         webhook.IsActive = false;
-        return await _repository.UpdateAsync(webhook, cancellationToken);
+        var updatedWebhook = await _repository.UpdateAsync(webhook, cancellationToken);
+        return Result<TenantWebhook>.Success(updatedWebhook);
     }
 }
 
 /// <summary>
 /// Handler for getting tenant webhooks.
 /// </summary>
-public class GetTenantWebhooksHandler : IRequestHandler<GetTenantWebhooksQuery, IEnumerable<TenantWebhook>>
+public class GetTenantWebhooksHandler : IRequestHandler<GetTenantWebhooksQuery, Result<IEnumerable<TenantWebhook>>>
 {
     private readonly ITenantWebhookRepository _repository;
 
@@ -216,9 +219,10 @@ public class GetTenantWebhooksHandler : IRequestHandler<GetTenantWebhooksQuery, 
         _repository = repository;
     }
 
-    public async Task<IEnumerable<TenantWebhook>> Handle(GetTenantWebhooksQuery request, CancellationToken cancellationToken)
+    public async Task<Result<IEnumerable<TenantWebhook>>> Handle(GetTenantWebhooksQuery request, CancellationToken cancellationToken)
     {
-        return await _repository.GetByTenantIdAsync(request.TenantId, request.IsActive, cancellationToken);
+        var webhooks = await _repository.GetByTenantIdAsync(request.TenantId, request.IsActive, cancellationToken);
+        return Result<IEnumerable<TenantWebhook>>.Success(webhooks);
     }
 }
 

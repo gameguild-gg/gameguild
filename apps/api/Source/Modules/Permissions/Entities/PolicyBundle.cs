@@ -9,7 +9,7 @@ public class PolicyBundle : EntityBase<Guid>
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string Version { get; set; } = string.Empty;
+    public new string Version { get; set; } = string.Empty;
     public PolicyBundleType BundleType { get; set; }
     public string ContentHash { get; set; } = string.Empty;
     public string? DigitalSignature { get; set; }
@@ -18,8 +18,8 @@ public class PolicyBundle : EntityBase<Guid>
     public PolicyBundleStatus Status { get; set; }
     public string PolicyData { get; set; } = string.Empty;
     public string? Metadata { get; set; }
-    public override Guid? TenantId { get; set; }
-    public override bool IsGlobal { get; set; }
+    public new Guid? TenantId { get; set; }
+    public new bool IsGlobal { get; set; }
     public DateTime? EffectiveFrom { get; set; }
     public DateTime? EffectiveUntil { get; set; }
     public Guid? PreviousVersionId { get; set; }
@@ -37,7 +37,7 @@ public class PolicyBundle : EntityBase<Guid>
 public class PolicyBundleDeployment : EntityBase<Guid>
 {
     public Guid BundleId { get; set; }
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
     public string Environment { get; set; } = string.Empty;
     public PolicyDeploymentStatus Status { get; set; }
     public DateTime DeployedAt { get; set; }
