@@ -1,7 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Programs;
-using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs;
 using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 namespace GameGuild.Modules.Programs.Queries;

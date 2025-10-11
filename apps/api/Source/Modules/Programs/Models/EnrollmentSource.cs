@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace GameGuild.Source.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs.Models;
 
 /// <summary>
 /// Represents how a user was enrolled in a program

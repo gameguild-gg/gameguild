@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-namespace GameGuild.Source.Modules.Programs.Models;
+namespace GameGuild.Modules.Programs.Models;
 
 /// <summary>
 /// Content types defining the nature and interaction model of program materials
