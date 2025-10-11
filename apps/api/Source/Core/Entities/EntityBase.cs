@@ -8,7 +8,7 @@ namespace GameGuild;
 ///   and IConcurrencyControlled interfaces.
 /// </summary>
 /// <typeparam name="TKey"> The type of the entity's identifier </typeparam>
-public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomainEvents where TKey : IEquatable<TKey>
+public abstract class EntityBase<TKey> : IEntity<TKey>, ITenantScoped, IHasDomainEvents, IAuditable, IConcurrencyControlled where TKey : IEquatable<TKey>
 {
     private readonly List<IDomainEvent> _domainEvents = [];
 
