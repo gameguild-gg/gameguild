@@ -33,7 +33,7 @@ public class UserTenantRole : EntityBase, ITenantable {
   /// Navigation property to the tenant
   /// </summary>
   [ForeignKey(nameof(TenantId))]
-  public virtual Tenant? Tenant { get; set; }
+  public new virtual Tenant? Tenant { get; set; }
 
   /// <summary>
   /// The role application being assigned to the user
@@ -76,13 +76,6 @@ public class UserTenantRole : EntityBase, ITenantable {
   /// Additional metadata for the role assignment
   /// </summary>
   public Dictionary<string, object>? Metadata { get; set; }
-
-  /// <summary>
-  /// Explicit implementation of ITenantable.TenantId
-  /// This pattern allows for explicit interface implementation while maintaining
-  /// a strongly-typed TenantId property
-  /// </summary>
-  Guid ITenantable.TenantId => TenantId;
 
   /// <summary>
   /// Checks if the role assignment is currently valid

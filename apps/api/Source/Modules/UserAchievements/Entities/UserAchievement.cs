@@ -63,7 +63,7 @@ public class UserAchievement : EntityBase {
   public int PointsEarned { get; set; } = 0;
 
   /// <summary> The tenant this achievement belongs to </summary>
-  public Guid? TenantId { get; set; }
+  public new Guid? TenantId { get; set; }
 
   /// <summary> 
   /// Times this achievement has been earned (for repeatable achievements).

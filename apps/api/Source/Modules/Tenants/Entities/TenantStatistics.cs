@@ -17,7 +17,7 @@ public class TenantStatistics : EntityBase
 
     /// <summary> Navigation property to the tenant </summary>
     [ForeignKey(nameof(TenantId))]
-    public Tenant? Tenant { get; set; }
+    public new Tenant? Tenant { get; set; }
 
     /// <summary> Total number of users associated with this tenant </summary>
     public int TotalUsers { get; set; }

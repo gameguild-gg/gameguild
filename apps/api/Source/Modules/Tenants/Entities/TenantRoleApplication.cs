@@ -7,8 +7,7 @@ namespace GameGuild.Modules.Tenants;
 [Table("TenantRoleApplications")]
 [Index(nameof(TenantId), nameof(RoleTemplateId), IsUnique = true, Name = "IX_TenantRoleApplications_TenantId_RoleTemplateId")]
 [Index(nameof(RoleName), Name = "IX_TenantRoleApplications_RoleName")]
-public class TenantRoleApplication : EntityBase, ITenantable
-{
+public class TenantRoleApplication : EntityBase, ITenantable {
     /// <summary>
     /// The tenant this role application belongs to
     /// </summary>
@@ -19,7 +18,7 @@ public class TenantRoleApplication : EntityBase, ITenantable
     /// Navigation property to the tenant
     /// </summary>
     [ForeignKey(nameof(TenantId))]
-    public virtual Tenant? Tenant { get; set; }
+    public new virtual Tenant? Tenant { get; set; }
 
     /// <summary>
     /// The role template being applied
@@ -81,16 +80,14 @@ public class TenantRoleApplication : EntityBase, ITenantable
     /// Gets the effective permissions for this role application
     /// Returns custom permissions if set, otherwise returns template permissions
     /// </summary>
-    public PermissionType[] GetEffectivePermissions()
-    {
+    public PermissionType[] GetEffectivePermissions() {
         return CustomPermissions ?? RoleTemplate?.Permissions ?? Array.Empty<PermissionType>();
     }
 
     /// <summary>
     /// Gets the effective description for this role application
     /// </summary>
-    public string GetEffectiveDescription()
-    {
+    public string GetEffectiveDescription() {
         return CustomDescription ?? RoleTemplate?.Description ?? string.Empty;
     }
 }

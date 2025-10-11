@@ -72,7 +72,7 @@ public class Achievement : EntityBase {
   public int DisplayOrder { get; set; } = 0;
 
   /// <summary> The tenant this achievement belongs to </summary>
-  public Guid? TenantId { get; set; }
+  public new Guid? TenantId { get; set; }
 
   /// <summary> Users who have earned this achievement </summary>
   public virtual ICollection<UserAchievement> UserAchievements { get; set; } = new List<UserAchievement>();
