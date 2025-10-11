@@ -89,8 +89,9 @@ public class PromoCode : EntityBase {
   /// <summary> Navigation property to promo code usage records </summary>
   public virtual ICollection<PromoCodeUse> PromoCodeUses { get; set; } = new List<PromoCodeUse>();
 
-  /// <summary> Navigation property to financial transactions that used this promo code </summary>
-  public virtual ICollection<FinancialTransaction> FinancialTransactions { get; set; } = new List<FinancialTransaction>();
+  // TODO: Add FinancialTransaction entity and uncomment
+  // /// <summary> Navigation property to financial transactions that used this promo code </summary>
+  // public virtual ICollection<FinancialTransaction> FinancialTransactions { get; set; } = new List<FinancialTransaction>();
 
   /// <summary> Check if the promo code is currently valid </summary>
   public bool IsCurrentlyValid() {

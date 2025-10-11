@@ -32,12 +32,13 @@ public class PromoCodeUse : EntityBase {
   public virtual User User { get; set; } = null!;
 
   /// <summary> Foreign key to the FinancialTransaction entity </summary>
-  [Required]
-  public Guid FinancialTransactionId { get; set; }
+  // TODO: Add FinancialTransaction entity and uncomment
+  // [Required]
+  // public Guid FinancialTransactionId { get; set; }
 
-  /// <summary> Navigation property to the FinancialTransaction entity </summary>
-  [ForeignKey(nameof(FinancialTransactionId))]
-  public virtual FinancialTransaction FinancialTransaction { get; set; } = null!;
+  // /// <summary> Navigation property to the FinancialTransaction entity </summary>
+  // [ForeignKey(nameof(FinancialTransactionId))]
+  // public virtual FinancialTransaction FinancialTransaction { get; set; } = null!;
 
   /// <summary> The actual discount amount that was applied </summary>
   [Column(TypeName = "decimal(10,2)")]
