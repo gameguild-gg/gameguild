@@ -2,6 +2,7 @@ using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
 namespace GameGuild.Modules.Certificates;
 
@@ -15,9 +16,9 @@ namespace GameGuild.Modules.Certificates;
 [Index(nameof(Status))]
 [Index(nameof(IssuedAt))]
 public class UserCertificate : EntityBase {
-  [Required] [ForeignKey(nameof(User))] public Guid UserId { get; set; }
+  [Required][ForeignKey(nameof(User))] public Guid UserId { get; set; }
 
-  [Required] [ForeignKey(nameof(Certificate))] public Guid CertificateId { get; set; }
+  [Required][ForeignKey(nameof(Certificate))] public Guid CertificateId { get; set; }
 
   /// <summary> Program associated with this certificate issuance (null for non-program certificates) </summary>
   public Guid? ProgramId { get; set; }
@@ -63,7 +64,7 @@ public class UserCertificate : EntityBase {
 
   public virtual Programs.Program? Program { get; set; }
 
-  public virtual Product? Product { get; set; }
+  public virtual ProductEntity? Product { get; set; }
 
   public virtual ProgramUser? ProgramUser { get; set; }
 

@@ -62,7 +62,7 @@ internal class UserCreatedTestingLabPermissionHandler : IDomainEventHandler<User
       var defaultRoleName = _configuration["TestingLab:DefaultUserRole"] ?? "TestingLabTester";
 
       // Use the simple permission service to assign the configurable default role
-      var permissionService = _serviceProvider.GetRequiredService<ISimplePermissionService>();
+      var permissionService = _serviceProvider.GetRequiredService<IPermissionService>();
 
       await permissionService.AssignRoleToUserAsync(userId, tenantId, defaultRoleName);
 
