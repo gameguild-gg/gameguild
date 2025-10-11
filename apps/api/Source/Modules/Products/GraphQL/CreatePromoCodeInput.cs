@@ -1,5 +1,5 @@
-﻿using PromoCodeTypeEnum = GameGuild.PromoCodeType;
-
+﻿using GameGuild.Modules.Products.Domain.Enums;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.GraphQL;
 
 public class CreatePromoCodeInput {

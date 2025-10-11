@@ -4,6 +4,7 @@ using GameGuild;
 using GameGuild.Modules.Subscriptions.Entities;
 using Microsoft.EntityFrameworkCore;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Domain.Entities;
 
 /// <summary>Entity representing subscription plans for products</summary>

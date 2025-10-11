@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using ProductType = GameGuild.ProductType;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Models;
 
 [Table("Products")]

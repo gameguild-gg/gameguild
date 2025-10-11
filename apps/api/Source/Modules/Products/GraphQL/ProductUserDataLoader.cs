@@ -2,6 +2,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Users;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> DataLoader interface for efficiently loading User entities for Products </summary>

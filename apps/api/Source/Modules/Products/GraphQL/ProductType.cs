@@ -1,11 +1,11 @@
 using System.Security.Claims;
-using GameGuild.Core.Authorization;
+using GameGuild.Modules.Authorization;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Products.Services;
-using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 using ProductTypeEnum = GameGuild.ProductType;
 
 

@@ -4,6 +4,7 @@ using GameGuild.Modules.Products.Models;
 using ProductTypeEnum = GameGuild.ProductType;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Queries;
 
 /// <summary> Query to get product by ID </summary>
@@ -16,7 +17,7 @@ public record GetProductByIdQuery : IRequest<Product?> {
 }
 
 /// <summary> Query to get products list </summary>
-public record GetProductsQuery : IRequest<IEnumerable<Product>> {
+public record GetProductsQuery : IRequest<IEnumerable<ProductEntity>> {
   public ProductTypeEnum? Type { get; init; }
 
   public ContentStatus? Status { get; init; }
@@ -63,7 +64,7 @@ public record GetProductPricingQuery : IRequest<IEnumerable<ProductPricing>> {
 }
 
 /// <summary> Query to get bundle contents </summary>
-public record GetBundleContentsQuery : IRequest<IEnumerable<Product>> {
+public record GetBundleContentsQuery : IRequest<IEnumerable<ProductEntity>> {
   public Guid BundleProductId { get; init; }
 }
 
@@ -173,7 +174,7 @@ public record UserProductAccess {
 }
 
 /// <summary> Query to get products by type </summary>
-public record GetProductsByTypeQuery : IRequest<IEnumerable<Product>> {
+public record GetProductsByTypeQuery : IRequest<IEnumerable<ProductEntity>> {
   public GameGuild.ProductType Type { get; init; }
 
   public int Skip { get; init; } = 0;
@@ -182,14 +183,14 @@ public record GetProductsByTypeQuery : IRequest<IEnumerable<Product>> {
 }
 
 /// <summary> Query to get published products </summary>
-public record GetPublishedProductsQuery : IRequest<IEnumerable<Product>> {
+public record GetPublishedProductsQuery : IRequest<IEnumerable<ProductEntity>> {
   public int Skip { get; init; } = 0;
 
   public int Take { get; init; } = 50;
 }
 
 /// <summary> Query to search products </summary>
-public record SearchProductsQuery : IRequest<IEnumerable<Product>> {
+public record SearchProductsQuery : IRequest<IEnumerable<ProductEntity>> {
   public string SearchTerm { get; init; } = string.Empty;
 
   public ProductTypeEnum? Type { get; init; }
@@ -200,7 +201,7 @@ public record SearchProductsQuery : IRequest<IEnumerable<Product>> {
 }
 
 /// <summary> Query to get products by creator </summary>
-public record GetProductsByCreatorQuery : IRequest<IEnumerable<Product>> {
+public record GetProductsByCreatorQuery : IRequest<IEnumerable<ProductEntity>> {
   public Guid CreatorId { get; init; }
 
   public int Skip { get; init; } = 0;
@@ -209,7 +210,7 @@ public record GetProductsByCreatorQuery : IRequest<IEnumerable<Product>> {
 }
 
 /// <summary> Query to get products in price range </summary>
-public record GetProductsInPriceRangeQuery : IRequest<IEnumerable<Product>> {
+public record GetProductsInPriceRangeQuery : IRequest<IEnumerable<ProductEntity>> {
   public decimal MinPrice { get; init; }
 
   public decimal MaxPrice { get; init; }
@@ -222,21 +223,21 @@ public record GetProductsInPriceRangeQuery : IRequest<IEnumerable<Product>> {
 }
 
 /// <summary> Query to get popular products </summary>
-public record GetPopularProductsQuery : IRequest<IEnumerable<Product>> {
+public record GetPopularProductsQuery : IRequest<IEnumerable<ProductEntity>> {
   public int Skip { get; init; } = 0;
 
   public int Take { get; init; } = 50;
 }
 
 /// <summary> Query to get recent products </summary>
-public record GetRecentProductsQuery : IRequest<IEnumerable<Product>> {
+public record GetRecentProductsQuery : IRequest<IEnumerable<ProductEntity>> {
   public int Skip { get; init; } = 0;
 
   public int Take { get; init; } = 50;
 }
 
 /// <summary> Query to get bundle items </summary>
-public record GetBundleItemsQuery : IRequest<IEnumerable<Product>> {
+public record GetBundleItemsQuery : IRequest<IEnumerable<ProductEntity>> {
   public Guid BundleId { get; init; }
 }
 

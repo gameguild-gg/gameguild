@@ -2,6 +2,7 @@
 using ProductTypeEnum = GameGuild.ProductType;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.GraphQL;
 
 public class UpdateProductInput {
