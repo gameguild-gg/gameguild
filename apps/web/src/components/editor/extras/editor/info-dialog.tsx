@@ -15,11 +15,13 @@ import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { X } from "lucide-react"
+import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
 
 interface ProjectData {
   id: string
   name: string
   tags: string[]
+  storageType?: StorageOption
 }
 
 interface StorageAdapter {
@@ -30,7 +32,7 @@ interface InfoDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   project: ProjectData | null
-  onSave: (projectId: string, newName: string, newTags: string[]) => Promise<void>
+  onSave: (projectId: string, newName: string, newTags: string[], storageOption: StorageOption) => Promise<void>
   availableTags: Array<{ name: string }>
   storageAdapter: StorageAdapter
 }
@@ -47,16 +49,19 @@ export function InfoDialog({
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
+  const [storageOption, setStorageOption] = useState<StorageOption>("local")
 
   useEffect(() => {
     if (project) {
       setName(project.name)
       setTags(project.tags || [])
+      setStorageOption(project.storageType || "local")
     } else {
       // Reset state when dialog is closed or project is null
       setName("")
       setTags([])
       setTagInput("")
+      setStorageOption("local")
     }
   }, [project])
 
@@ -100,7 +105,7 @@ export function InfoDialog({
     }
 
     try {
-      await onSave(project.id, trimmedName, tags)
+      await onSave(project.id, trimmedName, tags, storageOption)
       onOpenChange(false)
     } catch (error) {
       // Error is handled in the onSave implementation, but we can add a fallback
@@ -283,6 +288,19 @@ export function InfoDialog({
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+          
+          {/* Storage Options Section */}
+          <div className="grid grid-cols-4 items-start gap-4">
+            <Label className="text-right pt-2">
+              Storage
+            </Label>
+            <div className="col-span-3">
+              <StorageOptionSelector
+                selectedOption={storageOption}
+                onSelectionChange={setStorageOption}
+              />
             </div>
           </div>
         </div>

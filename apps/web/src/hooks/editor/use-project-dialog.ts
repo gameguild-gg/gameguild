@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import JSZip from "jszip"
+import { ProjectExporter, type ProjectData as ExportProjectData } from "@/lib/interopAdapter/project-exporter"
+import { HashManager } from "@/lib/sync/editor/hash-manager"
 
 interface ProjectData {
   id: string
@@ -12,13 +13,15 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
 }
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete?: (id: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
 }
 
 interface UseProjectDialogProps {
@@ -29,6 +32,7 @@ interface UseProjectDialogProps {
 export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProjectDialogProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "gameguild-cloud" | "google-drive" | undefined>(undefined)
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(16) // Changed initial itemsPerPage from 10 to 12 to match available options in selector
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
@@ -38,7 +42,7 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
   // Reset pagination only when filter criteria actually change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, selectedTags, tagFilterMode])
+  }, [searchTerm, selectedTags, tagFilterMode, storageTypeFilter])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -52,8 +56,8 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
       try {
         let projects: ProjectData[]
 
-        if (searchTerm || selectedTags.length > 0) {
-          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
+        if (searchTerm || selectedTags.length > 0 || storageTypeFilter) {
+          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode, storageTypeFilter)
         } else {
           projects = await storageAdapter.list()
         }
@@ -66,7 +70,7 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     }
 
     filterProjects()
-  }, [searchTerm, selectedTags, isDbInitialized, tagFilterMode, storageAdapter])
+  }, [searchTerm, selectedTags, isDbInitialized, tagFilterMode, storageTypeFilter, storageAdapter])
 
   const handleDownload = async (
     projectId: string,
@@ -77,33 +81,30 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     updatedAt: string,
   ) => {
     try {
-      const zip = new JSZip()
+      // Generate hash for the project
+      const hash = await HashManager.generateHash(projectData)
 
-      // Add the lexical file with .gglexical extension
-      zip.file(`${projectName}.gglexical`, projectData)
-
-      // Create index.json with project metadata
-      const metadata = {
+      // Prepare project data for export using ProjectExporter
+      const exportProjectData: ExportProjectData = {
         id: projectId,
         name: projectName,
+        data: projectData,
         tags: projectTags,
         size: new Blob([projectData]).size,
         createdAt: createdAt,
         updatedAt: updatedAt,
-        version: "1.0",
-        type: "gg-lexical-project",
+        hash: hash,
+        storageType: "local"
       }
 
-      zip.file("index.json", JSON.stringify(metadata, null, 2))
-
-      // Generate zip file
-      const zipBlob = await zip.generateAsync({ type: "blob" })
-      const url = URL.createObjectURL(zipBlob)
+      // Use ProjectExporter to create the ZIP file
+      const zipBlob = await ProjectExporter.createZipFile(exportProjectData, hash)
 
       // Create download link
+      const url = URL.createObjectURL(zipBlob)
       const link = document.createElement("a")
       link.href = url
-      link.download = `gg-lexical-editor-${projectName}.zip`
+      link.download = ProjectExporter.getDownloadFilename(exportProjectData)
       document.body.appendChild(link)
       link.click()
 
@@ -111,15 +112,15 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
 
-      toast.success("Download started", {
-        description: `Folder "gg-lexical-editor-${projectName}.zip" is being downloaded`,
+      toast.success("Export completed", {
+        description: `Project "${projectName}" exported successfully`,
         duration: 2500,
         icon: "📥",
       })
     } catch (error) {
-      console.error("Download error:", error)
-      toast.error("Download error", {
-        description: "Could not download the project folder. Please try again.",
+      console.error("Export failed:", error)
+      toast.error("Export failed", {
+        description: "Could not export the project. Please try again.",
         duration: 4000,
         icon: "❌",
       })
@@ -155,6 +156,8 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    storageTypeFilter,
+    setStorageTypeFilter,
     currentPage,
     setCurrentPage,
     itemsPerPage,
