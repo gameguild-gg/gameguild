@@ -1,6 +1,6 @@
-using GameGuild.Modules.Payments.Entities;
+using GameGuild.Modules.Payments.Domain.Entities;
 
-namespace GameGuild.Modules.Payments.Services;
+namespace GameGuild.Modules.Payments.Payments.Application.Services;
 
 /// <summary>
 ///     Tax calculation service interface

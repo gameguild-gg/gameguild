@@ -1,5 +1,5 @@
-using GameGuild.Modules.Users.DTOs;
-using GameGuild.Modules.Users.Models;
+using GameGuild.Modules.Users;
+using GameGuild.Modules.Users;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Users.Queries;

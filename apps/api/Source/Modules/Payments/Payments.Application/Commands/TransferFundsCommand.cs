@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
-using GameGuild.Modules.Payments.Entities;
+using GameGuild.Modules.Payments.Domain.Entities;
 
 namespace GameGuild.Modules.Payments.Commands;
 
