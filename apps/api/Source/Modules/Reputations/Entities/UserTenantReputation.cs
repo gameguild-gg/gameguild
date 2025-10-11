@@ -1,6 +1,7 @@
 using GameGuild.Modules.Users;
 using GameGuild.Core.Domain;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Permissions;
 
 namespace GameGuild.Modules.Reputations.Entities;
 

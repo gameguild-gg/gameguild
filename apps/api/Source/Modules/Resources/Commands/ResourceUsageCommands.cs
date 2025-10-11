@@ -14,13 +14,13 @@ public record GetUsageRecordsQuery(
     Guid TenantId,
     ResourceUsageType? UsageType = null,
     DateTime? StartDate = null,
-    DateTime? EndDate = null) : IRequest<Result<IEnumerable<ResourceUsageRecord>>>;
+    DateTime? EndDate = null) : IQuery<Result<IEnumerable<ResourceUsageRecord>>>;
 
 /// <summary>
 /// Query to get current usage summary for a tenant
 /// </summary>
 /// <param name="TenantId">Tenant unique identifier</param>
-public record GetCurrentUsageSummaryQuery(Guid TenantId) : IRequest<Result<Dictionary<ResourceUsageType, long>>>;
+public record GetCurrentUsageSummaryQuery(Guid TenantId) : IQuery<Result<Dictionary<ResourceUsageType, long>>>;
 
 /// <summary>
 /// Query to check usage limits for a tenant
@@ -29,7 +29,7 @@ public record GetCurrentUsageSummaryQuery(Guid TenantId) : IRequest<Result<Dicti
 /// <param name="UsageType">Optional usage type filter</param>
 public record CheckUsageLimitsQuery(
     Guid TenantId,
-    ResourceUsageType? UsageType = null) : IRequest<Result<Dictionary<ResourceUsageType, ResourceQuotaStatus>>>;
+    ResourceUsageType? UsageType = null) : IQuery<Result<Dictionary<ResourceUsageType, ResourceQuotaStatus>>>;
 
 /// <summary>
 /// Command to record usage for a tenant
@@ -48,7 +48,7 @@ public record RecordUsageCommand(
     string? Source = null,
     Guid? UserId = null,
     Guid? ResourceId = null,
-    string? Metadata = null) : IRequest<Result<ResourceUsageRecord>>;
+    string? Metadata = null) : ICommand<Result<ResourceUsageRecord>>;
 
 /// <summary>
 /// Resource quota status result

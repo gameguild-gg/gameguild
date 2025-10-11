@@ -1,3 +1,6 @@
+using GameGuild.Modules.Resources.Entities;
+using GameGuild.Modules.Resources.Events;
+
 namespace GameGuild.Modules.Resources.Abstractions;
 
 /// <summary>

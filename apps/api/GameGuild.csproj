@@ -26,6 +26,9 @@
         <PackageReference Include="FluentValidation" />
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
 
+        <PackageReference Include="MediatR" />
+        <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" />
+
         <PackageReference Include="HotChocolate.AspNetCore" />
         <PackageReference Include="HotChocolate.AspNetCore.Authorization" />
         <PackageReference Include="HotChocolate.Data.EntityFramework" />
