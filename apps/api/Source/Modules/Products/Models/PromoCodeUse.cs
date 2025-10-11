@@ -1,8 +1,6 @@
-using GameGuild.Modules.Payments;
 using GameGuild.Modules.Users;
 
 
-using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Models;
 
 /// <summary> EntityBase tracking when and how promo codes are used Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>

@@ -1,5 +1,3 @@
-using GameGuild.Modules.Common;
-
 namespace GameGuild.Modules.Payments.Domain.Entities;
 
 /// <summary>

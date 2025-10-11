@@ -1,6 +1,3 @@
-using Microsoft.Extensions.Logging;
-using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users;
 using System.Text.Json;
 
 namespace GameGuild.Core.Services;

@@ -1,8 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Modules.Tenants;
-
 namespace GameGuild.Modules.Tenants;
 
 /// <summary>

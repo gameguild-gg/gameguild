@@ -1,5 +1,4 @@
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Modules.DeveloperPortal.Entities;
 
 namespace GameGuild.Modules.DeveloperPortal.Repositories;

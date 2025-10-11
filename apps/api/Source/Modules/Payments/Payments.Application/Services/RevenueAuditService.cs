@@ -1,6 +1,6 @@
 using GameGuild.Modules.Payments.Payments.Application.Repositories;
 using GameGuild.Modules.Payments.Payments.Domain.Entities;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Payments.Payments.Application.Services;
 

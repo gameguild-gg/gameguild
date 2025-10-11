@@ -1,5 +1,4 @@
-using GameGuild.Modules.Subscriptions.Models;
-﻿using GameGuild.Modules.Subscriptions.Entities;
+using GameGuild.Modules.Subscriptions.Entities;
 
 namespace GameGuild.Modules.Subscriptions.Specifications;
 

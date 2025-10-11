@@ -1,6 +1,3 @@
-using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
-
 namespace GameGuild.Database;
 
 /// <summary>

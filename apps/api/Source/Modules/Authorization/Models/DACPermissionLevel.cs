@@ -1,6 +1,4 @@
 ﻿namespace GameGuild.Authorization;
-using GameGuild.Modules.Tenants;
-using Modules.Resources;
 
 /// <summary>
 /// Permission levels for the 3-layer DAC system

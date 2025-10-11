@@ -1,5 +1,3 @@
-using GameGuild.Core.Domain;
-
 namespace GameGuild.Modules.Audit.Entities;
 
 /// <summary>

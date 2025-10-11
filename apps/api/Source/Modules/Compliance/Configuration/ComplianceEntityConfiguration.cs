@@ -1,5 +1,3 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Modules.Compliance.Entities;
 
 namespace GameGuild.Modules.Compliance.Configuration;

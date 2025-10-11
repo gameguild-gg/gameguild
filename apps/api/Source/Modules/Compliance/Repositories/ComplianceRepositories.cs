@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using GameGuild.Database;
 using GameGuild.Modules.Compliance.Entities;
 

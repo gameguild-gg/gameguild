@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using GameGuild.Modules.Users;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;

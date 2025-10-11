@@ -1,6 +1,6 @@
 using GameGuild.Modules.ErrorTracking.Entities;
 using GameGuild.Modules.ErrorTracking.Services;
-using Microsoft.EntityFrameworkCore;
+
 
 namespace GameGuild.Modules.ErrorTracking.Repositories;
 

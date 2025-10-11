@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-
-namespace GameGuild.Modules.Features.Extensions;
+﻿namespace GameGuild.Modules.Features.Extensions;
 
 /// <summary>
 ///     Extension methods for usage enforcement middleware

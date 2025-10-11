@@ -1,5 +1,3 @@
-using GameGuild.Modules.Subscriptions.Models;
-
 namespace GameGuild.Modules.Subscriptions.Abstractions;
 
 /// <summary>

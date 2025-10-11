@@ -1,5 +1,4 @@
 namespace GameGuild.Modules.Authentication;
-using Tenants;
 
 /// <summary> Tenant information included in authentication responses </summary>
 public class TenantInfo

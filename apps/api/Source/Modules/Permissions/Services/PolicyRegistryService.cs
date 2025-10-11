@@ -1,8 +1,6 @@
 using GameGuild.Database;
 using GameGuild.Modules.Permissions.Abstractions;
 using GameGuild.Modules.Permissions.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 

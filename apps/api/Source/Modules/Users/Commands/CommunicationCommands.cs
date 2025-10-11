@@ -1,5 +1,3 @@
-using GameGuild;
-using GameGuild.Modules.Users;
 using GameGuild.Modules.Users.Services;
 using GameGuild.Modules.Users.Entities;
 using GameGuild.CQRS;

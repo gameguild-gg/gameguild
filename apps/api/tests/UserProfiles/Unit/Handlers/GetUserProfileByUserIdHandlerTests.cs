@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.CQRS;
 using GameGuild.Modules.UserProfiles;
 using Microsoft.Extensions.Logging;
 using Moq;

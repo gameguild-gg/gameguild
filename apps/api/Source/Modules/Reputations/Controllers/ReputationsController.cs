@@ -1,6 +1,3 @@
-using GameGuild.Modules.Users;
-using GameGuild.Authorization.Identity;
-using GameGuild.Modules.Reputations.Entities;
 using GameGuild.Modules.Reputations.Services;
 using Microsoft.AspNetCore.Mvc;
 

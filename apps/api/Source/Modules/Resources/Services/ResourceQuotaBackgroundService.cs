@@ -1,8 +1,6 @@
 using GameGuild.Database;
-using GameGuild.Modules.Resources;
 using GameGuild.Modules.Resources.Events;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+
 
 namespace GameGuild.Modules.Resources.Services;
 

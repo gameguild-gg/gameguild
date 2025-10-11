@@ -1,7 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Database;
 using GameGuild.Modules.Subscriptions.Entities;
 using GameGuild.Modules.Subscriptions.SubscriptionPlans.Abstractions;
 using GameGuild.Modules.Subscriptions.SubscriptionPlans.Events;

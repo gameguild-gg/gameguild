@@ -1,5 +1,4 @@
 using GameGuild.Database;
-using GameGuild.Modules.Programs;
 using ProgramContentEntity = GameGuild.Modules.Programs.ProgramContent;
 
 namespace GameGuild.Modules.Programs.GraphQL;

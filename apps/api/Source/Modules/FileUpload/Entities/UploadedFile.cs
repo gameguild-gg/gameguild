@@ -1,5 +1,3 @@
-using GameGuild.Core.Domain;
-
 namespace GameGuild.Modules.FileUpload.Entities;
 
 public class UploadedFile : EntityBase

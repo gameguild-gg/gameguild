@@ -2,6 +2,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.TestingLab.Entities;
 using GameGuild.Modules.Users;
+using ProjectVersionEntity = GameGuild.Modules.Projects.Entities.ProjectVersion;
 
 
 namespace GameGuild.Modules.TestingLab;
@@ -49,7 +50,7 @@ public class TestingRequestType : ObjectType<TestingRequest> {
     // Navigation Properties
     descriptor.Field("projectVersion")
               .ResolveWith<TestingRequestResolvers>(r => r.GetProjectVersion(default(TestingRequest)!, default(ApplicationDbContext)!))
-              .Type<ObjectType<ProjectVersion>>()
+              .Type<ObjectType<ProjectVersionEntity>>()
               .Description("The project version being tested.");
 
     descriptor.Field("createdBy").ResolveWith<TestingRequestResolvers>(r => r.GetCreatedBy(default(TestingRequest)!, default(ApplicationDbContext)!)).Type<ObjectType<User>>().Description("The user who created this testing request.");
