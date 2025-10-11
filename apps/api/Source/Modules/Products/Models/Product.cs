@@ -5,6 +5,7 @@ using GameGuild.Modules.Users;
 using GameGuild.Modules.Products.Models;
 using Microsoft.EntityFrameworkCore;
 using ProductType = GameGuild.ProductType;
+using ContentEntity = GameGuild.Modules.Contents.Models.Content;
 
 
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
@@ -15,7 +16,7 @@ namespace GameGuild.Modules.Products.Models;
 [Index(nameof(Status))]
 [Index(nameof(Visibility))]
 [Index(nameof(CreatorId))]
-public class Product : Content {
+public class Product : ContentEntity {
   [Required][MaxLength(200)] public string Name { get; set; } = string.Empty;
 
   [MaxLength(500)] public string? ShortDescription { get; set; }

@@ -5,6 +5,7 @@ using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
+using ContentEntity = GameGuild.Modules.Contents.Models.Content;
 
 // GraphQL attributes
 
@@ -19,7 +20,7 @@ namespace GameGuild.Modules.Projects;
 [Index(nameof(CategoryId))]
 [Index(nameof(CreatedAt))]
 [Index(nameof(UpdatedAt))]
-public sealed class Project : Content {
+public sealed class Project : ContentEntity {
   /// <summary> Short description (max 500 chars) </summary>
   [GraphQLDescription("Short description (max 500 chars).")]
   [MaxLength(500)]
