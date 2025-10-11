@@ -1,5 +1,6 @@
 using GameGuild.Modules.Users;
 using GameGuild.Core.Domain;
+using GameGuild.Modules.Resources;
 
 
 namespace GameGuild.Modules.Reputations.Entities;
@@ -14,8 +15,7 @@ namespace GameGuild.Modules.Reputations.Entities;
 [Index(nameof(ReputationActionId))]
 [Index(nameof(OccurredAt))]
 [Index(nameof(PointsChange))]
-public class UserReputationHistory : Resource
-{
+public class UserReputationHistory : Resource {
     /// <summary> The user whose reputation changed (for direct user reputation tracking) </summary>
     [ForeignKey(nameof(UserId))]
     public User? User { get; set; }
@@ -92,10 +92,8 @@ public class UserReputationHistory : Resource
 }
 
 /// <summary> EntityBase Framework configuration for UserReputationHistory Contains complex configurations that cannot be expressed with simple data annotations </summary>
-public class UserReputationHistoryConfiguration : IEntityTypeConfiguration<UserReputationHistory>
-{
-    public void Configure(EntityTypeBuilder<UserReputationHistory> builder)
-    {
+public class UserReputationHistoryConfiguration : IEntityTypeConfiguration<UserReputationHistory> {
+    public void Configure(EntityTypeBuilder<UserReputationHistory> builder) {
         // Check constraint for polymorphic relationship (can't be done with annotations)
         builder.ToTable(
           "UserReputationHistory",

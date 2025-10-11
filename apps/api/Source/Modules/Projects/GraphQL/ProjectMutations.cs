@@ -1,7 +1,7 @@
 using GameGuild.Core.Domain.Identity;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Contents.Models;
-using GameGuild.Modules.Users.Abstractions;
+using GameGuild.Modules.Users;
 
 
 namespace GameGuild.Modules.Projects;
