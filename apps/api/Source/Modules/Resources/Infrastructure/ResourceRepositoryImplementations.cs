@@ -1,7 +1,6 @@
 using GameGuild.Database;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Resources.Repositories;
-using GameGuild.Core.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Resources.Infrastructure;
