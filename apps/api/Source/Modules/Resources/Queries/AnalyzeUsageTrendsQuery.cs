@@ -1,7 +1,7 @@
 namespace GameGuild.Modules.Resources.Queries;
 
 using GameGuild.Database;
-using MediatR;
+using GameGuild.CQRS;
 using GameGuild;
 
 /// <summary>

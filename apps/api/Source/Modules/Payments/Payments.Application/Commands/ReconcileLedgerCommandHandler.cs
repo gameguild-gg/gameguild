@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Payments.Payments.Application.Commands;
 
-public class ReconcileLedgerCommandHandler : IRequestHandler<ReconcileLedgerCommand, Unit>
+public class ReconcileLedgerCommandHandler : ICommandHandler<ReconcileLedgerCommand, Unit>
 {
     private readonly IRevenueAuditService _revenueAuditService;
 
