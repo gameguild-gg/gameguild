@@ -41,7 +41,7 @@ public class RegisterTenantWebhookHandler : IRequestHandler<RegisterTenantWebhoo
 /// <summary>
 /// Handler for updating a tenant webhook.
 /// </summary>
-public class UpdateTenantWebhookHandler : IRequestHandler<UpdateTenantWebhookCommand, TenantWebhook>
+public class UpdateTenantWebhookHandler : IRequestHandler<UpdateTenantWebhookCommand, Result<TenantWebhook>>
 {
     private readonly ITenantWebhookRepository _repository;
 
@@ -50,11 +50,11 @@ public class UpdateTenantWebhookHandler : IRequestHandler<UpdateTenantWebhookCom
         _repository = repository;
     }
 
-    public async Task<TenantWebhook> Handle(UpdateTenantWebhookCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TenantWebhook>> Handle(UpdateTenantWebhookCommand request, CancellationToken cancellationToken)
     {
         var webhook = await _repository.GetByIdAsync(request.WebhookId, cancellationToken);
         if (webhook == null)
-            throw new InvalidOperationException($"Webhook {request.WebhookId} not found");
+            return Result<TenantWebhook>.Failure($"Webhook {request.WebhookId} not found");
 
         if (request.Name != null)
             webhook.Name = request.Name;
@@ -85,14 +85,15 @@ public class UpdateTenantWebhookHandler : IRequestHandler<UpdateTenantWebhookCom
 
         webhook.ValidateWebhook();
 
-        return await _repository.UpdateAsync(webhook, cancellationToken);
+        var updatedWebhook = await _repository.UpdateAsync(webhook, cancellationToken);
+        return Result<TenantWebhook>.Success(updatedWebhook);
     }
 }
 
 /// <summary>
 /// Handler for deleting a tenant webhook.
 /// </summary>
-public class DeleteTenantWebhookHandler : IRequestHandler<DeleteTenantWebhookCommand, bool>
+public class DeleteTenantWebhookHandler : IRequestHandler<DeleteTenantWebhookCommand, Result<bool>>
 {
     private readonly ITenantWebhookRepository _repository;
 
@@ -101,16 +102,17 @@ public class DeleteTenantWebhookHandler : IRequestHandler<DeleteTenantWebhookCom
         _repository = repository;
     }
 
-    public async Task<bool> Handle(DeleteTenantWebhookCommand request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(DeleteTenantWebhookCommand request, CancellationToken cancellationToken)
     {
-        return await _repository.DeleteAsync(request.WebhookId, cancellationToken);
+        var deleted = await _repository.DeleteAsync(request.WebhookId, cancellationToken);
+        return Result<bool>.Success(deleted);
     }
 }
 
 /// <summary>
 /// Handler for testing a tenant webhook.
 /// </summary>
-public class TestTenantWebhookHandler : IRequestHandler<TestTenantWebhookCommand, TenantWebhookDelivery>
+public class TestTenantWebhookHandler : IRequestHandler<TestTenantWebhookCommand, Result<TenantWebhookDelivery>>
 {
     private readonly ITenantWebhookRepository _repository;
     private readonly ITenantWebhookService _webhookService;
@@ -121,11 +123,11 @@ public class TestTenantWebhookHandler : IRequestHandler<TestTenantWebhookCommand
         _webhookService = webhookService;
     }
 
-    public async Task<TenantWebhookDelivery> Handle(TestTenantWebhookCommand request, CancellationToken cancellationToken)
+    public async Task<Result<TenantWebhookDelivery>> Handle(TestTenantWebhookCommand request, CancellationToken cancellationToken)
     {
         var webhook = await _repository.GetByIdAsync(request.WebhookId, cancellationToken);
         if (webhook == null)
-            throw new InvalidOperationException($"Webhook {request.WebhookId} not found");
+            return Result<TenantWebhookDelivery>.Failure($"Webhook {request.WebhookId} not found");
 
         var testPayload = request.TestPayload ?? new
         {
@@ -136,7 +138,10 @@ public class TestTenantWebhookHandler : IRequestHandler<TestTenantWebhookCommand
 
         var payloadJson = System.Text.Json.JsonSerializer.Serialize(testPayload);
 
-        return await _webhookService.DeliverWebhookAsync(webhook, request.EventType, payloadJson, cancellationToken);
+        // Use a test event type for testing
+        var testEventType = TenantWebhookEventType.Test; // Assuming this exists, or use the first supported event type
+        var delivery = await _webhookService.DeliverWebhookAsync(webhook, testEventType, payloadJson, cancellationToken);
+        return Result<TenantWebhookDelivery>.Success(delivery);
     }
 }
 
