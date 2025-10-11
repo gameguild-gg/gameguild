@@ -251,60 +251,6 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
         }
     }
 
-    public async Task<TamperEvidentAuditLog?> GetByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default)
-    {
-        return await _repository.GetByIdAsync(id, cancellationToken);
-    }
-
-    public async Task<List<TamperEvidentAuditLog>> GetByTenantAsync(
-        Guid tenantId,
-        int page = 1,
-        int pageSize = 50,
-        CancellationToken cancellationToken = default)
-    {
-        return await _repository
-            .AsQueryable()
-            .Where(x => x.TenantId == tenantId)
-            .OrderByDescending(x => x.Timestamp)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task<List<TamperEvidentAuditLog>> GetUnverifiedAsync(
-        Guid? tenantId = null,
-        int limit = 100,
-        CancellationToken cancellationToken = default)
-    {
-        var query = _repository.AsQueryable()
-            .Where(x => !x.IsVerified || x.LastVerifiedAt == null);
-
-        if (tenantId.HasValue)
-            query = query.Where(x => x.TenantId == tenantId);
-
-        return await query
-            .OrderBy(x => x.Timestamp)
-            .Take(limit)
-            .ToListAsync(cancellationToken);
-    }
-
-    public async Task MarkAsVerifiedAsync(
-        Guid id,
-        string? notes = null,
-        CancellationToken cancellationToken = default)
-    {
-        var log = await _repository.GetByIdAsync(id, cancellationToken);
-        if (log == null)
-            throw new InvalidOperationException($"Audit log {id} not found");
-
-        log.MarkAsVerified(notes);
-        await _repository.UpdateAsync(log, cancellationToken);
-
-        _logger.LogInformation("Marked audit log {AuditLogId} as verified", id);
-    }
-
     private async Task<string> GetCurrentSigningKeyIdAsync(CancellationToken cancellationToken)
     {
         // In a real implementation, this would retrieve the current active signing key ID

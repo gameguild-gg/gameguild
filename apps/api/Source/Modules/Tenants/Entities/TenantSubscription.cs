@@ -31,7 +31,7 @@ public class TenantSubscription : EntityBase, ITenantable
     ///     ID of the tenant this subscription belongs to
     /// </summary>
     [Required]
-    public override Guid TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     ///     Navigation property to the tenant
