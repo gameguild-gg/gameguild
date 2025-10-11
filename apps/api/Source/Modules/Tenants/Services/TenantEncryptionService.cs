@@ -1,11 +1,12 @@
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Tenants.Repositories;
+using GameGuild.Modules.Tenants.Services;
 using GameGuild.Modules.Common.Configuration;
-using GameGuild.Tenants.Repositories;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Tenants.Services;
+namespace GameGuild.Modules.Tenants.Services;
 
 /// <summary>
 /// Service implementation for managing tenant-specific encryption keys.
