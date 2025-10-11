@@ -19,7 +19,7 @@ public class PermissionAuditLog : EntityBase
     /// <summary>
     /// Tenant ID where the permission change occurred
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Resource ID for resource-specific permissions

@@ -26,7 +26,7 @@ public class UserTenantRole : EntityBase, ITenantable
     /// The tenant context for this role assignment
     /// </summary>
     [Required]
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary>
     /// Navigation property to the tenant

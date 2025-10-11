@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Permissions.Entities;
 /// </summary>
 public class SoDRule : EntityBase<Guid>
 {
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public SoDRuleType RuleType { get; set; }
@@ -34,7 +34,7 @@ public class SoDViolation : EntityBase<Guid>
 {
     public Guid RuleId { get; set; }
     public Guid UserId { get; set; }
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
     public SoDViolationStatus Status { get; set; }
     public string ViolationDetails { get; set; } = string.Empty;
     public string ConflictingItems { get; set; } = string.Empty;

@@ -130,7 +130,7 @@ public class TestingFeedback : EntityBase
     /// <summary>
     /// Whether this feedback is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Whether this is positive feedback

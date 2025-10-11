@@ -41,7 +41,7 @@ public class ResourceThrottlingPolicy : EntityBase
     /// <summary>
     ///     Tenant this policy applies to
     /// </summary>
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary>
     ///     Type of resource being throttled

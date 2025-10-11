@@ -27,7 +27,7 @@ public class AbacPolicy : EntityBase
     /// <summary>
     /// Tenant this policy applies to (null for global policies)
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary>
     /// Navigation property to Tenant
