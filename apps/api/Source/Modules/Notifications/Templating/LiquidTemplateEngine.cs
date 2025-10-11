@@ -13,8 +13,7 @@ namespace GameGuild.Modules.Notifications.Templating;
 /// <summary>
 /// Notification template engine interface.
 /// </summary>
-public interface INotificationTemplateEngine
-{
+public interface INotificationTemplateEngine {
     Task<string> RenderAsync(
         string template,
         Dictionary<string, object> variables,
@@ -32,14 +31,12 @@ public interface INotificationTemplateEngine
 /// <summary>
 /// Liquid template engine implementation for notification templates.
 /// </summary>
-public sealed class LiquidTemplateEngine : INotificationTemplateEngine
-{
+public sealed class LiquidTemplateEngine : INotificationTemplateEngine {
     private readonly ILogger<LiquidTemplateEngine> _logger;
     private readonly FluidParser _parser;
     private readonly TemplateOptions _options;
 
-    public LiquidTemplateEngine(ILogger<LiquidTemplateEngine> logger)
-    {
+    public LiquidTemplateEngine(ILogger<LiquidTemplateEngine> logger) {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _parser = new FluidParser();
         _options = new TemplateOptions();
@@ -52,12 +49,9 @@ public sealed class LiquidTemplateEngine : INotificationTemplateEngine
     public async Task<string> RenderAsync(
         string template,
         Dictionary<string, object> variables,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (!_parser.TryParse(template, out var fluidTemplate, out var error))
-            {
+        CancellationToken cancellationToken = default) {
+        try {
+            if (!_parser.TryParse(template, out var fluidTemplate, out var error)) {
                 _logger.LogError("Template parsing failed: {Error}", error);
                 throw new TemplateException($"Failed to parse template: {error}");
             }
@@ -68,8 +62,7 @@ public sealed class LiquidTemplateEngine : INotificationTemplateEngine
 
             return result;
         }
-        catch (Exception ex) when (ex is not TemplateException)
-        {
+        catch (Exception ex) when (ex is not TemplateException) {
             _logger.LogError(ex, "Template rendering failed");
             throw new TemplateException("Failed to render template", ex);
         }
@@ -77,39 +70,30 @@ public sealed class LiquidTemplateEngine : INotificationTemplateEngine
 
     public Task<TemplateValidationResult> ValidateAsync(
         string template,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(template))
-            {
-                return Task.FromResult(new TemplateValidationResult
-                {
+        CancellationToken cancellationToken = default) {
+        try {
+            if (string.IsNullOrWhiteSpace(template)) {
+                return Task.FromResult(new TemplateValidationResult {
                     IsValid = false,
                     Errors = new List<string> { "Template cannot be empty" }
                 });
             }
 
-            if (!_parser.TryParse(template, out _, out var error))
-            {
-                return Task.FromResult(new TemplateValidationResult
-                {
+            if (!_parser.TryParse(template, out _, out var error)) {
+                return Task.FromResult(new TemplateValidationResult {
                     IsValid = false,
                     Errors = new List<string> { error }
                 });
             }
 
-            return Task.FromResult(new TemplateValidationResult
-            {
+            return Task.FromResult(new TemplateValidationResult {
                 IsValid = true,
                 Errors = new List<string>()
             });
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Template validation failed");
-            return Task.FromResult(new TemplateValidationResult
-            {
+            return Task.FromResult(new TemplateValidationResult {
                 IsValid = false,
                 Errors = new List<string> { ex.Message }
             });
@@ -118,12 +102,9 @@ public sealed class LiquidTemplateEngine : INotificationTemplateEngine
 
     public Task<List<string>> ExtractVariablesAsync(
         string template,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            if (!_parser.TryParse(template, out var fluidTemplate, out _))
-            {
+        CancellationToken cancellationToken = default) {
+        try {
+            if (!_parser.TryParse(template, out var fluidTemplate, out _)) {
                 return Task.FromResult(new List<string>());
             }
 
@@ -132,48 +113,37 @@ public sealed class LiquidTemplateEngine : INotificationTemplateEngine
 
             return Task.FromResult(variables.ToList());
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to extract template variables");
             return Task.FromResult(new List<string>());
         }
     }
 
-    private void ExtractVariablesFromStatements(IEnumerable<Statement> statements, HashSet<string> variables)
-    {
-        foreach (var statement in statements)
-        {
-            if (statement is OutputStatement outputStatement)
-            {
+    private void ExtractVariablesFromStatements(IEnumerable<Statement> statements, HashSet<string> variables) {
+        foreach (var statement in statements) {
+            if (statement is OutputStatement outputStatement) {
                 ExtractVariablesFromExpression(outputStatement.Expression, variables);
             }
         }
     }
 
-    private void ExtractVariablesFromExpression(Expression expression, HashSet<string> variables)
-    {
-        if (expression is MemberExpression memberExpression)
-        {
+    private void ExtractVariablesFromExpression(Expression expression, HashSet<string> variables) {
+        if (expression is MemberExpression memberExpression) {
             var segments = new List<string>();
             CollectMemberSegments(memberExpression, segments);
-            if (segments.Any())
-            {
+            if (segments.Any()) {
                 variables.Add(string.Join(".", segments));
             }
         }
     }
 
-    private void CollectMemberSegments(Expression expression, List<string> segments)
-    {
-        if (expression is MemberExpression memberExpression)
-        {
-            if (memberExpression.Expression != null)
-            {
+    private void CollectMemberSegments(Expression expression, List<string> segments) {
+        if (expression is MemberExpression memberExpression) {
+            if (memberExpression.Expression != null) {
                 CollectMemberSegments(memberExpression.Expression, segments);
             }
 
-            if (memberExpression.MemberName != null)
-            {
+            if (memberExpression.MemberName != null) {
                 segments.Add(memberExpression.MemberName);
             }
         }
@@ -183,8 +153,7 @@ public sealed class LiquidTemplateEngine : INotificationTemplateEngine
 /// <summary>
 /// Template validation result.
 /// </summary>
-public sealed class TemplateValidationResult
-{
+public sealed class TemplateValidationResult {
     public required bool IsValid { get; init; }
     public required List<string> Errors { get; init; }
 }
@@ -192,8 +161,7 @@ public sealed class TemplateValidationResult
 /// <summary>
 /// Template exception.
 /// </summary>
-public sealed class TemplateException : Exception
-{
+public sealed class TemplateException : Exception {
     public TemplateException(string message) : base(message) { }
     public TemplateException(string message, Exception innerException) : base(message, innerException) { }
 }

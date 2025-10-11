@@ -1,6 +1,7 @@
 using GameGuild.Modules.Users;
 using GameGuild.Core.Domain;
 using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Resources;
 
 
 namespace GameGuild.Modules.Reputations.Entities;
@@ -9,8 +10,7 @@ namespace GameGuild.Modules.Reputations.Entities;
 [Table("ReputationLevels")]
 [Index(nameof(MinimumScore))]
 [Index(nameof(SortOrder))]
-public class ReputationTier : Resource, ITenantable
-{
+public class ReputationTier : Resource, ITenantable {
     /// <summary> Unique name/identifier for this reputation tier </summary>
     [Required]
     [MaxLength(100)]
