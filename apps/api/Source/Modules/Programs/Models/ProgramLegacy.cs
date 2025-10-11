@@ -10,7 +10,7 @@ using GameGuild.Modules.Programs.Models;
 using EnrollmentStatus = GameGuild.Modules.Programs.Entities.EnrollmentStatus;
 
 
-namespace GameGuild.Modules.Programs;
+namespace GameGuild.Modules.Programs.Models;
 
 /// <summary>
 /// Represents a learning program that contains structured educational content and enrollment management
@@ -26,7 +26,7 @@ namespace GameGuild.Modules.Programs;
 [Table("programs")]
 [Index(nameof(Category))]
 [Index(nameof(Difficulty))]
-public class Program : EntityBase {
+public class ProgramLegacy : EntityBase {
   /// <summary>
   /// Thumbnail image URL for program display in listings and cards
   /// </summary>

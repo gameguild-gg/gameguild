@@ -5,10 +5,9 @@ namespace GameGuild.Modules.Subscriptions.SubscriptionPlans.Events;
 /// <summary>
 ///     Domain event raised when a subscription plan is discontinued
 /// </summary>
-public class SubscriptionPlanDiscontinuedEvent : DomainEvent
-{
+public class SubscriptionPlanDiscontinuedEvent : DomainEvent {
     public SubscriptionPlanDiscontinuedEvent(Guid planId, string name)
-    {
+      : base(planId, "SubscriptionPlan") {
         PlanId = planId;
         Name = name;
     }

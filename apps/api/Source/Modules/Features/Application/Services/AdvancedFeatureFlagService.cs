@@ -11,8 +11,7 @@ namespace GameGuild.Modules.Features.Services;
 /// <summary>
 ///     Advanced feature flag service with targeting, analytics, and SDK capabilities
 /// </summary>
-public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
-{
+public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService {
     private readonly Dictionary<string, FeatureFlagConfig> _cache = new Dictionary<string, FeatureFlagConfig>();
 
     private readonly DateTime _lastCacheUpdate = DateTime.UtcNow;
@@ -23,8 +22,7 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
 
     public AdvancedFeatureFlagService(
         IFeatureFlagRepository repository,
-        ILogger<AdvancedFeatureFlagService> logger)
-    {
+        ILogger<AdvancedFeatureFlagService> logger) {
         _repository = repository;
         _logger = logger;
     }
@@ -35,40 +33,37 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
     public async Task<FeatureEvaluationResult> EvaluateFeatureAsync(
         string featureKey,
         FeatureContext context,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         DateTime startTime = DateTime.UtcNow;
 
-        try
-        {
+        try {
             // Get feature flag configuration
             FeatureFlag? featureFlag = await GetFeatureFlagByKeyAsync(featureKey, cancellationToken).ConfigureAwait(false);
 
-            if (featureFlag == null)
-            {
+            if (featureFlag == null) {
                 _logger.LogWarning("Feature flag '{FeatureKey}' not found", featureKey);
 
-                return new FeatureEvaluationResult
-                {
-                    FeatureKey = featureKey, IsEnabled = false, Reason = "Feature flag not found"
+                return new FeatureEvaluationResult {
+                    FeatureKey = featureKey,
+                    IsEnabled = false,
+                    Reason = "Feature flag not found"
                 };
             }
 
             // Check environment
             if (!string.IsNullOrEmpty(featureFlag.Environment) &&
-                featureFlag.Environment != context.Environment)
-            {
-                return new FeatureEvaluationResult
-                {
-                    FeatureKey = featureKey, IsEnabled = false, Reason = $"Environment mismatch: expected {featureFlag.Environment}, got {context.Environment}"
+                featureFlag.Environment != context.Environment) {
+                return new FeatureEvaluationResult {
+                    FeatureKey = featureKey,
+                    IsEnabled = false,
+                    Reason = $"Environment mismatch: expected {featureFlag.Environment}, got {context.Environment}"
                 };
             }
 
             // Evaluate targeting rules
             FeatureEvaluationResult? targetingResult = await EvaluateTargetingRulesAsync(featureFlag, context, cancellationToken).ConfigureAwait(false);
 
-            if (targetingResult != null)
-            {
+            if (targetingResult != null) {
                 // Record usage analytics
                 await RecordUsageAsync(featureFlag.Id, context, targetingResult.IsEnabled, targetingResult.Value, cancellationToken).ConfigureAwait(false);
 
@@ -79,15 +74,13 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
             bool isEnabled = featureFlag.IsEnabled;
 
             // Apply percentage rollout
-            if (isEnabled && featureFlag.RolloutPercentage < 100)
-            {
+            if (isEnabled && featureFlag.RolloutPercentage < 100) {
                 isEnabled = IsUserInRollout(context, featureFlag.RolloutPercentage);
             }
 
             string? value = isEnabled ? featureFlag.EnabledValue : featureFlag.DefaultValue;
 
-            var result = new FeatureEvaluationResult
-            {
+            var result = new FeatureEvaluationResult {
                 FeatureKey = featureKey,
                 IsEnabled = isEnabled,
                 Value = value,
@@ -101,13 +94,13 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
 
             return result;
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Error evaluating feature flag '{FeatureKey}'", featureKey);
 
-            return new FeatureEvaluationResult
-            {
-                FeatureKey = featureKey, IsEnabled = false, Reason = $"Evaluation error: {ex.Message}"
+            return new FeatureEvaluationResult {
+                FeatureKey = featureKey,
+                IsEnabled = false,
+                Reason = $"Evaluation error: {ex.Message}"
             };
         }
     }
@@ -117,28 +110,24 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
     /// </summary>
     public async Task<BulkEvaluationResponse> EvaluateFeaturesAsync(
         BulkEvaluationRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var response = new BulkEvaluationResponse
-        {
+        CancellationToken cancellationToken = default) {
+        var response = new BulkEvaluationResponse {
             Environment = request.Context.Environment
         };
 
-        var tasks = request.FeatureKeys.Select(async key =>
-            {
-                FeatureEvaluationResult result = await EvaluateFeatureAsync(key, request.Context, cancellationToken).ConfigureAwait(false);
+        var tasks = request.FeatureKeys.Select(async key => {
+            FeatureEvaluationResult result = await EvaluateFeatureAsync(key, request.Context, cancellationToken).ConfigureAwait(false);
 
-                return new
-                {
-                    Key = key, Result = result
-                };
-            }
+            return new {
+                Key = key,
+                Result = result
+            };
+        }
         );
 
         var results = await Task.WhenAll(tasks).ConfigureAwait(false);
 
-        foreach (var result in results)
-        {
+        foreach (var result in results) {
             response.Results[result.Key] = result.Result;
         }
 
@@ -150,15 +139,13 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
     /// </summary>
     public async Task<FeatureFlagConfig?> GetFeatureFlagConfigAsync(
         string featureKey,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         FeatureFlag? featureFlag = await GetFeatureFlagByKeyAsync(featureKey, cancellationToken).ConfigureAwait(false);
 
         if (featureFlag == null)
             return null;
 
-        return new FeatureFlagConfig
-        {
+        return new FeatureFlagConfig {
             Key = featureFlag.Key,
             Name = featureFlag.Name,
             Description = featureFlag.Description,
@@ -178,24 +165,22 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
     /// </summary>
     public async Task<IEnumerable<FeatureFlagConfig>> GetAllFeatureFlagConfigsAsync(
         string environment = "production",
-        CancellationToken cancellationToken = default)
-    {
-        var featureFlags = await _repository.GetByEnvironmentAsync(environment, cancellationToken).ConfigureAwait(false);
+        CancellationToken cancellationToken = default) {
+        var featureFlags = await _repository.GetByEnvironmentAsync(environment, cancellationToken);
 
-        return featureFlags.Select(ff => new FeatureFlagConfig
-            {
-                Key = ff.Key,
-                Name = ff.Name,
-                Description = ff.Description,
-                IsEnabled = ff.IsEnabled,
-                Type = ff.Type,
-                DefaultValue = ff.DefaultValue,
-                EnabledValue = ff.EnabledValue,
-                IsGlobal = ff.IsGlobal,
-                RolloutPercentage = ff.RolloutPercentage,
-                Environment = ff.Environment,
-                LastModified = ff.UpdatedAt
-            }
+        return featureFlags.Select(ff => new FeatureFlagConfig {
+            Key = ff.Key,
+            Name = ff.Name,
+            Description = ff.Description,
+            IsEnabled = ff.IsEnabled,
+            Type = ff.Type,
+            DefaultValue = ff.DefaultValue,
+            EnabledValue = ff.EnabledValue,
+            IsGlobal = ff.IsGlobal,
+            RolloutPercentage = ff.RolloutPercentage,
+            Environment = ff.Environment,
+            LastModified = ff.UpdatedAt
+        }
         );
     }
 
@@ -204,10 +189,8 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
     /// </summary>
     public async Task<Guid> CreateTargetingRuleAsync(
         FeatureFlagTargetingRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var target = new FeatureFlagTarget
-        {
+        CancellationToken cancellationToken = default) {
+        var target = new FeatureFlagTarget {
             FeatureFlagId = request.FeatureFlagId,
             TargetType = request.TargetType,
             TargetIdentifier = request.TargetIdentifier,
@@ -228,8 +211,7 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
         string featureKey,
         DateTime? startDate = null,
         DateTime? endDate = null,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         DateTime start = startDate ?? DateTime.UtcNow.AddDays(-30);
         DateTime end = endDate ?? DateTime.UtcNow;
 
@@ -238,8 +220,7 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
         var totalAccesses = usage.Sum(u => u.AccessCount);
         var enabledAccesses = usage.Where(u => u.WasEnabled).Sum(u => u.AccessCount);
 
-        return new FeatureFlagAnalytics
-        {
+        return new FeatureFlagAnalytics {
             FeatureKey = featureKey,
             TotalAccesses = totalAccesses,
             EnabledAccesses = enabledAccesses,
@@ -254,46 +235,39 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
 
     #region Private Methods
 
-    private async Task<FeatureFlag?> GetFeatureFlagByKeyAsync(string key, CancellationToken cancellationToken)
-    {
+    private async Task<FeatureFlag?> GetFeatureFlagByKeyAsync(string key, CancellationToken cancellationToken) {
         // Try cache first (in a real implementation, use proper caching like Redis)
         if (_cache.TryGetValue(key, out FeatureFlagConfig? cachedConfig) &&
-            (DateTime.UtcNow - _lastCacheUpdate).TotalMinutes < 5)
-        {
+            (DateTime.UtcNow - _lastCacheUpdate).TotalMinutes < 5) {
             // Convert back to FeatureFlag for consistency
             // In a real implementation, cache the actual FeatureFlag entity
         }
 
-        return await _repository.GetByKeyAsync(key, cancellationToken).ConfigureAwait(false);
+        return await _repository.GetByKeyAsync(key, cancellationToken);
     }
 
     private async Task<FeatureEvaluationResult?> EvaluateTargetingRulesAsync(
         FeatureFlag featureFlag,
         FeatureContext context,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         if (!featureFlag.Targets.Any())
             return null;
 
         // Sort by priority (highest first)
         var sortedTargets = featureFlag.Targets.OrderByDescending(t => t.Priority);
 
-        foreach (FeatureFlagTarget target in sortedTargets)
-        {
-            if (await MatchesTargetingRuleAsync(target, context, cancellationToken).ConfigureAwait(false))
-            {
+        foreach (FeatureFlagTarget target in sortedTargets) {
+            if (await MatchesTargetingRuleAsync(target, context, cancellationToken).ConfigureAwait(false)) {
                 bool isEnabled = target.IsEnabled;
 
                 // Apply percentage rollout for this target
-                if (isEnabled && target.RolloutPercentage < 100)
-                {
+                if (isEnabled && target.RolloutPercentage < 100) {
                     isEnabled = IsUserInRollout(context, target.RolloutPercentage, target.TargetIdentifier);
                 }
 
                 string? value = isEnabled ? target.CustomValue ?? featureFlag.EnabledValue : featureFlag.DefaultValue;
 
-                return new FeatureEvaluationResult
-                {
+                return new FeatureEvaluationResult {
                     FeatureKey = featureFlag.Key,
                     IsEnabled = isEnabled,
                     Value = value,
@@ -311,10 +285,8 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
     private async Task<bool> MatchesTargetingRuleAsync(
         FeatureFlagTarget target,
         FeatureContext context,
-        CancellationToken cancellationToken)
-    {
-        return target.TargetType.ToLowerInvariant() switch
-        {
+        CancellationToken cancellationToken) {
+        return target.TargetType.ToLowerInvariant() switch {
             "tenant" => context.TenantId?.ToString() == target.TargetIdentifier,
             "user" => context.UserId?.ToString() == target.TargetIdentifier,
             "plan" => context.SubscriptionPlanId == target.TargetIdentifier,
@@ -327,23 +299,19 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
     private async Task<bool> EvaluateCustomTargetingRuleAsync(
         FeatureFlagTarget target,
         FeatureContext context,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         // Custom targeting rule evaluation
         // Could be extended to support complex conditions, regex, etc.
         await Task.CompletedTask; // Placeholder for async operations
 
-        if (!string.IsNullOrEmpty(target.Metadata))
-        {
-            try
-            {
+        if (!string.IsNullOrEmpty(target.Metadata)) {
+            try {
                 var conditions = JsonSerializer.Deserialize<Dictionary<string, object>>(target.Metadata);
 
                 // Evaluate custom conditions here
                 return false;
             }
-            catch
-            {
+            catch {
                 return false;
             }
         }
@@ -351,8 +319,7 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
         return false;
     }
 
-    private static bool IsUserInRollout(FeatureContext context, int percentage, string? salt = null)
-    {
+    private static bool IsUserInRollout(FeatureContext context, int percentage, string? salt = null) {
         if (percentage >= 100) return true;
         if (percentage <= 0) return false;
 
@@ -373,12 +340,9 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
         FeatureContext context,
         bool wasEnabled,
         string? returnedValue,
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            var usage = new FeatureFlagUsage
-            {
+        CancellationToken cancellationToken) {
+        try {
+            var usage = new FeatureFlagUsage {
                 FeatureFlagId = featureFlagId,
                 TenantId = context.TenantId,
                 UserId = context.UserId,
@@ -388,17 +352,18 @@ public class AdvancedFeatureFlagService : IAdvancedFeatureFlagService
                 FirstAccessAt = DateTime.UtcNow,
                 LastAccessAt = DateTime.UtcNow,
                 ContextData = JsonSerializer.Serialize(
-                    new
-                    {
-                        context.UserAgent, context.IpAddress, context.Country, context.RequestTime
+                    new {
+                        context.UserAgent,
+                        context.IpAddress,
+                        context.Country,
+                        context.RequestTime
                     }
                 )
             };
 
             await _repository.RecordUsageAsync(usage, cancellationToken).ConfigureAwait(false);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogWarning(ex, "Failed to record feature flag usage for {FeatureFlagId}", featureFlagId);
         }
     }

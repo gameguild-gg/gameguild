@@ -5,18 +5,16 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// <summary>
 ///     Event raised when subscription is nearing usage limits
 /// </summary>
-public sealed class SubscriptionUsageWarningEvent : DomainEvent
-{
-  public SubscriptionUsageWarningEvent(Guid subscriptionId, Guid tenantId, string limitType, object currentUsage, object limit, decimal usagePercentage)
-    : base(subscriptionId, "Subscription")
-  {
-    SubscriptionId = subscriptionId;
-    TenantId = tenantId;
-    LimitType = limitType;
-    CurrentUsage = currentUsage;
-    Limit = limit;
-    UsagePercentage = usagePercentage;
-  }
+public sealed class SubscriptionUsageWarningEvent : DomainEvent {
+    public SubscriptionUsageWarningEvent(Guid subscriptionId, Guid tenantId, string limitType, object currentUsage, object limit, decimal usagePercentage)
+      : base(subscriptionId, "Subscription") {
+        SubscriptionId = subscriptionId;
+        TenantId = tenantId;
+        LimitType = limitType;
+        CurrentUsage = currentUsage;
+        Limit = limit;
+        UsagePercentage = usagePercentage;
+    }
 
     public Guid SubscriptionId { get; }
 

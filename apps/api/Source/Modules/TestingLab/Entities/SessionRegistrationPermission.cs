@@ -1,3 +1,4 @@
+using GameGuild.Modules.Resources;
 using GameGuild.Modules.TestingLab.Entities;
 
 namespace GameGuild.Modules.TestingLab;
@@ -5,7 +6,7 @@ namespace GameGuild.Modules.TestingLab;
 /// <summary> Resource-specific permissions for SessionRegistration entities (Layer 3 of DAC permission system) Manages access control for individual session registration entries </summary>
 [Table("SessionRegistrationPermissions")]
 [Index(nameof(UserId), nameof(TenantId), nameof(ResourceId), Name = "IX_SessionRegistrationPermissions_User_Tenant_Resource")]
-public class SessionRegistrationPermission : ResourcePermission<SessionRegistration> {
+public class SessionRegistrationPermission : GameGuild.Modules.Resources.ResourcePermission<SessionRegistration> {
   public SessionRegistrationPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
     : base(userId, tenantId, resourceId) {
     AddPermission(permissions);

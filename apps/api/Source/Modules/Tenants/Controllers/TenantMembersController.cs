@@ -13,8 +13,7 @@ namespace GameGuild.Modules.Tenants;
 [ApiController]
 [Route("api/tenants")]
 [Authorize]
-public class TenantMembersController(IMediator mediator) : ControllerBase
-{
+public class TenantMembersController(IMediator mediator) : ControllerBase {
     /// <summary> Add a member to a tenant </summary>
     /// <param name="tenantId"> Tenant ID </param>
     /// <param name="request"> Add member request </param>
@@ -23,16 +22,13 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     [HttpPost("{tenantId:guid}/members")]
     [RequireTenantPermission(PermissionType.Edit)]
     public async Task<ActionResult<TenantMemberDto>> AddMember(
-        Guid tenantId,
-        [FromBody] AddTenantMemberRequest request,
-        CancellationToken cancellationToken)
-    {
-        var command = new AddTenantMemberCommand
-        {
-            TenantId = tenantId,
-            UserId = request.UserId,
-            Role = request.Role
-        };
+      Guid tenantId,
+      [FromBody] AddTenantMemberRequest request,
+      CancellationToken cancellationToken) {
+        var command = new AddTenantMemberCommand(
+          request.UserId,
+          tenantId,
+          request.Role);
 
         var result = await mediator.Send(command, cancellationToken);
 
@@ -50,15 +46,12 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     [HttpDelete("{tenantId:guid}/members/{userId:guid}")]
     [RequireTenantPermission(PermissionType.Delete)]
     public async Task<ActionResult> RemoveMember(
-        Guid tenantId,
-        Guid userId,
-        CancellationToken cancellationToken)
-    {
-        var command = new RemoveTenantMemberCommand
-        {
-            TenantId = tenantId,
-            UserId = userId
-        };
+      Guid tenantId,
+      Guid userId,
+      CancellationToken cancellationToken) {
+        var command = new RemoveTenantMemberCommand(
+          userId,
+          tenantId);
 
         var result = await mediator.Send(command, cancellationToken);
 
@@ -77,17 +70,14 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     [HttpPatch("{tenantId:guid}/members/{userId:guid}/role")]
     [RequireTenantPermission(PermissionType.Edit)]
     public async Task<ActionResult<TenantMemberDto>> UpdateMemberRole(
-        Guid tenantId,
-        Guid userId,
-        [FromBody] UpdateMemberRoleRequest request,
-        CancellationToken cancellationToken)
-    {
-        var command = new UpdateTenantMemberRoleCommand
-        {
-            TenantId = tenantId,
-            UserId = userId,
-            NewRole = request.Role
-        };
+      Guid tenantId,
+      Guid userId,
+      [FromBody] UpdateMemberRoleRequest request,
+      CancellationToken cancellationToken) {
+        var command = new UpdateTenantMemberRoleCommand(
+          userId,
+          tenantId,
+          request.Role);
 
         var result = await mediator.Send(command, cancellationToken);
 
@@ -105,15 +95,12 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     [HttpPost("{tenantId:guid}/members/{userId:guid}/activate")]
     [RequireTenantPermission(PermissionType.Edit)]
     public async Task<ActionResult<TenantMemberDto>> ActivateMember(
-        Guid tenantId,
-        Guid userId,
-        CancellationToken cancellationToken)
-    {
-        var command = new ActivateTenantMemberCommand
-        {
-            TenantId = tenantId,
-            UserId = userId
-        };
+      Guid tenantId,
+      Guid userId,
+      CancellationToken cancellationToken) {
+        var command = new ActivateTenantMemberCommand(
+          userId,
+          tenantId);
 
         var result = await mediator.Send(command, cancellationToken);
 
@@ -130,10 +117,9 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     [HttpGet("{tenantId:guid}/members")]
     [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetTenantMembers(
-        Guid tenantId,
-        CancellationToken cancellationToken)
-    {
-        var query = new GetTenantMembersQuery { TenantId = tenantId };
+      Guid tenantId,
+      CancellationToken cancellationToken) {
+        var query = new GetTenantMembersQuery(tenantId);
         var result = await mediator.Send(query, cancellationToken);
 
         if (!result.IsSuccess)
@@ -149,10 +135,9 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     [HttpGet("users/{userId:guid}/tenants")]
     [Authorize]
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetUserTenants(
-        Guid userId,
-        CancellationToken cancellationToken)
-    {
-        var query = new GetUserTenantsQuery { UserId = userId };
+      Guid userId,
+      CancellationToken cancellationToken) {
+        var query = new GetUserTenantsQuery(userId);
         var result = await mediator.Send(query, cancellationToken);
 
         if (!result.IsSuccess)
@@ -173,8 +158,7 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
         Guid tenantId,
         Guid userId,
         [FromBody] AssignParentRequest request,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         var command = new AssignParentMemberCommand(userId, request.ParentMemberId);
         var result = await mediator.Send(command, cancellationToken);
 
@@ -194,8 +178,7 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     public async Task<ActionResult> RemoveParentMember(
         Guid tenantId,
         Guid userId,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         var command = new RemoveParentMemberCommand(userId);
         var result = await mediator.Send(command, cancellationToken);
 
@@ -215,8 +198,7 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetMemberChildren(
         Guid tenantId,
         Guid userId,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         var query = new GetMemberChildrenQuery(userId);
         var result = await mediator.Send(query, cancellationToken);
 
@@ -236,8 +218,7 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetMemberHierarchy(
         Guid tenantId,
         Guid userId,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         var query = new GetMemberHierarchyQuery(userId);
         var result = await mediator.Send(query, cancellationToken);
 
@@ -255,8 +236,7 @@ public class TenantMembersController(IMediator mediator) : ControllerBase
     [RequireTenantPermission(PermissionType.Read)]
     public async Task<ActionResult<IReadOnlyList<TenantMemberDto>>> GetTenantHierarchyTree(
         Guid tenantId,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         var query = new GetTenantHierarchyTreeQuery(tenantId);
         var result = await mediator.Send(query, cancellationToken);
 

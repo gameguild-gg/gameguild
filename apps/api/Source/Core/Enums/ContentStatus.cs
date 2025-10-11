@@ -5,8 +5,7 @@ namespace GameGuild;
 /// <summary>
 /// Enumeration of content status values for lifecycle management
 /// </summary>
-public enum ContentStatus
-{
+public enum ContentStatus {
     /// <summary>
     /// Content is in draft state and not visible
     /// </summary>
@@ -59,5 +58,11 @@ public enum ContentStatus
     /// Content has been deleted
     /// </summary>
     [Description("Deleted")]
-    Deleted = 8
+    Deleted = 8,
+
+    /// <summary>
+    /// Content is under review (alias for InReview)
+    /// </summary>
+    [Description("Under Review")]
+    UnderReview = 2
 }

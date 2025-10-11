@@ -5,15 +5,14 @@ namespace GameGuild.Modules.Features.Events;
 /// <summary>
 ///     Domain event raised when usage limits are exceeded
 /// </summary>
-public class UsageLimitExceededEvent : DomainEvent
-{
+public class UsageLimitExceededEvent : DomainEvent {
     public UsageLimitExceededEvent(
-        Guid tenantId,
-        string metricName,
-        long currentUsage,
-        long limit,
-        double utilizationPercentage)
-    {
+      Guid tenantId,
+      string metricName,
+      long currentUsage,
+      long limit,
+      double utilizationPercentage)
+      : base(tenantId, "UsageMetric") {
         TenantId = tenantId;
         MetricName = metricName;
         CurrentUsage = currentUsage;

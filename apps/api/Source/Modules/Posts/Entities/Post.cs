@@ -42,6 +42,11 @@ public class Post : ContentEntity {
   [Column(TypeName = "jsonb")]
   public string? RichContent { get; set; }
 
+  // Backward compatibility alias - maps to Summary from Content base class
+  /// <summary> Alias for Summary property from Content base class for backward compatibility </summary>
+  [NotMapped]
+  public string? Description { get => Summary; set => Summary = value; }
+
   /// <summary> References to other content/resources this post relates to </summary>
   public virtual ICollection<PostContentReference> ContentReferences { get; set; } = new List<PostContentReference>();
 

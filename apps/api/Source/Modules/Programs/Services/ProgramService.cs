@@ -1,6 +1,5 @@
 using GameGuild.Database;
 using GameGuild.Modules.Contents.Models;
-using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
 namespace GameGuild.Modules.Programs;
@@ -11,21 +10,21 @@ namespace GameGuild.Modules.Programs;
 /// </summary>
 public class ProgramService(ApplicationDbContext context) : IProgramService {
   // Basic CRUD Operations
-  public async Task<ProgramEntity?> GetProgramByIdAsync(Guid id) { return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id); }
+  public async Task<Program?> GetProgramByIdAsync(Guid id) { return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Id == id); }
 
-  public async Task<ProgramEntity?> GetProgramBySlugAsync(string slug) { return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Slug == slug); }
+  public async Task<Program?> GetProgramBySlugAsync(string slug) { return await context.Programs.Where(p => p.DeletedAt == null).FirstOrDefaultAsync(p => p.Slug == slug); }
 
-  public async Task<ProgramEntity?> GetPublishedProgramBySlugAsync(string slug) {
+  public async Task<Program?> GetPublishedProgramBySlugAsync(string slug) {
     return await context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public).FirstOrDefaultAsync(p => p.Slug == slug);
   }
 
-  public async Task<ProgramEntity?> GetProgramWithContentAsync(Guid id) {
+  public async Task<Program?> GetProgramWithContentAsync(Guid id) {
     return await context.Programs.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted)).Include(p => p.ProgramUsers.Where(pu => !pu.IsDeleted)).Where(p => !p.IsDeleted).FirstOrDefaultAsync(p => p.Id == id);
   }
 
-  public async Task<IEnumerable<ProgramEntity>> GetProgramsAsync(int skip = 0, int take = 50) { return await context.Programs.Where(p => p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync(); }
+  public async Task<IEnumerable<Program>> GetProgramsAsync(int skip = 0, int take = 50) { return await context.Programs.Where(p => p.DeletedAt == null).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync(); }
 
-  public async Task<ProgramEntity> CreateProgramAsync(ProgramEntity program) {
+  public async Task<Program> CreateProgramAsync(Program program) {
     program.Status = ContentStatus.Draft;
     program.Visibility = AccessLevel.Private;
 
@@ -35,7 +34,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity> UpdateProgramAsync(ProgramEntity program) {
+  public async Task<Program> UpdateProgramAsync(Program program) {
     program.Touch();
     context.Programs.Update(program);
     await context.SaveChangesAsync();
@@ -52,12 +51,12 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     }
   }
 
-  public async Task<ProgramEntity> CloneProgramAsync(Guid id, string newTitle) {
+  public async Task<Program> CloneProgramAsync(Guid id, string newTitle) {
     var originalProgram = await GetProgramWithContentAsync(id);
 
     if (originalProgram == null) throw new ArgumentException("Program not found", nameof(id));
 
-    var clonedProgram = new ProgramEntity {
+    var clonedProgram = new Program {
       Title = newTitle,
       Description = originalProgram.Description,
       Slug = GenerateSlug(newTitle),
@@ -132,7 +131,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     }
   }
 
-  public async Task<ProgramEntity> ReorderContentAsync(Guid programId, List<Guid> contentIds) {
+  public async Task<Program> ReorderContentAsync(Guid programId, List<Guid> contentIds) {
     var program = await GetProgramByIdAsync(programId);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
@@ -194,7 +193,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return await context.ProgramUsers.Include(pu => pu.User).Where(pu => !pu.IsDeleted && pu.ProgramId == programId && pu.IsActive).OrderBy(pu => pu.JoinedAt).ToListAsync();
   }
 
-  public async Task<IEnumerable<ProgramEntity>> GetUserProgramsAsync(Guid userId) {
+  public async Task<IEnumerable<Program>> GetUserProgramsAsync(Guid userId) {
     return await context.ProgramUsers.Include(pu => pu.Program).Where(pu => !pu.IsDeleted && pu.UserId == userId && pu.IsActive).Select(pu => pu.Program).Where(p => !p.IsDeleted).OrderByDescending(p => p.CreatedAt).ToListAsync();
   }
 
@@ -215,7 +214,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return await context.ContentInteractions.Include(ci => ci.Content).Where(ci => !ci.IsDeleted && ci.ProgramUserId == programUser.Id).OrderBy(ci => ci.Content.SortOrder).ToListAsync();
   }
 
-  public async Task<ProgramEntity> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status) {
+  public async Task<Program> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status) {
     var program = await GetProgramByIdAsync(programId);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
@@ -252,13 +251,13 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   }
 
   // Lifecycle Management
-  public async Task<ProgramEntity> CreateDraftAsync(ProgramEntity program) {
+  public async Task<Program> CreateDraftAsync(Program program) {
     program.Status = ContentStatus.Draft;
 
     return await CreateProgramAsync(program);
   }
 
-  public async Task<ProgramEntity> SubmitForReviewAsync(Guid id) {
+  public async Task<Program> SubmitForReviewAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(id));
@@ -270,7 +269,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity> ApproveAsync(Guid id) {
+  public async Task<Program> ApproveAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(id));
@@ -282,7 +281,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity> RejectAsync(Guid id, string reason) {
+  public async Task<Program> RejectAsync(Guid id, string reason) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(id));
@@ -297,7 +296,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity> ArchiveAsync(Guid id) {
+  public async Task<Program> ArchiveAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(id));
@@ -309,7 +308,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity> RestoreAsync(Guid id) {
+  public async Task<Program> RestoreAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(id));
@@ -322,7 +321,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   }
 
   // Publishing Operations
-  public async Task<ProgramEntity> PublishProgramAsync(Guid id) {
+  public async Task<Program> PublishProgramAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(id));
@@ -334,7 +333,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity> UnpublishProgramAsync(Guid id) {
+  public async Task<Program> UnpublishProgramAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(id));
@@ -346,7 +345,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity> SchedulePublishAsync(Guid id, DateTime publishAt) {
+  public async Task<Program> SchedulePublishAsync(Guid id, DateTime publishAt) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(id));
@@ -358,7 +357,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity> SetVisibilityAsync(Guid id, AccessLevel visibility) {
+  public async Task<Program> SetVisibilityAsync(Guid id, AccessLevel visibility) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(id));
@@ -371,27 +370,27 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   }
 
   // Search & Discovery
-  public async Task<IEnumerable<ProgramEntity>> SearchProgramsAsync(string searchTerm, int skip = 0, int take = 50) {
+  public async Task<IEnumerable<Program>> SearchProgramsAsync(string searchTerm, int skip = 0, int take = 50) {
     if (string.IsNullOrWhiteSpace(searchTerm)) return await GetProgramsAsync(skip, take);
 
     return await context.Programs.Where(p => !p.IsDeleted && (p.Title.Contains(searchTerm) || (p.Description != null && p.Description.Contains(searchTerm)))).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
-  public async Task<IEnumerable<ProgramEntity>> GetProgramsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50) {
+  public async Task<IEnumerable<Program>> GetProgramsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50) {
     // Since Program doesn't have CreatorId, we'll return all programs for now
     // In a real implementation, you'd need to add a CreatorId property to Program
     return await context.Programs.Where(p => !p.IsDeleted).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
-  public async Task<IEnumerable<ProgramEntity>> GetFeaturedProgramsAsync(int count = 10) {
+  public async Task<IEnumerable<Program>> GetFeaturedProgramsAsync(int count = 10) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published).OrderByDescending(p => p.ProgramUsers.Count(pu => !pu.IsDeleted && pu.IsActive)).Take(count).ToListAsync();
   }
 
-  public async Task<IEnumerable<ProgramEntity>> GetRecentProgramsAsync(int count = 10) {
+  public async Task<IEnumerable<Program>> GetRecentProgramsAsync(int count = 10) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published).OrderByDescending(p => p.CreatedAt).Take(count).ToListAsync();
   }
 
-  public async Task<IEnumerable<ProgramEntity>> GetPopularProgramsAsync(int count = 10) {
+  public async Task<IEnumerable<Program>> GetPopularProgramsAsync(int count = 10) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Status == ContentStatus.Published).OrderByDescending(p => p.ProgramUsers.Count(pu => !pu.IsDeleted && pu.IsActive)).ThenByDescending(p => p.CreatedAt).Take(count).ToListAsync();
   }
 
@@ -450,8 +449,8 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   // Additional methods required by the controller
 
   // CRUD Operations with DTOs
-  public async Task<ProgramEntity> CreateProgramAsync(CreateProgramDto createDto) {
-    var program = new ProgramEntity {
+  public async Task<Program> CreateProgramAsync(CreateProgramDto createDto) {
+    var program = new Program {
       Id = Guid.NewGuid(),
       Title = createDto.Title,
       Description = createDto.Description,
@@ -469,7 +468,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity?> UpdateProgramAsync(Guid id, UpdateProgramDto updateDto) {
+  public async Task<Program?> UpdateProgramAsync(Guid id, UpdateProgramDto updateDto) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -485,15 +484,15 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   }
 
   // Category and Difficulty Operations
-  public async Task<IEnumerable<ProgramEntity>> GetProgramsByCategoryAsync(ProgramCategory category, int skip = 0, int take = 50) {
+  public async Task<IEnumerable<Program>> GetProgramsByCategoryAsync(ProgramCategory category, int skip = 0, int take = 50) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Category == category).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
-  public async Task<IEnumerable<ProgramEntity>> GetProgramsByDifficultyAsync(ProgramDifficulty difficulty, int skip = 0, int take = 50) {
+  public async Task<IEnumerable<Program>> GetProgramsByDifficultyAsync(ProgramDifficulty difficulty, int skip = 0, int take = 50) {
     return await context.Programs.Where(p => !p.IsDeleted && p.Difficulty == difficulty).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
-  public async Task<IEnumerable<ProgramEntity>> GetPublishedProgramsAsync(int skip = 0, int take = 50) {
+  public async Task<IEnumerable<Program>> GetPublishedProgramsAsync(int skip = 0, int take = 50) {
     return await context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published).OrderByDescending(p => p.CreatedAt).Skip(skip).Take(take).ToListAsync();
   }
 
@@ -663,7 +662,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   }
 
   // Lifecycle Management - Stub implementations
-  public async Task<ProgramEntity?> SubmitProgramAsync(Guid id) {
+  public async Task<Program?> SubmitProgramAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -675,7 +674,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity?> ApproveProgramAsync(Guid id) {
+  public async Task<Program?> ApproveProgramAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -687,7 +686,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity?> RejectProgramAsync(Guid id, string reason) {
+  public async Task<Program?> RejectProgramAsync(Guid id, string reason) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -699,7 +698,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity?> WithdrawProgramAsync(Guid id) {
+  public async Task<Program?> WithdrawProgramAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -711,7 +710,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity?> ArchiveProgramAsync(Guid id) {
+  public async Task<Program?> ArchiveProgramAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -723,7 +722,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity?> RestoreProgramAsync(Guid id) {
+  public async Task<Program?> RestoreProgramAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -735,7 +734,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity?> ScheduleProgramAsync(Guid id, DateTime publishAt) {
+  public async Task<Program?> ScheduleProgramAsync(Guid id, DateTime publishAt) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -750,7 +749,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
   }
 
   // Monetization - Stub implementations
-  public async Task<ProgramEntity?> EnableMonetizationAsync(Guid id, MonetizationDto monetizationDto) {
+  public async Task<Program?> EnableMonetizationAsync(Guid id, MonetizationDto monetizationDto) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -762,7 +761,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return program;
   }
 
-  public async Task<ProgramEntity?> DisableMonetizationAsync(Guid id) {
+  public async Task<Program?> DisableMonetizationAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) return null;
@@ -897,7 +896,7 @@ public class ProgramService(ApplicationDbContext context) : IProgramService {
     return new List<Guid>();
   }
 
-  public async Task<ProgramEntity> PublishAsync(Guid id) {
+  public async Task<Program> PublishAsync(Guid id) {
     var program = await GetProgramByIdAsync(id);
 
     if (program == null) {
