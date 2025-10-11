@@ -34,7 +34,7 @@ public abstract class WithPermissions : EntityBase
     /// <summary> Tenant relationship - NULL means global defaults </summary>
     [GraphQLType(typeof(UuidType))]
     [GraphQLDescription("The tenant ID this permission applies to (null for global defaults)")]
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 
     /// <summary> Navigation property to the Tenant entity </summary>
     [GraphQLIgnore]

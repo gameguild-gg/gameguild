@@ -20,7 +20,7 @@ public class PermissionTemplateVersion : EntityBase
     /// <summary>
     /// Version number (incremental)
     /// </summary>
-    public int Version { get; set; }
+    public override int Version { get; set; }
 
     /// <summary>
     /// Template name at this version

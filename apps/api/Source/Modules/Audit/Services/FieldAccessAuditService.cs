@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using GameGuild.Modules.Audit.Entities;
 using GameGuild.Modules.Audit.Enums;
+using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Audit.Services;
 
@@ -34,7 +35,57 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         _logger = logger;
     }
 
-    public async Task<FieldAccessAudit> RecordFieldAccessAsync(
+    // Interface method with specific parameters
+    public async Task<Result<FieldAccessAudit>> RecordFieldAccessAsync(
+        Guid tenantId,
+        Guid userId,
+        string entityType,
+        Guid entityId,
+        string fieldName,
+        FieldAccessType accessType,
+        string? oldValue,
+        string? newValue,
+        bool isSensitive,
+        SensitivityLevel sensitivityLevel,
+        string ipAddress,
+        string userAgent,
+        CancellationToken cancellationToken = default)
+    {
+        var audit = FieldAccessAudit.Create(
+            tenantId,
+            userId,
+            entityType,
+            entityId.ToString(),
+            fieldName,
+            accessType);
+
+        // Set values with masking for sensitive fields
+        var maskedOldValue = isSensitive ? MaskSensitiveData(oldValue, sensitivityLevel) : oldValue;
+        var maskedNewValue = isSensitive ? MaskSensitiveData(newValue, sensitivityLevel) : newValue;
+
+        audit.SetValues(oldValue, newValue, maskedOldValue, maskedNewValue, isSensitive, sensitivityLevel);
+        audit.SetAccessContext(ipAddress, userAgent, null, null, null);
+
+        // Determine if notification is required (e.g., for GDPR)
+        var requiresNotification = isSensitive &&
+            (accessType == FieldAccessType.Export || accessType == FieldAccessType.Delete);
+
+        audit.SetComplianceInfo(null, null, requiresNotification);
+
+        await _repository.AddAsync(audit, cancellationToken);
+
+        _logger.LogInformation(
+            "Recorded field access: {EntityType}.{FieldName} by user {UserId} - {AccessType}",
+            entityType,
+            fieldName,
+            userId,
+            accessType);
+
+        return Result<FieldAccessAudit>.Success(audit);
+    }
+
+    // Internal method with additional parameters
+    private async Task<FieldAccessAudit> RecordFieldAccessAsync(
         Guid? tenantId,
         Guid userId,
         string entityType,
@@ -130,7 +181,27 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         return text;
     }
 
-    public async Task<List<FieldAccessAudit>> GetFieldAccessHistoryAsync(
+    public async Task<Result<IEnumerable<FieldAccessAudit>>> GetFieldAccessHistoryAsync(
+        Guid entityId,
+        string? fieldName = null,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _repository.AsQueryable()
+            .Where(x => x.EntityId == entityId.ToString());
+
+        if (!string.IsNullOrEmpty(fieldName))
+            query = query.Where(x => x.FieldName == fieldName);
+
+        var results = await query
+            .OrderByDescending(x => x.AccessedAt)
+            .Take(100) // Limit to 100 results
+            .ToListAsync(cancellationToken);
+
+        return Result<IEnumerable<FieldAccessAudit>>.Success(results);
+    }
+
+    // Internal method with pagination
+    private async Task<List<FieldAccessAudit>> GetFieldAccessHistoryAsync(
         string entityType,
         string entityId,
         string? fieldName = null,
@@ -151,7 +222,28 @@ public class FieldAccessAuditService : IFieldAccessAuditService
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<List<FieldAccessAudit>> GetSensitiveFieldAccessesAsync(
+    public async Task<Result<IEnumerable<FieldAccessAudit>>> GetSensitiveFieldAccessesAsync(
+        Guid tenantId,
+        DateTime startDate,
+        DateTime endDate,
+        CancellationToken cancellationToken = default)
+    {
+        var query = _repository.AsQueryable()
+            .Where(x => x.TenantId == tenantId)
+            .Where(x => x.IsSensitiveField)
+            .Where(x => x.AccessedAt >= startDate)
+            .Where(x => x.AccessedAt <= endDate);
+
+        var results = await query
+            .OrderByDescending(x => x.AccessedAt)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+
+        return Result<IEnumerable<FieldAccessAudit>>.Success(results);
+    }
+
+    // Internal method with additional parameters
+    private async Task<List<FieldAccessAudit>> GetSensitiveFieldAccessesAsync(
         Guid? tenantId,
         DateTime? startDate = null,
         DateTime? endDate = null,

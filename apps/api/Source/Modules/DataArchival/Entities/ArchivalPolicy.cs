@@ -8,11 +8,6 @@ namespace GameGuild.Modules.DataArchival.Entities;
 public class ArchivalPolicy : EntityBase
 {
     /// <summary>
-    /// Gets or sets the unique identifier for the archival policy.
-    /// </summary>
-    public Guid Id { get; set; }
-
-    /// <summary>
     /// Gets or sets the name of the archival policy.
     /// </summary>
     public string Name { get; set; } = string.Empty;
@@ -26,11 +21,6 @@ public class ArchivalPolicy : EntityBase
     /// Gets or sets whether the policy is enabled.
     /// </summary>
     public bool IsEnabled { get; set; } = true;
-
-    /// <summary>
-    /// Gets or sets the tenant ID this policy belongs to (null for global policies).
-    /// </summary>
-    public Guid? TenantId { get; set; }
 
     /// <summary>
     /// Gets or sets the entity type this policy applies to.

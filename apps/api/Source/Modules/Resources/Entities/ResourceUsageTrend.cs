@@ -10,7 +10,7 @@ public class ResourceUsageTrend : EntityBase
     /// <summary>
     ///     Tenant this trend applies to
     /// </summary>
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary>
     ///     Type of resource being analyzed

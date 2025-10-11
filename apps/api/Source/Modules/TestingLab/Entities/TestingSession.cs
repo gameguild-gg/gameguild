@@ -134,15 +134,15 @@ public class TestingSession : EntityBase
     public virtual ICollection<TestingFeedback> Feedback { get; set; } = new List<TestingFeedback>();
 
     /// <summary>
-    /// Session waitlist entries
+    /// Session waitlist entries (TODO: Implement SessionWaitlist entity)
     /// </summary>
-    public virtual ICollection<SessionWaitlist> Waitlist { get; set; } = new List<SessionWaitlist>();
+    // public virtual ICollection<SessionWaitlist> Waitlist { get; set; } = new List<SessionWaitlist>();
 
     // Computed Properties
     /// <summary>
     /// Whether this session is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Whether the session is currently active

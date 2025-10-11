@@ -41,7 +41,7 @@ public class TenantDomain : EntityBase
 
     /// <summary> ID of the tenant this domain belongs to </summary>
     [Required]
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary> ID of the user group that users with this domain should be automatically added to </summary>
     public Guid? UserGroupId { get; set; }

@@ -106,7 +106,7 @@ public sealed class ProfileAttribute : EntityBase
     /// <summary>
     /// Gets or sets when this attribute was last updated.
     /// </summary>
-    public DateTime UpdatedAt { get; set; }
+    public override DateTime UpdatedAt { get; set; }
 
     /// <summary>
     /// Gets or sets when this attribute expires and should be recalculated.

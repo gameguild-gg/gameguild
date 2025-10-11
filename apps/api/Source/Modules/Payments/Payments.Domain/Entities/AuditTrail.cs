@@ -58,7 +58,7 @@ public class AuditTrail : EntityBase
     public string? Reason { get; set; }
 
     /// <summary>Tenant ID for multi-tenancy</summary>
-    public Guid? TenantId { get; set; }
+    public override Guid? TenantId { get; set; }
 }
 
 /// <summary>Audit actions</summary>

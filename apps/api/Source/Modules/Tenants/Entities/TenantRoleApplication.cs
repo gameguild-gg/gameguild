@@ -13,7 +13,7 @@ public class TenantRoleApplication : EntityBase, ITenantable
     /// The tenant this role application belongs to
     /// </summary>
     [Required]
-    public Guid TenantId { get; set; }
+    public override Guid TenantId { get; set; }
 
     /// <summary>
     /// Navigation property to the tenant
