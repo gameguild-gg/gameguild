@@ -1,6 +1,4 @@
-using GameGuild.Tenants.Entities;
-
-namespace GameGuild.Tenants.Services;
+namespace GameGuild.Modules.Tenants;
 
 /// <summary>
 /// Service for managing tenant lifecycle webhooks

@@ -1,4 +1,4 @@
-using GameGuild.Tenants.Entities;
+using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Common.Configuration;
 using GameGuild.Tenants.Repositories;
 using System.Security.Cryptography;

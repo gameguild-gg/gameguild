@@ -10,6 +10,7 @@ using GameGuild.Modules.Permissions.Entities;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Users.Entities;
 using GameGuild.Source.Database.Seeding;
 
 namespace GameGuild.Database;
