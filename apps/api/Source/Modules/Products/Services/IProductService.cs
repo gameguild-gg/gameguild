@@ -1,6 +1,6 @@
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Models;
-using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
 
 namespace GameGuild.Modules.Products.Services;

@@ -12,11 +12,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Handlers;
 
 /// <summary> Query handlers for product operations </summary>
 public class ProductQueryHandlers
-  : IRequestHandler<GetProductByIdQuery, Product?>, IRequestHandler<GetProductsQuery, IEnumerable<Product>>, IRequestHandler<GetUserProductsQuery, IEnumerable<UserProduct>>, IRequestHandler<GetProductStatsQuery, ProductStats> {
+  : IRequestHandler<GetProductByIdQuery, Product?>, IRequestHandler<GetProductsQuery, IEnumerable<ProductEntity>>, IRequestHandler<GetUserProductsQuery, IEnumerable<UserProduct>>, IRequestHandler<GetProductStatsQuery, ProductStats> {
   private readonly ApplicationDbContext _context;
 
   private readonly ILogger<ProductQueryHandlers> _logger;
@@ -59,7 +60,7 @@ public class ProductQueryHandlers
     }
   }
 
-  public async Task<IEnumerable<Product>> Handle(GetProductsQuery request, CancellationToken cancellationToken) {
+  public async Task<IEnumerable<ProductEntity>> Handle(GetProductsQuery request, CancellationToken cancellationToken) {
     try {
       _logger.LogDebug("Getting products with filters - Type: {Type}, Status: {Status}, Skip: {Skip}, Take: {Take}", request.Type, request.Status, request.Skip, request.Take);
 
@@ -252,7 +253,7 @@ public class ProductQueryHandlers
   }
 
   /// <summary> Apply access control based on user context and product access levels </summary>
-  private IQueryable<Product> ApplyAccessControl(IQueryable<Product> query) {
+  private IQueryable<ProductEntity> ApplyAccessControl(IQueryable<ProductEntity> query) {
     // Anonymous users can only see public products that are published
     if (!_userContext.IsAuthenticated) { return query.Where(p => p.Visibility == AccessLevel.Public && p.Status == ContentStatus.Published); }
 

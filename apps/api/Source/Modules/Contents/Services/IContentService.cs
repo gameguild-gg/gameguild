@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using GameGuild.Modules.Contents.Models;
 
+using ContentEntity = GameGuild.Modules.Contents.Models.Content;
 namespace GameGuild.Modules.Contents.Services;
 
 /// <summary>
@@ -13,12 +14,12 @@ public interface IContentService
     /// <summary>
     /// Creates new content
     /// </summary>
-    Task<Content> CreateContentAsync(Content content);
+    Task<ContentEntity> CreateContentAsync(ContentEntity content);
 
     /// <summary>
     /// Updates existing content
     /// </summary>
-    Task<Content> UpdateContentAsync(Content content);
+    Task<ContentEntity> UpdateContentAsync(ContentEntity content);
 
     /// <summary>
     /// Deletes content (soft delete)
@@ -28,62 +29,62 @@ public interface IContentService
     /// <summary>
     /// Gets content by ID
     /// </summary>
-    Task<Content?> GetContentByIdAsync(Guid contentId);
+    Task<ContentEntity?> GetContentByIdAsync(Guid contentId);
 
     /// <summary>
     /// Gets content by slug
     /// </summary>
-    Task<Content?> GetContentBySlugAsync(string slug);
+    Task<ContentEntity?> GetContentBySlugAsync(string slug);
 
     /// <summary>
     /// Gets all content for a tenant
     /// </summary>
-    Task<IEnumerable<Content>> GetContentByTenantAsync(Guid tenantId);
+    Task<IEnumerable<ContentEntity>> GetContentByTenantAsync(Guid tenantId);
 
     /// <summary>
     /// Gets content by author
     /// </summary>
-    Task<IEnumerable<Content>> GetContentByAuthorAsync(Guid authorId);
+    Task<IEnumerable<ContentEntity>> GetContentByAuthorAsync(Guid authorId);
 
     /// <summary>
     /// Gets content by type
     /// </summary>
-    Task<IEnumerable<Content>> GetContentByTypeAsync(ContentType type);
+    Task<IEnumerable<ContentEntity>> GetContentByTypeAsync(ContentType type);
 
     /// <summary>
     /// Gets content by status
     /// </summary>
-    Task<IEnumerable<Content>> GetContentByStatusAsync(ContentStatus status);
+    Task<IEnumerable<ContentEntity>> GetContentByStatusAsync(ContentStatus status);
 
     /// <summary>
     /// Publishes content
     /// </summary>
-    Task<Content> PublishContentAsync(Guid contentId, Guid publishedBy);
+    Task<ContentEntity> PublishContentAsync(Guid contentId, Guid publishedBy);
 
     /// <summary>
     /// Schedules content for publishing
     /// </summary>
-    Task<Content> ScheduleContentAsync(Guid contentId, DateTime scheduledPublishAt);
+    Task<ContentEntity> ScheduleContentAsync(Guid contentId, DateTime scheduledPublishAt);
 
     /// <summary>
     /// Archives content
     /// </summary>
-    Task<Content> ArchiveContentAsync(Guid contentId);
+    Task<ContentEntity> ArchiveContentAsync(Guid contentId);
 
     /// <summary>
     /// Approves content
     /// </summary>
-    Task<Content> ApproveContentAsync(Guid contentId, Guid approvedBy, string? approvalNotes);
+    Task<ContentEntity> ApproveContentAsync(Guid contentId, Guid approvedBy, string? approvalNotes);
 
     /// <summary>
     /// Rejects content
     /// </summary>
-    Task<Content> RejectContentAsync(Guid contentId, Guid reviewedBy, string? reviewNotes);
+    Task<ContentEntity> RejectContentAsync(Guid contentId, Guid reviewedBy, string? reviewNotes);
 
     /// <summary>
     /// Submits content for review
     /// </summary>
-    Task<Content> SubmitForReviewAsync(Guid contentId);
+    Task<ContentEntity> SubmitForReviewAsync(Guid contentId);
 
     /// <summary>
     /// Creates a new version of content
@@ -103,17 +104,17 @@ public interface IContentService
     /// <summary>
     /// Searches content by metadata, title, or body
     /// </summary>
-    Task<IEnumerable<Content>> SearchContentAsync(string searchTerm, Guid? tenantId = null);
+    Task<IEnumerable<ContentEntity>> SearchContentAsync(string searchTerm, Guid? tenantId = null);
 
     /// <summary>
     /// Gets published content with filters
     /// </summary>
-    Task<IEnumerable<Content>> GetPublishedContentAsync(Guid? tenantId = null, ContentType? type = null, int? limit = null);
+    Task<IEnumerable<ContentEntity>> GetPublishedContentAsync(Guid? tenantId = null, ContentType? type = null, int? limit = null);
 
     /// <summary>
     /// Gets scheduled content that needs to be published
     /// </summary>
-    Task<IEnumerable<Content>> GetScheduledContentReadyToPublishAsync();
+    Task<IEnumerable<ContentEntity>> GetScheduledContentReadyToPublishAsync();
 
     /// <summary>
     /// Processes scheduled content publishing

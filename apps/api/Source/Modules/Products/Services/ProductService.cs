@@ -3,7 +3,7 @@ using GameGuild.Modules.Contents;
 using GameGuild.Modules.Products.Interfaces;
 using GameGuild.Modules.Products.Models;
 using Microsoft.EntityFrameworkCore;
-using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 using ProductType = GameGuild.ProductType;
 
 

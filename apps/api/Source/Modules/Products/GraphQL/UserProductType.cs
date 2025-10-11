@@ -2,6 +2,7 @@
 using GameGuild.Modules.Products.Models;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> GraphQL type for UserProduct entity </summary>
