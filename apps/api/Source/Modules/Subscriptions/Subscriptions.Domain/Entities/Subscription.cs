@@ -20,8 +20,7 @@ namespace GameGuild.Modules.Subscriptions.Entities;
 [Index(nameof(PlanId))]
 [Index(nameof(NextBillingDate))]
 [Index(nameof(Status))]
-public class Subscription : EntityBase, ISubscription
-{
+public class Subscription : EntityBase, ISubscription {
     /// <summary>
     ///     Default constructor for EF
     /// </summary>
@@ -37,8 +36,7 @@ public class Subscription : EntityBase, ISubscription
         BillingCycle billingCycle,
         Money amount,
         DateTime startDate,
-        DateTime? trialEndDate = null)
-    {
+        DateTime? trialEndDate = null) {
         TenantId = tenantId;
         PlanId = planId;
         CreatedByUserId = createdByUserId;
@@ -122,7 +120,7 @@ public class Subscription : EntityBase, ISubscription
     public string? Metadata { get; private set; }
 
     // Navigation properties
-    public override virtual Tenant Tenant { get; set; } = null!;
+    public override Tenant Tenant { get; set; } = null!;
 
     public virtual SubscriptionPlan Plan { get; set; } = null!;
 
@@ -173,32 +171,28 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Checks if the subscription is currently active
     /// </summary>
-    public bool IsActive
-    {
+    public bool IsActive {
         get => Status == SubscriptionStatus.Active;
     }
 
     /// <summary>
     ///     Checks if the subscription is in trial
     /// </summary>
-    public bool IsTrialing
-    {
+    public bool IsTrialing {
         get => Status == SubscriptionStatus.Trialing;
     }
 
     /// <summary>
     ///     Checks if the subscription is cancelled
     /// </summary>
-    public bool IsCancelled
-    {
+    public bool IsCancelled {
         get => Status == SubscriptionStatus.Cancelled;
     }
 
     /// <summary>
     ///     Gets remaining trial days (if in trial)
     /// </summary>
-    public int? GetRemainingTrialDays()
-    {
+    public int? GetRemainingTrialDays() {
         if (!IsTrialing || !TrialEndDate.HasValue)
             return null;
 
@@ -210,8 +204,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Gets days until next billing
     /// </summary>
-    public int GetDaysUntilNextBilling()
-    {
+    public int GetDaysUntilNextBilling() {
         if (!IsActive) return -1;
 
         return Math.Max(0, (NextBillingDate - DateTime.UtcNow).Days);
@@ -220,8 +213,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Activates the subscription
     /// </summary>
-    public void Activate()
-    {
+    public void Activate() {
         if (Status != SubscriptionStatus.PendingActivation && Status != SubscriptionStatus.Trialing)
             throw new InvalidOperationException("Can only activate pending or trialing subscriptions");
 
@@ -232,8 +224,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Starts a trial period
     /// </summary>
-    public void StartTrial(DateTime trialEndDate)
-    {
+    public void StartTrial(DateTime trialEndDate) {
         if (Status != SubscriptionStatus.PendingActivation)
             throw new InvalidOperationException("Can only start trial for pending subscriptions");
 
@@ -244,18 +235,15 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Ends the trial period
     /// </summary>
-    public void EndTrial(bool convertToPaid)
-    {
+    public void EndTrial(bool convertToPaid) {
         if (Status != SubscriptionStatus.Trialing)
             throw new InvalidOperationException("Can only end trial for trialing subscriptions");
 
-        if (convertToPaid)
-        {
+        if (convertToPaid) {
             Status = SubscriptionStatus.Active;
             Raise(new SubscriptionActivatedEvent(Id, TenantId));
         }
-        else
-        {
+        else {
             var reason = ModuState.Subscriptions.Domain.Models.CancellationReason.TrialEnded;
             Cancel(reason, "Trial period ended without conversion");
         }
@@ -264,8 +252,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Cancels the subscription
     /// </summary>
-    public void Cancel(CancellationReason reason, string? note = null, DateTime? effectiveDate = null)
-    {
+    public void Cancel(CancellationReason reason, string? note = null, DateTime? effectiveDate = null) {
         if (Status == SubscriptionStatus.Cancelled)
             return;
 
@@ -283,19 +270,16 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Suspends the subscription temporarily
     /// </summary>
-    public void Suspend(string? reason = null)
-    {
+    public void Suspend(string? reason = null) {
         if (Status != SubscriptionStatus.Active)
             throw new InvalidOperationException("Can only suspend active subscriptions");
 
         Status = SubscriptionStatus.Suspended;
         AutoRenew = false;
 
-        if (!string.IsNullOrEmpty(reason))
-        {
+        if (!string.IsNullOrEmpty(reason)) {
             Metadata = JsonSerializer.Serialize(
-                new
-                {
+                new {
                     suspensionReason = reason
                 }
             );
@@ -307,8 +291,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Reactivates a suspended subscription
     /// </summary>
-    public void Reactivate()
-    {
+    public void Reactivate() {
         if (Status != SubscriptionStatus.Suspended)
             throw new InvalidOperationException("Can only reactivate suspended subscriptions");
 
@@ -322,8 +305,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Updates the subscription plan
     /// </summary>
-    public void ChangePlan(Guid newPlanId, Money newAmount, DateTime? effectiveDate = null)
-    {
+    public void ChangePlan(Guid newPlanId, Money newAmount, DateTime? effectiveDate = null) {
         if (Status != SubscriptionStatus.Active)
             throw new InvalidOperationException("Can only change plans for active subscriptions");
 
@@ -339,8 +321,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Updates the billing cycle
     /// </summary>
-    public void ChangeBillingCycle(BillingCycle newBillingCycle, Money newAmount)
-    {
+    public void ChangeBillingCycle(BillingCycle newBillingCycle, Money newAmount) {
         if (Status != SubscriptionStatus.Active)
             throw new InvalidOperationException("Can only change billing cycle for active subscriptions");
 
@@ -360,16 +341,14 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Processes a renewal (moves to next billing period)
     /// </summary>
-    public SubscriptionRenewalResult ProcessRenewal(Money newAmount)
-    {
+    public SubscriptionRenewalResult ProcessRenewal(Money newAmount) {
         if (Status != SubscriptionStatus.Active)
             return SubscriptionRenewalResult.Failed(Id, "Subscription is not active");
 
         if (!AutoRenew)
             return SubscriptionRenewalResult.Failed(Id, "Auto-renewal is disabled");
 
-        try
-        {
+        try {
             Amount = newAmount;
             BillingCycleCount++;
 
@@ -382,8 +361,7 @@ public class Subscription : EntityBase, ISubscription
 
             return SubscriptionRenewalResult.CreateSuccess(Id, BillingCycleCount, newAmount);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             return SubscriptionRenewalResult.Failed(Id, ex.Message);
         }
     }
@@ -391,8 +369,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Sets external IDs for payment provider integration
     /// </summary>
-    public void SetExternalIds(string? subscriptionId, string? customerId)
-    {
+    public void SetExternalIds(string? subscriptionId, string? customerId) {
         ExternalId = subscriptionId;
         ExternalCustomerId = customerId;
     }
@@ -400,8 +377,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Sets auto-renewal preference
     /// </summary>
-    public void SetAutoRenew(bool autoRenew)
-    {
+    public void SetAutoRenew(bool autoRenew) {
         if (Status == SubscriptionStatus.Cancelled)
             throw new InvalidOperationException("Cannot change auto-renewal for cancelled subscriptions");
 
@@ -413,11 +389,9 @@ public class Subscription : EntityBase, ISubscription
     /// </summary>
     private static (DateTime periodStart, DateTime periodEnd, DateTime nextBilling) CalculateBillingDates(
         DateTime startDate,
-        BillingCycle cycle)
-    {
+        BillingCycle cycle) {
         DateTime periodStart = startDate;
-        (DateTime periodEnd, DateTime nextBilling) = cycle switch
-        {
+        (DateTime periodEnd, DateTime nextBilling) = cycle switch {
             BillingCycle.Monthly => (startDate.AddMonths(1).AddDays(-1), startDate.AddMonths(1)),
             BillingCycle.Quarterly => (startDate.AddMonths(3).AddDays(-1), startDate.AddMonths(3)),
             BillingCycle.SemiAnnually => (startDate.AddMonths(6).AddDays(-1), startDate.AddMonths(6)),

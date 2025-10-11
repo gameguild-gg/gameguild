@@ -31,7 +31,7 @@ public sealed class Project : ContentEntity {
   public string? ImageUrl { get; set; }
 
   /// <summary> Project type (Game, Tool, Art, etc.) </summary>
-  public ProjectType Type { get; set; } = ProjectType.Game;
+  public new ProjectType Type { get; set; } = ProjectType.Game;
 
   /// <summary> Development status </summary>
   public DevelopmentStatus DevelopmentStatus { get; set; } = DevelopmentStatus.Planning;
@@ -57,13 +57,13 @@ public sealed class Project : ContentEntity {
   public string? DownloadUrl { get; set; }
 
   /// <summary> Project tags (JSON array) </summary>
-  public string? Tags { get; set; }
+  public new string? Tags { get; set; }
 
   /// <summary> Project metadata and statistics </summary>
   public ProjectMetadata? ProjectMetadata { get; set; }
 
   /// <summary> Navigation property to project versions </summary>
-  public ICollection<ProjectVersion> Versions { get; set; } = new List<ProjectVersion>();
+  public new ICollection<ProjectVersion> Versions { get; set; } = new List<ProjectVersion>();
 
   /// <summary> Navigation property to project collaborators </summary>
   public ICollection<ProjectCollaborator> Collaborators { get; set; } = new List<ProjectCollaborator>();
@@ -89,7 +89,7 @@ public sealed class Project : ContentEntity {
   public Guid? CreatedById { get; set; }
 
   /// <summary> Tenant this project belongs to (for multi-tenancy) </summary>
-  public override Tenant? Tenant { get; set; }
+  public Tenant? Tenant { get; set; }
 
   public Guid? TenantId { get; set; }
 
