@@ -8,4 +8,4 @@ public record UpdateDisputeStatusCommand(
     Guid DisputeId,
     DisputeStatus NewStatus,
     DateTime? DueDate = null
-) : IRequest;
+) : ICommand<Unit>;

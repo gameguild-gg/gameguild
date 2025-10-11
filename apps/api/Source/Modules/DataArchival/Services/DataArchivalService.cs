@@ -208,4 +208,35 @@ public class DataArchivalService : IDataArchivalService
             job.ErrorMessage
         );
     }
+
+    // TODO: Implement remaining IDataArchivalService methods
+    public Task<Guid> ExecuteArchivalPolicyAsync(Guid policyId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("ExecuteArchivalPolicyAsync is not yet implemented");
+    }
+
+    public Task MoveToCoolStorageAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("MoveToCoolStorageAsync is not yet implemented");
+    }
+
+    public Task MoveToArchiveStorageAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("MoveToArchiveStorageAsync is not yet implemented");
+    }
+
+    public Task<bool> RestoreFromArchiveAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("RestoreFromArchiveAsync is not yet implemented");
+    }
+
+    public Task<StorageTier> GetStorageTierAsync(string entityType, Guid entityId, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("GetStorageTierAsync is not yet implemented");
+    }
+
+    public Task<ArchivalCostSavingsDto> CalculateCostSavingsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException("CalculateCostSavingsAsync is not yet implemented");
+    }
 }
