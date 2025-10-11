@@ -82,14 +82,14 @@ internal sealed class FeatureFlagOpenFeatureService(FeatureClient featureClient)
             // Convert the object to OpenFeature Value
             var value = kvp.Value switch
             {
-                string s => new OpenFeature.Model.Value(s),
-                int i => new OpenFeature.Model.Value(i),
-                long l => new OpenFeature.Model.Value(l),
-                double d => new OpenFeature.Model.Value(d),
-                bool b => new OpenFeature.Model.Value(b),
-                DateTime dt => new OpenFeature.Model.Value(dt.ToString("O")), // ISO 8601 format
-                null => new OpenFeature.Model.Value(string.Empty),
-                _ => new OpenFeature.Model.Value(kvp.Value.ToString() ?? string.Empty)
+                string s => new Value(s),
+                int i => new Value(i),
+                long l => new Value(l),
+                double d => new Value(d),
+                bool b => new Value(b),
+                DateTime dt => new Value(dt.ToString("O")), // ISO 8601 format
+                null => new Value(string.Empty),
+                _ => new Value(kvp.Value.ToString() ?? string.Empty)
             };
             builder.Set(kvp.Key, value);
         }

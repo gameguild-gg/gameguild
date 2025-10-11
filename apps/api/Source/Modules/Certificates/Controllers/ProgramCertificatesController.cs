@@ -13,7 +13,7 @@ namespace GameGuild.Modules.Certificates;
 public class ProgramCertificatesController(ApplicationDbContext db) : ControllerBase {
   /// <summary> List all certificates associated with a program </summary>
   [HttpGet]
-  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, Programs.Program>(PermissionType.Read, "programId")]
+  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<CertificateEntity>>> GetProgramCertificates(Guid programId) {
     var items = await db.Certificates.Where(c => c.ProgramId == programId).ToListAsync();
 
@@ -22,7 +22,7 @@ public class ProgramCertificatesController(ApplicationDbContext db) : Controller
 
   /// <summary> Create a new certificate under a program </summary>
   [HttpPost]
-  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<CertificateEntity>> CreateCertificate(Guid programId, [FromBody] CreateCertificateDto dto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -35,7 +35,7 @@ public class ProgramCertificatesController(ApplicationDbContext db) : Controller
 
   /// <summary> Update an existing certificate under a program </summary>
   [HttpPut("{certificateId}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<CertificateEntity>> UpdateCertificate(Guid programId, Guid certificateId, [FromBody] UpdateCertificateDto dto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
     if (dto.Id != certificateId) return BadRequest("Certificate ID mismatch");
@@ -53,7 +53,7 @@ public class ProgramCertificatesController(ApplicationDbContext db) : Controller
 
   /// <summary> Delete a certificate under a program </summary>
   [HttpDelete("{certificateId}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult> DeleteCertificate(Guid programId, Guid certificateId) {
     var existing = await db.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId);
 
@@ -67,7 +67,7 @@ public class ProgramCertificatesController(ApplicationDbContext db) : Controller
 
   /// <summary> Add a skill tag to a certificate </summary>
   [HttpPost("{certificateId}/tags")]
-  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<CertificateTag>> AddCertificateTag(Guid programId, Guid certificateId, [FromBody] AddCertificateTagDto dto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -94,7 +94,7 @@ public class ProgramCertificatesController(ApplicationDbContext db) : Controller
 
   /// <summary> Remove a skill tag from a certificate </summary>
   [HttpDelete("{certificateId}/tags/{tagId}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
+  [GameGuild.Authorization.RequireResourcePermission<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult> RemoveCertificateTag(Guid programId, Guid certificateId, Guid tagId) {
     var cert = await db.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId);
 

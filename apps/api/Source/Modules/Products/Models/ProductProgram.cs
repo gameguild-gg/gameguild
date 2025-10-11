@@ -26,7 +26,7 @@ public class ProductProgram : EntityBase {
   public Guid ProgramId { get; set; }
 
   /// <summary> Navigation property to the Program entity </summary>
-  public virtual Programs.Program Program { get; set; } = null!;
+  public virtual Programs.Entities.Program Program { get; set; } = null!;
 
   /// <summary> Display order of programs within the product </summary>
   public int SortOrder { get; set; }

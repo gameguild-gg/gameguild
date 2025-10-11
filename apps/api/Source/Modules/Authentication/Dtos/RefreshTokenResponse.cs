@@ -1,5 +1,5 @@
 ﻿namespace GameGuild.Modules.Authentication;
-using GameGuild.Modules.Tenants;
+using Tenants;
 
 /// <summary> Response DTO with refreshed authentication tokens </summary>
 public class RefreshTokenResponse

@@ -1,6 +1,6 @@
 ﻿namespace GameGuild.Modules.Audit;
-using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Users;
+using Tenants;
+using Users;
 
 /// <summary>
 /// Category of audit events

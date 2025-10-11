@@ -1,6 +1,6 @@
 namespace GameGuild.Authorization;
 using GameGuild.Modules.Tenants;
-using GameGuild.Modules.Resources;
+using Modules.Resources;
 
 /// <summary>
 /// Convenience attributes for common permission scenarios

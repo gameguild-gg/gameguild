@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Programs;
 [ExtendObjectType<Mutation>]
 public class ActivityGradeMutations {
   /// <summary> Grade a content interaction (create or update existing grade) Requires Edit permission on the parent Program </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActivityGradeResult> GradeActivity(Guid programId, CreateActivityGradeInput input, [Service] IActivityGradeService activityGradeService, [Service] IContentInteractionService contentInteractionService) {
     try {
       // Verify the content interaction belongs to the specified program
@@ -26,7 +26,7 @@ public class ActivityGradeMutations {
   }
 
   /// <summary> Update an existing grade Requires Edit permission on the parent Program </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Edit, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActivityGradeResult> UpdateActivityGrade(Guid programId, UpdateActivityGradeInput input, [Service] IActivityGradeService activityGradeService) {
     try {
       // Verify the grade belongs to the specified program
@@ -44,7 +44,7 @@ public class ActivityGradeMutations {
   }
 
   /// <summary> Delete a grade Requires Delete permission on the parent Program </summary>
-  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, Program>(PermissionType.Delete, "programId")]
+  [GraphQLRequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Delete, "programId")]
   public async Task<ActivityGradeResult> DeleteActivityGrade(Guid programId, Guid gradeId, [Service] IActivityGradeService activityGradeService) {
     try {
       // Verify the grade belongs to the specified program

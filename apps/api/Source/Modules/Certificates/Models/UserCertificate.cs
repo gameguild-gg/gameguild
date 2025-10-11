@@ -62,11 +62,11 @@ public class UserCertificate : EntityBase {
 
   public virtual Certificate Certificate { get; set; } = null!;
 
-  public virtual Programs.Program? Program { get; set; }
+  public virtual Programs.Entities.Program? Program { get; set; }
 
   public virtual ProductEntity? Product { get; set; }
 
-  public virtual ProgramUser? ProgramUser { get; set; }
+  public virtual Programs.Entities.ProgramUser? ProgramUser { get; set; }
 
   public virtual ICollection<CertificateBlockchainAnchor> BlockchainAnchors { get; set; } = new List<CertificateBlockchainAnchor>();
 }

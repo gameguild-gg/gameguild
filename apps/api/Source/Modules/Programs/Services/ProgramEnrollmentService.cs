@@ -73,7 +73,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
   }
 
   /// <summary> Get all user's enrollments </summary>
-  public async Task<IEnumerable<ProgramEnrollment>> GetUserEnrollmentsAsync(Guid userId, EnrollmentStatus? status = null) {
+  public async Task<IEnumerable<ProgramEnrollment>> GetUserEnrollmentsAsync(Guid userId, Entities.EnrollmentStatus? status = null) {
     var query = _context.ProgramEnrollments.Include(pe => pe.Program).Where(pe => pe.UserId == userId);
 
     if (status.HasValue) { query = query.Where(pe => pe.EnrollmentStatus == status.Value); }
