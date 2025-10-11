@@ -8,7 +8,7 @@ namespace GameGuild.Modules.Resources.Handlers;
 /// <summary>
 /// Handler for recording resource usage with billing event integration
 /// </summary>
-public class RecordUsageWithBillingHandler : IRequestHandler<RecordUsageCommand, Result<ResourceUsageRecordDto>>
+public class RecordUsageWithBillingHandler : IRequestHandler<RecordUsageCommand, Result<ResourceUsageRecord>>
 {
     private readonly IResourceUsageRepository _usageRepository;
     private readonly IResourceQuotaRepository _quotaRepository;
