@@ -16,13 +16,13 @@ namespace GameGuild.Modules.Projects.Controllers;
 public class ProjectPermissionController : ControllerBase {
   private readonly ILogger<ProjectPermissionController> _logger;
 
-  private readonly IDacPermissionResolver _permissionResolver;
+  private readonly IPermissionResolver _permissionResolver;
 
   private readonly IPermissionService _permissionService;
 
   private readonly IResourcePermissionService _resourcePermissionService;
 
-  public ProjectPermissionController(IDacPermissionResolver permissionResolver, IResourcePermissionService resourcePermissionService, IPermissionService permissionService, ILogger<ProjectPermissionController> logger) {
+  public ProjectPermissionController(IPermissionResolver permissionResolver, IResourcePermissionService resourcePermissionService, IPermissionService permissionService, ILogger<ProjectPermissionController> logger) {
     _permissionResolver = permissionResolver;
     _resourcePermissionService = resourcePermissionService;
     _permissionService = permissionService;
