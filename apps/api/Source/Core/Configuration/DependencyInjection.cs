@@ -247,7 +247,8 @@ public static class DependencyInjection {
         // Core business modules with IModule implementations
         services.AddAuthenticationModule(configuration);
         services.AddPermissionsModule(configuration);
-        // services.AddProgramsModuleV2(configuration); // Temporarily disabled
+        services.AddProgramModule(); // Programs module - learning programs, enrollments, content management
+        services.AddUserAchievementsModule(); // Gamification module - achievements, levels, progress tracking
         // services.AddBillingModule(configuration); // Temporarily disabled
         // services.AddPaymentsModule(configuration); // Temporarily disabled
         // services.AddTestingLabModule(configuration); // Temporarily disabled
