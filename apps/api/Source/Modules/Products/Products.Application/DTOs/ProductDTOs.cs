@@ -1,6 +1,7 @@
 using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Modules.Products.Domain.Enums;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Application.DTOs;
 
 /// <summary>

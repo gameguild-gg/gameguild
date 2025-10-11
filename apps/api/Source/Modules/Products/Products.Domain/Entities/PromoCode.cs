@@ -5,6 +5,7 @@ using GameGuild.Modules.Products.Domain.Enums;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Domain.Entities;
 
 /// <summary>Entity representing promotional codes for discounts</summary>

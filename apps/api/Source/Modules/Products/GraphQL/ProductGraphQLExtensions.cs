@@ -3,6 +3,7 @@ using GameGuild.Modules.Products.GraphQL;
 using HotChocolate.Execution.Configuration;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> Extension methods for configuring Product GraphQL integration </summary>

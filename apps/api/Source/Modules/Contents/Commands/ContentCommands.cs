@@ -1,6 +1,7 @@
 using System;
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents.Models;
+using ContentEntity = GameGuild.Modules.Contents.Models.Content;
 
 namespace GameGuild.Modules.Contents.Commands;
 
@@ -23,7 +24,7 @@ public record CreateContentCommand(
     string? Tags,
     string? CategoryIds,
     string? Metadata
-) : IRequest<Result<Content>>;
+) : IRequest<Result<ContentEntity>>;
 
 // Update content command
 public record UpdateContentCommand(
@@ -37,7 +38,7 @@ public record UpdateContentCommand(
     string? Tags,
     string? CategoryIds,
     string? Metadata
-) : IRequest<Result<Content>>;
+) : IRequest<Result<ContentEntity>>;
 
 // Delete content command
 public record DeleteContentCommand(
@@ -48,37 +49,37 @@ public record DeleteContentCommand(
 public record PublishContentCommand(
     Guid ContentId,
     Guid PublishedBy
-) : IRequest<Result<Content>>;
+) : IRequest<Result<ContentEntity>>;
 
 // Schedule content command
 public record ScheduleContentCommand(
     Guid ContentId,
     DateTime ScheduledPublishAt
-) : IRequest<Result<Content>>;
+) : IRequest<Result<ContentEntity>>;
 
 // Archive content command
 public record ArchiveContentCommand(
     Guid ContentId
-) : IRequest<Result<Content>>;
+) : IRequest<Result<ContentEntity>>;
 
 // Approve content command
 public record ApproveContentCommand(
     Guid ContentId,
     Guid ApprovedBy,
     string? ApprovalNotes
-) : IRequest<Result<Content>>;
+) : IRequest<Result<ContentEntity>>;
 
 // Reject content command
 public record RejectContentCommand(
     Guid ContentId,
     Guid ReviewedBy,
     string? ReviewNotes
-) : IRequest<Result<Content>>;
+) : IRequest<Result<ContentEntity>>;
 
 // Submit for review command
 public record SubmitContentForReviewCommand(
     Guid ContentId
-) : IRequest<Result<Content>>;
+) : IRequest<Result<ContentEntity>>;
 
 // Create version command
 public record CreateContentVersionCommand(

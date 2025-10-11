@@ -1,4 +1,4 @@
-using GameGuild.Modules.Products;
+using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
 

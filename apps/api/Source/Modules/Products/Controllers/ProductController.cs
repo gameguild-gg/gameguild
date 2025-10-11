@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProductTypeEnum = GameGuild.ProductType;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products;
 
 /// <summary>
@@ -22,7 +23,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get all products using CQRS pattern (content-type level read permission) </summary>
   [HttpGet]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> GetProducts() {
+  public async Task<ActionResult<IEnumerable<ProductEntity>>> GetProducts() {
     var query = new GetProductsQuery();
     var products = await mediator.Send(query);
 
@@ -32,7 +33,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Create a new product using CQRS pattern (content-type level create permission) </summary>
   [HttpPost]
   [RequireContentTypePermission<Product>(PermissionType.Create)]
-  public async Task<ActionResult<Product>> CreateProduct([FromBody] CreateProductCommand command) {
+  public async Task<ActionResult<ProductEntity>> CreateProduct([FromBody] CreateProductCommand command) {
     var result = await mediator.Send(command);
 
     if (!result.Success) return BadRequest(result.Error);
@@ -45,7 +46,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get a specific product by ID using CQRS pattern (resource level read permission) </summary>
   [HttpGet("{id:guid}")]
   [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Read)]
-  public async Task<ActionResult<Product>> GetProduct(Guid id) {
+  public async Task<ActionResult<ProductEntity>> GetProduct(Guid id) {
     var query = new GetProductByIdQuery { ProductId = id };
     var product = await mediator.Send(query);
 
@@ -57,7 +58,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Update a product using CQRS pattern (resource level update permission) </summary>
   [HttpPut("{id:guid}")]
   [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Edit)]
-  public async Task<ActionResult<Product>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand command) {
+  public async Task<ActionResult<ProductEntity>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand command) {
     var updateCommand = command with { ProductId = id, UpdatedBy = User.GetUserId() ?? Guid.Empty };
     var result = await mediator.Send(updateCommand);
 
@@ -81,7 +82,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get products by type (content-type level read permission) </summary>
   [HttpGet("type/{type}")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> GetProductsByType(ProductTypeEnum type, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProductEntity>>> GetProductsByType(ProductTypeEnum type, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new GetProductsByTypeQuery { Type = type, Skip = skip, Take = take });
 
     return Ok(products);
@@ -89,7 +90,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get published products (no permission required - public access) </summary>
   [HttpGet("published")]
-  public async Task<ActionResult<IEnumerable<Product>>> GetPublishedProducts([FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProductEntity>>> GetPublishedProducts([FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new GetPublishedProductsQuery { Skip = skip, Take = take });
 
     return Ok(products);
@@ -98,7 +99,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Search products (content-type level read permission) </summary>
   [HttpGet("search")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> SearchProducts([FromQuery] string searchTerm, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProductEntity>>> SearchProducts([FromQuery] string searchTerm, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new SearchProductsQuery { SearchTerm = searchTerm, Skip = skip, Take = take });
 
     return Ok(products);
@@ -107,7 +108,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get products by creator (content-type level read permission) </summary>
   [HttpGet("creator/{creatorId}")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> GetProductsByCreator(Guid creatorId, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProductEntity>>> GetProductsByCreator(Guid creatorId, [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new GetProductsByCreatorQuery { CreatorId = creatorId, Skip = skip, Take = take });
 
     return Ok(products);
@@ -116,7 +117,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get products in price range (content-type level read permission) </summary>
   [HttpGet("price-range")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> GetProductsInPriceRange([FromQuery] decimal minPrice, [FromQuery] decimal maxPrice, [FromQuery] string currency = "USD", [FromQuery] int skip = 0, [FromQuery] int take = 50) {
+  public async Task<ActionResult<IEnumerable<ProductEntity>>> GetProductsInPriceRange([FromQuery] decimal minPrice, [FromQuery] decimal maxPrice, [FromQuery] string currency = "USD", [FromQuery] int skip = 0, [FromQuery] int take = 50) {
     var products = await mediator.Send(new GetProductsInPriceRangeQuery { MinPrice = minPrice, MaxPrice = maxPrice, Currency = currency, Skip = skip, Take = take });
 
     return Ok(products);
@@ -125,7 +126,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get popular products (content-type level read permission) </summary>
   [HttpGet("popular")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> GetPopularProducts([FromQuery] int count = 10) {
+  public async Task<ActionResult<IEnumerable<ProductEntity>>> GetPopularProducts([FromQuery] int count = 10) {
     var products = await mediator.Send(new GetPopularProductsQuery { Take = count });
 
     return Ok(products);
@@ -134,7 +135,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get recent products (content-type level read permission) </summary>
   [HttpGet("recent")]
   [RequireContentTypePermission<Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> GetRecentProducts([FromQuery] int count = 10) {
+  public async Task<ActionResult<IEnumerable<ProductEntity>>> GetRecentProducts([FromQuery] int count = 10) {
     var products = await mediator.Send(new GetRecentProductsQuery { Take = count });
 
     return Ok(products);
@@ -143,7 +144,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Publish a product (resource-level publish permission) </summary>
   [HttpPost("{id}/publish")]
   [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Publish)]
-  public async Task<ActionResult<Product>> PublishProduct(Guid id) {
+  public async Task<ActionResult<ProductEntity>> PublishProduct(Guid id) {
     var product = await mediator.Send(new PublishProductCommand { ProductId = id, PublishedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(product);
@@ -152,7 +153,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Unpublish a product (resource-level edit permission) </summary>
   [HttpPost("{id}/unpublish")]
   [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Edit)]
-  public async Task<ActionResult<Product>> UnpublishProduct(Guid id) {
+  public async Task<ActionResult<ProductEntity>> UnpublishProduct(Guid id) {
     var product = await mediator.Send(new UnpublishProductCommand { ProductId = id, UnpublishedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(product);
@@ -161,7 +162,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Archive a product (resource-level edit permission) </summary>
   [HttpPost("{id}/archive")]
   [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Edit)]
-  public async Task<ActionResult<Product>> ArchiveProduct(Guid id) {
+  public async Task<ActionResult<ProductEntity>> ArchiveProduct(Guid id) {
     var product = await mediator.Send(new ArchiveProductCommand { ProductId = id, ArchivedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(product);
@@ -170,7 +171,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Set product visibility (resource-level edit permission) </summary>
   [HttpPut("{id}/visibility")]
   [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Edit)]
-  public async Task<ActionResult<Product>> SetProductVisibility(Guid id, [FromBody] AccessLevel visibility) {
+  public async Task<ActionResult<ProductEntity>> SetProductVisibility(Guid id, [FromBody] AccessLevel visibility) {
     var product = await mediator.Send(new SetProductVisibilityCommand { ProductId = id, Visibility = visibility, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(product);
@@ -181,7 +182,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Get bundle items (resource-level read permission) </summary>
   [HttpGet("{id}/bundle-items")]
   [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Read)]
-  public async Task<ActionResult<IEnumerable<Product>>> GetBundleItems(Guid id) {
+  public async Task<ActionResult<IEnumerable<ProductEntity>>> GetBundleItems(Guid id) {
     var products = await mediator.Send(new GetBundleItemsQuery { BundleId = id });
 
     return Ok(products);
@@ -190,7 +191,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Add product to bundle (resource-level edit permission) </summary>
   [HttpPost("{bundleId}/bundle-items/{productId}")]
   [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Edit, "bundleId")]
-  public async Task<ActionResult<Product>> AddToBundle(Guid bundleId, Guid productId) {
+  public async Task<ActionResult<ProductEntity>> AddToBundle(Guid bundleId, Guid productId) {
     var bundle = await mediator.Send(new AddToBundleCommand { BundleId = bundleId, ProductId = productId, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(bundle);
@@ -199,7 +200,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
   /// <summary> Remove product from bundle (resource-level edit permission) </summary>
   [HttpDelete("{bundleId}/bundle-items/{productId}")]
   [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Edit, "bundleId")]
-  public async Task<ActionResult<Product>> RemoveFromBundle(Guid bundleId, Guid productId) {
+  public async Task<ActionResult<ProductEntity>> RemoveFromBundle(Guid bundleId, Guid productId) {
     var bundle = await mediator.Send(new RemoveFromBundleCommand { BundleId = bundleId, ProductId = productId, UpdatedBy = User.GetUserId() ?? Guid.Empty });
 
     return Ok(bundle);

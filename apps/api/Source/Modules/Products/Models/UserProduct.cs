@@ -2,6 +2,7 @@ using GameGuild.Modules.Subscriptions.Models;
 using GameGuild.Modules.Users;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Models;
 
 /// <summary> Junction entity representing the relationship between a User and a Product Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>

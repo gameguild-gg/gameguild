@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents.Models;
 
+using ContentEntity = GameGuild.Modules.Contents.Models.Content;
 namespace GameGuild.Modules.Contents.Queries;
 
 /// <summary>
@@ -12,45 +13,45 @@ namespace GameGuild.Modules.Contents.Queries;
 // Get content by ID query
 public record GetContentByIdQuery(
     Guid ContentId
-) : IRequest<Result<Content?>>;
+) : IRequest<Result<ContentEntity?>>;
 
 // Get content by slug query
 public record GetContentBySlugQuery(
     string Slug
-) : IRequest<Result<Content?>>;
+) : IRequest<Result<ContentEntity?>>;
 
 // Get content by tenant query
 public record GetContentByTenantQuery(
     Guid TenantId
-) : IRequest<Result<IEnumerable<Content>>>;
+) : IRequest<Result<IEnumerable<ContentEntity>>>;
 
 // Get content by author query
 public record GetContentByAuthorQuery(
     Guid AuthorId
-) : IRequest<Result<IEnumerable<Content>>>;
+) : IRequest<Result<IEnumerable<ContentEntity>>>;
 
 // Get content by type query
 public record GetContentByTypeQuery(
     ContentType Type
-) : IRequest<Result<IEnumerable<Content>>>;
+) : IRequest<Result<IEnumerable<ContentEntity>>>;
 
 // Get content by status query
 public record GetContentByStatusQuery(
     ContentStatus Status
-) : IRequest<Result<IEnumerable<Content>>>;
+) : IRequest<Result<IEnumerable<ContentEntity>>>;
 
 // Search content query
 public record SearchContentQuery(
     string SearchTerm,
     Guid? TenantId
-) : IRequest<Result<IEnumerable<Content>>>;
+) : IRequest<Result<IEnumerable<ContentEntity>>>;
 
 // Get published content query
 public record GetPublishedContentQuery(
     Guid? TenantId,
     ContentType? Type,
     int? Limit
-) : IRequest<Result<IEnumerable<Content>>>;
+) : IRequest<Result<IEnumerable<ContentEntity>>>;
 
 // Get content versions query
 public record GetContentVersionsQuery(
@@ -64,4 +65,4 @@ public record GetContentVersionQuery(
 ) : IRequest<Result<ContentVersion?>>;
 
 // Get scheduled content query
-public record GetScheduledContentReadyToPublishQuery() : IRequest<Result<IEnumerable<Content>>>;
+public record GetScheduledContentReadyToPublishQuery() : IRequest<Result<IEnumerable<ContentEntity>>>;

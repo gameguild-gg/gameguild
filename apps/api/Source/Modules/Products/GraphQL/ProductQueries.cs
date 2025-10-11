@@ -7,7 +7,7 @@ using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Products.Queries;
 using GameGuild.Modules.Products.Services;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
-using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 using ProductTypeEnum = GameGuild.ProductType;
 
 

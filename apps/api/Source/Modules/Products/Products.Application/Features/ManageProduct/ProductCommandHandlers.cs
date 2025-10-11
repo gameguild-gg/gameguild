@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 // using GameGuild.Modules.Contents.Domain.Entities;
 
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Application.Features.ManageProduct;
 
 /// <summary>

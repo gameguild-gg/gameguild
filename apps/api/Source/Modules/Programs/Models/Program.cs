@@ -1,8 +1,8 @@
 using System.Text.Json;
-using GameGuild.Core.Entities;
+using GameGuild;
 using GameGuild.Modules.Certificates;
 using GameGuild.Modules.Feedbacks;
-using GameGuild.Modules.Products;
+using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Programs;

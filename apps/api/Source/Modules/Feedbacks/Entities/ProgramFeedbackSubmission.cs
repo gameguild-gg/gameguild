@@ -1,6 +1,6 @@
 using GameGuild.Modules.Users;
 using System.Text.Json;
-using GameGuild.Modules.Products;
+using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs.Entities;
 
 namespace GameGuild.Modules.Feedbacks.Entities;

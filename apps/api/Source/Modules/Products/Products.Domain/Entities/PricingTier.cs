@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild;
 using Microsoft.EntityFrameworkCore;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Domain.Entities;
 
 /// <summary>Entity representing pricing tiers for products</summary>

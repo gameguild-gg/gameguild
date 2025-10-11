@@ -2,6 +2,7 @@ using GameGuild.Modules.Products.Domain.Entities;
 using GameGuild.Database;
 using GameGuild.CQRS;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Application.Features.ManagePricing;
 
 /// <summary>Handler for creating pricing rules</summary>

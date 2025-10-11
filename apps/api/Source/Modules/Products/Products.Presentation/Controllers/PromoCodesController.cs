@@ -7,6 +7,7 @@ using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Presentation.Controllers;
 
 /// <summary>
