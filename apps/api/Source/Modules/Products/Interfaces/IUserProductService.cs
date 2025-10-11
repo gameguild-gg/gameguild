@@ -1,4 +1,6 @@
-﻿namespace GameGuild.Modules.Products;
+﻿using GameGuild.Modules.Products.Models;
+
+namespace GameGuild.Modules.Products;
 
 /// <summary> Interface for user product access services </summary>
 public interface IUserProductService {

@@ -12,7 +12,7 @@ namespace GameGuild.Modules.Products.Models;
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_ProductPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_ProductPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_ProductPermissions_Expiration")]
-public class ProductPermission : ResourcePermission<Product> {
+public class ProductPermission : ResourcePermission<ProductEntity> {
   // Public parameterless constructor for EF and GraphQL
   public ProductPermission() : base() { }
 
