@@ -1,6 +1,6 @@
 using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using Microsoft.AspNetCore.Mvc;
 using ProductTypeEnum = GameGuild.ProductType;
 

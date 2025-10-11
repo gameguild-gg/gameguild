@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
-using GameGuild.Modules.Contents;
+using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Products.Commands;
 using GameGuild.Modules.Products.Models;
 using Microsoft.EntityFrameworkCore;
