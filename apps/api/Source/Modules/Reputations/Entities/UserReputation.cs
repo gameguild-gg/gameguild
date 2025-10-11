@@ -1,5 +1,6 @@
 using GameGuild.Modules.Users;
 using GameGuild.Core.Domain;
+using GameGuild.Modules.Resources;
 
 
 namespace GameGuild.Modules.Reputations.Entities;
@@ -11,8 +12,7 @@ namespace GameGuild.Modules.Reputations.Entities;
 [Index(nameof(UserId), IsUnique = true)]
 [Index(nameof(Score))]
 [Index(nameof(CurrentLevelId))]
-public class UserReputation : Resource, IReputation
-{
+public class UserReputation : Resource, IReputation {
     /// <summary>
     /// The user this reputation belongs to
     /// </summary>

@@ -1,5 +1,6 @@
 using GameGuild.Modules.Users;
 using GameGuild.Core.Domain;
+using GameGuild.Modules.Resources;
 
 
 namespace GameGuild.Modules.Reputations.Entities;
@@ -12,8 +13,7 @@ namespace GameGuild.Modules.Reputations.Entities;
 [Index(nameof(ActionType), IsUnique = true)]
 [Index(nameof(Points))]
 [Index(nameof(IsActive))]
-public class ReputationAction : Resource
-{
+public class ReputationAction : Resource {
     /// <summary>
     /// Unique identifier for this action type
     /// </summary>
