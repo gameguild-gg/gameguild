@@ -7,12 +7,13 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// </summary>
 public sealed class TrialEndedEvent : DomainEvent
 {
-    public TrialEndedEvent(Guid subscriptionId, Guid tenantId, bool convertedToPaid)
-    {
-        SubscriptionId = subscriptionId;
-        TenantId = tenantId;
-        ConvertedToPaid = convertedToPaid;
-    }
+  public TrialEndedEvent(Guid subscriptionId, Guid tenantId, bool convertedToPaid)
+    : base(subscriptionId, "Subscription")
+  {
+    SubscriptionId = subscriptionId;
+    TenantId = tenantId;
+    ConvertedToPaid = convertedToPaid;
+  }
 
     public Guid SubscriptionId { get; }
 

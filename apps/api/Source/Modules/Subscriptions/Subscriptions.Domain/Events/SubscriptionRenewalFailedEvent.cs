@@ -7,13 +7,14 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// </summary>
 public sealed class SubscriptionRenewalFailedEvent : DomainEvent
 {
-    public SubscriptionRenewalFailedEvent(Guid subscriptionId, Guid tenantId, string reason, DateTime failedAt)
-    {
-        SubscriptionId = subscriptionId;
-        TenantId = tenantId;
-        Reason = reason;
-        FailedAt = failedAt;
-    }
+  public SubscriptionRenewalFailedEvent(Guid subscriptionId, Guid tenantId, string reason, DateTime failedAt)
+    : base(subscriptionId, "Subscription")
+  {
+    SubscriptionId = subscriptionId;
+    TenantId = tenantId;
+    Reason = reason;
+    FailedAt = failedAt;
+  }
 
     public Guid SubscriptionId { get; }
 

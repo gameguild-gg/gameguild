@@ -5,8 +5,7 @@
 /// Replaces the need for separate ValidationError, BusinessRuleError, etc.
 /// Use with Result<T> pattern instead of throwing exceptions.
 /// </summary>
-public record Error(string Code, string Message, ErrorType Type, Dictionary<string, object>? Metadata = null)
-{
+public record Error(string Code, string Message, ErrorType Type, Dictionary<string, object>? Metadata = null) {
     public static readonly Error None = new("", "", ErrorType.Failure);
 
     public static readonly Error NullValue = new("General.Null", "Null value was provided", ErrorType.Failure);
@@ -23,8 +22,7 @@ public record Error(string Code, string Message, ErrorType Type, Dictionary<stri
     public static Error Validation(string code, string message) => new(code, message, ErrorType.Validation);
 
     // Validation-specific factory methods (replaces ValidationError concept)
-    public static Error ValidationFailure(string propertyName, string message, object? attemptedValue = null)
-    {
+    public static Error ValidationFailure(string propertyName, string message, object? attemptedValue = null) {
         var metadata = attemptedValue != null ? new Dictionary<string, object> { ["attemptedValue"] = attemptedValue, ["property"] = propertyName } : new Dictionary<string, object> { ["property"] = propertyName };
 
         return new($"Validation.{propertyName}", message, ErrorType.Validation, metadata);
@@ -37,8 +35,7 @@ public record Error(string Code, string Message, ErrorType Type, Dictionary<stri
     public static Error OutOfRange(string propertyName, object? attemptedValue = null) => ValidationFailure(propertyName, $"{propertyName} is out of valid range", attemptedValue);
 
     // Business rule factory methods (replaces BusinessRuleViolationException concept)
-    public static Error BusinessRule(string rule, string message, object? context = null)
-    {
+    public static Error BusinessRule(string rule, string message, object? context = null) {
         var metadata = context != null ? new Dictionary<string, object> { ["rule"] = rule, ["context"] = context } : new Dictionary<string, object> { ["rule"] = rule };
 
         return new($"BusinessRule.{rule}", message, ErrorType.Problem, metadata);
@@ -56,4 +53,8 @@ public record Error(string Code, string Message, ErrorType Type, Dictionary<stri
     // For backward compatibility during transition
     [Obsolete("Use Message property instead")]
     public string Description => Message;
+
+    // Implicit conversion from string for backward compatibility
+    // Allows Result.Failure("message") instead of Result.Failure(Error.Failure("code", "message"))
+    public static implicit operator Error(string message) => Failure("General.Error", message);
 }

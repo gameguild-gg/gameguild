@@ -9,8 +9,7 @@ using GameGuild.CQRS;
 /// <summary>
 /// Service for real-time anomaly detection on audit events with ML-based pattern recognition
 /// </summary>
-public class AnomalyDetectionService : IAnomalyDetectionService
-{
+public class AnomalyDetectionService : IAnomalyDetectionService {
     private readonly IRepository<AuditAnomaly, Guid> _repository;
     private readonly IRepository<TamperEvidentAuditLog, Guid> _auditLogRepository;
     private readonly ILogger<AnomalyDetectionService> _logger;
@@ -24,8 +23,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
     public AnomalyDetectionService(
         IRepository<AuditAnomaly, Guid> repository,
         IRepository<TamperEvidentAuditLog, Guid> auditLogRepository,
-        ILogger<AnomalyDetectionService> logger)
-    {
+        ILogger<AnomalyDetectionService> logger) {
         _repository = repository;
         _auditLogRepository = auditLogRepository;
         _logger = logger;
@@ -40,19 +38,26 @@ public class AnomalyDetectionService : IAnomalyDetectionService
         string ipAddress,
         string userAgent,
         Dictionary<string, object> context,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         // Create an audit log from the parameters to use with internal detection
-        var auditLog = new TamperEvidentAuditLog
-        {
-            TenantId = tenantId,
-            UserId = userId,
-            Action = action,
-            EntityType = entityType,
-            IpAddress = ipAddress,
-            UserAgent = userAgent,
-            Timestamp = DateTime.UtcNow
-        };
+        var auditLog = TamperEvidentAuditLog.Create(
+            tenantId: tenantId,
+            userId: userId,
+            action: action,
+            entityType: entityType,
+            entityId: null,
+            beforeSnapshot: null,
+            afterSnapshot: null,
+            changes: string.Empty,
+            riskLevel: "Unknown",
+            ipAddress: ipAddress,
+            userAgent: userAgent,
+            country: null,
+            region: null,
+            city: null,
+            previousHash: string.Empty,
+            sequenceNumber: 0
+        );
 
         var result = await DetectAnomalyInternalAsync(auditLog, cancellationToken);
         var anomaly = result.DetectedAnomalies.FirstOrDefault();
@@ -63,10 +68,8 @@ public class AnomalyDetectionService : IAnomalyDetectionService
     // Internal detection method
     private async Task<AnomalyDetectionResult> DetectAnomalyInternalAsync(
         TamperEvidentAuditLog auditLog,
-        CancellationToken cancellationToken = default)
-    {
-        var result = new AnomalyDetectionResult
-        {
+        CancellationToken cancellationToken = default) {
+        var result = new AnomalyDetectionResult {
             IsAnomaly = false,
             ConfidenceScore = 0.0,
             DetectedAnomalies = new List<AuditAnomaly>()
@@ -87,8 +90,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
 
         var anomalies = await Task.WhenAll(detections);
 
-        foreach (var anomaly in anomalies.Where(a => a != null))
-        {
+        foreach (var anomaly in anomalies.Where(a => a != null)) {
             result.DetectedAnomalies.Add(anomaly!);
             result.IsAnomaly = true;
             result.ConfidenceScore = Math.Max(result.ConfidenceScore, anomaly!.ConfidenceScore);
@@ -99,8 +101,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
 
     public async Task<Result<IEnumerable<AuditAnomaly>>> GetActiveAnomaliesAsync(
         Guid tenantId,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var query = _repository.AsQueryable()
             .Where(x => x.TenantId == tenantId)
             .Where(x => x.Status == AnomalyStatus.Detected || x.Status == AnomalyStatus.Investigating);
@@ -115,35 +116,28 @@ public class AnomalyDetectionService : IAnomalyDetectionService
 
     public async Task<Result> AssignAnomalyAsync(
         Guid anomalyId,
-        string assignee,
-        CancellationToken cancellationToken = default)
-    {
+    string assignee,
+    CancellationToken cancellationToken = default) {
         var anomaly = await _repository.GetByIdAsync(anomalyId, cancellationToken);
         if (anomaly is null)
             return Result.Failure("Anomaly not found");
 
-        anomaly.AssignTo(Guid.Parse(assignee)); // Assuming assignee is a user ID string
+        anomaly.AssignTo(assignee);
         await _repository.UpdateAsync(anomaly, cancellationToken);
 
         _logger.LogInformation("Assigned anomaly {AnomalyId} to user {UserId}", anomalyId, assignee);
         return Result.Success();
     }
-
     public async Task<Result> ResolveAnomalyAsync(
-        Guid anomalyId,
-        string resolutionNotes,
-        string? mitigationActions = null,
-        CancellationToken cancellationToken = default)
-    {
+            Guid anomalyId,
+            string resolutionNotes,
+            string? mitigationActions = null,
+            CancellationToken cancellationToken = default) {
         var anomaly = await _repository.GetByIdAsync(anomalyId, cancellationToken);
         if (anomaly is null)
             return Result.Failure("Anomaly not found");
 
-        var mitigationList = string.IsNullOrEmpty(mitigationActions)
-            ? null
-            : new List<string> { mitigationActions };
-
-        anomaly.Resolve(resolutionNotes, mitigationList);
+        anomaly.Resolve(resolutionNotes, mitigationActions);
         await _repository.UpdateAsync(anomaly, cancellationToken);
 
         _logger.LogInformation("Resolved anomaly {AnomalyId}", anomalyId);
@@ -153,8 +147,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
     public async Task<Result> MarkAsFalsePositiveAsync(
         Guid anomalyId,
         string notes,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var anomaly = await _repository.GetByIdAsync(anomalyId, cancellationToken);
         if (anomaly is null)
             return Result.Failure("Anomaly not found");
@@ -166,12 +159,10 @@ public class AnomalyDetectionService : IAnomalyDetectionService
         return Result.Success();
     }
 
-    public double CalculateConfidenceScore(Dictionary<string, object> features)
-    {
+    public double CalculateConfidenceScore(Dictionary<string, object> features) {
         // Extract features from dictionary
         if (!features.TryGetValue("anomalyType", out var typeObj) ||
-            !features.TryGetValue("occurrenceCount", out var countObj))
-        {
+            !features.TryGetValue("occurrenceCount", out var countObj)) {
             return 0.5; // Default score if features are missing
         }
 
@@ -179,8 +170,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
         var occurrenceCount = Convert.ToInt32(countObj);
 
         // Base score calculation
-        double baseScore = type switch
-        {
+        double baseScore = type switch {
             AnomalyType.MultipleFailedLogins => 0.7,
             AnomalyType.UnusualAccessPattern => 0.6,
             AnomalyType.SuspiciousLocation => 0.8,
@@ -197,8 +187,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
 
         // Adjust based on time window if available
         double timeMultiplier = 1.0;
-        if (features.TryGetValue("timeWindowMinutes", out var timeObj))
-        {
+        if (features.TryGetValue("timeWindowMinutes", out var timeObj)) {
             var timeWindowMinutes = Convert.ToDouble(timeObj);
             timeMultiplier = timeWindowMinutes < 5 ? 1.2 :
                              timeWindowMinutes < 15 ? 1.1 :
@@ -212,8 +201,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
     public async Task<Result<Dictionary<string, object>>> AnalyzeGeographicPatternsAsync(
         Guid userId,
         string ipAddress,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var recentAudits = await _auditLogRepository
             .AsQueryable()
             .Where(x => x.UserId == userId && x.Country != null)
@@ -241,8 +229,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
         result["CountryChanges"] = countryChanges;
 
         // Check for suspicious patterns
-        if (countryChanges > 3 && (DateTime.UtcNow - recentAudits.Last().Timestamp).TotalHours < 24)
-        {
+        if (countryChanges > 3 && (DateTime.UtcNow - recentAudits.Last().Timestamp).TotalHours < 24) {
             result["IsSuspicious"] = true;
             result["Reason"] = "Multiple country changes detected";
         }
@@ -253,8 +240,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
     // Private detection methods
     private async Task<AuditAnomaly?> DetectMultipleFailedLoginsAsync(
         TamperEvidentAuditLog auditLog,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         if (auditLog.Action != "Login" || auditLog.RiskLevel == AuditRiskLevel.Low)
             return null;
 
@@ -266,12 +252,12 @@ public class AnomalyDetectionService : IAnomalyDetectionService
                        x.Timestamp >= DateTime.UtcNow.AddMinutes(-15))
             .CountAsync(cancellationToken);
 
-        if (recentFailedLogins >= SuspiciousLoginThreshold)
-        {
-            var confidence = CalculateConfidenceScore(
-                AnomalyType.MultipleFailedLogins,
-                recentFailedLogins,
-                TimeSpan.FromMinutes(15));
+        if (recentFailedLogins >= SuspiciousLoginThreshold) {
+            var confidence = CalculateConfidenceScore(new Dictionary<string, object> {
+                { "anomalyType", AnomalyType.MultipleFailedLogins },
+                { "occurrenceCount", recentFailedLogins },
+                { "timeWindow", TimeSpan.FromMinutes(15) }
+            });
 
             var anomaly = AuditAnomaly.Create(
                 auditLog.TenantId,
@@ -290,20 +276,19 @@ public class AnomalyDetectionService : IAnomalyDetectionService
 
     private async Task<AuditAnomaly?> DetectUnusualAccessPatternAsync(
         TamperEvidentAuditLog auditLog,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         var recentAccesses = await _auditLogRepository
             .AsQueryable()
             .Where(x => x.UserId == auditLog.UserId &&
                        x.Timestamp >= DateTime.UtcNow.AddHours(-1))
             .CountAsync(cancellationToken);
 
-        if (recentAccesses >= UnusualAccessPatternThreshold)
-        {
-            var confidence = CalculateConfidenceScore(
-                AnomalyType.UnusualAccessPattern,
-                recentAccesses,
-                TimeSpan.FromHours(1));
+        if (recentAccesses >= UnusualAccessPatternThreshold) {
+            var confidence = CalculateConfidenceScore(new Dictionary<string, object> {
+                { "anomalyType", AnomalyType.UnusualAccessPattern },
+                { "occurrenceCount", recentAccesses },
+                { "timeWindow", TimeSpan.FromHours(1) }
+            });
 
             var anomaly = AuditAnomaly.Create(
                 auditLog.TenantId,
@@ -322,8 +307,7 @@ public class AnomalyDetectionService : IAnomalyDetectionService
 
     private async Task<AuditAnomaly?> DetectSuspiciousLocationAsync(
         TamperEvidentAuditLog auditLog,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         if (string.IsNullOrEmpty(auditLog.Country))
             return null;
 
@@ -333,16 +317,16 @@ public class AnomalyDetectionService : IAnomalyDetectionService
             .OrderByDescending(x => x.Timestamp)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (lastAudit != null && lastAudit.Country != auditLog.Country)
-        {
+        if (lastAudit != null && lastAudit.Country != auditLog.Country) {
             var timeDiff = (auditLog.Timestamp - lastAudit.Timestamp).TotalHours;
 
             if (timeDiff < 2) // Impossible travel within 2 hours
             {
-                var confidence = CalculateConfidenceScore(
-                    AnomalyType.SuspiciousLocation,
-                    1,
-                    TimeSpan.FromHours(timeDiff));
+                var confidence = CalculateConfidenceScore(new Dictionary<string, object> {
+                    { "anomalyType", AnomalyType.SuspiciousLocation },
+                    { "occurrenceCount", 1 },
+                    { "timeWindow", TimeSpan.FromHours(timeDiff) }
+                });
 
                 var anomaly = AuditAnomaly.Create(
                     auditLog.TenantId,
@@ -363,40 +347,35 @@ public class AnomalyDetectionService : IAnomalyDetectionService
 
     private Task<AuditAnomaly?> DetectUnauthorizedAccessAttemptAsync(
         TamperEvidentAuditLog auditLog,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         // Implement based on authorization failure patterns
         return Task.FromResult<AuditAnomaly?>(null);
     }
 
     private Task<AuditAnomaly?> DetectDataExfiltrationAsync(
         TamperEvidentAuditLog auditLog,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         // Implement based on large data export patterns
         return Task.FromResult<AuditAnomaly?>(null);
     }
 
     private Task<AuditAnomaly?> DetectPrivilegeEscalationAsync(
         TamperEvidentAuditLog auditLog,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         // Implement based on rapid permission changes
         return Task.FromResult<AuditAnomaly?>(null);
     }
 
     private Task<AuditAnomaly?> DetectAccountTakeoverAsync(
         TamperEvidentAuditLog auditLog,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         // Implement based on behavior change patterns
         return Task.FromResult<AuditAnomaly?>(null);
     }
 
     private Task<AuditAnomaly?> DetectBruteForceAttackAsync(
         TamperEvidentAuditLog auditLog,
-        CancellationToken cancellationToken)
-    {
+        CancellationToken cancellationToken) {
         // Implement based on systematic access patterns
         return Task.FromResult<AuditAnomaly?>(null);
     }

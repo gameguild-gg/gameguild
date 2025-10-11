@@ -1,5 +1,4 @@
-using GameGuild.CQRS;
-﻿namespace GameGuild.CQRS;
+namespace GameGuild.CQRS;
 
 /// <summary>
 ///  Defines a handler for a query.

@@ -5,10 +5,9 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// <summary>
 ///     Domain event raised when a subscription is renewed
 /// </summary>
-public class SubscriptionRenewedEvent : DomainEvent
-{
+public class SubscriptionRenewedEvent : DomainEvent {
     public SubscriptionRenewedEvent(Guid subscriptionId, Guid tenantId, int billingCycleCount, Money amount)
-    {
+      : base(subscriptionId, "Subscription") {
         SubscriptionId = subscriptionId;
         TenantId = tenantId;
         BillingCycleCount = billingCycleCount;

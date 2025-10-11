@@ -29,7 +29,7 @@ public sealed class GdprService : IGdprService
     {
         _context = context;
         _logger = logger;
-        _exportBasePath = configuration["Gdpr:ExportPath"] ?? Path.Combine(Path.GetTempPath(), "gdpr-exports");
+        _exportBasePath = configuration["Gdpr:ExportPath"] ?? System.IO.Path.Combine(System.IO.Path.GetTempPath(), "gdpr-exports");
 
         // Ensure export directory exists
         Directory.CreateDirectory(_exportBasePath);
@@ -90,7 +90,7 @@ public sealed class GdprService : IGdprService
 
         // Generate export file
         var fileName = $"user_{userId}_export_{DateTime.UtcNow:yyyyMMddHHmmss}.json";
-        var filePath = Path.Combine(_exportBasePath, fileName);
+        var filePath = System.IO.Path.Combine(_exportBasePath, fileName);
 
         var exportData = new
         {

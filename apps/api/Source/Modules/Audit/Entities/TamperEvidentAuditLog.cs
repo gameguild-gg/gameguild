@@ -6,8 +6,7 @@ namespace GameGuild.Modules.Audit.Entities;
 /// Tamper-evident audit log entry with cryptographic hash chain for immutability (WORM - Write Once Read Many).
 /// Each entry includes a hash of its content plus the previous entry's hash, forming an immutable chain.
 /// </summary>
-public sealed class TamperEvidentAuditLog : EntityBase
-{
+public sealed class TamperEvidentAuditLog : EntityBase {
     public Guid? UserId { get; private set; }
     public string Action { get; private set; } = string.Empty;
     public string EntityType { get; private set; } = string.Empty;
@@ -65,10 +64,8 @@ public sealed class TamperEvidentAuditLog : EntityBase
         string? region,
         string? city,
         string previousHash,
-        long sequenceNumber)
-    {
-        return new TamperEvidentAuditLog
-        {
+        long sequenceNumber) {
+        return new TamperEvidentAuditLog {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             UserId = userId,
@@ -94,58 +91,50 @@ public sealed class TamperEvidentAuditLog : EntityBase
         };
     }
 
-    public void SetCryptographicHashes(string contentHash, string chainHash)
-    {
+    public void SetCryptographicHashes(string contentHash, string chainHash) {
         ContentHash = contentHash;
         ChainHash = chainHash;
+        UpdatedAt = DateTime.UtcNow;
     }
 
-    public void Sign(string digitalSignature, string signingKeyId)
-    {
+    public void Sign(string digitalSignature, string signingKeyId) {
         DigitalSignature = digitalSignature;
         SigningKeyId = signingKeyId;
         SignedAt = DateTime.UtcNow;
     }
 
-    public void MarkAsVerified(string? notes = null)
-    {
+    public void MarkAsVerified(string? notes = null) {
         IsVerified = true;
         LastVerifiedAt = DateTime.UtcNow;
         VerificationNotes = notes;
     }
 
-    public void RecordCustody(string custodyEntry)
-    {
+    public void RecordCustody(string custodyEntry) {
         var currentChain = string.IsNullOrEmpty(CustodyChain) ? "" : CustodyChain + " → ";
         CustodyChain = currentChain + custodyEntry;
     }
 
-    public void MarkAsEvidence(string packageId)
-    {
+    public void MarkAsEvidence(string packageId) {
         EvidencePackageId = packageId;
         IsPartOfEvidence = true;
     }
 
-    public void MarkAsForwardedToSiem(string correlationId)
-    {
+    public void MarkAsForwardedToSiem(string correlationId) {
         ForwardedToSiem = true;
         ForwardedAt = DateTime.UtcNow;
         SiemCorrelationId = correlationId;
     }
 
-    public bool VerifyChain(string expectedPreviousHash)
-    {
+    public bool VerifyChain(string expectedPreviousHash) {
         return PreviousHash == expectedPreviousHash;
     }
 
-    public bool VerifyContentHash(string computedHash)
-    {
+    public bool VerifyContentHash(string computedHash) {
         return ContentHash == computedHash;
     }
 }
 
-public enum AuditRiskLevel
-{
+public enum AuditRiskLevel {
     Low,
     Medium,
     High,
