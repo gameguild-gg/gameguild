@@ -6,4 +6,4 @@ public record ReconcileLedgerCommand(
     Guid EntryId,
     Guid ReconciledBy,
     string? Notes = null
-) : IRequest;
+) : ICommand<Unit>;

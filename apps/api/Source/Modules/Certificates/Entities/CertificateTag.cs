@@ -59,7 +59,7 @@ public class CertificateTag : EntityBase
     /// <summary>
     /// Whether this association is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public new bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Proficiency level description

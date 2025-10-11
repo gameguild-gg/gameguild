@@ -98,7 +98,7 @@ public class Certificate : EntityBase
     /// <summary>
     /// Whether this certificate is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public new bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Number of certificates issued

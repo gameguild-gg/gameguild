@@ -9,4 +9,4 @@ public record ResolveDisputeCommand(
     DisputeResolution Resolution,
     string Notes,
     Guid ResolvedBy
-) : IRequest;
+) : ICommand<Unit>;
