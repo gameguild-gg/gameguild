@@ -1,5 +1,5 @@
 using GameGuild.Modules.Payments.Payments.Application.Services;
-using GameGuild.Modules.Payments.Payments.Domain.Entities;
+using GameGuild.Modules.Payments.Domain.Entities;
 using GameGuild.CQRS;
 
 namespace GameGuild.Modules.Payments.Payments.Application.Features.QueryWallet;

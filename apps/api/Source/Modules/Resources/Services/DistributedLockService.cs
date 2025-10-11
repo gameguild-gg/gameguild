@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
+
 namespace GameGuild.Modules.Resources;
 
 /// <summary>
@@ -30,8 +33,8 @@ public class DistributedLockService : IDistributedLockService
     }
 
     public async Task<IDisposable?> AcquireLockAsync(
-        Guid tenantId, 
-        ResourceUsageType resourceType, 
+        Guid tenantId,
+        ResourceUsageType resourceType,
         TimeSpan timeout,
         CancellationToken cancellationToken = default)
     {
@@ -41,7 +44,7 @@ public class DistributedLockService : IDistributedLockService
         _logger.LogDebug("Attempting to acquire lock for {LockKey} with timeout {Timeout}", lockKey, timeout);
 
         var acquired = await semaphore.WaitAsync(timeout, cancellationToken);
-        
+
         if (!acquired)
         {
             _logger.LogWarning("Failed to acquire lock for {LockKey} within timeout {Timeout}", lockKey, timeout);
@@ -56,7 +59,7 @@ public class DistributedLockService : IDistributedLockService
     public Task<bool> IsLockedAsync(Guid tenantId, ResourceUsageType resourceType, CancellationToken cancellationToken = default)
     {
         var lockKey = GetLockKey(tenantId, resourceType);
-        
+
         if (!Locks.TryGetValue(lockKey, out var semaphore))
             return Task.FromResult(false);
 

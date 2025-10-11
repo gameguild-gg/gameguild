@@ -1,7 +1,6 @@
 using GameGuild.Database;
 using GameGuild.CQRS;
 using GameGuild.Modules.Resources.Commands;
-using GameGuild.Database;
 using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

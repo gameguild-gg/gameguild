@@ -1,5 +1,8 @@
 namespace GameGuild.Modules.Resources.Queries;
+
 using GameGuild.Database;
+using MediatR;
+using GameGuild;
 
 /// <summary>
 ///     Query to analyze usage trends for a tenant and resource type
@@ -55,9 +58,9 @@ public class AnalyzeUsageTrendsHandler : IRequestHandler<AnalyzeUsageTrendsQuery
         {
             // Get usage records for the period
             var usageRecords = await _context.Set<ResourceUsageRecord>()
-                .Where(r => r.TenantId == request.TenantId && 
+                .Where(r => r.TenantId == request.TenantId &&
                            r.Type == request.ResourceType &&
-                           r.Timestamp >= request.StartDate && 
+                           r.Timestamp >= request.StartDate &&
                            r.Timestamp <= request.EndDate)
                 .OrderBy(r => r.Timestamp)
                 .ToListAsync(cancellationToken);
@@ -127,7 +130,7 @@ public class AnalyzeUsageTrendsHandler : IRequestHandler<AnalyzeUsageTrendsQuery
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error analyzing usage trends for tenant {TenantId}, resource {ResourceType}", 
+            _logger.LogError(ex, "Error analyzing usage trends for tenant {TenantId}, resource {ResourceType}",
                 request.TenantId, request.ResourceType);
             return Result<UsageTrendAnalysisResponse>.Failure($"Error analyzing usage trends: {ex.Message}");
         }
@@ -144,13 +147,13 @@ public class AnalyzeUsageTrendsHandler : IRequestHandler<AnalyzeUsageTrendsQuery
     private static List<UsageAnomalyDto> DetectAnomalies(List<ResourceUsageRecord> records, double average, double stdDev)
     {
         var anomalies = new List<UsageAnomalyDto>();
-        
+
         if (stdDev == 0) return anomalies;
 
         foreach (var record in records)
         {
             var zScore = Math.Abs((record.Amount - average) / stdDev);
-            
+
             if (zScore > 2.0) // Anomaly threshold
             {
                 anomalies.Add(new UsageAnomalyDto(
@@ -179,8 +182,8 @@ public class AnalyzeUsageTrendsHandler : IRequestHandler<AnalyzeUsageTrendsQuery
     }
 
     private static (string Pattern, double Confidence) DetectPattern(
-        List<ResourceUsageRecord> records, 
-        double growthRate, 
+        List<ResourceUsageRecord> records,
+        double growthRate,
         int anomalyCount,
         double stdDev)
     {
