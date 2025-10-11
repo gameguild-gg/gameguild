@@ -5,7 +5,7 @@ using GameGuild.CQRS;
 using GameGuild.Modules.Projects.Queries;
 using GameGuild.Modules.Projects.Repositories;
 using GameGuild.Modules.Users;
-using GameGuild.Modules.Tenants.Abstractions;
+using GameGuild.Modules.Tenants;
 
 
 namespace GameGuild.Modules.Projects;
