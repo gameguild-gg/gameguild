@@ -91,7 +91,7 @@ public sealed class Project : ContentEntity {
   /// <summary> Tenant this project belongs to (for multi-tenancy) </summary>
   public Tenant? Tenant { get; set; }
 
-  public Guid? TenantId { get; set; }
+  public new Guid? TenantId { get; set; }
 
   /// <summary> Computed property: Is the project active </summary>
   [GraphQLIgnore]

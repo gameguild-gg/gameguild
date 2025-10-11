@@ -7,8 +7,9 @@ using GameGuild.Modules.Resources;
 /// <summary>
 /// Audit log entry for tracking security-sensitive operations
 /// </summary>
-public class AuditLog : EntityBase
-{
+public class AuditLog : EntityBase {
+    private Guid? _tenantId;
+
     /// <summary>
     /// Type of action being audited
     /// </summary>
@@ -33,6 +34,11 @@ public class AuditLog : EntityBase
     /// User who performed the action
     /// </summary>
     public Guid? UserId { get; set; }
+
+    /// <summary>
+    /// Override TenantId to allow direct assignment for audit logs
+    /// </summary>
+    public override Guid? TenantId { get => _tenantId ?? base.TenantId; set => _tenantId = value; }
 
     /// <summary>
     /// IP address of the user
