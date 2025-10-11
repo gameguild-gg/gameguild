@@ -117,13 +117,14 @@ export default function PreviewPage() {
       searchTerm: string,
       tags: string[],
       filterMode: "all" | "any" = "any",
+      storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
     ): Promise<ProjectData[]> => {
       if (!isDbInitialized) {
         return []
       }
 
       try {
-        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode)
+        return await dbStorage.current.searchProjects(searchTerm, tags, filterMode, storageTypeFilter)
       } catch (error) {
         console.error("Failed to search projects:", error)
         return []
