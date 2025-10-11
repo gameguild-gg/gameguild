@@ -3,6 +3,8 @@ using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Models;
 using GameGuild.Modules.Programs.Entities;
+using ProgramContentTypeEntity = GameGuild.Modules.Programs.Entities.ProgramContentType;
+using GradingMethodEntity = GameGuild.Modules.Programs.Entities.GradingMethod;
 
 
 namespace GameGuild.Modules.Programs;
@@ -87,7 +89,7 @@ public class ProgramContent : EntityBase {
   /// - Activity: Hands-on exercise tools
   /// Used for content-specific UI rendering and business logic.
   /// </remarks>
-  public ProgramContentType Type { get; set; }
+  public ProgramContentTypeEntity Type { get; set; }
 
   /// <summary>
   /// Flexible JSON content body supporting diverse content types and structures
@@ -133,7 +135,7 @@ public class ProgramContent : EntityBase {
   /// Determines grading interface and workflow for assessments.
   /// Affects final grade calculations and transcript generation.
   /// </remarks>
-  public GradingMethod? GradingMethod { get; set; }
+  public GradingMethodEntity? GradingMethod { get; set; }
 
   /// <summary>
   /// Maximum possible points or score for this gradeable content
