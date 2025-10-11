@@ -3,6 +3,7 @@ using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 
 namespace GameGuild.Modules.Feedbacks;
 
@@ -45,7 +46,7 @@ public class ProgramFeedbackSubmission : EntityBase {
 
   public virtual Programs.Program Program { get; set; } = null!;
 
-  public virtual Product? Product { get; set; }
+  public virtual ProductEntity? Product { get; set; }
 
   public virtual ProgramUser ProgramUser { get; set; } = null!;
 
