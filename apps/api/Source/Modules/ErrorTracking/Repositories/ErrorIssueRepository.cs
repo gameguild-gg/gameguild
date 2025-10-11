@@ -28,15 +28,15 @@ public class ErrorIssueRepository : IErrorIssueRepository
             .FirstOrDefaultAsync(i => i.Fingerprint == fingerprint && i.TenantId == tenantId, cancellationToken);
     }
 
-    public async Task<List<ErrorIssue>> GetAllAsync(
+    public async Task<IEnumerable<ErrorIssue>> GetAllAsync(
         Guid? tenantId,
         string? status,
         string? severity,
         string? environment,
         DateTime? startDate,
         DateTime? endDate,
-        int pageNumber,
-        int pageSize,
+        int skip,
+        int take,
         CancellationToken cancellationToken = default)
     {
         var query = _context.Set<ErrorIssue>().AsQueryable();
@@ -73,16 +73,15 @@ public class ErrorIssueRepository : IErrorIssueRepository
 
         return await query
             .OrderByDescending(i => i.LastSeenAt)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+            .Skip(skip)
+            .Take(take)
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<Guid> AddAsync(ErrorIssue issue, CancellationToken cancellationToken = default)
+    public async Task AddAsync(ErrorIssue issue, CancellationToken cancellationToken = default)
     {
         _context.Set<ErrorIssue>().Add(issue);
         await _context.SaveChangesAsync(cancellationToken);
-        return issue.Id;
     }
 
     public async Task UpdateAsync(ErrorIssue issue, CancellationToken cancellationToken = default)

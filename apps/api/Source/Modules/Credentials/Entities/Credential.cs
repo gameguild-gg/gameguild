@@ -34,7 +34,7 @@ public sealed class Credential : EntityBase, ITenantable
     public User User { get; set; } = null!;
 
     /// <summary> Foreign key to the Tenant entity (optional - for tenant-specific credentials) </summary>
-    public override Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary> Type of credential (e.g., "password", "api_key", "oauth_token", "2fa_secret") </summary>
     [Required]
