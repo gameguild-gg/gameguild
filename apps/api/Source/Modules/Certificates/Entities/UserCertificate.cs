@@ -118,7 +118,7 @@ public class UserCertificate : EntityBase
     /// <summary>
     /// Whether this certificate is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public new bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Whether the certificate is currently valid
