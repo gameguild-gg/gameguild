@@ -6,8 +6,7 @@ namespace GameGuild.Modules.ErrorTracking.Entities;
 /// <summary>
 /// Represents an aggregated error issue (group of similar error events).
 /// </summary>
-public class ErrorIssue : EntityBase
-{
+public class ErrorIssue : EntityBase {
     /// <summary>
     /// Gets or sets the tenant ID this issue belongs to.
     /// </summary>
@@ -111,13 +110,11 @@ public class ErrorIssue : EntityBase
     /// <summary>
     /// Records a new error event occurrence.
     /// </summary>
-    public void RecordEvent(Guid? userId = null)
-    {
+    public void RecordEvent(Guid? userId = null) {
         EventCount++;
         LastSeenAt = DateTime.UtcNow;
 
-        if (userId.HasValue)
-        {
+        if (userId.HasValue) {
             UserCount++;
         }
     }
@@ -125,8 +122,7 @@ public class ErrorIssue : EntityBase
     /// <summary>
     /// Marks the issue as resolved.
     /// </summary>
-    public void Resolve(Guid userId, string? notes = null)
-    {
+    public void Resolve(Guid userId, string? notes = null) {
         Status = IssueStatus.Resolved;
         ResolvedAt = DateTime.UtcNow;
         ResolvedByUserId = userId;
@@ -136,8 +132,7 @@ public class ErrorIssue : EntityBase
     /// <summary>
     /// Reopens a resolved issue.
     /// </summary>
-    public void Reopen()
-    {
+    public void Reopen() {
         Status = IssueStatus.Unresolved;
         ResolvedAt = null;
         ResolvedByUserId = null;
@@ -147,16 +142,14 @@ public class ErrorIssue : EntityBase
     /// <summary>
     /// Ignores the issue (won't trigger alerts).
     /// </summary>
-    public void Ignore()
-    {
+    public void Ignore() {
         Status = IssueStatus.Ignored;
     }
 
     /// <summary>
     /// Mutes alerts for this issue temporarily.
     /// </summary>
-    public void Mute(TimeSpan duration)
-    {
+    public void Mute(TimeSpan duration) {
         IsMuted = true;
         MutedUntil = DateTime.UtcNow.Add(duration);
     }
@@ -164,8 +157,7 @@ public class ErrorIssue : EntityBase
     /// <summary>
     /// Unmutes alerts for this issue.
     /// </summary>
-    public void Unmute()
-    {
+    public void Unmute() {
         IsMuted = false;
         MutedUntil = null;
     }
@@ -174,10 +166,10 @@ public class ErrorIssue : EntityBase
 /// <summary>
 /// Represents the status of an error issue.
 /// </summary>
-public enum IssueStatus
-{
+public enum IssueStatus {
     Unresolved = 0,
     Resolved = 1,
     Ignored = 2,
-    InProgress = 3
+    InProgress = 3,
+    Regressed = 4
 }

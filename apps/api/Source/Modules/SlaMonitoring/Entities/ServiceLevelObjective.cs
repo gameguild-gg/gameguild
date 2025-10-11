@@ -130,5 +130,9 @@ public enum SloStatus {
     Active = 0,
     Violated = 1,
     Warning = 2,
-    Inactive = 3
+    Inactive = 3,
+    // Backward compatibility
+    Disabled = 3,
+    Breached = 1,
+    AtRisk = 2
 }

@@ -108,7 +108,7 @@ public class ApplicationDbContext : DbContext {
     public DbSet<GameGuild.Modules.UserAchievements.AchievementProgress> AchievementProgress => Set<GameGuild.Modules.UserAchievements.AchievementProgress>();
 
     // Programs Module
-    public DbSet<GameGuild.Modules.Programs.Program> Programs => Set<GameGuild.Modules.Programs.Program>();
+    public DbSet<GameGuild.Modules.Programs.Entities.Program> Programs => Set<GameGuild.Modules.Programs.Entities.Program>();
 
     public DbSet<GameGuild.Modules.Programs.Entities.ProgramUser> ProgramUsers => Set<GameGuild.Modules.Programs.Entities.ProgramUser>();
 

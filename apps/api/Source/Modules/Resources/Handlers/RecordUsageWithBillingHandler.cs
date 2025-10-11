@@ -69,7 +69,7 @@ public class RecordUsageWithBillingHandler : IRequestHandler<RecordUsageCommand,
             RecordedAt = DateTime.UtcNow
         };
 
-        await _usageRepository.AddAsync(record, cancellationToken);
+        await _usageRepository.AddAsync(record);
 
         // Update quota
         quota.CurrentUsage += request.Count;
