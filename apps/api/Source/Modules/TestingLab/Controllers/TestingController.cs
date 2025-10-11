@@ -717,95 +717,9 @@ public class TestingController(ITestService testService) : ControllerBase {
   #region Module Permission Integration Endpoints
 
   // NOTE: IModulePermissionService, UserRoleAssignment, and related types don't exist in this codebase
-  // These endpoints are stubs and have been commented out until the proper permission infrastructure exists
+  // All permission integration endpoints have been removed until proper infrastructure exists
 
-  /*
-  /// <summary> Check if current user can perform specific Testing Lab actions </summary>
-  [HttpGet("permissions/check")]
-  public async Task<ActionResult<TestingLabActionPermissions>> CheckTestingLabPermissions([FromServices] IModulePermissionService modulePermissionService, [FromQuery] Guid? tenantId = null) {
-    var userId = GetCurrentUserId();
-
-    var permissions = new TestingLabActionPermissions {
-      CanCreateSessions = await modulePermissionService.CanCreateTestingSessionsAsync(userId, tenantId),
-      CanDeleteSessions = await modulePermissionService.CanDeleteTestingSessionsAsync(userId, tenantId),
-      CanManageTesters = await modulePermissionService.CanManageTestersAsync(userId, tenantId),
-      CanViewReports = await modulePermissionService.CanViewTestingReportsAsync(userId, tenantId),
-      CanExportData = await modulePermissionService.CanExportTestingDataAsync(userId, tenantId),
-    };
-
-    return Ok(permissions);
-  }
-
-  /// <summary> Get comprehensive Testing Lab permissions for current user </summary>
-  [HttpGet("permissions/my-permissions")]
-  public async Task<ActionResult<TestingLabPermissions>> GetMyTestingLabPermissions([FromServices] IModulePermissionService modulePermissionService, [FromQuery] Guid? tenantId = null) {
-    var userId = GetCurrentUserId();
-    var permissions = await modulePermissionService.GetUserTestingLabPermissionsAsync(userId, tenantId);
-
-    return Ok(permissions);
-  }
-
-  /// <summary> Assign Testing Lab role to a user (admin only) </summary>
-  [HttpPost("permissions/assign-role")]
-  public async Task<ActionResult> AssignTestingLabRole([FromServices] IModulePermissionService modulePermissionService, [FromBody] AssignTestingLabRoleDto request) {
-    // TODO: Add admin permission check
-    try {
-      await modulePermissionService.AssignRoleAsync(request.UserId, request.TenantId, ModuleType.TestingLab, request.RoleName, request.Constraints, request.ExpiresAt);
-
-      return Ok(new { message = $"Successfully assigned {request.RoleName} role to user {request.UserId}" });
-    }
-    catch (Exception ex) { return BadRequest($"Error assigning role: {ex.Message}"); }
-  }
-
-  /// <summary> Create a new testing session with module permission checking </summary>
-  [HttpPost("sessions/create-with-permissions")]
-  public async Task<ActionResult<TestingSession>> CreateTestingSessionWithPermissions([FromServices] IModulePermissionService modulePermissionService, [FromBody] CreateTestingSessionDto sessionDto, [FromQuery] Guid? tenantId = null) {
-    var userId = GetCurrentUserId();
-
-    // Check if user has permission to create sessions
-    var canCreate = await modulePermissionService.CanCreateTestingSessionsAsync(userId, tenantId);
-
-    if (!canCreate) { return Forbid("You do not have permission to create testing sessions"); }
-
-    try {
-      // Convert DTO to entity and create session
-      var session = sessionDto.ToTestingSession(userId);
-      var createdSession = await testService.CreateTestingSessionAsync(session);
-
-      return CreatedAtAction(nameof(GetTestingSession), new { id = createdSession.Id }, createdSession);
-    }
-    catch (Exception ex) { return BadRequest($"Error creating testing session: {ex.Message}"); }
-  }
-
-  /// <summary> Delete a testing session with module permission checking </summary>
-  [HttpDelete("sessions/{id}/delete-with-permissions")]
-  public async Task<ActionResult> DeleteTestingSessionWithPermissions([FromServices] IModulePermissionService modulePermissionService, Guid id, [FromQuery] Guid? tenantId = null) {
-    var userId = GetCurrentUserId();
-
-    // Check if user has permission to delete sessions
-    var canDelete = await modulePermissionService.CanDeleteTestingSessionsAsync(userId, tenantId);
-
-    if (!canDelete) { return Forbid("You do not have permission to delete testing sessions"); }
-
-    try {
-      var result = await testService.DeleteTestingSessionAsync(id);
-
-      if (!result) return NotFound();
-
-      return NoContent();
-    }
-    catch (Exception ex) { return BadRequest($"Error deleting testing session: {ex.Message}"); }
-  }
-
-  /// <summary> Get users with specific Testing Lab roles </summary>
-  [HttpGet("permissions/users-with-role/{roleName}")]
-  public async Task<ActionResult<List<UserRoleAssignment>>> GetUsersWithTestingLabRole([FromServices] IModulePermissionService modulePermissionService, string roleName, [FromQuery] Guid? tenantId = null) {
-    // TODO: Add admin permission check
-    var users = await modulePermissionService.GetUsersWithRoleAsync(tenantId, ModuleType.TestingLab, roleName);
-
-    return Ok(users);
-  }
-  */
+  #endregion
 
   // Helper method to get current user ID
   private Guid GetCurrentUserId() {
@@ -815,8 +729,6 @@ public class TestingController(ITestService testService) : ControllerBase {
 
     return userId;
   }
-
-  #endregion
 }
 
 // DTOs for request bodies
