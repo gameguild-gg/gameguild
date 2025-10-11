@@ -3,15 +3,15 @@ using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Contents;
-using GameGuild.Source.Modules.Products.Models;
-using GameGuild.Source.Modules.Products.Queries;
-using GameGuild.Source.Modules.Products.Services;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Products.Queries;
+using GameGuild.Modules.Products.Services;
 using AuthorizeAttribute = HotChocolate.Authorization.AuthorizeAttribute;
 using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
 using ProductTypeEnum = GameGuild.ProductType;
 
 
-namespace GameGuild.Source.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> GraphQL queries for Product module using CQRS pattern </summary>
 [ExtendObjectType<Query>]

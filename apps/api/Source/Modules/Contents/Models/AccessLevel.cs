@@ -1,4 +1,4 @@
-namespace GameGuild.Source.Modules.Contents.Models;
+namespace GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Resources;
 
 /// <summary>

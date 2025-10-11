@@ -2,7 +2,7 @@ using GameGuild.Database;
 using GameGuild.Modules.Users;
 
 
-namespace GameGuild.Source.Modules.Products.GraphQL;
+namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> DataLoader interface for efficiently loading User entities for Products </summary>
 public interface IProductUserDataLoader : IDataLoader<Guid, User?> { }

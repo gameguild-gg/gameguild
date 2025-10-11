@@ -6,13 +6,13 @@ using GameGuild.Core.Domain.Identity;
 using GameGuild.CQRS;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Source.Modules.Products.Models;
-using GameGuild.Source.Modules.Products.Queries;
+using GameGuild.Modules.Products.Models;
+using GameGuild.Modules.Products.Queries;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 
-namespace GameGuild.Source.Modules.Products.Handlers;
+namespace GameGuild.Modules.Products.Handlers;
 
 /// <summary> Query handlers for product operations </summary>
 public class ProductQueryHandlers

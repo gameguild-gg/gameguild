@@ -1,13 +1,13 @@
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using GameGuild.Source.Modules.Products.Interfaces;
-using GameGuild.Source.Modules.Products.Models;
+using GameGuild.Modules.Products.Interfaces;
+using GameGuild.Modules.Products.Models;
 using Microsoft.EntityFrameworkCore;
 using ProductEntity = GameGuild.Source.Modules.Products.Models.Product;
 using ProductType = GameGuild.ProductType;
 
 
-namespace GameGuild.Source.Modules.Products.Services;
+namespace GameGuild.Modules.Products.Services;
 
 /// <summary>
 /// Service implementation for Product business logic

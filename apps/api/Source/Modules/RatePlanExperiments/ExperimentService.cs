@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace GameGuild.Source.Modules.RatePlanExperiments
+namespace GameGuild.Modules.RatePlanExperiments
 {
     public class ExperimentService : IExperimentService
     {
