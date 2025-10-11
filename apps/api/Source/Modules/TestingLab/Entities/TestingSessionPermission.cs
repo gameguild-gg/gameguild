@@ -1,3 +1,4 @@
+using GameGuild.Modules.Resources;
 using GameGuild.Modules.TestingLab.Entities;
 
 namespace GameGuild.Modules.TestingLab;
@@ -8,7 +9,7 @@ namespace GameGuild.Modules.TestingLab;
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_TestingSessionPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_TestingSessionPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_TestingSessionPermissions_Expiration")]
-public class TestingSessionPermission : ResourcePermission<TestingSession> {
+public class TestingSessionPermission : GameGuild.Modules.Resources.ResourcePermission<TestingSession> {
   public TestingSessionPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
     : base(userId, tenantId, resourceId) {
     AddPermission(permissions);

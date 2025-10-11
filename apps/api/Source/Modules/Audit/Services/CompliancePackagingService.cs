@@ -155,8 +155,7 @@ public class CompliancePackagingService : ICompliancePackagingService {
         if (package is null)
             return Result.Failure("Package not found");
 
-        var approverId = Guid.TryParse(approvedBy, out var userId) ? userId : Guid.Empty;
-        package.Approve(approverId, null);
+        package.Approve(approvedBy);
         await _repository.UpdateAsync(package, cancellationToken);
 
         _logger.LogInformation("Package {PackageId} approved by {UserId}", packageId, approvedBy);

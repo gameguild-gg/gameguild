@@ -8,7 +8,6 @@ using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Commands;
 using Microsoft.Extensions.Logging;
 using IMediator = GameGuild.CQRS.IMediator;
-using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 namespace GameGuild.Modules.Programs.GraphQL;
 
@@ -18,7 +17,7 @@ public class ProgramMutations {
 
   /// <summary> Creates a new program </summary>
   [HotChocolate.Authorization.Authorize]
-  public async Task<ProgramEntity> CreateProgram(
+  public async Task<Program> CreateProgram(
     CreateProgramInput input,
     ClaimsPrincipal claimsPrincipal,
     [Service] IMediator mediator,
@@ -55,8 +54,8 @@ public class ProgramMutations {
   }
 
   /// <summary> Updates an existing program </summary>
-  [GraphQLRequireResourcePermission<ProgramPermission, ProgramEntity>(PermissionType.Edit, "id")]
-  public async Task<ProgramEntity> UpdateProgram(
+  [GraphQLRequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "id")]
+  public async Task<Program> UpdateProgram(
     Guid id,
     UpdateProgramInput input,
     [Service] IMediator mediator,
@@ -86,7 +85,7 @@ public class ProgramMutations {
   }
 
   /// <summary> Deletes a program </summary>
-  [GraphQLRequireResourcePermission<ProgramPermission, ProgramEntity>(PermissionType.Delete, "id")]
+  [GraphQLRequireResourcePermission<ProgramPermission, Program>(PermissionType.Delete, "id")]
   public async Task<bool> DeleteProgram(
     Guid id,
     [Service] IMediator mediator,
@@ -100,8 +99,8 @@ public class ProgramMutations {
   }
 
   /// <summary> Publishes a program (makes it publicly available) </summary>
-  [GraphQLRequireResourcePermission<ProgramPermission, ProgramEntity>(PermissionType.Edit, "id")]
-  public async Task<ProgramEntity> PublishProgram(
+  [GraphQLRequireResourcePermission<ProgramPermission, Program>(PermissionType.Edit, "id")]
+  public async Task<Program> PublishProgram(
     Guid id,
     [Service] IProgramService programService,
     [Service] ILogger<ProgramMutations> logger

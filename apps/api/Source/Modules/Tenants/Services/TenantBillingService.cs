@@ -3,8 +3,7 @@ using GameGuild.Modules.Tenants.Repositories;
 
 namespace GameGuild.Modules.Tenants.Services;
 
-public interface ITenantBillingService
-{
+public interface ITenantBillingService {
     Task<TenantUsageRecord> RecordUsageAsync(Guid tenantId, TenantUsageType usageType, decimal quantity, string unit, decimal unitPrice, string currency);
 
     Task<List<TenantUsageRecord>> GetUsageRecordsAsync(Guid tenantId, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default);
@@ -18,35 +17,29 @@ public interface ITenantBillingService
     Task SyncWithProviderAsync(Guid integrationId);
 }
 
-public class TenantBillingService : ITenantBillingService
-{
+public class TenantBillingService : ITenantBillingService {
     private readonly ITenantBillingRepository _repository;
     private readonly ILogger<TenantBillingService> _logger;
 
-    public TenantBillingService(ITenantBillingRepository repository, ILogger<TenantBillingService> logger)
-    {
+    public TenantBillingService(ITenantBillingRepository repository, ILogger<TenantBillingService> logger) {
         _repository = repository;
         _logger = logger;
     }
 
-    public async Task<TenantUsageRecord> RecordUsageAsync(Guid tenantId, TenantUsageType usageType, decimal quantity, string unit, decimal unitPrice, string currency)
-    {
-        var usageRecord = new TenantUsageRecord
-        {
+    public async Task<TenantUsageRecord> RecordUsageAsync(Guid tenantId, TenantUsageType usageType, decimal quantity, string unit, decimal unitPrice, string currency) {
+        var usageRecord = new TenantUsageRecord {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             UsageType = usageType,
             Quantity = quantity,
             Unit = unit,
-            UnitPrice = unitPrice,
+            CostPerUnit = unitPrice,
             Currency = currency,
             RecordedAt = DateTime.UtcNow,
-            PeriodStart = DateTime.UtcNow.Date,
-            PeriodEnd = DateTime.UtcNow.Date.AddDays(1),
-            Metadata = "{}"
+            Metadata = new Dictionary<string, string>()
         };
 
-        usageRecord.CalculateCost(quantity, unitPrice);
+        usageRecord.CalculateCost();
 
         await _repository.CreateUsageRecordAsync(usageRecord);
 
@@ -56,21 +49,17 @@ public class TenantBillingService : ITenantBillingService
         return usageRecord;
     }
 
-    public async Task<List<TenantUsageRecord>> GetUsageRecordsAsync(Guid tenantId, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default)
-    {
+    public async Task<List<TenantUsageRecord>> GetUsageRecordsAsync(Guid tenantId, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default) {
         return await _repository.GetUsageRecordsByPeriodAsync(tenantId, periodStart, periodEnd, cancellationToken);
     }
 
-    public async Task<decimal> CalculateTotalCostAsync(Guid tenantId, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default)
-    {
+    public async Task<decimal> CalculateTotalCostAsync(Guid tenantId, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default) {
         var records = await GetUsageRecordsAsync(tenantId, periodStart, periodEnd, cancellationToken);
         return records.Sum(r => r.TotalCost);
     }
 
-    public async Task<TenantBillingIntegration> CreateBillingIntegrationAsync(Guid tenantId, TenantBillingProvider provider, string configuration, TenantBillingCycle billingCycle, string currency)
-    {
-        var integration = new TenantBillingIntegration
-        {
+    public async Task<TenantBillingIntegration> CreateBillingIntegrationAsync(Guid tenantId, TenantBillingProvider provider, string configuration, TenantBillingCycle billingCycle, string currency) {
+        var integration = new TenantBillingIntegration {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             Provider = provider,
@@ -90,11 +79,9 @@ public class TenantBillingService : ITenantBillingService
         return integration;
     }
 
-    public async Task<TenantBillingIntegration> UpdateBillingIntegrationAsync(Guid integrationId, string configuration)
-    {
+    public async Task<TenantBillingIntegration> UpdateBillingIntegrationAsync(Guid integrationId, string configuration) {
         var integration = await _repository.GetBillingIntegrationByIdAsync(integrationId);
-        if (integration == null)
-        {
+        if (integration == null) {
             throw new InvalidOperationException($"Billing integration {integrationId} not found");
         }
 
@@ -106,11 +93,9 @@ public class TenantBillingService : ITenantBillingService
         return integration;
     }
 
-    public async Task SyncWithProviderAsync(Guid integrationId)
-    {
+    public async Task SyncWithProviderAsync(Guid integrationId) {
         var integration = await _repository.GetBillingIntegrationByIdAsync(integrationId);
-        if (integration == null)
-        {
+        if (integration == null) {
             throw new InvalidOperationException($"Billing integration {integrationId} not found");
         }
 

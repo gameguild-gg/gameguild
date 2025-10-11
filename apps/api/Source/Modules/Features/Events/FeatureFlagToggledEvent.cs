@@ -6,8 +6,7 @@ namespace GameGuild.Modules.Features.Events;
 ///     Domain event raised when a feature flag is toggled
 /// </summary>
 public class FeatureFlagToggledEvent(Guid featureFlagId, string key, bool isEnabled, Guid? tenantId = null)
-    : DomainEvent
-{
+  : DomainEvent(featureFlagId, "FeatureFlag") {
     public Guid FeatureFlagId { get; } = featureFlagId;
 
     public string Key { get; } = key;

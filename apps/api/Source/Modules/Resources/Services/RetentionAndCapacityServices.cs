@@ -313,7 +313,7 @@ public class ReservedCapacityService : IReservedCapacityService {
             throw new InvalidOperationException("Reservation not found");
 
         return await CreateReservationAsync(
-            existing.TenantId,
+            existing.TenantId!.Value,
             existing.ResourceType,
             existing.ReservedQuantity,
             newCommitmentMonths,

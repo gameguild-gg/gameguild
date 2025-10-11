@@ -3,7 +3,6 @@ using GameGuild.Database;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Programs.Commands;
 using GameGuild.Modules.Programs;
-using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
 namespace GameGuild.Modules.Programs;
@@ -23,16 +22,16 @@ namespace GameGuild.Modules.Programs;
 /// for specific command operations while maintaining transaction integrity
 /// and consistent logging for audit and monitoring purposes.
 /// </remarks>
-public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<ProgramCommandHandlers> logger) : IRequestHandler<CreateProgramCommand, ProgramEntity>,
-                                                                                                            IRequestHandler<UpdateProgramCommand, ProgramEntity>,
+public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<ProgramCommandHandlers> logger) : IRequestHandler<CreateProgramCommand, Program>,
+                                                                                                            IRequestHandler<UpdateProgramCommand, Program>,
                                                                                                             IRequestHandler<DeleteProgramCommand, bool>,
-                                                                                                            IRequestHandler<PublishProgramCommand, ProgramEntity>,
-                                                                                                            IRequestHandler<UnpublishProgramCommand, ProgramEntity>,
-                                                                                                            IRequestHandler<ArchiveProgramCommand, ProgramEntity>,
-                                                                                                            IRequestHandler<RestoreProgramCommand, ProgramEntity>,
+                                                                                                            IRequestHandler<PublishProgramCommand, Program>,
+                                                                                                            IRequestHandler<UnpublishProgramCommand, Program>,
+                                                                                                            IRequestHandler<ArchiveProgramCommand, Program>,
+                                                                                                            IRequestHandler<RestoreProgramCommand, Program>,
                                                                                                             IRequestHandler<EnrollUserCommand, ProgramUser>,
                                                                                                             IRequestHandler<UnenrollUserCommand, bool>,
-                                                                                                            IRequestHandler<UpdateEnrollmentStatusCommand, ProgramEntity>,
+                                                                                                            IRequestHandler<UpdateEnrollmentStatusCommand, Program>,
                                                                                                             IRequestHandler<AddProgramContentCommand, ProgramContent>,
                                                                                                             IRequestHandler<RemoveProgramContentCommand, bool>,
                                                                                                             IRequestHandler<ReorderProgramContentCommand, IEnumerable<ProgramContent>>,
@@ -41,8 +40,8 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
                                                                                                             IRequestHandler<DeleteProgramRatingCommand, bool>,
                                                                                                             IRequestHandler<AddToWishlistCommand, ProgramWishlist>,
                                                                                                             IRequestHandler<RemoveFromWishlistCommand, bool>,
-                                                                                                            IRequestHandler<BulkUpdateProgramVisibilityCommand, IEnumerable<ProgramEntity>>,
-                                                                                                            IRequestHandler<BulkArchiveProgramsCommand, IEnumerable<ProgramEntity>> {
+                                                                                                            IRequestHandler<BulkUpdateProgramVisibilityCommand, IEnumerable<Program>>,
+                                                                                                            IRequestHandler<BulkArchiveProgramsCommand, IEnumerable<Program>> {
   // ===== CONTENT MANAGEMENT HANDLERS =====
 
   public async Task<ProgramContent> Handle(AddProgramContentCommand request, CancellationToken cancellationToken) {

@@ -1,5 +1,4 @@
 using GameGuild.Modules.Contents.Models;
-using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 
 namespace GameGuild.Modules.Programs;
@@ -31,7 +30,7 @@ public interface IProgramService {
   /// Excludes soft-deleted programs from results.
   /// Use for lightweight program lookups and basic operations.
   /// </remarks>
-  Task<ProgramEntity?> GetProgramByIdAsync(Guid id);
+  Task<Program?> GetProgramByIdAsync(Guid id);
 
   /// <summary>
   /// Retrieves a program by its URL-friendly slug identifier
@@ -43,7 +42,7 @@ public interface IProgramService {
   /// Excludes soft-deleted programs from results.
   /// Used for public program access and content management.
   /// </remarks>
-  Task<ProgramEntity?> GetProgramBySlugAsync(string slug);
+  Task<Program?> GetProgramBySlugAsync(string slug);
 
   /// <summary>
   /// Retrieves a published program by slug that is publicly accessible
@@ -55,7 +54,7 @@ public interface IProgramService {
   /// Used for public-facing program discovery and enrollment.
   /// Ensures only properly published content is accessible to learners.
   /// </remarks>
-  Task<ProgramEntity?> GetPublishedProgramBySlugAsync(string slug);
+  Task<Program?> GetPublishedProgramBySlugAsync(string slug);
 
   /// <summary>
   /// Retrieves a program with all associated content and user relationships
@@ -67,7 +66,7 @@ public interface IProgramService {
   /// Excludes soft-deleted related entities from collections.
   /// Use for comprehensive program management and content editing.
   /// </remarks>
-  Task<ProgramEntity?> GetProgramWithContentAsync(Guid id);
+  Task<Program?> GetProgramWithContentAsync(Guid id);
 
   /// <summary>
   /// Retrieves a paginated list of programs ordered by creation date
@@ -80,7 +79,7 @@ public interface IProgramService {
   /// Excludes soft-deleted programs from results.
   /// Used for program listing and administrative overview.
   /// </remarks>
-  Task<IEnumerable<ProgramEntity>> GetProgramsAsync(int skip = 0, int take = 50);
+  Task<IEnumerable<Program>> GetProgramsAsync(int skip = 0, int take = 50);
 
   /// <summary>
   /// Creates a new program with initial draft status and private visibility
@@ -92,7 +91,7 @@ public interface IProgramService {
   /// Generates UUID, creation timestamp, and initial metadata.
   /// Program must be explicitly published after content creation.
   /// </remarks>
-  Task<ProgramEntity> CreateProgramAsync(ProgramEntity program);
+  Task<Program> CreateProgramAsync(Program program);
 
   /// <summary>
   /// Updates an existing program's properties and metadata
@@ -104,7 +103,7 @@ public interface IProgramService {
   /// Preserves existing relationships and content associations.
   /// Use for program metadata, settings, and content organization changes.
   /// </remarks>
-  Task<ProgramEntity> UpdateProgramAsync(ProgramEntity program);
+  Task<Program> UpdateProgramAsync(Program program);
 
   /// <summary>
   /// Soft deletes a program while preserving data integrity
@@ -130,7 +129,7 @@ public interface IProgramService {
   /// Does not copy user enrollments or progress data.
   /// Useful for creating program templates and variations.
   /// </remarks>
-  Task<ProgramEntity> CloneProgramAsync(Guid id, string newTitle);
+  Task<Program> CloneProgramAsync(Guid id, string newTitle);
 
   /// <summary>
   /// Verifies program existence and accessibility status
@@ -195,7 +194,7 @@ public interface IProgramService {
   /// Affects learner navigation and content progression logic.
   /// Validates all content IDs belong to the specified program.
   /// </remarks>
-  Task<ProgramEntity> ReorderContentAsync(Guid programId, List<Guid> contentIds);
+  Task<Program> ReorderContentAsync(Guid programId, List<Guid> contentIds);
 
   /// <summary>
   /// Retrieves all content items for a program in display order
@@ -260,7 +259,7 @@ public interface IProgramService {
   /// Includes program metadata and enrollment timestamps.
   /// Used for user dashboard and learning journey tracking.
   /// </remarks>
-  Task<IEnumerable<ProgramEntity>> GetUserProgramsAsync(Guid userId);
+  Task<IEnumerable<Program>> GetUserProgramsAsync(Guid userId);
 
   /// <summary>
   /// Verifies if a user has active enrollment in a specific program
@@ -317,7 +316,7 @@ public interface IProgramService {
   /// Automatically recalculates overall program completion percentage.
   /// Triggers progress notifications and achievement checks.
   /// </remarks>
-  Task<ProgramEntity> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status);
+  Task<Program> UpdateUserProgressAsync(Guid programId, Guid userId, Guid contentId, ProgressStatus status);
 
   // Lifecycle Management
 
@@ -331,7 +330,7 @@ public interface IProgramService {
   /// Draft programs are not visible to learners until published.
   /// Enables content creation and testing before public release.
   /// </remarks>
-  Task<ProgramEntity> CreateDraftAsync(ProgramEntity program);
+  Task<Program> CreateDraftAsync(Program program);
 
   /// <summary>
   /// Submits a draft program for review and approval workflow
@@ -343,7 +342,7 @@ public interface IProgramService {
   /// Validates program has required content and metadata.
   /// Triggers review workflow notifications to administrators.
   /// </remarks>
-  Task<ProgramEntity> SubmitForReviewAsync(Guid id);
+  Task<Program> SubmitForReviewAsync(Guid id);
 
   /// <summary>
   /// Approves a reviewed program for publication and learner access
@@ -355,7 +354,7 @@ public interface IProgramService {
   /// Enables learner enrollment and content access.
   /// Triggers publication notifications and discovery indexing.
   /// </remarks>
-  Task<ProgramEntity> ApproveAsync(Guid id);
+  Task<Program> ApproveAsync(Guid id);
 
   /// <summary>
   /// Rejects a reviewed program with feedback for revision
@@ -368,7 +367,7 @@ public interface IProgramService {
   /// Preserves content and allows creator to address issues.
   /// Triggers rejection notification with improvement guidance.
   /// </remarks>
-  Task<ProgramEntity> RejectAsync(Guid id, string reason);
+  Task<Program> RejectAsync(Guid id, string reason);
 
   /// <summary>
   /// Archives a program while preserving learner access and progress
@@ -380,7 +379,7 @@ public interface IProgramService {
   /// Enrolled learners can continue and complete the program.
   /// New enrollments are prevented but existing ones remain active.
   /// </remarks>
-  Task<ProgramEntity> ArchiveAsync(Guid id);
+  Task<Program> ArchiveAsync(Guid id);
 
   /// <summary>
   /// Publishes an approved program for public learner access
@@ -392,7 +391,7 @@ public interface IProgramService {
   /// Validates program meets publication requirements.
   /// Triggers indexing for search and recommendation systems.
   /// </remarks>
-  Task<ProgramEntity> PublishAsync(Guid id);
+  Task<Program> PublishAsync(Guid id);
 
   /// <summary>
   /// Sets program visibility level controlling access permissions
@@ -406,17 +405,17 @@ public interface IProgramService {
   /// Private: Invitation-only access with restricted visibility
   /// Unlisted: Accessible by direct link but not in discovery
   /// </remarks>
-  Task<ProgramEntity> SetVisibilityAsync(Guid id, AccessLevel visibility);
+  Task<Program> SetVisibilityAsync(Guid id, AccessLevel visibility);
 
   // Publishing Operations
   /// <summary> Publish a program </summary>
-  Task<ProgramEntity> PublishProgramAsync(Guid id);
+  Task<Program> PublishProgramAsync(Guid id);
 
   /// <summary> Unpublish a program </summary>
-  Task<ProgramEntity> UnpublishProgramAsync(Guid id);
+  Task<Program> UnpublishProgramAsync(Guid id);
 
   /// <summary> Schedule program for publishing </summary>
-  Task<ProgramEntity> SchedulePublishAsync(Guid id, DateTime publishAt);
+  Task<Program> SchedulePublishAsync(Guid id, DateTime publishAt);
 
   // Search & Discovery
 
@@ -432,7 +431,7 @@ public interface IProgramService {
   /// Results are ranked by relevance and filtered for published status.
   /// Includes fuzzy matching for improved search experience.
   /// </remarks>
-  Task<IEnumerable<ProgramEntity>> SearchProgramsAsync(string searchTerm, int skip = 0, int take = 50);
+  Task<IEnumerable<Program>> SearchProgramsAsync(string searchTerm, int skip = 0, int take = 50);
 
   /// <summary>
   /// Retrieves programs created by a specific user or instructor
@@ -446,7 +445,7 @@ public interface IProgramService {
   /// Ordered by creation date with most recent first.
   /// Used for creator portfolio and content management.
   /// </remarks>
-  Task<IEnumerable<ProgramEntity>> GetProgramsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50);
+  Task<IEnumerable<Program>> GetProgramsByCreatorAsync(Guid creatorId, int skip = 0, int take = 50);
 
   /// <summary>
   /// Retrieves curated featured programs for homepage and discovery
@@ -458,7 +457,7 @@ public interface IProgramService {
   /// Includes high-quality, popular, or strategically important content.
   /// Used for homepage highlights and promotional campaigns.
   /// </remarks>
-  Task<IEnumerable<ProgramEntity>> GetFeaturedProgramsAsync(int count = 10);
+  Task<IEnumerable<Program>> GetFeaturedProgramsAsync(int count = 10);
 
   /// <summary>
   /// Retrieves recently published programs for discovery and trending
@@ -470,7 +469,7 @@ public interface IProgramService {
   /// Filtered for published status and public visibility.
   /// Used for "what's new" sections and content discovery.
   /// </remarks>
-  Task<IEnumerable<ProgramEntity>> GetRecentProgramsAsync(int count = 10);
+  Task<IEnumerable<Program>> GetRecentProgramsAsync(int count = 10);
 
   /// <summary>
   /// Retrieves popular programs based on enrollment and engagement metrics
@@ -482,7 +481,7 @@ public interface IProgramService {
   /// Weighted algorithm considers recency and sustained popularity.
   /// Used for trending sections and recommendation algorithms.
   /// </remarks>
-  Task<IEnumerable<ProgramEntity>> GetPopularProgramsAsync(int count = 10);
+  Task<IEnumerable<Program>> GetPopularProgramsAsync(int count = 10);
 
   // Analytics & Statistics
   /// <summary> Get total program count with optional filters </summary>
@@ -501,20 +500,20 @@ public interface IProgramService {
 
   // CRUD Operations with DTOs
   /// <summary> Create a program using DTO </summary>
-  Task<ProgramEntity> CreateProgramAsync(CreateProgramDto createDto);
+  Task<Program> CreateProgramAsync(CreateProgramDto createDto);
 
   /// <summary> Update a program using DTO </summary>
-  Task<ProgramEntity?> UpdateProgramAsync(Guid id, UpdateProgramDto updateDto);
+  Task<Program?> UpdateProgramAsync(Guid id, UpdateProgramDto updateDto);
 
   // Category and Difficulty Operations
   /// <summary> Get programs by category </summary>
-  Task<IEnumerable<ProgramEntity>> GetProgramsByCategoryAsync(ProgramCategory category, int skip = 0, int take = 50);
+  Task<IEnumerable<Program>> GetProgramsByCategoryAsync(ProgramCategory category, int skip = 0, int take = 50);
 
   /// <summary> Get programs by difficulty level </summary>
-  Task<IEnumerable<ProgramEntity>> GetProgramsByDifficultyAsync(ProgramDifficulty difficulty, int skip = 0, int take = 50);
+  Task<IEnumerable<Program>> GetProgramsByDifficultyAsync(ProgramDifficulty difficulty, int skip = 0, int take = 50);
 
   /// <summary> Get published programs for public access </summary>
-  Task<IEnumerable<ProgramEntity>> GetPublishedProgramsAsync(int skip = 0, int take = 50);
+  Task<IEnumerable<Program>> GetPublishedProgramsAsync(int skip = 0, int take = 50);
 
   // Content Management with DTOs
   /// <summary> Add content to a program using DTO </summary>
@@ -529,33 +528,33 @@ public interface IProgramService {
 
   // Lifecycle Management
   /// <summary> Submit program for review </summary>
-  Task<ProgramEntity?> SubmitProgramAsync(Guid id);
+  Task<Program?> SubmitProgramAsync(Guid id);
 
   /// <summary> Approve a program </summary>
-  Task<ProgramEntity?> ApproveProgramAsync(Guid id);
+  Task<Program?> ApproveProgramAsync(Guid id);
 
   /// <summary> Reject a program with reason </summary>
-  Task<ProgramEntity?> RejectProgramAsync(Guid id, string reason);
+  Task<Program?> RejectProgramAsync(Guid id, string reason);
 
   /// <summary> Withdraw program from review </summary>
-  Task<ProgramEntity?> WithdrawProgramAsync(Guid id);
+  Task<Program?> WithdrawProgramAsync(Guid id);
 
   /// <summary> Archive a program </summary>
-  Task<ProgramEntity?> ArchiveProgramAsync(Guid id);
+  Task<Program?> ArchiveProgramAsync(Guid id);
 
   /// <summary> Restore an archived program </summary>
-  Task<ProgramEntity?> RestoreProgramAsync(Guid id);
+  Task<Program?> RestoreProgramAsync(Guid id);
 
   // Publishing with Scheduling
   /// <summary> Schedule a program for publishing </summary>
-  Task<ProgramEntity?> ScheduleProgramAsync(Guid id, DateTime publishAt);
+  Task<Program?> ScheduleProgramAsync(Guid id, DateTime publishAt);
 
   // Monetization Operations
   /// <summary> Enable monetization for a program </summary>
-  Task<ProgramEntity?> EnableMonetizationAsync(Guid id, MonetizationDto monetizationDto);
+  Task<Program?> EnableMonetizationAsync(Guid id, MonetizationDto monetizationDto);
 
   /// <summary> Disable monetization for a program </summary>
-  Task<ProgramEntity?> DisableMonetizationAsync(Guid id);
+  Task<Program?> DisableMonetizationAsync(Guid id);
 
   /// <summary> Get program pricing information </summary>
   Task<PricingDto?> GetProgramPricingAsync(Guid id);

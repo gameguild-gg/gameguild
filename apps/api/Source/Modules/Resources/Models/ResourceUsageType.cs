@@ -1,8 +1,7 @@
 namespace GameGuild.Modules.Resources;
 
 /// <summary> Types of resource usage that can be tracked and limited </summary>
-public enum ResourceUsageType
-{
+public enum ResourceUsageType {
     /// <summary> Number of users in the system </summary>
     Users = 1,
 
@@ -40,5 +39,14 @@ public enum ResourceUsageType
     Webhooks = 12,
 
     /// <summary> Number of integrations enabled </summary>
-    Integrations = 13
+    Integrations = 13,
+
+    /// <summary> Database storage and connections </summary>
+    Database = 14,
+
+    /// <summary> Compute resources (CPU/Memory) </summary>
+    Compute = 15,
+
+    /// <summary> Custom resource type defined by tenant </summary>
+    Custom = 99
 }

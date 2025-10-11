@@ -2,7 +2,6 @@ using GameGuild.CQRS;
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Entities;
-using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 namespace GameGuild.Modules.Programs.Commands;
 
@@ -27,7 +26,7 @@ public record CreateProgramCommand(
   int? MaxEnrollments = null,
   DateTime? EnrollmentDeadline = null,
   string? CreatorId = null
-) : ICommand<ProgramEntity>;
+) : ICommand<Program>;
 
 /// <summary> Command to update an existing program </summary>
 public record UpdateProgramCommand(
@@ -43,7 +42,7 @@ public record UpdateProgramCommand(
   EnrollmentStatus? EnrollmentStatus = null,
   int? MaxEnrollments = null,
   DateTime? EnrollmentDeadline = null
-) : ICommand<ProgramEntity>;
+) : ICommand<Program>;
 
 /// <summary> Command to delete a program (soft delete) </summary>
 public record DeleteProgramCommand(Guid Id) : ICommand<bool>;
@@ -51,16 +50,16 @@ public record DeleteProgramCommand(Guid Id) : ICommand<bool>;
 // ===== STATUS COMMANDS =====
 
 /// <summary> Command to publish a program </summary>
-public record PublishProgramCommand(Guid Id) : ICommand<ProgramEntity>;
+public record PublishProgramCommand(Guid Id) : ICommand<Program>;
 
 /// <summary> Command to unpublish a program </summary>
-public record UnpublishProgramCommand(Guid Id) : ICommand<ProgramEntity>;
+public record UnpublishProgramCommand(Guid Id) : ICommand<Program>;
 
 /// <summary> Command to archive a program </summary>
-public record ArchiveProgramCommand(Guid Id) : ICommand<ProgramEntity>;
+public record ArchiveProgramCommand(Guid Id) : ICommand<Program>;
 
 /// <summary> Command to restore a program from archive </summary>
-public record RestoreProgramCommand(Guid Id) : ICommand<ProgramEntity>;
+public record RestoreProgramCommand(Guid Id) : ICommand<Program>;
 
 // ===== ENROLLMENT COMMANDS =====
 
@@ -71,7 +70,7 @@ public record EnrollUserCommand(Guid ProgramId, string UserId, DateTime? Enrollm
 public record UnenrollUserCommand(Guid ProgramId, string UserId) : ICommand<bool>;
 
 /// <summary> Command to update enrollment status </summary>
-public record UpdateEnrollmentStatusCommand(Guid ProgramId, EnrollmentStatus Status, int? MaxEnrollments = null, DateTime? EnrollmentDeadline = null) : ICommand<ProgramEntity>;
+public record UpdateEnrollmentStatusCommand(Guid ProgramId, EnrollmentStatus Status, int? MaxEnrollments = null, DateTime? EnrollmentDeadline = null) : ICommand<Program>;
 
 // ===== CONTENT MANAGEMENT COMMANDS =====
 
@@ -106,7 +105,7 @@ public record RemoveFromWishlistCommand(Guid ProgramId, string UserId) : IComman
 // ===== BULK OPERATIONS =====
 
 /// <summary> Command to bulk update program visibility </summary>
-public record BulkUpdateProgramVisibilityCommand(IEnumerable<Guid> ProgramIds, AccessLevel Visibility) : ICommand<IEnumerable<ProgramEntity>>;
+public record BulkUpdateProgramVisibilityCommand(IEnumerable<Guid> ProgramIds, AccessLevel Visibility) : ICommand<IEnumerable<Program>>;
 
 /// <summary> Command to bulk archive programs </summary>
-public record BulkArchiveProgramsCommand(IEnumerable<Guid> ProgramIds) : ICommand<IEnumerable<ProgramEntity>>;
+public record BulkArchiveProgramsCommand(IEnumerable<Guid> ProgramIds) : ICommand<IEnumerable<Program>>;

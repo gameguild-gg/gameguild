@@ -1,3 +1,4 @@
+using GameGuild.Modules.Resources;
 using GameGuild.Modules.TestingLab.Entities;
 
 namespace GameGuild.Modules.TestingLab;
@@ -5,7 +6,7 @@ namespace GameGuild.Modules.TestingLab;
 /// <summary> Resource-specific permissions for TestingFeedback entities (Layer 3 of DAC permission system) Manages access control for individual testing feedback entries </summary>
 [Table("TestingFeedbackPermissions")]
 [Index(nameof(UserId), nameof(TenantId), nameof(ResourceId), Name = "IX_TestingFeedbackPermissions_User_Tenant_Resource")]
-public class TestingFeedbackPermission : ResourcePermission<TestingFeedback> {
+public class TestingFeedbackPermission : GameGuild.Modules.Resources.ResourcePermission<TestingFeedback> {
   public TestingFeedbackPermission(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permissions)
     : base(userId, tenantId, resourceId) {
     AddPermission(permissions);

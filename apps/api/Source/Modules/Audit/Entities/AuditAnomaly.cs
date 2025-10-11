@@ -6,8 +6,7 @@ namespace GameGuild.Modules.Audit.Entities;
 /// Real-time anomaly detection on privileged operations for security monitoring.
 /// Uses pattern analysis, ML-based detection, and rule-based triggers to identify suspicious activities.
 /// </summary>
-public sealed class AuditAnomaly : EntityBase
-{
+public sealed class AuditAnomaly : EntityBase {
     public new Guid? TenantId { get; private set; }
     public Guid? UserId { get; private set; }
     public AnomalyType Type { get; private set; }
@@ -65,10 +64,8 @@ public sealed class AuditAnomaly : EntityBase
         string detectionMethod,
         double confidenceScore,
         string ipAddress,
-        string anomalyData)
-    {
-        return new AuditAnomaly
-        {
+        string anomalyData) {
+        return new AuditAnomaly {
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             UserId = userId,
@@ -86,8 +83,7 @@ public sealed class AuditAnomaly : EntityBase
         };
     }
 
-    public void SetGeographicContext(string? country, string? region, string? city, double? latitude, double? longitude, bool isSuspicious, double? distance)
-    {
+    public void SetGeographicContext(string? country, string? region, string? city, double? latitude, double? longitude, bool isSuspicious, double? distance) {
         Country = country;
         Region = region;
         City = city;
@@ -97,58 +93,50 @@ public sealed class AuditAnomaly : EntityBase
         DistanceFromLastLogin = distance;
     }
 
-    public void SetDetectionDetails(string? rule, string? pattern)
-    {
+    public void SetDetectionDetails(string? rule, string? pattern) {
         DetectionRule = rule;
         PatternMatched = pattern;
     }
 
-    public void SetRelatedEvents(string auditLogIds, int eventCount, DateTime firstEventAt, DateTime lastEventAt)
-    {
+    public void SetRelatedEvents(string auditLogIds, int eventCount, DateTime firstEventAt, DateTime lastEventAt) {
         RelatedAuditLogIds = auditLogIds;
         RelatedEventCount = eventCount;
         FirstRelatedEventAt = firstEventAt;
         LastRelatedEventAt = lastEventAt;
     }
 
-    public void AssignTo(string assignee)
-    {
+    public void AssignTo(string assignee) {
         AssignedTo = assignee;
         AssignedAt = DateTime.UtcNow;
         Status = AnomalyStatus.Assigned;
     }
 
-    public void MarkAsInvestigating()
-    {
+    public void MarkAsInvestigating() {
         InvestigatedAt = DateTime.UtcNow;
         Status = AnomalyStatus.Investigating;
     }
 
-    public void Resolve(string resolutionNotes, string? mitigationActions = null)
-    {
+    public void Resolve(string resolutionNotes, string? mitigationActions = null) {
         ResolutionNotes = resolutionNotes;
         MitigationActions = mitigationActions;
         ResolvedAt = DateTime.UtcNow;
         Status = AnomalyStatus.Resolved;
     }
 
-    public void MarkAsFalsePositive(string notes)
-    {
+    public void MarkAsFalsePositive(string notes) {
         ResolutionNotes = notes;
         ResolvedAt = DateTime.UtcNow;
         Status = AnomalyStatus.FalsePositive;
     }
 
-    public void MarkNotificationSent(string channel)
-    {
+    public void MarkNotificationSent(string channel) {
         NotificationSent = true;
         NotificationSentAt = DateTime.UtcNow;
         NotificationChannel = channel;
     }
 }
 
-public enum AnomalyType
-{
+public enum AnomalyType {
     UnusualAccessPattern,
     PrivilegedOperationSpike,
     GeographicAnomaly,
@@ -160,11 +148,17 @@ public enum AnomalyType
     DataExfiltration,
     AccountCompromise,
     InsiderThreat,
-    Other
+    Other,
+    // Backward compatibility
+    AccountTakeover,
+    BruteForceAttack,
+    MultipleFailedLogins,
+    PrivilegeEscalation,
+    SuspiciousLocation,
+    UnauthorizedAccessAttempt
 }
 
-public enum AnomalySeverity
-{
+public enum AnomalySeverity {
     Info,
     Low,
     Medium,
@@ -172,8 +166,7 @@ public enum AnomalySeverity
     Critical
 }
 
-public enum AnomalyStatus
-{
+public enum AnomalyStatus {
     Detected,
     Assigned,
     Investigating,

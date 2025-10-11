@@ -10,8 +10,7 @@ namespace GameGuild.Modules.Audit.Services;
 /// <summary>
 /// Service for managing tamper-evident audit logs with cryptographic integrity verification
 /// </summary>
-public class TamperEvidentAuditService : ITamperEvidentAuditService
-{
+public class TamperEvidentAuditService : ITamperEvidentAuditService {
     private readonly IRepository<TamperEvidentAuditLog, Guid> _repository;
     private readonly ICryptographicSigningService _signingService;
     private readonly ILogger<TamperEvidentAuditService> _logger;
@@ -19,8 +18,7 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
     public TamperEvidentAuditService(
         IRepository<TamperEvidentAuditLog, Guid> repository,
         ICryptographicSigningService signingService,
-        ILogger<TamperEvidentAuditService> logger)
-    {
+        ILogger<TamperEvidentAuditService> logger) {
         _repository = repository;
         _signingService = signingService;
         _logger = logger;
@@ -41,10 +39,8 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
         string? country = null,
         string? region = null,
         string? city = null,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             // Get the last audit log for hash chain
             var lastLog = await _repository
                 .AsQueryable()
@@ -77,7 +73,7 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
             // Set cryptographic hashes
             var contentHash = _signingService.ComputeContentHash(JsonSerializer.Serialize(auditLog));
             var chainHash = _signingService.ComputeChainHash(contentHash, previousHash, sequenceNumber);
-            auditLog.SetCryptographicHashes(contentHash, previousHash, chainHash, sequenceNumber);
+            auditLog.SetCryptographicHashes(contentHash, chainHash);
 
             // Save to repository
             await _repository.AddAsync(auditLog, cancellationToken);
@@ -89,49 +85,41 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
 
             return Result<TamperEvidentAuditLog>.Success(auditLog);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to create audit log");
             return Result<TamperEvidentAuditLog>.Failure($"Failed to create audit log: {ex.Message}");
         }
     }
 
-    public async Task<Result<bool>> VerifyChainIntegrityAsync(Guid tenantId, CancellationToken cancellationToken = default)
-    {
-        try
-        {
+    public async Task<Result<bool>> VerifyChainIntegrityAsync(Guid tenantId, CancellationToken cancellationToken = default) {
+        try {
             var logs = await _repository
                 .AsQueryable()
                 .Where(x => x.TenantId == tenantId)
                 .OrderBy(x => x.SequenceNumber)
                 .ToListAsync(cancellationToken);
 
-            if (logs.Count == 0)
-            {
+            if (logs.Count == 0) {
                 return Result<bool>.Success(true);
             }
 
             string? previousHash = null;
             long expectedSequence = 1;
 
-            foreach (var log in logs)
-            {
+            foreach (var log in logs) {
                 // Verify sequence number
-                if (log.SequenceNumber != expectedSequence)
-                {
+                if (log.SequenceNumber != expectedSequence) {
                     return Result<bool>.Failure($"Sequence number mismatch at {log.Id}. Expected {expectedSequence}, found {log.SequenceNumber}");
                 }
 
                 // Verify previous hash matches
-                if (previousHash != null && log.PreviousHash != previousHash)
-                {
+                if (previousHash != null && log.PreviousHash != previousHash) {
                     return Result<bool>.Failure($"Previous hash mismatch at {log.Id}");
                 }
 
                 // Verify content hash
                 var computedContentHash = _signingService.ComputeContentHash(JsonSerializer.Serialize(log));
-                if (computedContentHash != log.ContentHash)
-                {
+                if (computedContentHash != log.ContentHash) {
                     return Result<bool>.Failure($"Content hash mismatch at {log.Id}");
                 }
 
@@ -141,8 +129,7 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
                     previousHash ?? string.Empty,
                     log.SequenceNumber);
 
-                if (computedChainHash != log.ChainHash)
-                {
+                if (computedChainHash != log.ChainHash) {
                     return Result<bool>.Failure($"Chain hash mismatch at {log.Id}");
                 }
 
@@ -152,8 +139,7 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
 
             return Result<bool>.Success(true);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to verify chain integrity for tenant {TenantId}", tenantId);
             return Result<bool>.Failure($"Failed to verify chain integrity: {ex.Message}");
         }
@@ -161,19 +147,15 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
 
     public async Task<Result<TamperEvidentAuditLog>> GetByIdAsync(
         Guid id,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             var log = await _repository.GetByIdAsync(id, cancellationToken);
-            if (log == null)
-            {
+            if (log == null) {
                 return Result<TamperEvidentAuditLog>.Failure($"Audit log {id} not found");
             }
             return Result<TamperEvidentAuditLog>.Success(log);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to get audit log {Id}", id);
             return Result<TamperEvidentAuditLog>.Failure($"Failed to get audit log: {ex.Message}");
         }
@@ -183,10 +165,8 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
         Guid tenantId,
         int skip = 0,
         int take = 100,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             var logs = await _repository
                 .AsQueryable()
                 .Where(x => x.TenantId == tenantId)
@@ -197,8 +177,7 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
 
             return Result<IEnumerable<TamperEvidentAuditLog>>.Success(logs);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to get audit logs for tenant {TenantId}", tenantId);
             return Result<IEnumerable<TamperEvidentAuditLog>>.Failure($"Failed to get audit logs: {ex.Message}");
         }
@@ -206,10 +185,8 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
 
     public async Task<Result<IEnumerable<TamperEvidentAuditLog>>> GetUnverifiedAsync(
         Guid tenantId,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             var logs = await _repository
                 .AsQueryable()
                 .Where(x => x.TenantId == tenantId && (!x.IsVerified || x.LastVerifiedAt == null))
@@ -218,8 +195,7 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
 
             return Result<IEnumerable<TamperEvidentAuditLog>>.Success(logs);
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to get unverified audit logs for tenant {TenantId}", tenantId);
             return Result<IEnumerable<TamperEvidentAuditLog>>.Failure($"Failed to get unverified audit logs: {ex.Message}");
         }
@@ -228,13 +204,10 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
     public async Task<Result> MarkAsVerifiedAsync(
         Guid id,
         string? notes = null,
-        CancellationToken cancellationToken = default)
-    {
-        try
-        {
+        CancellationToken cancellationToken = default) {
+        try {
             var log = await _repository.GetByIdAsync(id, cancellationToken);
-            if (log == null)
-            {
+            if (log == null) {
                 return Result.Failure($"Audit log {id} not found");
             }
 
@@ -244,15 +217,13 @@ public class TamperEvidentAuditService : ITamperEvidentAuditService
             _logger.LogInformation("Marked audit log {AuditLogId} as verified", id);
             return Result.Success();
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             _logger.LogError(ex, "Failed to mark audit log {Id} as verified", id);
             return Result.Failure($"Failed to mark as verified: {ex.Message}");
         }
     }
 
-    private async Task<string> GetCurrentSigningKeyIdAsync(CancellationToken cancellationToken)
-    {
+    private async Task<string> GetCurrentSigningKeyIdAsync(CancellationToken cancellationToken) {
         // In a real implementation, this would retrieve the current active signing key ID
         // from a key management service or configuration
         return await Task.FromResult("default-key-2024");

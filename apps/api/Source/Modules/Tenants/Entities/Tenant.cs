@@ -9,8 +9,7 @@ namespace GameGuild.Modules.Tenants;
 [Index(nameof(Name), IsUnique = true)]
 [Index(nameof(Slug), IsUnique = true)]
 [Index(nameof(IsActive))]
-public class Tenant : EntityBase
-{
+public class Tenant : EntityBase {
     /// <summary> Default constructor </summary>
     public Tenant() { }
 
@@ -48,30 +47,26 @@ public class Tenant : EntityBase
     public DateTime? ArchivedAt { get; set; }
 
     /// <summary> Activate the tenant </summary>
-    public void Activate()
-    {
+    public void Activate() {
         IsActive = true;
         Touch();
     }
 
     /// <summary> Deactivate the tenant </summary>
-    public void Deactivate()
-    {
+    public void Deactivate() {
         IsActive = false;
         Touch();
     }
 
     /// <summary> Update tenant information </summary>
-    public void Update(string name, string? description = null)
-    {
+    public void Update(string name, string? description = null) {
         Name = name;
         Description = description;
         Touch();
     }
 
     /// <summary> Archive the tenant </summary>
-    public void Archive(string reason = "")
-    {
+    public void Archive(string reason = "") {
         IsArchived = true;
         ArchivedAt = DateTime.UtcNow;
         IsActive = false; // Archived tenants are also inactive
@@ -82,14 +77,13 @@ public class Tenant : EntityBase
     }
 
     /// <summary> Unarchive/restore the tenant </summary>
-    public void Unarchive()
-    {
+    public void Unarchive() {
         IsArchived = false;
         ArchivedAt = null;
         IsActive = true; // Unarchived tenants become active again
         Touch();
 
         // Add domain event
-        AddDomainEvent(new TenantRestoredEvent(Id));
+        AddDomainEvent(new TenantRestoredEvent(Id, Name));
     }
 }

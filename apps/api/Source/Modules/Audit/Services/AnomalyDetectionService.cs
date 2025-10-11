@@ -260,12 +260,16 @@ public class AnomalyDetectionService : IAnomalyDetectionService {
             });
 
             var anomaly = AuditAnomaly.Create(
-                auditLog.TenantId,
-                auditLog.UserId,
-                AnomalyType.MultipleFailedLogins,
-                confidence >= 0.8 ? AnomalySeverity.High : AnomalySeverity.Medium,
-                "Multiple Failed Login Attempts",
-                $"Detected {recentFailedLogins} failed login attempts in the last 15 minutes");
+              auditLog.TenantId,
+              auditLog.UserId,
+              AnomalyType.MultipleFailedLogins,
+              confidence >= 0.8 ? AnomalySeverity.High : AnomalySeverity.Medium,
+              "Multiple Failed Login Attempts",
+              $"Detected {recentFailedLogins} failed login attempts in the last 15 minutes",
+              "RuleBasedEngine",
+              confidence,
+              auditLog.IpAddress ?? string.Empty,
+              System.Text.Json.JsonSerializer.Serialize(new { recentFailedLogins, threshold = SuspiciousLoginThreshold }));
 
             anomaly.SetDetectionDetails("RuleBasedEngine", confidence, "FailedLoginThreshold", null);
             return anomaly;
@@ -291,12 +295,16 @@ public class AnomalyDetectionService : IAnomalyDetectionService {
             });
 
             var anomaly = AuditAnomaly.Create(
-                auditLog.TenantId,
-                auditLog.UserId,
-                AnomalyType.UnusualAccessPattern,
-                AnomalySeverity.Medium,
-                "Unusual Access Pattern Detected",
-                $"User performed {recentAccesses} actions in the last hour");
+              auditLog.TenantId,
+              auditLog.UserId,
+              AnomalyType.UnusualAccessPattern,
+              AnomalySeverity.Medium,
+              "Unusual Access Pattern Detected",
+              $"User performed {recentAccesses} actions in the last hour",
+              "StatisticalAnalysis",
+              confidence,
+              auditLog.IpAddress ?? string.Empty,
+              System.Text.Json.JsonSerializer.Serialize(new { recentAccesses, threshold = UnusualAccessPatternThreshold }));
 
             anomaly.SetDetectionDetails("StatisticalAnalysis", confidence, "AccessFrequencyThreshold", null);
             return anomaly;
@@ -329,12 +337,16 @@ public class AnomalyDetectionService : IAnomalyDetectionService {
                 });
 
                 var anomaly = AuditAnomaly.Create(
-                    auditLog.TenantId,
-                    auditLog.UserId,
-                    AnomalyType.SuspiciousLocation,
-                    AnomalySeverity.High,
-                    "Impossible Travel Detected",
-                    $"User location changed from {lastAudit.Country} to {auditLog.Country} in {timeDiff:F1} hours");
+                  auditLog.TenantId,
+                  auditLog.UserId,
+                  AnomalyType.SuspiciousLocation,
+                  AnomalySeverity.High,
+                  "Impossible Travel Detected",
+                  $"User location changed from {lastAudit.Country} to {auditLog.Country} in {timeDiff:F1} hours",
+                  "GeographicAnalysis",
+                  confidence,
+                  auditLog.IpAddress ?? string.Empty,
+                  System.Text.Json.JsonSerializer.Serialize(new { fromCountry = lastAudit.Country, toCountry = auditLog.Country, timeDiffHours = timeDiff }));
 
                 anomaly.SetDetectionDetails("GeographicAnalysis", confidence, "ImpossibleTravelDetection", null);
                 anomaly.SetGeographicContext(auditLog.IpAddress, auditLog.Country, null, null, null, null, true, 0);

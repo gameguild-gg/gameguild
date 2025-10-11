@@ -8,8 +8,7 @@ namespace GameGuild.Modules.Audit.Services;
 /// <summary>
 /// Service for field-level data access auditing with PII masking capabilities
 /// </summary>
-public class FieldAccessAuditService : IFieldAccessAuditService
-{
+public class FieldAccessAuditService : IFieldAccessAuditService {
     private readonly IRepository<FieldAccessAudit, Guid> _repository;
     private readonly ILogger<FieldAccessAuditService> _logger;
 
@@ -29,8 +28,7 @@ public class FieldAccessAuditService : IFieldAccessAuditService
 
     public FieldAccessAuditService(
         IRepository<FieldAccessAudit, Guid> repository,
-        ILogger<FieldAccessAuditService> logger)
-    {
+        ILogger<FieldAccessAuditService> logger) {
         _repository = repository;
         _logger = logger;
     }
@@ -49,15 +47,18 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         SensitivityLevel sensitivityLevel,
         string ipAddress,
         string userAgent,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var audit = FieldAccessAudit.Create(
-            tenantId,
-            userId,
-            entityType,
-            entityId.ToString(),
-            fieldName,
-            accessType);
+          tenantId,
+          userId,
+          entityType,
+          entityId,
+          fieldName,
+          accessType,
+          isSensitive,
+          sensitivityLevel,
+          ipAddress,
+          userAgent);
 
         // Set values with masking for sensitive fields
         var maskedOldValue = isSensitive ? MaskSensitiveData(oldValue, sensitivityLevel) : oldValue;
@@ -101,18 +102,21 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         string? apiEndpoint,
         string? legalBasis,
         Guid? consentId,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var sensitivityLevel = DetermineSensitivityLevel(fieldName);
         var isSensitive = sensitivityLevel >= SensitivityLevel.Confidential;
 
         var audit = FieldAccessAudit.Create(
-            tenantId,
-            userId,
-            entityType,
-            entityId,
-            fieldName,
-            accessType);
+          tenantId!.Value,
+          userId,
+          entityType,
+          Guid.Parse(entityId),
+          fieldName,
+          accessType,
+          isSensitive,
+          sensitivityLevel,
+          ipAddress ?? string.Empty,
+          userAgent ?? string.Empty);
 
         // Set values with masking for sensitive fields
         var maskedOldValue = isSensitive ? MaskSensitiveData(oldValue, sensitivityLevel) : oldValue;
@@ -125,8 +129,7 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         var requiresNotification = isSensitive &&
             (accessType == FieldAccessType.Export || accessType == FieldAccessType.Delete);
 
-        if (!string.IsNullOrEmpty(legalBasis) || consentId.HasValue)
-        {
+        if (!string.IsNullOrEmpty(legalBasis) || consentId.HasValue) {
             audit.SetComplianceInfo(legalBasis, consentId, requiresNotification);
         }
 
@@ -142,13 +145,11 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         return audit;
     }
 
-    public string MaskSensitiveData(string? data, SensitivityLevel sensitivityLevel)
-    {
+    public string MaskSensitiveData(string? data, SensitivityLevel sensitivityLevel) {
         if (string.IsNullOrEmpty(data))
             return string.Empty;
 
-        return sensitivityLevel switch
-        {
+        return sensitivityLevel switch {
             SensitivityLevel.HighlyRestricted => "***REDACTED***",
             SensitivityLevel.Restricted => MaskWithPattern(data, 0.9), // Show 10%
             SensitivityLevel.Confidential => MaskWithPattern(data, 0.7), // Show 30%
@@ -157,8 +158,7 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         };
     }
 
-    public string RedactPii(string text)
-    {
+    public string RedactPii(string text) {
         if (string.IsNullOrEmpty(text))
             return text;
 
@@ -184,8 +184,7 @@ public class FieldAccessAuditService : IFieldAccessAuditService
     public async Task<Result<IEnumerable<FieldAccessAudit>>> GetFieldAccessHistoryAsync(
         Guid entityId,
         string? fieldName = null,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var query = _repository.AsQueryable()
             .Where(x => x.EntityId == entityId.ToString());
 
@@ -207,8 +206,7 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         string? fieldName = null,
         int page = 1,
         int pageSize = 50,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var query = _repository.AsQueryable()
             .Where(x => x.EntityType == entityType && x.EntityId == entityId);
 
@@ -226,8 +224,7 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         Guid tenantId,
         DateTime startDate,
         DateTime endDate,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var query = _repository.AsQueryable()
             .Where(x => x.TenantId == tenantId)
             .Where(x => x.IsSensitiveField)
@@ -250,8 +247,7 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         SensitivityLevel? minSensitivityLevel = null,
         int page = 1,
         int pageSize = 50,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         var query = _repository.AsQueryable()
             .Where(x => x.IsSensitiveField);
 
@@ -274,12 +270,10 @@ public class FieldAccessAuditService : IFieldAccessAuditService
             .ToListAsync(cancellationToken);
     }
 
-    private SensitivityLevel DetermineSensitivityLevel(string fieldName)
-    {
+    private SensitivityLevel DetermineSensitivityLevel(string fieldName) {
         var normalizedName = fieldName.ToLowerInvariant().Replace("_", "").Replace("-", "");
 
-        foreach (var kvp in SensitiveFieldMap)
-        {
+        foreach (var kvp in SensitiveFieldMap) {
             if (normalizedName.Contains(kvp.Key))
                 return kvp.Value;
         }
@@ -287,8 +281,7 @@ public class FieldAccessAuditService : IFieldAccessAuditService
         return SensitivityLevel.Public;
     }
 
-    private string MaskWithPattern(string data, double maskPercentage)
-    {
+    private string MaskWithPattern(string data, double maskPercentage) {
         if (data.Length <= 4)
             return new string('*', data.Length);
 

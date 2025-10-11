@@ -1,9 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild;
-using GameGuild.Modules.Permissions;
 using GameGuild.Modules.Resources;
 using Microsoft.EntityFrameworkCore;
-using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 namespace GameGuild.Modules.Programs;
 
@@ -16,7 +13,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(ResourceId), nameof(UserId), Name = "IX_ProgramPermissions_Resource_User")]
 [Index(nameof(TenantId), Name = "IX_ProgramPermissions_TenantId")]
 [Index(nameof(ExpiresAt), Name = "IX_ProgramPermissions_Expiration")]
-public class ProgramPermission : ResourcePermission<ProgramEntity> {
+public class ProgramPermission : GameGuild.Modules.Resources.ResourcePermission<GameGuild.Modules.Programs.Entities.Program> {
   /// <summary>
   /// Default parameterless constructor (required by Entity Framework and GraphQL)
   /// </summary>

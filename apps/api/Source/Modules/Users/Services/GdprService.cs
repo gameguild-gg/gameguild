@@ -8,16 +8,14 @@ namespace GameGuild.Modules.Users.Services;
 /// <summary>
 /// Service for GDPR compliance operations (data export, right to be forgotten)
 /// </summary>
-public interface IGdprService
-{
+public interface IGdprService {
     Task<PersonalDataExport> CreateExportRequestAsync(Guid userId, string format, bool includeMetadata, CancellationToken cancellationToken = default);
     Task<string> GeneratePersonalDataExportAsync(Guid userId, string format, bool includeMetadata, CancellationToken cancellationToken = default);
     Task<bool> DeleteUserDataAsync(Guid userId, string reason, bool anonymize, CancellationToken cancellationToken = default);
     Task<PersonalDataExport?> GetExportStatusAsync(Guid exportId, CancellationToken cancellationToken = default);
 }
 
-public sealed class GdprService : IGdprService
-{
+public sealed class GdprService : IGdprService {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<GdprService> _logger;
     private readonly string _exportBasePath;
@@ -25,8 +23,7 @@ public sealed class GdprService : IGdprService
     public GdprService(
         ApplicationDbContext context,
         ILogger<GdprService> logger,
-        IConfiguration configuration)
-    {
+        IConfiguration configuration) {
         _context = context;
         _logger = logger;
         _exportBasePath = configuration["Gdpr:ExportPath"] ?? System.IO.Path.Combine(System.IO.Path.GetTempPath(), "gdpr-exports");
@@ -39,10 +36,8 @@ public sealed class GdprService : IGdprService
         Guid userId,
         string format,
         bool includeMetadata,
-        CancellationToken cancellationToken = default)
-    {
-        var export = new PersonalDataExport
-        {
+        CancellationToken cancellationToken = default) {
+        var export = new PersonalDataExport {
             Id = Guid.NewGuid(),
             UserId = userId,
             Format = format,
@@ -56,18 +51,15 @@ public sealed class GdprService : IGdprService
         _logger.LogInformation("Created GDPR data export request {ExportId} for user {UserId}", export.Id, userId);
 
         // Trigger async processing
-        _ = Task.Run(async () =>
-        {
-            try
-            {
+        _ = Task.Run(async () => {
+            try {
                 var filePath = await GeneratePersonalDataExportAsync(userId, format, includeMetadata, cancellationToken);
                 var fileInfo = new FileInfo(filePath);
 
                 export.MarkCompleted(filePath, fileInfo.Length, 0); // Entity count will be set during generation
                 await _context.SaveChangesAsync(cancellationToken);
             }
-            catch (Exception ex)
-            {
+            catch (Exception ex) {
                 _logger.LogError(ex, "Failed to generate GDPR export for user {UserId}", userId);
                 export.MarkFailed(ex.Message);
                 await _context.SaveChangesAsync(cancellationToken);
@@ -81,8 +73,7 @@ public sealed class GdprService : IGdprService
         Guid userId,
         string format,
         bool includeMetadata,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogInformation("Generating personal data export for user {UserId} in format {Format}", userId, format);
 
         // Aggregate all personal data
@@ -92,12 +83,10 @@ public sealed class GdprService : IGdprService
         var fileName = $"user_{userId}_export_{DateTime.UtcNow:yyyyMMddHHmmss}.json";
         var filePath = System.IO.Path.Combine(_exportBasePath, fileName);
 
-        var exportData = new
-        {
+        var exportData = new {
             ExportDate = DateTime.UtcNow,
             UserId = userId,
-            Metadata = includeMetadata ? new
-            {
+            Metadata = includeMetadata ? new {
                 ExportFormat = format,
                 ExportVersion = "1.0",
                 ComplianceStandard = "GDPR",
@@ -106,8 +95,7 @@ public sealed class GdprService : IGdprService
             PersonalData = userData
         };
 
-        var options = new JsonSerializerOptions
-        {
+        var options = new JsonSerializerOptions {
             WriteIndented = true,
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
         };
@@ -119,8 +107,7 @@ public sealed class GdprService : IGdprService
         return filePath;
     }
 
-    private async Task<Dictionary<string, object>> AggregateUserDataAsync(Guid userId, CancellationToken cancellationToken)
-    {
+    private async Task<Dictionary<string, object>> AggregateUserDataAsync(Guid userId, CancellationToken cancellationToken) {
         var data = new Dictionary<string, object>();
 
         // User profile data
@@ -128,10 +115,8 @@ public sealed class GdprService : IGdprService
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
-        if (user != null)
-        {
-            data["Profile"] = new
-            {
+        if (user != null) {
+            data["Profile"] = new {
                 user.Id,
                 user.Username,
                 Email = user.Email,
@@ -151,8 +136,7 @@ public sealed class GdprService : IGdprService
         var credentials = await _context.Set<Credentials.Credential>()
             .AsNoTracking()
             .Where(c => c.UserId == userId)
-            .Select(c => new
-            {
+            .Select(c => new {
                 c.Id,
                 c.Type,
                 c.IsActive,
@@ -170,8 +154,7 @@ public sealed class GdprService : IGdprService
             .Where(s => s.UserId == userId)
             .OrderByDescending(s => s.CreatedAt)
             .Take(100) // Last 100 sessions
-            .Select(s => new
-            {
+            .Select(s => new {
                 s.Id,
                 s.IpAddress,
                 s.UserAgent,
@@ -190,8 +173,7 @@ public sealed class GdprService : IGdprService
             .AsNoTracking()
             .Where(ur => ur.UserId == userId)
             .Include(ur => ur.Role)
-            .Select(ur => new
-            {
+            .Select(ur => new {
                 RoleName = ur.Role!.Name,
                 ur.AssignedAt,
                 ur.ExpiresAt
@@ -210,20 +192,17 @@ public sealed class GdprService : IGdprService
         Guid userId,
         string reason,
         bool anonymize,
-        CancellationToken cancellationToken = default)
-    {
+        CancellationToken cancellationToken = default) {
         _logger.LogWarning("Processing {Action} request for user {UserId}. Reason: {Reason}",
             anonymize ? "anonymization" : "deletion", userId, reason);
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-        if (user == null)
-        {
+        if (user == null) {
             _logger.LogWarning("User {UserId} not found for GDPR deletion", userId);
             return false;
         }
 
-        if (anonymize)
-        {
+        if (anonymize) {
             // Anonymize user data (GDPR Article 17 exemptions)
             user.GivenName = $"Anonymized_{Guid.NewGuid():N}";
             user.FamilyName = "User";
@@ -235,8 +214,7 @@ public sealed class GdprService : IGdprService
 
             _logger.LogInformation("Anonymized user {UserId} data", userId);
         }
-        else
-        {
+        else {
             // Hard delete: Remove all related data
 
             // Delete credentials
@@ -268,8 +246,7 @@ public sealed class GdprService : IGdprService
         return true;
     }
 
-    public async Task<PersonalDataExport?> GetExportStatusAsync(Guid exportId, CancellationToken cancellationToken = default)
-    {
+    public async Task<PersonalDataExport?> GetExportStatusAsync(Guid exportId, CancellationToken cancellationToken = default) {
         return await _context.Set<PersonalDataExport>()
             .AsNoTracking()
             .FirstOrDefaultAsync(e => e.Id == exportId, cancellationToken);

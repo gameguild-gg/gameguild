@@ -1,8 +1,7 @@
 ﻿namespace GameGuild;
 
 /// <summary> Enumeration of permission types in the system Represents the various operations that can be controlled through permissions </summary>
-public enum PermissionType
-{
+public enum PermissionType {
     #region Interaction Permissions
 
     Read = 1,
@@ -243,6 +242,9 @@ public enum PermissionType
     TenantAdmin = 201,
 
     UserManagement = 202,
+
+    /// <summary> Configure system settings and integrations </summary>
+    Configure = 203,
 
     #endregion
 }

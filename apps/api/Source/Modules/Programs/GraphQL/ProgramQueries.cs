@@ -4,7 +4,6 @@ using GameGuild.Authorization.Identity;
 using GameGuild.GraphQL;
 using GameGuild.Modules.Programs;
 using Microsoft.Extensions.Logging;
-using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 namespace GameGuild.Modules.Programs.GraphQL;
 
@@ -14,7 +13,7 @@ public class ProgramQueries {
 
     /// <summary> Gets all programs the current user can edit (owned/has permissions for) </summary>
     [HotChocolate.Authorization.Authorize] // Requires authentication
-    public async Task<IEnumerable<ProgramEntity>> GetMyPrograms(
+    public async Task<IEnumerable<Program>> GetMyPrograms(
       ClaimsPrincipal claimsPrincipal,
       [Service] IProgramService programService,
       [Service] ILogger<ProgramQueries> logger,
@@ -48,7 +47,7 @@ public class ProgramQueries {
 
             if (userId == null) {
                 logger.LogWarning("No valid user ID found in claims");
-                return Enumerable.Empty<ProgramEntity>();
+                return Enumerable.Empty<Program>();
             }
 
             var userGuid = userId.Value;
@@ -66,7 +65,7 @@ public class ProgramQueries {
     }
 
     /// <summary> Gets all public programs (no auth required) </summary>
-    public async Task<IEnumerable<ProgramEntity>> GetPublishedPrograms(
+    public async Task<IEnumerable<Program>> GetPublishedPrograms(
       [Service] IProgramService programService,
       int skip = 0,
       int take = 50
@@ -75,8 +74,8 @@ public class ProgramQueries {
     }
 
     /// <summary> Gets a program by ID (with proper authorization) </summary>
-    [GraphQLRequireResourcePermission<ProgramPermission, ProgramEntity>(PermissionType.Read, "id")]
-    public async Task<ProgramEntity?> GetProgramById(
+    [GraphQLRequireResourcePermission<ProgramPermission, Program>(PermissionType.Read, "id")]
+    public async Task<Program?> GetProgramById(
       Guid id,
       [Service] IProgramService programService
     ) {
@@ -84,7 +83,7 @@ public class ProgramQueries {
     }
 
     /// <summary> Gets a program by slug (public access for published programs) </summary>
-    public async Task<ProgramEntity?> GetProgramBySlug(
+    public async Task<Program?> GetProgramBySlug(
       string slug,
       [Service] IProgramService programService
     ) {
