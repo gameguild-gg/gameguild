@@ -238,7 +238,7 @@ public record RevokeUserAccessCommand : IRequest<RevokeUserAccessResult> {
 public record CreateProductResult {
   public bool Success { get; init; }
 
-  public Product? Product { get; init; }
+  public ProductEntity? Product { get; init; }
 
   public string? Error { get; init; }
 }
@@ -246,7 +246,7 @@ public record CreateProductResult {
 public record UpdateProductResult {
   public bool Success { get; init; }
 
-  public Product? Product { get; init; }
+  public ProductEntity? Product { get; init; }
 
   public string? Error { get; init; }
 }
@@ -282,7 +282,7 @@ public record RevokeUserProductAccessResult {
 public record PublishProductResult {
   public bool Success { get; init; }
 
-  public Product? Product { get; init; }
+  public ProductEntity? Product { get; init; }
 
   public string? Error { get; init; }
 }
@@ -290,7 +290,7 @@ public record PublishProductResult {
 public record UnpublishProductResult {
   public bool Success { get; init; }
 
-  public Product? Product { get; init; }
+  public ProductEntity? Product { get; init; }
 
   public string? Error { get; init; }
 }
@@ -298,7 +298,7 @@ public record UnpublishProductResult {
 public record ArchiveProductResult {
   public bool Success { get; init; }
 
-  public Product? Product { get; init; }
+  public ProductEntity? Product { get; init; }
 
   public string? Error { get; init; }
 }
@@ -306,7 +306,7 @@ public record ArchiveProductResult {
 public record SetProductVisibilityResult {
   public bool Success { get; init; }
 
-  public Product? Product { get; init; }
+  public ProductEntity? Product { get; init; }
 
   public string? Error { get; init; }
 }
