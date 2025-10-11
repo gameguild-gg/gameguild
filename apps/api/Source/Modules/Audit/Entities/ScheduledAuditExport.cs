@@ -9,7 +9,6 @@ namespace GameGuild.Modules.Audit.Entities;
 /// </summary>
 public sealed class ScheduledAuditExport : EntityBase
 {
-    public Guid TenantId { get; private set; }
     public string JobName { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public bool IsEnabled { get; private set; }
@@ -135,7 +134,6 @@ public enum ExportFormat
 public sealed class AuditExportHistory : EntityBase
 {
     public Guid ScheduledExportId { get; private set; }
-    public Guid TenantId { get; private set; }
     public DateTime ExecutedAt { get; private set; }
     public ExportStatus Status { get; private set; }
     public int RecordCount { get; private set; }

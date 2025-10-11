@@ -9,7 +9,6 @@ namespace GameGuild.Modules.Audit.Entities;
 /// </summary>
 public sealed class PrivacyEvent : EntityBase
 {
-    public Guid TenantId { get; private set; }
     public Guid UserId { get; private set; }
     public PrivacyEventType EventType { get; private set; }
     public string EventAction { get; private set; } = string.Empty;

@@ -1,3 +1,5 @@
+using GameGuild.Modules.FileUpload.Entities;
+
 namespace GameGuild.Modules.FileUpload.Services;
 
 public interface IVirusScannerService
