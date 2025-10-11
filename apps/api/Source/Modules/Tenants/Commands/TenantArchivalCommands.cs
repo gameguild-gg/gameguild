@@ -27,13 +27,13 @@ public record ArchiveTenantCommand(
     Guid TenantId,
     Guid ArchivedBy,
     TenantArchivalReason Reason
-) : IRequest<Result<TenantArchiveRecord>>;
+) : IRequest<Result<TenantArchiveDto>>;
 
 // Restore Tenant Command
 public record RestoreTenantFromArchiveCommand(
     Guid ArchiveRecordId,
     Guid RestoredBy
-) : IRequest<Result<TenantArchiveRecord>>;
+) : IRequest<Result<TenantArchiveDto>>;
 
 // Purge Tenant Command
 public record PurgeTenantCommand(
@@ -56,4 +56,4 @@ public record GetTenantArchivalPolicyQuery(
 // Get Archive Record Query
 public record GetTenantArchiveRecordQuery(
     Guid TenantId
-) : IRequest<Result<TenantArchiveRecord>>;
+) : IRequest<Result<TenantArchiveDto>>;

@@ -9,7 +9,6 @@ namespace GameGuild.Modules.Audit.Entities;
 /// </summary>
 public sealed class FieldAccessAudit : EntityBase
 {
-    public Guid TenantId { get; private set; }
     public Guid UserId { get; private set; }
     public string EntityType { get; private set; } = string.Empty;
     public Guid EntityId { get; private set; }

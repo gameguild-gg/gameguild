@@ -9,10 +9,9 @@ namespace GameGuild.Modules.Audit.Entities;
 /// </summary>
 public sealed class ComplianceEvidencePackage : EntityBase
 {
-    public Guid TenantId { get; private set; }
     public string PackageName { get; private set; } = string.Empty;
     public ComplianceFramework Framework { get; private set; }
-    public string Version { get; private set; } = string.Empty;
+    public string PackageVersion { get; private set; } = string.Empty;
     public DateTime PeriodStart { get; private set; }
     public DateTime PeriodEnd { get; private set; }
     public CompliancePackageStatus Status { get; private set; }
