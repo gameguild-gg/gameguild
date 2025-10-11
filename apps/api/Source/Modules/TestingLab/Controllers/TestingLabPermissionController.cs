@@ -13,9 +13,9 @@ namespace GameGuild.Modules.TestingLab;
 public class TestingLabPermissionController : ControllerBase {
   private readonly ILogger<TestingLabPermissionController> _logger;
 
-  private readonly ISimplePermissionService _permissionService;
+  private readonly IPermissionService _permissionService;
 
-  public TestingLabPermissionController(ISimplePermissionService permissionService, ILogger<TestingLabPermissionController> logger) {
+  public TestingLabPermissionController(IPermissionService permissionService, ILogger<TestingLabPermissionController> logger) {
     _permissionService = permissionService;
     _logger = logger;
   }
@@ -60,7 +60,7 @@ public class TestingLabPermissionController : ControllerBase {
   /// <summary> Update an existing TestingLab role template </summary>
   [HttpPut("role-templates/{idOrName}")]
   public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(string idOrName, [FromBody] UpdateTestingLabRoleRequest request) {
-    // TODO: Implement when GetRoleTemplateAsync and UpdateRoleTemplateAsync are available in ISimplePermissionService
+    // TODO: Implement when GetRoleTemplateAsync and UpdateRoleTemplateAsync are available in IPermissionService
     await Task.CompletedTask; // Remove async warning
     return StatusCode(501, "Method not implemented - missing service methods");
   }
@@ -68,7 +68,7 @@ public class TestingLabPermissionController : ControllerBase {
   /// <summary> Delete a TestingLab role template </summary>
   [HttpDelete("role-templates/{idOrName}")]
   public async Task<ActionResult> DeleteTestingLabRoleTemplate(string idOrName) {
-    // TODO: Implement when DeleteRoleTemplateAsync is available in ISimplePermissionService
+    // TODO: Implement when DeleteRoleTemplateAsync is available in IPermissionService
     await Task.CompletedTask; // Remove async warning
     return StatusCode(501, "Method not implemented - missing service methods");
   }
@@ -78,7 +78,7 @@ public class TestingLabPermissionController : ControllerBase {
   public async Task<ActionResult> DeleteTestingLabRoleTemplateByName(string name) {
     try {
       _logger.LogInformation("Attempting to delete TestingLab role template by name '{Name}'", name);
-      // TODO: Uncomment when DeleteRoleTemplateAsync is available in ISimplePermissionService
+      // TODO: Uncomment when DeleteRoleTemplateAsync is available in IPermissionService
       // var deleted = await _permissionService.DeleteRoleTemplateAsync(name);
       var deleted = false; // Temporary stub
 

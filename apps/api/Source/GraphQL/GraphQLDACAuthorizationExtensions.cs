@@ -15,7 +15,7 @@ public static class GraphQLDACAuthorizationExtensions {
            .AddDirectiveType<DACAuthorizeDirectiveType>()
 
            // Add enum types for authorization
-           .AddType<EnumType<DACPermissionLevel>>()
+           .AddType<EnumType<DacPermissionLevel>>()
            .AddType<EnumType<PermissionType>>()
 
            // Configure schema building options

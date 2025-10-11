@@ -1,6 +1,8 @@
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Programs;
+using GameGuild.Modules.Programs.Models;
+using ContentEntity = GameGuild.Modules.Contents.Models.Content;
 
 
 namespace GameGuild.Modules.Programs;
@@ -27,7 +29,7 @@ public class ContentProgress : EntityBase {
 
   /// <summary> Navigation property to the Content entity </summary>
   [ForeignKey(nameof(ContentId))]
-  public virtual Content Content { get; set; } = null!;
+  public virtual ContentEntity Content { get; set; } = null!;
 
   /// <summary> Program enrollment this progress belongs to </summary>
   [Required]

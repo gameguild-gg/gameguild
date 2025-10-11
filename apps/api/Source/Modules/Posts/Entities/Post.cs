@@ -1,6 +1,7 @@
 using GameGuild.Modules.Contents.Models;
 using GameGuild.Modules.Posts.Models;
 using GameGuild.Modules.Users;
+using ContentEntity = GameGuild.Modules.Contents.Models.Content;
 
 
 namespace GameGuild.Modules.Posts;
@@ -11,7 +12,7 @@ namespace GameGuild.Modules.Posts;
 [Index(nameof(IsSystemGenerated))]
 [Index(nameof(IsPinned))]
 [Index(nameof(AuthorId))]
-public class Post : Content {
+public class Post : ContentEntity {
   /// <summary> Type of post (e.g., "user_signup", "achievement", "general", "announcement", etc.) </summary>
   [MaxLength(50)]
   public string PostType { get; set; } = "general";

@@ -1,4 +1,6 @@
 using GameGuild.Core.Domain.Identity;
+using GameGuild.Modules.Tenants;
+using GameGuild.Modules.Users;
 
 namespace GameGuild.Authorization.Middleware;
 

@@ -11,7 +11,7 @@ namespace GameGuild.GraphQL;
 public class PermissionQueries {
   /// <summary> Get effective permissions for current user on a resource </summary>
   [Authorize]
-  public async Task<IEnumerable<EffectivePermission>> GetEffectivePermissions([Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, Guid resourceId, string? userId = null) {
+  public async Task<IEnumerable<EffectivePermission>> GetEffectivePermissions([Service] IPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, Guid resourceId, string? userId = null) {
     var context = httpContextAccessor.HttpContext!;
     var currentUserId = GetUserIdFromContext(context);
     var tenantId = GetTenantIdFromContext(context);
@@ -29,7 +29,7 @@ public class PermissionQueries {
   /// <summary> Get permission hierarchy for debugging and understanding permission resolution </summary>
   [Authorize]
   public async Task<PermissionHierarchy> GetPermissionHierarchy(
-    [Service] IDacPermissionResolver resolver,
+    [Service] IPermissionResolver resolver,
     [Service] IHttpContextAccessor httpContextAccessor,
     string resourceType,
     Guid resourceId,
@@ -52,7 +52,7 @@ public class PermissionQueries {
 
   /// <summary> Check if current user has specific permission on a resource </summary>
   [Authorize]
-  public async Task<bool> HasPermission([Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, Guid resourceId, PermissionType permission) {
+  public async Task<bool> HasPermission([Service] IPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, Guid resourceId, PermissionType permission) {
     var context = httpContextAccessor.HttpContext!;
     var userId = GetUserIdFromContext(context);
     var tenantId = GetTenantIdFromContext(context);
@@ -64,7 +64,7 @@ public class PermissionQueries {
 
   /// <summary> Get all resources where user has specific permission </summary>
   [Authorize]
-  public async Task<IEnumerable<Guid>> GetResourcesWithPermission([Service] IDacPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, PermissionType permission, Guid[] resourceIds) {
+  public async Task<IEnumerable<Guid>> GetResourcesWithPermission([Service] IPermissionResolver resolver, [Service] IHttpContextAccessor httpContextAccessor, string resourceType, PermissionType permission, Guid[] resourceIds) {
     var context = httpContextAccessor.HttpContext!;
     var userId = GetUserIdFromContext(context);
     var tenantId = GetTenantIdFromContext(context);
@@ -88,7 +88,7 @@ public class PermissionQueries {
     return Guid.TryParse(tenantIdClaim, out var tenantId) ? tenantId : null;
   }
 
-  private static async Task<IEnumerable<EffectivePermission>> GetEffectivePermissionsByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, Guid resourceId) {
+  private static async Task<IEnumerable<EffectivePermission>> GetEffectivePermissionsByType(IPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, Guid resourceId) {
     return resourceType.ToLower() switch {
       "project" or "projects" => await resolver.GetEffectivePermissionsAsync<Project>(userId, tenantId, resourceId, "Project"),
       "post" or "posts" => await resolver.GetEffectivePermissionsAsync<EntityBase>(userId, tenantId, resourceId, "Post"),
@@ -99,7 +99,7 @@ public class PermissionQueries {
     };
   }
 
-  private static async Task<PermissionHierarchy> GetPermissionHierarchyByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, PermissionType permission, Guid resourceId) {
+  private static async Task<PermissionHierarchy> GetPermissionHierarchyByType(IPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, PermissionType permission, Guid resourceId) {
     return resourceType.ToLower() switch {
       "project" or "projects" => await resolver.GetPermissionHierarchyAsync<Project>(userId, tenantId, permission, resourceId, "Project"),
       "post" or "posts" => await resolver.GetPermissionHierarchyAsync<EntityBase>(userId, tenantId, permission, resourceId, "Post"),
@@ -110,7 +110,7 @@ public class PermissionQueries {
     };
   }
 
-  private static async Task<PermissionResult> GetPermissionResultByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, PermissionType permission, Guid resourceId) {
+  private static async Task<PermissionResult> GetPermissionResultByType(IPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, PermissionType permission, Guid resourceId) {
     return resourceType.ToLower() switch {
       "project" or "projects" => await resolver.ResolvePermissionAsync<Project>(userId, tenantId, permission, resourceId, "Project"),
       "post" or "posts" => await resolver.ResolvePermissionAsync<EntityBase>(userId, tenantId, permission, resourceId, "Post"),
@@ -122,7 +122,7 @@ public class PermissionQueries {
   }
 
   private static async Task<Dictionary<Guid, Dictionary<PermissionType, PermissionResult>>>
-    BulkResolvePermissionsByType(IDacPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, Guid[] resourceIds, PermissionType[] permissions) {
+    BulkResolvePermissionsByType(IPermissionResolver resolver, string resourceType, Guid userId, Guid? tenantId, Guid[] resourceIds, PermissionType[] permissions) {
     return resourceType.ToLower() switch {
       "project" or "projects" => await resolver.BulkResolvePermissionsAsync<Project>(userId, tenantId, resourceIds, permissions),
       "post" or "posts" => await resolver.BulkResolvePermissionsAsync<EntityBase>(userId, tenantId, resourceIds, permissions),
