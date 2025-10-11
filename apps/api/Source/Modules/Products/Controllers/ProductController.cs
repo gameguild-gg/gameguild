@@ -1,10 +1,9 @@
 using GameGuild.Authorization.Identity;
 using GameGuild.CQRS;
 using GameGuild.Modules.Contents.Models;
+using GameGuild.Modules.Products.Models;
 using Microsoft.AspNetCore.Mvc;
 using ProductTypeEnum = GameGuild.ProductType;
-using Product = GameGuild.Modules.Products.Models.Product;
-
 
 using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Controllers;
@@ -23,7 +22,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get all products using CQRS pattern (content-type level read permission) </summary>
   [HttpGet]
-  [RequireContentTypePermission<Product>(PermissionType.Read)]
+  [RequireContentTypePermission<ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<IEnumerable<ProductEntity>>> GetProducts() {
     var query = new GetProductsQuery();
     var products = await mediator.Send(query);
@@ -33,7 +32,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Create a new product using CQRS pattern (content-type level create permission) </summary>
   [HttpPost]
-  [RequireContentTypePermission<Product>(PermissionType.Create)]
+  [RequireContentTypePermission<ProductEntity>(PermissionType.Create)]
   public async Task<ActionResult<ProductEntity>> CreateProduct([FromBody] CreateProductCommand command) {
     var result = await mediator.Send(command);
 
@@ -46,7 +45,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Get a specific product by ID using CQRS pattern (resource level read permission) </summary>
   [HttpGet("{id:guid}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Read)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Read)]
   public async Task<ActionResult<ProductEntity>> GetProduct(Guid id) {
     var query = new GetProductByIdQuery { ProductId = id };
     var product = await mediator.Send(query);
@@ -58,7 +57,7 @@ public class ProductController(IMediator mediator) : ControllerBase {
 
   /// <summary> Update a product using CQRS pattern (resource level update permission) </summary>
   [HttpPut("{id:guid}")]
-  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, Product>(PermissionType.Edit)]
+  [GameGuild.Authorization.RequireResourcePermission<ProductPermission, ProductEntity>(PermissionType.Edit)]
   public async Task<ActionResult<ProductEntity>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand command) {
     var updateCommand = command with { ProductId = id, UpdatedBy = User.GetUserId() ?? Guid.Empty };
     var result = await mediator.Send(updateCommand);
