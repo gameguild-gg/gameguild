@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,7 +49,7 @@ public sealed class Region
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Location { get; init; }
-    public RegionStatus Status { get; init; }
+    public string Status { get; set; }
     public bool IsPrimary { get; init; }
     public int Priority { get; init; }
     public RegionCapabilities Capabilities { get; init; } = new();
@@ -120,10 +120,10 @@ public sealed class FailoverResult
     public required Region ToRegion { get; init; }
     public required FailoverStatus Status { get; init; }
     public DateTime StartedAt { get; init; }
-    public DateTime? CompletedAt { get; init; }
+    public DateTime? CompletedAt { get; set; }
     public TimeSpan Duration => CompletedAt.HasValue ? CompletedAt.Value - StartedAt : TimeSpan.Zero;
     public List<FailoverStep> Steps { get; init; } = new();
-    public string? ErrorMessage { get; init; }
+    public string? ErrorMessage { get; set; }
 }
 
 /// <summary>
@@ -147,8 +147,8 @@ public sealed class FailoverStep
     public required string Description { get; init; }
     public required FailoverStepStatus Status { get; init; }
     public DateTime StartedAt { get; init; }
-    public DateTime? CompletedAt { get; init; }
-    public string? ErrorMessage { get; init; }
+    public DateTime? CompletedAt { get; set; }
+    public string? ErrorMessage { get; set; }
 }
 
 /// <summary>
@@ -182,7 +182,7 @@ public sealed class RunbookExecution
     public required string RunbookId { get; init; }
     public required string RunbookName { get; init; }
     public DateTime StartedAt { get; init; } = DateTime.UtcNow;
-    public DateTime? CompletedAt { get; init; }
+    public DateTime? CompletedAt { get; set; }
     public required RunbookStatus Status { get; init; }
     public List<RunbookStep> Steps { get; init; } = new();
     public Dictionary<string, object> Parameters { get; init; } = new();
@@ -210,7 +210,7 @@ public sealed class RunbookStep
     public required string Action { get; init; }
     public required RunbookStepStatus Status { get; init; }
     public DateTime? StartedAt { get; init; }
-    public DateTime? CompletedAt { get; init; }
+    public DateTime? CompletedAt { get; set; }
     public string? Output { get; init; }
     public string? Error { get; init; }
 }

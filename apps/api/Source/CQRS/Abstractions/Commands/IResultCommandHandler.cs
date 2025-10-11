@@ -1,5 +1,4 @@
-using GameGuild.CQRS;
-﻿namespace GameGuild.CQRS;
+namespace GameGuild.CQRS;
 
 /// <summary>
 ///   Defines a handler for a command that returns a Result<TValue> . Commands represent write operations that modify system state with enhanced error handling.

@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 namespace GameGuild.CQRS;
 
 /// <summary> Wrapper class for an async handler that handles a request and does not return a response </summary>

@@ -5,8 +5,7 @@ namespace GameGuild.Modules.DataArchival.Entities;
 /// <summary>
 /// Represents an archival job execution record.
 /// </summary>
-public class ArchivalJob : EntityBase
-{
+public class ArchivalJob : EntityBase {
     /// <summary>
     /// Gets or sets the archival policy ID.
     /// </summary>
@@ -72,11 +71,14 @@ public class ArchivalJob : EntityBase
     /// </summary>
     public string? Details { get; set; }
 
+    // Backward compatibility aliases
+    public Guid PolicyId { get => ArchivalPolicyId; set => ArchivalPolicyId = value; }
+    public int ItemsArchived { get => ItemsMovedToArchive; set => ItemsMovedToArchive = value; }
+
     /// <summary>
     /// Marks the job as started.
     /// </summary>
-    public void Start()
-    {
+    public void Start() {
         Status = ArchivalJobStatus.Running;
         StartedAt = DateTime.UtcNow;
     }
@@ -84,8 +86,7 @@ public class ArchivalJob : EntityBase
     /// <summary>
     /// Marks the job as completed.
     /// </summary>
-    public void Complete()
-    {
+    public void Complete() {
         Status = ArchivalJobStatus.Completed;
         CompletedAt = DateTime.UtcNow;
     }
@@ -93,8 +94,7 @@ public class ArchivalJob : EntityBase
     /// <summary>
     /// Marks the job as failed.
     /// </summary>
-    public void Fail(string errorMessage)
-    {
+    public void Fail(string errorMessage) {
         Status = ArchivalJobStatus.Failed;
         CompletedAt = DateTime.UtcNow;
         ErrorMessage = errorMessage;
@@ -104,8 +104,7 @@ public class ArchivalJob : EntityBase
 /// <summary>
 /// Represents the status of an archival job.
 /// </summary>
-public enum ArchivalJobStatus
-{
+public enum ArchivalJobStatus {
     Pending = 0,
     Running = 1,
     Completed = 2,

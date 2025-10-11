@@ -7,8 +7,7 @@ namespace GameGuild.Modules.SlaMonitoring.Services;
 /// <summary>
 /// Service implementation for SLA/SLO monitoring.
 /// </summary>
-public class SlaMonitoringService : ISlaMonitoringService
-{
+public class SlaMonitoringService : ISlaMonitoringService {
     private readonly IServiceLevelObjectiveRepository _sloRepository;
     private readonly IServiceLevelIndicatorRepository _sliRepository;
     private readonly ISloViolationRepository _violationRepository;
@@ -22,8 +21,7 @@ public class SlaMonitoringService : ISlaMonitoringService
         ISloViolationRepository violationRepository,
         IErrorBudgetCalculator errorBudgetCalculator,
         IAlertManager alertManager,
-        ILogger<SlaMonitoringService> logger)
-    {
+        ILogger<SlaMonitoringService> logger) {
         _sloRepository = sloRepository;
         _sliRepository = sliRepository;
         _violationRepository = violationRepository;
@@ -32,17 +30,14 @@ public class SlaMonitoringService : ISlaMonitoringService
         _logger = logger;
     }
 
-    public async Task RecordSliMetricAsync(Guid sloId, double value, bool isSuccessful, CancellationToken cancellationToken = default)
-    {
+    public async Task RecordSliMetricAsync(Guid sloId, double value, bool isSuccessful, CancellationToken cancellationToken = default) {
         var slo = await _sloRepository.GetByIdAsync(sloId, cancellationToken);
-        if (slo == null)
-        {
+        if (slo == null) {
             _logger.LogWarning("SLO {SloId} not found", sloId);
             return;
         }
 
-        var sli = new ServiceLevelIndicator
-        {
+        var sli = new ServiceLevelIndicator {
             Id = Guid.NewGuid(),
             SloId = sloId,
             MetricValue = value,
@@ -54,8 +49,7 @@ public class SlaMonitoringService : ISlaMonitoringService
 
         // Check if this metric causes a violation
         var errorBudget = await _errorBudgetCalculator.CalculateAsync(sloId, cancellationToken);
-        if (errorBudget.RemainingBudgetPercentage <= 0)
-        {
+        if (errorBudget.RemainingBudgetPercentage <= 0) {
             await CheckErrorBudgetAlertsAsync(sloId, cancellationToken);
         }
 
@@ -63,13 +57,11 @@ public class SlaMonitoringService : ISlaMonitoringService
             sloId, value, isSuccessful);
     }
 
-    public async Task<ErrorBudgetDto> CalculateErrorBudgetAsync(Guid sloId, CancellationToken cancellationToken = default)
-    {
+    public async Task<ErrorBudgetDto> CalculateErrorBudgetAsync(Guid sloId, CancellationToken cancellationToken = default) {
         return await _errorBudgetCalculator.CalculateAsync(sloId, cancellationToken);
     }
 
-    public async Task<SloComplianceDto> GetComplianceStatusAsync(Guid sloId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
-    {
+    public async Task<SloComplianceDto> GetComplianceStatusAsync(Guid sloId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default) {
         var slo = await _sloRepository.GetByIdAsync(sloId, cancellationToken);
         if (slo == null)
             throw new InvalidOperationException($"SLO {sloId} not found");
@@ -94,8 +86,7 @@ public class SlaMonitoringService : ISlaMonitoringService
         );
     }
 
-    public async Task CheckErrorBudgetAlertsAsync(Guid sloId, CancellationToken cancellationToken = default)
-    {
+    public async Task CheckErrorBudgetAlertsAsync(Guid sloId, CancellationToken cancellationToken = default) {
         var slo = await _sloRepository.GetByIdAsync(sloId, cancellationToken);
         if (slo == null)
             return;
@@ -103,13 +94,10 @@ public class SlaMonitoringService : ISlaMonitoringService
         var errorBudget = await _errorBudgetCalculator.CalculateAsync(sloId, cancellationToken);
 
         // Check if we should create a violation
-        if (errorBudget.RemainingBudgetPercentage <= 0)
-        {
+        if (errorBudget.RemainingBudgetPercentage <= 0) {
             var existingViolation = await _violationRepository.GetActiveBySloIdAsync(sloId, cancellationToken);
-            if (existingViolation == null)
-            {
-                var violation = new SloViolation
-                {
+            if (existingViolation == null) {
+                var violation = new SloViolation {
                     Id = Guid.NewGuid(),
                     SloId = sloId,
                     TenantId = slo.TenantId,
@@ -129,8 +117,7 @@ public class SlaMonitoringService : ISlaMonitoringService
         await _alertManager.CheckAndTriggerAlertsAsync(slo, errorBudget, cancellationToken);
     }
 
-    public async Task<double> GetErrorBudgetBurnRateAsync(Guid sloId, TimeSpan window, CancellationToken cancellationToken = default)
-    {
+    public async Task<double> GetErrorBudgetBurnRateAsync(Guid sloId, TimeSpan window, CancellationToken cancellationToken = default) {
         var endDate = DateTime.UtcNow;
         var startDate = endDate - window;
 
@@ -151,16 +138,13 @@ public class SlaMonitoringService : ISlaMonitoringService
         return errorBudget > 0 ? errorRate / errorBudget : 0;
     }
 
-    public async Task<IEnumerable<SloViolationDto>> GetActiveSloViolationsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
-    {
+    public async Task<IEnumerable<SloViolationDto>> GetActiveSloViolationsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default) {
         var violations = await _violationRepository.GetActiveViolationsAsync(tenantId, cancellationToken);
         var dtos = new List<SloViolationDto>();
 
-        foreach (var violation in violations)
-        {
+        foreach (var violation in violations) {
             var slo = await _sloRepository.GetByIdAsync(violation.SloId, cancellationToken);
-            if (slo != null)
-            {
+            if (slo != null) {
                 dtos.Add(new SloViolationDto(
                     violation.Id,
                     violation.SloId,
@@ -169,7 +153,7 @@ public class SlaMonitoringService : ISlaMonitoringService
                     violation.EndedAt,
                     violation.ActualValue,
                     violation.TargetValue,
-                    violation.Severity,
+                    violation.Severity.ToString(),
                     violation.Notes
                 ));
             }
@@ -178,15 +162,13 @@ public class SlaMonitoringService : ISlaMonitoringService
         return dtos;
     }
 
-    public async Task<SloComplianceReportDto> GenerateComplianceReportAsync(Guid? tenantId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default)
-    {
+    public async Task<SloComplianceReportDto> GenerateComplianceReportAsync(Guid? tenantId, DateTime startDate, DateTime endDate, CancellationToken cancellationToken = default) {
         var slos = await _sloRepository.GetAllAsync(tenantId, cancellationToken);
         var summaries = new List<SloComplianceSummaryDto>();
         var compliantCount = 0;
         var violatedCount = 0;
 
-        foreach (var slo in slos)
-        {
+        foreach (var slo in slos) {
             var compliance = await GetComplianceStatusAsync(slo.Id, startDate, endDate, cancellationToken);
 
             summaries.Add(new SloComplianceSummaryDto(

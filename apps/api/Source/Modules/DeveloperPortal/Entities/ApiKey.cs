@@ -5,8 +5,7 @@ namespace GameGuild.Modules.DeveloperPortal.Entities;
 /// <summary>
 /// Represents an API key for developer access.
 /// </summary>
-public class ApiKey : EntityBase
-{
+public class ApiKey : EntityBase {
     /// <summary>
     /// Gets or sets the tenant ID this API key belongs to.
     /// </summary>
@@ -102,11 +101,21 @@ public class ApiKey : EntityBase
     /// </summary>
     public ICollection<ApiUsageLog> UsageLogs { get; set; } = new List<ApiUsageLog>();
 
+    // Backward compatibility aliases
+    public Guid DeveloperId { get => UserId; set => UserId = value; }
+    public long UsageCount { get => TotalRequests; set => TotalRequests = value; }
+    public int RateLimitPerHour { get; set; } = 3600;
+    public int RateLimitPerDay { get; set; } = 86400;
+    public bool IsRevoked => RevokedAt.HasValue;
+    public bool IsExpired => ExpiresAt.HasValue && ExpiresAt.Value < DateTime.UtcNow;
+
+    public void UpdateLastUsed() => LastUsedAt = DateTime.UtcNow;
+    public void IncrementUsage() => TotalRequests++;
+
     /// <summary>
     /// Checks if the API key is currently valid.
     /// </summary>
-    public bool IsValid()
-    {
+    public bool IsValid() {
         if (!IsActive || RevokedAt.HasValue)
             return false;
 
@@ -119,8 +128,7 @@ public class ApiKey : EntityBase
     /// <summary>
     /// Records usage of this API key.
     /// </summary>
-    public void RecordUsage(bool success = true)
-    {
+    public void RecordUsage(bool success = true) {
         TotalRequests++;
         if (!success)
             FailedRequests++;
@@ -131,8 +139,7 @@ public class ApiKey : EntityBase
     /// <summary>
     /// Revokes this API key.
     /// </summary>
-    public void Revoke(Guid userId, string reason)
-    {
+    public void Revoke(Guid userId, string reason) {
         IsActive = false;
         RevokedAt = DateTime.UtcNow;
         RevokedByUserId = userId;

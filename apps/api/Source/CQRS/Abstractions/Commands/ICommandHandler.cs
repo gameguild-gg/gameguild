@@ -1,5 +1,4 @@
-using GameGuild.CQRS;
-﻿namespace GameGuild.CQRS;
+namespace GameGuild.CQRS;
 
 /// <summary> Defines a handler for a command with a response. Commands represent write operations that modify system state. </summary>
 /// <typeparam name="TCommand"> The type of command being handled </typeparam>

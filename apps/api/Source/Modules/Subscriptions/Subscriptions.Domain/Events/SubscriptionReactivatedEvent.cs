@@ -7,11 +7,12 @@ namespace GameGuild.Modules.Subscriptions.Events;
 /// </summary>
 public sealed class SubscriptionReactivatedEvent : DomainEvent
 {
-    public SubscriptionReactivatedEvent(Guid subscriptionId, Guid tenantId)
-    {
-        SubscriptionId = subscriptionId;
-        TenantId = tenantId;
-    }
+  public SubscriptionReactivatedEvent(Guid subscriptionId, Guid tenantId)
+    : base(subscriptionId, "Subscription")
+  {
+    SubscriptionId = subscriptionId;
+    TenantId = tenantId;
+  }
 
     public Guid SubscriptionId { get; }
 
