@@ -7,6 +7,7 @@ using GameGuild.Modules.Resources;
 using GameGuild.Modules.Tags.Models;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Entities;
 
 
 namespace GameGuild.Modules.Programs;
