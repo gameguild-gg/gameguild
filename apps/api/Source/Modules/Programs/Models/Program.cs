@@ -1,6 +1,6 @@
 using System.Text.Json;
+using GameGuild.Core.Entities;
 using GameGuild.Modules.Certificates;
-using GameGuild.Modules.Contents;
 using GameGuild.Modules.Feedbacks;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Resources;
@@ -27,7 +27,7 @@ namespace GameGuild.Modules.Programs;
 [Index(nameof(Slug))]
 [Index(nameof(Category))]
 [Index(nameof(Difficulty))]
-public class Program : Content {
+public class Program : EntityBase<Guid> {
   /// <summary>
   /// Thumbnail image URL for program display in listings and cards
   /// </summary>
