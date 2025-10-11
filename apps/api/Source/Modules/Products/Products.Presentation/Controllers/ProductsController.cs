@@ -254,7 +254,7 @@ public class ProductsController : ControllerBase
         return Ok(result);
     }
 
-    private static ProductDto MapToDto(Product product)
+    private static ProductDto MapToDto(GameGuild.Modules.Products.Domain.Entities.Product product)
     {
         return new ProductDto
         {

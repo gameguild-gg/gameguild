@@ -1,6 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Modules.Permissions.Constants;
 using GameGuild.Modules.Permissions.Entities;
+using GameGuild.Modules.Permissions.Abstractions;
 
 namespace GameGuild.Modules.Permissions.Commands;
 

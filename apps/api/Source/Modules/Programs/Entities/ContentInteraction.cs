@@ -112,7 +112,7 @@ public class ContentInteraction : EntityBase
     /// <summary>
     /// Whether this interaction is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Whether the content has been started

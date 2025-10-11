@@ -112,7 +112,7 @@ public class ProgramUser : EntityBase
     /// <summary>
     /// Whether this enrollment is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Whether the program is completed

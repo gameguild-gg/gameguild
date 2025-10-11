@@ -1,15 +1,16 @@
 using GameGuild.Modules.Products.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ProductEntity = GameGuild.Modules.Products.Domain.Entities.Product;
 
 namespace GameGuild.Modules.Products.Infrastructure.Configuration;
 
 /// <summary>
 /// EF Core configuration for Product entity
 /// </summary>
-public class ProductConfiguration : IEntityTypeConfiguration<Product>
+public class ProductConfiguration : IEntityTypeConfiguration<ProductEntity>
 {
-    public void Configure(EntityTypeBuilder<Product> builder)
+    public void Configure(EntityTypeBuilder<ProductEntity> builder)
     {
         builder.ToTable("Products");
 

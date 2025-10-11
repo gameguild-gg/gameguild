@@ -119,7 +119,7 @@ public class ActivityGrade : EntityBase
     /// <summary>
     /// Whether this grade is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Percentage score (points / max points * 100)
@@ -180,7 +180,7 @@ public class ActivityGrade : EntityBase
     /// <summary>
     /// Finalizes the grade (prevents further changes)
     /// </summary>
-    public void Finalize()
+    public void FinalizeGrade()
     {
         IsFinalized = true;
         UpdatedAt = DateTime.UtcNow;
