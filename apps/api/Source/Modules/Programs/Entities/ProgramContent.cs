@@ -105,7 +105,7 @@ public class ProgramContent : EntityBase
     /// <summary>
     /// Whether this content is global (tenant-independent)
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Total number of child content items

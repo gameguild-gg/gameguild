@@ -39,15 +39,11 @@ public class TenantDomain : EntityBase
     /// <summary> Whether this is a secondary domain for the tenant (can have multiple per tenant) </summary>
     public bool IsSecondaryDomain { get; set; } = false;
 
-    /// <summary> ID of the tenant this domain belongs to </summary>
-    [Required]
-    public override Guid TenantId { get; set; }
-
     /// <summary> ID of the user group that users with this domain should be automatically added to </summary>
     public Guid? UserGroupId { get; set; }
 
     /// <summary> Navigation property to the tenant </summary>
-    [ForeignKey(nameof(TenantId))]
+    [Required]
     public override Tenant? Tenant { get; set; }
 
     /// <summary> Gets the full domain string including subdomain if present </summary>

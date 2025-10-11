@@ -39,9 +39,9 @@ public class Program : EntityBase
     public AccessLevel Visibility { get; set; } = AccessLevel.Public;
 
     /// <summary>
-    /// Resource metadata
+    /// Resource metadata (TODO: Implement ResourceMetadata type)
     /// </summary>
-    public ResourceMetadata? Metadata { get; set; }
+    // public ResourceMetadata? Metadata { get; set; }
 
     /// <summary>
     /// URL-friendly identifier
@@ -108,9 +108,9 @@ public class Program : EntityBase
     public virtual ICollection<ProgramUser> ProgramUsers { get; set; } = new List<ProgramUser>();
 
     /// <summary>
-    /// Product-program relationships
+    /// Product-program relationships (TODO: Implement ProductProgram type)
     /// </summary>
-    public virtual ICollection<ProductProgram> ProductPrograms { get; set; } = new List<ProductProgram>();
+    // public virtual ICollection<ProductProgram> ProductPrograms { get; set; } = new List<ProductProgram>();
 
     /// <summary>
     /// Program certificates
@@ -136,7 +136,7 @@ public class Program : EntityBase
     /// <summary>
     /// Whether the program is part of a global tenant
     /// </summary>
-    public bool IsGlobal => TenantId == null;
+    public override bool IsGlobal => TenantId == null;
 
     /// <summary>
     /// Current number of active enrollments
