@@ -4,9 +4,9 @@ using GameGuild;
 using GameGuild.Modules.Billing;
 using GameGuild.Modules.Payments;
 using GameGuild.Modules.Users;
+using GameGuild.Modules.Products.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
-using PromoCodeTypeEnum = GameGuild.PromoCodeType;
-
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Models;
 
 /// <summary> EntityBase representing promotional codes for discounts Inherits from BaseEntity to provide UUID IDs, version control, timestamps, and soft delete functionality </summary>
@@ -38,7 +38,7 @@ public class PromoCode : EntityBase {
   public string? Description { get; set; }
 
   /// <summary> Type of discount this promo code provides </summary>
-  public PromoCodeTypeEnum Type { get; set; }
+  public PromoCodeType Type { get; set; }
 
   /// <summary> Discount percentage (for PercentageOff type) </summary>
   [Column(TypeName = "decimal(5,2)")]

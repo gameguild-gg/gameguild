@@ -1,9 +1,8 @@
 ﻿using GameGuild.Database;
 using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Products.Services;
-using PromoCodeTypeEnum = GameGuild.PromoCodeType;
-
-
+using GameGuild.Modules.Products.Domain.Enums;
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.GraphQL;
 
 /// <summary> GraphQL type for PromoCode entity </summary>
@@ -16,7 +15,7 @@ public class PromoCodeType : ObjectType<PromoCode> {
 
     descriptor.Field(pc => pc.Code).Type<NonNullType<StringType>>().Description("The promotional code");
 
-    descriptor.Field(pc => pc.Type).Type<NonNullType<EnumType<PromoCodeTypeEnum>>>().Description("The type of discount (percentage or fixed amount)");
+    descriptor.Field(pc => pc.Type).Type<NonNullType<EnumType<PromoCodeType>>>().Description("The type of discount (percentage or fixed amount)");
 
     descriptor.Field(pc => pc.DiscountPercentage).Type<DecimalType>().Description("The discount percentage (for percentage-based discounts)");
 

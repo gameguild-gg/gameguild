@@ -1,7 +1,7 @@
 using GameGuild.Modules.Users;
 using GameGuild.Modules.Certificates.Entities;
 using GameGuild.Modules.Feedbacks.Entities;
-using GameGuild.Modules.Products;
+using GameGuild.Modules.Products.Models;
 using GameGuild.Modules.Tenants;
 // using GameGuild.Modules.Contents.Models;
 

@@ -6,6 +6,7 @@ using GameGuild.Modules.Subscriptions.Entities;
 using GameGuild.Modules.Users;
 using Microsoft.EntityFrameworkCore;
 
+using ProductEntity = GameGuild.Modules.Products.Models.Product;
 namespace GameGuild.Modules.Products.Domain.Entities;
 
 /// <summary>Junction entity representing the relationship between a User and a Product</summary>
