@@ -1,4 +1,5 @@
 using GameGuild.Modules.Programs;
+using GameGuild.Modules.Programs.Entities;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
