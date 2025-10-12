@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
-        <AssemblyName>GameGuild.API</AssemblyName>
+        <AssemblyName>GameGuild</AssemblyName>
         <RootNamespace>GameGuild</RootNamespace>
         <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
