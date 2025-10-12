@@ -1,0 +1,18 @@
+{
+  "name": "@gameguild/tailwind-config",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Tailwind CSS configuration for the website and related projects",
+  "author": "Matheus Martins <contact@matheusmartins.com>",
+  "homepage": "https://gameguild.gg",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./globals.css",
+    "./postcss.config": "./postcss.config.mjs"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}
