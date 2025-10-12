@@ -1,5 +1,5 @@
-/* eslint-disable */
 import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
@@ -9,18 +9,18 @@ export type MakeEmpty<T extends { [key: string]: unknown }, K extends keyof T> =
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: { input: string; output: string; }
-  String: { input: string; output: string; }
-  Boolean: { input: boolean; output: boolean; }
-  Int: { input: number; output: number; }
-  Float: { input: number; output: number; }
+  ID: { input: string; output: string };
+  String: { input: string; output: string };
+  Boolean: { input: boolean; output: boolean };
+  Int: { input: number; output: number };
+  Float: { input: number; output: number };
   /** The `DateTime` scalar represents an ISO-8601 compliant date time type. */
-  DateTime: { input: any; output: any; }
+  DateTime: { input: any; output: any };
   /** The `Decimal` scalar type represents a decimal floating-point number. */
-  Decimal: { input: any; output: any; }
+  Decimal: { input: any; output: any };
   /** The `Long` scalar type represents non-fractional signed whole 64-bit numeric values. Long can represent values between -(2^63) and 2^63 - 1. */
-  Long: { input: any; output: any; }
-  UUID: { input: any; output: any; }
+  Long: { input: any; output: any };
+  UUID: { input: any; output: any };
 };
 
 export enum AccessLevel {
@@ -28,7 +28,7 @@ export enum AccessLevel {
   Protected = 'PROTECTED',
   Public = 'PUBLIC',
   Restricted = 'RESTRICTED',
-  Unlisted = 'UNLISTED'
+  Unlisted = 'UNLISTED',
 }
 
 /** Represents a gamification achievement that users can earn */
@@ -312,7 +312,7 @@ export enum ApplyPolicy {
   /** Before the resolver was executed. */
   BeforeResolver = 'BEFORE_RESOLVER',
   /** The policy is applied in the validation step before the execution. */
-  Validation = 'VALIDATION'
+  Validation = 'VALIDATION',
 }
 
 export type AwardAchievementInput = {
@@ -330,7 +330,7 @@ export enum BillingCycle {
   Biannually = 'BIANNUALLY',
   Monthly = 'MONTHLY',
   Quarterly = 'QUARTERLY',
-  SemiAnnually = 'SEMI_ANNUALLY'
+  SemiAnnually = 'SEMI_ANNUALLY',
 }
 
 export type BulkAwardAchievementInput = {
@@ -356,7 +356,7 @@ export enum CancellationReason {
   PlanUpgrade = 'PLAN_UPGRADE',
   TermsViolation = 'TERMS_VIOLATION',
   TrialEnded = 'TRIAL_ENDED',
-  UserRequested = 'USER_REQUESTED'
+  UserRequested = 'USER_REQUESTED',
 }
 
 export type Certificate = {
@@ -423,7 +423,7 @@ export enum CertificateStatus {
   Active = 'ACTIVE',
   Expired = 'EXPIRED',
   Pending = 'PENDING',
-  Revoked = 'REVOKED'
+  Revoked = 'REVOKED',
 }
 
 export type CertificateTag = {
@@ -449,7 +449,7 @@ export type CertificateTag = {
 export enum CertificateTagRelationshipType {
   Demonstrates = 'DEMONSTRATES',
   Optional = 'OPTIONAL',
-  Required = 'REQUIRED'
+  Required = 'REQUIRED',
 }
 
 export enum CertificateType {
@@ -465,7 +465,7 @@ export enum CertificateType {
   ProjectCompletion = 'PROJECT_COMPLETION',
   SkillMastery = 'SKILL_MASTERY',
   Specialization = 'SPECIALIZATION',
-  TimeInvestment = 'TIME_INVESTMENT'
+  TimeInvestment = 'TIME_INVESTMENT',
 }
 
 export type CompleteContentInput = {
@@ -495,7 +495,6 @@ export type Content = {
   version: Scalars['Int']['output'];
   visibility: AccessLevel;
 };
-
 
 export type ContentAddLocalizationArgs = {
   content: Scalars['String']['input'];
@@ -596,7 +595,6 @@ export type ContentLicense = {
   visibility: AccessLevel;
 };
 
-
 export type ContentLicenseAddLocalizationArgs = {
   content: Scalars['String']['input'];
   fieldName: Scalars['String']['input'];
@@ -608,7 +606,7 @@ export enum ContentStatus {
   Archived = 'ARCHIVED',
   Draft = 'DRAFT',
   Published = 'PUBLISHED',
-  UnderReview = 'UNDER_REVIEW'
+  UnderReview = 'UNDER_REVIEW',
 }
 
 export type CreateAchievementInput = {
@@ -699,7 +697,7 @@ export type Credential = {
 export enum DacPermissionLevel {
   ContentType = 'CONTENT_TYPE',
   Resource = 'RESOURCE',
-  Tenant = 'TENANT'
+  Tenant = 'TENANT',
 }
 
 export type EmailAddress = {
@@ -716,7 +714,7 @@ export enum EnrollmentStatus {
   InviteOnly = 'INVITE_ONLY',
   Open = 'OPEN',
   Paused = 'PAUSED',
-  Waitlist = 'WAITLIST'
+  Waitlist = 'WAITLIST',
 }
 
 export type FinancialTransaction = {
@@ -761,7 +759,7 @@ export enum GradingMethod {
   Ai = 'AI',
   AutomatedTests = 'AUTOMATED_TESTS',
   Instructor = 'INSTRUCTOR',
-  Peer = 'PEER'
+  Peer = 'PEER',
 }
 
 export type GrantProductAccessInput = {
@@ -829,7 +827,7 @@ export enum LocalizationStatus {
   Draft = 'DRAFT',
   MachineTranslated = 'MACHINE_TRANSLATED',
   NeedsReview = 'NEEDS_REVIEW',
-  Published = 'PUBLISHED'
+  Published = 'PUBLISHED',
 }
 
 export type Money = {
@@ -883,37 +881,30 @@ export type Mutation = {
   usePromoCode: PromoCodeUse;
 };
 
-
 export type MutationAddToBundleArgs = {
   input: BundleManagementInput;
 };
-
 
 export type MutationArchiveProductArgs = {
   id: Scalars['UUID']['input'];
 };
 
-
 export type MutationAwardAchievementArgs = {
   input: AwardAchievementInput;
 };
 
-
 export type MutationBulkAwardAchievementArgs = {
   input: BulkAwardAchievementInput;
 };
-
 
 export type MutationCompleteContentInteractionArgs = {
   input: CompleteContentInput;
   programId: Scalars['UUID']['input'];
 };
 
-
 export type MutationCreateAchievementArgs = {
   input: CreateAchievementInput;
 };
-
 
 export type MutationCreateContentArgs = {
   body: Scalars['String']['input'];
@@ -930,57 +921,46 @@ export type MutationCreateContentArgs = {
   visibility?: Visibility;
 };
 
-
 export type MutationCreateProductArgs = {
   input: CreateProductInput;
 };
-
 
 export type MutationCreateProgramArgs = {
   input: CreateProgramInput;
 };
 
-
 export type MutationCreatePromoCodeArgs = {
   input: CreatePromoCodeInput;
 };
 
-
 export type MutationDeleteAchievementArgs = {
   achievementId: Scalars['UUID']['input'];
 };
-
 
 export type MutationDeleteContentArgs = {
   contentId: Scalars['UUID']['input'];
   programId: Scalars['UUID']['input'];
 };
 
-
 export type MutationDeleteProductArgs = {
   id: Scalars['UUID']['input'];
 };
-
 
 export type MutationDeleteProgramArgs = {
   id: Scalars['UUID']['input'];
 };
 
-
 export type MutationDeletePromoCodeArgs = {
   id: Scalars['UUID']['input'];
 };
-
 
 export type MutationGrantUserAccessArgs = {
   input: GrantProductAccessInput;
 };
 
-
 export type MutationMarkAchievementNotifiedArgs = {
   userAchievementId: Scalars['UUID']['input'];
 };
-
 
 export type MutationMoveContentArgs = {
   contentId: Scalars['UUID']['input'];
@@ -989,21 +969,17 @@ export type MutationMoveContentArgs = {
   programId: Scalars['UUID']['input'];
 };
 
-
 export type MutationPublishProductArgs = {
   id: Scalars['UUID']['input'];
 };
-
 
 export type MutationPublishProgramArgs = {
   id: Scalars['UUID']['input'];
 };
 
-
 export type MutationRemoveFromBundleArgs = {
   input: BundleManagementInput;
 };
-
 
 export type MutationReorderContentArgs = {
   contentIds: Array<Scalars['UUID']['input']>;
@@ -1011,55 +987,45 @@ export type MutationReorderContentArgs = {
   sortOrders: Array<Scalars['Int']['input']>;
 };
 
-
 export type MutationRevokeAchievementArgs = {
   input: RevokeAchievementInput;
 };
-
 
 export type MutationRevokeUserAccessArgs = {
   productId: Scalars['UUID']['input'];
   userId: Scalars['UUID']['input'];
 };
 
-
 export type MutationSetProductPricingArgs = {
   input: SetProductPricingInput;
 };
-
 
 export type MutationSetProductVisibilityArgs = {
   id: Scalars['UUID']['input'];
   visibility: AccessLevel;
 };
 
-
 export type MutationStartContentInteractionArgs = {
   input: StartContentInput;
   programId: Scalars['UUID']['input'];
 };
-
 
 export type MutationSubmitContentInteractionArgs = {
   input: SubmitContentInput;
   programId: Scalars['UUID']['input'];
 };
 
-
 export type MutationUnpublishProductArgs = {
   id: Scalars['UUID']['input'];
 };
-
 
 export type MutationUpdateAchievementArgs = {
   input: UpdateAchievementInput;
 };
 
-
 export type MutationUpdateAchievementProgressArgs = {
   input: UpdateAchievementProgressInput;
 };
-
 
 export type MutationUpdateContentArgs = {
   body?: InputMaybe<Scalars['String']['input']>;
@@ -1076,39 +1042,32 @@ export type MutationUpdateContentArgs = {
   visibility?: InputMaybe<Visibility>;
 };
 
-
 export type MutationUpdateContentProgressArgs = {
   input: UpdateProgressInput;
   programId: Scalars['UUID']['input'];
 };
 
-
 export type MutationUpdateProductArgs = {
   input: UpdateProductInput;
 };
 
-
 export type MutationUpdateProductPricingArgs = {
   input: UpdateProductPricingInput;
 };
-
 
 export type MutationUpdateProgramArgs = {
   id: Scalars['UUID']['input'];
   input: UpdateProgramInput;
 };
 
-
 export type MutationUpdatePromoCodeArgs = {
   input: UpdatePromoCodeInput;
 };
-
 
 export type MutationUpdateTimeSpentArgs = {
   input: UpdateTimeSpentInput;
   programId: Scalars['UUID']['input'];
 };
-
 
 export type MutationUsePromoCodeArgs = {
   code: Scalars['String']['input'];
@@ -1120,7 +1079,7 @@ export enum PaymentMethodStatus {
   Active = 'ACTIVE',
   Expired = 'EXPIRED',
   Inactive = 'INACTIVE',
-  Removed = 'REMOVED'
+  Removed = 'REMOVED',
 }
 
 export enum PaymentMethodType {
@@ -1128,7 +1087,7 @@ export enum PaymentMethodType {
   CreditCard = 'CREDIT_CARD',
   CryptoWallet = 'CRYPTO_WALLET',
   DebitCard = 'DEBIT_CARD',
-  WalletBalance = 'WALLET_BALANCE'
+  WalletBalance = 'WALLET_BALANCE',
 }
 
 export enum PermissionType {
@@ -1230,7 +1189,7 @@ export enum PermissionType {
   Vote = 'VOTE',
   Warning = 'WARNING',
   Widget = 'WIDGET',
-  Withdraw = 'WITHDRAW'
+  Withdraw = 'WITHDRAW',
 }
 
 export type PhoneNumber = {
@@ -1324,7 +1283,6 @@ export type Product = {
   visibility: AccessLevel;
 };
 
-
 /** Represents a product in the CMS system with full EntityBase support and DAC permissions. */
 export type ProductAddLocalizationArgs = {
   content: Scalars['String']['input'];
@@ -1337,14 +1295,14 @@ export enum ProductAccessStatus {
   Active = 'ACTIVE',
   Expired = 'EXPIRED',
   Revoked = 'REVOKED',
-  Suspended = 'SUSPENDED'
+  Suspended = 'SUSPENDED',
 }
 
 export enum ProductAcquisitionType {
   Free = 'FREE',
   Gift = 'GIFT',
   Purchase = 'PURCHASE',
-  Subscription = 'SUBSCRIPTION'
+  Subscription = 'SUBSCRIPTION',
 }
 
 /** Represents pricing information for a product */
@@ -1444,7 +1402,7 @@ export enum ProductType {
   Program = 'PROGRAM',
   ResourcePack = 'RESOURCE_PACK',
   Subscription = 'SUBSCRIPTION',
-  Workshop = 'WORKSHOP'
+  Workshop = 'WORKSHOP',
 }
 
 /** Represents a learning program with structured educational content */
@@ -1514,7 +1472,6 @@ export type Program = {
   visibility: AccessLevel;
 };
 
-
 /** Represents a learning program with structured educational content */
 export type ProgramAddLocalizationArgs = {
   content: Scalars['String']['input'];
@@ -1523,12 +1480,10 @@ export type ProgramAddLocalizationArgs = {
   status?: LocalizationStatus;
 };
 
-
 /** Represents a learning program with structured educational content */
 export type ProgramCalculateEstimatedWeeksArgs = {
   hoursPerWeek: Scalars['Int']['input'];
 };
-
 
 /** Represents a learning program with structured educational content */
 export type ProgramEstimatedWeeksArgs = {
@@ -1553,7 +1508,7 @@ export enum ProgramCategory {
   Programming = 'PROGRAMMING',
   ProjectManagement = 'PROJECT_MANAGEMENT',
   Science = 'SCIENCE',
-  WebDevelopment = 'WEB_DEVELOPMENT'
+  WebDevelopment = 'WEB_DEVELOPMENT',
 }
 
 export type ProgramContent = {
@@ -1597,14 +1552,14 @@ export enum ProgramContentType {
   Page = 'PAGE',
   Questionnaire = 'QUESTIONNAIRE',
   Reflection = 'REFLECTION',
-  Survey = 'SURVEY'
+  Survey = 'SURVEY',
 }
 
 export enum ProgramDifficulty {
   Advanced = 'ADVANCED',
   Beginner = 'BEGINNER',
   Expert = 'EXPERT',
-  Intermediate = 'INTERMEDIATE'
+  Intermediate = 'INTERMEDIATE',
 }
 
 export type ProgramFeedbackSubmission = {
@@ -1716,7 +1671,7 @@ export enum ProgressStatus {
   Completed = 'COMPLETED',
   InProgress = 'IN_PROGRESS',
   NotStarted = 'NOT_STARTED',
-  Skipped = 'SKIPPED'
+  Skipped = 'SKIPPED',
 }
 
 /** Represents a promotional code for products */
@@ -1768,7 +1723,6 @@ export type PromoCode = {
   version: Scalars['Int']['output'];
 };
 
-
 /** Represents a promotional code for products */
 export type PromoCodeCalculateDiscountArgs = {
   orderAmount: Scalars['Decimal']['input'];
@@ -1778,7 +1732,7 @@ export enum PromoCodeType {
   BuyOneGetOne = 'BUY_ONE_GET_ONE',
   FirstMonthFree = 'FIRST_MONTH_FREE',
   FixedAmountOff = 'FIXED_AMOUNT_OFF',
-  PercentageOff = 'PERCENTAGE_OFF'
+  PercentageOff = 'PERCENTAGE_OFF',
 }
 
 export type PromoCodeUse = {
@@ -1858,14 +1812,12 @@ export type Query = {
   userProducts: Array<UserProduct>;
 };
 
-
 export type QueryAchievementArgs = {
   achievementId: Scalars['UUID']['input'];
   includeLevels?: Scalars['Boolean']['input'];
   includePrerequisites?: Scalars['Boolean']['input'];
   tenantId?: InputMaybe<Scalars['UUID']['input']>;
 };
-
 
 export type QueryAchievementLeaderboardArgs = {
   category?: InputMaybe<Scalars['String']['input']>;
@@ -1875,12 +1827,10 @@ export type QueryAchievementLeaderboardArgs = {
   timeFrame?: InputMaybe<Scalars['DateTime']['input']>;
 };
 
-
 export type QueryAchievementStatisticsArgs = {
   achievementId: Scalars['UUID']['input'];
   tenantId?: InputMaybe<Scalars['UUID']['input']>;
 };
-
 
 export type QueryAchievementsArgs = {
   category?: InputMaybe<Scalars['String']['input']>;
@@ -1896,7 +1846,6 @@ export type QueryAchievementsArgs = {
   type?: InputMaybe<Scalars['String']['input']>;
 };
 
-
 export type QueryAvailableAchievementsArgs = {
   category?: InputMaybe<Scalars['String']['input']>;
   onlyEligible?: Scalars['Boolean']['input'];
@@ -1906,11 +1855,9 @@ export type QueryAvailableAchievementsArgs = {
   userId: Scalars['UUID']['input'];
 };
 
-
 export type QueryBundleItemsArgs = {
   bundleId: Scalars['UUID']['input'];
 };
-
 
 export type QueryCheckAchievementPrerequisitesArgs = {
   achievementId: Scalars['UUID']['input'];
@@ -1918,85 +1865,70 @@ export type QueryCheckAchievementPrerequisitesArgs = {
   userId: Scalars['UUID']['input'];
 };
 
-
 export type QueryContentByParentArgs = {
   parentContentId: Scalars['UUID']['input'];
   programId: Scalars['UUID']['input'];
 };
-
 
 export type QueryContentByTypeArgs = {
   contentType: ProgramContentType;
   programId: Scalars['UUID']['input'];
 };
 
-
 export type QueryContentByVisibilityArgs = {
   programId: Scalars['UUID']['input'];
   visibility: Visibility;
 };
 
-
 export type QueryContentCountArgs = {
   programId: Scalars['UUID']['input'];
 };
-
 
 export type QueryContentInteractionByIdArgs = {
   interactionId: Scalars['UUID']['input'];
   programId: Scalars['UUID']['input'];
 };
 
-
 export type QueryContentInteractionStatsArgs = {
   programId: Scalars['UUID']['input'];
 };
-
 
 export type QueryContentInteractionsByStatusArgs = {
   programId: Scalars['UUID']['input'];
   status: ProgressStatus;
 };
 
-
 export type QueryCurrentPricingArgs = {
   productId: Scalars['UUID']['input'];
 };
-
 
 export type QueryHasUserAccessArgs = {
   productId: Scalars['UUID']['input'];
   userId: Scalars['UUID']['input'];
 };
 
-
 export type QueryIsPromoCodeValidArgs = {
   code: Scalars['String']['input'];
   productId?: InputMaybe<Scalars['UUID']['input']>;
 };
-
 
 export type QueryMyProductsArgs = {
   skip?: Scalars['Int']['input'];
   take?: Scalars['Int']['input'];
 };
 
-
 export type QueryMyProgramsArgs = {
   skip?: Scalars['Int']['input'];
   take?: Scalars['Int']['input'];
 };
 
-
 export type QueryPopularProductsArgs = {
   count?: Scalars['Int']['input'];
 };
 
-
 export type QueryPricingHistoryArgs = {
   productId: Scalars['UUID']['input'];
 };
-
 
 export type QueryProductByIdArgs = {
   id: Scalars['UUID']['input'];
@@ -2004,12 +1936,10 @@ export type QueryProductByIdArgs = {
   includePrograms?: Scalars['Boolean']['input'];
 };
 
-
 export type QueryProductCountArgs = {
   type?: InputMaybe<ProductType>;
   visibility?: InputMaybe<AccessLevel>;
 };
-
 
 export type QueryProductsArgs = {
   isBundle?: InputMaybe<Scalars['Boolean']['input']>;
@@ -2021,20 +1951,17 @@ export type QueryProductsArgs = {
   visibility?: InputMaybe<AccessLevel>;
 };
 
-
 export type QueryProductsByCreatorArgs = {
   creatorId: Scalars['UUID']['input'];
   skip?: Scalars['Int']['input'];
   take?: Scalars['Int']['input'];
 };
 
-
 export type QueryProductsByTypeArgs = {
   skip?: Scalars['Int']['input'];
   take?: Scalars['Int']['input'];
   type: ProductType;
 };
-
 
 export type QueryProductsInPriceRangeArgs = {
   currency?: Scalars['String']['input'];
@@ -2044,64 +1971,52 @@ export type QueryProductsInPriceRangeArgs = {
   take?: Scalars['Int']['input'];
 };
 
-
 export type QueryProgramByIdArgs = {
   id: Scalars['UUID']['input'];
 };
 
-
 export type QueryProgramBySlugArgs = {
   slug: Scalars['String']['input'];
 };
-
 
 export type QueryProgramContentByIdArgs = {
   id: Scalars['UUID']['input'];
   programId: Scalars['UUID']['input'];
 };
 
-
 export type QueryProgramContentsArgs = {
   programId: Scalars['UUID']['input'];
 };
 
-
 export type QueryPromoCodeArgs = {
   code: Scalars['String']['input'];
 };
-
 
 export type QueryPublishedProductsArgs = {
   skip?: Scalars['Int']['input'];
   take?: Scalars['Int']['input'];
 };
 
-
 export type QueryPublishedProgramsArgs = {
   skip?: Scalars['Int']['input'];
   take?: Scalars['Int']['input'];
 };
 
-
 export type QueryRecentProductsArgs = {
   count?: Scalars['Int']['input'];
 };
-
 
 export type QueryRequiredContentArgs = {
   programId: Scalars['UUID']['input'];
 };
 
-
 export type QueryRequiredContentCountArgs = {
   programId: Scalars['UUID']['input'];
 };
 
-
 export type QueryRootContentArgs = {
   programId: Scalars['UUID']['input'];
 };
-
 
 export type QuerySearchProductsArgs = {
   searchTerm: Scalars['String']['input'];
@@ -2109,17 +2024,14 @@ export type QuerySearchProductsArgs = {
   take?: Scalars['Int']['input'];
 };
 
-
 export type QuerySearchProgramContentArgs = {
   programId: Scalars['UUID']['input'];
   searchTerm: Scalars['String']['input'];
 };
 
-
 export type QueryTotalRevenueForProductArgs = {
   productId: Scalars['UUID']['input'];
 };
-
 
 export type QueryUserAchievementProgressArgs = {
   category?: InputMaybe<Scalars['String']['input']>;
@@ -2128,14 +2040,12 @@ export type QueryUserAchievementProgressArgs = {
   userId: Scalars['UUID']['input'];
 };
 
-
 export type QueryUserAchievementSummaryArgs = {
   nearCompletionThreshold?: Scalars['Int']['input'];
   recentLimit?: Scalars['Int']['input'];
   tenantId?: InputMaybe<Scalars['UUID']['input']>;
   userId: Scalars['UUID']['input'];
 };
-
 
 export type QueryUserAchievementsArgs = {
   category?: InputMaybe<Scalars['String']['input']>;
@@ -2151,24 +2061,20 @@ export type QueryUserAchievementsArgs = {
   userId: Scalars['UUID']['input'];
 };
 
-
 export type QueryUserContentInteractionArgs = {
   contentId: Scalars['UUID']['input'];
   programId: Scalars['UUID']['input'];
   programUserId: Scalars['UUID']['input'];
 };
 
-
 export type QueryUserContentInteractionsArgs = {
   programId: Scalars['UUID']['input'];
   programUserId: Scalars['UUID']['input'];
 };
 
-
 export type QueryUserCountForProductArgs = {
   productId: Scalars['UUID']['input'];
 };
-
 
 export type QueryUserProductsArgs = {
   userId: Scalars['UUID']['input'];
@@ -2262,7 +2168,7 @@ export enum SkillProficiencyLevel {
   Expert = 'EXPERT',
   Intermediate = 'INTERMEDIATE',
   Master = 'MASTER',
-  Novice = 'NOVICE'
+  Novice = 'NOVICE',
 }
 
 export type StartContentInput = {
@@ -2279,7 +2185,7 @@ export enum SubscriptionBillingInterval {
   Day = 'DAY',
   Month = 'MONTH',
   Week = 'WEEK',
-  Year = 'YEAR'
+  Year = 'YEAR',
 }
 
 export enum SubscriptionStatus {
@@ -2291,7 +2197,7 @@ export enum SubscriptionStatus {
   PendingActivation = 'PENDING_ACTIVATION',
   Suspended = 'SUSPENDED',
   Trialing = 'TRIALING',
-  Unpaid = 'UNPAID'
+  Unpaid = 'UNPAID',
 }
 
 export type TagProficiency = {
@@ -2324,7 +2230,7 @@ export enum TagType {
   Industry = 'INDUSTRY',
   Skill = 'SKILL',
   Technology = 'TECHNOLOGY',
-  Topic = 'TOPIC'
+  Topic = 'TOPIC',
 }
 
 /** A tenant represents an organization or group within the system */
@@ -2363,7 +2269,6 @@ export type Tenant = {
   version: Scalars['Int']['output'];
   visibility: AccessLevel;
 };
-
 
 /** A tenant represents an organization or group within the system */
 export type TenantAddLocalizationArgs = {
@@ -2439,18 +2344,15 @@ export type TenantPermission = {
   version: Scalars['Int']['output'];
 };
 
-
 /** Represents the permissions and relationship between a user and a tenant */
 export type TenantPermissionHasAllPermissionsArgs = {
   permissions: Array<PermissionType>;
 };
 
-
 /** Represents the permissions and relationship between a user and a tenant */
 export type TenantPermissionHasAnyPermissionArgs = {
   permissions: Array<PermissionType>;
 };
-
 
 /** Represents the permissions and relationship between a user and a tenant */
 export type TenantPermissionHasPermissionArgs = {
@@ -2527,14 +2429,12 @@ export type TenantSettings = {
   visibility: AccessLevel;
 };
 
-
 export type TenantSettingsAddLocalizationArgs = {
   content: Scalars['String']['input'];
   fieldName: Scalars['String']['input'];
   language: LanguageInput;
   status?: LocalizationStatus;
 };
-
 
 export type TenantSettingsFeatureFlagArgs = {
   defaultValue?: Scalars['Boolean']['input'];
@@ -2591,7 +2491,7 @@ export enum TransactionStatus {
   Failed = 'FAILED',
   Pending = 'PENDING',
   Processing = 'PROCESSING',
-  Refunded = 'REFUNDED'
+  Refunded = 'REFUNDED',
 }
 
 export enum TransactionType {
@@ -2601,7 +2501,7 @@ export enum TransactionType {
   Purchase = 'PURCHASE',
   Refund = 'REFUND',
   Transfer = 'TRANSFER',
-  Withdrawal = 'WITHDRAWAL'
+  Withdrawal = 'WITHDRAWAL',
 }
 
 export type UpdateAchievementInput = {
@@ -2958,7 +2858,6 @@ export type UserProfile = {
   visibility: AccessLevel;
 };
 
-
 /** Represents a user profile with personal information and settings */
 export type UserProfileAddLocalizationArgs = {
   content: Scalars['String']['input'];
@@ -3012,137 +2911,1434 @@ export type UserSubscription = {
 export enum VerificationMethod {
   Blockchain = 'BLOCKCHAIN',
   Both = 'BOTH',
-  Code = 'CODE'
+  Code = 'CODE',
 }
 
 export enum Visibility {
   Archived = 'ARCHIVED',
   Draft = 'DRAFT',
-  Published = 'PUBLISHED'
+  Published = 'PUBLISHED',
 }
 
 export type CreateProductMutationVariables = Exact<{
   input: CreateProductInput;
 }>;
 
-
-export type CreateProductMutation = { __typename?: 'Mutation', createProduct: { __typename?: 'Product', id: any, title: string, name: string, description?: string | null, shortDescription?: string | null, imageUrl?: string | null, slug: string, status: ContentStatus, type: ProductType, isBundle: boolean, hasAccess?: boolean | null, createdAt: any, updatedAt?: any | null, currentPricing?: { __typename?: 'ProductPricing', id: any, basePrice: any, currency: string, isDefault: boolean } | null, creator?: { __typename?: 'User', id?: string | null, name: string, email: string } | null, productPrograms?: Array<{ __typename?: 'ProductProgram', id: any, sortOrder: number, program?: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null } | null } | null> | null } };
+export type CreateProductMutation = {
+  __typename?: 'Mutation';
+  createProduct: {
+    __typename?: 'Product';
+    id: any;
+    title: string;
+    name: string;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    slug: string;
+    status: ContentStatus;
+    type: ProductType;
+    isBundle: boolean;
+    hasAccess?: boolean | null;
+    createdAt: any;
+    updatedAt?: any | null;
+    currentPricing?: { __typename?: 'ProductPricing'; id: any; basePrice: any; currency: string; isDefault: boolean } | null;
+    creator?: { __typename?: 'User'; id?: string | null; name: string; email: string } | null;
+    productPrograms?: Array<{
+      __typename?: 'ProductProgram';
+      id: any;
+      sortOrder: number;
+      program?: {
+        __typename?: 'Program';
+        id: any;
+        title: string;
+        description?: string | null;
+        slug: string;
+        thumbnail?: string | null;
+        videoShowcaseUrl?: string | null;
+        category?: ProgramCategory | null;
+        difficulty?: ProgramDifficulty | null;
+        estimatedHours?: number | null;
+      } | null;
+    } | null> | null;
+  };
+};
 
 export type UpdateProductMutationVariables = Exact<{
   input: UpdateProductInput;
 }>;
 
+export type UpdateProductMutation = {
+  __typename?: 'Mutation';
+  updateProduct?: {
+    __typename?: 'Product';
+    id: any;
+    title: string;
+    name: string;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    slug: string;
+    status: ContentStatus;
+    type: ProductType;
+    isBundle: boolean;
+    hasAccess?: boolean | null;
+    createdAt: any;
+    updatedAt?: any | null;
+    currentPricing?: { __typename?: 'ProductPricing'; id: any; basePrice: any; currency: string; isDefault: boolean } | null;
+    creator?: { __typename?: 'User'; id?: string | null; name: string; email: string } | null;
+    productPrograms?: Array<{
+      __typename?: 'ProductProgram';
+      id: any;
+      sortOrder: number;
+      program?: {
+        __typename?: 'Program';
+        id: any;
+        title: string;
+        description?: string | null;
+        slug: string;
+        thumbnail?: string | null;
+        videoShowcaseUrl?: string | null;
+        category?: ProgramCategory | null;
+        difficulty?: ProgramDifficulty | null;
+        estimatedHours?: number | null;
+      } | null;
+    } | null> | null;
+  } | null;
+};
 
-export type UpdateProductMutation = { __typename?: 'Mutation', updateProduct?: { __typename?: 'Product', id: any, title: string, name: string, description?: string | null, shortDescription?: string | null, imageUrl?: string | null, slug: string, status: ContentStatus, type: ProductType, isBundle: boolean, hasAccess?: boolean | null, createdAt: any, updatedAt?: any | null, currentPricing?: { __typename?: 'ProductPricing', id: any, basePrice: any, currency: string, isDefault: boolean } | null, creator?: { __typename?: 'User', id?: string | null, name: string, email: string } | null, productPrograms?: Array<{ __typename?: 'ProductProgram', id: any, sortOrder: number, program?: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null } | null } | null> | null } | null };
+export type HealthQueryVariables = Exact<{ [key: string]: never }>;
 
-export type HealthQueryVariables = Exact<{ [key: string]: never; }>;
+export type HealthQuery = { __typename?: 'Query'; health: string };
 
+export type GetPublishedProductsWithProgramsQueryVariables = Exact<{ [key: string]: never }>;
 
-export type HealthQuery = { __typename?: 'Query', health: string };
+export type GetPublishedProductsWithProgramsQuery = {
+  __typename?: 'Query';
+  publishedProducts: Array<{
+    __typename?: 'Product';
+    id: any;
+    title: string;
+    name: string;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    slug: string;
+    status: ContentStatus;
+    type: ProductType;
+    isBundle: boolean;
+    hasAccess?: boolean | null;
+    createdAt: any;
+    updatedAt?: any | null;
+    currentPricing?: { __typename?: 'ProductPricing'; id: any; basePrice: any; currency: string; isDefault: boolean } | null;
+    creator?: { __typename?: 'User'; id?: string | null; name: string; email: string } | null;
+    productPrograms?: Array<{
+      __typename?: 'ProductProgram';
+      id: any;
+      sortOrder: number;
+      program?: {
+        __typename?: 'Program';
+        id: any;
+        title: string;
+        description?: string | null;
+        slug: string;
+        thumbnail?: string | null;
+        videoShowcaseUrl?: string | null;
+        category?: ProgramCategory | null;
+        difficulty?: ProgramDifficulty | null;
+        estimatedHours?: number | null;
+      } | null;
+    } | null> | null;
+  }>;
+};
 
-export type GetPublishedProductsWithProgramsQueryVariables = Exact<{ [key: string]: never; }>;
+export type GetAllProductsWithProgramsQueryVariables = Exact<{ [key: string]: never }>;
 
-
-export type GetPublishedProductsWithProgramsQuery = { __typename?: 'Query', publishedProducts: Array<{ __typename?: 'Product', id: any, title: string, name: string, description?: string | null, shortDescription?: string | null, imageUrl?: string | null, slug: string, status: ContentStatus, type: ProductType, isBundle: boolean, hasAccess?: boolean | null, createdAt: any, updatedAt?: any | null, currentPricing?: { __typename?: 'ProductPricing', id: any, basePrice: any, currency: string, isDefault: boolean } | null, creator?: { __typename?: 'User', id?: string | null, name: string, email: string } | null, productPrograms?: Array<{ __typename?: 'ProductProgram', id: any, sortOrder: number, program?: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null } | null } | null> | null }> };
-
-export type GetAllProductsWithProgramsQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type GetAllProductsWithProgramsQuery = { __typename?: 'Query', products: Array<{ __typename?: 'Product', id: any, title: string, name: string, description?: string | null, shortDescription?: string | null, imageUrl?: string | null, slug: string, status: ContentStatus, type: ProductType, isBundle: boolean, hasAccess?: boolean | null, createdAt: any, updatedAt?: any | null, currentPricing?: { __typename?: 'ProductPricing', id: any, basePrice: any, currency: string, isDefault: boolean } | null, creator?: { __typename?: 'User', id?: string | null, name: string, email: string } | null, productPrograms?: Array<{ __typename?: 'ProductProgram', id: any, sortOrder: number, program?: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null } | null } | null> | null }> };
+export type GetAllProductsWithProgramsQuery = {
+  __typename?: 'Query';
+  products: Array<{
+    __typename?: 'Product';
+    id: any;
+    title: string;
+    name: string;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    slug: string;
+    status: ContentStatus;
+    type: ProductType;
+    isBundle: boolean;
+    hasAccess?: boolean | null;
+    createdAt: any;
+    updatedAt?: any | null;
+    currentPricing?: { __typename?: 'ProductPricing'; id: any; basePrice: any; currency: string; isDefault: boolean } | null;
+    creator?: { __typename?: 'User'; id?: string | null; name: string; email: string } | null;
+    productPrograms?: Array<{
+      __typename?: 'ProductProgram';
+      id: any;
+      sortOrder: number;
+      program?: {
+        __typename?: 'Program';
+        id: any;
+        title: string;
+        description?: string | null;
+        slug: string;
+        thumbnail?: string | null;
+        videoShowcaseUrl?: string | null;
+        category?: ProgramCategory | null;
+        difficulty?: ProgramDifficulty | null;
+        estimatedHours?: number | null;
+      } | null;
+    } | null> | null;
+  }>;
+};
 
 export type SearchProductsWithProgramsQueryVariables = Exact<{
   searchTerm: Scalars['String']['input'];
 }>;
 
-
-export type SearchProductsWithProgramsQuery = { __typename?: 'Query', searchProducts: Array<{ __typename?: 'Product', id: any, title: string, name: string, description?: string | null, shortDescription?: string | null, imageUrl?: string | null, slug: string, status: ContentStatus, type: ProductType, isBundle: boolean, hasAccess?: boolean | null, createdAt: any, updatedAt?: any | null, currentPricing?: { __typename?: 'ProductPricing', id: any, basePrice: any, currency: string, isDefault: boolean } | null, creator?: { __typename?: 'User', id?: string | null, name: string, email: string } | null, productPrograms?: Array<{ __typename?: 'ProductProgram', id: any, sortOrder: number, program?: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null } | null } | null> | null }> };
+export type SearchProductsWithProgramsQuery = {
+  __typename?: 'Query';
+  searchProducts: Array<{
+    __typename?: 'Product';
+    id: any;
+    title: string;
+    name: string;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    slug: string;
+    status: ContentStatus;
+    type: ProductType;
+    isBundle: boolean;
+    hasAccess?: boolean | null;
+    createdAt: any;
+    updatedAt?: any | null;
+    currentPricing?: { __typename?: 'ProductPricing'; id: any; basePrice: any; currency: string; isDefault: boolean } | null;
+    creator?: { __typename?: 'User'; id?: string | null; name: string; email: string } | null;
+    productPrograms?: Array<{
+      __typename?: 'ProductProgram';
+      id: any;
+      sortOrder: number;
+      program?: {
+        __typename?: 'Program';
+        id: any;
+        title: string;
+        description?: string | null;
+        slug: string;
+        thumbnail?: string | null;
+        videoShowcaseUrl?: string | null;
+        category?: ProgramCategory | null;
+        difficulty?: ProgramDifficulty | null;
+        estimatedHours?: number | null;
+      } | null;
+    } | null> | null;
+  }>;
+};
 
 export type GetMyProductsWithProgramsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
-
-export type GetMyProductsWithProgramsQuery = { __typename?: 'Query', myProducts: Array<{ __typename?: 'Product', id: any, title: string, name: string, description?: string | null, shortDescription?: string | null, imageUrl?: string | null, slug: string, status: ContentStatus, type: ProductType, isBundle: boolean, hasAccess?: boolean | null, createdAt: any, updatedAt?: any | null, currentPricing?: { __typename?: 'ProductPricing', id: any, basePrice: any, currency: string, isDefault: boolean } | null, creator?: { __typename?: 'User', id?: string | null, name: string, email: string } | null, productPrograms?: Array<{ __typename?: 'ProductProgram', id: any, sortOrder: number, program?: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null } | null } | null> | null }> };
+export type GetMyProductsWithProgramsQuery = {
+  __typename?: 'Query';
+  myProducts: Array<{
+    __typename?: 'Product';
+    id: any;
+    title: string;
+    name: string;
+    description?: string | null;
+    shortDescription?: string | null;
+    imageUrl?: string | null;
+    slug: string;
+    status: ContentStatus;
+    type: ProductType;
+    isBundle: boolean;
+    hasAccess?: boolean | null;
+    createdAt: any;
+    updatedAt?: any | null;
+    currentPricing?: { __typename?: 'ProductPricing'; id: any; basePrice: any; currency: string; isDefault: boolean } | null;
+    creator?: { __typename?: 'User'; id?: string | null; name: string; email: string } | null;
+    productPrograms?: Array<{
+      __typename?: 'ProductProgram';
+      id: any;
+      sortOrder: number;
+      program?: {
+        __typename?: 'Program';
+        id: any;
+        title: string;
+        description?: string | null;
+        slug: string;
+        thumbnail?: string | null;
+        videoShowcaseUrl?: string | null;
+        category?: ProgramCategory | null;
+        difficulty?: ProgramDifficulty | null;
+        estimatedHours?: number | null;
+      } | null;
+    } | null> | null;
+  }>;
+};
 
 export type GetMyProgramsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
-
-export type GetMyProgramsQuery = { __typename?: 'Query', myPrograms: Array<{ __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null, visibility: AccessLevel, status: ContentStatus, createdAt: any, updatedAt?: any | null }> };
+export type GetMyProgramsQuery = {
+  __typename?: 'Query';
+  myPrograms: Array<{
+    __typename?: 'Program';
+    id: any;
+    title: string;
+    description?: string | null;
+    slug: string;
+    thumbnail?: string | null;
+    videoShowcaseUrl?: string | null;
+    category?: ProgramCategory | null;
+    difficulty?: ProgramDifficulty | null;
+    estimatedHours?: number | null;
+    visibility: AccessLevel;
+    status: ContentStatus;
+    createdAt: any;
+    updatedAt?: any | null;
+  }>;
+};
 
 export type GetPublishedProgramsQueryVariables = Exact<{
   skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
-
-export type GetPublishedProgramsQuery = { __typename?: 'Query', publishedPrograms: Array<{ __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null, visibility: AccessLevel, status: ContentStatus, createdAt: any, updatedAt?: any | null }> };
+export type GetPublishedProgramsQuery = {
+  __typename?: 'Query';
+  publishedPrograms: Array<{
+    __typename?: 'Program';
+    id: any;
+    title: string;
+    description?: string | null;
+    slug: string;
+    thumbnail?: string | null;
+    videoShowcaseUrl?: string | null;
+    category?: ProgramCategory | null;
+    difficulty?: ProgramDifficulty | null;
+    estimatedHours?: number | null;
+    visibility: AccessLevel;
+    status: ContentStatus;
+    createdAt: any;
+    updatedAt?: any | null;
+  }>;
+};
 
 export type GetProgramByIdQueryVariables = Exact<{
   id: Scalars['UUID']['input'];
 }>;
 
-
-export type GetProgramByIdQuery = { __typename?: 'Query', programById?: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null, visibility: AccessLevel, status: ContentStatus, createdAt: any, updatedAt?: any | null } | null };
+export type GetProgramByIdQuery = {
+  __typename?: 'Query';
+  programById?: {
+    __typename?: 'Program';
+    id: any;
+    title: string;
+    description?: string | null;
+    slug: string;
+    thumbnail?: string | null;
+    videoShowcaseUrl?: string | null;
+    category?: ProgramCategory | null;
+    difficulty?: ProgramDifficulty | null;
+    estimatedHours?: number | null;
+    visibility: AccessLevel;
+    status: ContentStatus;
+    createdAt: any;
+    updatedAt?: any | null;
+  } | null;
+};
 
 export type GetProgramBySlugQueryVariables = Exact<{
   slug: Scalars['String']['input'];
 }>;
 
+export type GetProgramBySlugQuery = {
+  __typename?: 'Query';
+  programBySlug?: {
+    __typename?: 'Program';
+    id: any;
+    title: string;
+    description?: string | null;
+    slug: string;
+    thumbnail?: string | null;
+    videoShowcaseUrl?: string | null;
+    category?: ProgramCategory | null;
+    difficulty?: ProgramDifficulty | null;
+    estimatedHours?: number | null;
+    visibility: AccessLevel;
+    status: ContentStatus;
+    createdAt: any;
+    updatedAt?: any | null;
+  } | null;
+};
 
-export type GetProgramBySlugQuery = { __typename?: 'Query', programBySlug?: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null, visibility: AccessLevel, status: ContentStatus, createdAt: any, updatedAt?: any | null } | null };
+export type TestAuthQueryVariables = Exact<{ [key: string]: never }>;
 
-export type TestAuthQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type TestAuthQuery = { __typename?: 'Query', testAuth: string };
+export type TestAuthQuery = { __typename?: 'Query'; testAuth: string };
 
 export type CreateProgramMutationVariables = Exact<{
   input: CreateProgramInput;
 }>;
 
-
-export type CreateProgramMutation = { __typename?: 'Mutation', createProgram: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null, visibility: AccessLevel, status: ContentStatus, createdAt: any, updatedAt?: any | null } };
+export type CreateProgramMutation = {
+  __typename?: 'Mutation';
+  createProgram: {
+    __typename?: 'Program';
+    id: any;
+    title: string;
+    description?: string | null;
+    slug: string;
+    thumbnail?: string | null;
+    videoShowcaseUrl?: string | null;
+    category?: ProgramCategory | null;
+    difficulty?: ProgramDifficulty | null;
+    estimatedHours?: number | null;
+    visibility: AccessLevel;
+    status: ContentStatus;
+    createdAt: any;
+    updatedAt?: any | null;
+  };
+};
 
 export type UpdateProgramMutationVariables = Exact<{
   id: Scalars['UUID']['input'];
   input: UpdateProgramInput;
 }>;
 
-
-export type UpdateProgramMutation = { __typename?: 'Mutation', updateProgram: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null, visibility: AccessLevel, status: ContentStatus, createdAt: any, updatedAt?: any | null } };
+export type UpdateProgramMutation = {
+  __typename?: 'Mutation';
+  updateProgram: {
+    __typename?: 'Program';
+    id: any;
+    title: string;
+    description?: string | null;
+    slug: string;
+    thumbnail?: string | null;
+    videoShowcaseUrl?: string | null;
+    category?: ProgramCategory | null;
+    difficulty?: ProgramDifficulty | null;
+    estimatedHours?: number | null;
+    visibility: AccessLevel;
+    status: ContentStatus;
+    createdAt: any;
+    updatedAt?: any | null;
+  };
+};
 
 export type DeleteProgramMutationVariables = Exact<{
   id: Scalars['UUID']['input'];
 }>;
 
-
-export type DeleteProgramMutation = { __typename?: 'Mutation', deleteProgram: boolean };
+export type DeleteProgramMutation = { __typename?: 'Mutation'; deleteProgram: boolean };
 
 export type PublishProgramMutationVariables = Exact<{
   id: Scalars['UUID']['input'];
 }>;
 
+export type PublishProgramMutation = {
+  __typename?: 'Mutation';
+  publishProgram: {
+    __typename?: 'Program';
+    id: any;
+    title: string;
+    description?: string | null;
+    slug: string;
+    thumbnail?: string | null;
+    videoShowcaseUrl?: string | null;
+    category?: ProgramCategory | null;
+    difficulty?: ProgramDifficulty | null;
+    estimatedHours?: number | null;
+    visibility: AccessLevel;
+    status: ContentStatus;
+    createdAt: any;
+    updatedAt?: any | null;
+  };
+};
 
-export type PublishProgramMutation = { __typename?: 'Mutation', publishProgram: { __typename?: 'Program', id: any, title: string, description?: string | null, slug: string, thumbnail?: string | null, videoShowcaseUrl?: string | null, category?: ProgramCategory | null, difficulty?: ProgramDifficulty | null, estimatedHours?: number | null, visibility: AccessLevel, status: ContentStatus, createdAt: any, updatedAt?: any | null } };
-
-
-export const CreateProductDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateProduct"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateProductInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createProduct"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"shortDescription"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"isBundle"}},{"kind":"Field","name":{"kind":"Name","value":"hasAccess"}},{"kind":"Field","name":{"kind":"Name","value":"currentPricing"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"basePrice"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"isDefault"}}]}},{"kind":"Field","name":{"kind":"Name","value":"creator"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"productPrograms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"sortOrder"}},{"kind":"Field","name":{"kind":"Name","value":"program"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<CreateProductMutation, CreateProductMutationVariables>;
-export const UpdateProductDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateProduct"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateProductInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateProduct"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"shortDescription"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"isBundle"}},{"kind":"Field","name":{"kind":"Name","value":"hasAccess"}},{"kind":"Field","name":{"kind":"Name","value":"currentPricing"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"basePrice"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"isDefault"}}]}},{"kind":"Field","name":{"kind":"Name","value":"creator"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"productPrograms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"sortOrder"}},{"kind":"Field","name":{"kind":"Name","value":"program"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<UpdateProductMutation, UpdateProductMutationVariables>;
-export const HealthDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Health"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"health"}}]}}]} as unknown as DocumentNode<HealthQuery, HealthQueryVariables>;
-export const GetPublishedProductsWithProgramsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetPublishedProductsWithPrograms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"publishedProducts"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"shortDescription"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"isBundle"}},{"kind":"Field","name":{"kind":"Name","value":"hasAccess"}},{"kind":"Field","name":{"kind":"Name","value":"currentPricing"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"basePrice"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"isDefault"}}]}},{"kind":"Field","name":{"kind":"Name","value":"creator"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"productPrograms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"sortOrder"}},{"kind":"Field","name":{"kind":"Name","value":"program"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<GetPublishedProductsWithProgramsQuery, GetPublishedProductsWithProgramsQueryVariables>;
-export const GetAllProductsWithProgramsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetAllProductsWithPrograms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"products"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"shortDescription"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"isBundle"}},{"kind":"Field","name":{"kind":"Name","value":"hasAccess"}},{"kind":"Field","name":{"kind":"Name","value":"currentPricing"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"basePrice"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"isDefault"}}]}},{"kind":"Field","name":{"kind":"Name","value":"creator"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"productPrograms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"sortOrder"}},{"kind":"Field","name":{"kind":"Name","value":"program"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<GetAllProductsWithProgramsQuery, GetAllProductsWithProgramsQueryVariables>;
-export const SearchProductsWithProgramsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SearchProductsWithPrograms"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"searchTerm"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"searchProducts"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"searchTerm"},"value":{"kind":"Variable","name":{"kind":"Name","value":"searchTerm"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"shortDescription"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"isBundle"}},{"kind":"Field","name":{"kind":"Name","value":"hasAccess"}},{"kind":"Field","name":{"kind":"Name","value":"currentPricing"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"basePrice"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"isDefault"}}]}},{"kind":"Field","name":{"kind":"Name","value":"creator"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"productPrograms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"sortOrder"}},{"kind":"Field","name":{"kind":"Name","value":"program"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<SearchProductsWithProgramsQuery, SearchProductsWithProgramsQueryVariables>;
-export const GetMyProductsWithProgramsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMyProductsWithPrograms"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"skip"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}},"defaultValue":{"kind":"IntValue","value":"0"}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"take"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}},"defaultValue":{"kind":"IntValue","value":"50"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myProducts"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"skip"},"value":{"kind":"Variable","name":{"kind":"Name","value":"skip"}}},{"kind":"Argument","name":{"kind":"Name","value":"take"},"value":{"kind":"Variable","name":{"kind":"Name","value":"take"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"shortDescription"}},{"kind":"Field","name":{"kind":"Name","value":"imageUrl"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"isBundle"}},{"kind":"Field","name":{"kind":"Name","value":"hasAccess"}},{"kind":"Field","name":{"kind":"Name","value":"currentPricing"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"basePrice"}},{"kind":"Field","name":{"kind":"Name","value":"currency"}},{"kind":"Field","name":{"kind":"Name","value":"isDefault"}}]}},{"kind":"Field","name":{"kind":"Name","value":"creator"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}},{"kind":"Field","name":{"kind":"Name","value":"productPrograms"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"sortOrder"}},{"kind":"Field","name":{"kind":"Name","value":"program"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<GetMyProductsWithProgramsQuery, GetMyProductsWithProgramsQueryVariables>;
-export const GetMyProgramsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetMyPrograms"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"skip"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}},"defaultValue":{"kind":"IntValue","value":"0"}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"take"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}},"defaultValue":{"kind":"IntValue","value":"50"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"myPrograms"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"skip"},"value":{"kind":"Variable","name":{"kind":"Name","value":"skip"}}},{"kind":"Argument","name":{"kind":"Name","value":"take"},"value":{"kind":"Variable","name":{"kind":"Name","value":"take"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<GetMyProgramsQuery, GetMyProgramsQueryVariables>;
-export const GetPublishedProgramsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetPublishedPrograms"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"skip"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}},"defaultValue":{"kind":"IntValue","value":"0"}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"take"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Int"}},"defaultValue":{"kind":"IntValue","value":"50"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"publishedPrograms"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"skip"},"value":{"kind":"Variable","name":{"kind":"Name","value":"skip"}}},{"kind":"Argument","name":{"kind":"Name","value":"take"},"value":{"kind":"Variable","name":{"kind":"Name","value":"take"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<GetPublishedProgramsQuery, GetPublishedProgramsQueryVariables>;
-export const GetProgramByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetProgramById"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"programById"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<GetProgramByIdQuery, GetProgramByIdQueryVariables>;
-export const GetProgramBySlugDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetProgramBySlug"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"programBySlug"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<GetProgramBySlugQuery, GetProgramBySlugQueryVariables>;
-export const TestAuthDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"TestAuth"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"testAuth"}}]}}]} as unknown as DocumentNode<TestAuthQuery, TestAuthQueryVariables>;
-export const CreateProgramDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateProgram"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateProgramInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createProgram"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<CreateProgramMutation, CreateProgramMutationVariables>;
-export const UpdateProgramDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateProgram"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateProgramInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateProgram"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<UpdateProgramMutation, UpdateProgramMutationVariables>;
-export const DeleteProgramDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteProgram"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteProgram"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}]}}]} as unknown as DocumentNode<DeleteProgramMutation, DeleteProgramMutationVariables>;
-export const PublishProgramDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"PublishProgram"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"publishProgram"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"description"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"thumbnail"}},{"kind":"Field","name":{"kind":"Name","value":"videoShowcaseUrl"}},{"kind":"Field","name":{"kind":"Name","value":"category"}},{"kind":"Field","name":{"kind":"Name","value":"difficulty"}},{"kind":"Field","name":{"kind":"Name","value":"estimatedHours"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<PublishProgramMutation, PublishProgramMutationVariables>;
+export const CreateProductDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateProduct' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'CreateProductInput' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createProduct' },
+            arguments: [{ kind: 'Argument', name: { kind: 'Name', value: 'input' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } } }],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'shortDescription' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isBundle' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasAccess' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentPricing' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'basePrice' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'currency' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isDefault' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'creator' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'productPrograms' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'program' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateProductMutation, CreateProductMutationVariables>;
+export const UpdateProductDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateProduct' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'UpdateProductInput' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateProduct' },
+            arguments: [{ kind: 'Argument', name: { kind: 'Name', value: 'input' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } } }],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'shortDescription' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isBundle' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasAccess' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentPricing' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'basePrice' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'currency' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isDefault' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'creator' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'productPrograms' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'program' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UpdateProductMutation, UpdateProductMutationVariables>;
+export const HealthDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'Health' },
+      selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'health' } }] },
+    },
+  ],
+} as unknown as DocumentNode<HealthQuery, HealthQueryVariables>;
+export const GetPublishedProductsWithProgramsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetPublishedProductsWithPrograms' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'publishedProducts' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'shortDescription' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isBundle' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasAccess' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentPricing' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'basePrice' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'currency' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isDefault' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'creator' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'productPrograms' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'program' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetPublishedProductsWithProgramsQuery, GetPublishedProductsWithProgramsQueryVariables>;
+export const GetAllProductsWithProgramsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetAllProductsWithPrograms' },
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'products' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'shortDescription' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isBundle' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasAccess' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentPricing' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'basePrice' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'currency' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isDefault' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'creator' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'productPrograms' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'program' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetAllProductsWithProgramsQuery, GetAllProductsWithProgramsQueryVariables>;
+export const SearchProductsWithProgramsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'SearchProductsWithPrograms' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'searchTerm' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'searchProducts' },
+            arguments: [
+              { kind: 'Argument', name: { kind: 'Name', value: 'searchTerm' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'searchTerm' } } },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'shortDescription' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isBundle' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasAccess' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentPricing' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'basePrice' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'currency' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isDefault' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'creator' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'productPrograms' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'program' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<SearchProductsWithProgramsQuery, SearchProductsWithProgramsQueryVariables>;
+export const GetMyProductsWithProgramsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetMyProductsWithPrograms' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'skip' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          defaultValue: { kind: 'IntValue', value: '0' },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'take' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          defaultValue: { kind: 'IntValue', value: '50' },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'myProducts' },
+            arguments: [
+              { kind: 'Argument', name: { kind: 'Name', value: 'skip' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'skip' } } },
+              { kind: 'Argument', name: { kind: 'Name', value: 'take' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'take' } } },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'shortDescription' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'imageUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'type' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'isBundle' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'hasAccess' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'currentPricing' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'basePrice' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'currency' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'isDefault' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'creator' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'productPrograms' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'sortOrder' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'program' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                            { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetMyProductsWithProgramsQuery, GetMyProductsWithProgramsQueryVariables>;
+export const GetMyProgramsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetMyPrograms' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'skip' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          defaultValue: { kind: 'IntValue', value: '0' },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'take' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          defaultValue: { kind: 'IntValue', value: '50' },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'myPrograms' },
+            arguments: [
+              { kind: 'Argument', name: { kind: 'Name', value: 'skip' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'skip' } } },
+              { kind: 'Argument', name: { kind: 'Name', value: 'take' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'take' } } },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetMyProgramsQuery, GetMyProgramsQueryVariables>;
+export const GetPublishedProgramsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetPublishedPrograms' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'skip' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          defaultValue: { kind: 'IntValue', value: '0' },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'take' } },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
+          defaultValue: { kind: 'IntValue', value: '50' },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'publishedPrograms' },
+            arguments: [
+              { kind: 'Argument', name: { kind: 'Name', value: 'skip' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'skip' } } },
+              { kind: 'Argument', name: { kind: 'Name', value: 'take' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'take' } } },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetPublishedProgramsQuery, GetPublishedProgramsQueryVariables>;
+export const GetProgramByIdDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetProgramById' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'programById' },
+            arguments: [{ kind: 'Argument', name: { kind: 'Name', value: 'id' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } } }],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetProgramByIdQuery, GetProgramByIdQueryVariables>;
+export const GetProgramBySlugDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetProgramBySlug' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'slug' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'programBySlug' },
+            arguments: [{ kind: 'Argument', name: { kind: 'Name', value: 'slug' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'slug' } } }],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<GetProgramBySlugQuery, GetProgramBySlugQueryVariables>;
+export const TestAuthDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'TestAuth' },
+      selectionSet: { kind: 'SelectionSet', selections: [{ kind: 'Field', name: { kind: 'Name', value: 'testAuth' } }] },
+    },
+  ],
+} as unknown as DocumentNode<TestAuthQuery, TestAuthQueryVariables>;
+export const CreateProgramDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateProgram' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'CreateProgramInput' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createProgram' },
+            arguments: [{ kind: 'Argument', name: { kind: 'Name', value: 'input' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } } }],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<CreateProgramMutation, CreateProgramMutationVariables>;
+export const UpdateProgramDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdateProgram' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } } },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'input' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'UpdateProgramInput' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updateProgram' },
+            arguments: [
+              { kind: 'Argument', name: { kind: 'Name', value: 'id' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } } },
+              { kind: 'Argument', name: { kind: 'Name', value: 'input' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'input' } } },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<UpdateProgramMutation, UpdateProgramMutationVariables>;
+export const DeleteProgramDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteProgram' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteProgram' },
+            arguments: [{ kind: 'Argument', name: { kind: 'Name', value: 'id' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } } }],
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<DeleteProgramMutation, DeleteProgramMutationVariables>;
+export const PublishProgramDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'PublishProgram' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: { kind: 'NonNullType', type: { kind: 'NamedType', name: { kind: 'Name', value: 'UUID' } } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'publishProgram' },
+            arguments: [{ kind: 'Argument', name: { kind: 'Name', value: 'id' }, value: { kind: 'Variable', name: { kind: 'Name', value: 'id' } } }],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'slug' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'thumbnail' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'videoShowcaseUrl' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'category' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'difficulty' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'estimatedHours' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'visibility' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<PublishProgramMutation, PublishProgramMutationVariables>;

@@ -1,0 +1,13 @@
+{
+  "name": "@gameguild/prettier-config",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "src/index.js",
+  "description": "Prettier configuration for the website and related projects",
+  "author": "Matheus Martins <contact@matheusmartins.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "prettier": "^3.5.0"
+  }
+}
