@@ -3,6 +3,8 @@ using GameGuild.Core.Logging;
 using GameGuild.Core.Middleware;
 using Serilog;
 using Serilog.Events;
+using ILogger = Serilog.ILogger;
+
 
 namespace GameGuild.Core.Configuration;
 
@@ -11,6 +13,56 @@ namespace GameGuild.Core.Configuration;
 /// </summary>
 public static class LoggingConfiguration
 {
+    /// <summary>
+    /// Creates a bootstrap logger for capturing early startup logs before the full logging infrastructure is configured
+    /// </summary>
+    public static ILogger CreateBootstrapLogger()
+    {
+        return new LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateBootstrapLogger();
+    }
+
+    /// <summary>
+    /// Configures all logging providers for the application (Serilog, structured logging, etc.)
+    /// </summary>
+    public static WebApplicationBuilder AddLogging(this WebApplicationBuilder builder)
+    {
+        // Configure Serilog as the primary logging provider
+        builder.AddSerilogLogging();
+
+        // Note: AddStructuredLogging is called later in the Presentation layer
+        // to ensure it's registered in the service collection with proper ordering
+
+        return builder;
+    }
+
+    /// <summary>
+    /// Configures Serilog as the logging provider for the WebApplicationBuilder
+    /// </summary>
+    public static WebApplicationBuilder AddSerilogLogging(this WebApplicationBuilder builder)
+    {
+        builder.Host.UseSerilog((context, services, configuration) => 
+            configuration.ReadFrom.Configuration(context.Configuration)
+                .Enrich.FromLogContext()
+                .Enrich.With<ModuleEnricher>()
+                .Enrich.WithMachineName()
+                .Enrich.WithProcessId()
+                .Enrich.WithProcessName()
+                .Enrich.WithThreadId()
+                .Enrich.WithEnvironmentName()
+                .Enrich.WithProperty("Application", "GameGuild")
+                .Enrich.WithProperty("Version", GetApplicationVersion())
+                .MinimumLevel.Information()
+                .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+                .MinimumLevel.Override("Microsoft.EntityFrameworkCore", LogEventLevel.Warning)
+                .MinimumLevel.Override("System", LogEventLevel.Warning)
+        );
+
+        return builder;
+    }
+
     /// <summary>
     /// Configures Serilog with structured logging, enrichers, and per-module filtering
     /// </summary>

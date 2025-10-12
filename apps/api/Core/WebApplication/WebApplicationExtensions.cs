@@ -1,6 +1,8 @@
 using GameGuild.Core.Configuration;
 using GameGuild.Core.GraphQL;
 using GameGuild.Core.Middleware;
+using GameGuild.Database;
+using GameGuild.Database.Extensions;
 using GameGuild.Modules.Tenants;
 // using GameGuild.Authorization.Middleware;
 
@@ -43,6 +45,12 @@ internal static class WebApplicationExtensions
     public static WebApplication ConfigureCommonPipeline(this WebApplication app)
     {
         ArgumentNullException.ThrowIfNull(app);
+
+        // Add tenant logging middleware (early in pipeline)
+        app.UseTenantLogging();
+
+        // Add structured logging middleware (early in pipeline)
+        app.UseStructuredLogging();
 
         // Add correlation ID middleware very early in pipeline
         app.UseCorrelationId();
@@ -110,7 +118,7 @@ internal static class WebApplicationExtensions
         app.MapControllers();
 
         // Map GraphQL endpoint with CORS configuration
-        app.MapGraphQL("/graphql").RequireCors(); // Explicitly require CORS policy
+        app.MapGraphQL().RequireCors(); // Explicitly require CORS policy
 
         // Additional minimal endpoints would be mapped here when implemented via IEndpoint.
 
@@ -167,6 +175,38 @@ internal static class WebApplicationExtensions
         //  logger.LogError(ex, "An error occurred while seeding the database");
         //  throw;
         // }
+
+        return app;
+    }
+
+    /// <summary> Applies database migrations and seeds initial data. Skipped in Testing environment for integration tests. </summary>
+    /// <param name="app"> The web application </param>
+    /// <returns> The web application for chaining </returns>
+    public static async Task<WebApplication> ApplyDatabaseMigrationsAsync(this WebApplication app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+
+        // Skip migrations in Testing environment for integration tests
+        if (app.Environment.IsEnvironment("Testing"))
+        {
+            return app;
+        }
+
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<WebApplication>>();
+
+        try
+        {
+            logger.LogInformation("Applying database migrations and seeding initial data...");
+            await context.MigrateAndSeedAsync(scope.ServiceProvider);
+            logger.LogInformation("Database migration and seeding completed successfully");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "An error occurred while applying database migrations");
+            throw;
+        }
 
         return app;
     }

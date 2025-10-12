@@ -12,6 +12,10 @@ using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Features;
 using GameGuild.Modules.UserProfiles;
 using GameGuild.Modules.Authorization;
+using GameGuild.Modules.Experiments;
+using GameGuild.Modules.Programs;
+using GameGuild.Modules.UserAchievements;
+
 
 namespace GameGuild;
 
@@ -155,6 +159,10 @@ public static class DependencyInjection {
     // Register core business services
     services.AddCoreServices();
 
+    // Add audit and performance monitoring services
+    services.AddSingleton<Core.Services.IAuditService, Core.Services.AuditService>();
+    services.AddSingleton<Core.Services.IPerformanceMonitoringService, Core.Services.PerformanceMonitoringService>();
+
     // Register database context only if enabled
     if (options.EnableDatabase) {
       ServiceCollectionExtensions.AddDatabaseContext(services, configuration);
@@ -241,29 +249,31 @@ public static class DependencyInjection {
   private static IServiceCollection AddExternalServices(this IServiceCollection services, IConfiguration configuration) {
     // Add modules using the new standardized IModule pattern where available
 
-    // Core business modules with IModule implementations
-    services.AddAuthenticationModule(configuration);
-    services.AddPermissionsModule(configuration);
-    services.AddProgramModule(); // Programs module - learning programs, enrollments, content management
-    services.AddUserAchievementsModule(); // Gamification module - achievements, levels, progress tracking
-                                          // services.AddBillingModule(configuration); // Temporarily disabled
-                                          // services.AddPaymentsModule(configuration); // Temporarily disabled
-                                          // services.AddTestingLabModule(configuration); // Temporarily disabled
-                                          // services.AddPostsModule(configuration); // Temporarily disabled
-    services.AddAuthorizationModule(configuration);
-
-    // Legacy modules still using old pattern (to be migrated)
-    services.AddResourcesModule();
-    services.AddTenantServices(); // Re-enabled for authentication dependencies
-    services.AddAuditServices(); // Re-enabled for authentication dependencies
-                                 // services.AddProjectsModule(); // Temporarily disabled
-                                 // services.AddSubscriptionsModule(); // Temporarily disabled
-    services.AddCredentialsModule();
-    services.AddUsersModule();
-    services.AddUserProfilesModule();
-    services.AddFeaturesModule();
-    // services.AddProductsModule(); // Temporarily disabled
-    services.AddExperimentsModule(); // Rate Plan Experiment Framework
+    // ===== CORE ESSENTIAL MODULES (Always enabled) =====
+    services.AddAuthenticationModule(configuration); // Required for user authentication
+    services.AddAuthorizationModule(configuration); // Required for user authorization
+    services.AddPermissionsModule(configuration); // Required for permission system
+    
+    // ===== CORE INFRASTRUCTURE MODULES (Always enabled) =====
+    services.AddResourcesModule(); // Core resource management
+    services.AddTenantServices(); // Required for multi-tenancy
+    services.AddAuditServices(); // Required for audit logging
+    services.AddUsersModule(); // Required for user management
+    services.AddCredentialsModule(); // Required for authentication
+    
+    // ===== FEATURE MODULES (Temporarily disabled - load only when needed) =====
+    // services.AddProgramModule(); // Programs module - learning programs, enrollments, content management
+    // services.AddUserAchievementsModule(); // Gamification module - achievements, levels, progress tracking
+    // services.AddBillingModule(configuration); // Billing module
+    // services.AddPaymentsModule(configuration); // Payments module
+    // services.AddTestingLabModule(configuration); // Testing lab module
+    // services.AddPostsModule(configuration); // Posts/content module
+    // services.AddProjectsModule(); // Projects module
+    // services.AddSubscriptionsModule(); // Subscriptions module
+    // services.AddUserProfilesModule(); // User profiles module
+    // services.AddFeaturesModule(); // Feature flags module
+    // services.AddProductsModule(); // Products module
+    // services.AddExperimentsModule(); // Rate Plan Experiment Framework
 
     // External infrastructure services
     services.AddCloudflareServices(configuration);

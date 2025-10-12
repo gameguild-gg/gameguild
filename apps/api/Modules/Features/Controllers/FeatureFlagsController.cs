@@ -1,88 +1,153 @@
-// using GameGuild.Modules.Features.Models;
-// using GameGuild.Modules.Features.Services;
-// using Microsoft.AspNetCore.Mvc;
+using GameGuild.Modules.Features.Models;
+using GameGuild.Modules.Features.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+
+
+namespace GameGuild.Modules.Features.Controllers;
 // 
-// 
-// namespace GameGuild.Modules.Features.Controllers;
-// 
-// /// <summary>
-// /// Controller for managing feature flags
-// /// </summary>
-// [ApiController]
-// [Route("api/feature-flags")]
-// [Authorize]
-// public class FeatureFlagsController : ControllerBase {
-//   private readonly IFeatureFlagService _featureFlagService;
-// 
-//   private readonly ILogger<FeatureFlagsController> _logger;
-// 
-//   public FeatureFlagsController(IFeatureFlagService featureFlagService, ILogger<FeatureFlagsController> logger) {
-//     _featureFlagService = featureFlagService;
-//     _logger = logger;
-//   }
-// 
-//   /// <summary>
-//   /// Evaluate a feature flag
-//   /// </summary>
-//   [HttpPost("evaluate")]
-//   public async Task<IActionResult> EvaluateFeature([FromBody] FeatureEvaluationRequest request, CancellationToken cancellationToken) {
-//     try {
-//       var context = new FeatureContext {
-//         UserId = request.UserId ?? GetCurrentUserId(),
-//         TenantId = request.TenantId ?? GetCurrentTenantId(),
-//         Environment = request.Environment ?? "production",
-//         UserRoles = request.UserRoles ?? GetCurrentUserRoles(),
-//         CustomAttributes = request.CustomAttributes ?? new Dictionary<string, object>(),
-//         IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-//         UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
-//       };
-// 
-//       var result = await _featureFlagService.EvaluateFeatureAsync(request.FeatureKey, context, cancellationToken);
-// 
-//       return Ok(result);
-//     }
-//     catch (Exception ex) {
-//       _logger.LogError(ex, "Error evaluating feature flag '{FeatureKey}'", request.FeatureKey);
-// 
-//       return StatusCode(500, new { error = "Internal server error" });
-//     }
-//   }
-// 
-//   /// <summary>
-//   /// Get boolean feature flag value
-//   /// </summary>
-//   [HttpGet("{featureKey}/boolean")]
-//   public async Task<IActionResult> GetBooleanFeature(
-//     string featureKey,
-//     [FromQuery] bool defaultValue = false,
-//     [FromQuery] Guid? userId = null,
-//     [FromQuery] Guid? tenantId = null,
-//     [FromQuery] string environment = "production",
-//     CancellationToken cancellationToken = default
-//   ) {
-//     try {
-//       var context = new FeatureContext {
-//         UserId = userId ?? GetCurrentUserId(),
-//         TenantId = tenantId ?? GetCurrentTenantId(),
-//         Environment = environment,
-//         UserRoles = GetCurrentUserRoles(),
-//         IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
-//         UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
-//       };
-// 
-//       var result = await _featureFlagService.GetBooleanAsync(featureKey, defaultValue, context, cancellationToken);
-// 
-//       return Ok(new { featureKey, value = result, type = "boolean" });
-//     }
-//     catch (Exception ex) {
-//       _logger.LogError(ex, "Error getting boolean feature flag '{FeatureKey}'", featureKey);
-// 
-//       return Ok(new { featureKey, value = defaultValue, type = "boolean", error = true });
-//     }
-//   }
-// 
-//   /// <summary>
-//   /// Get all feature flags
+/// <summary>
+/// Controller for managing feature flags
+/// </summary>
+[ApiController]
+[Route("api/feature-flags")]
+[Authorize]
+public class FeatureFlagsController : ControllerBase {
+  private readonly IFeatureFlagService _featureFlagService;
+
+  private readonly ILogger<FeatureFlagsController> _logger;
+
+  public FeatureFlagsController(IFeatureFlagService featureFlagService, ILogger<FeatureFlagsController> logger) {
+    _featureFlagService = featureFlagService;
+    _logger = logger;
+  }
+
+  /// <summary>
+  /// Evaluate a feature flag
+  /// </summary>
+  [HttpPost("evaluate")]
+  public async Task<IActionResult> EvaluateFeature([FromBody] FeatureEvaluationRequest request, CancellationToken cancellationToken) {
+    try {
+      var context = new FeatureContext {
+        UserId = request.UserId ?? GetCurrentUserId(),
+        TenantId = request.TenantId ?? GetCurrentTenantId(),
+        Environment = request.Environment ?? "production",
+        UserRoles = request.UserRoles ?? GetCurrentUserRoles(),
+        CustomAttributes = request.CustomAttributes ?? new Dictionary<string, object>(),
+        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+        UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
+      };
+
+      var result = await _featureFlagService.EvaluateFeatureAsync(request.FeatureKey, context, cancellationToken);
+
+      return Ok(result);
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error evaluating feature flag '{FeatureKey}'", request.FeatureKey);
+
+      return StatusCode(500, new { error = "Internal server error" });
+    }
+  }
+
+  /// <summary>
+  /// Get boolean feature flag value
+  /// </summary>
+  [HttpGet("{featureKey}/boolean")]
+  public async Task<IActionResult> GetBooleanFeature(
+    string featureKey,
+    [FromQuery] bool defaultValue = false,
+    [FromQuery] Guid? userId = null,
+    [FromQuery] Guid? tenantId = null,
+    [FromQuery] string environment = "production",
+    CancellationToken cancellationToken = default
+  ) {
+    try {
+      var context = new FeatureContext {
+        UserId = userId ?? GetCurrentUserId(),
+        TenantId = tenantId ?? GetCurrentTenantId(),
+        Environment = environment,
+        UserRoles = GetCurrentUserRoles(),
+        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+        UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
+      };
+
+      var result = await _featureFlagService.GetBooleanAsync(featureKey, defaultValue, context, cancellationToken);
+
+      return Ok(new { featureKey, value = result, type = "boolean" });
+    }
+    catch (Exception ex) {
+      _logger.LogError(ex, "Error getting boolean feature flag '{FeatureKey}'", featureKey);
+
+      return Ok(new { featureKey, value = defaultValue, type = "boolean", error = true });
+    }
+  }
+
+  /// <summary>
+  /// Bulk evaluate multiple feature flags - NEW INCREMENTAL FEATURE
+  /// </summary>
+  [HttpPost("bulk-evaluate")]
+  public async Task<IActionResult> BulkEvaluateFeatures([FromBody] BulkEvaluationRequest request, CancellationToken cancellationToken)
+  {
+    try 
+    {
+      var context = new FeatureContext 
+      {
+        UserId = request.UserId ?? GetCurrentUserId(),
+        TenantId = request.TenantId ?? GetCurrentTenantId(),
+        Environment = request.Environment ?? "production",
+        UserRoles = request.UserRoles ?? GetCurrentUserRoles(),
+        CustomAttributes = request.CustomAttributes ?? new Dictionary<string, object>(),
+        IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString(),
+        UserAgent = HttpContext.Request.Headers.UserAgent.ToString()
+      };
+
+      var results = new List<FeatureEvaluationResult>();
+      foreach (var featureKey in request.FeatureKeys)
+      {
+        try 
+        {
+          var result = await _featureFlagService.EvaluateFeatureAsync(featureKey, context, cancellationToken);
+          results.Add(result);
+        }
+        catch (Exception ex)
+        {
+          _logger.LogWarning(ex, "Failed to evaluate feature '{FeatureKey}' in bulk request", featureKey);
+          results.Add(new FeatureEvaluationResult 
+          { 
+            FeatureKey = featureKey, 
+            Enabled = false, 
+            Reason = "Evaluation failed" 
+          });
+        }
+      }
+
+      return Ok(new BulkEvaluationResponse { Results = results });
+    }
+    catch (Exception ex) 
+    {
+      _logger.LogError(ex, "Error in bulk feature evaluation");
+      return StatusCode(500, new { error = "Internal server error" });
+    }
+  }
+
+  private Guid? GetCurrentUserId()
+  {
+    // Implementation would depend on your auth system
+    return null;
+  }
+
+  private Guid? GetCurrentTenantId()
+  {
+    // Implementation would depend on your multi-tenancy setup
+    return null;
+  }
+
+  private List<string> GetCurrentUserRoles()
+  {
+    // Implementation would depend on your auth system
+    return new List<string>();
+  }
+}
 //   /// </summary>
 //   [HttpGet]
 //   public async Task<IActionResult> GetFeatureFlags([FromQuery] Guid? tenantId = null, [FromQuery] string? environment = null, CancellationToken cancellationToken = default) {
