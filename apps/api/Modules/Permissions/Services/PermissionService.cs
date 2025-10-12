@@ -338,8 +338,9 @@ public class PermissionService(ApplicationDbContext context, ILogger<PermissionS
 
     #region Layer 3: Resource-Specific Permissions
 
-    public async Task<TPermission> GrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType[ ] permissions)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
+    public async Task<TPermission> GrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType[ ] permissions) 
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() 
+        where TResource : EntityBase
     {
         if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
@@ -376,7 +377,8 @@ public class PermissionService(ApplicationDbContext context, ILogger<PermissionS
     }
 
     public async Task<bool> HasResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType permission)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() 
+        where TResource : EntityBase
     {
         var resourcePermission = await _context.Set<TPermission>().AsNoTracking().FirstOrDefaultAsync(rp => rp.UserId == userId && rp.TenantId == tenantId && rp.ResourceId == resourceId && rp.DeletedAt == null);
 
@@ -384,7 +386,8 @@ public class PermissionService(ApplicationDbContext context, ILogger<PermissionS
     }
 
     public async Task<IEnumerable<PermissionType>> GetResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid resourceId)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() 
+        where TResource : EntityBase
     {
         var permissions = new HashSet<PermissionType>();
 
@@ -403,7 +406,8 @@ public class PermissionService(ApplicationDbContext context, ILogger<PermissionS
     }
 
     public async Task BulkGrantResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid[ ] resourceIds, PermissionType[ ] permissions)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() 
+        where TResource : EntityBase
     {
         if (resourceIds == null || resourceIds.Length == 0) throw new ArgumentException("At least one resource ID must be specified", nameof(resourceIds));
 
@@ -445,7 +449,8 @@ public class PermissionService(ApplicationDbContext context, ILogger<PermissionS
     }
 
     public async Task ShareResourceAsync<TPermission, TResource>(Guid resourceId, Guid targetUserId, Guid? tenantId, PermissionType[ ] permissions, DateTime? expiresAt = null)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() 
+        where TResource : EntityBase
     {
         var resourcePermission = await GrantResourcePermissionAsync<TPermission, TResource>(targetUserId, tenantId, resourceId, permissions);
 
@@ -459,7 +464,8 @@ public class PermissionService(ApplicationDbContext context, ILogger<PermissionS
     }
 
     public async Task<TPermission?> RevokeResourcePermissionAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId, PermissionType[ ] permissions)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() 
+        where TResource : EntityBase
     {
         if (permissions == null || permissions.Length == 0) throw new ArgumentException("At least one permission must be specified", nameof(permissions));
 
@@ -493,7 +499,9 @@ public class PermissionService(ApplicationDbContext context, ILogger<PermissionS
         return null;
     }
 
-    public async Task RevokeResourceAccessAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId) where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
+    public async Task RevokeResourceAccessAsync<TPermission, TResource>(Guid userId, Guid? tenantId, Guid resourceId) 
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() 
+        where TResource : EntityBase
     {
         var resourcePermission = await _context.Set<TPermission>().FirstOrDefaultAsync(rp => rp.UserId == userId && rp.TenantId == tenantId && rp.ResourceId == resourceId && rp.DeletedAt == null);
 
@@ -745,7 +753,8 @@ public class PermissionService(ApplicationDbContext context, ILogger<PermissionS
     }
 
     public async Task<Dictionary<Guid, IEnumerable<PermissionType>>> GetBulkResourcePermissionsAsync<TPermission, TResource>(Guid? userId, Guid? tenantId, Guid[ ] resourceIds)
-        where TPermission : ResourcePermission<TResource>, new() where TResource : EntityBase
+        where TPermission : GameGuild.Modules.Resources.ResourcePermission<TResource>, new() 
+        where TResource : EntityBase
     {
         if (resourceIds == null || resourceIds.Length == 0) { return []; }
 

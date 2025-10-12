@@ -1,5 +1,6 @@
 ﻿using DotNetEnv;
 using GameGuild.CQRS;
+using GameGuild.Core.Configuration;
 
 namespace GameGuild;
 
@@ -14,6 +15,9 @@ public static class WebApplicationBuilderExtensions
         ArgumentNullException.ThrowIfNull(builder);
 
         builder.ConfigureEnvironment();
+
+        // Configure Serilog logging (must be early in the pipeline)
+        builder.AddSerilogLogging();
 
         // Add services by architectural layer with default options
         builder.Services.AddPresentationLayer(builder.Configuration);
@@ -70,8 +74,6 @@ public static class WebApplicationBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        // TODO: Load .env file for local development.
-        // Env.Load();
         builder.Configuration.AddEnvironmentVariables();
 
         return builder;
