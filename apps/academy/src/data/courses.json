@@ -1,0 +1,313 @@
+{
+  "courses": [
+    {
+      "name": "Animation",
+      "slug": "animation",
+      "chapters": [
+        {
+          "id": "1",
+          "title": "Introduction to Animation",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Learn the basics of animation principles, timing, and spacing. Master the foundations that will support all your future animation work.",
+          "duration": "1h 20m",
+          "progress": 75
+        },
+        {
+          "id": "2",
+          "title": "Advanced Animation Techniques",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Dive deeper into advanced animation techniques including secondary motion, anticipation, and follow-through.",
+          "duration": "2h 15m",
+          "progress": 50
+        },
+        {
+          "id": "3",
+          "title": "Character Animation Fundamentals",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Bring characters to life with personality and emotion through advanced character animation techniques.",
+          "duration": "3h 30m",
+          "progress": 25
+        },
+        {
+          "id": "4",
+          "title": "Motion Graphics and Effects",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Create stunning motion graphics and visual effects for professional animation projects.",
+          "duration": "2h 45m"
+        }
+      ]
+    },
+    {
+      "name": "Fundamentals",
+      "slug": "fundamentals",
+      "chapters": [
+        {
+          "id": "5",
+          "title": "Core Principles",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Understand the fundamental principles of digital art and design that form the foundation of all creative work.",
+          "duration": "2h 30m",
+          "progress": 90
+        },
+        {
+          "id": "6",
+          "title": "Color Theory and Composition",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Master color relationships, harmony, and composition techniques to create visually compelling artwork.",
+          "duration": "1h 45m",
+          "progress": 65
+        },
+        {
+          "id": "7",
+          "title": "Digital Drawing Basics",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Learn essential digital drawing techniques and brush fundamentals for creating professional artwork.",
+          "duration": "2h 10m",
+          "progress": 40
+        }
+      ]
+    },
+    {
+      "name": "Image Editing",
+      "slug": "image-editing",
+      "chapters": [
+        {
+          "id": "8",
+          "title": "Photoshop Essentials",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Master the essential tools and techniques in Photoshop for professional image editing and manipulation.",
+          "duration": "2h 20m",
+          "progress": 80
+        },
+        {
+          "id": "9",
+          "title": "Advanced Retouching",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Learn advanced retouching techniques for portrait and product photography enhancement.",
+          "duration": "3h 15m",
+          "progress": 30
+        },
+        {
+          "id": "10",
+          "title": "Compositing and Photo Manipulation",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Create stunning photo compositions and manipulations using advanced blending and masking techniques.",
+          "duration": "2h 55m"
+        }
+      ]
+    },
+    {
+      "name": "Game Development",
+      "slug": "game-development",
+      "chapters": [
+        {
+          "id": "11",
+          "title": "Game Design Principles",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Learn the fundamental principles of game design, mechanics, and player experience.",
+          "duration": "2h 40m",
+          "progress": 95
+        },
+        {
+          "id": "12",
+          "title": "Unity Game Engine Basics",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Get started with Unity game engine and learn to create your first interactive game prototype.",
+          "duration": "4h 10m",
+          "progress": 70
+        },
+        {
+          "id": "13",
+          "title": "3D Game Assets Creation",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Create optimized 3D assets for game development including modeling, texturing, and optimization.",
+          "duration": "5h 20m",
+          "progress": 15
+        }
+      ]
+    },
+    {
+      "name": "Model to Motion",
+      "slug": "model-to-motion",
+      "chapters": [
+        {
+          "id": "14",
+          "title": "3D Modeling for Animation",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Learn to create 3D models optimized for animation workflows and character development.",
+          "duration": "3h 45m",
+          "progress": 60
+        },
+        {
+          "id": "15",
+          "title": "Rigging Fundamentals",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Understand the basics of character rigging and control systems for 3D animation.",
+          "duration": "4h 30m",
+          "progress": 35
+        }
+      ]
+    },
+    {
+      "name": "Rigging and Scripting",
+      "slug": "rigging-and-scripting",
+      "chapters": [
+        {
+          "id": "16",
+          "title": "Advanced Character Rigging",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Master advanced rigging techniques for complex character animations and facial rigs.",
+          "duration": "6h 15m",
+          "progress": 45
+        },
+        {
+          "id": "17",
+          "title": "Python Scripting for Artists",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Learn Python scripting to automate workflows and create custom tools for 3D applications.",
+          "duration": "4h 40m",
+          "progress": 20
+        }
+      ]
+    },
+    {
+      "name": "Surface and Look Development",
+      "slug": "surface-and-look-development",
+      "chapters": [
+        {
+          "id": "18",
+          "title": "Material Creation and Shading",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Create realistic materials and shaders for 3D models using industry-standard techniques.",
+          "duration": "3h 25m",
+          "progress": 85
+        },
+        {
+          "id": "19",
+          "title": "Lighting and Rendering",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Master lighting setups and rendering techniques for photorealistic 3D imagery.",
+          "duration": "4h 50m",
+          "progress": 55
+        }
+      ]
+    },
+    {
+      "name": "Sculpting",
+      "slug": "sculpting",
+      "chapters": [
+        {
+          "id": "20",
+          "title": "Digital Sculpting Fundamentals",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Learn the basics of digital sculpting using ZBrush and other industry-standard tools.",
+          "duration": "5h 30m",
+          "progress": 75
+        },
+        {
+          "id": "21",
+          "title": "Character Sculpting",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Create detailed character sculptures with proper anatomy and artistic flair.",
+          "duration": "7h 20m",
+          "progress": 25
+        },
+        {
+          "id": "22",
+          "title": "Hard Surface Sculpting",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Master hard surface sculpting techniques for mechanical objects and environments.",
+          "duration": "4h 15m"
+        }
+      ]
+    },
+    {
+      "name": "Visual Effects and Simulation",
+      "slug": "visual-effects-and-simulation",
+      "chapters": [
+        {
+          "id": "23",
+          "title": "Particle Systems and Dynamics",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Create stunning particle effects and dynamic simulations for visual effects work.",
+          "duration": "5h 10m",
+          "progress": 65
+        },
+        {
+          "id": "24",
+          "title": "Fluid Simulation",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Learn to simulate realistic water, smoke, and fire effects for film and games.",
+          "duration": "6h 45m",
+          "progress": 40
+        },
+        {
+          "id": "25",
+          "title": "Compositing and Post-Production",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Master compositing techniques to seamlessly integrate 3D elements with live-action footage.",
+          "duration": "4h 35m",
+          "progress": 10
+        }
+      ]
+    },
+    {
+      "name": "Video Editing",
+      "slug": "video-editing",
+      "chapters": [
+        {
+          "id": "26",
+          "title": "Video Editing Fundamentals",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Learn the essential skills of video editing including cutting, timing, and storytelling.",
+          "duration": "3h 20m",
+          "progress": 90
+        },
+        {
+          "id": "27",
+          "title": "Advanced Editing Techniques",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Master advanced editing techniques including multi-camera editing and complex transitions.",
+          "duration": "4h 15m",
+          "progress": 50
+        },
+        {
+          "id": "28",
+          "title": "Color Grading and Audio",
+          "image": "/placeholder.svg",
+          "coverImage": "/placeholder.svg",
+          "description": "Perfect your videos with professional color grading and audio mixing techniques.",
+          "duration": "3h 45m",
+          "progress": 30
+        }
+      ]
+    }
+  ]
+}

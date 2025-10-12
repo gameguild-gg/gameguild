@@ -15,12 +15,13 @@ namespace GameGuild.Tests.Authentication.Integration;
 /// Integration tests for authentication features
 /// Tests JWT token generation, refresh, and validation
 /// </summary>
-public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactory<ApiProgram>>, IDisposable {
-    private readonly WebApplicationFactory<ApiProgram> _factory;
+public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactory<WebApplicationEntryPoint>>, IDisposable
+{
+    private readonly WebApplicationFactory<WebApplicationEntryPoint> _factory;
     private readonly HttpClient _client;
     private readonly IServiceScope _scope;
 
-    public AuthenticationIntegrationTests(WebApplicationFactory<ApiProgram> factory) {
+    public AuthenticationIntegrationTests(WebApplicationFactory<WebApplicationEntryPoint> factory)
         // Set environment variable before factory initialization
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
 

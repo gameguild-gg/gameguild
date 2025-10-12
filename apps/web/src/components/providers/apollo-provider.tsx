@@ -48,7 +48,7 @@ export function ApolloClientProvider({ children }: PropsWithChildren) {
     });
 
     return new ApolloClient({
-      name: 'game-guild-web',
+      name: 'gameguild-web',
       version: '1.0',
       ssrMode: typeof window === 'undefined',
       link: from([errorLink, authLink as unknown as ApolloLink, httpLink as unknown as ApolloLink]),

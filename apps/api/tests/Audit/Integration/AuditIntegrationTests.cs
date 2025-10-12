@@ -13,13 +13,14 @@ namespace GameGuild.Tests.Audit.Integration;
 /// Integration tests for audit features
 /// Tests audit logging, compliance reporting, and query capabilities
 /// </summary>
-public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<ApiProgram>>, IDisposable {
-    private readonly WebApplicationFactory<ApiProgram> _factory;
+public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<WebApplicationEntryPoint>>, IDisposable
+{
+    private readonly WebApplicationFactory<WebApplicationEntryPoint> _factory;
     private readonly IServiceScope _scope;
     private readonly ApplicationDbContext _context;
     private readonly IAuditService _auditService;
 
-    public AuditIntegrationTests(WebApplicationFactory<ApiProgram> factory) {
+    public AuditIntegrationTests(WebApplicationFactory<WebApplicationEntryPoint> factory)
         _factory = factory.WithWebHostBuilder(builder => {
             builder.UseEnvironment("Testing");
             builder.ConfigureServices(services => {

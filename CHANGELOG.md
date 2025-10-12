@@ -2761,7 +2761,7 @@
   public ([8892425](https://github.com/gameguild-gg/website/commit/8892425430b3b0751fae190aad8dbd559b3d7161))
 * refactor dto routes and
   styles ([f24cdc5](https://github.com/gameguild-gg/website/commit/f24cdc5fcf68eef19503cf5062c123bd64b128cb))
-* remove @game-guild/courses from
+* remove @gameguild/courses from
   package.json ([f62f584](https://github.com/gameguild-gg/website/commit/f62f5844523e3b463c476e34b27c834c76ed803d))
 * remove a bit more of those env
   vars ([c7be2d2](https://github.com/gameguild-gg/website/commit/c7be2d2edaa11e6ba6fba8075172bf49ca975f69))
