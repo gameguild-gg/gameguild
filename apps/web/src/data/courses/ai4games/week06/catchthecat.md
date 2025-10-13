@@ -52,6 +52,112 @@ The Catcher moves by blocking a cell. A cell can be blocked only once each turn.
     - Block a cell outside the board;
     - Block a cell where the cat is;
 
+## STL Notes
+
+We will need to build auxiliary data structures to help us with the agent implementation for the path finding in C++.
+
+Assume we have a `Point2D` structure like this
+
+``` cpp
+struct Point2D {
+    int x, y;
+};
+```
+
+This wont work in a `priority_queue` unless we wrap it in a struct with a priority and a custom comparator:
+
+``` cpp
+struct Point2DWithPriority {
+    Point2D point;
+    int priority;
+
+    // given we want to use a min heap, we need to reverse the comparison
+    bool operator<(const Point2DWithPriority& other) const {
+        return priority > other.priority;
+    }
+};
+```
+
+Now in order to make `Point2D` to work as a index in associative containers like `unordered_map`, and `unordered_set`, we need to provide a hash function.
+
+``` cpp
+template <>
+struct std::hash<Point2D> {
+    std::size_t operator()(const Point2D& p) const {
+        return std::hash<int>()(p.x) ^ std::hash<int>()(p.y);
+    }
+};
+```
+
+And we need to tell how to compare two `Point2D` objects for the collision detection on the hash table.
+
+``` cpp
+struct Point2D {
+  // ...
+  bool operator==(const Point2D &other) const {
+        return x == other.x && y == other.y;
+  }
+}
+```
+
+So the final code should looks like something like this:
+
+``` C++
+#include <iostream>
+#include <queue>
+#include <unordered_map>
+#include <unordered_set>
+
+struct Point2D {
+    int x;
+    int y;
+
+    Point2D(int x, int y) : x(x), y(y) {}
+
+    bool operator==(const Point2D &other) const {
+        return x == other.x && y == other.y;
+    }
+};
+
+// if we want to use Point 2d as keys on hashtable structures such as umap and uset, you have to tell the STL how to hash Point2D
+template <>
+struct std::hash<Point2D> {
+    std::size_t operator()(const Point2D &p) const {
+        return std::hash<int>()(p.x) ^ (std::hash<int>()(p.y));
+    }
+};
+
+// in order to use Point2D in a priority queue, we need to wrap the Point2D and add a priority field and a comparator telling how to compare two Point2DPrioritized
+struct Point2DPrioritized {
+    Point2D point;
+    int priority;
+
+    Point2DPrioritized(Point2D point, int priority): point(point), priority(priority) {}
+
+    // the < and > are reversed because we will give higher priority to the ones with less value
+    bool operator<(const Point2DPrioritized &other) const {
+        return priority > other.priority;
+    }
+};
+
+int main() {
+    // this will not work!!
+    // std::priority_queue<Point2D> pq;
+    // pq.push(Point2D(1,2));
+
+    std::priority_queue<Point2DPrioritized> pq;
+    // this only works because the Point2DPrioritized has the operator < defined
+    pq.push({Point2D(1,2), 5});
+
+    std::unordered_set<Point2D> visited;
+    // this only work because we have created the hash<Point2D> specialization at the namespace of the std
+    visited.insert(Point2D(1,2));
+    // the same thing works for unordered_map
+    std::unordered_map<Point2D, int> point_to_value;
+    point_to_value[Point2D(1,2)] = 42;
+}
+```
+
 ## Competition
 
 All students enrolled in the competition will submit both agents. The agents will play against each other, and the winner will be the one that wins the most games. 
@@ -94,25 +200,43 @@ It will generate `N` executables that will be managed and called via terminal to
 
 The report will be generated via another automation that will generate 100 initial states randomly. All agents from all students play against each other.
 
-```
-executables = fetchAllExecutables() 
-initialstates = generateRandomStates(100);
-foreach cat of executables{
-  foreach catcher of executables {
-    turnIsCat = true;
-    foreach state of initialstate {
-      while(nat have winner && correct output){
-        if(turnIsCat)
-          state = cat(state)
-        else
-          state = catcher(state)
-        turnIsCat = !turnIsCat
-      }
-      generate partial report from current cat and catcher  
-    }
-  }
-}
-compose final report of the run
+``` mermaid
+flowchart TD
+    A[Start Competition] --> B[Get List of Agent Repositories]
+    
+    B --> C{For Each Repository}
+    C --> D[Clone Repository]
+    D --> E[Build catchthecat Executable]
+    E --> F{More Repositories?}
+    F -->|Yes| C
+    F -->|No| G[Generate X Random Initial States]
+    
+    G --> H{For Each Combination of 2 Executables}
+    H --> I[Set: Cat Agent & Catcher Agent]
+    I --> J[Set turnIsCat = true]
+    
+    J --> K{For Each Initial State}
+    K --> L[Load Current State]
+    L --> M{Game Loop: Has Winner OR Invalid Output?}
+    
+    M -->|No| N{Is Cat Turn?}
+    N -->|Yes| O[simulate cat move]
+    N -->|No| P[simulate catcher move]
+    O --> Q[turnIsCat = false]
+    P --> R[turnIsCat = true]
+    Q --> M
+    R --> M
+    
+    M -->|Yes| S[Generate Partial Report for Current Match]
+    S --> T{More Initial States?}
+    T -->|Yes| K
+    T -->|No| U{More Agent Combinations?}
+    U -->|Yes| H
+    U -->|No| V[Compose Final Report]
+    
+    V --> W[Show Final Scoreboard]
+    W --> X[Allow Players to Watch Agent Replays]
+    X --> Y[End Competition]
 ```
 
 ### IAgent.h
