@@ -38,10 +38,10 @@ This is a group project. You can make groups of 2 or more, but for every extra m
 
 ## Grading
 
-- 10 Points - builds for OpenGL and it is published on Itchio or on any other platform you want (ex.: github pages)
-- 5 Points – following coding standards 
-- 10 Points – uses good OOP Architecture 
-- 5 points – Follow-path steering behavior implementation 
-- 5 points - General Pathfinding algorithm implementation 
-- 10 points - Program performance 
-- 25 points - Selection and Implementation of Enhanced Techniques
+- 5 Points - builds for OpenGL and is published on Itchio or on any other platform you want (ex.: github pages)
+- 5 points - the video recording explaining the code and what you have done
+- 10 Points – uses good OOP Architecture
+- 5 points – Follow-path steering behavior implementation
+- 5 points - General Pathfinding algorithm implementation
+- 10 points - Debug interface implementation
+- 20 points - Selection and Implementation of Enhanced Techniques
