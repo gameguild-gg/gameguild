@@ -1,9 +1,7 @@
 using GameGuild.Common;
 using GameGuild.Modules.Permissions;
 using GameGuild.Source.Modules.Certificates.Dtos;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using CertificateEntity = GameGuild.Modules.Certificates.Certificate;
 using CreateCertificateDto = GameGuild.Source.Modules.Certificates.Dtos.CreateCertificateDto;
 using UpdateCertificateDto = GameGuild.Source.Modules.Certificates.Dtos.UpdateCertificateDto;
@@ -88,7 +86,7 @@ public class ProgramCertificatesController(Database.ApplicationDbContext db) : C
   ) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
-  var cert = await db.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId);
+    var cert = await db.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId);
     if (cert == null || cert.ProgramId != programId) return NotFound();
 
     // Verify tag exists
@@ -119,7 +117,7 @@ public class ProgramCertificatesController(Database.ApplicationDbContext db) : C
   [HttpDelete("{certificateId}/tags/{tagId}")]
   [RequireResourcePermission<Programs.ProgramPermission, Programs.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult> RemoveCertificateTag(Guid programId, Guid certificateId, Guid tagId) {
-  var cert = await db.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId);
+    var cert = await db.Certificates.FirstOrDefaultAsync(c => c.Id == certificateId);
     if (cert == null || cert.ProgramId != programId) return NotFound();
 
     var ct = await db.CertificateTags

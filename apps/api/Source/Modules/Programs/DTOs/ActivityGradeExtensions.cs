@@ -40,7 +40,10 @@ public static class ActivityGradeExtensions {
           : null,
       Grader = grade.GraderProgramUser?.User != null
                  ? new GraderSummaryDto {
-                   Id = grade.GraderProgramUser.User.Id, UserDisplayName = grade.GraderProgramUser.User.Name, UserEmail = grade.GraderProgramUser.User.Email, Role = "Grader", // Default role since ProgramUser doesn't have a Role property
+                   Id = grade.GraderProgramUser.User.Id,
+                   UserDisplayName = grade.GraderProgramUser.User.Name,
+                   UserEmail = grade.GraderProgramUser.User.Email,
+                   Role = "Grader", // Default role since ProgramUser doesn't have a Role property
                  }
                  : null,
     };

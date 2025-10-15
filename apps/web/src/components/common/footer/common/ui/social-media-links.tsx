@@ -25,13 +25,13 @@ const SocialLink = ({ href, icon: Icon, label, hoverColor, iconHover }: SocialLi
       target={shouldShowGitHubModal ? undefined : '_blank'}
       rel={shouldShowGitHubModal ? undefined : 'noopener noreferrer'}
       aria-label={label} 
-      className={`group p-3 bg-gradient-to-br from-slate-800/50 to-slate-700/50 rounded-lg border border-slate-600/50 transition-all duration-300 hover:shadow-lg ${hoverColor}`}
+      className={`group p-3 bg-gradient-to-br from-slate-200/80 to-slate-300/80 dark:from-slate-800/50 dark:to-slate-700/50 rounded-lg border border-slate-400/50 dark:border-slate-600/50 transition-all duration-300 hover:shadow-lg ${hoverColor}`}
       {...(shouldShowGitHubModal && {
         'data-github-issue': 'true',
         'data-route': '/footer'
       })}
     >
-      <Icon className={`w-5 h-5 text-slate-400 transition-colors ${iconHover}`} />
+      <Icon className={`w-5 h-5 text-slate-700 dark:text-slate-400 transition-colors ${iconHover}`} />
     </a>
   );
 };

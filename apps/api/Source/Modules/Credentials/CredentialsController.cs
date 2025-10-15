@@ -2,7 +2,6 @@ using GameGuild.Modules.Credentials.Commands;
 using GameGuild.Modules.Credentials.Queries;
 using GameGuild.Modules.Users;
 using Microsoft.AspNetCore.Mvc;
-using MediatR;
 
 
 namespace GameGuild.Modules.Credentials;

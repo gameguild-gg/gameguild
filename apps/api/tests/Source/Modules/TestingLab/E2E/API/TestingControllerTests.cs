@@ -24,9 +24,13 @@ namespace GameGuild.Tests.Modules.TestingLab.E2E.API;
 /// </summary>
 public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, IDisposable {
   private readonly TestWebApplicationFactory _factory;
+
   private readonly HttpClient _client;
+
   private readonly ApplicationDbContext _context;
+
   private readonly IServiceScope _scope;
+
   private readonly ITestOutputHelper _output;
 
   public TestingControllerTests(TestWebApplicationFactory factory, ITestOutputHelper output) {
@@ -61,7 +65,9 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var requests =
       JsonSerializer.Deserialize<TestingRequest[]>(
         content,
-        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        new JsonSerializerOptions {
+          PropertyNameCaseInsensitive = true
+        }
       );
 
     Assert.NotNull(requests);
@@ -86,7 +92,9 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var requests =
       JsonSerializer.Deserialize<TestingRequest[]>(
         content,
-        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        new JsonSerializerOptions {
+          PropertyNameCaseInsensitive = true
+        }
       );
 
     Assert.NotNull(requests);
@@ -174,7 +182,9 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var request =
       JsonSerializer.Deserialize<TestingRequest>(
         content,
-        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        new JsonSerializerOptions {
+          PropertyNameCaseInsensitive = true
+        }
       );
 
     Assert.NotNull(request);
@@ -217,7 +227,9 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var sessions =
       JsonSerializer.Deserialize<TestingSession[]>(
         content,
-        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        new JsonSerializerOptions {
+          PropertyNameCaseInsensitive = true
+        }
       );
 
     Assert.NotNull(sessions);
@@ -249,7 +261,9 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     var session =
       JsonSerializer.Deserialize<TestingSession>(
         content,
-        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        new JsonSerializerOptions {
+          PropertyNameCaseInsensitive = true
+        }
       );
 
     Assert.NotNull(session);
@@ -420,10 +434,16 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     using var scope = _factory.Services.CreateScope();
     var jwtService = scope.ServiceProvider.GetRequiredService<IJwtTokenService>();
 
-    var userDto = new UserDto { Id = user.Id, Username = user.Name, Email = user.Email };
+    var userDto = new UserDto {
+      Id = user.Id, Username = user.Name, Email = user.Email
+    };
 
-    var roles = new[] { "User" };
-    var additionalClaims = new[] { new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString()) };
+    var roles = new[] {
+      "User"
+    };
+    var additionalClaims = new[] {
+      new System.Security.Claims.Claim("tenant_id", tenant.Id.ToString())
+    };
 
     return Task.FromResult(jwtService.GenerateAccessToken(userDto, roles, additionalClaims));
   }
@@ -473,7 +493,12 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Assert
     response.EnsureSuccessStatusCode();
     var responseContent = await response.Content.ReadAsStringAsync();
-    var createdRequest = JsonSerializer.Deserialize<TestingRequest>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var createdRequest = JsonSerializer.Deserialize<TestingRequest>(
+      responseContent,
+      new JsonSerializerOptions {
+        PropertyNameCaseInsensitive = true
+      }
+    );
 
     Assert.NotNull(createdRequest);
     Assert.Equal(requestDto.Title, createdRequest.Title);
@@ -492,9 +517,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
 
     var requestDto = new CreateSimpleTestingRequestDto {
       // Missing required fields
-      Title = "",
-      VersionNumber = "",
-      DownloadUrl = "invalid-url",
+      Title = "", VersionNumber = "", DownloadUrl = "invalid-url",
     };
 
     var json = JsonSerializer.Serialize(requestDto);
@@ -564,7 +587,12 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Assert
     response.EnsureSuccessStatusCode();
     var responseContent = await response.Content.ReadAsStringAsync();
-    var requests = JsonSerializer.Deserialize<TestingRequest[]>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var requests = JsonSerializer.Deserialize<TestingRequest[]>(
+      responseContent,
+      new JsonSerializerOptions {
+        PropertyNameCaseInsensitive = true
+      }
+    );
 
     Assert.NotNull(requests);
     Assert.Contains(requests, r => r.Id == activeRequest.Id);
@@ -591,7 +619,12 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Assert
     response.EnsureSuccessStatusCode();
     var responseContent = await response.Content.ReadAsStringAsync();
-    var requests = JsonSerializer.Deserialize<TestingRequest[]>(responseContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+    var requests = JsonSerializer.Deserialize<TestingRequest[]>(
+      responseContent,
+      new JsonSerializerOptions {
+        PropertyNameCaseInsensitive = true
+      }
+    );
 
     Assert.NotNull(requests);
     Assert.Contains(requests, r => r.Id == userRequest.Id);
@@ -646,8 +679,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     SetAuthorizationHeader(token);
 
     var attendanceDto = new UpdateAttendanceDto {
-      UserId = user.Id,
-      AttendanceStatus = AttendanceStatus.Completed,
+      UserId = user.Id, AttendanceStatus = AttendanceStatus.Completed,
     };
 
     var json = JsonSerializer.Serialize(attendanceDto);
@@ -698,7 +730,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Detach the entity to ensure we get fresh data from the database
     _context.Entry(feedback).State = EntityState.Detached;
     var updatedFeedback = await _context.TestingFeedback
-        .FirstOrDefaultAsync(f => f.Id == feedback.Id);
+                                        .FirstOrDefaultAsync(f => f.Id == feedback.Id);
     Assert.NotNull(updatedFeedback);
     Assert.True(updatedFeedback.IsReported);
     Assert.Equal(reportDto.Reason, updatedFeedback.ReportReason);
@@ -743,7 +775,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
     // Detach the entity to ensure we get fresh data from the database
     _context.Entry(feedback).State = EntityState.Detached;
     var updatedFeedback = await _context.TestingFeedback
-        .FirstOrDefaultAsync(f => f.Id == feedback.Id);
+                                        .FirstOrDefaultAsync(f => f.Id == feedback.Id);
     Assert.NotNull(updatedFeedback);
     Assert.Equal(FeedbackQuality.Positive, updatedFeedback.QualityRating);
   }
@@ -843,10 +875,7 @@ public class TestingControllerTests : IClassFixture<TestWebApplicationFactory>, 
   private async Task<TestingFeedback> SeedTestingFeedbackAsync(ApplicationDbContext context, TestingRequest testingRequest, UserModel user) {
     // Create a feedback form first
     var feedbackForm = new TestingFeedbackForm {
-      Id = Guid.NewGuid(),
-      TestingRequestId = testingRequest.Id,
-      FormSchema = "{}",
-      CreatedAt = DateTime.UtcNow,
+      Id = Guid.NewGuid(), TestingRequestId = testingRequest.Id, FormSchema = "{}", CreatedAt = DateTime.UtcNow,
     };
 
     context.TestingFeedbackForms.Add(feedbackForm);

@@ -1,7 +1,5 @@
 using GameGuild.Database;
 using GameGuild.Modules.Credentials.Queries;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Credentials.Handlers;

@@ -1,6 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Modules.UserProfiles.Inputs;
-using MediatR;
 
 
 namespace GameGuild.Modules.UserProfiles;

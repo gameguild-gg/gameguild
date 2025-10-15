@@ -1,7 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Certificates;
@@ -15,9 +12,9 @@ namespace GameGuild.Modules.Certificates;
 public class CertificateBlockchainAnchor : Entity {
   public Guid CertificateId { get; set; }
 
-  [Required] [MaxLength(100)] public string BlockchainNetwork { get; set; } = string.Empty;
+  [Required][MaxLength(100)] public string BlockchainNetwork { get; set; } = string.Empty;
 
-  [Required] [MaxLength(200)] public string TransactionHash { get; set; } = string.Empty;
+  [Required][MaxLength(200)] public string TransactionHash { get; set; } = string.Empty;
 
   [MaxLength(200)] public string? BlockHash { get; set; }
 

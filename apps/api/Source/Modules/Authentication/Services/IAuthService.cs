@@ -4,8 +4,8 @@ namespace GameGuild.Modules.Authentication {
 
     Task<SignInResponseDto> LocalSignUpAsync(LocalSignUpRequestDto request);
 
-  // Return a full SignInResponseDto on refresh for consistency with sign-in endpoints
-  Task<SignInResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request);
+    // Return a full SignInResponseDto on refresh for consistency with sign-in endpoints
+    Task<SignInResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request);
 
     Task RevokeRefreshTokenAsync(string token, string ipAddress);
 

@@ -1,12 +1,11 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Tenants;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.Modules.Authentication {
@@ -32,7 +31,9 @@ namespace GameGuild.Modules.Authentication {
       if (passwordCredential == null || !VerifyPassword(request.Password, passwordCredential.Value)) throw new UnauthorizedAccessException("Invalid credentials");
 
       var userDto = new UserDto {
-        Id = user.Id, Username = user.Name, Email = user.Email,
+        Id = user.Id,
+        Username = user.Name,
+        Email = user.Email,
       };
       var roles = new[] {
         "User",
@@ -46,7 +47,7 @@ namespace GameGuild.Modules.Authentication {
       var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
       var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
       var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
-      
+
       var refreshTokenEntity = new RefreshToken {
         UserId = user.Id,
         Token = refreshToken,
@@ -59,8 +60,8 @@ namespace GameGuild.Modules.Authentication {
       await context.SaveChangesAsync();
 
       var response = new SignInResponseDto {
-        AccessToken = accessToken, 
-        RefreshToken = refreshToken, 
+        AccessToken = accessToken,
+        RefreshToken = refreshToken,
         ExpiresAt = refreshTokenExpiresAt, // backward compatible
         AccessTokenExpiresAt = accessTokenExpiresAt,
         RefreshTokenExpiresAt = refreshTokenExpiresAt,
@@ -81,7 +82,10 @@ namespace GameGuild.Modules.Authentication {
       if (await context.Users.AnyAsync(u => u.Email == request.Email)) throw new InvalidOperationException("User already exists");
 
       var user = new User {
-        Name = request.Username ?? request.Email, Email = request.Email, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow,
+        Name = request.Username ?? request.Email,
+        Email = request.Email,
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow,
       };
       context.Users.Add(user);
       await context.SaveChangesAsync();
@@ -110,7 +114,9 @@ namespace GameGuild.Modules.Authentication {
       }
 
       var userDto = new UserDto {
-        Id = user.Id, Username = user.Name, Email = user.Email,
+        Id = user.Id,
+        Username = user.Name,
+        Email = user.Email,
       };
       var roles = new[] {
         "User",
@@ -124,7 +130,7 @@ namespace GameGuild.Modules.Authentication {
       var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
       var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
       var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
-      
+
       var refreshTokenEntity = new RefreshToken {
         UserId = user.Id,
         Token = refreshToken,
@@ -137,8 +143,8 @@ namespace GameGuild.Modules.Authentication {
       await context.SaveChangesAsync();
 
       var response = new SignInResponseDto {
-        AccessToken = accessToken, 
-        RefreshToken = refreshToken, 
+        AccessToken = accessToken,
+        RefreshToken = refreshToken,
         ExpiresAt = refreshTokenExpiresAt,
         AccessTokenExpiresAt = accessTokenExpiresAt,
         RefreshTokenExpiresAt = refreshTokenExpiresAt,
@@ -181,7 +187,7 @@ namespace GameGuild.Modules.Authentication {
             throw new UnauthorizedAccessException("Invalid refresh token");
           }
 
-            // If already rotated by another request: return replacement if still active
+          // If already rotated by another request: return replacement if still active
           if (existing.IsRevoked && existing.ReplacedByToken is not null) {
             var replacement = await context.RefreshTokens
               .FirstOrDefaultAsync(rt => rt.Token == existing.ReplacedByToken);
@@ -224,7 +230,8 @@ namespace GameGuild.Modules.Authentication {
             var permittedTenants = await tenantAuthService.GetUserTenantsAsync(user);
             if (permittedTenants.Any(t => t.TenantId.HasValue && t.TenantId.Value == tenantId.Value)) {
               tenantClaims = await tenantAuthService.GetTenantClaimsAsync(user, tenantId.Value);
-            } else {
+            }
+            else {
               tenantId = null; // ignore inaccessible tenant
             }
           }
@@ -320,7 +327,9 @@ namespace GameGuild.Modules.Authentication {
 
       // Generate tokens
       var userDto = new UserDto {
-        Id = user.Id, Username = user.Name, Email = user.Email,
+        Id = user.Id,
+        Username = user.Name,
+        Email = user.Email,
       };
       var roles = new[] {
         "User",
@@ -333,7 +342,9 @@ namespace GameGuild.Modules.Authentication {
 
       // Create initial response
       var response = new SignInResponseDto {
-        AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto,
+        AccessToken = jwtToken,
+        RefreshToken = refreshToken,
+        User = userDto,
       };
 
       // Enhance with tenant data
@@ -353,7 +364,9 @@ namespace GameGuild.Modules.Authentication {
 
       // Generate tokens
       var userDto = new UserDto {
-        Id = user.Id, Username = user.Name, Email = user.Email,
+        Id = user.Id,
+        Username = user.Name,
+        Email = user.Email,
       };
       var roles = new[] {
         "User",
@@ -366,7 +379,9 @@ namespace GameGuild.Modules.Authentication {
 
       // Create initial response
       var response = new SignInResponseDto {
-        AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto,
+        AccessToken = jwtToken,
+        RefreshToken = refreshToken,
+        User = userDto,
       };
 
       // Enhance with tenant data
@@ -390,7 +405,9 @@ namespace GameGuild.Modules.Authentication {
 
         // Generate tokens
         var userDto = new UserDto {
-          Id = user.Id, Username = user.Name, Email = user.Email,
+          Id = user.Id,
+          Username = user.Name,
+          Email = user.Email,
         };
         var roles = new[] {
           "User",
@@ -399,15 +416,15 @@ namespace GameGuild.Modules.Authentication {
         var refreshToken = jwtTokenService.GenerateRefreshToken();
 
         // Save refresh token
-  var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
-  var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
-  var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
-  var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
-        
+        var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
+        var refreshTokenExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpiryDays);
+        var accessTokenExpiryMinutes = int.Parse(configuration["Jwt:ExpiryInMinutes"] ?? "60");
+        var accessTokenExpiresAt = DateTime.UtcNow.AddMinutes(accessTokenExpiryMinutes);
+
         var refreshTokenEntity = new RefreshToken {
           UserId = user.Id,
           Token = refreshToken,
-            ExpiresAt = refreshTokenExpiresAt,
+          ExpiresAt = refreshTokenExpiresAt,
           IsRevoked = false,
           CreatedByIp = "0.0.0.0",
         };
@@ -416,8 +433,8 @@ namespace GameGuild.Modules.Authentication {
         await context.SaveChangesAsync();
 
         var response = new SignInResponseDto {
-          AccessToken = jwtToken, 
-          RefreshToken = refreshToken, 
+          AccessToken = jwtToken,
+          RefreshToken = refreshToken,
           ExpiresAt = refreshTokenExpiresAt,
           AccessTokenExpiresAt = accessTokenExpiresAt,
           RefreshTokenExpiresAt = refreshTokenExpiresAt,
@@ -475,10 +492,20 @@ namespace GameGuild.Modules.Authentication {
       bool isNewUser = false;
 
       if (user == null) {
+        // Generate unique username from name using slugify (same as CreateUserHandler)
+        var baseUsername = name.ToSlugCase();
+        var existingUsernames = await context.Users
+                                             .Where(u => u.Username.StartsWith(baseUsername))
+                                             .Select(u => u.Username)
+                                             .ToListAsync();
+
+        var uniqueUsername = SlugCase.GenerateUnique(name, existingUsernames, 50);
+
         // Create new user
         user = new User {
           Id = Guid.NewGuid(),
           Name = name,
+          Username = uniqueUsername,
           Email = email,
           CreatedAt = DateTime.UtcNow,
           UpdatedAt = DateTime.UtcNow,
@@ -496,7 +523,8 @@ namespace GameGuild.Modules.Authentication {
         var metadata =
           System.Text.Json.JsonSerializer.Serialize(
             new {
-              ProviderId = providerId, Provider = provider,
+              ProviderId = providerId,
+              Provider = provider,
             }
           );
 
@@ -548,7 +576,9 @@ namespace GameGuild.Modules.Authentication {
 
       // Generate tokens
       var userDto = new UserDto {
-        Id = user.Id, Username = user.Name, Email = user.Email,
+        Id = user.Id,
+        Username = user.Name,
+        Email = user.Email,
       };
       var roles = new[] {
         "User",
@@ -561,7 +591,9 @@ namespace GameGuild.Modules.Authentication {
 
       // Create initial response
       var response = new SignInResponseDto {
-        AccessToken = jwtToken, RefreshToken = refreshToken, User = userDto,
+        AccessToken = jwtToken,
+        RefreshToken = refreshToken,
+        User = userDto,
       };
 
       // Enhance with tenant data
@@ -583,7 +615,8 @@ namespace GameGuild.Modules.Authentication {
 
         if (user == null) {
           return new EmailOperationResponseDto {
-            Success = false, Message = "User not found",
+            Success = false,
+            Message = "User not found",
           };
         }
 
@@ -591,7 +624,8 @@ namespace GameGuild.Modules.Authentication {
 
         if (passwordCredential == null) {
           return new EmailOperationResponseDto {
-            Success = false, Message = "No password set for this account",
+            Success = false,
+            Message = "No password set for this account",
           };
         }
 
@@ -600,7 +634,8 @@ namespace GameGuild.Modules.Authentication {
 
         if (passwordCredential.Value != hashedCurrentPassword) {
           return new EmailOperationResponseDto {
-            Success = false, Message = "Current password is incorrect",
+            Success = false,
+            Message = "Current password is incorrect",
           };
         }
 
@@ -612,12 +647,14 @@ namespace GameGuild.Modules.Authentication {
         await context.SaveChangesAsync();
 
         return new EmailOperationResponseDto {
-          Success = true, Message = "Password changed successfully",
+          Success = true,
+          Message = "Password changed successfully",
         };
       }
       catch (Exception) {
         return new EmailOperationResponseDto {
-          Success = false, Message = "Failed to change password",
+          Success = false,
+          Message = "Failed to change password",
         };
       }
     }

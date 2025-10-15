@@ -20,9 +20,11 @@ const sidebarItems = [
   },
   {
     title: 'Testing Sessions',
-    href: '/dashboard/testing-lab/sessions',
+    href: '#',
     icon: Calendar,
     description: 'View and join testing sessions',
+    isGitHubIssue: true,
+    route: '/dashboard/testing-lab/sessions',
   },
   {
     title: 'Feedback',
@@ -67,16 +69,31 @@ export function TestingLabSidebar() {
 
             return (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground', isActive ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground')}
-                >
-                  <Icon className="h-4 w-4" />
-                  <div className="flex-1">
-                    <div>{item.title}</div>
-                    <div className="text-xs text-muted-foreground line-clamp-1">{item.description}</div>
-                  </div>
-                </Link>
+                {(item as any).isGitHubIssue ? (
+                  <a
+                    href={item.href}
+                    data-github-issue="true"
+                    data-route={(item as any).route}
+                    className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground', isActive ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground')}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <div className="flex-1">
+                      <div>{item.title}</div>
+                      <div className="text-xs text-muted-foreground line-clamp-1">{item.description}</div>
+                    </div>
+                  </a>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground', isActive ? 'bg-accent text-accent-foreground font-medium' : 'text-muted-foreground')}
+                  >
+                    <Icon className="h-4 w-4" />
+                    <div className="flex-1">
+                      <div>{item.title}</div>
+                      <div className="text-xs text-muted-foreground line-clamp-1">{item.description}</div>
+                    </div>
+                  </Link>
+                )}
               </li>
             );
           })}

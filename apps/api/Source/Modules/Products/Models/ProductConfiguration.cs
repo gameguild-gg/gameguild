@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Products;
+﻿namespace GameGuild.Modules.Products;
 
 /// <summary>
 /// Entity Framework configuration for Product entity
@@ -10,7 +6,7 @@ namespace GameGuild.Modules.Products;
 internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product> {
   public void Configure(EntityTypeBuilder<Product> builder) {
     ArgumentNullException.ThrowIfNull(builder);
-    
+
     // Configure the relationship with User as optional to avoid query filter warnings
     builder.HasOne(p => p.Creator)
            .WithMany()

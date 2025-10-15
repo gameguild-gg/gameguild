@@ -195,7 +195,6 @@ export function useUserDetail(identifierType: UserIdentifierType, identifier: st
   const fetchUserById = async (userId: string): Promise<UserDetail> => {
     const userData = await getUserById({
       path: { id: userId },
-      url: '/api/users/{id}'
     });
     
     if (!userData) {

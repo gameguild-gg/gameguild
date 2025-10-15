@@ -9,7 +9,6 @@ using GameGuild.Modules.Programs;
 using GameGuild.Modules.Projects;
 using GameGuild.Modules.TestingLab;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Common;
@@ -34,16 +33,16 @@ public class DatabaseSeeder(
       await SeedGlobalProjectDefaultPermissionsAsync();
       await SeedTenantDomainDefaultPermissionsAsync();
       await SeedTestingLabDefaultPermissionsAsync();
-      
+
       // Seed module-based permission roles
       await modulePermissionService.EnsureDefaultRolesExistAsync();
-      
+
       // Check if mock data seeding should be skipped (e.g., during tests)
       var skipMockData = Environment.GetEnvironmentVariable("SKIP_MOCK_DATA_SEEDING") == "true";
-      
+
       // Fix existing projects without slugs
       await FixProjectsWithoutSlugsAsync();
-      
+
       if (!skipMockData) {
         await SeedSampleCoursesAsync();
         await SeedSampleTracksAsync();
@@ -152,7 +151,7 @@ public class DatabaseSeeder(
     var testingLabResourceTypes = new[] { "TestingSession", "TestingRequest", "TestingFeedback", "SessionRegistration" };
 
     foreach (var resourceType in testingLabResourceTypes) {
-      var permissions = new[] { 
+      var permissions = new[] {
         PermissionType.Read,    // Allow users to view testing sessions and requests
         PermissionType.Create,  // Allow users to create testing requests
         PermissionType.Edit,    // Allow users to edit their own testing content
@@ -1070,6 +1069,7 @@ public class DatabaseSeeder(
     var mockUsers = new[] {
       new User {
         Name = "Alice Johnson",
+        Username = "alice-johnson",
         Email = "alice.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1077,6 +1077,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "Bob Smith",
+        Username = "bob-smith",
         Email = "bob.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1084,6 +1085,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "Carol Williams",
+        Username = "carol-williams",
         Email = "carol.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1091,6 +1093,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "David Brown",
+        Username = "david-brown",
         Email = "david.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1098,6 +1101,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "Eva Garcia",
+        Username = "eva-garcia",
         Email = "eva.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1105,6 +1109,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "Frank Miller",
+        Username = "frank-miller",
         Email = "frank.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1272,7 +1277,7 @@ public class DatabaseSeeder(
     foreach (var project in projectsWithoutSlugs) {
       // Generate slug from title
       var baseSlug = project.Title.ToSlugCase();
-      
+
       // Ensure slug is unique
       var existingSlugCount = await context.Set<Project>()
                                            .Where(p => p.Slug.StartsWith(baseSlug) && p.DeletedAt == null && p.Id != project.Id)
@@ -1466,7 +1471,7 @@ public class DatabaseSeeder(
                                  .ToListAsync();
 
     if (testingRequests.Count == 0 || testingLocations.Count == 0 || mockUsers.Count == 0) {
-      logger.LogWarning("Insufficient data to create testing sessions (requests: {RequestCount}, locations: {LocationCount}, users: {UserCount})", 
+      logger.LogWarning("Insufficient data to create testing sessions (requests: {RequestCount}, locations: {LocationCount}, users: {UserCount})",
                        testingRequests.Count, testingLocations.Count, mockUsers.Count);
       return;
     }
@@ -1477,7 +1482,7 @@ public class DatabaseSeeder(
     // Create sessions for the next 2 weeks
     for (int day = 1; day <= 14; day++) {
       var sessionDate = baseDate.AddDays(day);
-      
+
       // Skip weekends for some variety
       if (sessionDate.DayOfWeek == DayOfWeek.Saturday || sessionDate.DayOfWeek == DayOfWeek.Sunday) {
         continue;
@@ -1485,7 +1490,7 @@ public class DatabaseSeeder(
 
       // Create 1-3 sessions per day
       var sessionsPerDay = new Random().Next(1, 4);
-      
+
       for (int session = 0; session < sessionsPerDay; session++) {
         var startHour = 9 + (session * 4); // 9 AM, 1 PM, 5 PM
         var sessionStart = sessionDate.Date.AddHours(startHour);

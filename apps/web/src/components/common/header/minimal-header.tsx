@@ -3,11 +3,20 @@ import React from 'react';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ThemeToggle } from '@/components/theme';
 import { UserProfile } from '@/components/common/header/common/ui/user-profile';
+import { auth } from '@/auth';
+import { getCurrentUserProfile } from '@/lib/user-profile/user-profile.actions';
 
 type MinimalHeaderProps = React.HTMLAttributes<HTMLElement>;
 
 // A minimal header: dashboard-style layout + glassmorphism from default header + the shared UserProfile menu
 export const MinimalHeader = async ({ className = '', ...props }: Readonly<MinimalHeaderProps>): Promise<React.JSX.Element> => {
+  const session = await auth();
+  let userProfile = null;
+  
+  if (session?.user?.id) {
+    const userProfileResult = await getCurrentUserProfile();
+    userProfile = userProfileResult.success ? userProfileResult.data : null;
+  }
   return (
     <header
       className={
@@ -29,7 +38,7 @@ export const MinimalHeader = async ({ className = '', ...props }: Readonly<Minim
         <div className="flex items-center gap-3">
           <ThemeToggle />
           {/* UserProfile is a server component that renders Sign In or the profile menu */}
-          <UserProfile />
+          <UserProfile session={session} userProfile={userProfile} />
         </div>
       </div>
 
