@@ -11,10 +11,10 @@ import { usePathname, useSearchParams } from 'next/navigation';
  * when the user has consented to analytics cookies
  */
 export function ConditionalAnalytics() {
-  const { isCategoryEnabled, hasConsented } = useCookies();
+  const { isCategoryEnabled, consentState } = useCookies();
 
   // Only render analytics if user has consented and analytics cookies are enabled
-  const shouldLoadAnalytics = hasConsented && isCategoryEnabled('analytics');
+  const shouldLoadAnalytics = consentState === 'accepted' && isCategoryEnabled('analytics');
 
   useEffect(() => {
     // Handle dynamic script loading/unloading based on consent changes
