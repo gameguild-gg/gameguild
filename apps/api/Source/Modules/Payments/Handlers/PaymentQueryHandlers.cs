@@ -1,7 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 using IUserContext = GameGuild.Common.IUserContext;
 
 
@@ -243,17 +241,17 @@ public class GetRevenueReportQueryHandler : IRequestHandler<GetRevenueReportQuer
 
     return groupedPayments
            .Select(g => {
-               var revenue = g.Sum(p => p.Amount);
-               var refunded = g.Sum(p => refundsByPayment.GetValueOrDefault(p.Id, 0));
+             var revenue = g.Sum(p => p.Amount);
+             var refunded = g.Sum(p => refundsByPayment.GetValueOrDefault(p.Id, 0));
 
-               return new RevenueDataPoint {
-                 Date = g.Key,
-                 Revenue = revenue,
-                 NetRevenue = revenue - refunded,
-                 TransactionCount = g.Count(),
-                 AverageTransactionValue = g.Average(p => p.Amount),
-               };
-             }
+             return new RevenueDataPoint {
+               Date = g.Key,
+               Revenue = revenue,
+               NetRevenue = revenue - refunded,
+               TransactionCount = g.Count(),
+               AverageTransactionValue = g.Average(p => p.Amount),
+             };
+           }
            )
            .OrderBy(dp => dp.Date);
   }

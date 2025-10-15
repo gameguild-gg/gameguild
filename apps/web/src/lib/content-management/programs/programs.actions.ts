@@ -128,7 +128,7 @@ export async function getPrograms(data?: GetApiProgramData) {
 /**
  * Create a new program
  */
-export async function createProgram(data?: PostApiProgramData) {
+export async function createProgram(data?: Omit<PostApiProgramData, 'url'>) {
   try {
     console.log('createProgram called with data:', data?.body);
 
@@ -248,7 +248,7 @@ export async function deleteProgram(data: DeleteApiProgramByIdData) {
 /**
  * Get a specific program by ID
  */
-export async function getProgramById(data: GetApiProgramByIdData) {
+export async function getProgramById(data: Omit<GetApiProgramByIdData, 'url'>) {
   await configureAuthenticatedClient();
 
   return getApiProgramById({
@@ -259,7 +259,7 @@ export async function getProgramById(data: GetApiProgramByIdData) {
 /**
  * Update a program by ID
  */
-export async function updateProgram(data: PutApiProgramByIdData) {
+export async function updateProgram(data: Omit<PutApiProgramByIdData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await putApiProgramById({
@@ -276,7 +276,7 @@ export async function updateProgram(data: PutApiProgramByIdData) {
 /**
  * Get a program with its content
  */
-export async function getProgramWithContent(data: GetApiProgramByIdWithContentData) {
+export async function getProgramWithContent(data: Omit<GetApiProgramByIdWithContentData, 'url'>) {
   await configureAuthenticatedClient();
 
   return getApiProgramByIdWithContent({
@@ -329,7 +329,7 @@ export async function searchPrograms(data?: GetApiProgramSearchData) {
 /**
  * Get program by slug
  */
-export async function getProgramBySlug(data: GetApiProgramSlugBySlugData) {
+export async function getProgramBySlug(data: Omit<GetApiProgramSlugBySlugData, 'url'>) {
   await configureAuthenticatedClient();
 
   return getApiProgramSlugBySlug({
@@ -399,7 +399,7 @@ export async function getRecentPrograms(data?: GetApiProgramRecentData) {
 /**
  * Create program content
  */
-export async function createProgramContent(data: PostApiProgramByIdContentData) {
+export async function createProgramContent(data: Omit<PostApiProgramByIdContentData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await postApiProgramByIdContent({
@@ -416,7 +416,7 @@ export async function createProgramContent(data: PostApiProgramByIdContentData) 
 /**
  * Delete program content
  */
-export async function deleteProgramContent(data: DeleteApiProgramByIdContentByContentIdData) {
+export async function deleteProgramContent(data: Omit<DeleteApiProgramByIdContentByContentIdData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await deleteApiProgramByIdContentByContentId({
@@ -449,7 +449,7 @@ export async function updateProgramContent(data: PutApiProgramByIdContentByConte
 /**
  * Reorder program content
  */
-export async function reorderProgramContent(data: PostApiProgramByIdContentReorderData) {
+export async function reorderProgramContent(data: Omit<PostApiProgramByIdContentReorderData, 'url'>) {
   await configureAuthenticatedClient();
 
   const result = await postApiProgramByIdContentReorder({
@@ -477,7 +477,7 @@ export async function getProgramContent(data: GetApiProgramsByProgramIdContentDa
 /**
  * Get top-level program content
  */
-export async function getTopLevelProgramContent(data: GetApiProgramsByProgramIdContentTopLevelData) {
+export async function getTopLevelProgramContent(data: Omit<GetApiProgramsByProgramIdContentTopLevelData, 'url'>) {
   await configureAuthenticatedClient();
 
   return getApiProgramsByProgramIdContentTopLevel({
@@ -499,7 +499,7 @@ export async function getProgramContentById(data: GetApiProgramsByProgramIdConte
 /**
  * Get program content children
  */
-export async function getProgramContentChildren(data: GetApiProgramsByProgramIdContentByParentIdChildrenData) {
+export async function getProgramContentChildren(data: Omit<GetApiProgramsByProgramIdContentByParentIdChildrenData, 'url'>) {
   await configureAuthenticatedClient();
 
   return getApiProgramsByProgramIdContentByParentIdChildren({

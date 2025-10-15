@@ -1,4 +1,3 @@
-using MediatR;
 using Microsoft.Extensions.Caching.Memory;
 
 

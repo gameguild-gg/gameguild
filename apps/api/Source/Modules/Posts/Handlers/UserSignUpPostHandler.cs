@@ -1,4 +1,3 @@
-using MediatR;
 using GameGuild.Modules.Authentication;
 using GameGuild.Modules.Contents;
 

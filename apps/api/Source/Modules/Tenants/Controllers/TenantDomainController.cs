@@ -181,12 +181,12 @@ public class TenantDomainController(ITenantDomainService tenantDomainService) : 
   public async Task<ActionResult<IEnumerable<TenantUserGroupMembershipDto>>> GetUserMemberships(Guid userId) {
     var memberships = await tenantDomainService.GetUserGroupMembershipsAsync(userId);
     var dtos = memberships.Select(m => new TenantUserGroupMembershipDto {
-        Id = m.Id,
-        UserId = m.UserId,
-        GroupId = m.UserGroupId,
-        IsAutoAssigned = m.IsAutoAssigned,
-        CreatedAt = m.CreatedAt,
-      }
+      Id = m.Id,
+      UserId = m.UserId,
+      GroupId = m.UserGroupId,
+      IsAutoAssigned = m.IsAutoAssigned,
+      CreatedAt = m.CreatedAt,
+    }
     );
 
     return Ok(dtos);

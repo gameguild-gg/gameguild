@@ -32,7 +32,14 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
         primaryBorderColor: '#333',
         lineColor: '#333',
         secondaryColor: '#f0f0f0',
-        tertiaryColor: '#fff',
+        tertiaryColor: '#ffffff',
+        background: '#ffffff',
+        primaryColor: '#ffffff',
+        backgroundSecondary: '#ffffff',
+        backgroundTertiary: '#ffffff',
+        mainBkg: '#ffffff',
+        secondBkg: '#f0f0f0',
+        tertiaryBkg: '#ffffff',
       }
     });
 
@@ -147,7 +154,10 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
         justifyContent: 'center',
         alignItems: 'center',
         width: 'auto',
-        maxWidth: '100%'
+        maxWidth: '100%',
+        backgroundColor: '#ffffff',
+        borderRadius: '0.5rem',
+        padding: '1rem'
       }}
     />
   );

@@ -1,13 +1,9 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
 namespace GameGuild.Modules.Projects;
 
 internal sealed class ProjectFeedbackConfiguration : IEntityTypeConfiguration<ProjectFeedback> {
   public void Configure(EntityTypeBuilder<ProjectFeedback> builder) {
     ArgumentNullException.ThrowIfNull(builder);
-    
+
     // Configure the relationship with User as optional to avoid query filter warnings
     builder.HasOne(pf => pf.User)
            .WithMany()
@@ -30,10 +26,10 @@ internal sealed class ProjectFeedbackConfiguration : IEntityTypeConfiguration<Pr
     // Additional indexes
     builder.HasIndex(pf => new { pf.ProjectId, pf.Rating })
            .HasDatabaseName("IX_ProjectFeedbacks_Project_Rating");
-           
+
     builder.HasIndex(pf => pf.UserId)
            .HasDatabaseName("IX_ProjectFeedbacks_User");
-           
+
     builder.HasIndex(pf => pf.CreatedAt)
            .HasDatabaseName("IX_ProjectFeedbacks_Date");
 

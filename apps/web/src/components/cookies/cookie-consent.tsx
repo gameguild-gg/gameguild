@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { CookieIcon, Settings, X } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+// Removed unused icons
+// import { CookieIcon, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCookies } from '@/hooks/use-cookies';
 import { CookiePreferences } from './cookie-preferences';
@@ -12,19 +13,32 @@ type CookieConsentProps = {
   compactMode?: boolean;
 };
 
-export const CookieConsent = ({ className = '', showPreferencesButton = true, compactMode = false }: Readonly<CookieConsentProps>): React.JSX.Element | null => {
-  const { hasConsented, acceptAll, acceptEssential, isLoading } = useCookies();
+export const CookieConsent = ({ className = '', showPreferencesButton = false, compactMode = false }: Readonly<CookieConsentProps>): React.JSX.Element | null => {
+  const { hasConsented, hasDeclined, acceptAll, acceptEssential, decline, isLoading, consentState } = useCookies();
   const [visible, setVisible] = useState(false);
-  const [showPreferences, setShowPreferences] = useState(false);
+
+  // Typing animation state
+  const terminalLines = useMemo(
+    () => [
+      'Our site uses cookies like power-ups: some are essential to keep the game running, others help us track stats and improve your experience.',
+      'Choose your loadout below or accept all to start playing. You can change settings anytime.',
+    ],
+    [],
+  );
+  const [typedText, setTypedText] = useState<string>('');
+  // Use refs to avoid stale closures in setInterval
+  const lineIndexRef = useRef<number>(0);
+  const charIndexRef = useRef<number>(0);
+  const typingIntervalRef = useRef<number | null>(null);
 
   useEffect(() => {
-    // Only show consent banner if user hasn't consented and we're not loading
-    if (!isLoading && !hasConsented) {
+    // Show modal only when tri-state is not answered
+    if (!isLoading && consentState === 'not_answered') {
       setVisible(true);
     } else {
       setVisible(false);
     }
-  }, [hasConsented, isLoading]);
+  }, [consentState, isLoading]);
 
   const handleAcceptAll = () => {
     acceptAll();
@@ -36,98 +50,106 @@ export const CookieConsent = ({ className = '', showPreferencesButton = true, co
     setVisible(false);
   };
 
-  const handleShowPreferences = () => {
-    setShowPreferences(true);
+  const handleDecline = () => {
+    decline();
+    setVisible(false);
   };
 
-  const handleClosePreferences = () => {
-    setShowPreferences(false);
-    // Check if user has consented after closing preferences
-    if (hasConsented) {
-      setVisible(false);
-    }
-  };
+  // Keyboard shortcuts: Enter = Accept ALL, Esc = Deny
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!visible) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAcceptAll();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleDecline();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [visible]);
 
-  // Don't render anything while loading or if consent has been given
+  // Fast typing animation (4x speed)
+  useEffect(() => {
+    if (!visible) return;
+
+    // Reset typing state when modal becomes visible
+    setTypedText('');
+    lineIndexRef.current = 0;
+    charIndexRef.current = 0;
+
+    const CHUNK = 4; // 4x characters per tick
+
+    const startTyping = () => {
+      if (typingIntervalRef.current) {
+        window.clearInterval(typingIntervalRef.current);
+      }
+      typingIntervalRef.current = window.setInterval(() => {
+        const line = terminalLines[lineIndexRef.current] || '';
+        if (charIndexRef.current < line.length) {
+          const start = charIndexRef.current;
+          const end = Math.min(start + CHUNK, line.length);
+          setTypedText((prev) => prev + line.slice(start, end));
+          charIndexRef.current = end;
+        } else {
+          // Move to next line
+          const nextIndex = lineIndexRef.current + 1;
+          if (nextIndex < terminalLines.length) {
+            setTypedText((prev) => prev + '\n');
+            lineIndexRef.current = nextIndex;
+            charIndexRef.current = 0;
+          } else {
+            // Completed typing all lines
+            if (typingIntervalRef.current) {
+              window.clearInterval(typingIntervalRef.current);
+              typingIntervalRef.current = null;
+            }
+          }
+        }
+      }, 15); // base interval, chunking makes it ~4x faster
+    };
+
+    startTyping();
+
+    return () => {
+      if (typingIntervalRef.current) {
+        window.clearInterval(typingIntervalRef.current);
+        typingIntervalRef.current = null;
+      }
+    };
+    // We intentionally omit dependencies to restart only on visibility change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
+  // Don't render anything while loading or if consent/decline already given
   if (isLoading || !visible) {
     return null;
   }
 
-  // Show preferences modal
-  if (showPreferences) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-        <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg bg-white shadow-xl">
-          <button onClick={handleClosePreferences} className="absolute right-4 top-4 z-10 rounded-full p-2 hover:bg-gray-100" aria-label="Close preferences">
-            <X className="h-4 w-4" />
-          </button>
-          <CookiePreferences onSave={handleClosePreferences} />
-        </div>
-      </div>
-    );
-  }
-
-  // Compact mode for smaller screens or embedded contexts
-  if (compactMode) {
-    return (
-      <aside className={`fixed inset-x-0 bottom-0 z-50 bg-gray-950 text-white p-4 ${className}`}>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-start gap-3">
-            <CookieIcon className="h-6 w-6 flex-shrink-0 mt-0.5" />
-            <div className="flex-1 text-sm">
-              <p>We use cookies to enhance your experience. Choose your preferences or accept all.</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={handleAcceptAll} size="sm" className="bg-white text-gray-950 hover:bg-gray-100">
-              Accept All
-            </Button>
-            <Button onClick={handleAcceptEssential} variant="outline" size="sm" className="border-white text-white hover:bg-white hover:text-gray-950">
-              Essential Only
-            </Button>
-            {showPreferencesButton && (
-              <Button onClick={handleShowPreferences} variant="ghost" size="sm" className="text-white hover:bg-gray-800">
-                <Settings className="h-4 w-4 mr-1" />
-                Preferences
-              </Button>
-            )}
-          </div>
-        </div>
-      </aside>
-    );
-  }
-
-  // Full banner mode
+  // Bottom-right anchored terminal-style modal (non-blocking)
   return (
-    <aside className={`fixed inset-x-0 bottom-0 z-50 bg-gray-950 text-white p-6 ${className}`}>
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4 lg:flex-1">
-            <CookieIcon className="h-8 w-8 flex-shrink-0" />
-            <div className="space-y-1">
-              <h4 className="font-semibold text-lg">We value your privacy</h4>
-              <p className="text-sm text-gray-300 max-w-2xl">
-                We use cookies to provide the best experience on our website. These cookies help us understand how you use our site, remember your preferences, and show you relevant content. You can choose which types of cookies to allow.
-              </p>
+    <div className={`fixed bottom-4 right-4 z-50 font-mono ${className}`}>
+      <div className="relative w-full max-w-xl rounded-lg border-2 border-emerald-500 bg-emerald-950 text-emerald-100 shadow-[0_0_30px_rgba(16,185,129,0.6)]">
+        <div className="absolute -top-4 left-6 rounded bg-emerald-500 px-3 py-1 text-xs font-bold text-emerald-950 z-10">Cookie Settings</div>
+        <div className="flex items-start gap-3 p-6 pt-10">
+          <div className="flex-1">
+            <div className="h-32 overflow-y-auto scrollbar-thin scrollbar-track-emerald-900 scrollbar-thumb-emerald-600">
+              <pre className="whitespace-pre-wrap break-all text-sm leading-relaxed min-h-full">{typedText}<span className="inline-block w-2 align-baseline" style={{ backgroundColor: 'rgb(110 231 183)', animation: 'blink 1s step-start infinite' }}></span></pre>
+            </div>
+            <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+              <Button onClick={handleAcceptAll} className="bg-emerald-400 text-emerald-950 hover:bg-emerald-300 font-bold">Accept ALL [ENTER]</Button>
+              <Button onClick={handleAcceptEssential} variant="outline" className="border-emerald-400 text-emerald-100 bg-emerald-900/40 hover:bg-emerald-800/60 hover:text-emerald-50">Essential Only</Button>
+              <Button onClick={handleDecline} variant="ghost" className="text-emerald-300 hover:text-emerald-100 hover:bg-emerald-800/40">Deny [ESC]</Button>
             </div>
           </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row lg:flex-shrink-0">
-            <Button onClick={handleAcceptAll} className="bg-white text-gray-950 hover:bg-gray-100 font-medium">
-              Accept All Cookies
-            </Button>
-            <Button onClick={handleAcceptEssential} variant="outline" className="border-white text-white hover:bg-white hover:text-gray-950">
-              Essential Only
-            </Button>
-            {showPreferencesButton && (
-              <Button onClick={handleShowPreferences} variant="ghost" className="text-white hover:bg-gray-800">
-                <Settings className="h-4 w-4 mr-2" />
-                Customize
-              </Button>
-            )}
-          </div>
         </div>
+        {/* Blinking cursor keyframes */}
+        <style jsx>{`
+          @keyframes blink { from { opacity: 1; } 50% { opacity: 0; } to { opacity: 1; } }
+        `}</style>
       </div>
-    </aside>
+    </div>
   );
 };

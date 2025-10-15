@@ -46,7 +46,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   public async Task GraphQL_GetProjects_ShouldReturnProjects() {
     // Arrange - Using health query to verify GraphQL connectivity
     // Note: Project types not registering properly, using working health query as workaround
-    
+
     var query = @"
                 query {
                   health
@@ -72,11 +72,11 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     _output.WriteLine($"GraphQL Response: {responseContent}");
 
     var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
-    
+
     // For now, just verify that GraphQL is responding (either with data or errors)
     // This confirms the GraphQL endpoint is working even if specific queries fail
     Assert.True(result.ValueKind != JsonValueKind.Undefined);
-    
+
     // The test passes if we get any GraphQL response structure (data or errors)
     var hasData = result.TryGetProperty("data", out _);
     var hasErrors = result.TryGetProperty("errors", out _);
@@ -87,7 +87,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   public async Task GraphQL_GetProjectById_ShouldReturnProject() {
     // Arrange - Using health query to verify GraphQL connectivity
     // Note: Project types not registering properly, using working health query as workaround
-    
+
     var query = @"
                 query {
                   health
@@ -113,11 +113,11 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     _output.WriteLine($"GraphQL Response: {responseContent}");
 
     var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
-    
+
     // For now, just verify that GraphQL is responding (either with data or errors)
     // This confirms the GraphQL endpoint is working even if specific queries fail
     Assert.True(result.ValueKind != JsonValueKind.Undefined);
-    
+
     // The test passes if we get any GraphQL response structure (data or errors)
     var hasData = result.TryGetProperty("data", out _);
     var hasErrors = result.TryGetProperty("errors", out _);
@@ -128,7 +128,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   public async Task GraphQL_GetProjectsByType_ShouldFilterCorrectly() {
     // Arrange - Using health query to verify GraphQL connectivity
     // Note: Project types not registering properly, using working health query as workaround
-    
+
     var query = @"
                 query {
                   health
@@ -154,11 +154,11 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     _output.WriteLine($"GraphQL Response: {responseContent}");
 
     var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
-    
+
     // For now, just verify that GraphQL is responding (either with data or errors)
     // This confirms the GraphQL endpoint is working even if specific queries fail
     Assert.True(result.ValueKind != JsonValueKind.Undefined);
-    
+
     // The test passes if we get any GraphQL response structure (data or errors)
     var hasData = result.TryGetProperty("data", out _);
     var hasErrors = result.TryGetProperty("errors", out _);
@@ -169,7 +169,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   public async Task GraphQL_CreateProject_ShouldCreateProject() {
     // Arrange - Using health query to verify GraphQL connectivity
     // Note: Project types not registering properly, using working health query as workaround
-    
+
     var query = @"
                 query {
                   health
@@ -195,11 +195,11 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     _output.WriteLine($"GraphQL Response: {responseContent}");
 
     var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
-    
+
     // For now, just verify that GraphQL is responding (either with data or errors)
     // This confirms the GraphQL endpoint is working even if specific queries fail
     Assert.True(result.ValueKind != JsonValueKind.Undefined);
-    
+
     // The test passes if we get any GraphQL response structure (data or errors)
     var hasData = result.TryGetProperty("data", out _);
     var hasErrors = result.TryGetProperty("errors", out _);
@@ -210,7 +210,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   public async Task GraphQL_UpdateProject_ShouldUpdateProject() {
     // Arrange - Using health query to verify GraphQL connectivity
     // Note: Project types not registering properly, using working health query as workaround
-    
+
     var query = @"
                 query {
                   health
@@ -236,11 +236,11 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     _output.WriteLine($"GraphQL Response: {responseContent}");
 
     var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
-    
+
     // For now, just verify that GraphQL is responding (either with data or errors)
     // This confirms the GraphQL endpoint is working even if specific queries fail
     Assert.True(result.ValueKind != JsonValueKind.Undefined);
-    
+
     // The test passes if we get any GraphQL response structure (data or errors)
     var hasData = result.TryGetProperty("data", out _);
     var hasErrors = result.TryGetProperty("errors", out _);
@@ -251,7 +251,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   public async Task GraphQL_DeleteProject_ShouldDeleteProject() {
     // Arrange - Using health query to verify GraphQL connectivity
     // Note: Project types not registering properly, using working health query as workaround
-    
+
     var query = @"
                 query {
                   health
@@ -277,11 +277,11 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     _output.WriteLine($"GraphQL Response: {responseContent}");
 
     var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
-    
+
     // For now, just verify that GraphQL is responding (either with data or errors)
     // This confirms the GraphQL endpoint is working even if specific queries fail
     Assert.True(result.ValueKind != JsonValueKind.Undefined);
-    
+
     // The test passes if we get any GraphQL response structure (data or errors)
     var hasData = result.TryGetProperty("data", out _);
     var hasErrors = result.TryGetProperty("errors", out _);
@@ -292,7 +292,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   public async Task GraphQL_SearchProjects_ShouldReturnMatchingProjects() {
     // Arrange - Using health query to verify GraphQL connectivity
     // Note: Project types not registering properly, using working health query as workaround
-    
+
     var query = @"
                 query {
                   health
@@ -318,11 +318,11 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     _output.WriteLine($"GraphQL Response: {responseContent}");
 
     var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
-    
+
     // For now, just verify that GraphQL is responding (either with data or errors)
     // This confirms the GraphQL endpoint is working even if specific queries fail
     Assert.True(result.ValueKind != JsonValueKind.Undefined);
-    
+
     // The test passes if we get any GraphQL response structure (data or errors)
     var hasData = result.TryGetProperty("data", out _);
     var hasErrors = result.TryGetProperty("errors", out _);
@@ -333,7 +333,7 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
   public async Task GraphQL_Schema_ShouldIncludeProjectTypes() {
     // Arrange - Using health query to verify GraphQL connectivity
     // Note: Project types not registering properly, using working health query as workaround
-    
+
     var query = @"
                 query {
                   health
@@ -359,11 +359,11 @@ public class ProjectGraphQLTests : IClassFixture<TestWebApplicationFactory>, IDi
     _output.WriteLine($"GraphQL Response: {responseContent}");
 
     var result = JsonSerializer.Deserialize<JsonElement>(responseContent);
-    
+
     // For now, just verify that GraphQL is responding (either with data or errors)
     // This confirms the GraphQL endpoint is working even if specific queries fail
     Assert.True(result.ValueKind != JsonValueKind.Undefined);
-    
+
     // The test passes if we get any GraphQL response structure (data or errors)
     var hasData = result.TryGetProperty("data", out _);
     var hasErrors = result.TryGetProperty("errors", out _);

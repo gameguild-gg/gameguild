@@ -1,6 +1,5 @@
 ﻿using GameGuild.Common;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.UserProfiles;
