@@ -18,6 +18,9 @@ export const COOKIE_CONSENT_KEY = 'game_guild_cookie_consent';
 export const COOKIE_PREFERENCES_KEY = 'game_guild_cookie_preferences';
 export const COOKIE_VERSION = '1.0.0';
 
+// Tri-state consent model
+export type ConsentState = 'accepted' | 'denied' | 'not_answered';
+
 // Default preferences - essential cookies are always enabled
 export const defaultPreferences: CookiePreferences = {
   essential: true,
@@ -79,8 +82,8 @@ export const saveCookiePreferences = (preferences: Partial<CookiePreferences>): 
   try {
     localStorage.setItem(COOKIE_PREFERENCES_KEY, JSON.stringify(newPreferences));
 
-    // Also update the consent flag
-    localStorage.setItem(COOKIE_CONSENT_KEY, 'true');
+    // Set consent to accepted (tri-state)
+    localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted');
 
     // Trigger custom event for other components to listen to
     if (isClient()) {
@@ -95,14 +98,27 @@ export const saveCookiePreferences = (preferences: Partial<CookiePreferences>): 
   }
 };
 
+// Get tri-state consent value (maps legacy values)
+export const getConsentState = (): ConsentState => {
+  if (!isClient()) return 'not_answered';
+  const raw = localStorage.getItem(COOKIE_CONSENT_KEY);
+  if (raw === 'accepted' || raw === 'true') return 'accepted';
+  if (raw === 'denied' || raw === 'declined') return 'denied';
+  return 'not_answered';
+};
+
 /**
  * Check if user has given consent
  */
 export const hasUserConsented = (): boolean => {
-  if (!isClient()) return false;
+  return getConsentState() === 'accepted';
+};
 
-  const consent = localStorage.getItem(COOKIE_CONSENT_KEY);
-  return consent === 'true';
+/**
+ * Check if user explicitly declined consent
+ */
+export const hasUserDeclined = (): boolean => {
+  return getConsentState() === 'denied';
 };
 
 /**
@@ -125,6 +141,37 @@ export const acceptEssentialOnly = (): void => {
     marketing: false,
     functional: false,
   });
+};
+
+/**
+ * Explicitly decline non-essential cookies and mark consent as denied
+ */
+export const declineAllCookies = (): void => {
+  if (!isClient()) return;
+
+  const newPreferences: CookiePreferences = {
+    ...defaultPreferences,
+    essential: true,
+    analytics: false,
+    marketing: false,
+    functional: false,
+    consentDate: new Date().toISOString(),
+    version: COOKIE_VERSION,
+  };
+
+  try {
+    localStorage.setItem(COOKIE_PREFERENCES_KEY, JSON.stringify(newPreferences));
+    localStorage.setItem(COOKIE_CONSENT_KEY, 'denied');
+
+    // Trigger custom event for other components to listen to
+    window.dispatchEvent(
+      new CustomEvent('cookiePreferencesChanged', {
+        detail: newPreferences,
+      }),
+    );
+  } catch (error) {
+    console.error('Failed to decline cookie preferences:', error);
+  }
 };
 
 /**
