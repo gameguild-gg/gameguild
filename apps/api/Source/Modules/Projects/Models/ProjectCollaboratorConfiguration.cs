@@ -1,13 +1,9 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
 namespace GameGuild.Modules.Projects;
 
 internal sealed class ProjectCollaboratorConfiguration : IEntityTypeConfiguration<ProjectCollaborator> {
   public void Configure(EntityTypeBuilder<ProjectCollaborator> builder) {
     ArgumentNullException.ThrowIfNull(builder);
-    
+
     // Configure the relationship with User as optional to avoid query filter warnings
     builder.HasOne(pc => pc.User)
            .WithMany()

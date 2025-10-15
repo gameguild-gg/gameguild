@@ -1,6 +1,3 @@
-using MediatR;
-
-
 namespace GameGuild.Modules.Authentication;
 
 /// <summary>

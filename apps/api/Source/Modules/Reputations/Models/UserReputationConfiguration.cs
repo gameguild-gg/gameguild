@@ -1,13 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Reputations;
+﻿namespace GameGuild.Modules.Reputations;
 
 internal sealed class UserReputationConfiguration : IEntityTypeConfiguration<UserReputation> {
   public void Configure(EntityTypeBuilder<UserReputation> builder) {
     ArgumentNullException.ThrowIfNull(builder);
-    
+
     // Configure the relationship with User as optional to avoid query filter warnings
     builder.HasOne(ur => ur.User)
            .WithMany()

@@ -23,7 +23,6 @@ export default async function TenantDetailPage({ params }: TenantDetailPageProps
   try {
     const result = await getTenantByIdAction({
       path: { id },
-      url: '/api/tenants/{id}',
     });
 
     if (result.data) {

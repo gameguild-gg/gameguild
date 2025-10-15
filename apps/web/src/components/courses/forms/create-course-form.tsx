@@ -69,7 +69,6 @@ export const CreateCourseForm = (): React.JSX.Element => {
           description: formData.description.trim(),
           slug: formData.slug.trim(),
         },
-        url: '/api/program',
       });
 
       console.log('Form received result:', {

@@ -1,8 +1,6 @@
 ﻿namespace GameGuild.Modules.TestingLab;
 
-/// <summary>
-/// GraphQL type definition for TestingLocation entity
-/// </summary>
+/// <summary> GraphQL type definition for TestingLocation entity </summary>
 public class TestingLocationType : ObjectType<TestingLocation> {
   protected override void Configure(IObjectTypeDescriptor<TestingLocation> descriptor) {
     descriptor.Name("TestingLocation");

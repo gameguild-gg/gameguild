@@ -137,6 +137,18 @@ services:
       retries: 5
       start_period: 30s
 
+  adminer:
+    image: adminer:latest
+    container_name: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres  
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 #  minio:
 #    image: minio/minio
 #    container_name: minio
@@ -170,19 +182,6 @@ services:
 #      start_period: 10s
 #    #      start_interval: 1s
 #    security_opt: [ 'no-new-privileges:true' ]
-
-# Database Administration (optional - uncomment to enable)
-# adminer:
-#   image: adminer:4.8.1
-#   container_name: adminer
-#   restart: always
-#   ports:
-#     - '8080:8080'
-#   environment:
-#     ADMINER_DEFAULT_SERVER: postgres
-#   depends_on:
-#     postgres:
-#       condition: service_healthy
 
 volumes:
   #  minio-data:

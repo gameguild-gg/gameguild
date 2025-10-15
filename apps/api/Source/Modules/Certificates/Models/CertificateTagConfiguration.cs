@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Certificates;
+﻿namespace GameGuild.Modules.Certificates;
 
 public class CertificateTagConfiguration : IEntityTypeConfiguration<CertificateTag> {
   public void Configure(EntityTypeBuilder<CertificateTag> builder) {

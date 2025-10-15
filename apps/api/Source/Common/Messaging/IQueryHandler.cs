@@ -1,7 +1,4 @@
-﻿using MediatR;
-
-
-namespace GameGuild.Common;
+﻿namespace GameGuild.Common;
 
 /// <summary>
 /// Interface for query handlers

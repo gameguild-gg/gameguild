@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-
-namespace GameGuild.Modules.Credentials;
+﻿namespace GameGuild.Modules.Credentials;
 
 /// <summary>
 /// Input type for updating an existing credential
