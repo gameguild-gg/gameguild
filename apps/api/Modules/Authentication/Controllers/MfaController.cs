@@ -51,14 +51,14 @@ public class MfaController : BaseController
 
             var result = await _mfaService.InitiateMfaSetupAsync(userId.Value);
 
-            if (!result.IsSuccess) { return BadRequest(new { error = result.ErrorMessage }); }
+            if (!result.Success) { return BadRequest(new { error = result.Message }); }
 
             return Ok(
                 new MfaSetupResponse
                 {
                     SetupId = Guid.NewGuid().ToString(), // Temporary setup ID
                     SecretKey = result.SecretKey!,
-                    QrCodeUrl = result.QrCodeData!,
+                    QrCodeUrl = result.QrCodeUri!,
                     BackupCodes = [] // Empty list for initial setup
                 }
             );
@@ -85,7 +85,7 @@ public class MfaController : BaseController
 
             var result = await _mfaService.CompleteMfaSetupAsync(userId.Value, request.Code);
 
-            if (!result.IsSuccess) { return BadRequest(new { error = result.Message }); }
+            if (!result.Success) { return BadRequest(new { error = result.ErrorMessage ?? result.Message }); }
 
             _logger.LogInformation("User {UserId} successfully completed TOTP setup", userId);
 
@@ -110,19 +110,18 @@ public class MfaController : BaseController
         {
             var result = await _mfaService.VerifyMfaAsync(request.UserId, request.Code, request.Method);
 
-            if (!result.IsSuccess)
+            if (!result.Success)
             {
                 _logger.LogWarning("Failed MFA verification for user {UserId} from IP {IpAddress}", request.UserId, HttpContext.Connection.RemoteIpAddress);
 
-                return BadRequest(new { error = result.Message });
+                return BadRequest(new { error = result.ErrorMessage ?? result.Message });
             }
 
             return Ok(
                 new MfaVerificationResponse
                 {
-                    IsValid = result.IsSuccess,
-                    IsBackupCode = false, // MfaVerificationResult doesn't track this
-                    RemainingBackupCodes = null // MfaVerificationResult doesn't track this
+                    IsValid = result.Success,
+                    Message = result.Message
                 }
             );
         }
