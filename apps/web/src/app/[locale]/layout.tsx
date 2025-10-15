@@ -19,6 +19,7 @@ import { getMessages, setRequestLocale }     from 'next-intl/server';
 import { Inter }                             from "next/font/google";
 import { notFound }                          from 'next/navigation';
 import React, { PropsWithChildren }          from 'react';
+import { CookieConsent } from '@/components/cookies/cookie-consent';
 
 
 const inter = Inter({ subsets: [ "latin" ] });
@@ -75,6 +76,8 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
                   {/*<ThemeToggle />*/ }
                   <GitHubIssueProvider/>
                   { children }
+                  {/* Consent modal should be available on all pages */}
+                  <CookieConsent />
                   {/*TODO: Move this to a better place*/ }
                   {/*<FeedbackFloatingButton />*/ }
                   <Toaster/>
