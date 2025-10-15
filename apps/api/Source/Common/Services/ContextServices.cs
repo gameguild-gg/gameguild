@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Microsoft.Extensions.Logging;
 
 
 namespace GameGuild.Common;

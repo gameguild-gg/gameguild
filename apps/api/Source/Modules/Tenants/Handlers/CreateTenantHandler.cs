@@ -1,6 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -30,7 +29,10 @@ public class CreateTenantHandler(ApplicationDbContext context, ILogger<CreateTen
         );
 
       var tenant = new Tenant {
-        Name = request.Name, Description = request.Description, IsActive = request.IsActive, Slug = request.Slug,
+        Name = request.Name,
+        Description = request.Description,
+        IsActive = request.IsActive,
+        Slug = request.Slug,
       };
 
       context.Resources.Add(tenant);

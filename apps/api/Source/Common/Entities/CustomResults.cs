@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-
 namespace GameGuild.Common;
 
 public static class CustomResults {
@@ -32,7 +30,10 @@ public static class CustomResults {
 
     static int GetStatusCode(ErrorType errorType) {
       return errorType switch {
-        ErrorType.Validation or ErrorType.Problem => StatusCodes.Status400BadRequest, ErrorType.NotFound => StatusCodes.Status404NotFound, ErrorType.Conflict => StatusCodes.Status409Conflict, _ => StatusCodes.Status500InternalServerError,
+        ErrorType.Validation or ErrorType.Problem => StatusCodes.Status400BadRequest,
+        ErrorType.NotFound => StatusCodes.Status404NotFound,
+        ErrorType.Conflict => StatusCodes.Status409Conflict,
+        _ => StatusCodes.Status500InternalServerError,
       };
     }
 

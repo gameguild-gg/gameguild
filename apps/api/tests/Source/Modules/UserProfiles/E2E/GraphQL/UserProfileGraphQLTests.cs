@@ -55,17 +55,17 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
       // Act
       var response = await _client.PostAsync("/graphql", content);
       var responseString = await response.Content.ReadAsStringAsync();
-      
+
       // If response is not successful or has errors, throw with details
       if (!response.IsSuccessStatusCode) {
         throw new Exception($"HTTP Error {response.StatusCode}. Response: {responseString}");
       }
-      
+
       var result = JsonDocument.Parse(responseString);
-      
+
       if (result.RootElement.TryGetProperty("errors", out var errors)) {
-        var errorMessage = errors.GetArrayLength() > 0 
-          ? errors[0].GetProperty("message").GetString() 
+        var errorMessage = errors.GetArrayLength() > 0
+          ? errors[0].GetProperty("message").GetString()
           : "Unknown GraphQL error";
         throw new Exception($"GraphQL Error: {errorMessage}. Response: {responseString}");
       }
@@ -119,17 +119,17 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
       // Act
       var response = await _client.PostAsync("/graphql", content);
       var responseString = await response.Content.ReadAsStringAsync();
-      
+
       // If response is not successful or has errors, throw with details
       if (!response.IsSuccessStatusCode) {
         throw new Exception($"HTTP Error {response.StatusCode}. Response: {responseString}");
       }
-      
+
       var result = JsonDocument.Parse(responseString);
-      
+
       if (result.RootElement.TryGetProperty("errors", out var errors)) {
-        var errorMessage = errors.GetArrayLength() > 0 
-          ? errors[0].GetProperty("message").GetString() 
+        var errorMessage = errors.GetArrayLength() > 0
+          ? errors[0].GetProperty("message").GetString()
           : "Unknown GraphQL error";
         throw new Exception($"GraphQL Error: {errorMessage}. Response: {responseString}");
       }
@@ -170,17 +170,17 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
       // Act
       var response = await _client.PostAsync("/graphql", content);
       var responseString = await response.Content.ReadAsStringAsync();
-      
+
       // If response is not successful or has errors, throw with details
       if (!response.IsSuccessStatusCode) {
         throw new Exception($"HTTP Error {response.StatusCode}. Response: {responseString}");
       }
-      
+
       var result = JsonDocument.Parse(responseString);
-      
+
       if (result.RootElement.TryGetProperty("errors", out var errors)) {
-        var errorMessage = errors.GetArrayLength() > 0 
-          ? errors[0].GetProperty("message").GetString() 
+        var errorMessage = errors.GetArrayLength() > 0
+          ? errors[0].GetProperty("message").GetString()
           : "Unknown GraphQL error";
         throw new Exception($"GraphQL Error: {errorMessage}. Response: {responseString}");
       }
@@ -222,7 +222,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
       // Act
       var response = await _client.PostAsync("/graphql", content);
       var responseString = await response.Content.ReadAsStringAsync();
-      
+
       // Parse the response to check for errors
       var result = JsonDocument.Parse(responseString);
 
@@ -230,10 +230,10 @@ namespace GameGuild.Tests.Modules.UserProfiles.E2E.GraphQL {
       if (!response.IsSuccessStatusCode) {
         throw new Exception($"HTTP Error {response.StatusCode}. Response: {responseString}");
       }
-      
+
       if (result.RootElement.TryGetProperty("errors", out var errors)) {
-        var errorMessage = errors.GetArrayLength() > 0 
-          ? errors[0].GetProperty("message").GetString() 
+        var errorMessage = errors.GetArrayLength() > 0
+          ? errors[0].GetProperty("message").GetString()
           : "Unknown GraphQL error";
         throw new Exception($"GraphQL Error: {errorMessage}. Response: {responseString}");
       }

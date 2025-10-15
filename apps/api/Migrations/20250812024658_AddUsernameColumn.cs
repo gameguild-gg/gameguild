@@ -2,16 +2,13 @@
 
 #nullable disable
 
-namespace GameGuild.Migrations
-{
+namespace GameGuild.Migrations {
+  /// <inheritdoc />
+  public partial class AddUsernameColumn : Migration {
     /// <inheritdoc />
-    public partial class AddUsernameColumn : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            // Add Username column if it doesn't exist (conditional SQL)
-            migrationBuilder.Sql(@"
+    protected override void Up(MigrationBuilder migrationBuilder) {
+      // Add Username column if it doesn't exist (conditional SQL)
+      migrationBuilder.Sql(@"
                 DO $$
                 DECLARE
                     user_record RECORD;
@@ -60,13 +57,12 @@ namespace GameGuild.Migrations
                     END IF;
                 END $$;
             ");
-        }
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            // Remove Username column and index if they exist
-            migrationBuilder.Sql(@"
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder) {
+      // Remove Username column and index if they exist
+      migrationBuilder.Sql(@"
                 DO $$
                 BEGIN
                     IF EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'IX_Users_Username') THEN
@@ -79,6 +75,6 @@ namespace GameGuild.Migrations
                     END IF;
                 END $$;
             ");
-        }
     }
+  }
 }

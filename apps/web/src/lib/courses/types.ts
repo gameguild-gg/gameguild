@@ -1,7 +1,7 @@
 import { EnrollmentStatus as APIEnrollmentStatus } from '@/lib/core/api/generated/types.gen';
 
 export interface Course {
-  id: number;
+  id: string;
   title: string;
   description: string;
   category: string;
@@ -22,7 +22,7 @@ export interface Course {
 }
 
 export interface EnhancedCourse {
-  id: number;
+  id: string;
   title: string;
   description: string;
   area: string;

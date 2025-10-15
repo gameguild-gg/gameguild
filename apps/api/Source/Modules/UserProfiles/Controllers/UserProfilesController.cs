@@ -1,4 +1,3 @@
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -34,18 +33,18 @@ public class UserProfilesController(IMediator mediator) : ControllerBase {
     if (!userProfiles.IsSuccess) return BadRequest(userProfiles.Error);
 
     var userProfileDtos = userProfiles.Value.Select(up => new UserProfileResponseDto {
-        Id = up.Id,
-        Version = up.Version,
-        GivenName = up.GivenName,
-        FamilyName = up.FamilyName,
-        DisplayName = up.DisplayName,
-        Title = up.Title,
-        Description = up.Description,
-        CreatedAt = up.CreatedAt,
-        UpdatedAt = up.UpdatedAt,
-        DeletedAt = up.DeletedAt,
-        IsDeleted = up.IsDeleted,
-      }
+      Id = up.Id,
+      Version = up.Version,
+      GivenName = up.GivenName,
+      FamilyName = up.FamilyName,
+      DisplayName = up.DisplayName,
+      Title = up.Title,
+      Description = up.Description,
+      CreatedAt = up.CreatedAt,
+      UpdatedAt = up.UpdatedAt,
+      DeletedAt = up.DeletedAt,
+      IsDeleted = up.IsDeleted,
+    }
     );
 
     return Ok(userProfileDtos);

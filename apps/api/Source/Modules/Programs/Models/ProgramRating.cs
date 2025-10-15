@@ -1,7 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Programs;

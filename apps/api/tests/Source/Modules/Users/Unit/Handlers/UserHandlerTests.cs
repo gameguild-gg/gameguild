@@ -18,7 +18,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
       var options = new DbContextOptionsBuilder<ApplicationDbContext>()
         .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
         .Options;
-      
+
       _context = new ApplicationDbContext(options);
       _createLogger = new Mock<ILogger<CreateUserHandler>>();
       _updateLogger = new Mock<ILogger<UpdateUserHandler>>();
@@ -29,8 +29,8 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
     [Fact]
     public async Task Should_Handle_User_Creation_Command() {
       // Arrange
-      var command = new CreateUserCommand { 
-        Name = "Test User", 
+      var command = new CreateUserCommand {
+        Name = "Test User",
         Email = "test@example.com",
         InitialBalance = 100m,
       };
@@ -46,7 +46,7 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
       Assert.Equal("test@example.com", result.Email);
       Assert.True(result.IsActive); // Default should be true
       Assert.Equal(100m, result.Balance);
-      
+
       // Verify user was saved to database
       var savedUser = await _context.Users.FindAsync(result.Id);
       Assert.NotNull(savedUser);
@@ -57,18 +57,18 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
     public async Task Should_Handle_User_Update_Command() {
       // Arrange
       var userId = Guid.NewGuid();
-      var existingUser = new User { 
-        Id = userId, 
-        Name = "Original Name", 
-        Email = "original@example.com", 
+      var existingUser = new User {
+        Id = userId,
+        Name = "Original Name",
+        Email = "original@example.com",
         IsActive = true,
       };
-      
+
       _context.Users.Add(existingUser);
       await _context.SaveChangesAsync();
 
-      var command = new UpdateUserCommand { 
-        UserId = userId, 
+      var command = new UpdateUserCommand {
+        UserId = userId,
         Name = "Updated Name",
         Email = "updated@example.com",
       };
@@ -89,13 +89,13 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
     public async Task Should_Handle_User_Delete_Command() {
       // Arrange
       var userId = Guid.NewGuid();
-      var existingUser = new User { 
-        Id = userId, 
-        Name = "Test User", 
-        Email = "test@example.com", 
+      var existingUser = new User {
+        Id = userId,
+        Name = "Test User",
+        Email = "test@example.com",
         IsActive = true,
       };
-      
+
       _context.Users.Add(existingUser);
       await _context.SaveChangesAsync();
 
@@ -108,13 +108,13 @@ namespace GameGuild.Tests.Modules.Users.Unit.Handlers {
 
       // Assert
       Assert.True(result);
-      
+
       // Verify user was soft deleted by checking DeletedAt is set
       var userWithDeleted = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
       Assert.NotNull(userWithDeleted);
       Assert.NotNull(userWithDeleted.DeletedAt);
       Assert.True(userWithDeleted.IsDeleted);
-      
+
       // In this test setup, the query filter may not be working as expected in in-memory database
       // so we'll verify the soft delete by checking that we can't find the user with normal queries
       var activeUsers = await _context.Users.Where(u => u.DeletedAt == null).ToListAsync();

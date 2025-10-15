@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Subscriptions.Models;
+﻿namespace GameGuild.Modules.Subscriptions.Models;
 
 public class UserSubscriptionConfiguration : IEntityTypeConfiguration<UserSubscription> {
   public void Configure(EntityTypeBuilder<UserSubscription> builder) {

@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Tenants;
@@ -52,9 +51,9 @@ public class TenantContextService(ApplicationDbContext context) : ITenantContext
   /// </summary>
   public async Task<TenantPermission?> GetTenantPermissionAsync(Guid userId, Guid tenantId) {
     return await context.TenantPermissions.FirstOrDefaultAsync(tp =>
-                                                                 tp.UserId == userId && 
-                                                                 tp.TenantId == tenantId && 
-                                                                 tp.DeletedAt == null && 
+                                                                 tp.UserId == userId &&
+                                                                 tp.TenantId == tenantId &&
+                                                                 tp.DeletedAt == null &&
                                                                  (tp.ExpiresAt == null || tp.ExpiresAt > DateTime.UtcNow)
            );
   }

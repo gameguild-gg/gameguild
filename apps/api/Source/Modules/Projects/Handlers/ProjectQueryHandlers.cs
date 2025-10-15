@@ -1,8 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Projects;

@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-
-namespace GameGuild.Modules.Users;
+﻿namespace GameGuild.Modules.Users;
 
 /// <summary>
 /// DTO for updating user balance
