@@ -17,7 +17,6 @@ export async function getCurrentUserProfile(): Promise<{ success: boolean; data?
 
     const result = await getUserById({
       path: { id: session.user.id },
-      url: '/api/users/{id}'
     });
 
     if (!result.data) {

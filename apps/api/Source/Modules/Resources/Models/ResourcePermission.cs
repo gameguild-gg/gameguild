@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Permissions;
 

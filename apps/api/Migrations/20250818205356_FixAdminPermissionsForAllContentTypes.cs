@@ -2,16 +2,13 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace GameGuild.Migrations
-{
+namespace GameGuild.Migrations {
+  /// <inheritdoc />
+  public partial class FixAdminPermissionsForAllContentTypes : Migration {
     /// <inheritdoc />
-    public partial class FixAdminPermissionsForAllContentTypes : Migration
-    {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            // Ensure admin has all permissions including Draft permission for all content types
-            migrationBuilder.Sql(@"
+    protected override void Up(MigrationBuilder migrationBuilder) {
+      // Ensure admin has all permissions including Draft permission for all content types
+      migrationBuilder.Sql(@"
                 DO $$
                 DECLARE
                     super_admin_id UUID;
@@ -86,19 +83,18 @@ namespace GameGuild.Migrations
                 END
                 $$;
             ");
-        }
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            // This migration is designed to fix permissions, so rollback would remove all permissions
-            // which is not recommended for production. For safety, we'll leave permissions intact.
-            migrationBuilder.Sql(@"
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder) {
+      // This migration is designed to fix permissions, so rollback would remove all permissions
+      // which is not recommended for production. For safety, we'll leave permissions intact.
+      migrationBuilder.Sql(@"
                 -- Note: This migration fixes admin permissions. 
                 -- Rolling back would remove all admin permissions which could lock out the admin.
                 -- For safety, we're not removing permissions in the rollback.
                 SELECT 1; -- No-op to ensure valid SQL
             ");
-        }
     }
+  }
 }

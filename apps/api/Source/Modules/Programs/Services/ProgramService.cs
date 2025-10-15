@@ -1,7 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Contents;
-using Microsoft.EntityFrameworkCore;
 using ProgramEntity = GameGuild.Modules.Programs.Program;
 
 

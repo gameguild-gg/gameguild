@@ -377,20 +377,20 @@ public class TestingLabPerformanceTests : IDisposable {
   // Optimized helper method that creates all test data in batches to minimize database calls
   private async Task<(User user, ProjectModel project, ProjectVersionModel projectVersion, TestingRequest testingRequest, TestingLocation location)> CreateTestDataBatchAsync() {
     // Create all entities without saving
-    var user = new User { 
-      Id = Guid.NewGuid(), 
-      Name = "Performance Test User", 
-      Email = "performance@test.com", 
+    var user = new User {
+      Id = Guid.NewGuid(),
+      Name = "Performance Test User",
+      Email = "performance@test.com",
       CreatedAt = DateTime.UtcNow,
     };
-    
-    var project = new ProjectModel { 
-      Id = Guid.NewGuid(), 
-      Title = "Performance Test Project", 
-      CreatedById = user.Id, 
+
+    var project = new ProjectModel {
+      Id = Guid.NewGuid(),
+      Title = "Performance Test Project",
+      CreatedById = user.Id,
       CreatedAt = DateTime.UtcNow,
     };
-    
+
     var projectVersion = new ProjectVersionModel {
       Id = Guid.NewGuid(),
       ProjectId = project.Id,
@@ -398,7 +398,7 @@ public class TestingLabPerformanceTests : IDisposable {
       CreatedById = user.Id,
       CreatedAt = DateTime.UtcNow,
     };
-    
+
     var testingRequest = new TestingRequest {
       Id = Guid.NewGuid(),
       ProjectVersionId = projectVersion.Id,
@@ -412,7 +412,7 @@ public class TestingLabPerformanceTests : IDisposable {
       Status = TestingRequestStatus.Open,
       CreatedById = user.Id,
     };
-    
+
     var location = new TestingLocation {
       Id = Guid.NewGuid(),
       Name = "Performance Test Location",
@@ -428,10 +428,10 @@ public class TestingLabPerformanceTests : IDisposable {
     _context.Set<ProjectVersionModel>().Add(projectVersion);
     _context.TestingRequests.Add(testingRequest);
     _context.TestingLocations.Add(location);
-    
+
     // Single database call for all entities
     await _context.SaveChangesAsync();
-    
+
     return (user, project, projectVersion, testingRequest, location);
   }
 

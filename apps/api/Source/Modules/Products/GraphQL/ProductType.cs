@@ -91,173 +91,173 @@ public class ProductType : ObjectType<Product> {
               .Type<BooleanType>()
               .Description("Indicates if the current user can edit this product")
               .Resolve(async context => {
-                  var product = context.Parent<ProductEntity>();
-                  var user = context.GetUser();
-                  var userId = GetUserId(user);
+                var product = context.Parent<ProductEntity>();
+                var user = context.GetUser();
+                var userId = GetUserId(user);
 
-                  if (userId == null) return false;
+                if (userId == null) return false;
 
-                  var permissionService = context.Service<IPermissionService>();
+                var permissionService = context.Service<IPermissionService>();
 
-                  // Hierarchical permission check: Resource → Content-Type → Tenant
-                  try {
-                    // 1. Check resource-level permission
-                    var hasResourcePermission =
-                      await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
-                        userId.Value,
-                        product.Tenant?.Id,
-                        product.Id,
-                        PermissionType.Edit
-                      );
-
-                    if (hasResourcePermission) return true;
-                  }
-                  catch {
-                    // Continue to fallbacks if resource checking fails
-                  }
-
-                  // 2. Check content-type permission
-                  var hasContentTypePermission =
-                    await permissionService.HasContentTypePermissionAsync(
+                // Hierarchical permission check: Resource → Content-Type → Tenant
+                try {
+                  // 1. Check resource-level permission
+                  var hasResourcePermission =
+                    await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
                       userId.Value,
                       product.Tenant?.Id,
-                      "Product",
+                      product.Id,
                       PermissionType.Edit
                     );
 
-                  if (hasContentTypePermission) return true;
-
-                  // 3. Check tenant permission
-                  var hasTenantPermission =
-                    await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Edit);
-
-                  return hasTenantPermission;
+                  if (hasResourcePermission) return true;
                 }
+                catch {
+                  // Continue to fallbacks if resource checking fails
+                }
+
+                // 2. Check content-type permission
+                var hasContentTypePermission =
+                  await permissionService.HasContentTypePermissionAsync(
+                    userId.Value,
+                    product.Tenant?.Id,
+                    "Product",
+                    PermissionType.Edit
+                  );
+
+                if (hasContentTypePermission) return true;
+
+                // 3. Check tenant permission
+                var hasTenantPermission =
+                  await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Edit);
+
+                return hasTenantPermission;
+              }
               );
 
     descriptor.Field("canDelete")
               .Type<BooleanType>()
               .Description("Indicates if the current user can delete this product")
               .Resolve(async context => {
-                  var product = context.Parent<ProductEntity>();
-                  var user = context.GetUser();
-                  var userId = GetUserId(user);
+                var product = context.Parent<ProductEntity>();
+                var user = context.GetUser();
+                var userId = GetUserId(user);
 
-                  if (userId == null) return false;
+                if (userId == null) return false;
 
-                  var permissionService = context.Service<IPermissionService>();
+                var permissionService = context.Service<IPermissionService>();
 
-                  try {
-                    var hasResourcePermission =
-                      await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
-                        userId.Value,
-                        product.Tenant?.Id,
-                        product.Id,
-                        PermissionType.Delete
-                      );
-
-                    if (hasResourcePermission) return true;
-                  }
-                  catch { }
-
-                  var hasContentTypePermission =
-                    await permissionService.HasContentTypePermissionAsync(
+                try {
+                  var hasResourcePermission =
+                    await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
                       userId.Value,
                       product.Tenant?.Id,
-                      "Product",
+                      product.Id,
                       PermissionType.Delete
                     );
 
-                  if (hasContentTypePermission) return true;
-
-                  var hasTenantPermission =
-                    await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Delete);
-
-                  return hasTenantPermission;
+                  if (hasResourcePermission) return true;
                 }
+                catch { }
+
+                var hasContentTypePermission =
+                  await permissionService.HasContentTypePermissionAsync(
+                    userId.Value,
+                    product.Tenant?.Id,
+                    "Product",
+                    PermissionType.Delete
+                  );
+
+                if (hasContentTypePermission) return true;
+
+                var hasTenantPermission =
+                  await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Delete);
+
+                return hasTenantPermission;
+              }
               );
 
     descriptor.Field("canPublish")
               .Type<BooleanType>()
               .Description("Indicates if the current user can publish this product")
               .Resolve(async context => {
-                  var product = context.Parent<ProductEntity>();
-                  var user = context.GetUser();
-                  var userId = GetUserId(user);
+                var product = context.Parent<ProductEntity>();
+                var user = context.GetUser();
+                var userId = GetUserId(user);
 
-                  if (userId == null) return false;
+                if (userId == null) return false;
 
-                  var permissionService = context.Service<IPermissionService>();
+                var permissionService = context.Service<IPermissionService>();
 
-                  try {
-                    var hasResourcePermission =
-                      await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
-                        userId.Value,
-                        product.Tenant?.Id,
-                        product.Id,
-                        PermissionType.Publish
-                      );
-
-                    if (hasResourcePermission) return true;
-                  }
-                  catch { }
-
-                  var hasContentTypePermission =
-                    await permissionService.HasContentTypePermissionAsync(
+                try {
+                  var hasResourcePermission =
+                    await permissionService.HasResourcePermissionAsync<ProductPermission, ProductEntity>(
                       userId.Value,
                       product.Tenant?.Id,
-                      "Product",
+                      product.Id,
                       PermissionType.Publish
                     );
 
-                  if (hasContentTypePermission) return true;
-
-                  var hasTenantPermission =
-                    await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Publish);
-
-                  return hasTenantPermission;
+                  if (hasResourcePermission) return true;
                 }
+                catch { }
+
+                var hasContentTypePermission =
+                  await permissionService.HasContentTypePermissionAsync(
+                    userId.Value,
+                    product.Tenant?.Id,
+                    "Product",
+                    PermissionType.Publish
+                  );
+
+                if (hasContentTypePermission) return true;
+
+                var hasTenantPermission =
+                  await permissionService.HasTenantPermissionAsync(userId.Value, product.Tenant?.Id, PermissionType.Publish);
+
+                return hasTenantPermission;
+              }
               );
 
     descriptor.Field("hasAccess")
               .Type<BooleanType>()
               .Description("Indicates if the current user has access to this product")
               .Resolve(async context => {
-                  var product = context.Parent<ProductEntity>();
-                  var user = context.GetUser();
-                  var userId = GetUserId(user);
+                var product = context.Parent<ProductEntity>();
+                var user = context.GetUser();
+                var userId = GetUserId(user);
 
-                  if (userId == null) return false;
+                if (userId == null) return false;
 
-                  var productService = context.Service<IProductService>();
+                var productService = context.Service<IProductService>();
 
-                  return await productService.HasUserAccessAsync(userId.Value, product.Id);
-                }
+                return await productService.HasUserAccessAsync(userId.Value, product.Id);
+              }
               );
 
     descriptor.Field("currentPricing")
               .Type<ProductPricingType>()
               .Description("The current active pricing for this product")
               .Resolve(async context => {
-                  var product = context.Parent<ProductEntity>();
-                  var productService = context.Service<IProductService>();
+                var product = context.Parent<ProductEntity>();
+                var productService = context.Service<IProductService>();
 
-                  return await productService.GetCurrentPricingAsync(product.Id);
-                }
+                return await productService.GetCurrentPricingAsync(product.Id);
+              }
               );
 
     descriptor.Field("bundleItems")
               .Type<ListType<ProductType>>()
               .Description("Items included in this bundle (only applicable if IsBundle is true)")
               .Resolve(async context => {
-                  var product = context.Parent<ProductEntity>();
+                var product = context.Parent<ProductEntity>();
 
-                  if (!product.IsBundle) return new List<ProductEntity>();
+                if (!product.IsBundle) return new List<ProductEntity>();
 
-                  var productService = context.Service<IProductService>();
+                var productService = context.Service<IProductService>();
 
-                  return await productService.GetBundleItemsAsync(product.Id);
-                }
+                return await productService.GetBundleItemsAsync(product.Id);
+              }
               );
   }
 

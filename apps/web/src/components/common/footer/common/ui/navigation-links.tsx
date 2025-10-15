@@ -14,7 +14,7 @@ const navSections: NavSection[] = [
     title: 'Platform',
     color: 'blue',
     links: [
-      { href: '/courses', label: 'Courses' },
+      { href: '/programs', label: 'Courses' },
       { href: '/jobs', label: 'Job Board' },
       { href: '/community', label: 'Community' },
       { href: '/testing-lab', label: 'Game Testing Lab' },
@@ -75,7 +75,7 @@ export function NavigationLinks() {
       {navSections.map((section) => (
         <div key={section.title} className="min-w-0">
           <h3 className={`font-semibold mb-4 ${colorClasses[section.color].header} text-base lg:text-lg`}>{section.title}</h3>
-          <ul className="space-y-2 text-sm text-slate-400">
+          <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-400">
             {section.links.map((link) => {
               // Add GitHub modal for specific links
               const linksWithGitHubModal = [
@@ -88,13 +88,15 @@ export function NavigationLinks() {
                 'Documentation', 
                 'Tutorials', 
                 'Support', 
-                'API Reference'
+                'API Reference',
+                'Privacy',
+                'Terms of Service'
               ];
               const shouldShowGitHubModal = linksWithGitHubModal.includes(link.label);
               
               return (
                 <li key={link.href} className="flex items-start">
-                  <span className="text-slate-500 mr-2 mt-1.5 flex-shrink-0">•</span>
+                  <span className="text-slate-600 dark:text-slate-500 mr-2 mt-1.5 flex-shrink-0">•</span>
                   {shouldShowGitHubModal ? (
                     <a
                       href={link.href}

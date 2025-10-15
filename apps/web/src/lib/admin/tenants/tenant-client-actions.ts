@@ -37,7 +37,6 @@ export async function createTenantClient(prevState: ActionResult, formData: Form
 
     const result = await createTenantAction({
       body: createData,
-      url: '/api/tenants',
     });
 
     if (result.error) {
@@ -84,7 +83,6 @@ export async function updateTenantClient(tenantId: string, prevState: ActionResu
     const result = await updateTenantAction({
       path: { id: tenantId },
       body: updateData,
-      url: '/api/tenants/{id}',
     });
 
     if (result.error) {
@@ -118,7 +116,6 @@ export async function deleteTenantClient(tenantId: string): Promise<ActionResult
 
     const result = await deleteTenantAction({
       path: { id: tenantId },
-      url: '/api/tenants/{id}',
     });
 
     if (result.error) {

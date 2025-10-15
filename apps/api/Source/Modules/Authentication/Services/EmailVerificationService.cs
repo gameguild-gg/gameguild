@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Database;
 using GameGuild.Modules.Credentials;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Authentication {
@@ -150,7 +149,9 @@ namespace GameGuild.Modules.Authentication {
       var token = GenerateSecureToken();
 
       var tokenInfo = new TokenInfo {
-        UserId = userId, Type = "email_verification", ExpiresAt = DateTime.UtcNow.AddHours(24), // 24-hour expiration
+        UserId = userId,
+        Type = "email_verification",
+        ExpiresAt = DateTime.UtcNow.AddHours(24), // 24-hour expiration
       };
 
       _tokens[token] = tokenInfo;
@@ -165,7 +166,9 @@ namespace GameGuild.Modules.Authentication {
       var token = GenerateSecureToken();
 
       var tokenInfo = new TokenInfo {
-        UserId = userId, Type = "password_reset", ExpiresAt = DateTime.UtcNow.AddHours(1), // 1-hour expiration
+        UserId = userId,
+        Type = "password_reset",
+        ExpiresAt = DateTime.UtcNow.AddHours(1), // 1-hour expiration
       };
 
       _tokens[token] = tokenInfo;

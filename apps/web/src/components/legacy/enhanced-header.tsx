@@ -72,7 +72,7 @@ export default function EnhancedHeader() {
       items: [
         {
           title: 'All Courses',
-          href: '/courses',
+          href: '/programs',
           description: 'Browse our complete course library',
           icon: BookOpen,
         },
@@ -84,19 +84,19 @@ export default function EnhancedHeader() {
         },
         {
           title: 'Unity Development',
-          href: '/courses/unity',
+          href: '/programs/unity',
           description: 'Master Unity game development',
           icon: Gamepad2,
         },
         {
           title: 'Game Art & Design',
-          href: '/courses/art',
+          href: '/programs/art',
           description: 'Create stunning game visuals',
           icon: Palette,
         },
         {
           title: 'Programming',
-          href: '/courses/programming',
+          href: '/programs/programming',
           description: 'Learn coding for games',
           icon: Code,
         },

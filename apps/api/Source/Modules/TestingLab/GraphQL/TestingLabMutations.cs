@@ -4,37 +4,43 @@ using GameGuild.Common;
 
 namespace GameGuild.Modules.TestingLab;
 
-/// <summary>
-/// GraphQL input types for testing location operations
-/// </summary>
+/// <summary> GraphQL input types for testing location operations </summary>
 public class CreateTestingLocationInput {
   public string Name { get; set; } = string.Empty;
+
   public string? Description { get; set; }
+
   public string? Address { get; set; }
+
   public int MaxTestersCapacity { get; set; }
+
   public int MaxProjectsCapacity { get; set; }
+
   public string? EquipmentAvailable { get; set; }
+
   public LocationStatus Status { get; set; } = LocationStatus.Active;
 }
 
 public class UpdateTestingLocationInput {
   public string? Name { get; set; }
+
   public string? Description { get; set; }
+
   public string? Address { get; set; }
+
   public int? MaxTestersCapacity { get; set; }
+
   public int? MaxProjectsCapacity { get; set; }
+
   public string? EquipmentAvailable { get; set; }
+
   public LocationStatus? Status { get; set; }
 }
 
-/// <summary>
-/// GraphQL mutations for TestingLab module using CQRS pattern
-/// </summary>
+/// <summary> GraphQL mutations for TestingLab module using CQRS pattern </summary>
 [ExtendObjectType<Mutation>]
 public class TestingLabMutations {
-  /// <summary>
-  /// Create a new testing request
-  /// </summary>
+  /// <summary> Create a new testing request </summary>
   public async Task<TestingRequest> CreateTestingRequest(
     [Service] ITestService testService,
     ClaimsPrincipal claimsPrincipal, CreateTestingRequestDto input
@@ -49,9 +55,7 @@ public class TestingLabMutations {
     return await testService.CreateTestingRequestAsync(request);
   }
 
-  /// <summary>
-  /// Update an existing testing request
-  /// </summary>
+  /// <summary> Update an existing testing request </summary>
   public async Task<TestingRequest> UpdateTestingRequest(
     [Service] ITestService testService, Guid id,
     UpdateTestingRequestDto input
@@ -66,14 +70,10 @@ public class TestingLabMutations {
     return await testService.UpdateTestingRequestAsync(existingRequest);
   }
 
-  /// <summary>
-  /// Delete a testing request
-  /// </summary>
+  /// <summary> Delete a testing request </summary>
   public async Task<bool> DeleteTestingRequest([Service] ITestService testService, Guid id) { return await testService.DeleteTestingRequestAsync(id); }
 
-  /// <summary>
-  /// Create a new testing session
-  /// </summary>
+  /// <summary> Create a new testing session </summary>
   public async Task<TestingSession> CreateTestingSession(
     [Service] ITestService testService,
     ClaimsPrincipal claimsPrincipal, CreateTestingSessionDto input
@@ -88,9 +88,7 @@ public class TestingLabMutations {
     return await testService.CreateTestingSessionAsync(session);
   }
 
-  /// <summary>
-  /// Update an existing testing session
-  /// </summary>
+  /// <summary> Update an existing testing session </summary>
   public async Task<TestingSession> UpdateTestingSession(
     [Service] ITestService testService, Guid id,
     CreateTestingSessionDto input
@@ -113,14 +111,10 @@ public class TestingLabMutations {
     return await testService.UpdateTestingSessionAsync(existingSession);
   }
 
-  /// <summary>
-  /// Delete a testing session
-  /// </summary>
+  /// <summary> Delete a testing session </summary>
   public async Task<bool> DeleteTestingSession([Service] ITestService testService, Guid id) { return await testService.DeleteTestingSessionAsync(id); }
 
-  /// <summary>
-  /// Create a new testing location
-  /// </summary>
+  /// <summary> Create a new testing location </summary>
   public async Task<TestingLocation> CreateTestingLocation(
     [Service] ITestService testService,
     CreateTestingLocationInput input
@@ -138,9 +132,7 @@ public class TestingLabMutations {
     return await testService.CreateTestingLocationAsync(location);
   }
 
-  /// <summary>
-  /// Update an existing testing location
-  /// </summary>
+  /// <summary> Update an existing testing location </summary>
   public async Task<TestingLocation> UpdateTestingLocation(
     [Service] ITestService testService, Guid id,
     UpdateTestingLocationInput input
@@ -161,8 +153,6 @@ public class TestingLabMutations {
     return await testService.UpdateTestingLocationAsync(existingLocation);
   }
 
-  /// <summary>
-  /// Delete a testing location
-  /// </summary>
+  /// <summary> Delete a testing location </summary>
   public async Task<bool> DeleteTestingLocation([Service] ITestService testService, Guid id) { return await testService.DeleteTestingLocationAsync(id); }
 }

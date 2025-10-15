@@ -12,7 +12,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
       var options = new DbContextOptionsBuilder<ApplicationDbContext>()
         .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
         .Options;
-      
+
       _context = new ApplicationDbContext(options);
       _service = new UserProfileService(_context);
     }
@@ -21,7 +21,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
     public async Task Should_Create_UserProfile_Successfully() {
       // Arrange
       var userId = Guid.NewGuid();
-      var newProfile = new UserProfile { 
+      var newProfile = new UserProfile {
         Id = userId,
         Title = "Test User", // From Resource base class
         GivenName = "Test",
@@ -63,7 +63,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
     public async Task Should_Get_UserProfile_By_Id() {
       // Arrange
       var profileId = Guid.NewGuid();
-      var profile = new UserProfile { 
+      var profile = new UserProfile {
         Id = profileId,
         Title = "Test Profile",
         GivenName = "Test",
@@ -87,7 +87,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
     public async Task Should_Get_UserProfile_By_UserId() {
       // Arrange
       var userId = Guid.NewGuid();
-      var profile = new UserProfile { 
+      var profile = new UserProfile {
         Id = userId, // In the current implementation, UserProfile ID matches User ID
         Title = "Test Profile",
         GivenName = "Test",
@@ -111,7 +111,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
     public async Task Should_Update_UserProfile() {
       // Arrange
       var profileId = Guid.NewGuid();
-      var originalProfile = new UserProfile { 
+      var originalProfile = new UserProfile {
         Id = profileId,
         Title = "Original Title",
         GivenName = "Original",
@@ -146,7 +146,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
     public async Task Should_Delete_UserProfile() {
       // Arrange
       var profileId = Guid.NewGuid();
-      var profile = new UserProfile { 
+      var profile = new UserProfile {
         Id = profileId,
         Title = "Test Profile",
         GivenName = "Test",
@@ -162,7 +162,7 @@ namespace GameGuild.Tests.Modules.UserProfiles.Unit.Services {
 
       // Assert
       Assert.True(result);
-      
+
       var deletedProfile = await _service.GetUserProfileByIdAsync(profileId);
       Assert.Null(deletedProfile); // Should be null after deletion
     }

@@ -2,7 +2,6 @@ using System.Security.Cryptography;
 using GameGuild.Database;
 using GameGuild.Modules.Credentials;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Authentication {

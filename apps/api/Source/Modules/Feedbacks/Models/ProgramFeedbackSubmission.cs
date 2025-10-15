@@ -1,10 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json;
+﻿using System.Text.Json;
 using GameGuild.Common;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Feedbacks;

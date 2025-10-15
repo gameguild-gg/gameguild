@@ -2,8 +2,14 @@
 
 <details>
 <summary>Teacher notes</summary>
-- Day 1: Teacher Introduction; Course Overview; Expectations; FERPA Waiver consent form for using github; Form for receiving feedback about their expectations and topics; 
-- Day 2: Review expectations in class; Introduction to Randomness and Noise; Invite to explore fastnoise2 repo;
+- Day 1: 
+    - Teacher Introduction; 
+    - Course Overview; 
+    - Expectations about the topics; 
+    - FERPA Waiver consent form for using github; 
+- Day 2: 
+    - Review expectations in class;
+    - Talk about Solo center piece project
 </details>
 
 > A game developer portfolio is a collection of materials that showcase a game developer's skills, experience, and

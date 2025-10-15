@@ -55,7 +55,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task GraphQL_GrantTenantPermission_CreatesPermissionRecord() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     // Create additional test user and tenant for this test
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
@@ -102,7 +102,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task GraphQL_CheckPermission_ReturnsCorrectPermissionStatus() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
 
@@ -152,7 +152,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task GraphQL_GetUserPermissions_ReturnsCompletePermissionList() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
 
@@ -196,7 +196,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task REST_GrantTenantPermission_ReturnsSuccessResponse() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
 
@@ -231,7 +231,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task REST_RevokePermission_RemovesPermissionCorrectly() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
 
@@ -267,7 +267,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task REST_CheckPermission_ReturnsCorrectStatus() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
 
@@ -303,7 +303,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task GraphQL_GrantResourcePermission_WorksForSpecificResource() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
     var comment = await CreateTestCommentAsync();
@@ -370,7 +370,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task REST_ShareResource_CreatesPermissionForTargetUser() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     var owner = await CreateTestUserAsync("owner@test.com");
     var targetUser = await CreateTestUserAsync("target@test.com");
     var tenant = await CreateTestTenantAsync();
@@ -429,7 +429,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task GraphQL_EffectivePermissions_ResolvesHierarchyCorrectly() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
 
@@ -471,7 +471,7 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
   public async Task REST_BulkPermissionCheck_HandlesMultipleResources() {
     // Arrange
     _client = await GetAuthenticatedClientAsync();
-    
+
     var user = await CreateTestUserAsync();
     var tenant = await CreateTestTenantAsync();
     var comment1 = await CreateTestCommentAsync();
@@ -549,7 +549,8 @@ public class PermissionServiceE2ETests : IClassFixture<WebApplicationFactory<Pro
 
   private async Task<Comment> CreateTestCommentAsync() {
     var comment = new Comment {
-      Id = Guid.NewGuid(), Content = "Test comment content",
+      Id = Guid.NewGuid(),
+      Content = "Test comment content",
       // Note: Comment entity doesn't have IsEdited property
     };
 

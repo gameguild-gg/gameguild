@@ -1,13 +1,9 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
 namespace GameGuild.Modules.Posts;
 
 internal sealed class PostConfiguration : IEntityTypeConfiguration<Post> {
   public void Configure(EntityTypeBuilder<Post> builder) {
     ArgumentNullException.ThrowIfNull(builder);
-    
+
     // Configure the relationship with User as optional to avoid query filter warnings
     builder.HasOne(p => p.Author)
            .WithMany()
