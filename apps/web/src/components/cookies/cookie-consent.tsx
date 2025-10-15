@@ -140,7 +140,7 @@ export const CookieConsent = ({ className = '', showPreferencesButton = false, c
             </div>
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <Button onClick={handleAcceptAll} className="bg-emerald-400 text-emerald-950 hover:bg-emerald-300 font-bold">Accept ALL [ENTER]</Button>
-              <Button onClick={handleAcceptEssential} variant="outline" className="border-emerald-400 text-emerald-200 hover:bg-emerald-800/60">Essential Only</Button>
+              <Button onClick={handleAcceptEssential} variant="outline" className="border-emerald-400 text-emerald-100 bg-emerald-900/40 hover:bg-emerald-800/60 hover:text-emerald-50">Essential Only</Button>
               <Button onClick={handleDecline} variant="ghost" className="text-emerald-300 hover:text-emerald-100 hover:bg-emerald-800/40">Deny [ESC]</Button>
             </div>
           </div>
