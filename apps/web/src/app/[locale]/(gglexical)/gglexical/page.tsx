@@ -116,8 +116,8 @@ export default function HomePage() {
                   <Link href="/gglexical/viewer">
                     View Content
                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </CardContent>
             </Card>
           </div>
