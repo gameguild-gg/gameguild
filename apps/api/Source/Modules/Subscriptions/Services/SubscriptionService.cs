@@ -1,7 +1,6 @@
 using GameGuild.Common;
 using GameGuild.Database;
 using GameGuild.Modules.Subscriptions.Models;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Subscriptions.Services;

@@ -1,6 +1,4 @@
-using System.ComponentModel.DataAnnotations;
 using FluentValidation;
-using MediatR;
 
 
 namespace GameGuild.Common;
@@ -46,15 +44,15 @@ public class UnifiedValidationBehavior<TRequest, TResponse>(
           typeof(TResponse).GetGenericTypeDefinition() == typeof(Result<>)) {
         var resultType = typeof(TResponse).GetGenericArguments()[0];
         var error = Error.Failure("Validation.Failed", errorMessage);
-        
+
         // Use the generic Failure method by getting all methods and finding the generic one
         var methods = typeof(Result).GetMethods();
-        var genericFailureMethod = methods.FirstOrDefault(m => 
-          m.Name == "Failure" && 
-          m.IsGenericMethod && 
-          m.GetParameters().Length == 1 && 
+        var genericFailureMethod = methods.FirstOrDefault(m =>
+          m.Name == "Failure" &&
+          m.IsGenericMethod &&
+          m.GetParameters().Length == 1 &&
           m.GetParameters()[0].ParameterType == typeof(Error));
-        
+
         if (genericFailureMethod != null) {
           var typedFailureMethod = genericFailureMethod.MakeGenericMethod(resultType);
           return (TResponse)typedFailureMethod.Invoke(null, [error])!;

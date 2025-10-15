@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using GameGuild.Modules.Resources;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Common;

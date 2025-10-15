@@ -1,8 +1,5 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using GameGuild.Common;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Programs;
@@ -27,7 +24,7 @@ public class ProgramContent : Entity {
   [ForeignKey(nameof(Parent))]
   public Guid? ParentId { get; set; }
 
-  [Required] [MaxLength(255)] public string Title { get; set; } = string.Empty;
+  [Required][MaxLength(255)] public string Title { get; set; } = string.Empty;
 
   public string Description { get; set; } = string.Empty;
 
@@ -70,6 +67,12 @@ public class ProgramContent : Entity {
   public int? EstimatedMinutes { get; set; }
 
   public Visibility Visibility { get; set; } = Visibility.Published;
+
+  /// <summary>
+  /// URL-friendly slug for this content
+  /// </summary>
+  [MaxLength(255)]
+  public string? Slug { get; set; }
 
   // Navigation properties
   public virtual Program Program { get; set; } = null!;

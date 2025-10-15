@@ -194,7 +194,25 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
       <div className="markdown-content">
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkMath]}
-          rehypePlugins={[rehypeRaw, rehypeKatex]}
+          rehypePlugins={[
+            rehypeRaw,
+            [
+              rehypeKatex,
+              {
+                strict: false,
+                trust: true,
+                throwOnError: false,
+                errorColor: 'hsl(var(--destructive))',
+                macros: {
+                  '\\RR': '\\mathbb{R}',
+                  '\\NN': '\\mathbb{N}',
+                  '\\ZZ': '\\mathbb{Z}',
+                  '\\QQ': '\\mathbb{Q}',
+                  '\\CC': '\\mathbb{C}',
+                },
+              },
+            ],
+          ]}
           components={components}
         >
           {processedContent}
@@ -303,10 +321,75 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
           color: hsl(var(--foreground)) !important;
         }
 
+        /* KaTeX LaTeX formula styling */
         .katex-display {
           overflow-x: auto;
           overflow-y: hidden;
-          padding: 0.5rem 0;
+          padding: 1rem 0;
+          margin: 1.5rem 0;
+          text-align: center;
+          background-color: hsl(var(--muted) / 0.3);
+          border-radius: 0.5rem;
+          border: 1px solid hsl(var(--border));
+        }
+
+        .katex {
+          font-size: 1.1em;
+          color: hsl(var(--foreground)) !important;
+        }
+
+        .katex-display .katex {
+          font-size: 1.2em;
+        }
+
+        /* Inline math styling */
+        .markdown-content .katex {
+          background-color: hsl(var(--muted) / 0.2);
+          padding: 0.1rem 0.3rem;
+          border-radius: 0.25rem;
+          border: 1px solid hsl(var(--border) / 0.5);
+        }
+
+        /* Display math should not have inline styling */
+        .katex-display .katex {
+          background-color: transparent;
+          padding: 0;
+          border: none;
+          border-radius: 0;
+        }
+
+        /* Dark mode adjustments for KaTeX */
+        .katex .mord,
+        .katex .mop,
+        .katex .mrel,
+        .katex .mbin,
+        .katex .mpunct,
+        .katex .mopen,
+        .katex .mclose {
+          color: hsl(var(--foreground)) !important;
+        }
+
+        /* Ensure proper spacing and alignment */
+        .katex-display {
+          line-height: 1.2;
+        }
+
+        /* Handle long formulas with horizontal scroll */
+        .katex-display .katex {
+          max-width: 100%;
+          overflow-x: auto;
+          overflow-y: hidden;
+        }
+
+        /* Error handling for malformed LaTeX */
+        .katex-error {
+          color: hsl(var(--destructive)) !important;
+          background-color: hsl(var(--destructive) / 0.1);
+          padding: 0.25rem 0.5rem;
+          border-radius: 0.25rem;
+          border: 1px solid hsl(var(--destructive) / 0.3);
+          font-family: ui-monospace, SFMono-Regular, monospace;
+          font-size: 0.875rem;
         }
 
         .markdown-content table {
@@ -406,6 +489,44 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
         /* Let Mermaid handle text sizing and positioning naturally */
         .mermaid-container {
           font-family: inherit !important;
+        }
+
+        /* Responsive design for LaTeX formulas on mobile */
+        @media (max-width: 768px) {
+          .katex-display {
+            padding: 0.75rem 0.5rem;
+            margin: 1rem 0;
+            font-size: 0.9em;
+          }
+
+          .katex {
+            font-size: 1em;
+          }
+
+          .katex-display .katex {
+            font-size: 1.1em;
+          }
+
+          /* Ensure formulas don't break layout on small screens */
+          .katex-display .katex {
+            white-space: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 0.5rem;
+          }
+        }
+
+        /* Improve readability of math symbols */
+        .katex .accent-body {
+          color: hsl(var(--foreground)) !important;
+        }
+
+        .katex .frac-line {
+          border-bottom-color: hsl(var(--foreground)) !important;
+        }
+
+        .katex .sqrt > .root {
+          color: hsl(var(--foreground)) !important;
         }
       `}</style>
       </div>

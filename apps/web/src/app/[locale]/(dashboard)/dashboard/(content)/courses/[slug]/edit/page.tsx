@@ -27,7 +27,7 @@ export default async function EditCoursePage({ params }: PageProps) {
       thumbnail: undefined,
     };
 
-    await updateProgram({ path: { id }, body, url: '/api/program/{id}' });
+    await updateProgram({ path: { id }, body });
 
     redirect(`/dashboard/courses/${slug}/overview`);
   }

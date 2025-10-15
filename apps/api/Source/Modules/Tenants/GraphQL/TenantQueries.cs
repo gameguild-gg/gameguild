@@ -1,6 +1,5 @@
 using GameGuild.Common;
 using GameGuild.Modules.Tenants.Inputs;
-using MediatR;
 
 
 namespace GameGuild.Modules.Tenants;

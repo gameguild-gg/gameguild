@@ -189,7 +189,10 @@ public class ProjectDACIntegrationTests : IDisposable {
     var projectId = Guid.NewGuid();
 
     var expiredPermission = new ProjectPermission {
-      UserId = userId, TenantId = tenantId, ResourceId = projectId, ExpiresAt = DateTime.UtcNow.AddDays(-1), // Expired
+      UserId = userId,
+      TenantId = tenantId,
+      ResourceId = projectId,
+      ExpiresAt = DateTime.UtcNow.AddDays(-1), // Expired
     };
 
     expiredPermission.AddPermission(PermissionType.Edit);

@@ -1,3 +1,293 @@
+# [2.22.0](https://github.com/gameguild-gg/gameguild/compare/v2.21.4...v2.22.0) (2025-09-29)
+
+
+### Features
+
+* **course:** Add 'Automation in Game Development' module to Intro to GPro ([413efd2](https://github.com/gameguild-gg/gameguild/commit/413efd2f6326c6b309811ee1574cbf284d39335e))
+* **mermaid:** Standardize chart background and container styling ([6b1af26](https://github.com/gameguild-gg/gameguild/commit/6b1af26dffc29b13ef4807881acd295b157463ef))
+
+## [2.21.4](https://github.com/gameguild-gg/gameguild/compare/v2.21.3...v2.21.4) (2025-09-22)
+
+
+### Bug Fixes
+
+* **web:** Adds week 5 content on game dev issues ([eddf87c](https://github.com/gameguild-gg/gameguild/commit/eddf87c81a6aad43175f50a004df031b89ee2eaa))
+
+## [2.21.3](https://github.com/gameguild-gg/gameguild/compare/v2.21.2...v2.21.3) (2025-09-22)
+
+
+### Bug Fixes
+
+* **dsa:** Refactors merge sort explanations ([0ed52dc](https://github.com/gameguild-gg/gameguild/commit/0ed52dc3dcbb60201e5154fba4ccff9a0153f511))
+
+## [2.21.2](https://github.com/gameguild-gg/gameguild/compare/v2.21.1...v2.21.2) (2025-09-22)
+
+
+### Bug Fixes
+
+* **web:** Adds content for AI for games week 3 and 5 ([4b0d2fe](https://github.com/gameguild-gg/gameguild/commit/4b0d2fe36905fdca92b833997cc5c885ebb11830))
+
+## [2.21.1](https://github.com/gameguild-gg/gameguild/compare/v2.21.0...v2.21.1) (2025-09-20)
+
+
+### Bug Fixes
+
+* **web:** Adds behaviour and decision trees ([44eead1](https://github.com/gameguild-gg/gameguild/commit/44eead14dd9f0115e38a8644768ef732133f442c))
+
+# [2.21.0](https://github.com/gameguild-gg/gameguild/compare/v2.20.0...v2.21.0) (2025-09-16)
+
+
+### Features
+
+* **api:** Add TestingLab adapter services ([407fdde](https://github.com/gameguild-gg/gameguild/commit/407fddeebfbb8e4e27882aa8a5286a30e595e73d))
+* **api:** Add TestingLab repositories ([e0bba37](https://github.com/gameguild-gg/gameguild/commit/e0bba376e2def4a79844c7212b0d3687c19985df))
+* **web:** Add nested content for 'Gamedev Issues' in mock data ([c051067](https://github.com/gameguild-gg/gameguild/commit/c0510671c48775f78ce58e62eea05653bba055b7))
+* **web:** Group game publishing content by platform in mock data ([2c6cd95](https://github.com/gameguild-gg/gameguild/commit/2c6cd95b044382f757456a17bd4fc40b830072d5))
+* **web:** Refactor course content sidebar for hierarchical display ([0898092](https://github.com/gameguild-gg/gameguild/commit/08980928f7c4826f150544a185409f8bd0d97297))
+
+# [2.20.0](https://github.com/gameguild-gg/gameguild/compare/v2.19.0...v2.20.0) (2025-09-15)
+
+
+### Features
+
+* **web:** Add game development issues content ([06466e6](https://github.com/gameguild-gg/gameguild/commit/06466e63f878cca5ba571f4f7450ecae73a96753))
+
+# [2.19.0](https://github.com/gameguild-gg/gameguild/compare/v2.18.0...v2.19.0) (2025-09-13)
+
+
+### Features
+
+* **web:** Adds game publishing course content ([cf9ad40](https://github.com/gameguild-gg/gameguild/commit/cf9ad40642d41cd8ee614b8eed7b6ce3e346e8cd))
+
+# [2.18.0](https://github.com/gameguild-gg/gameguild/compare/v2.17.2...v2.18.0) (2025-09-08)
+
+
+### Features
+
+* **web:** Adds game development careers content ([4e89619](https://github.com/gameguild-gg/gameguild/commit/4e8961979352c25984a9ce6a31cbc85c0c79b888))
+
+## [2.17.2](https://github.com/gameguild-gg/gameguild/compare/v2.17.1...v2.17.2) (2025-09-06)
+
+
+### Bug Fixes
+
+* **ai4games:** Corrects cohesion image label ([71d896f](https://github.com/gameguild-gg/gameguild/commit/71d896f1a5075ecbe7f54815496312d3d030ac6d))
+
+## [2.17.1](https://github.com/gameguild-gg/gameguild/compare/v2.17.0...v2.17.1) (2025-09-06)
+
+
+### Bug Fixes
+
+* **courses:** Corrects cohesion example image link ([a70f1fe](https://github.com/gameguild-gg/gameguild/commit/a70f1fe5297f9d6e079184ee37d129f9db9ee2cf))
+
+# [2.17.0](https://github.com/gameguild-gg/gameguild/compare/v2.16.0...v2.17.0) (2025-09-04)
+
+
+### Bug Fixes
+
+* **ai4games:** Improve math notation in 'Conway's Game of Life' lesson ([de1331c](https://github.com/gameguild-gg/gameguild/commit/de1331c8274eac08aa59b2582a432c1f0ff2cfb8))
+
+
+### Features
+
+* **ai4games:** Add 'State Machines' lesson content ([741c1d5](https://github.com/gameguild-gg/gameguild/commit/741c1d5ef503b81e1372cec2fedcf8442ef2a79a))
+* **ai4games:** Integrate 'State Machines' content into course mock data ([dde83d5](https://github.com/gameguild-gg/gameguild/commit/dde83d539a6b97e965904c1a5046c073d20ed8d6))
+
+# [2.16.0](https://github.com/gameguild-gg/gameguild/compare/v2.15.3...v2.16.0) (2025-09-01)
+
+
+### Features
+
+* **courses:** Adds intro to game dev tools content ([4a61039](https://github.com/gameguild-gg/gameguild/commit/4a61039887463ca8e78c55c9eaae1b8d60d8d135))
+
+## [2.15.3](https://github.com/gameguild-gg/gameguild/compare/v2.15.2...v2.15.3) (2025-08-28)
+
+
+### Bug Fixes
+
+* **courses:** expectations and add week01 content ([2a3e65c](https://github.com/gameguild-gg/gameguild/commit/2a3e65c1e2116467d2a31143024c22ba61db0490))
+
+## [2.15.2](https://github.com/gameguild-gg/gameguild/compare/v2.15.1...v2.15.2) (2025-08-28)
+
+
+### Bug Fixes
+
+* **ai_for_games:** Wrong image for Cohesion ([640d6c0](https://github.com/gameguild-gg/gameguild/commit/640d6c0557f6544bf780e6f9e1ff181aca28b590))
+
+## [2.15.1](https://github.com/gameguild-gg/gameguild/compare/v2.15.0...v2.15.1) (2025-08-28)
+
+
+### Bug Fixes
+
+* **dsa:** add more details to dsa content ([ed403f3](https://github.com/gameguild-gg/gameguild/commit/ed403f3443c82b8483dd6ab79bb9e4e7f0902bd8))
+
+# [2.15.0](https://github.com/gameguild-gg/gameguild/compare/v2.14.0...v2.15.0) (2025-08-28)
+
+
+### Bug Fixes
+
+* Ferpa Waiver ([6b66fe2](https://github.com/gameguild-gg/gameguild/commit/6b66fe2a675d9a4a1c352f570767b9a9db49aa6f))
+
+
+### Features
+
+* **ai4games:** Add week 01 expectations content file ([346e24b](https://github.com/gameguild-gg/gameguild/commit/346e24b935af65a52ce7fe661e8ee45817f1166b))
+* **dsa:** Add week 01 expectations content file ([c27a23a](https://github.com/gameguild-gg/gameguild/commit/c27a23ae0692811a59fd7a3b81e9b0ff381f78ee))
+* **mock-data:** Integrate AI for Games expectations into mock data ([99308cc](https://github.com/gameguild-gg/gameguild/commit/99308cce7a9dbb4142b6ada94d5f3bd04fbc5e2f))
+* **mock-data:** Integrate DSA expectations and update sort orders ([45a7d58](https://github.com/gameguild-gg/gameguild/commit/45a7d588aa610ebde2c2e9db5b3745d14d2734bd))
+
+# [2.14.0](https://github.com/gameguild-gg/gameguild/compare/v2.13.0...v2.14.0) (2025-08-27)
+
+
+### Features
+
+* **academic-honesty:** Introduce Academic Honesty Policy page ([3835957](https://github.com/gameguild-gg/gameguild/commit/3835957e7dfdd385515dbec20dd0dd5bab45244d))
+
+# [2.13.0](https://github.com/gameguild-gg/gameguild/compare/v2.12.0...v2.13.0) (2025-08-25)
+
+
+### Bug Fixes
+
+* setup instructions ([7850ee2](https://github.com/gameguild-gg/gameguild/commit/7850ee2f249bf6082f2905dba45b0454b23ed66e))
+
+
+### Features
+
+* add Data Structures and Algorithms course content ([64c3161](https://github.com/gameguild-gg/gameguild/commit/64c316179aacdc09df0d6fa01fbfd02eaaef1fb4))
+* **apps/api:** Add commands for managing testing requests and sessions ([3ddf1b2](https://github.com/gameguild-gg/gameguild/commit/3ddf1b267fdbd86f230577857cd80edcfa74e6e5))
+* **apps/api:** Add comprehensive TestingLab module abstractions and service interfaces ([1b0828b](https://github.com/gameguild-gg/gameguild/commit/1b0828b3c6aec34ccdb58534156a245c6824cab2))
+* **apps/api:** Add comprehensive TestingLab module with entities, enums, and permissions ([bbc5b73](https://github.com/gameguild-gg/gameguild/commit/bbc5b7318da1e9888815d32bcdec9780be1199fc))
+* **apps/api:** Add handlers for testing requests and sessions with event publishing ([1a306cb](https://github.com/gameguild-gg/gameguild/commit/1a306cb0acefdb44355aca4f42c957484a75895d))
+* **apps/api:** Add queries for testing lab data retrieval ([4a4985a](https://github.com/gameguild-gg/gameguild/commit/4a4985ae9b39acfed2540e981dcd48e96a600daf))
+* **apps/api:** Add testing lab event notifications for feedback, requests, and sessions ([8e23d4c](https://github.com/gameguild-gg/gameguild/commit/8e23d4cbc08dcb41041ccb44a4593172aa47b1df))
+* **apps/api:** Add validators for TestingLab commands ([3798695](https://github.com/gameguild-gg/gameguild/commit/3798695ea4e41fb5a10d9351840b31dc0a7c3c83))
+* **apps/api:** Revamp TestingLab module with new entities, services, commands, queries, and permission management ([81dc6cc](https://github.com/gameguild-gg/gameguild/commit/81dc6ccab8ca4ca4c9feae93236c64996975b2a4))
+* integrate DSA course into mock data system ([113cdfd](https://github.com/gameguild-gg/gameguild/commit/113cdfd36efea9b5461b13ecbd1e32ad11d2e1c4))
+
+## [2.10.2](https://github.com/gameguild-gg/gameguild/compare/v2.10.1...v2.10.2) (2025-08-23)
+
+
+### Bug Fixes
+
+* add .vscode settings to prevent markdown auto-formatting ([63b9e8c](https://github.com/gameguild-gg/gameguild/commit/63b9e8c87c43be8ca30d764cfb9f9f2bdcf54ca0))
+* correct LaTeX formatting in flocking.md ([b23fb18](https://github.com/gameguild-gg/gameguild/commit/b23fb183c901a8328ec793fcce8a1b3af5b07341))
+* update markdown content and renderer ([d70579d](https://github.com/gameguild-gg/gameguild/commit/d70579d85ea7449fd0dd3f6c11a45106006db088))
+
+## [2.10.1](https://github.com/gameguild-gg/gameguild/compare/v2.10.0...v2.10.1) (2025-08-23)
+
+
+### Bug Fixes
+
+* Update flocking.md content ([e8f09c9](https://github.com/gameguild-gg/gameguild/commit/e8f09c9f7d422f8f3bb1919f5f5ad2a7a8bf7d2a))
+
+# [2.10.0](https://github.com/gameguild-gg/gameguild/compare/v2.9.0...v2.10.0) (2025-08-21)
+
+
+### Features
+
+* add redirect from /p to /programs ([378fadc](https://github.com/gameguild-gg/gameguild/commit/378fadcd334c5c498683547caf59d30b3f8e3a03))
+* restructure course routes and cleanup empty files ([ed7c4c4](https://github.com/gameguild-gg/gameguild/commit/ed7c4c42b9f24462193cf8abd6cf2594bc5f479f))
+
+# [2.9.0](https://github.com/gameguild-gg/gameguild/compare/v2.8.3...v2.9.0) (2025-08-21)
+
+
+### Bug Fixes
+
+* Add missing username generation for OAuth user creation ([6420e6a](https://github.com/gameguild-gg/gameguild/commit/6420e6aa8f337b67cfc294c8aa3f57fa830da8c8))
+
+
+### Features
+
+* add GitHub issue modals to auth links and remove sign-up div ([0a79d0f](https://github.com/gameguild-gg/gameguild/commit/0a79d0f83ddccecc146318fcb85b0e952bf5080e))
+
+## [2.8.3](https://github.com/gameguild-gg/gameguild/compare/v2.8.2...v2.8.3) (2025-08-21)
+
+
+### Bug Fixes
+
+* cloudflare dns update ([d10a377](https://github.com/gameguild-gg/gameguild/commit/d10a37780fe7e55f1d84aa8aa8c071ece8379268))
+* DNS update logic and enhance authentication error handling ([fe8cf02](https://github.com/gameguild-gg/gameguild/commit/fe8cf02316bd7867a854b9c3269676d9a2b4f48a))
+
+## [2.8.2](https://github.com/gameguild-gg/gameguild/compare/v2.8.1...v2.8.2) (2025-08-21)
+
+
+### Bug Fixes
+
+* Allow course content access without authentication ([3d523e8](https://github.com/gameguild-gg/gameguild/commit/3d523e8eb21306110a8feeebb4b89a0ceb929065))
+
+## [2.8.1](https://github.com/gameguild-gg/gameguild/compare/v2.8.0...v2.8.1) (2025-08-21)
+
+
+### Bug Fixes
+
+* Add suppressHydrationWarning to gglexical layout body element ([d886d14](https://github.com/gameguild-gg/gameguild/commit/d886d1456db47db3687decc414dbf52b5159f8f5))
+
+# [2.8.0](https://github.com/gameguild-gg/gameguild/compare/v2.7.1...v2.8.0) (2025-08-21)
+
+
+### Bug Fixes
+
+* actions ([5d27c92](https://github.com/gameguild-gg/gameguild/commit/5d27c926b3b9e978f286ae19642169e7c1a8ec17))
+* resolve conflicting star exports in activity-tracking module ([2d29a60](https://github.com/gameguild-gg/gameguild/commit/2d29a60e6151394304cc6a5c97fd2e76d99b0872))
+
+
+### Features
+
+* add GitHub fork button component ([649af32](https://github.com/gameguild-gg/gameguild/commit/649af326636e6c1be94c1bafa41d8797fe67a099))
+* add responsive sidebar infrastructure for course content ([0ec4fac](https://github.com/gameguild-gg/gameguild/commit/0ec4fac254768ccb8de4a631f0fed3eb576c1922))
+* enhance course content sidebar with theme toggle and header ([3d3234e](https://github.com/gameguild-gg/gameguild/commit/3d3234edc423562a29c21a01e3b8188ba031e97b))
+* integrate GitHub fork button into default header ([0e48290](https://github.com/gameguild-gg/gameguild/commit/0e48290520c309019d4b3c32f50025b915ad2031))
+* restructure course content routing with new layout ([1893d0e](https://github.com/gameguild-gg/gameguild/commit/1893d0e214111c38d73eb756d51dae34d704e395))
+
+## [2.7.1](https://github.com/gameguild-gg/gameguild/compare/v2.7.0...v2.7.1) (2025-08-20)
+
+
+### Bug Fixes
+
+* **editor:** callout to admonition ([6a24b8b](https://github.com/gameguild-gg/gameguild/commit/6a24b8b6026ba3bda6794aaf41b7fc9a24d55adb))
+* **editor:** import fix ([641e441](https://github.com/gameguild-gg/gameguild/commit/641e4410ca0b6592a63d82090e149d1e69581895))
+* **editor:** logic fix in preview-table-of-contents ([365637d](https://github.com/gameguild-gg/gameguild/commit/365637da8ef16f1a1ddfdc90e65a040594f8928a))
+* **editor:** open project fix ([09561b1](https://github.com/gameguild-gg/gameguild/commit/09561b1ac301af84df013d57dcc82f06cca3ad87))
+* **editor:** preview page = serializedState type ([3a96333](https://github.com/gameguild-gg/gameguild/commit/3a9633305f82d465853859d0e2cb0717c818d229))
+* **editor:** preview page focus serializedState ([f21ec4d](https://github.com/gameguild-gg/gameguild/commit/f21ec4dd2a5e8e12a1572ae82c8baac90ce1aea9))
+* **layouts:** implement comprehensive hydration and theme fixes ([c908e0b](https://github.com/gameguild-gg/gameguild/commit/c908e0bcc74f4c0cc589e55dac70ed475619472b))
+* **ui:** resolve hydration issues, theme persistence, and error handling ([bce7a6a](https://github.com/gameguild-gg/gameguild/commit/bce7a6a2ec8c6134c49b2ed30c4e809138f4ee07))
+
+# [2.7.0](https://github.com/gameguild-gg/gameguild/compare/v2.6.0...v2.7.0) (2025-08-20)
+
+
+### Bug Fixes
+
+* **editor:** open project fix ([75a2b51](https://github.com/gameguild-gg/gameguild/commit/75a2b51dfc4f7606c3860a8f29e42a4c62a23684))
+
+
+### Features
+
+* **courses:** add AI for Games course content and update mock data ([b54825a](https://github.com/gameguild-gg/gameguild/commit/b54825a748b009f20e0f8c49902fd340d547545b))
+
+# [2.6.0](https://github.com/gameguild-gg/gameguild/compare/v2.5.3...v2.6.0) (2025-08-19)
+
+
+### Features
+
+* add slug field to ProgramContent model ([e124989](https://github.com/gameguild-gg/gameguild/commit/e124989da8afdd60f4393f6475987c02fead65c5))
+* add slug field to ProgramContent model ([b644747](https://github.com/gameguild-gg/gameguild/commit/b644747a50d153be0a1435cc26f5d5da82b6b2da))
+
+## [2.5.3](https://github.com/gameguild-gg/gameguild/compare/v2.5.2...v2.5.3) (2025-08-19)
+
+
+### Bug Fixes
+
+* remove /dashboard prefix from course and program viewing links ([95c3fea](https://github.com/gameguild-gg/gameguild/commit/95c3feacffefe2d01aa70a701c43d5cc2c363fa6))
+
+## [2.5.2](https://github.com/gameguild-gg/gameguild/compare/v2.5.1...v2.5.2) (2025-08-19)
+
+
+### Bug Fixes
+
+* **editor:** callout component ([439c983](https://github.com/gameguild-gg/gameguild/commit/439c98377fd3c434841746a4e3ded451d0d72d2e))
+* **web:** new packages ([7f4f7e5](https://github.com/gameguild-gg/gameguild/commit/7f4f7e5f09d625e66c93a9bd3f966458fc6b6b9e))
+
 ## [2.5.1](https://github.com/gameguild-gg/gameguild/compare/v2.5.0...v2.5.1) (2025-08-18)
 
 

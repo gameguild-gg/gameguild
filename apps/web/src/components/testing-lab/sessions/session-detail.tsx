@@ -1,24 +1,52 @@
 'use client';
 
-import { TestSession } from '@/lib/api/testing-lab/test-sessions';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarGroup, SidebarGroupLabel, SidebarInset } from '@/components/ui/sidebar';
-import { ArrowLeft, Calendar, Clock, GamepadIcon, Monitor, Target, Trophy, Users, Zap, Star, Info, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
-import { format } from 'date-fns';
-import { Link, useRouter } from '@/i18n/navigation';
-import { useState, useEffect, useCallback } from 'react';
+import {TestSession} from '@/lib/api/testing-lab/test-sessions';
+import {Badge} from '@/components/ui/badge';
+import {Button} from '@/components/ui/button';
+import {Carousel, type CarouselApi, CarouselContent, CarouselItem} from '@/components/ui/carousel';
+import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from '@/components/ui/sheet';
+import {Dialog, DialogContent, DialogHeader, DialogTitle} from '@/components/ui/dialog';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger
+} from '@/components/ui/sidebar';
+import {
+  ArrowLeft,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  FileText,
+  GamepadIcon,
+  Info,
+  Monitor,
+  Star,
+  Target,
+  Trophy,
+  Users,
+  Zap
+} from 'lucide-react';
+import {format} from 'date-fns';
+import {Link} from '@/i18n/navigation';
+import {useCallback, useEffect, useState} from 'react';
 import Autoplay from 'embla-carousel-autoplay';
-import { JoinProcess } from '../join/join-process';
+import {JoinProcess} from '../join/join-process';
 
 interface SessionDetailProps {
   session: TestSession;
 }
 
-export function SessionDetail({ session }: SessionDetailProps) {
+export function SessionDetail({session}: SessionDetailProps) {
   const [mounted, setMounted] = useState(false);
   const [showGameDetails, setShowGameDetails] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
@@ -66,8 +94,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
       description: session.description,
       genre: ['Action', 'Adventure'], // Default genres
       status: 'primary' as const,
-  testingFocus: [normalizedSessionType],
-  platforms: toArray(session.platform),
+      testingFocus: [normalizedSessionType],
+      platforms: toArray(session.platform),
     },
     ...(session.featuredGames || []),
   ];
@@ -148,7 +176,7 @@ export function SessionDetail({ session }: SessionDetailProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [showGameDetails, showRequirements, prevGame, nextGame]);
 
-  // Ensure component is mounted before rendering Sidebar
+  // Ensure the component is mounted before rendering Sidebar
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -156,13 +184,13 @@ export function SessionDetail({ session }: SessionDetailProps) {
   const getSessionTypeIcon = (type: string) => {
     switch (type) {
       case 'gameplay':
-        return <GamepadIcon className="h-6 w-6" />;
+        return <GamepadIcon className="h-6 w-6"/>;
       case 'usability':
-        return <Users className="h-6 w-6" />;
+        return <Users className="h-6 w-6"/>;
       case 'bug-testing':
-        return <Target className="h-6 w-6" />;
+        return <Target className="h-6 w-6"/>;
       default:
-        return <Trophy className="h-6 w-6" />;
+        return <Trophy className="h-6 w-6"/>;
     }
   };
 
@@ -182,7 +210,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
   // Show loading state until component is mounted to prevent hydration issues
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950/30 to-purple-950/40 flex items-center justify-center">
+      <div
+        className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950/30 to-purple-950/40 flex items-center justify-center">
         <div className="text-white">Loading...</div>
       </div>
     );
@@ -197,14 +226,15 @@ export function SessionDetail({ session }: SessionDetailProps) {
             <div className="flex items-center gap-3">
               <Button asChild variant="ghost" size="sm" className="text-slate-400 hover:text-white">
                 <Link href="/testing-lab">
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <ArrowLeft className="h-4 w-4 mr-2"/>
                   <span className="group-data-[collapsible=icon]:hidden">Back to Sessions</span>
                 </Link>
               </Button>
             </div>
           </SidebarHeader>
 
-          <SidebarContent className="bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-800/95 backdrop-blur-xl">
+          <SidebarContent
+            className="bg-gradient-to-b from-slate-900/95 via-slate-900/90 to-slate-800/95 backdrop-blur-xl">
             <SidebarGroup>
               <SidebarGroupLabel className="text-white font-semibold flex items-center gap-2 px-2 py-2">
                 {getSessionTypeIcon(session.sessionType)}
@@ -222,15 +252,16 @@ export function SessionDetail({ session }: SessionDetailProps) {
                     </Badge>
                   </div>
 
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{session.title}</h1>
+                  <h1
+                    className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{session.title}</h1>
 
                   <div className="flex flex-col gap-3 text-sm text-slate-400">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
+                      <Calendar className="h-4 w-4"/>
                       {format(sessionDate, 'MMM dd, h:mm a')}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
+                      <Clock className="h-4 w-4"/>
                       {session.duration}m
                     </div>
                   </div>
@@ -244,7 +275,9 @@ export function SessionDetail({ session }: SessionDetailProps) {
                       </span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300" style={{ width: `${fillPercentage}%` }} />
+                      <div
+                        className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{width: `${fillPercentage}%`}}/>
                     </div>
                   </div>
 
@@ -257,16 +290,21 @@ export function SessionDetail({ session }: SessionDetailProps) {
                       </span>
                     </div>
                     <div className="w-full bg-slate-700 rounded-full h-2">
-                      <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300" style={{ width: `${(session.currentGames / session.maxGames) * 100}%` }} />
+                      <div
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
+                        style={{width: `${(session.currentGames / session.maxGames) * 100}%`}}/>
                     </div>
                   </div>
 
                   {/* Join Session Button */}
                   <div className="pt-3">
-          <Button asChild className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-10 group-data-[collapsible=icon]:px-2" disabled={normalizedStatus !== 'open'}>
+                    <Button asChild
+                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-10 group-data-[collapsible=icon]:px-2"
+                            disabled={normalizedStatus !== 'open'}>
                       <Link href={`/testing-lab/sessions/${session.slug}/join`}>
-                        <Zap className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0" />
-            <span className="group-data-[collapsible=icon]:hidden">{normalizedStatus === 'open' ? 'Join Session' : 'Session Full'}</span>
+                        <Zap className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0"/>
+                        <span
+                          className="group-data-[collapsible=icon]:hidden">{normalizedStatus === 'open' ? 'Join Session' : 'Session Full'}</span>
                       </Link>
                     </Button>
                   </div>
@@ -275,21 +313,24 @@ export function SessionDetail({ session }: SessionDetailProps) {
             </SidebarGroup>
 
             {/* Separator */}
-            <div className="h-px bg-slate-700/50 mx-3 group-data-[collapsible=icon]:hidden" />
+            <div className="h-px bg-slate-700/50 mx-3 group-data-[collapsible=icon]:hidden"/>
 
             <SidebarGroup className="mt-6">
               <SidebarGroupLabel className="text-white font-semibold flex items-center gap-2 px-2 py-2">
-                <GamepadIcon className="h-4 w-4 text-blue-400" />
+                <GamepadIcon className="h-4 w-4 text-blue-400"/>
                 <span className="group-data-[collapsible=icon]:hidden">Games ({allGames.length})</span>
               </SidebarGroupLabel>
 
               <SidebarMenu className="space-y-4 px-2">
                 {allGames.map((game, index) => (
                   <SidebarMenuItem key={game.id}>
-                    <SidebarMenuButton isActive={currentGameIndex === index} className="group-data-[collapsible=icon]:justify-center h-auto py-4 cursor-pointer" onClick={() => selectGame(index)}>
+                    <SidebarMenuButton isActive={currentGameIndex === index}
+                                       className="group-data-[collapsible=icon]:justify-center h-auto py-4 cursor-pointer"
+                                       onClick={() => selectGame(index)}>
                       <div className="flex items-center gap-3 w-full">
-                        <div className={`p-2 rounded-lg ${currentGameIndex === index ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-slate-700'}`}>
-                          <GamepadIcon className="h-4 w-4 text-white" />
+                        <div
+                          className={`p-2 rounded-lg ${currentGameIndex === index ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-slate-700'}`}>
+                          <GamepadIcon className="h-4 w-4 text-white"/>
                         </div>
 
                         <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
@@ -297,7 +338,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
                           <p className="text-xs truncate text-slate-500">by {game.developer}</p>
                         </div>
 
-                        {game.status === 'primary' && <Star className="h-3 w-3 text-yellow-400 flex-shrink-0 group-data-[collapsible=icon]:hidden" />}
+                        {game.status === 'primary' && <Star
+                            className="h-3 w-3 text-yellow-400 flex-shrink-0 group-data-[collapsible=icon]:hidden"/>}
                       </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -306,35 +348,39 @@ export function SessionDetail({ session }: SessionDetailProps) {
 
               {/* Submit Game CTA - Developer Spotlight */}
               <div className="px-2 pt-4 group-data-[collapsible=icon]:hidden">
-                <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-600/20 via-blue-600/20 to-cyan-500/20 border border-purple-500/30 backdrop-blur-sm">
+                <div
+                  className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-600/20 via-blue-600/20 to-cyan-500/20 border border-purple-500/30 backdrop-blur-sm">
                   {/* Animated background elements */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10 animate-pulse" />
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-full blur-xl animate-bounce" />
-                  <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-pink-500/20 to-purple-600/20 rounded-full blur-lg animate-pulse delay-1000" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10 animate-pulse"/>
+                  <div
+                    className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-full blur-xl animate-bounce"/>
+                  <div
+                    className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-pink-500/20 to-purple-600/20 rounded-full blur-lg animate-pulse delay-1000"/>
 
                   {/* Content */}
                   <div className="relative z-10 p-4">
                     <div className="flex items-start gap-3 mb-3">
                       <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 shadow-lg">
-                        <GamepadIcon className="h-5 w-5 text-white" />
+                        <GamepadIcon className="h-5 w-5 text-white"/>
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-white text-sm mb-1">Got a Game?</h3>
-                        <p className="text-xs text-slate-300 leading-relaxed">Get real feedback from players and level up your game!</p>
+                        <p className="text-xs text-slate-300 leading-relaxed">Get real feedback from players and level
+                          up your game!</p>
                       </div>
                     </div>
 
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"/>
                         <span>Free playtesting sessions</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse delay-300" />
+                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse delay-300"/>
                         <span>Detailed feedback reports</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse delay-500" />
+                        <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse delay-500"/>
                         <span>Connect with real gamers</span>
                       </div>
                     </div>
@@ -361,146 +407,162 @@ export function SessionDetail({ session }: SessionDetailProps) {
           <div className="relative min-h-screen">
             {/* Header with sidebar trigger */}
             <div className="absolute top-4 left-4 z-20">
-              <SidebarTrigger className="bg-slate-900/80 border-slate-700 text-slate-200 backdrop-blur-sm" />
+              <SidebarTrigger className="bg-slate-900/80 border-slate-700 text-slate-200 backdrop-blur-sm"/>
             </div>
 
             {/* Full Screen Game Carousel */}
             {allGames.length > 0 ? (
-              <Carousel setApi={setCarouselApi} className="absolute inset-0" plugins={[autoplayPlugin]} opts={{ loop: true }}>
+              <Carousel setApi={setCarouselApi} className="absolute inset-0" plugins={[autoplayPlugin]}
+                        opts={{loop: true}}>
                 <CarouselContent>
                   {allGames.map((game, index) => (
-                  <CarouselItem key={game.id}>
-                    <div className="relative h-screen bg-gradient-to-br from-indigo-900/50 via-purple-900/30 to-blue-900/50">
-                      {/* Animated Background Pattern */}
-                      <div className="absolute inset-0 opacity-10">
-                        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(68,71,84,0.1)_25%,rgba(68,71,84,0.1)_50%,transparent_50%,transparent_75%,rgba(68,71,84,0.1)_75%)] bg-[length:40px_40px] animate-pulse" />
-                      </div>
+                    <CarouselItem key={game.id}>
+                      <div
+                        className="relative h-screen bg-gradient-to-br from-indigo-900/50 via-purple-900/30 to-blue-900/50">
+                        {/* Animated Background Pattern */}
+                        <div className="absolute inset-0 opacity-10">
+                          <div
+                            className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(68,71,84,0.1)_25%,rgba(68,71,84,0.1)_50%,transparent_50%,transparent_75%,rgba(68,71,84,0.1)_75%)] bg-[length:40px_40px] animate-pulse"/>
+                        </div>
 
-                      {/* Game Character/Art Placeholder */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center space-y-6">
-                          <div className="relative">
-                            <GamepadIcon className="h-32 w-32 text-blue-400/60 mx-auto mb-6" />
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-xl scale-150" />
+                        {/* Game Character/Art Placeholder */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center space-y-6">
+                            <div className="relative">
+                              <GamepadIcon className="h-32 w-32 text-blue-400/60 mx-auto mb-6"/>
+                              <div
+                                className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-xl scale-150"/>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Game Info Overlay - Bottom */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/95 via-slate-900/80 to-transparent p-8">
-                        <div className="max-w-4xl">
-                          {/* Game Title */}
-                          <div className="mb-6">
-                            <div className="flex items-center gap-4 mb-4">
-                              <div className="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1 border border-slate-700/50">
-                                <p className="text-white font-semibold text-sm">
-                                  {index + 1} / {allGames.length}
-                                </p>
+                        {/* Game Info Overlay - Bottom */}
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900/95 via-slate-900/80 to-transparent p-8">
+                          <div className="max-w-4xl">
+                            {/* Game Title */}
+                            <div className="mb-6">
+                              <div className="flex items-center gap-4 mb-4">
+                                <div
+                                  className="bg-black/40 backdrop-blur-sm rounded-lg px-3 py-1 border border-slate-700/50">
+                                  <p className="text-white font-semibold text-sm">
+                                    {index + 1} / {allGames.length}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <h2 className="text-5xl md:text-6xl font-bold text-white mb-3">{game.title}</h2>
+                              <p className="text-2xl text-blue-300 mb-4">by {game.developer}</p>
+                              <p
+                                className="text-lg text-slate-300 leading-relaxed max-w-3xl mb-6">{game.description}</p>
+
+                              {/* Action buttons for details and requirements */}
+                              <div className="flex gap-3 mb-6">
+                                <Button variant="outline" onClick={() => setShowGameDetails(true)}
+                                        className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
+                                  <Info className="h-4 w-4 mr-2"/>
+                                  Game Details
+                                </Button>
+                                <Button variant="outline" onClick={() => setShowRequirements(true)}
+                                        className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
+                                  <FileText className="h-4 w-4 mr-2"/>
+                                  Requirements
+                                </Button>
                               </div>
                             </div>
 
-                            <h2 className="text-5xl md:text-6xl font-bold text-white mb-3">{game.title}</h2>
-                            <p className="text-2xl text-blue-300 mb-4">by {game.developer}</p>
-                            <p className="text-lg text-slate-300 leading-relaxed max-w-3xl mb-6">{game.description}</p>
-
-                            {/* Action buttons for details and requirements */}
-                            <div className="flex gap-3 mb-6">
-                              <Button variant="outline" onClick={() => setShowGameDetails(true)} className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
-                                <Info className="h-4 w-4 mr-2" />
-                                Game Details
-                              </Button>
-                              <Button variant="outline" onClick={() => setShowRequirements(true)} className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
-                                <FileText className="h-4 w-4 mr-2" />
-                                Requirements
-                              </Button>
-                            </div>
-                          </div>
-
-                          {/* Game Details Grid */}
-                          <div className="grid md:grid-cols-3 gap-6 mb-8">
-                            {/* Genre */}
-                            <div>
-                              <h4 className="text-white font-semibold mb-2 text-sm">Genre</h4>
-                              <div className="flex flex-wrap gap-2">
-                                {game.genre?.map((genre) => (
-                                  <Badge key={genre} variant="outline" className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 text-purple-300 border-purple-600/50 text-sm px-3 py-1">
-                                    {genre}
-                                  </Badge>
-                                ))}
+                            {/* Game Details Grid */}
+                            <div className="grid md:grid-cols-3 gap-6 mb-8">
+                              {/* Genre */}
+                              <div>
+                                <h4 className="text-white font-semibold mb-2 text-sm">Genre</h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {game.genre?.map((genre) => (
+                                    <Badge key={genre} variant="outline"
+                                           className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 text-purple-300 border-purple-600/50 text-sm px-3 py-1">
+                                      {genre}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
 
-                            {/* Testing Focus */}
-                            <div>
-                              <h4 className="text-white font-semibold mb-2 text-sm flex items-center gap-1">
-                                <Target className="h-4 w-4 text-blue-400" />
-                                Testing Focus
-                              </h4>
-                              <div className="flex flex-wrap gap-2">
-                                {game.testingFocus?.map((focus) => (
-                                  <span key={focus} className="bg-blue-900/20 text-blue-300 text-sm px-3 py-1 rounded border border-blue-700/30">
+                              {/* Testing Focus */}
+                              <div>
+                                <h4 className="text-white font-semibold mb-2 text-sm flex items-center gap-1">
+                                  <Target className="h-4 w-4 text-blue-400"/>
+                                  Testing Focus
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {game.testingFocus?.map((focus) => (
+                                    <span key={focus}
+                                          className="bg-blue-900/20 text-blue-300 text-sm px-3 py-1 rounded border border-blue-700/30">
                                     {focus}
                                   </span>
-                                ))}
+                                  ))}
+                                </div>
                               </div>
-                            </div>
 
-                            {/* Platforms */}
-                            <div>
-                              <h4 className="text-white font-semibold mb-2 text-sm flex items-center gap-1">
-                                <Monitor className="h-4 w-4 text-green-400" />
-                                Platforms
-                              </h4>
-                              <div className="flex flex-wrap gap-2">
-                                {toArray(('platforms' in game ? (game as any).platforms : 'platform' in game ? (game as any).platform : session.platform) as string | string[]).map((platform: string) => (
-                                  <Badge key={platform} variant="outline" className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 text-green-300 border-green-600/50 text-sm px-3 py-1">
-                                    {platform}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Rewards */}
-                          {session.rewards && (
-                            <div className="mb-8 inline-block bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border border-yellow-700/50 rounded-lg p-4">
-                              <div className="flex items-center gap-3">
-                                <Trophy className="h-6 w-6 text-yellow-400" />
-                                <div>
-                                  <p className="text-yellow-300 font-semibold text-lg">{session.rewards.value}</p>
-                                  <p className="text-yellow-400/80 text-sm">Testing Reward</p>
+                              {/* Platforms */}
+                              <div>
+                                <h4 className="text-white font-semibold mb-2 text-sm flex items-center gap-1">
+                                  <Monitor className="h-4 w-4 text-green-400"/>
+                                  Platforms
+                                </h4>
+                                <div className="flex flex-wrap gap-2">
+                                  {toArray(('platforms' in game ? (game as any).platforms : 'platform' in game ? (game as any).platform : session.platform) as string | string[]).map((platform: string) => (
+                                    <Badge key={platform} variant="outline"
+                                           className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 text-green-300 border-green-600/50 text-sm px-3 py-1">
+                                      {platform}
+                                    </Badge>
+                                  ))}
                                 </div>
                               </div>
                             </div>
-                          )}
 
-                          {/* Carousel Navigation - Centered at bottom */}
-                          {allGames.length > 1 && (
-                            <div className="flex items-center justify-center gap-4 pt-6 mt-6 border-t border-slate-700/30">
-                              <Button variant="outline" size="sm" onClick={prevGame} className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
-                                <ChevronLeft className="h-4 w-4" />
-                              </Button>
-                              <div className="flex gap-3">
-                                {allGames.map((_, dotIndex) => (
-                                  <button
-                                    key={dotIndex}
-                                    onClick={() => selectGame(dotIndex)}
-                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${index === dotIndex ? 'bg-blue-400 scale-125' : 'bg-slate-600 hover:bg-slate-400'}`}
-                                  />
-                                ))}
+                            {/* Rewards */}
+                            {session.rewards && (
+                              <div
+                                className="mb-8 inline-block bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border border-yellow-700/50 rounded-lg p-4">
+                                <div className="flex items-center gap-3">
+                                  <Trophy className="h-6 w-6 text-yellow-400"/>
+                                  <div>
+                                    <p className="text-yellow-300 font-semibold text-lg">{session.rewards.value}</p>
+                                    <p className="text-yellow-400/80 text-sm">Testing Reward</p>
+                                  </div>
+                                </div>
                               </div>
-                              <Button variant="outline" size="sm" onClick={nextGame} className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
-                                <ChevronRight className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )}
+                            )}
+
+                            {/* Carousel Navigation - Centered at bottom */}
+                            {allGames.length > 1 && (
+                              <div
+                                className="flex items-center justify-center gap-4 pt-6 mt-6 border-t border-slate-700/30">
+                                <Button variant="outline" size="sm" onClick={prevGame}
+                                        className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
+                                  <ChevronLeft className="h-4 w-4"/>
+                                </Button>
+                                <div className="flex gap-3">
+                                  {allGames.map((_, dotIndex) => (
+                                    <button
+                                      key={dotIndex}
+                                      onClick={() => selectGame(dotIndex)}
+                                      className={`w-3 h-3 rounded-full transition-all duration-300 ${index === dotIndex ? 'bg-blue-400 scale-125' : 'bg-slate-600 hover:bg-slate-400'}`}
+                                    />
+                                  ))}
+                                </div>
+                                <Button variant="outline" size="sm" onClick={nextGame}
+                                        className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
+                                  <ChevronRight className="h-4 w-4"/>
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-            </Carousel>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+              </Carousel>
             ) : (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-white text-xl">No games available</div>
@@ -514,7 +576,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
           <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-slate-900 border-slate-700 p-6">
             <SheetHeader className="pb-6 border-b border-slate-700/50">
               <SheetTitle className="text-white text-2xl font-bold">Game Details</SheetTitle>
-              <SheetDescription className="text-slate-400 text-base mt-2">Detailed information about {allGames[currentGameIndex]?.title}</SheetDescription>
+              <SheetDescription className="text-slate-400 text-base mt-2">Detailed information
+                about {allGames[currentGameIndex]?.title}</SheetDescription>
             </SheetHeader>
 
             <div className="space-y-8 mt-8 pb-6">
@@ -523,7 +586,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
                   <div className="bg-slate-800/30 rounded-lg p-5 border border-slate-700/30">
                     <h3 className="text-xl font-bold text-white mb-3">{allGames[currentGameIndex]?.title}</h3>
                     <p className="text-blue-300 mb-4 text-lg">by {allGames[currentGameIndex]?.developer}</p>
-                    <p className="text-slate-300 leading-relaxed text-base">{allGames[currentGameIndex]?.description}</p>
+                    <p
+                      className="text-slate-300 leading-relaxed text-base">{allGames[currentGameIndex]?.description}</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -531,7 +595,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
                       <h4 className="text-white font-semibold mb-4 text-lg">Genre</h4>
                       <div className="space-y-2">
                         {allGames[currentGameIndex]?.genre?.map((genre) => (
-                          <span key={genre} className="block text-sm text-purple-300 bg-purple-900/30 px-3 py-2 rounded-md border border-purple-700/30">
+                          <span key={genre}
+                                className="block text-sm text-purple-300 bg-purple-900/30 px-3 py-2 rounded-md border border-purple-700/30">
                             {genre}
                           </span>
                         ))}
@@ -548,7 +613,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
                               ? (allGames[currentGameIndex] as any).platform
                               : session.platform,
                         ).map((platform: string) => (
-                          <span key={platform} className="block text-sm text-green-300 bg-green-900/30 px-3 py-2 rounded-md border border-green-700/30">
+                          <span key={platform}
+                                className="block text-sm text-green-300 bg-green-900/30 px-3 py-2 rounded-md border border-green-700/30">
                             {platform}
                           </span>
                         ))}
@@ -560,8 +626,9 @@ export function SessionDetail({ session }: SessionDetailProps) {
                     <h4 className="text-white font-semibold mb-4 text-lg">Testing Focus Areas</h4>
                     <div className="space-y-3">
                       {allGames[currentGameIndex]?.testingFocus?.map((focus) => (
-                        <div key={focus} className="flex items-center gap-3 text-sm text-blue-300 bg-blue-900/30 px-4 py-3 rounded-md border border-blue-700/30">
-                          <Target className="h-5 w-5 flex-shrink-0" />
+                        <div key={focus}
+                             className="flex items-center gap-3 text-sm text-blue-300 bg-blue-900/30 px-4 py-3 rounded-md border border-blue-700/30">
+                          <Target className="h-5 w-5 flex-shrink-0"/>
                           <span className="font-medium">{focus}</span>
                         </div>
                       ))}
@@ -600,7 +667,8 @@ export function SessionDetail({ session }: SessionDetailProps) {
           <SheetContent side="right" className="w-[400px] sm:w-[540px] bg-slate-900 border-slate-700 p-6">
             <SheetHeader className="pb-6 border-b border-slate-700/50">
               <SheetTitle className="text-white text-2xl font-bold">Testing Requirements</SheetTitle>
-              <SheetDescription className="text-slate-400 text-base mt-2">Requirements and expectations for this testing session</SheetDescription>
+              <SheetDescription className="text-slate-400 text-base mt-2">Requirements and expectations for this testing
+                session</SheetDescription>
             </SheetHeader>
 
             <div className="space-y-8 mt-8 pb-6">
@@ -609,8 +677,9 @@ export function SessionDetail({ session }: SessionDetailProps) {
                   <h3 className="text-xl font-bold text-white mb-6">Session Requirements</h3>
                   <div className="space-y-4">
                     {(session.requirements ?? []).map((requirement, index) => (
-                      <div key={index} className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                        <div className="w-3 h-3 bg-blue-400 rounded-full mt-2 flex-shrink-0" />
+                      <div key={index}
+                           className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
+                        <div className="w-3 h-3 bg-blue-400 rounded-full mt-2 flex-shrink-0"/>
                         <span className="text-slate-300 text-base leading-relaxed">{requirement}</span>
                       </div>
                     ))}
@@ -621,23 +690,25 @@ export function SessionDetail({ session }: SessionDetailProps) {
                   <h3 className="text-xl font-bold text-white mb-6">What to Expect</h3>
                   <div className="space-y-6 text-base text-slate-300">
                     <div className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                      <Clock className="h-6 w-6 text-blue-400 mt-1 flex-shrink-0" />
+                      <Clock className="h-6 w-6 text-blue-400 mt-1 flex-shrink-0"/>
                       <div>
                         <p className="font-semibold text-white mb-2">Duration</p>
-                        <p className="leading-relaxed">This session will run for approximately {session.duration} minutes</p>
+                        <p className="leading-relaxed">This session will run for
+                          approximately {session.duration} minutes</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                      <Users className="h-6 w-6 text-green-400 mt-1 flex-shrink-0" />
+                      <Users className="h-6 w-6 text-green-400 mt-1 flex-shrink-0"/>
                       <div>
                         <p className="font-semibold text-white mb-2">Participants</p>
-                        <p className="leading-relaxed">Up to {session.maxTesters} testers will participate in this session</p>
+                        <p className="leading-relaxed">Up to {session.maxTesters} testers will participate in this
+                          session</p>
                       </div>
                     </div>
 
                     <div className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                      <Target className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0" />
+                      <Target className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0"/>
                       <div>
                         <p className="font-semibold text-white mb-2">Focus</p>
                         <p className="leading-relaxed">Primary focus will be on {normalizedSessionType} testing</p>
@@ -645,8 +716,9 @@ export function SessionDetail({ session }: SessionDetailProps) {
                     </div>
 
                     {session.rewards && (
-                      <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-yellow-900/30 to-orange-900/30 rounded-lg border border-yellow-700/50">
-                        <Trophy className="h-6 w-6 text-yellow-400 mt-1 flex-shrink-0" />
+                      <div
+                        className="flex items-start gap-4 p-4 bg-gradient-to-r from-yellow-900/30 to-orange-900/30 rounded-lg border border-yellow-700/50">
+                        <Trophy className="h-6 w-6 text-yellow-400 mt-1 flex-shrink-0"/>
                         <div>
                           <p className="font-semibold text-white mb-2">Rewards</p>
                           <p className="text-yellow-200 leading-relaxed">{session.rewards.value}</p>
@@ -659,8 +731,10 @@ export function SessionDetail({ session }: SessionDetailProps) {
                 <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-6">
                   <h4 className="text-blue-300 font-semibold mb-4 text-lg">Session Status</h4>
                   <div className="flex items-center gap-3">
-                    <Badge className={getStatusColor(normalizedStatus) + ' text-base px-4 py-2'}>{capitalize(normalizedStatus)}</Badge>
-                    <span className="text-slate-400 text-base">{spotsLeft > 0 ? `${spotsLeft} spots remaining` : 'Session is full'}</span>
+                    <Badge
+                      className={getStatusColor(normalizedStatus) + ' text-base px-4 py-2'}>{capitalize(normalizedStatus)}</Badge>
+                    <span
+                      className="text-slate-400 text-base">{spotsLeft > 0 ? `${spotsLeft} spots remaining` : 'Session is full'}</span>
                   </div>
                 </div>
               </div>
@@ -674,8 +748,9 @@ export function SessionDetail({ session }: SessionDetailProps) {
             <DialogHeader className="sr-only">
               <DialogTitle>Join Testing Session</DialogTitle>
             </DialogHeader>
-            <div className="h-full overflow-y-auto rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-              <JoinProcess sessionSlug={session.slug} />
+            <div
+              className="h-full overflow-y-auto rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+              <JoinProcess sessionSlug={session.slug}/>
             </div>
           </DialogContent>
         </Dialog>

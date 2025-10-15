@@ -1,8 +1,12 @@
 'use server';
 
 import { auth } from '@/auth';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import { client } from '@/lib/api/generated/client.gen';
+import { 
+  getApiTestingLabPermissionsRoleTemplates,
+  postApiTestingLabPermissionsRoleTemplates,
+  putApiTestingLabPermissionsRoleTemplatesByIdOrName,
+  deleteApiTestingLabPermissionsRoleTemplatesByIdOrName
+} from '@/lib/api/generated/sdk.gen';
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -139,16 +143,8 @@ export async function getTestingLabRoleTemplatesAction(): Promise<RoleTemplate[]
   revalidatePath('/testing-lab/settings');
   
   try {
-    await configureAuthenticatedClient();
-    
     console.log('Fetching role templates from API...');
-    const response = await client.get({
-      url: '/api/testing-lab/permissions/role-templates',
-      headers: {
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache',
-      },
-    });
+    const response = await getApiTestingLabPermissionsRoleTemplates();
     
     console.log('API response:', { status: response.response?.status, hasData: !!response.data, hasError: !!response.error });
 
@@ -238,8 +234,6 @@ export async function createRoleTemplateAction(roleData: {
   }
   
   try {
-    await configureAuthenticatedClient();
-
     // Convert form permissions to the format expected by backend
     const backendPermissions = convertFormPermissionsToBackendDto(roleData.permissions);
     
@@ -249,8 +243,7 @@ export async function createRoleTemplateAction(roleData: {
       permissions: backendPermissions
     }, null, 2));
 
-    const response = await client.post({
-      url: '/api/testing-lab/permissions/role-templates',
+    const response = await postApiTestingLabPermissionsRoleTemplates({
       body: {
         name: roleData.name,
         description: roleData.description,
@@ -302,8 +295,6 @@ export async function updateRoleTemplateAction(roleId: string, roleData: {
   }
   
   try {
-    await configureAuthenticatedClient();
-
     // Convert form permissions to the format expected by backend
     const backendPermissions = convertFormPermissionsToBackendDto(roleData.permissions);
 
@@ -319,8 +310,10 @@ export async function updateRoleTemplateAction(roleId: string, roleData: {
       throw new Error('Invalid role id supplied for update (expected GUID). Refresh the page to reload proper identifiers.');
     }
 
-    const response = await client.put({
-      url: `/api/testing-lab/permissions/role-templates/${encodeURIComponent(roleId)}`,
+    const response = await putApiTestingLabPermissionsRoleTemplatesByIdOrName({
+      path: {
+        idOrName: roleId
+      },
       body: {
         ...(roleData.name && { name: roleData.name }),
         description: roleData.description,
@@ -372,15 +365,15 @@ export async function deleteRoleTemplateAction(roleId: string): Promise<void> {
   }
   
   try {
-    await configureAuthenticatedClient();
-
     const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
     if (!guidRegex.test(roleId)) {
       throw new Error('Invalid role id supplied for delete (expected GUID). Refresh the page to reload proper identifiers.');
     }
 
-    const response = await client.delete({
-      url: `/api/testing-lab/permissions/role-templates/${encodeURIComponent(roleId)}`,
+    const response = await deleteApiTestingLabPermissionsRoleTemplatesByIdOrName({
+      path: {
+        idOrName: roleId
+      }
     });
 
     if (response.error) {

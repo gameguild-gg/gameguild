@@ -1,14 +1,9 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Modules.GameJams.Models;
-
-
 namespace GameGuild.Modules.Projects;
 
 internal sealed class ProjectJamSubmissionConfiguration : IEntityTypeConfiguration<ProjectJamSubmission> {
   public void Configure(EntityTypeBuilder<ProjectJamSubmission> builder) {
     ArgumentNullException.ThrowIfNull(builder);
-    
+
     // Configure the relationship with Jam as optional to avoid query filter warnings
     builder.HasOne(pjs => pjs.Jam)
            .WithMany()
@@ -31,17 +26,17 @@ internal sealed class ProjectJamSubmissionConfiguration : IEntityTypeConfigurati
     // Additional indexes
     builder.HasIndex(pjs => pjs.JamId)
            .HasDatabaseName("IX_ProjectJamSubmissions_Jam");
-           
+
     builder.HasIndex(pjs => pjs.SubmittedAt)
            .HasDatabaseName("IX_ProjectJamSubmissions_Date");
-           
+
     builder.HasIndex(pjs => pjs.FinalScore)
            .HasDatabaseName("IX_ProjectJamSubmissions_Score");
 
     // Configure properties
     builder.Property(pjs => pjs.SubmittedAt)
            .IsRequired();
-           
+
     builder.Property(pjs => pjs.IsEligible)
            .HasDefaultValue(true);
   }

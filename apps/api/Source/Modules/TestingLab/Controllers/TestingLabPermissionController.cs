@@ -1,23 +1,19 @@
+using System.Security.Claims;
 using GameGuild.Common.Services;
 using GameGuild.Modules.Permissions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 
-namespace GameGuild.Modules.TestingLab.Controllers;
+namespace GameGuild.Modules.TestingLab;
 
-/// <summary>
-/// TestingLab-specific permission management controller
-/// Allows admins to create role templates for TestingLab resources: sessions, locations, feedbacks, etc.
-/// </summary>
+/// <summary> TestingLab-specific permission management controller Allows admins to create role templates for TestingLab resources: sessions, locations, feedbacks, etc. </summary>
 [ApiController]
 [Route("api/testing-lab/permissions")]
 [Authorize] // TODO: Add admin permission check
 public class TestingLabPermissionController : ControllerBase {
-  private readonly ISimplePermissionService _permissionService;
-
   private readonly ILogger<TestingLabPermissionController> _logger;
+
+  private readonly ISimplePermissionService _permissionService;
 
   public TestingLabPermissionController(ISimplePermissionService permissionService, ILogger<TestingLabPermissionController> logger) {
     _permissionService = permissionService;
@@ -32,9 +28,7 @@ public class TestingLabPermissionController : ControllerBase {
 
   // ===== TESTING LAB ROLE TEMPLATES =====
 
-  /// <summary>
-  /// Get all TestingLab role templates
-  /// </summary>
+  /// <summary> Get all TestingLab role templates </summary>
   [HttpGet("role-templates")]
   public async Task<ActionResult<List<TestingLabRoleTemplate>>> GetTestingLabRoleTemplates() {
     var allTemplates = await _permissionService.GetRoleTemplatesAsync();
@@ -48,51 +42,49 @@ public class TestingLabPermissionController : ControllerBase {
     // Show all role templates, not just TestingLab-specific ones
     var testingLabTemplates = allTemplates
                               .Select(t => new TestingLabRoleTemplate {
-                                  Id = t.Id,
-                                  Name = t.Name,
-                                  Description = t.Description,
-                                  IsSystemRole = t.IsSystemRole,
-                                  Permissions = new TestingLabPermissionsDto {
-                                    // Sessions
-                                    CanCreateSessions = t.PermissionTemplates?.Any(p => p.Action == "create" && p.ResourceType == "TestingSession") == true,
-                                    CanEditSessions = t.PermissionTemplates?.Any(p => p.Action == "edit" && p.ResourceType == "TestingSession") == true,
-                                    CanDeleteSessions = t.PermissionTemplates?.Any(p => p.Action == "delete" && p.ResourceType == "TestingSession") == true,
-                                    CanViewSessions = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingSession") == true,
+                                Id = t.Id,
+                                Name = t.Name,
+                                Description = t.Description,
+                                IsSystemRole = t.IsSystemRole,
+                                Permissions = new TestingLabPermissionsDto {
+                                  // Sessions
+                                  CanCreateSessions = t.PermissionTemplates?.Any(p => p.Action == "create" && p.ResourceType == "TestingSession") == true,
+                                  CanEditSessions = t.PermissionTemplates?.Any(p => p.Action == "edit" && p.ResourceType == "TestingSession") == true,
+                                  CanDeleteSessions = t.PermissionTemplates?.Any(p => p.Action == "delete" && p.ResourceType == "TestingSession") == true,
+                                  CanViewSessions = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingSession") == true,
 
-                                    // Locations
-                                    CanCreateLocations = t.PermissionTemplates?.Any(p => p.Action == "create" && p.ResourceType == "TestingLocation") == true,
-                                    CanEditLocations = t.PermissionTemplates?.Any(p => p.Action == "edit" && p.ResourceType == "TestingLocation") == true,
-                                    CanDeleteLocations = t.PermissionTemplates?.Any(p => p.Action == "delete" && p.ResourceType == "TestingLocation") == true,
-                                    CanViewLocations = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingLocation") == true,
+                                  // Locations
+                                  CanCreateLocations = t.PermissionTemplates?.Any(p => p.Action == "create" && p.ResourceType == "TestingLocation") == true,
+                                  CanEditLocations = t.PermissionTemplates?.Any(p => p.Action == "edit" && p.ResourceType == "TestingLocation") == true,
+                                  CanDeleteLocations = t.PermissionTemplates?.Any(p => p.Action == "delete" && p.ResourceType == "TestingLocation") == true,
+                                  CanViewLocations = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingLocation") == true,
 
-                                    // Feedback
-                                    CanCreateFeedback = t.PermissionTemplates?.Any(p => p.Action == "create" && p.ResourceType == "TestingFeedback") == true,
-                                    CanEditFeedback = t.PermissionTemplates?.Any(p => p.Action == "edit" && p.ResourceType == "TestingFeedback") == true,
-                                    CanDeleteFeedback = t.PermissionTemplates?.Any(p => p.Action == "delete" && p.ResourceType == "TestingFeedback") == true,
-                                    CanViewFeedback = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingFeedback") == true,
-                                    CanModerateFeedback = t.PermissionTemplates?.Any(p => p.Action == "moderate" && p.ResourceType == "TestingFeedback") == true,
+                                  // Feedback
+                                  CanCreateFeedback = t.PermissionTemplates?.Any(p => p.Action == "create" && p.ResourceType == "TestingFeedback") == true,
+                                  CanEditFeedback = t.PermissionTemplates?.Any(p => p.Action == "edit" && p.ResourceType == "TestingFeedback") == true,
+                                  CanDeleteFeedback = t.PermissionTemplates?.Any(p => p.Action == "delete" && p.ResourceType == "TestingFeedback") == true,
+                                  CanViewFeedback = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingFeedback") == true,
+                                  CanModerateFeedback = t.PermissionTemplates?.Any(p => p.Action == "moderate" && p.ResourceType == "TestingFeedback") == true,
 
-                                    // Requests
-                                    CanCreateRequests = t.PermissionTemplates?.Any(p => p.Action == "create" && p.ResourceType == "TestingRequest") == true,
-                                    CanEditRequests = t.PermissionTemplates?.Any(p => p.Action == "edit" && p.ResourceType == "TestingRequest") == true,
-                                    CanDeleteRequests = t.PermissionTemplates?.Any(p => p.Action == "delete" && p.ResourceType == "TestingRequest") == true,
-                                    CanViewRequests = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingRequest") == true,
-                                    CanApproveRequests = t.PermissionTemplates?.Any(p => p.Action == "approve" && p.ResourceType == "TestingRequest") == true,
+                                  // Requests
+                                  CanCreateRequests = t.PermissionTemplates?.Any(p => p.Action == "create" && p.ResourceType == "TestingRequest") == true,
+                                  CanEditRequests = t.PermissionTemplates?.Any(p => p.Action == "edit" && p.ResourceType == "TestingRequest") == true,
+                                  CanDeleteRequests = t.PermissionTemplates?.Any(p => p.Action == "delete" && p.ResourceType == "TestingRequest") == true,
+                                  CanViewRequests = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingRequest") == true,
+                                  CanApproveRequests = t.PermissionTemplates?.Any(p => p.Action == "approve" && p.ResourceType == "TestingRequest") == true,
 
-                                    // Participants
-                                    CanManageParticipants = t.PermissionTemplates?.Any(p => p.Action == "manage" && p.ResourceType == "TestingParticipant") == true,
-                                    CanViewParticipants = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingParticipant") == true,
-                                  }
-                                }
+                                  // Participants
+                                  CanManageParticipants = t.PermissionTemplates?.Any(p => p.Action == "manage" && p.ResourceType == "TestingParticipant") == true,
+                                  CanViewParticipants = t.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingParticipant") == true,
+                                },
+                              }
                               )
                               .ToList();
 
     return Ok(testingLabTemplates);
   }
 
-  /// <summary>
-  /// Create a new TestingLab role template
-  /// </summary>
+  /// <summary> Create a new TestingLab role template </summary>
   [HttpPost("role-templates")]
   public async Task<ActionResult<TestingLabRoleTemplate>> CreateTestingLabRoleTemplate([FromBody] CreateTestingLabRoleRequest request) {
     try {
@@ -111,9 +103,7 @@ public class TestingLabPermissionController : ControllerBase {
     catch (InvalidOperationException ex) { return Conflict(ex.Message); }
   }
 
-  /// <summary>
-  /// Update an existing TestingLab role template
-  /// </summary>
+  /// <summary> Update an existing TestingLab role template </summary>
   [HttpPut("role-templates/{idOrName}")]
   public async Task<ActionResult<TestingLabRoleTemplate>> UpdateTestingLabRoleTemplate(string idOrName, [FromBody] UpdateTestingLabRoleRequest request) {
     try {
@@ -161,9 +151,7 @@ public class TestingLabPermissionController : ControllerBase {
     catch (InvalidOperationException ex) { return NotFound(ex.Message); }
   }
 
-  /// <summary>
-  /// Delete a TestingLab role template
-  /// </summary>
+  /// <summary> Delete a TestingLab role template </summary>
   [HttpDelete("role-templates/{idOrName}")]
   public async Task<ActionResult> DeleteTestingLabRoleTemplate(string idOrName) {
     try {
@@ -190,9 +178,7 @@ public class TestingLabPermissionController : ControllerBase {
     catch (InvalidOperationException ex) { return Conflict(ex.Message); }
   }
 
-  /// <summary>
-  /// Delete a TestingLab role template by name (legacy compatibility for clients that don't yet have Ids)
-  /// </summary>
+  /// <summary> Delete a TestingLab role template by name (legacy compatibility for clients that don't yet have Ids) </summary>
   [HttpDelete("role-templates/by-name/{name}")]
   public async Task<ActionResult> DeleteTestingLabRoleTemplateByName(string name) {
     try {
@@ -209,9 +195,7 @@ public class TestingLabPermissionController : ControllerBase {
 
   // ===== USER TESTING LAB PERMISSIONS =====
 
-  /// <summary>
-  /// Get TestingLab permissions for a specific user
-  /// </summary>
+  /// <summary> Get TestingLab permissions for a specific user </summary>
   [HttpGet("users/{userId}")]
   public async Task<ActionResult<UserTestingLabPermissions>> GetUserTestingLabPermissions(Guid userId, [FromQuery] Guid? tenantId = null) {
     var userRoles = await _permissionService.GetUserRolesAsync(userId, tenantId);
@@ -253,15 +237,13 @@ public class TestingLabPermissionController : ControllerBase {
         // Participants
         CanManageParticipants = testingLabPermissions.Any(p => p.Action == "manage" && p.ResourceType == "TestingParticipant"),
         CanViewParticipants = testingLabPermissions.Any(p => p.Action == "read" && p.ResourceType == "TestingParticipant"),
-      }
+      },
     };
 
     return Ok(result);
   }
 
-  /// <summary>
-  /// Assign a TestingLab role to a user
-  /// </summary>
+  /// <summary> Assign a TestingLab role to a user </summary>
   [HttpPost("users/{userId}/roles")]
   public async Task<ActionResult> AssignTestingLabRole(Guid userId, [FromBody] AssignTestingLabRoleRequest request) {
     try {
@@ -279,9 +261,7 @@ public class TestingLabPermissionController : ControllerBase {
     catch (InvalidOperationException ex) { return NotFound(ex.Message); }
   }
 
-  /// <summary>
-  /// Revoke a TestingLab role from a user
-  /// </summary>
+  /// <summary> Revoke a TestingLab role from a user </summary>
   [HttpDelete("users/{userId}/roles/{roleName}")]
   public async Task<ActionResult> RevokeTestingLabRole(Guid userId, string roleName, [FromQuery] Guid? tenantId = null) {
     await _permissionService.RevokeRoleFromUserAsync(userId, tenantId, roleName);
@@ -298,9 +278,7 @@ public class TestingLabPermissionController : ControllerBase {
 
   // ===== INDIVIDUAL RESOURCE PERMISSIONS =====
 
-  /// <summary>
-  /// Grant permission to a specific TestingLab resource
-  /// </summary>
+  /// <summary> Grant permission to a specific TestingLab resource </summary>
   [HttpPost("users/{userId}/resources/{resourceType}/{resourceId}")]
   public async Task<ActionResult> GrantResourcePermission(
     Guid userId,
@@ -316,7 +294,7 @@ public class TestingLabPermissionController : ControllerBase {
       request.Action,
       resourceType,
       resourceId,
-      grantedByRole: null,
+      null,
       request.ExpiresAt
     );
 
@@ -332,9 +310,7 @@ public class TestingLabPermissionController : ControllerBase {
     return Ok();
   }
 
-  /// <summary>
-  /// Revoke permission from a specific TestingLab resource
-  /// </summary>
+  /// <summary> Revoke permission from a specific TestingLab resource </summary>
   [HttpDelete("users/{userId}/resources/{resourceType}/{resourceId}")]
   public async Task<ActionResult> RevokeResourcePermission(
     Guid userId,
@@ -361,9 +337,7 @@ public class TestingLabPermissionController : ControllerBase {
 
   // ===== PERMISSION CHECKING =====
 
-  /// <summary>
-  /// Check if a user can perform an action on a TestingLab resource
-  /// </summary>
+  /// <summary> Check if a user can perform an action on a TestingLab resource </summary>
   [HttpGet("users/{userId}/check/{resourceType}")]
   public async Task<ActionResult<bool>> CheckTestingLabPermission(
     Guid userId,
@@ -391,130 +365,150 @@ public class TestingLabPermissionController : ControllerBase {
     // Sessions
     if (permissions.CanCreateSessions)
       templates.Add(
-        new() {
-          Action = "create", ResourceType = "TestingSession"
+        new PermissionTemplate {
+          Action = "create",
+          ResourceType = "TestingSession",
         }
       );
     if (permissions.CanEditSessions)
       templates.Add(
-        new() {
-          Action = "edit", ResourceType = "TestingSession"
+        new PermissionTemplate {
+          Action = "edit",
+          ResourceType = "TestingSession",
         }
       );
     if (permissions.CanDeleteSessions)
       templates.Add(
-        new() {
-          Action = "delete", ResourceType = "TestingSession"
+        new PermissionTemplate {
+          Action = "delete",
+          ResourceType = "TestingSession",
         }
       );
     if (permissions.CanViewSessions)
       templates.Add(
-        new() {
-          Action = "read", ResourceType = "TestingSession"
+        new PermissionTemplate {
+          Action = "read",
+          ResourceType = "TestingSession",
         }
       );
 
     // Locations
     if (permissions.CanCreateLocations)
       templates.Add(
-        new() {
-          Action = "create", ResourceType = "TestingLocation"
+        new PermissionTemplate {
+          Action = "create",
+          ResourceType = "TestingLocation",
         }
       );
     if (permissions.CanEditLocations)
       templates.Add(
-        new() {
-          Action = "edit", ResourceType = "TestingLocation"
+        new PermissionTemplate {
+          Action = "edit",
+          ResourceType = "TestingLocation",
         }
       );
     if (permissions.CanDeleteLocations)
       templates.Add(
-        new() {
-          Action = "delete", ResourceType = "TestingLocation"
+        new PermissionTemplate {
+          Action = "delete",
+          ResourceType = "TestingLocation",
         }
       );
     if (permissions.CanViewLocations)
       templates.Add(
-        new() {
-          Action = "read", ResourceType = "TestingLocation"
+        new PermissionTemplate {
+          Action = "read",
+          ResourceType = "TestingLocation",
         }
       );
 
     // Feedback
     if (permissions.CanCreateFeedback)
       templates.Add(
-        new() {
-          Action = "create", ResourceType = "TestingFeedback"
+        new PermissionTemplate {
+          Action = "create",
+          ResourceType = "TestingFeedback",
         }
       );
     if (permissions.CanEditFeedback)
       templates.Add(
-        new() {
-          Action = "edit", ResourceType = "TestingFeedback"
+        new PermissionTemplate {
+          Action = "edit",
+          ResourceType = "TestingFeedback",
         }
       );
     if (permissions.CanDeleteFeedback)
       templates.Add(
-        new() {
-          Action = "delete", ResourceType = "TestingFeedback"
+        new PermissionTemplate {
+          Action = "delete",
+          ResourceType = "TestingFeedback",
         }
       );
     if (permissions.CanViewFeedback)
       templates.Add(
-        new() {
-          Action = "read", ResourceType = "TestingFeedback"
+        new PermissionTemplate {
+          Action = "read",
+          ResourceType = "TestingFeedback",
         }
       );
     if (permissions.CanModerateFeedback)
       templates.Add(
-        new() {
-          Action = "moderate", ResourceType = "TestingFeedback"
+        new PermissionTemplate {
+          Action = "moderate",
+          ResourceType = "TestingFeedback",
         }
       );
 
     // Requests
     if (permissions.CanCreateRequests)
       templates.Add(
-        new() {
-          Action = "create", ResourceType = "TestingRequest"
+        new PermissionTemplate {
+          Action = "create",
+          ResourceType = "TestingRequest",
         }
       );
     if (permissions.CanEditRequests)
       templates.Add(
-        new() {
-          Action = "edit", ResourceType = "TestingRequest"
+        new PermissionTemplate {
+          Action = "edit",
+          ResourceType = "TestingRequest",
         }
       );
     if (permissions.CanDeleteRequests)
       templates.Add(
-        new() {
-          Action = "delete", ResourceType = "TestingRequest"
+        new PermissionTemplate {
+          Action = "delete",
+          ResourceType = "TestingRequest",
         }
       );
     if (permissions.CanViewRequests)
       templates.Add(
-        new() {
-          Action = "read", ResourceType = "TestingRequest"
+        new PermissionTemplate {
+          Action = "read",
+          ResourceType = "TestingRequest",
         }
       );
     if (permissions.CanApproveRequests)
       templates.Add(
-        new() {
-          Action = "approve", ResourceType = "TestingRequest"
+        new PermissionTemplate {
+          Action = "approve",
+          ResourceType = "TestingRequest",
         }
       );
 
     // Participants
     if (permissions.CanManageParticipants)
       templates.Add(
-        new() {
-          Action = "manage", ResourceType = "TestingParticipant"
+        new PermissionTemplate {
+          Action = "manage",
+          ResourceType = "TestingParticipant",
         }
       );
     if (permissions.CanViewParticipants)
       templates.Add(
-        new() {
-          Action = "read", ResourceType = "TestingParticipant"
+        new PermissionTemplate {
+          Action = "read",
+          ResourceType = "TestingParticipant",
         }
       );
 
@@ -557,7 +551,7 @@ public class TestingLabPermissionController : ControllerBase {
         // Participants
         CanManageParticipants = template.PermissionTemplates?.Any(p => p.Action == "manage" && p.ResourceType == "TestingParticipant") == true,
         CanViewParticipants = template.PermissionTemplates?.Any(p => p.Action == "read" && p.ResourceType == "TestingParticipant") == true,
-      }
+      },
     };
   }
 }
@@ -620,7 +614,7 @@ public class TestingLabRoleTemplate {
 
   public bool IsSystemRole { get; set; }
 
-  public TestingLabPermissionsDto Permissions { get; set; } = new();
+  public TestingLabPermissionsDto Permissions { get; set; } = new TestingLabPermissionsDto();
 }
 
 public class UserTestingLabPermissions {
@@ -628,9 +622,9 @@ public class UserTestingLabPermissions {
 
   public Guid? TenantId { get; set; }
 
-  public List<string> AssignedRoles { get; set; } = new();
+  public List<string> AssignedRoles { get; set; } = new List<string>();
 
-  public TestingLabPermissionsDto Permissions { get; set; } = new();
+  public TestingLabPermissionsDto Permissions { get; set; } = new TestingLabPermissionsDto();
 }
 
 public class CreateTestingLabRoleRequest {
@@ -638,7 +632,7 @@ public class CreateTestingLabRoleRequest {
 
   public string Description { get; set; } = string.Empty;
 
-  public TestingLabPermissionsDto Permissions { get; set; } = new();
+  public TestingLabPermissionsDto Permissions { get; set; } = new TestingLabPermissionsDto();
 }
 
 public class UpdateTestingLabRoleRequest {
@@ -646,7 +640,7 @@ public class UpdateTestingLabRoleRequest {
 
   public string Description { get; set; } = string.Empty;
 
-  public TestingLabPermissionsDto Permissions { get; set; } = new();
+  public TestingLabPermissionsDto Permissions { get; set; } = new TestingLabPermissionsDto();
 }
 
 public class AssignTestingLabRoleRequest {

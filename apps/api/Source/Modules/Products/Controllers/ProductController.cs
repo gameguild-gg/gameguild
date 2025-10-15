@@ -1,9 +1,6 @@
 using GameGuild.Common;
-using GameGuild.Common.Extensions;
-using System.Security.Claims;
 using GameGuild.Modules.Contents;
 using GameGuild.Modules.Permissions;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -327,15 +324,15 @@ public class ProductController(IMediator mediator) : ControllerBase {
     [FromBody] ProductSubscriptionPlan plan
   ) {
     plan.ProductId = id; // Ensure the product ID matches the route
-    var createdPlan = await mediator.Send(new CreateSubscriptionPlanCommand { 
-      Name = plan.Name, 
-      Description = plan.Description, 
-      Price = plan.Price, 
-      Currency = plan.Currency, 
-      Interval = plan.BillingInterval.ToString().ToLower(), 
-      IntervalCount = plan.IntervalCount, 
-      TrialDays = plan.TrialPeriodDays, 
-      IsActive = plan.IsActive, 
+    var createdPlan = await mediator.Send(new CreateSubscriptionPlanCommand {
+      Name = plan.Name,
+      Description = plan.Description,
+      Price = plan.Price,
+      Currency = plan.Currency,
+      Interval = plan.BillingInterval.ToString().ToLower(),
+      IntervalCount = plan.IntervalCount,
+      TrialDays = plan.TrialPeriodDays,
+      IsActive = plan.IsActive,
       CreatedBy = User.GetUserId() ?? Guid.Empty,
     });
 

@@ -1,8 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-
-namespace GameGuild.Modules.Certificates;
+﻿namespace GameGuild.Modules.Certificates;
 
 public class UserCertificateConfiguration : IEntityTypeConfiguration<UserCertificate> {
   public void Configure(EntityTypeBuilder<UserCertificate> builder) {

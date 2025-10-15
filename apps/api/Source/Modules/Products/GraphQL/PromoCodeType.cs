@@ -1,5 +1,4 @@
 ﻿using GameGuild.Database;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Products;
@@ -38,23 +37,23 @@ public class PromoCodeType : ObjectType<PromoCode> {
               .Type<NonNullType<IntType>>()
               .Description("Current number of times this code has been used")
               .Resolve(async context => {
-                  var promoCode = context.Parent<PromoCode>();
-                  var dbContext = context.Service<ApplicationDbContext>();
+                var promoCode = context.Parent<PromoCode>();
+                var dbContext = context.Service<ApplicationDbContext>();
 
-                  return await dbContext.PromoCodeUses.Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id)
-                                        .CountAsync();
-                }
+                return await dbContext.PromoCodeUses.Where(pcu => !pcu.IsDeleted && pcu.PromoCodeId == promoCode.Id)
+                                      .CountAsync();
+              }
               );
 
     descriptor.Field("isValid")
               .Type<NonNullType<BooleanType>>()
               .Description("Indicates if the promo code is currently valid")
               .Resolve(async context => {
-                  var promoCode = context.Parent<PromoCode>();
-                  var productService = context.Service<IProductService>();
+                var promoCode = context.Parent<PromoCode>();
+                var productService = context.Service<IProductService>();
 
-                  return await productService.IsPromoCodeValidAsync(promoCode.Code);
-                }
+                return await productService.IsPromoCodeValidAsync(promoCode.Code);
+              }
               );
   }
 }

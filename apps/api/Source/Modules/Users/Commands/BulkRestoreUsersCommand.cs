@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using GameGuild.Common;
-using MediatR;
+﻿using GameGuild.Common;
 
 
 namespace GameGuild.Modules.Users;
@@ -9,7 +7,7 @@ namespace GameGuild.Modules.Users;
 /// Command to bulk restore users
 /// </summary>
 public sealed class BulkRestoreUsersCommand : IRequest<BulkOperationResult> {
-  [Required] [MinLength(1)] public IList<Guid> UserIds { get; set; } = new List<Guid>();
+  [Required][MinLength(1)] public IList<Guid> UserIds { get; set; } = new List<Guid>();
 
   public string? Reason { get; set; }
 }

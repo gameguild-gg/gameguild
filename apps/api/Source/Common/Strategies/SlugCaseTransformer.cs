@@ -12,7 +12,10 @@ public class SlugCaseTransformer : CachedCaseTransformer {
 
   static SlugCaseTransformer() {
     var config = new SlugHelperConfiguration {
-      ForceLowerCase = true, CollapseDashes = true, TrimWhitespace = true, StringReplacements = new Dictionary<string, string> { { "&", "and" }, { "+", "plus" } },
+      ForceLowerCase = true,
+      CollapseDashes = true,
+      TrimWhitespace = true,
+      StringReplacements = new Dictionary<string, string> { { "&", "and" }, { "+", "plus" } },
     };
 
     SlugHelper = new SlugHelper(config);

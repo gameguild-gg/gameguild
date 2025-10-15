@@ -1,5 +1,4 @@
 using GameGuild.Common;
-using MediatR;
 
 
 namespace GameGuild.Modules.Payments;

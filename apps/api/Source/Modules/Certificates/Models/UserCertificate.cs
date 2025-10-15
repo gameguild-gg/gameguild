@@ -1,10 +1,7 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Common;
 using GameGuild.Modules.Products;
 using GameGuild.Modules.Programs;
 using GameGuild.Modules.Users;
-using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Certificates;
@@ -19,7 +16,7 @@ namespace GameGuild.Modules.Certificates;
 [Index(nameof(Status))]
 [Index(nameof(IssuedAt))]
 public class UserCertificate : Entity {
-  [Required] [ForeignKey(nameof(User))] public Guid UserId { get; set; }
+  [Required][ForeignKey(nameof(User))] public Guid UserId { get; set; }
 
   [Required]
   [ForeignKey(nameof(Certificate))]

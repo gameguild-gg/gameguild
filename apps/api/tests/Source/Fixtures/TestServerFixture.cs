@@ -28,25 +28,24 @@ namespace GameGuild.Tests.Fixtures {
     public TestServerFixture() {
       var hostBuilder = new HostBuilder()
         .ConfigureWebHost(webHost => {
-            webHost.UseTestServer();
-            webHost.UseStartup<TestStartup>();
-            webHost.ConfigureServices(services => {
-                // Configure the fixture's services
-                ConfigureServices(services);
-              }
-            );
+          webHost.UseTestServer();
+          webHost.UseStartup<TestStartup>();
+          webHost.ConfigureServices(services => {
+            // Configure the fixture's services
+            ConfigureServices(services);
           }
+          );
+        }
         );
 
       _host = hostBuilder.Start();
       Server = _host.GetTestServer();
-      
+
       // Ensure database is created and ready for testing
       EnsureDatabaseCreated();
     }
 
-    private async void EnsureDatabaseCreated()
-    {
+    private async void EnsureDatabaseCreated() {
       using var scope = Server.Services.CreateScope();
       var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
       await dbContext.Database.EnsureCreatedAsync();
@@ -74,16 +73,16 @@ namespace GameGuild.Tests.Fixtures {
 
       // Add HTTP context accessor (required by pipeline behaviors)
       services.AddHttpContextAccessor();
-      
+
       // Add IDateTimeProvider for PerformanceBehavior
       services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
       // Add EF Core InMemory database for testing with unique database name
       var databaseName = $"TestDatabase_{Guid.NewGuid()}";
-      
+
       // Add DbContextFactory for GraphQL DataLoaders first  
       services.AddDbContextFactory<ApplicationDbContext>(options => options.UseInMemoryDatabase(databaseName));
-      
+
       // Add regular DbContext using the factory (ensures compatible lifetimes)
       services.AddScoped<ApplicationDbContext>(provider => {
         var factory = provider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
@@ -110,21 +109,20 @@ namespace GameGuild.Tests.Fixtures {
 
       // Add authentication module
       services = AuthModuleDependencyInjection.AddAuthModule(services, configuration);
-      
+
       // Replace the IAuthService with a mock for testing (avoids complex dependency chain)
       services.AddScoped<IAuthService, MockAuthService>();
-      
+
       // Add GraphQL infrastructure with testing configuration
       services.AddGraphQLInfrastructure(DependencyInjection.GraphQLOptionsFactory.ForTesting());
-      
+
       // Explicitly enable introspection for tests (overrides any DisableIntrospection calls)
       services.AddGraphQLServer().DisableIntrospection(false);
-      
+
       // Configure GraphQL to return 200 OK for validation errors
-      services.Configure<HotChocolate.AspNetCore.GraphQLHttpOptions>(options =>
-      {
-          // Configure to handle validation errors properly
-          options.EnableGetRequests = true;
+      services.Configure<HotChocolate.AspNetCore.GraphQLHttpOptions>(options => {
+        // Configure to handle validation errors properly
+        options.EnableGetRequests = true;
       });
 
       // Add controllers from the main application assembly
@@ -141,7 +139,7 @@ namespace GameGuild.Tests.Fixtures {
       var key = Encoding.ASCII.GetBytes(_testSecret);
       var tokenDescriptor = new SecurityTokenDescriptor {
         Subject = new ClaimsIdentity([
-          new Claim(ClaimTypes.NameIdentifier, userId), 
+          new Claim(ClaimTypes.NameIdentifier, userId),
           new Claim(ClaimTypes.Email, "test@example.com"),
           new Claim("sub", userId),
           new Claim("email", "test@example.com"),
