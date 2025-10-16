@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
+import type { JSX } from 'react/jsx-runtime';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { Move, Type, X } from 'lucide-react';
 
@@ -175,16 +176,14 @@ function SpotifyComponent({ data, nodeKey }: SpotifyComponentProps) {
   // Edit menu options
   const editMenuOptions: EditMenuOption[] = [
     {
-      id: 'size',
       icon: <Move className="h-4 w-4" />,
       label: 'Adjust size',
-      action: () => setShowSizeControls(true),
+      onClick: () => setShowSizeControls(true),
     },
     {
-      id: 'caption',
       icon: <Type className="h-4 w-4" />,
       label: caption ? 'Edit caption' : 'Add caption',
-      action: () => setIsEditing(true),
+      onClick: () => setIsEditing(true),
     },
   ];
 

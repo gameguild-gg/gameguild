@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { AlertCircle, Move, Pause, Play, Type, Volume2, VolumeX, X } from 'lucide-react';
+import type { JSX } from 'react/jsx-runtime';
 
 import { ImageSizeControl } from '@/components/ui/image-size-control';
 import { CaptionInput } from '@/components/ui/caption-input';
@@ -115,6 +116,11 @@ function EmbeddedAudio({
   onSizeChange,
   caption,
   onCaptionChange,
+  iframeRef,
+  isLoading,
+  setIsLoading,
+  showMenu,
+  setShowMenu,
 }: {
   embedInfo: { type: string; id: string };
   size: number;
@@ -126,12 +132,14 @@ function EmbeddedAudio({
   onSizeChange?: (size: number) => void;
   caption?: string;
   onCaptionChange?: (caption: string) => void;
+  iframeRef: React.RefObject<HTMLIFrameElement>;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+  showMenu: boolean;
+  setShowMenu: (show: boolean) => void;
 }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
   const captionControlsRef = useRef<HTMLDivElement>(null);
-  const [showMenu, setShowMenu] = useState(false);
 
   let embedUrl = '';
   let title = '';
@@ -164,51 +172,24 @@ function EmbeddedAudio({
 
   const editMenuOptions: EditMenuOption[] = [
     {
-      id: 'size',
       icon: <Move className="h-4 w-4" />,
       label: 'Adjust size',
-      action: () => {
+      onClick: () => {
         if (setShowSizeControls) {
           setShowSizeControls(true);
         }
       },
     },
     {
-      id: 'caption',
       icon: <Type className="h-4 w-4" />,
       label: caption ? 'Edit caption' : 'Add caption',
-      action: () => {
+      onClick: () => {
         if (setIsEditing) {
           setIsEditing(true);
         }
       },
     },
   ];
-
-  // Add CSS for YouTube
-  useEffect(() => {
-    if (embedInfo.type === 'youtube' && iframeRef.current) {
-      // Add CSS to hide the video and show only the controls
-      const style = document.createElement('style');
-      style.textContent = `
-        .youtube-audio-embed {
-          height: 60px !important;
-          overflow: hidden;
-        }
-        
-        /* Completely hide the video and show only the controls */
-        .youtube-audio-embed iframe {
-          margin-top: -150px;
-          opacity: 0.8;
-        }
-      `;
-      document.head.appendChild(style);
-
-      return () => {
-        document.head.removeChild(style);
-      };
-    }
-  }, [embedInfo.type]);
 
   return (
     <div style={{ width: `${size}%` }} className="relative" onMouseEnter={() => setShowMenu(true)} onMouseLeave={() => setShowMenu(false)}>
@@ -318,6 +299,7 @@ function AudioComponent({ data, nodeKey }: AudioComponentProps) {
   const controlsRef = useRef<HTMLDivElement>(null);
   const sizeControlsRef = useRef<HTMLDivElement>(null);
   const captionControlsRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Detect if it's an embedded audio when loading the component
   useEffect(() => {
@@ -351,6 +333,31 @@ function AudioComponent({ data, nodeKey }: AudioComponentProps) {
       });
     }
   }, [data, editor, nodeKey, hasBeenNew]);
+
+  // Add CSS for YouTube embedded audio
+  useEffect(() => {
+    if (embedInfo?.type === 'youtube' && iframeRef.current) {
+      // Add CSS to hide the video and show only the controls
+      const style = document.createElement('style');
+      style.textContent = `
+        .youtube-audio-embed {
+          height: 60px !important;
+          overflow: hidden;
+        }
+        
+        /* Completely hide the video and show only the controls */
+        .youtube-audio-embed iframe {
+          margin-top: -150px;
+          opacity: 0.8;
+        }
+      `;
+      document.head.appendChild(style);
+
+      return () => {
+        document.head.removeChild(style);
+      };
+    }
+  }, [embedInfo?.type]);
 
   const updateAudio = (newData: Partial<AudioData>) => {
     editor.update(() => {
@@ -456,16 +463,14 @@ function AudioComponent({ data, nodeKey }: AudioComponentProps) {
   // Edit menu options
   const editMenuOptions: EditMenuOption[] = [
     {
-      id: 'size',
       icon: <Move className="h-4 w-4" />,
       label: 'Adjust size',
-      action: () => setShowSizeControls(true),
+      onClick: () => setShowSizeControls(true),
     },
     {
-      id: 'caption',
       icon: <Type className="h-4 w-4" />,
       label: caption ? 'Edit caption' : 'Add caption',
-      action: () => setIsEditing(true),
+      onClick: () => setIsEditing(true),
     },
   ];
 
@@ -509,6 +514,11 @@ function AudioComponent({ data, nodeKey }: AudioComponentProps) {
             onSizeChange={handleSizeChange}
             caption={caption}
             onCaptionChange={handleCaptionChange}
+            iframeRef={iframeRef}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            showMenu={showMenu}
+            setShowMenu={setShowMenu}
           />
         ) : (
           // Render native audio
