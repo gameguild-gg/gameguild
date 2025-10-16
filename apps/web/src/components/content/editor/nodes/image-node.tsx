@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from 'lexical';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { Move, Type, X } from 'lucide-react';
+import type { JSX } from 'react/jsx-runtime';
 
 import { ImageSizeControl } from '@/components/ui/image-size-control';
 import { CaptionInput } from '@/components/ui/caption-input';
@@ -129,16 +130,14 @@ function ImageComponent({ data, nodeKey }: ImageComponentProps) {
   // Opções do menu de edição
   const editMenuOptions: EditMenuOption[] = [
     {
-      id: 'size',
       icon: <Move className="h-4 w-4" />,
       label: 'Ajustar tamanho',
-      action: () => setShowSizeControls(true),
+      onClick: () => setShowSizeControls(true),
     },
     {
-      id: 'caption',
       icon: <Type className="h-4 w-4" />,
       label: caption ? 'Editar legenda' : 'Adicionar legenda',
-      action: () => setIsEditing(true),
+      onClick: () => setIsEditing(true),
     },
   ];
 

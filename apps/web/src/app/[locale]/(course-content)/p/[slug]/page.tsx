@@ -1,9 +1,9 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { getProgramBySlug } from '@/data/courses/mock-data';
-import { Program, ProgramContent } from '@/lib/api/generated';
+import { Program } from '@/lib/api/generated';
 import { BookOpen } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
