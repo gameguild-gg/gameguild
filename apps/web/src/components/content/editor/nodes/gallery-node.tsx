@@ -312,10 +312,9 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
   // Edit menu options
   const editMenuOptions: EditMenuOption[] = [
     {
-      id: 'edit',
       icon: <ImageIcon className="h-4 w-4" />,
       label: 'Edit gallery',
-      action: () => setIsEditing(true),
+      onClick: () => setIsEditing(true),
     },
   ];
 

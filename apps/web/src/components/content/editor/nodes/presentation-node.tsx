@@ -471,25 +471,22 @@ function PresentationComponent({ data, nodeKey }: PresentationComponentProps) {
   // Edit menu options
   const editMenuOptions: EditMenuOption[] = [
     {
-      id: 'edit',
       icon: <Edit className="h-4 w-4" />,
       label: 'Edit presentation',
-      action: () => setIsEditing(true),
+      onClick: () => setIsEditing(true),
     },
     {
-      id: 'present',
       icon: <Expand className="h-4 w-4" />,
       label: 'Present',
-      action: () => {
+      onClick: () => {
         setIsPresenting(true);
         toggleFullscreen();
       },
     },
     {
-      id: 'export',
       icon: <Download className="h-4 w-4" />,
       label: 'Export presentation',
-      action: handleExportClick,
+      onClick: handleExportClick,
     },
   ];
 
