@@ -355,7 +355,7 @@ export const intro2gproUnityPlatformerContent: ProgramContent = {
 export const intro2gproAssignmentContent: ProgramContent = {
     id: 'intro2gpro-assignment',
     programId: 'intro2gpro-program-1',
-    parentId: undefined,
+    parentId: 'intro2gpro-production',
     title: 'Week 08: Game Development Assignment',
     description: 'Hands-on assignment for game development concepts',
     type: 2, // Assignment
