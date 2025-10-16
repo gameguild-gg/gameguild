@@ -79,9 +79,13 @@ flowchart TD
     E[Design] --> F[Game Design]
     E --> G[Level Design]
 ```
-<div style="text-align: center;">
-<img src="img_3.png" width="320">
-</div>
+
+::: note
+
+note to my future self: add image here!
+
+:::
+
 
 ``` mermaid
 flowchart TD
