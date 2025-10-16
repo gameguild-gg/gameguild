@@ -1,13 +1,12 @@
 'use client';
 
+import React from 'react';
 import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProgramContentDto } from '@/lib/api/generated/types.gen';
-import { ChevronRight } from 'lucide-react';
-import Link from 'next/link';
 
 interface CourseContentPageClientProps {
-    programData: any;
+    programData: ProgramContentDto;
     content: ProgramContentDto;
     contentPath: string[];
     basePath: string;
@@ -15,10 +14,10 @@ interface CourseContentPageClientProps {
 }
 
 export function CourseContentPageClient({
-    programData,
+    programData, // eslint-disable-line @typescript-eslint/no-unused-vars
     content,
-    contentPath,
-    basePath,
+    contentPath, // eslint-disable-line @typescript-eslint/no-unused-vars
+    basePath, // eslint-disable-line @typescript-eslint/no-unused-vars
     children
 }: CourseContentPageClientProps) {
 
@@ -31,13 +30,7 @@ export function CourseContentPageClient({
                         {/* Content Body */}
                         {content.body && (
                             <div className="prose max-w-none">
-                                {typeof content.body === 'string' ? (
-                                    <MarkdownRenderer content={content.body} />
-                                ) : (
-                                    <pre className="whitespace-pre-wrap">
-                                        {String(content.body || '')}
-                                    </pre>
-                                )}
+                                <MarkdownRenderer content={JSON.stringify(content.body)} />
                             </div>
                         )}
 

@@ -149,10 +149,9 @@ function CalloutComponent({ data, nodeKey }: CalloutComponentProps) {
         <ContentEditMenu
           options={[
             {
-              id: 'edit',
               icon: <Pencil className="h-4 w-4" />,
               label: 'Edit Callout',
-              action: () => setIsEditing(true),
+              onClick: () => setIsEditing(true),
             },
           ]}
         />

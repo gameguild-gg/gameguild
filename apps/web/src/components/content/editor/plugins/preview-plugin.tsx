@@ -40,8 +40,8 @@ import type { SerializedSpotifyNode } from '../nodes/spotify-node';
 // Add this import at the top with the other imports
 import type { SerializedSourceCodeNode } from '../nodes/source-code-node';
 import { useQuizLogic } from '@/hooks/editor/use-quiz-logic';
-import { QuizWrapper } from '../../../editor/ui/quiz/quiz-wrapper';
-import { QuizDisplay } from '../../../editor/ui/quiz/quiz-display';
+import { QuizWrapper } from '@/components/editor/extras/quiz/quiz-wrapper';
+import { QuizDisplay } from '@/components/editor/extras/quiz/quiz-display';
 
 // Import the SourceCodeCore at the top with other imports
 import { SourceCodeCore } from '../nodes/source-code-core';
