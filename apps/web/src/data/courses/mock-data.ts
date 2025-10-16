@@ -120,6 +120,8 @@ import intro2gproGamedevIssues from './intro2gpro/week04/gamedev-issues.md';
 import intro2gproGamedevIssuesPresentations from './intro2gpro/week05/gamedev-issues-presentations.md';
 import intro2gproAutomation from './intro2gpro/week06/automation.md';
 import intro2gproUnityPlatformer from './intro2gpro/week07/unity-platformer.md';
+import intro2gproAssignment from './intro2gpro/week08/assignment.md';
+import intro2gproProduction from './intro2gpro/week08/production.md';
 
 // Game Publishing Course Imports
 import gamePublishingSyllabus from './game-publishing/syllabus.md';
@@ -348,6 +350,52 @@ export const intro2gproUnityPlatformerContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'unity-platformer',
+};
+
+export const intro2gproAssignmentContent: ProgramContent = {
+    id: 'intro2gpro-assignment',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 08: Game Development Assignment',
+    description: 'Hands-on assignment for game development concepts',
+    type: 2, // Assignment
+    body: intro2gproAssignment,
+    sortOrder: 10,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'game-development-assignment',
+};
+
+export const intro2gproProductionContent: ProgramContent = {
+    id: 'intro2gpro-production',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 08: Game Production',
+    description: 'Game production processes and best practices',
+    type: 0, // Page
+    body: intro2gproProduction,
+    sortOrder: 11,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'game-production',
 };
 
 // Child content for gamedev-issues
@@ -3834,6 +3882,8 @@ intro2gproProgram.programContents = [
     intro2gproGamedevIssuesPresentationsContent,
     intro2gproAutomationContent,
     intro2gproUnityPlatformerContent,
+    intro2gproProductionContent,
+    intro2gproAssignmentContent,
 ];
 
 gamePublishingProgram.programContents = [
@@ -3843,6 +3893,24 @@ gamePublishingProgram.programContents = [
     gamePublishingMobileContent,
     gamePublishingConsoleContent,
     gamePublishingHtml5Content,
+    gamePublishingSteamContent,
+    gamePublishingEpicGamesStoreContent,
+    gamePublishingGogContent,
+    gamePublishingMicrosoftStoreContent,
+    gamePublishingItchioContent,
+    gamePublishingPlaystationStoreContent,
+    gamePublishingNintendoSwitchContent,
+    gamePublishingXboxContent,
+    gamePublishingOculusQuestContent,
+    gamePublishingPokiContent,
+    gamePublishingCrazyGamesContent,
+    gamePublishingSelfHostingContent,
+    gamePublishingGithubPagesContent,
+    gamePublishingFirebaseHostingContent,
+    gamePublishingNetlifyContent,
+    gamePublishingVercelContent,
+    gamePublishingGooglePlayContent,
+    gamePublishingAppStoreContent,
 ];
 
 // Set program references
@@ -4032,7 +4100,8 @@ export const mockProgramContents: ProgramContent[] = [
     intro2gproGamedevIssuesPresentationsContent,
     intro2gproAutomationContent,
     intro2gproUnityPlatformerContent,
-    
+    intro2gproProductionContent,
+    intro2gproAssignmentContent,
     // Game Publishing content
     gamePublishingSyllabusContent,
     // Game Publishing parent categories
@@ -4106,3 +4175,4 @@ export function getProgramContentBySlug(programSlug: string, contentPath: string
     }
     return content;
 }
+
