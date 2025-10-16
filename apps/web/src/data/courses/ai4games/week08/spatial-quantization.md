@@ -24,6 +24,7 @@ This is a group project. You can make groups of 2 or more, but for every extra m
 5. Invite the user to configure the board by placing tiles or setting weights or configurations on the grid or scenario.
 6. Implement at least 2 enhancements for the pathfinding algorithm. Ex.:
     1. Non-GridGraph 
+        1. Bonus point if you implement your very own navmesh builder that takes the obstacles and terrain and creates a grid that represents the free space.
     2. Path Smoothing 
     3. Hierarchical Pathfinding 
     4. Dynamic Pathfinding 
