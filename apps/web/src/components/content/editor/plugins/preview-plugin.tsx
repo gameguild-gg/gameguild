@@ -388,15 +388,19 @@ function PreviewAudio({ node }: { node: SerializedAudioNode }) {
 
   const embedInfo = getAudioEmbedInfo(src);
 
-  // Extrair nome do arquivo de áudio da URL
+  // Extrair nome do arquivo de áudio da URL com segurança
   const getAudioTitle = () => {
     if (title) return title;
 
     try {
+      if (!src) return 'Audio';
       const url = new URL(src);
       const pathSegments = url.pathname.split('/');
-      const filename = pathSegments[pathSegments.length - 1];
-      return decodeURIComponent(filename.split('.')[0]);
+      const lastSegment = pathSegments[pathSegments.length - 1] || '';
+      const base = lastSegment.includes('.')
+        ? lastSegment.substring(0, lastSegment.lastIndexOf('.'))
+        : lastSegment;
+      return decodeURIComponent(base || 'Audio');
     } catch (e) {
       return 'Audio';
     }
@@ -560,7 +564,9 @@ function PreviewPresentation({ node }: { node: SerializedPresentationNode }) {
     );
   }
 
-  const currentSlide = slides[currentSlideIndex];
+  // Clamp slide index to valid range to avoid undefined currentSlide
+  const safeIndex = Math.min(Math.max(currentSlideIndex, 0), slides.length - 1);
+  const currentSlide = slides[safeIndex];
 
   // Get background style based on theme
   const getBackgroundStyle = (slideTheme: string, backgroundImage?: string) => {
@@ -600,12 +606,12 @@ function PreviewPresentation({ node }: { node: SerializedPresentationNode }) {
         </div>
 
         <div className="aspect-video relative">
-          <div className="w-full h-full overflow-hidden" style={getBackgroundStyle(currentSlide.theme || theme, currentSlide.backgroundImage)}>
-            {currentSlide.theme === 'image' && <div className="absolute inset-0 bg-black/40"></div>}
+          <div className="w-full h-full overflow-hidden" style={getBackgroundStyle((currentSlide?.theme) || theme, currentSlide?.backgroundImage)}>
+            {currentSlide?.theme === 'image' && <div className="absolute inset-0 bg-black/40"></div>}
 
             <div className="relative z-10 w-full h-full p-8">
-              {currentSlide.title && <h2 className="text-3xl font-bold mb-4">{currentSlide.title}</h2>}
-              {currentSlide.content && <div className="prose max-w-none">{currentSlide.content}</div>}
+              {currentSlide?.title && <h2 className="text-3xl font-bold mb-4">{currentSlide.title}</h2>}
+              {currentSlide?.content && <div className="prose max-w-none">{currentSlide.content}</div>}
             </div>
           </div>
 
@@ -617,7 +623,7 @@ function PreviewPresentation({ node }: { node: SerializedPresentationNode }) {
                 size="icon"
                 className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8"
                 onClick={() => setCurrentSlideIndex((prev) => Math.max(0, prev - 1))}
-                disabled={currentSlideIndex === 0}
+                disabled={safeIndex === 0}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -626,7 +632,7 @@ function PreviewPresentation({ node }: { node: SerializedPresentationNode }) {
                 size="icon"
                 className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/20 hover:bg-black/40 text-white rounded-full h-8 w-8"
                 onClick={() => setCurrentSlideIndex((prev) => Math.min(slides.length - 1, prev + 1))}
-                disabled={currentSlideIndex === slides.length - 1}
+                disabled={safeIndex === slides.length - 1}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>
@@ -641,7 +647,7 @@ function PreviewPresentation({ node }: { node: SerializedPresentationNode }) {
               <button
                 key={slide.id}
                 className={cn('flex-shrink-0 w-16 h-10 rounded overflow-hidden border-2', index === currentSlideIndex ? 'border-primary' : 'border-transparent hover:border-gray-300')}
-                onClick={() => setCurrentSlideIndex(index)}
+                onClick={() => setCurrentSlideIndex(Math.min(Math.max(index, 0), slides.length - 1))}
               >
                 <div className="w-full h-full relative" style={getBackgroundStyle(slide.theme || theme, slide.backgroundImage)}>
                   {slide.theme === 'image' && <div className="absolute inset-0 bg-black/40"></div>}
