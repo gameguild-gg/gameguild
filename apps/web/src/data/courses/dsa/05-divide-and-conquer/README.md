@@ -236,6 +236,8 @@ The main issue with quicksort is that it can degrade to `O(n^2)` in an already s
 
 ### QuickSort implementation
 
+Todo: note to myself: update to make it be like visualgo
+
 ```c++
 #include <iostream>
 #include <vector>
