@@ -1,6 +1,7 @@
 import { FlatCompat } from '@eslint/eslintrc';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
+import unusedImports from 'eslint-plugin-unused-imports';
 
 const compat = new FlatCompat({
   baseDirectory: import.meta.dirname,
@@ -28,10 +29,13 @@ const config = [
     },
     plugins: {
       '@typescript-eslint': typescriptEslint,
+      'unused-imports': unusedImports,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': 'warn',
-      '@typescript-eslint/no-explicit-any': 'warn',
+      'react/no-unescaped-entities': 'off',
+      'unused-imports/no-unused-imports': 'warn',
+      'unused-imports/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': ['warn', { ignoreRestArgs: true }],
       '@typescript-eslint/ban-ts-comment': 'warn',
     },
   },
@@ -41,6 +45,17 @@ const config = [
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/ban-ts-comment': 'off',
+    },
+  },
+  // Targeted overrides for editor preview/plugins where raw HTML rendering is expected
+  {
+    files: [
+      'src/components/content/editor/plugins/**/*.{ts,tsx}',
+      'src/components/editor/plugins/**/*.{ts,tsx}',
+    ],
+    rules: {
+      '@next/next/no-img-element': 'off',
+      'react-hooks/exhaustive-deps': 'off',
     },
   },
 ];
