@@ -9,10 +9,10 @@ const nextConfig: NextConfig = {
   // Force the app to use the correct base URL
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   images: {
     remotePatterns: [
