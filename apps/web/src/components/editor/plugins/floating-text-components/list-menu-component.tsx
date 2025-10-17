@@ -30,7 +30,7 @@ export function ListMenuComponent({ editor, currentListType, updateToolbar }: Li
         <List className="mr-2 h-4 w-4" />
         <span>Listas</span>
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent side="right" align="start" className="w-64">
+      <DropdownMenuSubContent className="w-64">
         <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Tipos de Lista</div>
         <DropdownMenuSeparator />
 

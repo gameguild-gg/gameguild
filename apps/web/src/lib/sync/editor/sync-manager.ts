@@ -11,7 +11,8 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
-  hash?: string
+  hash: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
 interface ProjectMetadata {
@@ -22,6 +23,12 @@ interface ProjectMetadata {
   hash: string
   createdAt: string
   updatedAt: string
+}
+
+interface TagData {
+  id: string
+  name: string
+  projectIds: string[]
 }
 
 interface SyncStats {
@@ -54,7 +61,7 @@ export class SyncManager {
 
   constructor() {
     this.apiClient = new ApiClient()
-    this.syncQueue = new SyncQueue()
+    this.syncQueue = new SyncQueue(this.apiClient)
   }
 
   async init(): Promise<void> {
@@ -187,6 +194,21 @@ export class SyncManager {
 
     if (syncConfig.getConfig().debugMode) {
       console.log("Queued project delete:", projectId)
+    }
+  }
+
+  async queueTagsUpdate(tags: Omit<TagData, "projectIds">[]): Promise<void> {
+    if (!syncConfig.isEnabled()) {
+      return
+    }
+
+    await this.syncQueue.enqueue({
+      type: "tags_update",
+      data: tags,
+    })
+
+    if (syncConfig.getConfig().debugMode) {
+      console.log("Queued tags update:", tags.length, "tags")
     }
   }
 
