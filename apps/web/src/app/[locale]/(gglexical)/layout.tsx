@@ -1,5 +1,12 @@
-import { Metadata }                 from 'next';
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { Toaster } from "sonner"
+import { ThemeProvider } from "@/lib/context/theme-context"
+import { TopMenu } from "@/components/editor/top-menu"
 import React, { PropsWithChildren } from 'react';
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "GameGuild Editor",
@@ -30,8 +37,15 @@ export const metadata: Metadata = {
   ]
 }
 
-export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <div className="flex flex-col flex-1">{ children }</div>
+    <div>
+      <TopMenu />
+      <div className="flex flex-col flex-1 mt-10">{ children }</div>
+    </div>
   )
 }

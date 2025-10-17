@@ -2,6 +2,7 @@
 
 import { useCallback } from "react"
 import { $getSelection, $isRangeSelection } from "lexical"
+import { $patchStyleText } from "@lexical/selection"
 import { Paintbrush } from "lucide-react"
 import {
   DropdownMenuSub,
@@ -27,30 +28,9 @@ export function BackgroundColorMenuComponent({
       editor.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
-          const nodes = selection.getNodes()
-          nodes.forEach((node) => {
-            if (node.getTextContent()) {
-              const currentStyle = node.getStyle() || ""
-              // Remove existing background-color but preserve other styles
-              let newStyle = currentStyle.replace(/background-color:\s*[^;]+;?\s*/g, "")
-
-              // Add new background color if not transparent
-              if (color && color !== "transparent" && color !== "") {
-                // Ensure we don't have trailing semicolon issues
-                if (newStyle && !newStyle.endsWith(";")) {
-                  newStyle += ";"
-                }
-                newStyle += ` background-color: ${color};`
-              }
-
-              // Clean up the style string
-              newStyle = newStyle
-                .replace(/;\s*;/g, ";")
-                .replace(/^\s*;\s*/, "")
-                .trim()
-
-              node.setStyle(newStyle)
-            }
+          // Use $patchStyleText to apply background-color only to selected text range
+          $patchStyleText(selection, {
+            'background-color': color && color !== "transparent" && color !== "" ? color : null
           })
         }
       })
@@ -63,19 +43,9 @@ export function BackgroundColorMenuComponent({
     editor.update(() => {
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
-        const nodes = selection.getNodes()
-        nodes.forEach((node) => {
-          if (node.getTextContent()) {
-            const currentStyle = node.getStyle() || ""
-            // Remove only background-color, preserve other styles
-            const newStyle = currentStyle
-              .replace(/background-color:\s*[^;]+;?\s*/g, "")
-              .replace(/;\s*;/g, ";")
-              .replace(/^\s*;\s*/, "")
-              .trim()
-
-            node.setStyle(newStyle)
-          }
+        // Use $patchStyleText to remove background-color only from selected text range
+        $patchStyleText(selection, {
+          'background-color': null
         })
       }
     })
@@ -99,7 +69,7 @@ export function BackgroundColorMenuComponent({
           }}
         />
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent side="right" align="start" className="w-64">
+      <DropdownMenuSubContent className="w-64">
         <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Background Color</div>
         <DropdownMenuSeparator />
         <div className="p-2">
