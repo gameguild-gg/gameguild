@@ -73,7 +73,7 @@ const config = [
       "@typescript-eslint/switch-exhaustiveness-check": "error",
       "@typescript-eslint/strict-boolean-expressions": "error",
       "@typescript-eslint/no-unused-vars": "error",
-      "@typescript-eslint/consistent-type-definitions": ["error", "interface"],
+      "@typescript-eslint/consistent-type-definitions": "off",
       "camelcase": "off",
       "@typescript-eslint/naming-convention": [
         "error",
