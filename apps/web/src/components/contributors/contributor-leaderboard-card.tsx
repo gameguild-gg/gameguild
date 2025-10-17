@@ -2,7 +2,6 @@ import React from 'react';
 import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { EnhancedContributor } from '@/lib/integrations/github';
-import { ContributorStats } from './contributor-stats';
 import { numberToAbbreviation } from '@/lib/utils';
 import { Award, Trophy } from 'lucide-react';
 

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, CheckCircle, FileDown, Filter, Search, Users, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, FileDown, Search, Users, XCircle } from 'lucide-react';
 
 interface AttendanceRecord {
   id: string;
