@@ -42,6 +42,10 @@ export interface SourceCodeData {
   showFilePropertiesInReadMode?: boolean
 }
 
+// JSON-serializable value types for test cases
+export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[]
+export type JsonArray = JsonValue[]
+
 // Update the TerminalProps interface to include the new predicate test type
 export interface TerminalProps {
   terminalOutput: {
@@ -63,8 +67,8 @@ export interface TerminalProps {
       type: "custom" | "function" | "console"
       input?: string
       expectedOutput?: string
-      args?: any[]
-      expectedReturn?: any[]
+      args?: JsonArray
+      expectedReturn?: JsonArray
       predicate?: string
       customCode?: string
       customCodeFirst?: string | Record<ProgrammingLanguage, string>
@@ -78,8 +82,8 @@ export interface TerminalProps {
         type: "custom" | "function" | "console"
         input?: string
         expectedOutput?: string
-        args?: any[]
-        expectedReturn?: any[]
+        args?: JsonArray
+        expectedReturn?: JsonArray
         predicate?: string
         customCode?: string
         customCodeFirst?: string | Record<ProgrammingLanguage, string>
@@ -115,7 +119,7 @@ export interface LanguageSettingsDialogProps {
   selectedLanguage: ProgrammingLanguage
   setSelectedLanguage: (lang: ProgrammingLanguage) => void
   getLanguageLabel: (lang: string) => string
-  updateSourceCode?: (data: any) => void
+  updateSourceCode?: (data: Partial<SourceCodeData>) => void
   isAutocompleteEnabled?: boolean
   setIsAutocompleteEnabled?: (enabled: boolean) => void
 }
