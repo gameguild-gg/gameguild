@@ -4,6 +4,7 @@
 This 15-week course introduces students to network programming fundamentals through the lens of game development. Students will learn essential networking concepts, protocols, and programming techniques while building practical multiplayer game systems.
 
 ## Prerequisites
+
 - Proficiency in C++ programming
 - Basic understanding of computer systems and operating systems
 - Familiarity with object-oriented programming concepts
@@ -19,9 +20,11 @@ This 15-week course introduces students to network programming fundamentals thro
 - Grasp basic network addressing concepts
 
 **Hands-on Project:**
+
 Build a network diagnostic tool that implements ping functionality and performs traceroute analysis. Research and diagram the network architecture of a popular online game (e.g., World of Warcraft, Counter-Strike).
 
 **Assessment:**
+
 Quiz covering OSI model layers, TCP/IP fundamentals, and network device identification.
 
 ---
@@ -36,7 +39,7 @@ Quiz covering OSI model layers, TCP/IP fundamentals, and network device identifi
 Create an IP address calculator and subnet analyzer. Design a network topology for a hypothetical game server infrastructure, including load balancers and regional servers.
 
 **Assessment:**
-Quiz on IP addressing, subnetting calculations, and routing protocol concepts.
+- Quiz on IP addressing, subnetting calculations, routing protocol concepts.
 
 ---
 
@@ -157,6 +160,7 @@ Quiz on network performance metrics, reliability mechanisms, and optimization te
 - Implement client-side prediction
 - Understand lag compensation strategies
 - Learn rollback networking and interpolation
+- Guest Lecturer: Someone from Photon Quantum (Photon Network)
 
 **Hands-on Project:**
 Create a real-time combat game with client prediction system, rollback networking, and accurate hit registration for fast-paced gameplay.
@@ -232,6 +236,7 @@ Develop a fast-paced multiplayer game featuring:
 - Authoritative server with cheat prevention
 - Real-time state synchronization
 - Performance optimization for low-latency gameplay
+- Suggestion: Implement a 1x1 fighting game.
 
 ### Option 2: MMO-Style Persistent World
 Create a persistent multiplayer environment including:
