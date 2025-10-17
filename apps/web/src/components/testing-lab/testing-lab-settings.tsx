@@ -9,9 +9,8 @@ import { Label }                                                                
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue }                                                      from '@/components/ui/select';
 import { Separator }                                                                                                          from '@/components/ui/separator';
 import { Switch }                                                                                                             from '@/components/ui/switch';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow }                                                      from '@/components/ui/table';
 import { Textarea }                                                                                                           from '@/components/ui/textarea';
-import type { LocationStatus, TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment, User } from '@/lib/api/generated/types.gen';
+import type { LocationStatus, TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment } from '@/lib/api/generated/types.gen';
 import { CollaboratorsSettings } from './sections/collaborators-settings';
 // Legacy permission conversion utilities imported previously have been removed to avoid dual models.
 // We now rely exclusively on aggregated boolean permissions returned by server actions in actions/testing-lab-roles.
@@ -66,8 +65,7 @@ import {
   assignUserRoleAction,
   removeUserRoleAction 
 } from '@/actions/testing-lab-user-roles';
-import { getUsers } from '@/lib/api/users';
-import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, UserCheck, UserMinus, UserPlus, Users }                  from 'lucide-react';
+import { ChevronRight, Edit, MapPin, Plus, RefreshCw, Settings, Shield, Trash2, Users }                  from 'lucide-react';
 import { useEffect, useState }                                                                                                from 'react';
 import { toast }                                                                                                              from 'sonner';
 

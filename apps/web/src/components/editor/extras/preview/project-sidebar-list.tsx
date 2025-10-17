@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { FileText, Tag, Calendar, ChevronDown, ChevronRight, Search, Filter } from "lucide-react"
+import { FileText, Calendar, ChevronDown, Search, Filter } from "lucide-react"
 
 interface ProjectData {
   id: string
