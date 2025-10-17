@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { Maximize2, Minimize2 } from 'lucide-react';
 // Import RevealJS styles with scoping to prevent global layout issues
 import 'reveal.js/dist/reveal.css';

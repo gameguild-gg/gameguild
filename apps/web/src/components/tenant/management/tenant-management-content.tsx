@@ -4,7 +4,7 @@ import { useActionState, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Tenant } from '@/lib/api/generated/types.gen';
-import { createTenantClient, updateTenantClient, updateTenantFormClient, deleteTenantClient } from '@/lib/admin/tenants/tenant-client-actions';
+import { createTenantClient, updateTenantFormClient, deleteTenantClient } from '@/lib/admin/tenants/tenant-client-actions';
 import {
   activateTenantAction,
   deactivateTenantAction,

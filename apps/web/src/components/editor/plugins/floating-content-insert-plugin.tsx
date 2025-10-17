@@ -5,30 +5,18 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { $getSelection, $isRangeSelection, SELECTION_CHANGE_COMMAND, createCommand } from "lexical"
 import {
   AlertCircle,
-  BookMarkedIcon as MarkdownIcon,
-  Bookmark,
-  BookOpen,
   BoxIcon as ButtonIcon,
   ClipboardList,
-  Code2,
-  CodeIcon,
   CodepenIcon,
   Eye,
-  FileIcon,
-  Heading,
   ImageIcon,
   Images,
-  LayoutTemplateIcon as LayoutPresentationIcon,
-  Mail,
   MoreHorizontal,
-  MousePointerClick,
   Music,
   Music2,
   Music3,
   Plus,
   SeparatorHorizontal,
-  ShoppingBag,
-  ToggleLeft,
   Twitter,
   UserPlus,
   Video,
@@ -39,7 +27,6 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Separator } from "@/components/ui/separator"
 import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
 import type { ImageData } from "../nodes/image-node"
 import type { VideoData } from "../nodes/video-node"
