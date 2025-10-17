@@ -135,8 +135,109 @@
     @apply antialiased;
   }
 
-  html body[data-scroll-locked] {
-    overflow: visible !important;
-    margin-right: 0 !important;
-  }
+    html body[data-scroll-locked] {
+        overflow: visible !important;
+        margin-right: 0 !important;
+    }
+
+    
+    /* Estilos para diferentes tipos de listas ordenadas no editor */
+    .lexical-editor ol[data-circled-list="true"] {
+        counter-reset: circled-counter;
+    }
+    
+    .lexical-editor ol[data-circled-list="true"] li {
+        counter-increment: circled-counter;
+        position: relative;
+    }
+    
+    .lexical-editor ol[data-circled-list="true"] li::before {
+        content: "(" counter(circled-counter) ")";
+        font-weight: bold;
+        color: oklch(0.488 0.243 264.376);
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+
+    /* Estilos para listas não ordenadas customizadas */
+    
+    /* Reset para garantir que apenas os marcadores recebam cor */
+    ol, ul {
+        color: inherit; /* Texto mantém cor normal */
+    }
+    
+    /* Listas com setas */
+    ul.arrow-list, ol.arrow-list {
+        list-style: none;
+    }
+    
+    ul.arrow-list li::before, ol.arrow-list li::before {
+        content: "▶";
+        font-weight: bold;
+        color: oklch(0.488 0.243 264.376);
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+    
+    ul.arrow-list li, ol.arrow-list li {
+        color: inherit; /* Manter cor do texto normal */
+    }
+    
+    .lexical-editor ul[data-arrow-list="true"], .lexical-editor ol[data-arrow-list="true"] {
+        list-style: none;
+    }
+    
+    .lexical-editor ul[data-arrow-list="true"] li::before, .lexical-editor ol[data-arrow-list="true"] li::before {
+        content: "▶";
+        font-weight: bold;
+        color: oklch(0.488 0.243 264.376);
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+    
+    .lexical-editor ul[data-arrow-list="true"] li, .lexical-editor ol[data-arrow-list="true"] li {
+        color: inherit; /* Manter cor do texto normal */
+    }
+    
+    /* Listas com estrelas */
+    ul.star-list, ol.star-list {
+        list-style: none;
+    }
+    
+    ul.star-list li::before, ol.star-list li::before {
+        content: "★";
+        font-weight: bold;
+        color: oklch(0.488 0.243 264.376);
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+    
+    ul.star-list li, ol.star-list li {
+        color: inherit; /* Manter cor do texto normal */
+    }
+    
+    .lexical-editor ul[data-star-list="true"], .lexical-editor ol[data-star-list="true"] {
+        list-style: none;
+    }
+    
+    .lexical-editor ul[data-star-list="true"] li::before, .lexical-editor ol[data-star-list="true"] li::before {
+        content: "★";
+        font-weight: bold;
+        color: oklch(0.488 0.243 264.376);
+        margin-right: 0.5rem;
+        display: inline-block;
+    }
+    
+    .lexical-editor ul[data-star-list="true"] li, .lexical-editor ol[data-star-list="true"] li {
+        color: inherit; /* Manter cor do texto normal */
+    }
+    
+    /* Suporte a marcadores padrão com cores customizadas */
+    .lexical-editor ol li::marker, .lexical-editor ul li::marker {
+        color: inherit; /* Será sobrescrito por estilos específicos */
+    }
+    
+    .lexical-editor ol li, .lexical-editor ul li {
+        color: inherit; /* Garantir que o texto mantenha cor normal */
+    }
 }

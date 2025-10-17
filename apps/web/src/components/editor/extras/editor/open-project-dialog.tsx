@@ -8,11 +8,15 @@ import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
-import { FolderOpen, Upload } from "lucide-react"
+import { FolderOpen, Upload, Info, Cloud } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
 import { ImportProjectDialog } from "./import-project-dialog"
+import { InfoDialog } from "./info-dialog"
+import type { StorageOption } from "./storage-option-selector"
+import { GoogleDriveAuthDialog } from "./google-drive-auth-dialog"
+import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 
 interface ProjectData {
   id: string
@@ -22,14 +26,16 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags: string[]) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption) => Promise<void>
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
 }
 
 interface OpenProjectDialogProps {
@@ -38,7 +44,7 @@ interface OpenProjectDialogProps {
   isFirstTime: boolean
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   editorRef: React.RefObject<LexicalEditor | null>
   setLoadingRef: React.RefObject<((loading: boolean) => void) | null>
   onProjectLoad: (projectData: ProjectData) => void
@@ -66,6 +72,8 @@ export function OpenProjectDialog({
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    storageTypeFilter,
+    setStorageTypeFilter,
     currentPage,
     setCurrentPage,
     itemsPerPage,
@@ -81,6 +89,12 @@ export function OpenProjectDialog({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const [infoDialogOpen, setInfoDialogOpen] = useState(false)
+  const [projectToEdit, setProjectToEdit] = useState<ProjectData | null>(null)
+  const [googleDriveAuthDialogOpen, setGoogleDriveAuthDialogOpen] = useState(false)
+
+  // Google Drive authentication hook
+  const { isAuthenticated, isLoading, authenticate, signOut, refreshAuthState } = useGoogleDriveAuth()
 
   const handleOpen = async (projectId: string) => {
     const projectData = await loadProject(projectId)
@@ -90,7 +104,57 @@ export function OpenProjectDialog({
           setLoadingRef.current(true)
         }
 
-        const editorState = editorRef.current.parseEditorState(projectData.data)
+        // Validate project data structure
+        if (!projectData.data) {
+          throw new Error("Project data is missing")
+        }
+
+        // Validate that the data is valid JSON
+        let parsedData
+        try {
+          parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
+        } catch (parseError) {
+          throw new Error("Project data is not valid JSON")
+        }
+
+        // Validate that it has the expected Lexical structure
+        if (!parsedData || typeof parsedData !== 'object') {
+          throw new Error("Project data is not in expected format")
+        }
+
+        // Additional check for Lexical editor state structure
+        if (!parsedData.root || !parsedData.root.children) {
+          console.warn("Project data doesn't have expected Lexical structure, attempting to create minimal state")
+          // Create a minimal valid Lexical state if the structure is missing
+          parsedData = {
+            root: {
+              children: [{
+                children: [{
+                  detail: 0,
+                  format: 0,
+                  mode: "normal",
+                  style: "",
+                  text: projectData.data || "Empty project",
+                  type: "text",
+                  version: 1
+                }],
+                direction: "ltr",
+                format: "",
+                indent: 0,
+                type: "paragraph",
+                version: 1
+              }],
+              direction: "ltr",
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1
+            }
+          }
+        }
+
+        // Parse and set the editor state with the validated/corrected data
+        const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
         editorRef.current.setEditorState(editorState)
 
         await new Promise((resolve) => setTimeout(resolve, 100))
@@ -107,15 +171,19 @@ export function OpenProjectDialog({
           icon: "📂",
         })
       } catch (error) {
+        console.error("Failed to load project:", error, "Project data:", projectData)
         if (setLoadingRef.current) {
           setLoadingRef.current(false)
         }
+        const errorMessage = error instanceof Error ? error.message : "Unknown error"
         toast.error("Erro ao carregar projeto", {
-          description: "O arquivo do projeto está corrompido ou em formato inválido",
+          description: `O arquivo do projeto está corrompido ou em formato inválido: ${errorMessage}`,
           duration: 4000,
           icon: "❌",
         })
       }
+    } else {
+      console.error("Missing project data or editor ref:", { projectData, editorRef: editorRef.current })
     }
   }
 
@@ -127,7 +195,30 @@ export function OpenProjectDialog({
     return Date.now().toString() + Math.random().toString(36).substr(2, 9)
   }
 
+  const handleOpenInfo = (project: ProjectData) => {
+    setProjectToEdit(project)
+    setInfoDialogOpen(true)
+  }
 
+  const handleSaveInfo = async (projectId: string, newName: string, newTags: string[], storageType: StorageOption) => {
+    const projectToUpdate = await storageAdapter.load(projectId)
+    if (!projectToUpdate) {
+      toast.error("Error finding project to update.")
+      return
+    }
+
+    try {
+      await storageAdapter.save(projectId, newName, projectToUpdate.data, newTags, storageType)
+      toast.success("Project updated", {
+        description: `"${newName}" has been updated successfully.`,
+      })
+      onProjectsListUpdate() // Re-fetch projects
+    } catch (error) {
+      console.error("Failed to save info:", error)
+      toast.error("Failed to update project.")
+      throw error // re-throw to prevent dialog from closing
+    }
+  }
 
   const handleConfirmDelete = (projectId: string, projectName: string) => {
     setProjectToDelete({ id: projectId, name: projectName })
@@ -173,16 +264,53 @@ export function OpenProjectDialog({
           </Button>
         </DialogTrigger>
         <DialogContent
-          className="max-w-2xl w-full h-[80vh] overflow-hidden flex flex-col"
+          className="max-w-2xl lg:max-w-4xl w-full h-[95vh] overflow-hidden flex flex-col"
           onInteractOutside={(e) => e.preventDefault()}
         >
           <DialogHeader className="flex-shrink-0">
-            <DialogTitle>{isFirstTime ? "Welcome! Choose an Option" : "Open Project"}</DialogTitle>
-            {isFirstTime && (
-              <p className="text-sm text-muted-foreground">
-                To get started, please open an existing project or create a new one.
-              </p>
-            )}
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>{isFirstTime ? "Welcome! Choose an Option" : "Open Project"}</DialogTitle>
+                {isFirstTime && (
+                  <p className="text-sm text-muted-foreground">
+                    To get started, please open an existing project or create a new one.
+                  </p>
+                )}
+              </div>
+              
+              {/* Google Drive Auth Button */}
+              <div className="flex items-center gap-2">
+                {isAuthenticated ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                      <Cloud className="h-3 w-3" />
+                      <span>Google Drive Connected</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={signOut}
+                      className="text-xs text-gray-500 hover:text-red-600"
+                      title="Disconnect Google Drive"
+                    >
+                      Disconnect
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setGoogleDriveAuthDialogOpen(true)}
+                    disabled={isLoading}
+                    className="gap-1 text-xs"
+                    title="Connect to Google Drive to access your cloud projects"
+                  >
+                    <Cloud className="h-3 w-3" />
+                    {isLoading ? "Connecting..." : "Connect Google Drive"}
+                  </Button>
+                )}
+              </div>
+            </div>
           </DialogHeader>
 
           <div className="flex flex-col flex-1 min-h-0 space-y-4">
@@ -195,14 +323,17 @@ export function OpenProjectDialog({
                 availableTags={availableTags}
                 tagFilterMode={tagFilterMode}
                 onTagFilterModeChange={setTagFilterMode}
+                storageTypeFilter={storageTypeFilter}
+                onStorageTypeFilterChange={setStorageTypeFilter}
                 itemsPerPage={itemsPerPage}
                 onItemsPerPageChange={setItemsPerPage}
+                showFilters={true}
               />
             </div>
 
 
 
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-y-auto">
               <ProjectList
                 projects={filteredProjects}
                 currentPage={currentPage}
@@ -212,6 +343,7 @@ export function OpenProjectDialog({
                 onOpen={handleOpen}
                 onDelete={handleConfirmDelete}
                 onDownload={handleDownload}
+                onInfo={handleOpenInfo}
                 showDeleteButton={true}
                 openButtonText="Open"
               />
@@ -307,6 +439,32 @@ export function OpenProjectDialog({
         generateProjectId={generateProjectId}
         onOpenProject={handleImportProject}
         />
+      
+      <InfoDialog
+        open={infoDialogOpen}
+        onOpenChange={setInfoDialogOpen}
+        project={projectToEdit}
+        onSave={handleSaveInfo}
+        availableTags={availableTags}
+        storageAdapter={storageAdapter}
+      />
+
+      <GoogleDriveAuthDialog
+        open={googleDriveAuthDialogOpen}
+        onOpenChange={setGoogleDriveAuthDialogOpen}
+        onAuthSuccess={() => {
+          setGoogleDriveAuthDialogOpen(false)
+          // Refresh auth state to ensure UI reflects the new authentication status
+          refreshAuthState()
+          // Refresh the projects list to include Google Drive projects
+          onProjectsListUpdate()
+          toast.success("Google Drive connected successfully!", {
+            description: "You can now access your Google Drive projects.",
+            duration: 3000,
+            icon: "☁️",
+          })
+        }}
+      />
     </>
   )
 }
