@@ -1,8 +1,9 @@
 "use client"
 
 import { useCallback } from "react"
-import { $getSelection, $isRangeSelection } from "lexical"
-import { INSERT_ORDERED_LIST_COMMAND } from "@lexical/list"
+import { $getSelection, $isRangeSelection, $createTextNode } from "lexical"
+import { $createListItemNode } from "@lexical/list"
+import { $createCustomListNode, $isCustomListNode } from "@/components/editor/nodes/custom-list-node"
 import { Check } from "lucide-react"
 import {
   DropdownMenuSub,
@@ -23,23 +24,57 @@ interface OrderedListStyle {
 }
 
 const ORDERED_LIST_STYLES: OrderedListStyle[] = [
-  { icon: "1.", name: "Numbers (default)", style: "list-style-type: decimal;" },
+  { icon: "1.", name: "Numbers (default)", style: "decimal" },
+  { icon: "A.", name: "Uppercase Letters", style: "upper-alpha" },
+  { icon: "a.", name: "Lowercase Letters", style: "lower-alpha" },
+  { icon: "I.", name: "Uppercase Roman", style: "upper-roman" },
+  { icon: "i.", name: "Lowercase Roman", style: "lower-roman" },
+  { icon: "01.", name: "Zero-padded Numbers", style: "decimal-leading-zero" },
 ]
 
 export function OrderedListMenu({ editor, currentListType }: OrderedListMenuProps) {
   const handleOrderedListClick = useCallback(
-    (style: string) => {
-      editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
+    (listType: string) => {
       editor.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
-          const nodes = selection.getNodes()
-          nodes.forEach((node) => {
-            const listNode = node.getTopLevelElementOrThrow()
-            if (listNode.getType() === "list") {
-              listNode.setStyle(style)
+          // Detectar cor atual se já estamos em uma lista
+          let currentColor = "#3b82f6" // cor padrão
+          const anchorNode = selection.anchor.getNode()
+          let currentNode: any = anchorNode
+          
+          while (currentNode) {
+            if ($isCustomListNode(currentNode)) {
+              currentColor = currentNode.getMarkerColor()
+              break
             }
-          })
+            const parent = currentNode.getParent()
+            currentNode = parent
+          }
+          
+          // Criar diretamente um CustomListNode
+          const customListNode = $createCustomListNode("number", 1, listType, currentColor)
+          const listItemNode = $createListItemNode()
+          
+          // Se há texto selecionado, usar esse texto no item da lista
+          const selectedText = selection.getTextContent()
+          if (selectedText) {
+            // Criar um novo nó de texto com o conteúdo selecionado
+            const textNode = $createTextNode(selectedText)
+            listItemNode.append(textNode)
+            // Remover o texto selecionado
+            selection.removeText()
+          }
+          
+          customListNode.append(listItemNode)
+          
+          // Inserir a lista customizada na posição atual
+          selection.insertNodes([customListNode])
+          
+          // Focar no item da lista para permitir edição
+          setTimeout(() => {
+            listItemNode.selectEnd()
+          }, 0)
         }
       })
     },
@@ -52,7 +87,7 @@ export function OrderedListMenu({ editor, currentListType }: OrderedListMenuProp
         <span className="mr-2">1.</span>
         <span>Ordered Lists</span>
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent side="right" align="start" className="w-48">
+      <DropdownMenuSubContent className="w-48">
         {ORDERED_LIST_STYLES.map((listStyle, index) => (
           <DropdownMenuItem
             key={index}
