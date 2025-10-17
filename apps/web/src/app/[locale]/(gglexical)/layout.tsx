@@ -1,10 +1,8 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { Toaster } from "sonner"
-import { ThemeProvider } from "@/lib/context/theme-context"
 import { TopMenu } from "@/components/editor/top-menu"
-import React, { PropsWithChildren } from 'react';
+import React from 'react';
 
 const inter = Inter({ subsets: ["latin"] })
 

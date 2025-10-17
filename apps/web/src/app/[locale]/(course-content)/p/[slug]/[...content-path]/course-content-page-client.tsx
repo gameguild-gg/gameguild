@@ -3,8 +3,6 @@
 import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProgramContentDto } from '@/lib/api/generated/types.gen';
-import { ChevronRight } from 'lucide-react';
-import Link from 'next/link';
 
 interface CourseContentPageClientProps {
     programData: any;

@@ -7,7 +7,6 @@ import {
   Quote,
   Subscript,
   Superscript,
-  Code,
   Palette,
   AlignLeft,
   AlignCenter,
@@ -15,8 +14,6 @@ import {
   AlignJustify,
   TextCursorInput,
   Check,
-  Underline,
-  Strikethrough,
   Type,
 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -39,7 +36,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
 } from "@/components/ui/dropdown-menu"
-import { TOGGLE_LINK_COMMAND, $isLinkNode } from "@lexical/link"
+import { $isLinkNode } from "@lexical/link"
 import { ListMenuComponent } from "./floating-text-components/list-menu-component"
 import { FontFamilyMenuComponent } from "./floating-text-components/font-family-menu-component"
 import { FontSizeMenuComponent } from "./floating-text-components/font-size-menu-component"

@@ -1,4 +1,3 @@
-import { syncConfig } from "../../sync/editor/sync-config"
 import { SyncManager } from "../../sync/editor/sync-manager"
 import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
