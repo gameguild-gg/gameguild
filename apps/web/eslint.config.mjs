@@ -14,6 +14,7 @@ const compat = new FlatCompat({
 
 /** @type {import('eslint').Linter.Config[]} */
 const config = [
+  { ignores: ['src/lib/api/generated/**/*'] },
   ...compat.config({
     extends: ['next', 'next/core-web-vitals'],
     settings: {
