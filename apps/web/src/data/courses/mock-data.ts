@@ -13,7 +13,9 @@ import ai4gamesMazeDatastructure from './ai4games/week04/maze-datatructure.md';
 import ai4gamesRng from './ai4games/week10/rng.md';
 import ai4gamesPathfinding from './ai4games/week05/pathfinding.md';
 import ai4gamesCatchTheCat from './ai4games/week06/catchthecat.md';
+import ai4gamesPathfindingAssignment from './ai4games/week08/assignment.md';
 import ai4gamesSpatialQuantization from './ai4games/week08/spatial-quantization.md';
+import ai4gamesPathSmoothing from './ai4games/week09/path-smoothing.md';
 import ai4gamesPathfindingContinuous from './ai4games/week09/pathfinding-continuous.md';
 import ai4gamesNoise from './ai4games/week10/noise.md';
 import ai4gamesFinalProject from './ai4games/week11/final-project.md';
@@ -2161,6 +2163,29 @@ export const ai4gamesCatchTheCatContent: ProgramContent = {
     slug: 'catchthecat',
 };
 
+export const ai4gamesWeek08AssignmentContent: ProgramContent = {
+    id: 'ai4games-week08-assignment',
+    programId: ai4gamesProgram.id!,
+    parentId: undefined,
+    title: 'Week 08: Enhanced Pathfinding Assignment',
+    description: 'Hands-on assignment for enhanched pathfinding',
+    type: 2, // Assignment
+    body: ai4gamesPathfindingAssignment,
+    sortOrder: 12,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 180,
+    visibility: 1, // Published
+    program: ai4gamesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'spatial-quantization-assignment',
+};
+
 export const ai4gamesSpatialQuantizationContent: ProgramContent = {
     id: 'ai4games-spatial-quantization',
     programId: ai4gamesProgram.id!,
@@ -2182,6 +2207,29 @@ export const ai4gamesSpatialQuantizationContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'spatial-quantization',
+};
+
+export const ai4gamesPathSmoothingContent: ProgramContent = {
+    id: 'ai4games-path-smoothing',
+    programId: ai4gamesProgram.id!,
+    parentId: undefined,
+    title: 'Week 09: Path Smoothing',
+    description: 'Path smoothing techniques for cleaner navigation',
+    type: 0, // Page
+    body: ai4gamesPathSmoothing,
+    sortOrder: 13,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: ai4gamesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'path-smoothing',
 };
 
 export const ai4gamesPathfindingContinuousContent: ProgramContent = {
@@ -3791,7 +3839,9 @@ ai4gamesProgram.programContents = [
     ai4gamesMazeDatastructureContent,
     ai4gamesPathfindingContent,
     ai4gamesCatchTheCatContent,
+    ai4gamesWeek08AssignmentContent,
     ai4gamesSpatialQuantizationContent,
+    ai4gamesPathSmoothingContent,
     ai4gamesPathfindingContinuousContent,
     ai4gamesRngContent,
     ai4gamesNoiseContent,
@@ -4036,7 +4086,9 @@ export const mockProgramContents: ProgramContent[] = [
     ai4gamesMazeDatastructureContent,
     ai4gamesPathfindingContent,
     ai4gamesCatchTheCatContent,
+    ai4gamesWeek08AssignmentContent,
     ai4gamesSpatialQuantizationContent,
+    ai4gamesPathSmoothingContent,
     ai4gamesPathfindingContinuousContent,
     ai4gamesRngContent,
     ai4gamesNoiseContent,
