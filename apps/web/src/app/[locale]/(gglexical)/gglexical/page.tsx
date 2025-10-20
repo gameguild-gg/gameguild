@@ -443,197 +443,21 @@ export default function HomePage() {
                   </Button>
                 </div>
               </div>
-            ) : viewMode === 'grid' ? (
-              /* Grid View */
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                {additionalFilteredProjects.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((project) => (
-                  <div
-                    key={project.id}
-                    className="group relative flex h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-md dark:border-gray-800 dark:hover:border-gray-700"
-                  >
-                    <div className="flex flex-col p-4">
-                      <div className="mb-2 flex items-start justify-between">
-                        <span
-                          className="block truncate font-semibold text-gray-900 dark:text-gray-100"
-                          title={project.name}
-                        >
-                          {project.name}
-                        </span>
-                        <div className={`flex items-center gap-1 text-xs ${
-                          project.storageType === 'local' ? 'text-gray-600 dark:text-gray-400' :
-                          project.storageType === 'gameguild-cloud' ? 'text-blue-600 dark:text-blue-400' :
-                          'text-green-600 dark:text-green-400'
-                        }`} title={`Stored ${project.storageType === 'local' ? 'locally' : project.storageType === 'gameguild-cloud' ? 'on GameGuild Cloud' : 'on Google Drive'}`}>
-                          {project.storageType === 'local' ? '💾' : project.storageType === 'gameguild-cloud' ? '🏢' : '☁️'}
-                          <span>{project.storageType === 'local' ? 'Local' : project.storageType === 'gameguild-cloud' ? 'GameGuild' : 'Drive'}</span>
-                        </div>
-                      </div>
-                      {project.tags && project.tags.length > 0 && (
-                        <div className="mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
-                          {project.tags.slice(0, 3).map((tag) => (
-                            <span
-                              key={tag}
-                              className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-700/30"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                          {project.tags.length > 3 && (
-                            <span className="text-xs text-gray-500 dark:text-gray-400">+{project.tags.length - 3}</span>
-                          )}
-                        </div>
-                      )}
-                      <div className="mt-auto text-xs text-gray-500 dark:text-gray-400">
-                        <span>{(project.size / 1024).toFixed(1)}KB</span>
-                        <span className="mx-1.5">•</span>
-                        <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-2 right-2 flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleProjectOpen(project.id)
-                        }}
-                        className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800"
-                        title="Open in Studio"
-                      >
-                        <Blocks className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleProjectView(project.id)
-                        }}
-                        className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-purple-600 dark:hover:bg-gray-800"
-                        title="Open in Viewer"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      {handleDownload && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDownload(
-                              project.id,
-                              project.name,
-                              project.data,
-                              project.tags,
-                              project.createdAt,
-                              project.updatedAt
-                            )
-                          }}
-                          className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-green-600 dark:hover:bg-gray-800"
-                          title="Download project"
-                        >
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </Button>
-                      )}
-                      {handleConfirmDelete && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleConfirmDelete(project.id, project.name)
-                          }}
-                          className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-800"
-                          title="Delete project"
-                        >
-                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </Button>
-                      )}
-                    </div>
-                    <div className="absolute top-2 right-2 text-xs font-mono text-gray-400/50 dark:text-gray-500/50">
-                      {project.id.slice(0, 8)}
-                    </div>
-                  </div>
-                ))}
-              </div>
             ) : (
-              /* List View */
-              <div className="space-y-4">
-                {additionalFilteredProjects.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((project) => (
-                  <Card key={project.id} className="group hover:shadow-md transition-all duration-200">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
-                              {project.name}
-                            </h3>
-                            <div className="flex gap-1 flex-shrink-0">
-                              {project.tags.slice(0, 2).map((tag) => (
-                                <span
-                                  key={tag}
-                                  className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-300"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                            <span className="flex items-center gap-1">
-                              <User className="w-4 h-4" />
-                              Miguel Moroni
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              {new Date(project.updatedAt).toLocaleDateString()}
-                            </span>
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              project.storageType === 'local' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' :
-                              project.storageType === 'gameguild-cloud' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                              'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                            }`}>
-                              Draft
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* Action Buttons */}
-                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          <Button
-                            onClick={() => handleProjectOpen(project.id)}
-                            size="sm"
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                          >
-                            <Blocks className="w-4 h-4 mr-2" />
-                            Studio
-                          </Button>
-                          <Button
-                            onClick={() => handleProjectView(project.id)}
-                            size="sm"
-                            variant="outline"
-                            className="border-purple-200 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-300 dark:hover:bg-purple-900/20"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            Viewer
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <ProjectList
+                projects={additionalFilteredProjects}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                searchTerm={searchTerm}
+                selectedTags={selectedTags}
+                viewMode={viewMode}
+                onOpen={handleProjectOpen}
+                onView={handleProjectView}
+                onDelete={handleConfirmDelete}
+                onDownload={handleDownload}
+                showDeleteButton={true}
+                showStudioViewerButtons={true}
+              />
             )}
 
             {/* Pagination */}
