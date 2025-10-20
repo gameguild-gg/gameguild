@@ -124,6 +124,7 @@ import intro2gproAutomation from './intro2gpro/week06/automation.md';
 import intro2gproUnityPlatformer from './intro2gpro/week07/unity-platformer.md';
 import intro2gproAssignment from './intro2gpro/week08/assignment.md';
 import intro2gproProduction from './intro2gpro/week08/production.md';
+import intro2gproGameMechanics from './intro2gpro/week09/game-mechanics.md';
 
 // Game Publishing Course Imports
 import gamePublishingSyllabus from './game-publishing/syllabus.md';
@@ -398,6 +399,29 @@ export const intro2gproProductionContent: ProgramContent = {
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
     slug: 'game-production',
+};
+
+export const intro2gproGameMechanicsContent: ProgramContent = {
+    id: 'intro2gpro-game-mechanics',
+    programId: 'intro2gpro-program-1',
+    parentId: undefined,
+    title: 'Week 09: Game Mechanics',
+    description: 'Explore game mechanics catalogs and incorporate selected mechanics into your game pitch.',
+    type: 0, // Page
+    body: intro2gproGameMechanics,
+    sortOrder: 12,
+    isRequired: true,
+    gradingMethod: 1, // Points
+    maxPoints: 100,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: {} as Program, // Will be set after program creation
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+    slug: 'game-mechanics',
 };
 
 // Child content for gamedev-issues
@@ -3934,6 +3958,7 @@ intro2gproProgram.programContents = [
     intro2gproUnityPlatformerContent,
     intro2gproProductionContent,
     intro2gproAssignmentContent,
+    intro2gproGameMechanicsContent,
 ];
 
 gamePublishingProgram.programContents = [
@@ -4154,6 +4179,7 @@ export const mockProgramContents: ProgramContent[] = [
     intro2gproUnityPlatformerContent,
     intro2gproProductionContent,
     intro2gproAssignmentContent,
+    intro2gproGameMechanicsContent,
     // Game Publishing content
     gamePublishingSyllabusContent,
     // Game Publishing parent categories
