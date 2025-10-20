@@ -340,6 +340,7 @@ export function OpenProjectDialog({
                 itemsPerPage={itemsPerPage}
                 searchTerm={searchTerm}
                 selectedTags={selectedTags}
+                viewMode="grid"
                 onOpen={handleOpen}
                 onDelete={handleConfirmDelete}
                 onDownload={handleDownload}
