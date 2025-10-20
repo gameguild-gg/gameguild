@@ -119,7 +119,20 @@ export function ProjectList({
   }
 
   const handleProjectDownload = (project: ProjectData) => {
-    handleDownloadClick(project)
+    if (onDownload) {
+      // Call onDownload directly if provided (for direct download)
+      onDownload(
+        project.id,
+        project.name,
+        project.data,
+        project.tags,
+        project.createdAt,
+        project.updatedAt,
+      )
+    } else {
+      // Use dialog confirmation if onDownload is not provided
+      handleDownloadClick(project)
+    }
   }
 
   return (
