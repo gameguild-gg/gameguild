@@ -1,0 +1,347 @@
+"use client"
+
+import type React from "react"
+import { Button } from "@/components/ui/button"
+import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database, Wifi, WifiOff, Eye, Blocks } from "lucide-react"
+import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
+
+interface ProjectData {
+  id: string
+  name: string
+  data: string
+  tags: string[]
+  size: number
+  createdAt: string
+  updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
+}
+
+interface ProjectCardProps {
+  project: ProjectData
+  viewMode: 'grid' | 'list'
+  onOpen: (projectId: string) => void
+  onView?: (projectId: string) => void
+  onDelete?: (projectId: string, projectName: string) => void
+  onInfo?: (project: ProjectData) => void
+  onDownload?: (project: ProjectData) => void
+  showDeleteButton?: boolean
+  showStudioViewerButtons?: boolean
+  openButtonText?: string
+  openButtonIcon?: React.ReactNode
+}
+
+export function ProjectCard({
+  project,
+  viewMode,
+  onOpen,
+  onView,
+  onDelete,
+  onInfo,
+  onDownload,
+  showDeleteButton = true,
+  showStudioViewerButtons = false,
+  openButtonText = "Open",
+  openButtonIcon,
+}: ProjectCardProps) {
+  const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
+
+  // Format file size
+  const formatSize = (sizeInKB: number): string => {
+    if (sizeInKB < 1024) {
+      return `${sizeInKB.toFixed(1)}KB`
+    } else {
+      return `${(sizeInKB / 1024).toFixed(1)}MB`
+    }
+  }
+
+  // Render storage type indicator
+  const renderStorageIndicator = (
+    storageType: "local" | "gameguild-cloud" | "google-drive" | undefined,
+    isLocallyAvailable?: boolean
+  ) => {
+    if (!storageType || storageType === "local") {
+      return (
+        <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Stored locally on this device">
+          <HardDrive className="h-3 w-3" />
+          <span>Local</span>
+        </div>
+      )
+    }
+
+    if (storageType === "gameguild-cloud") {
+      return (
+        <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="Stored on GameGuild Cloud - Always accessible">
+          <Database className="h-3 w-3" />
+          <span>GameGuild</span>
+          <Wifi className="h-2 w-2" />
+        </div>
+      )
+    }
+
+    if (storageType === "google-drive") {
+      const isConnected = isGoogleDriveAuthenticated
+      const isAvailableLocally = isLocallyAvailable === true
+      
+      return (
+        <div className={`flex items-center gap-1 text-xs ${
+          isConnected 
+            ? (isAvailableLocally ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400")
+            : "text-orange-600 dark:text-orange-400"
+        }`} title={
+          !isConnected 
+            ? "Stored on Google Drive - Connect to access"
+            : isAvailableLocally
+              ? "Stored on Google Drive - Downloaded and ready"
+              : "Stored on Google Drive - Click to download"
+        }>
+          <Cloud className="h-3 w-3" />
+          <span>Google Drive</span>
+          {!isConnected ? (
+            <WifiOff className="h-2 w-2" />
+          ) : isAvailableLocally ? (
+            <Wifi className="h-2 w-2" />
+          ) : (
+            <Download className="h-2 w-2" />
+          )}
+        </div>
+      )
+    }
+
+    return null
+  }
+
+  if (viewMode === 'grid') {
+    return (
+      <div
+        className="group relative flex h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-md dark:border-gray-800 dark:hover:border-gray-700"
+        onClick={() => !showStudioViewerButtons && onOpen(project.id)}
+      >
+        <div className="flex flex-col p-4">
+          <div className="mb-2 flex items-start justify-between">
+            <span
+              className="block truncate font-semibold text-gray-900 dark:text-gray-100"
+              title={project.name}
+            >
+              {project.name}
+            </span>
+            {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
+          </div>
+          
+          {project.tags && project.tags.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
+              {project.tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-700/30"
+                >
+                  {tag}
+                </span>
+              ))}
+              {project.tags.length > 3 && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">+{project.tags.length - 3}</span>
+              )}
+            </div>
+          )}
+          
+          <div className="mt-auto text-xs text-gray-500 dark:text-gray-400">
+            <span>{formatSize(project.size)}</span>
+            <span className="mx-1.5">•</span>
+            <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+
+        {/* Studio/Viewer buttons for grid view */}
+        {showStudioViewerButtons && (
+          <div className="absolute inset-x-4 bottom-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <Button
+              onClick={(e) => {
+                e.stopPropagation()
+                onOpen(project.id)
+              }}
+              size="sm"
+              className="flex-1 h-8 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Blocks className="w-3 h-3 mr-1" />
+              Studio
+            </Button>
+            <Button
+              onClick={(e) => {
+                e.stopPropagation()
+                onView?.(project.id)
+              }}
+              size="sm"
+              variant="outline"
+              className="flex-1 h-8"
+            >
+              <Eye className="w-3 h-3 mr-1" />
+              Viewer
+            </Button>
+          </div>
+        )}
+
+        {/* Regular action buttons for grid view */}
+        {!showStudioViewerButtons && (
+          <div className="absolute bottom-2 right-2 flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            {onInfo && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onInfo(project)
+                }}
+                className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800"
+                title="Edit project info"
+              >
+                <Info className="h-4 w-4" />
+              </Button>
+            )}
+            {onDownload && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDownload(project)
+                }}
+                className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-green-600 dark:hover:bg-gray-800"
+                title="Download project"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            )}
+            {showDeleteButton && onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(project.id, project.name)
+                }}
+                className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-800"
+                title="Delete project"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        )}
+
+        <div className="absolute top-2 right-2 text-xs font-mono text-gray-400/50 dark:text-gray-500/50">
+          {project.id.slice(0, 8)}
+        </div>
+      </div>
+    )
+  }
+
+  // List view
+  return (
+    <div className="group rounded-lg border bg-card p-4 shadow-sm transition-all duration-200 hover:shadow-md dark:border-gray-800">
+      <div className="flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="font-semibold text-gray-900 dark:text-gray-100 truncate" title={project.name}>
+              {project.name}
+            </span>
+            {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
+          </div>
+          
+          {project.tags && project.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {project.tags.slice(0, 5).map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-700/30"
+                >
+                  {tag}
+                </span>
+              ))}
+              {project.tags.length > 5 && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">+{project.tags.length - 5}</span>
+              )}
+            </div>
+          )}
+          
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            <span>{formatSize(project.size)}</span>
+            <span className="mx-1.5">•</span>
+            <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
+            <span className="mx-1.5">•</span>
+            <span className="font-mono">#{project.id.slice(0, 8)}</span>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 ml-4">
+          {/* Studio/Viewer buttons for list view */}
+          {showStudioViewerButtons ? (
+            <>
+              <Button
+                onClick={() => onOpen(project.id)}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Blocks className="w-4 h-4 mr-1" />
+                Studio
+              </Button>
+              <Button
+                onClick={() => onView?.(project.id)}
+                size="sm"
+                variant="outline"
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                Viewer
+              </Button>
+            </>
+          ) : (
+            /* Regular action buttons for list view */
+            <>
+              <Button
+                onClick={() => onOpen(project.id)}
+                size="sm"
+                className="gap-1"
+              >
+                {openButtonIcon || <FolderOpen className="w-4 h-4" />}
+                {openButtonText}
+              </Button>
+              
+              {onInfo && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onInfo(project)}
+                  title="Edit project info"
+                >
+                  <Info className="w-4 h-4" />
+                </Button>
+              )}
+              
+              {onDownload && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDownload(project)}
+                  title="Download project"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              )}
+              
+              {showDeleteButton && onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(project.id, project.name)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                  title="Delete project"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
