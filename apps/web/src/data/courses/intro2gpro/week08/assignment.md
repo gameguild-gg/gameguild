@@ -8,7 +8,7 @@ Do not use Proprietary or closed licensed assets! If you use anything open and f
 
 ::: warning
 
-This is the first step towards our final delivery. You are all invited to publish your game here: https://itch.io/jam/gpr100-25 
+This is the first step towards our final delivery. You are all invited to publish your game here: https://itch.io/jam/gpr100-25
 
 :::
 
@@ -41,13 +41,20 @@ Tools to Express Your Game Idea: Use the following tools to develop and express 
 - Character design
 - Art style and mood board
 
-## Presentation: 
+## Presentation:
 
 At the end of the week, you will present your game idea to the class using the following:
 
 PowerPoint, Google Slides, Canvas, Notion or any other presentation tool (to show your concept art, wireframes, mind maps, and GDD)
 
-A 5-minute pitch of your game idea, covering its main aspects: genre, gameplay mechanics, storyline, and target audience.
+A 5-minute pitch of your game idea, covering its main aspects:
+
+- genre,
+- core gameplay mechanic,
+- storyline,
+- target audience
+
+Example of game pitches: https://heyglitch.notion.site/Pitch-Decks-f56e38c13fe6417f8379859e74367e1a
 
 ## Grading Criteria:
 
