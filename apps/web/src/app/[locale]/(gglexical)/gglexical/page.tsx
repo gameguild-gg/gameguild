@@ -11,9 +11,11 @@ import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 import { AdvancedFilters } from "@/components/editor/extras/project-dialog/advanced-filters"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
+import { useProjectActions } from "@/hooks/editor/use-project-actions"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { toast } from "sonner"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
+import { InfoDialog } from "@/components/editor/extras/editor/info-dialog"
 
 interface ProjectData {
   id: string
@@ -44,9 +46,7 @@ export default function HomePage() {
   const [accessFilter, setAccessFilter] = useState<"all" | "all-access" | "all-authors">("all")
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
-  // Delete confirmation
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
+
 
   // Storage adapter
   const storageAdapter = {
@@ -164,6 +164,13 @@ export default function HomePage() {
     }
   }
 
+  // Project actions (info, download, delete)
+  const projectActions = useProjectActions({
+    storageAdapter,
+    onProjectsListUpdate: loadAvailableTags,
+    onProjectUpdate: loadAvailableTags
+  })
+
   // Filter projects based on search and advanced filters
   const additionalFilteredProjects = filteredProjects.filter(project => {
     const matchesAuthor = !authorFilter || "Miguel Moroni".toLowerCase().includes(authorFilter.toLowerCase())
@@ -231,33 +238,23 @@ export default function HomePage() {
     }
   }
 
-  const handleConfirmDelete = (projectId: string, projectName: string) => {
-    setProjectToDelete({ id: projectId, name: projectName })
-    setDeleteDialogOpen(true)
-  }
-
-  const handleDelete = async () => {
-    if (!projectToDelete) return
-
-    try {
-      await storageAdapter.delete(projectToDelete.id)
-      await loadAvailableTags() // Refresh tags
-
-      toast.success("Projeto excluído", {
-        description: `"${projectToDelete.name}" foi removido permanentemente`,
-        duration: 3000,
-        icon: "🗑️",
-      })
-    } catch (error) {
-      console.error("Delete error:", error)
-      toast.error("Erro ao excluir projeto", {
-        description: "Não foi possível excluir o projeto. Tente novamente.",
-        duration: 4000,
-        icon: "❌",
-      })
-    } finally {
-      setProjectToDelete(null)
-    }
+  // Wrapper function to match ProjectList expected signature
+  const handleProjectDownload = (
+    projectId: string,
+    projectName: string,
+    projectData: string,
+    projectTags: string[],
+    createdAt: string,
+    updatedAt: string
+  ) => {
+    projectActions.handleDownload(
+      projectId,
+      projectName,
+      projectData,
+      projectTags,
+      createdAt,
+      updatedAt
+    )
   }
 
   return (
@@ -453,8 +450,9 @@ export default function HomePage() {
                 viewMode={viewMode}
                 onOpen={handleProjectOpen}
                 onView={handleProjectView}
-                onDelete={handleConfirmDelete}
-                onDownload={handleDownload}
+                onDelete={projectActions.handleConfirmDelete}
+                onInfo={projectActions.handleOpenInfo}
+                onDownload={handleProjectDownload}
                 showDeleteButton={true}
                 showStudioViewerButtons={true}
               />
@@ -477,12 +475,22 @@ export default function HomePage() {
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        itemName={projectToDelete?.name}
+        open={projectActions.deleteDialogOpen}
+        onOpenChange={projectActions.setDeleteDialogOpen}
+        itemName={projectActions.projectToDelete?.name}
         itemType="projeto"
-        onConfirm={handleDelete}
+        onConfirm={projectActions.handleDelete}
         title="Confirmar Exclusão"
+      />
+
+      {/* Info Dialog */}
+      <InfoDialog
+        open={projectActions.infoDialogOpen}
+        onOpenChange={projectActions.setInfoDialogOpen}
+        project={projectActions.projectToEdit}
+        onSave={projectActions.handleSaveInfo}
+        availableTags={availableTags}
+        storageAdapter={storageAdapter}
       />
     </div>
   )
