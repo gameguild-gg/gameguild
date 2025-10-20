@@ -153,30 +153,79 @@ export function ProjectCard({
 
         {/* Studio/Viewer buttons for grid view */}
         {showStudioViewerButtons && (
-          <div className="absolute inset-x-4 bottom-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <Button
-              onClick={(e) => {
-                e.stopPropagation()
-                onOpen(project.id)
-              }}
-              size="sm"
-              className="flex-1 h-8 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Blocks className="w-3 h-3 mr-1" />
-              Studio
-            </Button>
-            <Button
-              onClick={(e) => {
-                e.stopPropagation()
-                onView?.(project.id)
-              }}
-              size="sm"
-              variant="outline"
-              className="flex-1 h-8"
-            >
-              <Eye className="w-3 h-3 mr-1" />
-              Viewer
-            </Button>
+          <div className="absolute inset-x-2 bottom-2 space-y-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            {/* Primary action buttons (Studio/Viewer) */}
+            <div className="flex gap-2">
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpen(project.id)
+                }}
+                size="sm"
+                className="flex-1 h-8 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Blocks className="w-3 h-3 mr-1" />
+                Studio
+              </Button>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onView?.(project.id)
+                }}
+                size="sm"
+                variant="outline"
+                className="flex-1 h-8"
+              >
+                <Eye className="w-3 h-3 mr-1" />
+                Viewer
+              </Button>
+            </div>
+            
+            {/* Secondary action buttons (Info/Download/Delete) */}
+            <div className="flex justify-center gap-1">
+              {onInfo && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onInfo(project)
+                  }}
+                  className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800"
+                  title="Edit project info"
+                >
+                  <Info className="h-3 w-3" />
+                </Button>
+              )}
+              {onDownload && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDownload(project)
+                  }}
+                  className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-green-600 dark:hover:bg-gray-800"
+                  title="Download project"
+                >
+                  <Download className="h-3 w-3" />
+                </Button>
+              )}
+              {showDeleteButton && onDelete && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(project.id, project.name)
+                  }}
+                  className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-800"
+                  title="Delete project"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
@@ -276,6 +325,7 @@ export function ProjectCard({
           {/* Studio/Viewer buttons for list view */}
           {showStudioViewerButtons ? (
             <>
+              {/* Primary actions */}
               <Button
                 onClick={() => onOpen(project.id)}
                 size="sm"
@@ -292,6 +342,43 @@ export function ProjectCard({
                 <Eye className="w-4 h-4 mr-1" />
                 Viewer
               </Button>
+              
+              {/* Secondary actions */}
+              {onInfo && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onInfo(project)}
+                  title="Edit project info"
+                  className="opacity-60 hover:opacity-100"
+                >
+                  <Info className="w-4 h-4" />
+                </Button>
+              )}
+              
+              {onDownload && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDownload(project)}
+                  title="Download project"
+                  className="opacity-60 hover:opacity-100"
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              )}
+              
+              {showDeleteButton && onDelete && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(project.id, project.name)}
+                  className="opacity-60 hover:opacity-100 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                  title="Delete project"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
             </>
           ) : (
             /* Regular action buttons for list view */
