@@ -9,7 +9,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
 import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/project-search-filters"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
-import { AdvancedFilters } from "@/components/editor/extras/project-dialog/advanced-filters"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
 import { useProjectActions } from "@/hooks/editor/use-project-actions"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
@@ -44,7 +43,7 @@ export default function HomePage() {
   const [dateFromFilter, setDateFromFilter] = useState("")
   const [dateToFilter, setDateToFilter] = useState("")
   const [accessFilter, setAccessFilter] = useState<"all" | "all-access" | "all-authors">("all")
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true)
 
 
 
@@ -93,7 +92,7 @@ export default function HomePage() {
         throw new Error("Database not initialized")
       }
       try {
-        await dbStorage.current.save(id, name, data, tags)
+        await dbStorage.current.save(id, name, data, tags, storageType)
       } catch (error) {
         console.error("Failed to save project:", error)
         throw error
@@ -105,7 +104,7 @@ export default function HomePage() {
         return []
       }
       try {
-        const projects = await dbStorage.current.searchProjects(searchTerm, tags, filterMode)
+        const projects = await dbStorage.current.searchProjects(searchTerm, tags, filterMode, storageTypeFilter)
         return projects
       } catch (error) {
         console.error("Failed to search projects:", error)
@@ -395,10 +394,7 @@ export default function HomePage() {
             onItemsPerPageChange={setItemsPerPage}
             showFilters={showFilters}
             forceVerticalLayout={false}
-          />
-
-          {/* Advanced Filters */}
-          <AdvancedFilters
+            // Advanced filters props
             authorFilter={authorFilter}
             onAuthorFilterChange={setAuthorFilter}
             statusFilter={statusFilter}
@@ -409,7 +405,7 @@ export default function HomePage() {
             onDateToFilterChange={setDateToFilter}
             accessFilter={accessFilter}
             onAccessFilterChange={setAccessFilter}
-            showAdvanced={showAdvancedFilters}
+            showAdvancedFilters={showAdvancedFilters}
           />
 
           {/* Projects List */}
