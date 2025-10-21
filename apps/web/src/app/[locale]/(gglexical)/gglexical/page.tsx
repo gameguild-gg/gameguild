@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight, Eye, Blocks, Plus, Search, Filter, MoreVertical, Calendar, Tag, User, Grid, List, LayoutGrid } from "lucide-react"
+import { ArrowRight, Eye, Blocks, Plus, Search, MoreVertical, Calendar, Tag, User, Grid, List, LayoutGrid } from "lucide-react"
 import Link from "next/link"
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
@@ -133,8 +133,6 @@ export default function HomePage() {
     loadProject,
     refreshProjects,
   } = useProjectDialog({ isDbInitialized, storageAdapter })
-
-  const [showFilters, setShowFilters] = useState(false)
 
   // Initialize database
   useEffect(() => {
@@ -355,14 +353,6 @@ export default function HomePage() {
                 </select>
                 <Button 
                   variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="gap-2"
-                >
-                  <Filter className="w-4 h-4" />
-                  Filters
-                </Button>
-                <Button 
-                  variant="outline"
                   onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                   className="gap-2"
                 >
@@ -374,17 +364,6 @@ export default function HomePage() {
                   New post
                 </Button>
               </div>
-            </div>
-            
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <Input
-                placeholder="Search posts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
             </div>
           </div>
 
@@ -401,7 +380,7 @@ export default function HomePage() {
             onStorageTypeFilterChange={setStorageTypeFilter}
             itemsPerPage={itemsPerPage}
             onItemsPerPageChange={setItemsPerPage}
-            showFilters={showFilters}
+            showFilters={true}
             forceVerticalLayout={false}
             // Advanced filters props
             authorFilter={authorFilter}
@@ -432,7 +411,7 @@ export default function HomePage() {
                   <Blocks className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No projects found</h3>
                   <p className="text-gray-500 dark:text-gray-400 mb-4">
-                    {searchTerm || selectedTags.length > 0 || showFilters ? 
+                    {searchTerm || selectedTags.length > 0 ? 
                       "Try adjusting your search or filters" : 
                       "Create your first project to get started"
                     }
