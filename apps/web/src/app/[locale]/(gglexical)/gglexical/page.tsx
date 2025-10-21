@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowRight, Eye, Blocks, Plus, Search, Filter, MoreVertical, Calendar, Tag, User, Grid, List, LayoutGrid } from "lucide-react"
 import Link from "next/link"
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
 import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/project-search-filters"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
@@ -43,12 +43,12 @@ export default function HomePage() {
   const [dateFromFilter, setDateFromFilter] = useState("")
   const [dateToFilter, setDateToFilter] = useState("")
   const [accessFilter, setAccessFilter] = useState<"all" | "all-access" | "all-authors">("all")
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(true)
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false) // Mudado para false por padrão para economizar recursos
 
 
 
-  // Storage adapter
-  const storageAdapter = {
+  // Storage adapter - MEMOIZADO para evitar recriação
+  const storageAdapter = useMemo(() => ({
     load: async (id: string): Promise<ProjectData | null> => {
       if (!isDbInitialized) {
         throw new Error("Database not initialized")
@@ -111,7 +111,7 @@ export default function HomePage() {
         return []
       }
     },
-  }
+  }), [isDbInitialized])
 
   // Use the project dialog hook for project management
   const {
@@ -131,6 +131,7 @@ export default function HomePage() {
     setTagFilterMode,
     handleDownload,
     loadProject,
+    refreshProjects,
   } = useProjectDialog({ isDbInitialized, storageAdapter })
 
   const [showFilters, setShowFilters] = useState(false)
@@ -154,36 +155,44 @@ export default function HomePage() {
     initializeDatabase()
   }, [])
 
-  const loadAvailableTags = async () => {
+  const loadAvailableTags = useCallback(async () => {
     try {
       const tags = await dbStorage.current.getAllTags()
       setAvailableTags(tags)
     } catch (error) {
       console.error("Failed to load tags:", error)
     }
-  }
+  }, [])
 
-  // Project actions (info, download, delete)
+  // Função para atualizar lista após mudanças - MEMOIZADA
+  const updateProjectsList = useCallback(async () => {
+    await refreshProjects()
+    await loadAvailableTags()
+  }, [refreshProjects, loadAvailableTags])
+
+  // Project actions (info, download, delete) - MEMOIZADO para evitar recriação
   const projectActions = useProjectActions({
     storageAdapter,
-    onProjectsListUpdate: loadAvailableTags,
-    onProjectUpdate: loadAvailableTags
+    onProjectsListUpdate: updateProjectsList,
+    onProjectUpdate: updateProjectsList
   })
 
-  // Filter projects based on search and advanced filters
-  const additionalFilteredProjects = filteredProjects.filter(project => {
-    const matchesAuthor = !authorFilter || "Miguel Moroni".toLowerCase().includes(authorFilter.toLowerCase())
-    const matchesStatus = statusFilter === "all" || statusFilter === "draft" // All projects are drafts for now
-    const matchesDateFrom = !dateFromFilter || new Date(project.updatedAt) >= new Date(dateFromFilter)
-    const matchesDateTo = !dateToFilter || new Date(project.updatedAt) <= new Date(dateToFilter)
-    
-    return matchesAuthor && matchesStatus && matchesDateFrom && matchesDateTo
-  })
+  // Filter projects based on search and advanced filters - MEMOIZADO para evitar recálculo desnecessário
+  const additionalFilteredProjects = useMemo(() => {
+    return filteredProjects.filter(project => {
+      const matchesAuthor = !authorFilter || "Miguel".toLowerCase().includes(authorFilter.toLowerCase()) // Placeholder author check
+      const matchesStatus = statusFilter === "all" || statusFilter === "draft" // All projects are drafts for now
+      const matchesDateFrom = !dateFromFilter || new Date(project.updatedAt) >= new Date(dateFromFilter)
+      const matchesDateTo = !dateToFilter || new Date(project.updatedAt) <= new Date(dateToFilter)
+      
+      return matchesAuthor && matchesStatus && matchesDateFrom && matchesDateTo
+    })
+  }, [filteredProjects, authorFilter, statusFilter, dateFromFilter, dateToFilter])
 
   const totalPages = Math.ceil(additionalFilteredProjects.length / itemsPerPage)
 
-  // Handle project actions
-  const handleProjectOpen = async (projectId: string) => {
+  // Handle project actions - MEMOIZADAS para evitar recriação
+  const handleProjectOpen = useCallback(async (projectId: string) => {
     try {
       toast.loading("Carregando projeto...", { id: `loading-${projectId}` })
       
@@ -208,9 +217,9 @@ export default function HomePage() {
         description: "Não foi possível carregar o projeto"
       })
     }
-  }
+  }, [loadProject])
 
-  const handleProjectView = async (projectId: string) => {
+  const handleProjectView = useCallback(async (projectId: string) => {
     try {
       toast.loading("Carregando projeto...", { id: `loading-view-${projectId}` })
       
@@ -235,10 +244,10 @@ export default function HomePage() {
         description: "Não foi possível carregar o projeto"
       })
     }
-  }
+  }, [loadProject])
 
-  // Wrapper function to match ProjectList expected signature
-  const handleProjectDownload = (
+  // Wrapper function to match ProjectList expected signature - MEMOIZADA
+  const handleProjectDownload = useCallback((
     projectId: string,
     projectName: string,
     projectData: string,
@@ -254,7 +263,7 @@ export default function HomePage() {
       createdAt,
       updatedAt
     )
-  }
+  }, [projectActions])
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
