@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { ChevronDown, ChevronUp, Cloud, Database, HardDrive, Calendar, CalendarCheck, User, AlertCircle } from "lucide-react"
+import { ChevronDown, ChevronUp, Cloud, Database, HardDrive, Calendar, Tag, User, AlertCircle } from "lucide-react"
 import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 
 interface ProjectSearchFiltersProps {
@@ -370,7 +370,7 @@ export function ProjectSearchFilters({
                 </Button>
               </div>
               
-              <div className="grid grid-cols-5 gap-3">
+              <div className="grid grid-cols-4 gap-3">
                 {/* Author Filter */}
                 {onAuthorFilterChange && (
                   <div className="space-y-1">
@@ -407,35 +407,31 @@ export function ProjectSearchFilters({
                   </div>
                 )}
 
-                {/* Date From Filter */}
-                {onDateFromFilterChange && (
+                {/* Date Range Filter (consolidated) */}
+                {(onDateFromFilterChange && onDateToFilterChange) && (
                   <div className="space-y-1">
                     <Label className="text-xs font-medium flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
-                      Date From
+                      Date Range
                     </Label>
-                    <Input
-                      type="date"
-                      value={dateFromFilter}
-                      onChange={(e) => onDateFromFilterChange(e.target.value)}
-                      className="h-8 text-xs"
-                    />
-                  </div>
-                )}
-
-                {/* Date To Filter */}
-                {onDateToFilterChange && (
-                  <div className="space-y-1">
-                    <Label className="text-xs font-medium flex items-center gap-1">
-                      <CalendarCheck className="w-3 h-3" />
-                      Date To
-                    </Label>
-                    <Input
-                      type="date"
-                      value={dateToFilter}
-                      onChange={(e) => onDateToFilterChange(e.target.value)}
-                      className="h-8 text-xs"
-                    />
+                    <div className="flex gap-1">
+                      <Input
+                        type="date"
+                        value={dateFromFilter}
+                        onChange={(e) => onDateFromFilterChange(e.target.value)}
+                        className="h-8 text-xs flex-1"
+                        placeholder="From"
+                        title="Date From"
+                      />
+                      <Input
+                        type="date"
+                        value={dateToFilter}
+                        onChange={(e) => onDateToFilterChange(e.target.value)}
+                        className="h-8 text-xs flex-1"
+                        placeholder="To"
+                        title="Date To"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -472,14 +468,9 @@ export function ProjectSearchFilters({
                           Status: {statusFilter}
                         </span>
                       )}
-                      {dateFromFilter && (
+                      {(dateFromFilter || dateToFilter) && (
                         <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900 dark:text-purple-200">
-                          From: {dateFromFilter}
-                        </span>
-                      )}
-                      {dateToFilter && (
-                        <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900 dark:text-purple-200">
-                          To: {dateToFilter}
+                          Date: {dateFromFilter || '...'} → {dateToFilter || '...'}
                         </span>
                       )}
                       {accessFilter !== "all" && (
