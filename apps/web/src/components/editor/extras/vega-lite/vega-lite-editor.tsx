@@ -54,6 +54,21 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       return
     }
 
+    // Ensure preview container exists before proceeding
+    if (!previewRef.current) {
+      // If the template selector is still open, the preview isn't mounted yet; wait for close effect
+      if (showTemplateSelector) {
+        console.log("Preview ref not ready (template selector open); skipping render for now")
+        return
+      }
+      console.log("Preview ref not ready; deferring render by 50ms")
+      setTimeout(() => {
+        // Use latest layout on retry
+        renderChart(spec, forceValidation, currentLayout)
+      }, 50)
+      return
+    }
+
     setIsLoading(true)
     setError("")
 
@@ -73,7 +88,11 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
         return
       }
 
-      if (!previewRef.current) return
+      if (!previewRef.current) {
+        // If container disappears during async steps, safely abort and retry later
+        console.log("Preview ref disappeared during render; aborting this cycle")
+        return
+      }
 
       // Parse the specification
       let parsedSpec
@@ -112,8 +131,10 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
         // Compile Vega-Lite spec to Vega spec
         const vegaSpec = vegaLiteImport.compile(parsedSpec).spec
 
-        // Clear previous content
-        previewRef.current.innerHTML = ""
+        // Clear previous content (guard again)
+        if (previewRef.current) {
+          previewRef.current.innerHTML = ""
+        }
 
         // Create a new view and render
         const view = new vegaImport.View(vegaImport.parse(vegaSpec))
@@ -213,8 +234,6 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   const handleTemplateSelect = (template: { type: string; spec: string; title?: string }) => {
     console.log("Template selected:", template.type, "Spec length:", template.spec.length)
     
-    const currentLayout = data.layout || "rectangular"
-    
     // Set flag to indicate template was just selected
     setTemplateJustSelected(true)
     
@@ -227,32 +246,6 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
     
     // Close template selector
     setShowTemplateSelector(false)
-    
-    // Force render the chart immediately using the template spec directly
-    // Use setTimeout(0) to ensure DOM updates have processed
-    setTimeout(() => {
-      console.log("Rendering template chart with spec length:", template.spec.length, "layout:", currentLayout)
-      
-      // Check if preview container exists before rendering
-      if (previewRef.current) {
-        console.log("Preview container found, rendering...")
-        renderChart(template.spec, true, currentLayout)
-      } else {
-        console.log("Preview container not found, waiting...")
-        // If container not ready, wait a bit more
-        setTimeout(() => {
-          if (previewRef.current) {
-            console.log("Preview container found on retry, rendering...")
-            renderChart(template.spec, true, currentLayout)
-          }
-        }, 100)
-      }
-      
-      // Reset flag after rendering
-      setTimeout(() => {
-        setTemplateJustSelected(false)
-      }, 50)
-    }, 0)
   }
 
   const handleSave = () => {
@@ -275,6 +268,19 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       renderChart(initialData.spec, true) // Force validation
     }
   }, [])
+
+  // When closing the template selector, ensure first render happens once the preview is mounted
+  useEffect(() => {
+    if (!showTemplateSelector && data.spec && data.spec.trim() !== "") {
+      // Defer to next tick to let the preview container mount
+      setTimeout(() => {
+        console.log("Template selector closed; triggering initial render of selected template")
+        renderChart(data.spec, true, data.layout)
+        // Reset the template-selected flag after the first render trigger
+        setTemplateJustSelected(false)
+      }, 0)
+    }
+  }, [showTemplateSelector])
 
   // Re-render when data.spec changes (for template selection and other updates)
   useEffect(() => {
@@ -305,8 +311,11 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   // Separate useEffect for layout changes to ensure immediate re-render
   useEffect(() => {
     if (data.spec && data.spec.trim() !== "" && !templateJustSelected) {
-      console.log("Layout changed, re-rendering chart...")
-      renderChart(data.spec, true, data.layout)
+      console.log("Layout changed, re-rendering chart (raf)...")
+      const raf = requestAnimationFrame(() => {
+        renderChart(data.spec, true, data.layout)
+      })
+      return () => cancelAnimationFrame(raf)
     }
   }, [data.layout, templateJustSelected])
 
@@ -599,7 +608,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                         }`}
                         style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top center" }}
                       />
-                      {!previewRef.current?.hasChildNodes() && !isLoading && (
+                      {!previewRef.current?.hasChildNodes() && !isLoading && (!data.spec || data.spec.trim() === "") && (
                         <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400">
                           <div className="text-center">
                             <BarChart3 className="h-12 w-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
