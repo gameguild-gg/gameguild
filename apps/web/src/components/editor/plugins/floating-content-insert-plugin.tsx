@@ -482,8 +482,7 @@ export function FloatingContentInsertPlugin() {
           caption: "",
           size: 100,
           theme: "default",
-          width: 400,
-          height: 300,
+          layout: "rectangular",
         })
         setShowMenu(false)
       },
