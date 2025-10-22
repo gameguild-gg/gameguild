@@ -20,8 +20,8 @@ interface ProjectData {
 interface ProjectCardProps {
   project: ProjectData
   viewMode: 'grid' | 'list'
-  onOpen: (projectId: string) => void
-  onView?: (projectId: string) => void
+  onOpen: (projectId: string, event?: React.MouseEvent) => void
+  onView?: (projectId: string, event?: React.MouseEvent) => void
   onDelete?: (projectId: string, projectName: string) => void
   onInfo?: (project: ProjectData) => void
   onDownload?: (project: ProjectData) => void
@@ -115,7 +115,7 @@ export function ProjectCard({
     return (
       <div
         className="group relative flex h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-md dark:border-gray-800 dark:hover:border-gray-700"
-        onClick={() => !showStudioViewerButtons && onOpen(project.id)}
+        onClick={(e) => !showStudioViewerButtons && onOpen(project.id, e)}
       >
         <div className="flex flex-col p-4">
           <div className="mb-2 flex items-start justify-between">
@@ -159,7 +159,7 @@ export function ProjectCard({
               <Button
                 onClick={(e) => {
                   e.stopPropagation()
-                  onOpen(project.id)
+                  onOpen(project.id, e)
                 }}
                 size="sm"
                 className="flex-1 h-8 bg-blue-600 hover:bg-blue-700 text-white"
@@ -170,7 +170,7 @@ export function ProjectCard({
               <Button
                 onClick={(e) => {
                   e.stopPropagation()
-                  onView?.(project.id)
+                  onView?.(project.id, e)
                 }}
                 size="sm"
                 variant="outline"
@@ -327,7 +327,7 @@ export function ProjectCard({
             <>
               {/* Primary actions */}
               <Button
-                onClick={() => onOpen(project.id)}
+                onClick={(e) => onOpen(project.id, e)}
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
@@ -335,7 +335,7 @@ export function ProjectCard({
                 Studio
               </Button>
               <Button
-                onClick={() => onView?.(project.id)}
+                onClick={(e) => onView?.(project.id, e)}
                 size="sm"
                 variant="outline"
               >
@@ -384,7 +384,7 @@ export function ProjectCard({
             /* Regular action buttons for list view */
             <>
               <Button
-                onClick={() => onOpen(project.id)}
+                onClick={(e) => onOpen(project.id, e)}
                 size="sm"
                 className="gap-1"
               >
