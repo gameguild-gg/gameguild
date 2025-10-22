@@ -43,6 +43,8 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const renderChart = async (spec: string, forceValidation = false) => {
+    console.log("renderChart called with spec length:", spec.length, "forceValidation:", forceValidation)
+    
     if (!spec.trim()) {
       if (previewRef.current) {
         previewRef.current.innerHTML = ""
@@ -60,10 +62,11 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       if (forceValidation || !validationResult.isValid) {
         currentValidation = await VegaLiteValidator.validateSpec(spec)
         setValidationResult(currentValidation)
+        console.log("Validation result:", currentValidation)
       }
 
-      // Stop rendering if validation fails
-      if (!currentValidation.isValid) {
+      // Only stop rendering if validation fails with a critical error
+      if (!currentValidation.isValid && currentValidation.error?.includes("Invalid JSON")) {
         setError(currentValidation.error || "Invalid Vega-Lite specification")
         setIsLoading(false)
         return
@@ -115,6 +118,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
           .hover()
 
         await view.runAsync()
+        console.log("Chart rendered successfully")
         setError("")
       } catch (renderError: any) {
         console.error("Vega-Lite render error:", renderError)
@@ -170,14 +174,16 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
 
   const handleSpecChange = (newSpec: string | undefined) => {
     const spec = newSpec || ""
+    console.log("Spec changed, new length:", spec.length)
     setData((prev) => ({ ...prev, spec }))
 
-    if (autoUpdate) {
+    if (autoUpdate && spec.trim() !== "") {
       // Debounce the update with forced validation
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current)
       }
       updateTimeoutRef.current = setTimeout(() => {
+        console.log("Auto-updating from spec change...")
         renderChart(spec, true) // Force validation
       }, 500)
     }
@@ -201,15 +207,21 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   }
 
   const handleTemplateSelect = (template: { type: string; spec: string; title?: string }) => {
+    console.log("Template selected:", template.type, "Spec length:", template.spec.length)
+    
+    // Update the data state
     setData((prev) => ({
       ...prev,
       spec: template.spec,
       title: template.title || prev.title,
     }))
+    
+    // Close template selector
     setShowTemplateSelector(false)
-    if (autoUpdate) {
-      renderChart(template.spec)
-    }
+    
+    // Force render the chart immediately, regardless of autoUpdate setting
+    // This ensures template selection always shows the preview
+    renderChart(template.spec, true)
   }
 
   const handleSave = () => {
@@ -232,6 +244,20 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       renderChart(initialData.spec, true) // Force validation
     }
   }, [])
+
+  // Re-render when data.spec changes (for template selection and other updates)
+  useEffect(() => {
+    if (data.spec && data.spec.trim() !== "" && autoUpdate) {
+      // Clear timeout to avoid duplicate renders
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+      // Render immediately for non-empty specs
+      updateTimeoutRef.current = setTimeout(() => {
+        renderChart(data.spec, true)
+      }, 300) // Shorter delay for better responsiveness
+    }
+  }, [data.spec, autoUpdate])
 
   // Cleanup timeout on unmount
   useEffect(() => {
