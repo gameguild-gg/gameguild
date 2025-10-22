@@ -28,8 +28,7 @@ export interface VegaLiteData {
   caption?: string
   size?: number
   theme?: "default" | "dark" | "excel" | "ggplot2" | "quartz" | "vox" | "fivethirtyeight" | "latimes"
-  width?: number
-  height?: number
+  layout?: "square" | "rectangular" // New layout option
 }
 
 export class VegaLiteNode extends DecoratorNode<JSX.Element> {
@@ -190,12 +189,15 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
         parsedSpec.config.theme = data.theme
       }
 
-      // Apply custom width/height if specified
-      if (data.width) {
-        parsedSpec.width = data.width
-      }
-      if (data.height) {
-        parsedSpec.height = data.height
+      // Apply layout settings
+      if (data.layout === "square") {
+        // Square layout: 400x400
+        parsedSpec.width = 400
+        parsedSpec.height = 400
+      } else if (data.layout === "rectangular") {
+        // Rectangular layout: full width, proportional height
+        parsedSpec.width = "container"
+        parsedSpec.height = 300
       }
 
       // Try to use Vega-Lite if available, otherwise show placeholder
@@ -288,7 +290,7 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
     }
 
     renderVegaChart()
-  }, [data.spec, data.theme, data.width, data.height, nodeKey])
+  }, [data.spec, data.theme, data.layout, nodeKey])
 
   // Render fullscreen chart when fullscreen is opened
   useEffect(() => {
@@ -311,7 +313,7 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
       }
       renderFullscreenChart()
     }
-  }, [isFullscreen, data.spec, data.theme, data.width, data.height])
+  }, [isFullscreen, data.spec, data.theme, data.layout])
 
   useEffect(() => {
     return mergeRegister(
@@ -413,7 +415,9 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
           </div>
 
           {/* Chart Content */}
-          <div className="w-full flex justify-center items-center min-h-[400px] relative overflow-auto max-h-[700px]">
+          <div className={`w-full flex justify-center items-center relative overflow-auto max-h-[700px] ${
+            data.layout === "square" ? "min-h-[450px]" : "min-h-[350px]"
+          }`}>
             {isLoading ? (
               <div className="text-gray-500 dark:text-gray-400">Rendering chart...</div>
             ) : error ? (
