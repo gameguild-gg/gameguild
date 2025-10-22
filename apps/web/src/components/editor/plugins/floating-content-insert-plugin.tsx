@@ -35,6 +35,7 @@ import {
   Youtube,
   GitBranch,
   Table,
+  BarChart3,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -64,6 +65,7 @@ import { extractYouTubeVideoId } from "../nodes/youtube-node"
 import type { SpotifyData } from "../nodes/spotify-node"
 import { extractSpotifyInfo } from "../nodes/spotify-node"
 import type { MermaidData } from "../nodes/mermaid-node"
+import type { VegaLiteData } from "../nodes/vega-lite-node"
 import type { TableData } from "../nodes/table-node"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
@@ -102,6 +104,7 @@ export const INSERT_YOUTUBE_COMMAND = createCommand<YouTubeData>("INSERT_YOUTUBE
 export const INSERT_SPOTIFY_COMMAND = createCommand<SpotifyData>("INSERT_SPOTIFY_COMMAND")
 export const INSERT_SOURCE_CODE_COMMAND = createCommand("INSERT_SOURCE_CODE_COMMAND")
 export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID_COMMAND")
+export const INSERT_VEGA_LITE_COMMAND = createCommand<VegaLiteData>("INSERT_VEGA_LITE_COMMAND")
 export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TABLE_COMMAND")
 
 export function FloatingContentInsertPlugin() {
@@ -465,6 +468,22 @@ export function FloatingContentInsertPlugin() {
           title: "",
           caption: "",
           size: 100,
+        })
+        setShowMenu(false)
+      },
+    },
+    {
+      icon: BarChart3,
+      label: "Vega-Lite Chart",
+      action: () => {
+        editor.dispatchCommand(INSERT_VEGA_LITE_COMMAND, {
+          spec: "",
+          title: "",
+          caption: "",
+          size: 100,
+          theme: "default",
+          width: 400,
+          height: 300,
         })
         setShowMenu(false)
       },
