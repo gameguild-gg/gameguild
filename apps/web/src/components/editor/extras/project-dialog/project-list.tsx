@@ -27,8 +27,8 @@ interface ProjectListProps {
   searchTerm: string
   selectedTags: string[]
   viewMode?: 'grid' | 'list'
-  onOpen: (projectId: string) => void
-  onView?: (projectId: string) => void
+  onOpen: (projectId: string, event?: React.MouseEvent) => void
+  onView?: (projectId: string, event?: React.MouseEvent) => void
   onDelete?: (projectId: string, projectName: string) => void
   onInfo?: (project: ProjectData) => void
   onDownload?: (

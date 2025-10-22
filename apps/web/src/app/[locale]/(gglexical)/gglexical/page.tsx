@@ -190,7 +190,7 @@ export default function HomePage() {
   const totalPages = Math.ceil(additionalFilteredProjects.length / itemsPerPage)
 
   // Handle project actions - MEMOIZADAS para evitar recriação
-  const handleProjectOpen = useCallback(async (projectId: string) => {
+  const handleProjectOpen = useCallback(async (projectId: string, event?: React.MouseEvent) => {
     try {
       toast.loading("Carregando projeto...", { id: `loading-${projectId}` })
       
@@ -206,7 +206,13 @@ export default function HomePage() {
         
         // Small delay to show success message
         setTimeout(() => {
-          window.location.href = `/gglexical/studio`
+          if (event?.ctrlKey || event?.metaKey) {
+            // Open in new tab if Ctrl/Cmd was pressed
+            window.open(`/gglexical/studio`, '_blank')
+          } else {
+            // Navigate in current tab
+            window.location.href = `/gglexical/studio`
+          }
         }, 500)
       }
     } catch (error) {
@@ -217,7 +223,7 @@ export default function HomePage() {
     }
   }, [loadProject])
 
-  const handleProjectView = useCallback(async (projectId: string) => {
+  const handleProjectView = useCallback(async (projectId: string, event?: React.MouseEvent) => {
     try {
       toast.loading("Carregando projeto...", { id: `loading-view-${projectId}` })
       
@@ -233,7 +239,13 @@ export default function HomePage() {
         
         // Small delay to show success message
         setTimeout(() => {
-          window.location.href = `/gglexical/viewer`
+          if (event?.ctrlKey || event?.metaKey) {
+            // Open in new tab if Ctrl/Cmd was pressed
+            window.open(`/gglexical/viewer`, '_blank')
+          } else {
+            // Navigate in current tab
+            window.location.href = `/gglexical/viewer`
+          }
         }, 500)
       }
     } catch (error) {
