@@ -38,11 +38,13 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   const [zoomLevel, setZoomLevel] = useState(100)
   const [errorPanelCollapsed, setErrorPanelCollapsed] = useState(false)
   const [alwaysCollapseErrors, setAlwaysCollapseErrors] = useState(false)
+  const [templateJustSelected, setTemplateJustSelected] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const renderChart = async (spec: string, forceValidation = false) => {
-    console.log("renderChart called with spec length:", spec.length, "forceValidation:", forceValidation, "layout:", data.layout)
+  const renderChart = async (spec: string, forceValidation = false, layoutOverride?: "square" | "rectangular") => {
+    const currentLayout = layoutOverride || data.layout || "rectangular"
+    console.log("renderChart called with spec length:", spec.length, "forceValidation:", forceValidation, "layout:", currentLayout)
     
     if (!spec.trim()) {
       if (previewRef.current) {
@@ -88,11 +90,11 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       }
 
       // Apply layout settings
-      if (data.layout === "square") {
+      if (currentLayout === "square") {
         // Square layout: 400x400
         parsedSpec.width = 400
         parsedSpec.height = 400
-      } else if (data.layout === "rectangular") {
+      } else if (currentLayout === "rectangular") {
         // Rectangular layout: full width, proportional height
         parsedSpec.width = "container"
         parsedSpec.height = 300
@@ -211,6 +213,11 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   const handleTemplateSelect = (template: { type: string; spec: string; title?: string }) => {
     console.log("Template selected:", template.type, "Spec length:", template.spec.length)
     
+    const currentLayout = data.layout || "rectangular"
+    
+    // Set flag to indicate template was just selected
+    setTemplateJustSelected(true)
+    
     // Update the data state
     setData((prev) => ({
       ...prev,
@@ -221,9 +228,31 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
     // Close template selector
     setShowTemplateSelector(false)
     
-    // Force render the chart immediately, regardless of autoUpdate setting
-    // This ensures template selection always shows the preview
-    renderChart(template.spec, true)
+    // Force render the chart immediately using the template spec directly
+    // Use setTimeout(0) to ensure DOM updates have processed
+    setTimeout(() => {
+      console.log("Rendering template chart with spec length:", template.spec.length, "layout:", currentLayout)
+      
+      // Check if preview container exists before rendering
+      if (previewRef.current) {
+        console.log("Preview container found, rendering...")
+        renderChart(template.spec, true, currentLayout)
+      } else {
+        console.log("Preview container not found, waiting...")
+        // If container not ready, wait a bit more
+        setTimeout(() => {
+          if (previewRef.current) {
+            console.log("Preview container found on retry, rendering...")
+            renderChart(template.spec, true, currentLayout)
+          }
+        }, 100)
+      }
+      
+      // Reset flag after rendering
+      setTimeout(() => {
+        setTemplateJustSelected(false)
+      }, 50)
+    }, 0)
   }
 
   const handleSave = () => {
@@ -249,25 +278,37 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
 
   // Re-render when data.spec changes (for template selection and other updates)
   useEffect(() => {
-    if (data.spec && data.spec.trim() !== "" && autoUpdate) {
-      // Clear timeout to avoid duplicate renders
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current)
+    console.log("useEffect triggered - spec length:", data.spec.length, "autoUpdate:", autoUpdate, "templateJustSelected:", templateJustSelected)
+    
+    if (data.spec && data.spec.trim() !== "") {
+      // If template was just selected, skip this useEffect as renderChart was already called
+      if (templateJustSelected) {
+        console.log("Skipping useEffect because template was just selected")
+        return
       }
-      // Render immediately for non-empty specs
-      updateTimeoutRef.current = setTimeout(() => {
-        renderChart(data.spec, true)
-      }, 300) // Shorter delay for better responsiveness
+      
+      // For manual typing, respect autoUpdate setting
+      if (autoUpdate) {
+        // Clear timeout to avoid duplicate renders
+        if (updateTimeoutRef.current) {
+          clearTimeout(updateTimeoutRef.current)
+        }
+        // Render with delay for user typing
+        updateTimeoutRef.current = setTimeout(() => {
+          console.log("Auto-updating from useEffect...")
+          renderChart(data.spec, true)
+        }, 300)
+      }
     }
-  }, [data.spec, autoUpdate])
+  }, [data.spec, autoUpdate, templateJustSelected])
 
   // Separate useEffect for layout changes to ensure immediate re-render
   useEffect(() => {
-    if (data.spec && data.spec.trim() !== "") {
+    if (data.spec && data.spec.trim() !== "" && !templateJustSelected) {
       console.log("Layout changed, re-rendering chart...")
-      renderChart(data.spec, true)
+      renderChart(data.spec, true, data.layout)
     }
-  }, [data.layout])
+  }, [data.layout, templateJustSelected])
 
   // Cleanup timeout on unmount
   useEffect(() => {
