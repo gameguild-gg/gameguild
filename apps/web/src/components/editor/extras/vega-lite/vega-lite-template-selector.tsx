@@ -1,0 +1,388 @@
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { 
+  BarChart3, 
+  LineChart, 
+  PieChart, 
+  ScatterChart, 
+  AreaChart, 
+  MapPin,
+  TrendingUp,
+  Activity,
+  Target,
+  Layers,
+  Search,
+  X 
+} from "lucide-react"
+
+interface Template {
+  id: string
+  type: string
+  title: string
+  description: string
+  icon: React.ComponentType<any>
+  spec: string
+  category: "basic" | "advanced" | "statistical" | "geographic"
+}
+
+const templates: Template[] = [
+  // Basic Charts
+  {
+    id: "bar-chart",
+    type: "bar",
+    title: "Bar Chart",
+    description: "Simple vertical bar chart",
+    icon: BarChart3,
+    category: "basic",
+    spec: JSON.stringify({
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "A simple bar chart with embedded data.",
+      "data": {
+        "values": [
+          {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
+          {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
+          {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
+        ]
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "a", "type": "nominal", "axis": {"labelAngle": 0}},
+        "y": {"field": "b", "type": "quantitative"}
+      }
+    }, null, 2)
+  },
+  {
+    id: "line-chart",
+    type: "line",
+    title: "Line Chart",
+    description: "Time series line chart",
+    icon: LineChart,
+    category: "basic",
+    spec: JSON.stringify({
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "A simple line chart with embedded data.",
+      "data": {
+        "values": [
+          {"year": "2018", "value": 28}, {"year": "2019", "value": 55}, 
+          {"year": "2020", "value": 43}, {"year": "2021", "value": 91}, 
+          {"year": "2022", "value": 81}, {"year": "2023", "value": 53}
+        ]
+      },
+      "mark": "line",
+      "encoding": {
+        "x": {"field": "year", "type": "temporal"},
+        "y": {"field": "value", "type": "quantitative"}
+      }
+    }, null, 2)
+  },
+  {
+    id: "scatter-plot",
+    type: "scatter",
+    title: "Scatter Plot",
+    description: "Scatter plot with correlation",
+    icon: ScatterChart,
+    category: "basic",
+    spec: JSON.stringify({
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "A scatterplot showing horsepower and miles per gallon for various cars.",
+      "data": {
+        "values": [
+          {"x": 10, "y": 20}, {"x": 20, "y": 35}, {"x": 30, "y": 45},
+          {"x": 40, "y": 55}, {"x": 50, "y": 25}, {"x": 60, "y": 65},
+          {"x": 70, "y": 75}, {"x": 80, "y": 85}, {"x": 90, "y": 95}
+        ]
+      },
+      "mark": "circle",
+      "encoding": {
+        "x": {"field": "x", "type": "quantitative", "scale": {"zero": false}},
+        "y": {"field": "y", "type": "quantitative", "scale": {"zero": false}},
+        "size": {"value": 100}
+      }
+    }, null, 2)
+  },
+  {
+    id: "area-chart",
+    type: "area",
+    title: "Area Chart",
+    description: "Stacked area chart",
+    icon: AreaChart,
+    category: "basic",
+    spec: JSON.stringify({
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "An area chart showing unemployment over time.",
+      "data": {
+        "values": [
+          {"year": "2018", "value": 28}, {"year": "2019", "value": 55}, 
+          {"year": "2020", "value": 43}, {"year": "2021", "value": 91}, 
+          {"year": "2022", "value": 81}, {"year": "2023", "value": 53}
+        ]
+      },
+      "mark": "area",
+      "encoding": {
+        "x": {"field": "year", "type": "temporal"},
+        "y": {"field": "value", "type": "quantitative"}
+      }
+    }, null, 2)
+  },
+  // Advanced Charts
+  {
+    id: "grouped-bar",
+    type: "grouped-bar",
+    title: "Grouped Bar Chart",
+    description: "Multi-series bar chart",
+    icon: Layers,
+    category: "advanced",
+    spec: JSON.stringify({
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "A grouped bar chart with multiple series.",
+      "data": {
+        "values": [
+          {"category": "A", "group": "x", "value": 0.1},
+          {"category": "A", "group": "y", "value": 0.6},
+          {"category": "A", "group": "z", "value": 0.9},
+          {"category": "B", "group": "x", "value": 0.7},
+          {"category": "B", "group": "y", "value": 0.2},
+          {"category": "B", "group": "z", "value": 1.1},
+          {"category": "C", "group": "x", "value": 0.6},
+          {"category": "C", "group": "y", "value": 0.1},
+          {"category": "C", "group": "z", "value": 0.2}
+        ]
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {"field": "category", "type": "nominal"},
+        "y": {"field": "value", "type": "quantitative"},
+        "color": {"field": "group", "type": "nominal"},
+        "xOffset": {"field": "group", "type": "nominal"}
+      }
+    }, null, 2)
+  },
+  {
+    id: "heatmap",
+    type: "heatmap",
+    title: "Heatmap",
+    description: "2D heatmap visualization",
+    icon: Target,
+    category: "advanced",
+    spec: JSON.stringify({
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "A heatmap showing correlation between variables.",
+      "data": {
+        "values": [
+          {"x": "A", "y": "1", "z": 0.1}, {"x": "A", "y": "2", "z": 0.2}, {"x": "A", "y": "3", "z": 0.3},
+          {"x": "B", "y": "1", "z": 0.4}, {"x": "B", "y": "2", "z": 0.5}, {"x": "B", "y": "3", "z": 0.6},
+          {"x": "C", "y": "1", "z": 0.7}, {"x": "C", "y": "2", "z": 0.8}, {"x": "C", "y": "3", "z": 0.9}
+        ]
+      },
+      "mark": "rect",
+      "encoding": {
+        "x": {"field": "x", "type": "nominal"},
+        "y": {"field": "y", "type": "nominal"},
+        "color": {"field": "z", "type": "quantitative", "scale": {"scheme": "viridis"}}
+      }
+    }, null, 2)
+  },
+  // Statistical Charts
+  {
+    id: "histogram",
+    type: "histogram",
+    title: "Histogram",
+    description: "Distribution histogram",
+    icon: Activity,
+    category: "statistical",
+    spec: JSON.stringify({
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "A histogram of a distribution.",
+      "data": {
+        "values": [
+          {"value": 1}, {"value": 2}, {"value": 3}, {"value": 2}, {"value": 4},
+          {"value": 3}, {"value": 5}, {"value": 4}, {"value": 6}, {"value": 5},
+          {"value": 7}, {"value": 6}, {"value": 8}, {"value": 7}, {"value": 9}
+        ]
+      },
+      "mark": "bar",
+      "encoding": {
+        "x": {"bin": true, "field": "value", "type": "quantitative"},
+        "y": {"aggregate": "count", "type": "quantitative"}
+      }
+    }, null, 2)
+  },
+  {
+    id: "box-plot",
+    type: "box",
+    title: "Box Plot",
+    description: "Statistical box plot",
+    icon: TrendingUp,
+    category: "statistical",
+    spec: JSON.stringify({
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "A box plot showing distribution quartiles.",
+      "data": {
+        "values": [
+          {"category": "A", "value": 10}, {"category": "A", "value": 20}, {"category": "A", "value": 15},
+          {"category": "A", "value": 25}, {"category": "A", "value": 18}, {"category": "A", "value": 22},
+          {"category": "B", "value": 30}, {"category": "B", "value": 35}, {"category": "B", "value": 32},
+          {"category": "B", "value": 40}, {"category": "B", "value": 38}, {"category": "B", "value": 45}
+        ]
+      },
+      "mark": {"type": "boxplot", "extent": "min-max"},
+      "encoding": {
+        "x": {"field": "category", "type": "nominal"},
+        "y": {"field": "value", "type": "quantitative"}
+      }
+    }, null, 2)
+  }
+]
+
+interface VegaLiteTemplateSelectorProps {
+  onSelect: (template: { type: string; spec: string; title?: string }) => void
+  onCancel: () => void
+}
+
+export function VegaLiteTemplateSelector({ onSelect, onCancel }: VegaLiteTemplateSelectorProps) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+
+  const categories = [
+    { id: "all", label: "All Templates" },
+    { id: "basic", label: "Basic Charts" },
+    { id: "advanced", label: "Advanced Charts" },
+    { id: "statistical", label: "Statistical" },
+    { id: "geographic", label: "Geographic" },
+  ]
+
+  const filteredTemplates = templates.filter((template) => {
+    const matchesSearch = template.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         template.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = selectedCategory === "all" || template.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  const handleTemplateSelect = (template: Template) => {
+    onSelect({
+      type: template.type,
+      spec: template.spec,
+      title: template.title
+    })
+  }
+
+  return (
+    <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              Choose a Chart Template
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Start with a template and customize it to your needs
+            </p>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Search and Filter */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search templates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+            />
+          </div>
+          <div className="flex gap-2">
+            {categories.map((category) => (
+              <Button
+                key={category.id}
+                variant={selectedCategory === category.id ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category.id)}
+                className="border-gray-300 dark:border-gray-600"
+              >
+                {category.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Template Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {filteredTemplates.map((template) => {
+            const IconComponent = template.icon
+            return (
+              <Card
+                key={template.id}
+                className="cursor-pointer hover:shadow-lg transition-all duration-200 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 bg-white dark:bg-gray-800"
+                onClick={() => handleTemplateSelect(template)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                      <IconComponent className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {template.title}
+                      </CardTitle>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 capitalize mt-1">
+                        {template.category}
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <CardDescription className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {template.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+
+        {filteredTemplates.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-gray-400 dark:text-gray-600 mb-2">
+              <Search className="h-12 w-12 mx-auto" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
+              No templates found
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300">
+              Try adjusting your search or filter criteria
+            </p>
+          </div>
+        )}
+
+        {/* Custom Template Option */}
+        <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <Card
+            className="cursor-pointer hover:shadow-lg transition-all duration-200 border-dashed border-2 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 bg-gray-50 dark:bg-gray-800/50"
+            onClick={() => onSelect({ type: "custom", spec: "{}", title: "Custom Chart" })}
+          >
+            <CardContent className="p-6 text-center">
+              <div className="p-3 rounded-lg bg-gray-200 dark:bg-gray-700 inline-block mb-3">
+                <BarChart3 className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+              </div>
+              <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-1">
+                Start from Blank
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
+                Create your own custom Vega-Lite specification
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  )
+}

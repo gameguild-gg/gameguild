@@ -80,6 +80,8 @@ import { SourceCodePlugin } from "./plugins/source-code-plugin"
 
 import { MermaidNode } from "./nodes/mermaid-node"
 import { MermaidPlugin } from "./plugins/mermaid-plugin"
+import { VegaLiteNode } from "./nodes/vega-lite-node"
+import { VegaLitePlugin } from "./plugins/vega-lite-plugin"
 import { CustomListNode } from "./nodes/custom-list-node"
 import { TableNode as CustomTableNode } from "./nodes/table-node"
 import { TablePlugin } from "./plugins/table-plugin"
@@ -307,6 +309,7 @@ const initialConfig = {
     SpotifyNode,
     SourceCodeNode,
     MermaidNode,
+    VegaLiteNode,
     CustomTableNode,
   ],
   theme: {
@@ -454,6 +457,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <CodePlugin />
             <SourceCodePlugin />
             <MermaidPlugin />
+            <VegaLitePlugin />
             <TablePlugin />
             <OnChangePlugin
               onChange={(editorState) => {
