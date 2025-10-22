@@ -367,7 +367,18 @@ export function VegaLiteTemplateSelector({ onSelect, onCancel }: VegaLiteTemplat
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
           <Card
             className="cursor-pointer hover:shadow-lg transition-all duration-200 border-dashed border-2 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 bg-gray-50 dark:bg-gray-800/50"
-            onClick={() => onSelect({ type: "custom", spec: "{}", title: "Custom Chart" })}
+            onClick={() => onSelect({ 
+              type: "custom", 
+              spec: JSON.stringify({
+                "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                "data": {
+                  "values": []
+                },
+                "mark": "point",
+                "encoding": {}
+              }, null, 2), 
+              title: "Custom Chart" 
+            })}
           >
             <CardContent className="p-6 text-center">
               <div className="p-3 rounded-lg bg-gray-200 dark:bg-gray-700 inline-block mb-3">
