@@ -64,7 +64,6 @@ export function ProjectSearchFilters({
 }: ProjectSearchFiltersProps) {
   const [tagSearchInput, setTagSearchInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
 
   // Google Drive authentication hook
   const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
@@ -90,18 +89,8 @@ export function ProjectSearchFilters({
 
   return (
     <div className="space-y-3 rounded-lg bg-gray-100/50 p-4 dark:bg-gray-900/50">
-      <div className="flex cursor-pointer items-center justify-between" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <Label className="text-base font-medium">Filters</Label>
-        {!forceVerticalLayout && (
-        <button
-          className="rounded-full p-1.5 hover:bg-gray-200 dark:hover:bg-gray-800"
-          aria-label={isCollapsed ? "Show filters" : "Hide filters"}
-        >
-          {isCollapsed ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
-        </button>
-        )}
-      </div>
-      {!isCollapsed && (
+      
+      { (
         <>
           <div className={`flex flex-col gap-4 pt-2 ${!forceVerticalLayout && "md:flex-row md:gap-6"}`}>
             {/* Project Search Section */}
