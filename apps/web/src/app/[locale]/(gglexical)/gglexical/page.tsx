@@ -43,6 +43,7 @@ export default function HomePage() {
   const [dateFromFilter, setDateFromFilter] = useState("")
   const [dateToFilter, setDateToFilter] = useState("")
   const [accessFilter, setAccessFilter] = useState<"all" | "all-access" | "all-authors">("all")
+  const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "name" | "name-desc">("newest")
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false) // Mudado para false por padrão para economizar recursos
 
 
@@ -177,7 +178,7 @@ export default function HomePage() {
 
   // Filter projects based on search and advanced filters - MEMOIZADO para evitar recálculo desnecessário
   const additionalFilteredProjects = useMemo(() => {
-    return filteredProjects.filter(project => {
+    const filtered = filteredProjects.filter(project => {
       const matchesAuthor = !authorFilter || "Miguel".toLowerCase().includes(authorFilter.toLowerCase()) // Placeholder author check
       const matchesStatus = statusFilter === "all" || statusFilter === "draft" // All projects are drafts for now
       const matchesDateFrom = !dateFromFilter || new Date(project.updatedAt) >= new Date(dateFromFilter)
@@ -185,7 +186,22 @@ export default function HomePage() {
       
       return matchesAuthor && matchesStatus && matchesDateFrom && matchesDateTo
     })
-  }, [filteredProjects, authorFilter, statusFilter, dateFromFilter, dateToFilter])
+
+    // Apply sorting
+    return filtered.sort((a, b) => {
+      switch (sortOrder) {
+        case "oldest":
+          return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
+        case "name":
+          return a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+        case "name-desc":
+          return b.name.toLowerCase().localeCompare(a.name.toLowerCase())
+        case "newest":
+        default:
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      }
+    })
+  }, [filteredProjects, authorFilter, statusFilter, dateFromFilter, dateToFilter, sortOrder])
 
   const totalPages = Math.ceil(additionalFilteredProjects.length / itemsPerPage)
 
@@ -354,15 +370,6 @@ export default function HomePage() {
                     <LayoutGrid className="w-4 h-4" />
                   </Button>
                 </div>
-                <select
-                  className="rounded border bg-background px-3 py-2 text-sm border-gray-300 dark:border-gray-600"
-                  defaultValue="newest"
-                >
-                  <option value="newest">Newest first</option>
-                  <option value="oldest">Oldest first</option>
-                  <option value="name">Name A-Z</option>
-                  <option value="name-desc">Name Z-A</option>
-                </select>
                 <Button 
                   variant="outline"
                   onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
@@ -405,6 +412,8 @@ export default function HomePage() {
             onDateToFilterChange={setDateToFilter}
             accessFilter={accessFilter}
             onAccessFilterChange={setAccessFilter}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
             showAdvancedFilters={showAdvancedFilters}
           />
 

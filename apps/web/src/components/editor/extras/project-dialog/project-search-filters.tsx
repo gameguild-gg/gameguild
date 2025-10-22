@@ -32,6 +32,8 @@ interface ProjectSearchFiltersProps {
   onDateToFilterChange?: (value: string) => void
   accessFilter?: "all" | "all-access" | "all-authors" 
   onAccessFilterChange?: (value: "all" | "all-access" | "all-authors") => void
+  sortOrder?: "newest" | "oldest" | "name" | "name-desc"
+  onSortOrderChange?: (value: "newest" | "oldest" | "name" | "name-desc") => void
   showAdvancedFilters?: boolean
 }
 
@@ -60,6 +62,8 @@ export function ProjectSearchFilters({
   onDateToFilterChange,
   accessFilter = "all",
   onAccessFilterChange,
+  sortOrder = "newest",
+  onSortOrderChange,
   showAdvancedFilters = false,
 }: ProjectSearchFiltersProps) {
   const [tagSearchInput, setTagSearchInput] = useState("")
@@ -360,9 +364,10 @@ export function ProjectSearchFilters({
                   onClick={() => {
                     onAuthorFilterChange?.("")
                     onStatusFilterChange?.("all")
+                    onAccessFilterChange?.("all")
                     onDateFromFilterChange?.("")
                     onDateToFilterChange?.("")
-                    onAccessFilterChange?.("all")
+                    onSortOrderChange?.("newest")
                   }}
                   className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                 >
@@ -370,7 +375,7 @@ export function ProjectSearchFilters({
                 </Button>
               </div>
               
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-5 gap-3">
                 {/* Author Filter */}
                 {onAuthorFilterChange && (
                   <div className="space-y-1">
@@ -407,6 +412,22 @@ export function ProjectSearchFilters({
                   </div>
                 )}
 
+                {/* Access Filter */}
+                {onAccessFilterChange && (
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium">Access Level</Label>
+                    <select
+                      value={accessFilter}
+                      onChange={(e) => onAccessFilterChange(e.target.value as "all" | "all-access" | "all-authors")}
+                      className="w-full h-8 rounded border bg-background px-2 text-xs border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    >
+                      <option value="all">All posts</option>
+                      <option value="all-access">All access</option>
+                      <option value="all-authors">All authors</option>
+                    </select>
+                  </div>
+                )}
+
                 {/* Date Range Filter (consolidated) */}
                 {(onDateFromFilterChange && onDateToFilterChange) && (
                   <div className="space-y-1">
@@ -435,25 +456,26 @@ export function ProjectSearchFilters({
                   </div>
                 )}
 
-                {/* Access Filter */}
-                {onAccessFilterChange && (
+                {/* Sort Order Filter */}
+                {onSortOrderChange && (
                   <div className="space-y-1">
-                    <Label className="text-xs font-medium">Access Level</Label>
+                    <Label className="text-xs font-medium">Sort Order</Label>
                     <select
-                      value={accessFilter}
-                      onChange={(e) => onAccessFilterChange(e.target.value as "all" | "all-access" | "all-authors")}
+                      value={sortOrder}
+                      onChange={(e) => onSortOrderChange(e.target.value as "newest" | "oldest" | "name" | "name-desc")}
                       className="w-full h-8 rounded border bg-background px-2 text-xs border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400"
                     >
-                      <option value="all">All posts</option>
-                      <option value="all-access">All access</option>
-                      <option value="all-authors">All authors</option>
+                      <option value="newest">Newest first</option>
+                      <option value="oldest">Oldest first</option>
+                      <option value="name">Name A-Z</option>
+                      <option value="name-desc">Name Z-A</option>
                     </select>
                   </div>
                 )}
               </div>
 
               {/* Active Advanced Filters Summary */}
-              {(authorFilter || statusFilter !== "all" || dateFromFilter || dateToFilter || accessFilter !== "all") && (
+              {(authorFilter || statusFilter !== "all" || dateFromFilter || dateToFilter || accessFilter !== "all" || sortOrder !== "newest") && (
                 <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
                   <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                     <span className="font-medium">Active advanced filters:</span>
@@ -468,14 +490,19 @@ export function ProjectSearchFilters({
                           Status: {statusFilter}
                         </span>
                       )}
+                      {accessFilter !== "all" && (
+                        <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full dark:bg-orange-900 dark:text-orange-200">
+                          Access: {accessFilter}
+                        </span>
+                      )}
                       {(dateFromFilter || dateToFilter) && (
                         <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full dark:bg-purple-900 dark:text-purple-200">
                           Date: {dateFromFilter || '...'} → {dateToFilter || '...'}
                         </span>
                       )}
-                      {accessFilter !== "all" && (
-                        <span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full dark:bg-orange-900 dark:text-orange-200">
-                          Access: {accessFilter}
+                      {sortOrder !== "newest" && (
+                        <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full dark:bg-indigo-900 dark:text-indigo-200">
+                          Sort: {sortOrder === "oldest" ? "Oldest first" : sortOrder === "name" ? "Name A-Z" : "Name Z-A"}
                         </span>
                       )}
                     </div>
