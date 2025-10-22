@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X, Save, FileText, BarChart3, AlertCircle, CheckCircle } from "lucide-react"
+import { X, Save, FileText, BarChart3, AlertCircle, CheckCircle, Square, RectangleHorizontal } from "lucide-react"
 import type { VegaLiteData } from "@/components/editor/nodes/vega-lite-node"
 import { VegaLiteTemplateSelector } from "./vega-lite-template-selector"
 import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor"
@@ -26,8 +26,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       caption: "",
       size: 100,
       theme: "default",
-      width: 400,
-      height: 300,
+      layout: "rectangular", // Default to rectangular
     },
   )
   const [autoUpdate, setAutoUpdate] = useState(true)
@@ -43,7 +42,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const renderChart = async (spec: string, forceValidation = false) => {
-    console.log("renderChart called with spec length:", spec.length, "forceValidation:", forceValidation)
+    console.log("renderChart called with spec length:", spec.length, "forceValidation:", forceValidation, "layout:", data.layout)
     
     if (!spec.trim()) {
       if (previewRef.current) {
@@ -88,12 +87,15 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
         parsedSpec.config.theme = data.theme
       }
 
-      // Apply custom width/height if specified
-      if (data.width) {
-        parsedSpec.width = data.width
-      }
-      if (data.height) {
-        parsedSpec.height = data.height
+      // Apply layout settings
+      if (data.layout === "square") {
+        // Square layout: 400x400
+        parsedSpec.width = 400
+        parsedSpec.height = 400
+      } else if (data.layout === "rectangular") {
+        // Rectangular layout: full width, proportional height
+        parsedSpec.width = "container"
+        parsedSpec.height = 300
       }
 
       try {
@@ -258,6 +260,14 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       }, 300) // Shorter delay for better responsiveness
     }
   }, [data.spec, autoUpdate])
+
+  // Separate useEffect for layout changes to ensure immediate re-render
+  useEffect(() => {
+    if (data.spec && data.spec.trim() !== "") {
+      console.log("Layout changed, re-rendering chart...")
+      renderChart(data.spec, true)
+    }
+  }, [data.layout])
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -543,7 +553,9 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                       )}
                       <div
                         ref={previewRef}
-                        className="flex justify-center items-start p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm min-h-[300px]"
+                        className={`flex justify-center items-start p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-300 ${
+                          data.layout === "square" ? "min-h-[450px]" : "min-h-[350px]"
+                        }`}
                         style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top center" }}
                       />
                       {!previewRef.current?.hasChildNodes() && !isLoading && (
@@ -563,7 +575,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
             {/* Footer */}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
               <div className="flex items-center gap-4">
-                <div className="flex-1 grid grid-cols-3 gap-4">
+                <div className="flex-1 grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="caption" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                       Caption:
@@ -577,30 +589,40 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                     />
                   </div>
                   <div>
-                    <Label htmlFor="width" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Width:
+                    <Label htmlFor="layout" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Layout:
                     </Label>
-                    <Input
-                      id="width"
-                      type="number"
-                      value={data.width || 400}
-                      onChange={(e) => setData((prev) => ({ ...prev, width: parseInt(e.target.value) || 400 }))}
-                      placeholder="400"
-                      className="mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="height" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Height:
-                    </Label>
-                    <Input
-                      id="height"
-                      type="number"
-                      value={data.height || 300}
-                      onChange={(e) => setData((prev) => ({ ...prev, height: parseInt(e.target.value) || 300 }))}
-                      placeholder="300"
-                      className="mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
-                    />
+                    <Select 
+                      value={data.layout || "rectangular"} 
+                      onValueChange={(value) => {
+                        console.log("Layout changed to:", value)
+                        setData((prev) => ({ ...prev, layout: value as "square" | "rectangular" }))
+                      }}
+                    >
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="rectangular">
+                          <div className="flex items-center gap-2">
+                            <RectangleHorizontal className="h-4 w-4" />
+                            <div>
+                              <div className="font-medium">Rectangular</div>
+                              <div className="text-xs text-gray-500">Full width, proportional height</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="square">
+                          <div className="flex items-center gap-2">
+                            <Square className="h-4 w-4" />
+                            <div>
+                              <div className="font-medium">Square</div>
+                              <div className="text-xs text-gray-500">Centered 400x400 pixels</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
