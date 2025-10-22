@@ -80,16 +80,61 @@ export function ProjectList({
     setDownloadDialog({ open: true, project })
   }
 
-  const handleDownloadConfirm = () => {
-    if (downloadDialog.project && onDownload) {
-      onDownload(
-        downloadDialog.project.id,
-        downloadDialog.project.name,
-        downloadDialog.project.data,
-        downloadDialog.project.tags,
-        downloadDialog.project.createdAt,
-        downloadDialog.project.updatedAt,
-      )
+  const handleDownloadConfirm = async () => {
+    if (downloadDialog.project) {
+      if (onDownload) {
+        // Call the provided onDownload function
+        onDownload(
+          downloadDialog.project.id,
+          downloadDialog.project.name,
+          downloadDialog.project.data,
+          downloadDialog.project.tags,
+          downloadDialog.project.createdAt,
+          downloadDialog.project.updatedAt,
+        )
+      } else {
+        // If no onDownload provided, implement download locally
+        try {
+          // Dynamic imports to avoid issues if these aren't available
+          const [{ HashManager }, { ProjectExporter }] = await Promise.all([
+            import("@/lib/sync/editor/hash-manager"),
+            import("@/lib/interopAdapter/project-exporter")
+          ])
+
+          // Generate hash for the project
+          const hash = await HashManager.generateHash(downloadDialog.project.data)
+
+          // Prepare project data for export using ProjectExporter
+          const exportProjectData = {
+            id: downloadDialog.project.id,
+            name: downloadDialog.project.name,
+            data: downloadDialog.project.data,
+            tags: downloadDialog.project.tags,
+            size: new Blob([downloadDialog.project.data]).size,
+            createdAt: downloadDialog.project.createdAt,
+            updatedAt: downloadDialog.project.updatedAt,
+            hash: hash,
+            storageType: "local" as const
+          }
+
+          // Use ProjectExporter to create the ZIP file
+          const zipBlob = await ProjectExporter.createZipFile(exportProjectData, hash)
+
+          // Create download link
+          const url = URL.createObjectURL(zipBlob)
+          const link = document.createElement("a")
+          link.href = url
+          link.download = ProjectExporter.getDownloadFilename(exportProjectData)
+          document.body.appendChild(link)
+          link.click()
+
+          // Cleanup
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        } catch (error) {
+          console.error("Download error:", error)
+        }
+      }
     }
     setDownloadDialog({ open: false, project: null })
   }
@@ -119,20 +164,8 @@ export function ProjectList({
   }
 
   const handleProjectDownload = (project: ProjectData) => {
-    if (onDownload) {
-      // Call onDownload directly if provided (for direct download)
-      onDownload(
-        project.id,
-        project.name,
-        project.data,
-        project.tags,
-        project.createdAt,
-        project.updatedAt,
-      )
-    } else {
-      // Use dialog confirmation if onDownload is not provided
-      handleDownloadClick(project)
-    }
+    // Always show confirmation dialog first
+    handleDownloadClick(project)
   }
 
   return (

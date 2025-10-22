@@ -436,7 +436,6 @@ export default function HomePage() {
                 onView={handleProjectView}
                 onDelete={projectActions.handleConfirmDelete}
                 onInfo={projectActions.handleOpenInfo}
-                onDownload={handleProjectDownload}
                 showDeleteButton={true}
                 showStudioViewerButtons={true}
               />
