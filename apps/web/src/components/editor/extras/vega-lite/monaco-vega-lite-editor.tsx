@@ -29,19 +29,64 @@ export function MonacoVegaLiteEditor({
   useEffect(() => {
     if (!containerRef.current) return
 
-    // Configure Monaco editor for JSON with Vega-Lite schema
-    monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-      validate: true,
-      schemas: [
-        {
+    // Configure Monaco editor for JSON with offline Vega/Vega-Lite schemas when available
+    (async () => {
+      let vegaLiteSchema: any | undefined
+      let vegaSchema: any | undefined
+
+      // Try to get schemas from the vega-schema package first (offline)
+      try {
+        // Common path in vega-schema package
+        const mod = await import("vega-schema/vega-lite/v5.json")
+        vegaLiteSchema = (mod as any).default || mod
+      } catch {
+        // Fallbacks commonly used by other packages
+        try {
+          const mod = await import("vega-lite/build/vega-lite-schema.json")
+          vegaLiteSchema = (mod as any).default || mod
+        } catch {}
+      }
+
+      try {
+        const mod = await import("vega-schema/vega/v5.json")
+        vegaSchema = (mod as any).default || mod
+      } catch {
+        try {
+          const mod = await import("vega/build/vega-schema.json")
+          vegaSchema = (mod as any).default || mod
+        } catch {}
+      }
+
+      // Build the schemas array; keep the official URIs so $ref targets resolve locally
+      const schemas: monaco.languages.json.DiagnosticsOptions["schemas"] = []
+      if (vegaLiteSchema) {
+        schemas.push({
           uri: "https://vega.github.io/schema/vega-lite/v5.json",
           fileMatch: ["*"],
-          schema: {
-            $ref: "https://vega.github.io/schema/vega-lite/v5.json"
-          }
-        }
-      ]
-    })
+          schema: vegaLiteSchema as any,
+        })
+      } else {
+        // Last resort: still register the URI so Monaco knows the base, but without content it would try network
+        schemas.push({
+          uri: "https://vega.github.io/schema/vega-lite/v5.json",
+          fileMatch: ["*"],
+        } as any)
+      }
+
+      if (vegaSchema) {
+        schemas.push({
+          uri: "https://vega.github.io/schema/vega/v5.json",
+          fileMatch: [],
+          schema: vegaSchema as any,
+        })
+      }
+
+      monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+        validate: true,
+        enableSchemaRequest: false, // avoid network fetch; rely on provided schemas
+        schemas,
+      })
+    })()
 
     // Create the editor
     const editor = monaco.editor.create(containerRef.current, {
