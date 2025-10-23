@@ -17,7 +17,7 @@ import {
 } from "lexical"
 import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Edit, Trash2 } from "lucide-react"
+import { Edit } from "lucide-react"
 import { VegaLiteEditor } from "@/components/editor/extras/vega-lite/vega-lite-editor"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
@@ -139,12 +139,23 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
         CLICK_COMMAND,
         (payload) => {
           const event = payload
-          // Allow clicks within VegaLiteViewer to work normally
-          if (!event.shiftKey) {
+          // Only select if clicking within the component area
+          const componentElement = event.target as HTMLElement
+          const isWithinComponent = componentElement.closest('.vega-lite-node-container')
+          
+          if (isWithinComponent) {
+            if (!event.shiftKey) {
+              clearSelection()
+            }
+            setSelected(!isSelected)
+            return true
+          }
+          
+          // Clear selection if clicking outside
+          if (isSelected) {
             clearSelection()
           }
-          setSelected(!isSelected)
-          return true
+          return false
         },
         COMMAND_PRIORITY_LOW,
       ),
@@ -176,9 +187,7 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
 
   return (
     <>
-      <div
-        className={`relative group my-4 ${isSelected ? "ring-2 ring-blue-500 ring-offset-2" : ""}`}
-      >
+      <div className="relative group my-4 vega-lite-node-container">
         {/* Use VegaLiteViewer component with all its functionality */}
         <VegaLiteViewer 
           spec={data.spec}
@@ -203,23 +212,6 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
             },
           ]}
         />
-
-        {/* Controls overlay when selected */}
-        {isSelected && (
-          <div className="absolute top-3 right-3 z-60 flex gap-1 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-md p-1 shadow-lg border border-gray-200/50 dark:border-gray-700/50">
-            <Button variant="ghost" size="sm" onClick={onEdit} className="h-8 w-8 p-0">
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(new KeyboardEvent("keydown"))}
-              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
       </div>
 
       {/* Vega-Lite Editor Modal */}
