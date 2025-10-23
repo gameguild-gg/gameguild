@@ -22,8 +22,13 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
   const [error, setError] = useState<string>("")
   const [zoom, setZoom] = useState(100)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 })
   const vegaRef = useRef<HTMLDivElement>(null)
   const fullscreenVegaRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   console.log("Preview VegaLite: Full node structure:", JSON.stringify(node, null, 2))
   
@@ -392,21 +397,80 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
     }
   }, [isFullscreen])
 
+  // Reset position when zoom returns to 100%
+  useEffect(() => {
+    if (zoom === 100 && (position.x !== 0 || position.y !== 0)) {
+      // Smooth transition to center when returning to 100%
+      const resetTimer = setTimeout(() => {
+        setPosition({ x: 0, y: 0 })
+      }, 50)
+      return () => clearTimeout(resetTimer)
+    }
+  }, [zoom, position.x, position.y])
+
   // Zoom control functions
   const handleZoomIn = () => {
     setZoom((prev) => Math.min(prev + 25, 300))
   }
 
   const handleZoomOut = () => {
-    setZoom((prev) => Math.max(prev - 25, 25))
+    setZoom((prev) => Math.max(prev - 25, 100))
   }
 
   const handleZoomReset = () => {
     setZoom(100)
+    setPosition({ x: 0, y: 0 })
   }
 
   const handleFullscreen = () => {
     setIsFullscreen(true)
+  }
+
+  // Pan/Drag control functions
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoom > 100) {
+      setIsDragging(true)
+      setDragStart({ x: e.clientX, y: e.clientY })
+      setLastPosition(position)
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging && zoom > 100) {
+      e.preventDefault()
+      const deltaX = (e.clientX - dragStart.x) * 0.8 // Damping factor for smoother movement
+      const deltaY = (e.clientY - dragStart.y) * 0.8
+      setPosition({
+        x: lastPosition.x + deltaX,
+        y: lastPosition.y + deltaY
+      })
+    }
+  }
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false)
+    }
+  }
+
+  const handleMouseLeave = () => {
+    if (isDragging) {
+      setIsDragging(false)
+    }
+  }
+
+  // Wheel zoom for smoother zoom experience
+  const handleWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault()
+      const delta = e.deltaY > 0 ? -5 : 5 // Smaller increments for smooth zoom
+      setZoom((prev) => {
+        const newZoom = Math.max(100, Math.min(300, prev + delta))
+        return newZoom
+      })
+    }
   }
 
   if (!spec) {
@@ -433,7 +497,7 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
               variant="ghost"
               size="sm"
               onClick={handleZoomOut}
-              disabled={zoom <= 25}
+              disabled={zoom <= 100}
               className="h-8 w-8 p-0"
               title="Zoom Out"
             >
@@ -465,7 +529,7 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
               variant="ghost"
               size="sm"
               onClick={handleFullscreen}
-              className="h-8 w-8 p-0 relative z-50"
+              className="h-8 w-8 p-0 relative z-20"
               title="Fullscreen"
             >
               <Maximize2 className="h-4 w-4" />
@@ -473,9 +537,21 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
           </div>
 
           {/* Chart Content */}
-          <div className={`w-full flex justify-center items-center relative overflow-visible ${
-            layout === "square" ? "min-h-[450px]" : "min-h-[350px]"
-          }`}>
+          <div 
+            ref={containerRef}
+            className={`w-full flex justify-center items-center relative overflow-hidden ${
+              layout === "square" ? "min-h-[450px]" : "min-h-[350px]"
+            } ${zoom > 100 ? "cursor-move" : "cursor-default"}`}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onWheel={handleWheel}
+            style={{ 
+              position: "relative",
+              zIndex: 1
+            }}
+          >
             {isLoading ? (
               <div className="text-gray-500 dark:text-gray-400">Rendering chart...</div>
             ) : error ? (
@@ -486,12 +562,17 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
             ) : spec ? (
               <div
                 ref={vegaRef}
-                className="flex justify-center items-center transition-transform duration-200 ease-in-out w-full bg-white border border-gray-200 rounded"
+                className="flex justify-center items-center w-full bg-white border border-gray-200 rounded"
                 style={{
-                  transform: `scale(${zoom / 100})`,
+                  transform: `scale(${zoom / 100}) translate(${position.x / (zoom / 100)}px, ${position.y / (zoom / 100)}px)`,
                   transformOrigin: "center",
                   minHeight: layout === "square" ? "400px" : "300px",
                   minWidth: "200px",
+                  position: "relative",
+                  zIndex: 0,
+                  userSelect: zoom > 100 ? "none" : "auto",
+                  pointerEvents: zoom > 100 ? "none" : "auto",
+                  transition: isDragging ? "none" : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)"
                 }}
                 // Chart will be rendered directly into vegaRef
               />
