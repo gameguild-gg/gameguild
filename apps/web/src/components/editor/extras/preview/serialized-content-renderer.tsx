@@ -26,6 +26,7 @@ import { PreviewList } from "@/components/editor/plugins/preview-components/prev
 import { PreviewListItem } from "@/components/editor/plugins/preview-components/preview-list-item"
 import { PreviewLink } from "@/components/editor/plugins/preview-components/preview-link"
 import { PreviewHeading } from "@/components/editor/plugins/preview-components/preview-heading"
+import { PreviewVegaLite } from "@/components/editor/plugins/preview-components/preview-vega-lite"
 
 interface SerializedContentRendererProps {
   serializedState: SerializedEditorState
@@ -130,6 +131,11 @@ export function SerializedContentRenderer({
     // For Mermaid diagrams
     if (node.type === "mermaid") {
       return <PreviewMermaid key={uniqueKey} data={node.data} />
+    }
+
+    // For Vega-Lite charts
+    if (node.type === "vega-lite") {
+      return <PreviewVegaLite key={uniqueKey} node={node} />
     }
 
     if (node.children) {
