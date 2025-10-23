@@ -475,10 +475,10 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
 
   if (!spec) {
     return (
-      <div className="my-4 p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
-        <div className="text-center text-gray-500 dark:text-gray-400">
-          <BarChart3 className="h-12 w-12 mx-auto mb-2" />
-          <p>No Vega-Lite specification provided</p>
+      <div className="my-4 py-8">
+        <div className="text-center text-gray-400 dark:text-gray-500">
+          <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p className="text-sm">No Vega-Lite specification provided</p>
         </div>
       </div>
     )
@@ -487,12 +487,17 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
   return (
     <>
       <div className="relative group my-4" style={{ width: `${size || 100}%` }}>
-        {/* Chart Container */}
-        <div className="border rounded-lg bg-white dark:bg-gray-800 p-4 shadow-sm relative flex flex-col items-center">
-          {title && <h3 className="text-lg font-semibold mb-2 text-center dark:text-white">{title}</h3>}
+        {/* Title - Outside the chart area */}
+        {title && (
+          <h3 className="text-lg font-semibold mb-3 text-center dark:text-white">
+            {title}
+          </h3>
+        )}
 
-          {/* Zoom Controls */}
-          <div className="absolute top-2 right-2 z-10 flex items-center gap-1 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg p-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        {/* Chart Container - Minimal design */}
+        <div className="relative">
+          {/* Floating Controls */}
+          <div className="absolute top-3 right-3 z-50 flex items-center gap-1 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md rounded-md p-1 shadow-lg border border-gray-200/50 dark:border-gray-700/50 opacity-0 group-hover:opacity-100 transition-all duration-300">
             <Button
               variant="ghost"
               size="sm"
@@ -529,17 +534,17 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
               variant="ghost"
               size="sm"
               onClick={handleFullscreen}
-              className="h-8 w-8 p-0 relative z-20"
+              className="h-8 w-8 p-0 relative z-60"
               title="Fullscreen"
             >
               <Maximize2 className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Chart Content */}
+          {/* Chart Content - Minimal container */}
           <div 
             ref={containerRef}
-            className={`w-full flex justify-center items-center relative overflow-hidden ${
+            className={`w-full flex justify-center items-center relative overflow-hidden rounded-lg ${
               layout === "square" ? "min-h-[450px]" : "min-h-[350px]"
             } ${zoom > 100 ? "cursor-move" : "cursor-default"}`}
             onMouseDown={handleMouseDown}
@@ -549,27 +554,27 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
             onWheel={handleWheel}
             style={{ 
               position: "relative",
-              zIndex: 1
+              zIndex: 10
             }}
           >
             {isLoading ? (
-              <div className="text-gray-500 dark:text-gray-400">Rendering chart...</div>
+              <div className="text-gray-400 dark:text-gray-500 text-sm">Rendering chart...</div>
             ) : error ? (
-              <div className="text-red-500 p-4 border border-red-300 rounded bg-red-50 dark:bg-red-900/20 dark:border-red-700 max-w-full">
-                <div className="font-medium">Error rendering chart:</div>
-                <div className="text-sm mt-1">{error}</div>
+              <div className="text-red-500 p-3 rounded-md bg-red-50/50 dark:bg-red-900/10 max-w-full">
+                <div className="font-medium text-sm">Error rendering chart:</div>
+                <div className="text-xs mt-1 opacity-80">{error}</div>
               </div>
             ) : spec ? (
               <div
                 ref={vegaRef}
-                className="flex justify-center items-center w-full bg-white border border-gray-200 rounded"
+                className="flex justify-center items-center w-full"
                 style={{
                   transform: `scale(${zoom / 100}) translate(${position.x / (zoom / 100)}px, ${position.y / (zoom / 100)}px)`,
                   transformOrigin: "center",
                   minHeight: layout === "square" ? "400px" : "300px",
                   minWidth: "200px",
                   position: "relative",
-                  zIndex: 0,
+                  zIndex: 5,
                   userSelect: zoom > 100 ? "none" : "auto",
                   pointerEvents: zoom > 100 ? "none" : "auto",
                   transition: isDragging ? "none" : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)"
@@ -577,14 +582,17 @@ export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
                 // Chart will be rendered directly into vegaRef
               />
             ) : (
-              <div className="text-gray-500 dark:text-gray-400">No chart specification provided</div>
+              <div className="text-gray-400 dark:text-gray-500 text-sm">No chart specification provided</div>
             )}
           </div>
-
-          {caption && (
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-2 text-center italic">{caption}</p>
-          )}
         </div>
+
+        {/* Caption - Outside the chart area */}
+        {caption && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-3 text-center italic">
+            {caption}
+          </p>
+        )}
       </div>
 
       {/* Fullscreen Modal */}
