@@ -144,6 +144,14 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
 
         await view.runAsync()
         console.log("Chart rendered successfully")
+        
+        // Apply centering styles for square layout
+        if (currentLayout === "square" && previewRef.current?.firstElementChild) {
+          const svgElement = previewRef.current.firstElementChild as HTMLElement
+          svgElement.style.display = "block"
+          svgElement.style.margin = "0 auto"
+        }
+        
         setError("")
       } catch (renderError: any) {
         console.error("Vega-Lite render error:", renderError)
@@ -603,10 +611,10 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                       )}
                       <div
                         ref={previewRef}
-                        className={`flex justify-center items-start p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-300 ${
-                          data.layout === "square" ? "min-h-[450px]" : "min-h-[350px]"
+                        className={`flex justify-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm transition-all duration-300 ${
+                          data.layout === "square" ? "items-center min-h-[450px]" : "items-start min-h-[350px]"
                         }`}
-                        style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top center" }}
+                        style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: data.layout === "square" ? "center" : "top center" }}
                       />
                       {!previewRef.current?.hasChildNodes() && !isLoading && (!data.spec || data.spec.trim() === "") && (
                         <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400">
