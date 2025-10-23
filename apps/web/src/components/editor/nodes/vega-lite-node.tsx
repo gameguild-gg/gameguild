@@ -220,6 +220,13 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
           .hover()
 
         await view.runAsync()
+        
+        // Apply centering styles for square layout
+        if (data.layout === "square" && container.firstElementChild) {
+          const svgElement = container.firstElementChild as HTMLElement
+          svgElement.style.display = "block"
+          svgElement.style.margin = "0 auto"
+        }
         return view
       } catch (vegaError) {
         // Show a placeholder when vega-lite is not available
