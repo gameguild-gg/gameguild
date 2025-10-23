@@ -146,6 +146,7 @@ function StructureDeleteConfirmPlugin() {
           node.getType() === "divider" ||
           node.getType() === "header" ||
           node.getType() === "mermaid" ||
+          node.getType() === "vega-lite" ||
           node.getType() === "table",
       )
 
@@ -169,7 +170,8 @@ function StructureDeleteConfirmPlugin() {
                 node.getType() === "admonition" ||
                 node.getType() === "divider" ||
                 node.getType() === "header" ||
-                node.getType() === "mermaid"
+                node.getType() === "mermaid" ||
+                node.getType() === "vega-lite"
               ) {
                 node.remove()
               }
@@ -209,7 +211,8 @@ function StructureDeleteConfirmPlugin() {
             node.getType() === "admonition" ||
             node.getType() === "divider" ||
             node.getType() === "header" ||
-            node.getType() === "mermaid"
+            node.getType() === "mermaid" ||
+            node.getType() === "vega-lite"
         )
 
         if (hasStructuralNodes) {
@@ -233,6 +236,7 @@ function StructureDeleteConfirmPlugin() {
                   node.getType() === "divider" ||
                   node.getType() === "header" ||
                   node.getType() === "mermaid" ||
+                  node.getType() === "vega-lite" ||
                   node.getType() === "table"
                 ) {
                   node.remove()
