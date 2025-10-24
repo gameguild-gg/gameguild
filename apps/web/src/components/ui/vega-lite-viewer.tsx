@@ -138,11 +138,11 @@ export function VegaLiteViewer({
 
   // Zoom control functions
   const handleZoomIn = () => {
-    setZoom((prev) => Math.min(prev + 10, 300))
+    setZoom((prev) => Math.min(prev + 25, 300))
   }
 
   const handleZoomOut = () => {
-    setZoom((prev) => Math.max(prev - 10, 100))
+    setZoom((prev) => Math.max(prev - 25, 100))
   }
 
   const handleZoomReset = () => {
