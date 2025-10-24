@@ -13,6 +13,7 @@ import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor"
 import { VegaLiteValidator, type VegaLiteValidationResult } from "./vega-lite-validator"
 import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
 import { VegaLiteExport } from "./vega-lite-export"
+import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer"
 
 interface VegaLiteEditorProps {
   initialData?: VegaLiteData
@@ -36,6 +37,16 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   const [validationResult, setValidationResult] = useState<VegaLiteValidationResult>({ isValid: true })
   const [errorPanelCollapsed, setErrorPanelCollapsed] = useState(false)
   const [alwaysCollapseErrors, setAlwaysCollapseErrors] = useState(false)
+  const [manualUpdateKey, setManualUpdateKey] = useState(0) // Key to force manual updates
+  const [previewSpec, setPreviewSpec] = useState(initialData?.spec || "") // Spec shown in preview
+  const [previewData, setPreviewData] = useState<VegaLiteData>(initialData || {
+    spec: "",
+    title: "",
+    caption: "",
+    size: 100,
+    theme: "default",
+    layout: "rectangular",
+  })
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const handleSpecChange = (newSpec: string | undefined) => {
@@ -60,14 +71,21 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
     console.log("Template selected:", template.type, "Spec length:", template.spec.length)
     
     // Update the data state
-    setData((prev) => ({
-      ...prev,
+    const newData = {
+      ...data,
       spec: template.spec,
-      title: template.title || prev.title,
-    }))
+      title: template.title || data.title,
+    }
+    
+    setData(newData)
     
     // Close template selector
     setShowTemplateSelector(false)
+    
+    // Always update preview when template is selected, regardless of auto-update setting
+    setPreviewData(newData)
+    setPreviewSpec(newData.spec)
+    setManualUpdateKey(prev => prev + 1)
   }
 
   const handleSave = () => {
@@ -81,6 +99,39 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
 
     onSave(data)
   }
+
+  const handleManualUpdate = () => {
+    // Update preview data with current editor data
+    setPreviewData(data)
+    setPreviewSpec(data.spec)
+    // Force update by changing the trigger
+    setManualUpdateKey(prev => prev + 1)
+  }
+
+  // Effect to handle auto-update
+  useEffect(() => {
+    if (autoUpdate) {
+      // Debounce auto-updates
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+      
+      updateTimeoutRef.current = setTimeout(() => {
+        setPreviewData(data)
+        setPreviewSpec(data.spec)
+        setManualUpdateKey(prev => prev + 1) // Trigger update
+      }, 500) // 500ms debounce
+    }
+  }, [data, autoUpdate])
+
+  // Initial preview update when component mounts
+  useEffect(() => {
+    if (initialData?.spec && autoUpdate) {
+      setPreviewData(data)
+      setPreviewSpec(data.spec)
+      setManualUpdateKey(prev => prev + 1) // Trigger initial update
+    }
+  }, []) // Only run on mount
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -170,9 +221,15 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
               </div>
 
               {!autoUpdate && (
-                <div className="text-sm text-gray-500 dark:text-gray-400 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded">
-                  Auto update disabled
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleManualUpdate}
+                  disabled={!validationResult.isValid}
+                  className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-white dark:bg-gray-800"
+                >
+                  Update Preview
+                </Button>
               )}
 
               <div className="flex items-center gap-2 ml-auto">
@@ -284,24 +341,25 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                     
                     {/* Export Buttons */}
                     <VegaLiteExport
-                      spec={data.spec}
-                      theme={data.theme}
-                      layout={data.layout}
-                      title={data.title}
-                      isValid={validationResult.isValid}
+                      spec={previewSpec}
+                      theme={previewData.theme}
+                      layout={previewData.layout}
+                      title={previewData.title}
+                      isValid={validationResult.isValid && previewSpec.trim() !== ""}
                     />
                   </div>
                 </div>
                 <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
-                  {/* Use VegaLiteViewer for consistent preview */}
-                  <VegaLiteViewer 
-                    spec={data.spec}
-                    layout={data.layout}
-                    theme={data.theme}
-                    title={data.title}
+                  {/* Use ControlledVegaLiteViewer for smooth updates */}
+                  <ControlledVegaLiteViewer 
+                    spec={previewSpec}
+                    layout={previewData.layout}
+                    theme={previewData.theme}
+                    title={previewData.title}
                     showControls={true}
                     allowFullscreen={false}
                     className="h-full"
+                    updateTrigger={manualUpdateKey}
                   />
                 </div>
               </div>
