@@ -334,12 +334,12 @@ export function VegaLiteViewer({
             </div>
           )}
 
-          {/* Chart Content - Minimal container */}
+          {/* Chart Content - Fixed dimensions container */}
           <div 
             ref={containerRef}
             className={`w-full flex justify-center items-center relative overflow-hidden rounded-lg ${
-              layout === "square" ? "min-h-[450px]" : "min-h-[350px]"
-            } ${zoom > 100 ? "cursor-move" : "cursor-default"}`}
+              zoom > 100 ? "cursor-move" : "cursor-default"
+            }`}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -347,7 +347,10 @@ export function VegaLiteViewer({
             onWheel={handleWheel}
             style={{ 
               position: "relative",
-              zIndex: 10
+              zIndex: 10,
+              height: layout === "square" ? "450px" : "350px", // Fixed height
+              width: "100%", // Fixed width
+              backgroundColor: "transparent"
             }}
           >
             {isLoading ? (
@@ -360,13 +363,15 @@ export function VegaLiteViewer({
             ) : spec ? (
               <div
                 ref={vegaRef}
-                className="flex justify-center items-center w-full"
+                className="absolute inset-0 flex justify-center items-center"
                 style={{
                   transform: `scale(${zoom / 100}) translate(${position.x / (zoom / 100)}px, ${position.y / (zoom / 100)}px)`,
                   transformOrigin: "center",
-                  minHeight: layout === "square" ? "400px" : "300px",
-                  minWidth: "200px",
-                  position: "relative",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
                   zIndex: 5,
                   userSelect: zoom > 100 ? "none" : "auto",
                   pointerEvents: zoom > 100 ? "none" : "auto",
