@@ -60,7 +60,7 @@ export function VegaLiteViewer({
       }
 
       try {
-        await renderVegaChart(vegaRef.current, parsedSpec, layout, title)
+        await renderVegaChart(vegaRef.current, parsedSpec, layout, title, theme)
         console.log("VegaLiteViewer: Chart rendered successfully")
       } catch (err: any) {
         console.error("VegaLiteViewer: Error rendering chart:", err)
@@ -76,14 +76,14 @@ export function VegaLiteViewer({
     }
 
     loadChart()
-  }, [parsedSpec, layout, title])
+  }, [parsedSpec, layout, title, theme])
 
   // Render fullscreen chart when fullscreen is toggled
   useEffect(() => {
     const loadFullscreenChart = async () => {
       if (isFullscreen && fullscreenVegaRef.current && parsedSpec) {
         try {
-          await renderVegaChart(fullscreenVegaRef.current, parsedSpec, layout, title)
+          await renderVegaChart(fullscreenVegaRef.current, parsedSpec, layout, title, theme)
         } catch (err: any) {
           if (fullscreenVegaRef.current) {
             fullscreenVegaRef.current.innerHTML = `
@@ -98,7 +98,7 @@ export function VegaLiteViewer({
     }
 
     loadFullscreenChart()
-  }, [isFullscreen, parsedSpec, layout, title])
+  }, [isFullscreen, parsedSpec, layout, title, theme])
 
   // Handle escape key for fullscreen
   useEffect(() => {
