@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from "react"
 const THEME_MAP: Record<string, string> = {
   'default': 'default',
   'dark': 'dark',
+  // Light themes
   'excel': 'excel',
   'ggplot2': 'ggplot2',
   'quartz': 'quartz',
@@ -14,7 +15,51 @@ const THEME_MAP: Record<string, string> = {
   'latimes': 'latimes',
   'urbaninstitute': 'urbaninstitute',
   'googlecharts': 'googlecharts',
-  'powerbi': 'powerbi'
+  'powerbi': 'powerbi',
+  // Dark versions
+  'excel-dark': 'excel',
+  'ggplot2-dark': 'ggplot2',
+  'quartz-dark': 'quartz',
+  'vox-dark': 'vox',
+  'fivethirtyeight-dark': 'fivethirtyeight',
+  'latimes-dark': 'latimes',
+  'urbaninstitute-dark': 'urbaninstitute',
+  'googlecharts-dark': 'googlecharts',
+  'powerbi-dark': 'powerbi'
+}
+
+// Function to create dark version of any theme
+function createDarkTheme(baseTheme: any) {
+  return {
+    ...baseTheme,
+    background: "#1a1a1a",
+    view: {
+      ...baseTheme.view,
+      fill: "#1a1a1a",
+      stroke: "#404040"
+    },
+    axis: {
+      ...baseTheme.axis,
+      domainColor: "#666666",
+      gridColor: "#333333",
+      tickColor: "#666666",
+      labelColor: "#cccccc",
+      titleColor: "#ffffff"
+    },
+    legend: {
+      ...baseTheme.legend,
+      labelColor: "#cccccc",
+      titleColor: "#ffffff"
+    },
+    title: {
+      ...baseTheme.title,
+      color: "#ffffff"
+    },
+    text: {
+      ...baseTheme.text,
+      fill: "#cccccc"
+    }
+  }
 }
 
 interface VegaChartData {
@@ -169,13 +214,26 @@ export async function renderVegaChart(
       let specWithTheme = { ...parsedSpec }
       if (vegaThemesImport && theme !== "default" && THEME_MAP[theme]) {
         console.log("VegaChart Renderer: Applying theme:", theme)
+        
+        // Check if it's a dark version of a theme
+        const isDarkTheme = theme.endsWith('-dark')
+        const baseThemeName = isDarkTheme ? theme.replace('-dark', '') : theme
         const themeConfig = vegaThemesImport[THEME_MAP[theme]]
+        
         if (themeConfig) {
+          let finalThemeConfig = themeConfig
+          
+          // If it's a dark theme variant, apply dark modifications
+          if (isDarkTheme && baseThemeName !== 'dark') {
+            console.log("VegaChart Renderer: Creating dark version of theme:", baseThemeName)
+            finalThemeConfig = createDarkTheme(themeConfig)
+          }
+          
           specWithTheme = {
             ...parsedSpec,
             config: {
               ...parsedSpec.config,
-              ...themeConfig
+              ...finalThemeConfig
             }
           }
           console.log("VegaChart Renderer: Theme applied successfully")

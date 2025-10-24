@@ -199,9 +199,11 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-60 overflow-y-auto">
                     <SelectItem value="default">Default</SelectItem>
                     <SelectItem value="dark">Dark</SelectItem>
+                    
+                    {/* Light Themes */}
                     <SelectItem value="excel">Excel</SelectItem>
                     <SelectItem value="ggplot2">ggplot2</SelectItem>
                     <SelectItem value="quartz">Quartz</SelectItem>
@@ -211,6 +213,17 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                     <SelectItem value="urbaninstitute">Urban Institute</SelectItem>
                     <SelectItem value="googlecharts">Google Charts</SelectItem>
                     <SelectItem value="powerbi">Power BI</SelectItem>
+                    
+                    {/* Dark Theme Variants */}
+                    <SelectItem value="excel-dark">Excel Dark</SelectItem>
+                    <SelectItem value="ggplot2-dark">ggplot2 Dark</SelectItem>
+                    <SelectItem value="quartz-dark">Quartz Dark</SelectItem>
+                    <SelectItem value="vox-dark">Vox Dark</SelectItem>
+                    <SelectItem value="fivethirtyeight-dark">FiveThirtyEight Dark</SelectItem>
+                    <SelectItem value="latimes-dark">LA Times Dark</SelectItem>
+                    <SelectItem value="urbaninstitute-dark">Urban Institute Dark</SelectItem>
+                    <SelectItem value="googlecharts-dark">Google Charts Dark</SelectItem>
+                    <SelectItem value="powerbi-dark">Power BI Dark</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
