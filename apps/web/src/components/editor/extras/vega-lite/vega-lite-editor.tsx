@@ -6,12 +6,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X, Save, FileText, BarChart3, AlertCircle, CheckCircle, Square, RectangleHorizontal, Download } from "lucide-react"
+import { X, Save, FileText, BarChart3, AlertCircle, CheckCircle, Square, RectangleHorizontal } from "lucide-react"
 import type { VegaLiteData } from "@/components/editor/nodes/vega-lite-node"
 import { VegaLiteTemplateSelector } from "./vega-lite-template-selector"
 import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor"
 import { VegaLiteValidator, type VegaLiteValidationResult } from "./vega-lite-validator"
 import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
+import { VegaLiteExport } from "./vega-lite-export"
 
 interface VegaLiteEditorProps {
   initialData?: VegaLiteData
@@ -79,154 +80,6 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
     }
 
     onSave(data)
-  }
-
-  const handleDownloadSVG = async () => {
-    if (!data.spec.trim() || !validationResult.isValid) {
-      return
-    }
-
-    try {
-      // Parse the specification
-      let parsedSpec
-      try {
-        parsedSpec = typeof data.spec === 'string' ? JSON.parse(data.spec) : data.spec
-      } catch (parseError) {
-        console.error("Invalid JSON specification for download")
-        return
-      }
-
-      // Apply theme if specified
-      if (data.theme && data.theme !== "default") {
-        parsedSpec.config = parsedSpec.config || {}
-        parsedSpec.config.theme = data.theme
-      }
-
-      // Apply layout settings
-      if (data.layout === "square") {
-        parsedSpec.width = 400
-        parsedSpec.height = 400
-      } else if (data.layout === "rectangular") {
-        parsedSpec.width = "container"
-        parsedSpec.height = 300
-      }
-
-      // Dynamic import of Vega-Lite and Vega
-      const vegaLiteImport = await import("vega-lite" as any).catch(() => null)
-      const vegaImport = await import("vega" as any).catch(() => null)
-      
-      if (!vegaLiteImport || !vegaImport) {
-        console.error("Vega-Lite not available for download")
-        return
-      }
-
-      // Compile Vega-Lite spec to Vega spec
-      const vegaSpec = vegaLiteImport.compile(parsedSpec).spec
-
-      // Create a new view for SVG generation
-      const view = new vegaImport.View(vegaImport.parse(vegaSpec))
-        .renderer("svg")
-        .initialize()
-
-      await view.runAsync()
-
-      // Get SVG string
-      const svgString = await view.toSVG()
-
-      // Create blob and download
-      const blob = new Blob([svgString], { type: 'image/svg+xml' })
-      const url = URL.createObjectURL(blob)
-      
-      // Create download link
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${data.title || 'vega-lite-chart'}.svg`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      
-      // Clean up
-      URL.revokeObjectURL(url)
-
-      console.log("SVG downloaded successfully")
-    } catch (err: any) {
-      console.error("Error downloading SVG:", err)
-    }
-  }
-
-  const handleDownloadPNG = async () => {
-    if (!data.spec.trim() || !validationResult.isValid) {
-      return
-    }
-
-    try {
-      // Parse the specification
-      let parsedSpec
-      try {
-        parsedSpec = typeof data.spec === 'string' ? JSON.parse(data.spec) : data.spec
-      } catch (parseError) {
-        console.error("Invalid JSON specification for download")
-        return
-      }
-
-      // Apply theme if specified
-      if (data.theme && data.theme !== "default") {
-        parsedSpec.config = parsedSpec.config || {}
-        parsedSpec.config.theme = data.theme
-      }
-
-      // Apply layout settings with higher resolution for PNG
-      if (data.layout === "square") {
-        parsedSpec.width = 800  // Double resolution for PNG
-        parsedSpec.height = 800
-      } else if (data.layout === "rectangular") {
-        parsedSpec.width = 1200
-        parsedSpec.height = 600
-      }
-
-      // Dynamic import of Vega-Lite and Vega
-      const vegaLiteImport = await import("vega-lite" as any).catch(() => null)
-      const vegaImport = await import("vega" as any).catch(() => null)
-      
-      if (!vegaLiteImport || !vegaImport) {
-        console.error("Vega-Lite not available for download")
-        return
-      }
-
-      // Compile Vega-Lite spec to Vega spec
-      const vegaSpec = vegaLiteImport.compile(parsedSpec).spec
-
-      // Create a new view for PNG generation
-      const view = new vegaImport.View(vegaImport.parse(vegaSpec))
-        .renderer("canvas")
-        .initialize()
-
-      await view.runAsync()
-
-      // Get PNG as canvas and convert to blob
-      const canvas = await view.toCanvas()
-      canvas.toBlob((blob: Blob | null) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob)
-          
-          // Create download link
-          const link = document.createElement('a')
-          link.href = url
-          link.download = `${data.title || 'vega-lite-chart'}.png`
-          document.body.appendChild(link)
-          link.click()
-          document.body.removeChild(link)
-          
-          // Clean up
-          URL.revokeObjectURL(url)
-          
-          console.log("PNG downloaded successfully")
-        }
-      }, 'image/png')
-
-    } catch (err: any) {
-      console.error("Error downloading PNG:", err)
-    }
   }
 
   // Cleanup timeout on unmount
@@ -429,31 +282,14 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                       Live Preview
                     </h3>
                     
-                    {/* Download Buttons */}
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDownloadSVG}
-                        disabled={!data.spec.trim() || !validationResult.isValid}
-                        className="flex items-center gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
-                        title="Download as SVG"
-                      >
-                        <Download className="h-4 w-4" />
-                        SVG
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDownloadPNG}
-                        disabled={!data.spec.trim() || !validationResult.isValid}
-                        className="flex items-center gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
-                        title="Download as PNG"
-                      >
-                        <Download className="h-4 w-4" />
-                        PNG
-                      </Button>
-                    </div>
+                    {/* Export Buttons */}
+                    <VegaLiteExport
+                      spec={data.spec}
+                      theme={data.theme}
+                      layout={data.layout}
+                      title={data.title}
+                      isValid={validationResult.isValid}
+                    />
                   </div>
                 </div>
                 <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
