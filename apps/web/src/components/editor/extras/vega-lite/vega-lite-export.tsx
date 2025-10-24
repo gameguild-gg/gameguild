@@ -3,6 +3,40 @@
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 
+// Function to create dark version of any theme
+function createDarkTheme(baseTheme: any) {
+  return {
+    ...baseTheme,
+    background: "#1a1a1a",
+    view: {
+      ...baseTheme.view,
+      fill: "#1a1a1a",
+      stroke: "#404040"
+    },
+    axis: {
+      ...baseTheme.axis,
+      domainColor: "#666666",
+      gridColor: "#333333",
+      tickColor: "#666666",
+      labelColor: "#cccccc",
+      titleColor: "#ffffff"
+    },
+    legend: {
+      ...baseTheme.legend,
+      labelColor: "#cccccc",
+      titleColor: "#ffffff"
+    },
+    title: {
+      ...baseTheme.title,
+      color: "#ffffff"
+    },
+    text: {
+      ...baseTheme.text,
+      fill: "#cccccc"
+    }
+  }
+}
+
 interface VegaLiteExportProps {
   spec: string
   theme?: string
@@ -44,6 +78,7 @@ export function VegaLiteExport({
           const vegaThemesImport = await import("vega-themes" as any)
           const themeMap: Record<string, string> = {
             'dark': 'dark',
+            // Light themes
             'excel': 'excel',
             'ggplot2': 'ggplot2',
             'quartz': 'quartz',
@@ -52,17 +87,38 @@ export function VegaLiteExport({
             'latimes': 'latimes',
             'urbaninstitute': 'urbaninstitute',
             'googlecharts': 'googlecharts',
-            'powerbi': 'powerbi'
+            'powerbi': 'powerbi',
+            // Dark versions
+            'excel-dark': 'excel',
+            'ggplot2-dark': 'ggplot2',
+            'quartz-dark': 'quartz',
+            'vox-dark': 'vox',
+            'fivethirtyeight-dark': 'fivethirtyeight',
+            'latimes-dark': 'latimes',
+            'urbaninstitute-dark': 'urbaninstitute',
+            'googlecharts-dark': 'googlecharts',
+            'powerbi-dark': 'powerbi'
           }
           
           if (themeMap[theme]) {
+            // Check if it's a dark version of a theme
+            const isDarkTheme = theme.endsWith('-dark')
+            const baseThemeName = isDarkTheme ? theme.replace('-dark', '') : theme
             const themeConfig = vegaThemesImport[themeMap[theme]]
+            
             if (themeConfig) {
+              let finalThemeConfig = themeConfig
+              
+              // If it's a dark theme variant, apply dark modifications
+              if (isDarkTheme && baseThemeName !== 'dark') {
+                finalThemeConfig = createDarkTheme(themeConfig)
+              }
+              
               parsedSpec = {
                 ...parsedSpec,
                 config: {
                   ...parsedSpec.config,
-                  ...themeConfig
+                  ...finalThemeConfig
                 }
               }
             }
@@ -143,6 +199,7 @@ export function VegaLiteExport({
           const vegaThemesImport = await import("vega-themes" as any)
           const themeMap: Record<string, string> = {
             'dark': 'dark',
+            // Light themes
             'excel': 'excel',
             'ggplot2': 'ggplot2',
             'quartz': 'quartz',
@@ -151,17 +208,38 @@ export function VegaLiteExport({
             'latimes': 'latimes',
             'urbaninstitute': 'urbaninstitute',
             'googlecharts': 'googlecharts',
-            'powerbi': 'powerbi'
+            'powerbi': 'powerbi',
+            // Dark versions
+            'excel-dark': 'excel',
+            'ggplot2-dark': 'ggplot2',
+            'quartz-dark': 'quartz',
+            'vox-dark': 'vox',
+            'fivethirtyeight-dark': 'fivethirtyeight',
+            'latimes-dark': 'latimes',
+            'urbaninstitute-dark': 'urbaninstitute',
+            'googlecharts-dark': 'googlecharts',
+            'powerbi-dark': 'powerbi'
           }
           
           if (themeMap[theme]) {
+            // Check if it's a dark version of a theme
+            const isDarkTheme = theme.endsWith('-dark')
+            const baseThemeName = isDarkTheme ? theme.replace('-dark', '') : theme
             const themeConfig = vegaThemesImport[themeMap[theme]]
+            
             if (themeConfig) {
+              let finalThemeConfig = themeConfig
+              
+              // If it's a dark theme variant, apply dark modifications
+              if (isDarkTheme && baseThemeName !== 'dark') {
+                finalThemeConfig = createDarkTheme(themeConfig)
+              }
+              
               parsedSpec = {
                 ...parsedSpec,
                 config: {
                   ...parsedSpec.config,
-                  ...themeConfig
+                  ...finalThemeConfig
                 }
               }
             }
