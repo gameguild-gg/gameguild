@@ -30,10 +30,15 @@ export function VegaLiteViewer({
 }: VegaLiteViewerProps) {
   const [zoom, setZoom] = useState(100)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [fullscreenZoom, setFullscreenZoom] = useState(150) // Start larger in fullscreen
   const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [fullscreenPosition, setFullscreenPosition] = useState({ x: 0, y: 0 })
   const [isDragging, setIsDragging] = useState(false)
+  const [isFullscreenDragging, setIsFullscreenDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [fullscreenDragStart, setFullscreenDragStart] = useState({ x: 0, y: 0 })
   const [lastPosition, setLastPosition] = useState({ x: 0, y: 0 })
+  const [lastFullscreenPosition, setLastFullscreenPosition] = useState({ x: 0, y: 0 })
 
   // Use the new hook for chart data processing
   const { parsedSpec, isLoading, error, vegaRef, fullscreenVegaRef } = useVegaLiteChart({
@@ -120,6 +125,17 @@ export function VegaLiteViewer({
     }
   }, [zoom, position.x, position.y])
 
+  // Reset fullscreen position when zoom returns to 100%
+  useEffect(() => {
+    if (fullscreenZoom === 100 && (fullscreenPosition.x !== 0 || fullscreenPosition.y !== 0)) {
+      // Smooth transition to center when returning to 100%
+      const resetTimer = setTimeout(() => {
+        setFullscreenPosition({ x: 0, y: 0 })
+      }, 50)
+      return () => clearTimeout(resetTimer)
+    }
+  }, [fullscreenZoom, fullscreenPosition.x, fullscreenPosition.y])
+
   // Zoom control functions
   const handleZoomIn = () => {
     setZoom((prev) => Math.min(prev + 10, 300))
@@ -136,6 +152,67 @@ export function VegaLiteViewer({
 
   const handleFullscreen = () => {
     setIsFullscreen(true)
+  }
+
+  // Fullscreen zoom control functions
+  const handleFullscreenZoomIn = () => {
+    setFullscreenZoom((prev) => Math.min(prev + 50, 500))
+  }
+
+  const handleFullscreenZoomOut = () => {
+    setFullscreenZoom((prev) => Math.max(prev - 50, 100))
+  }
+
+  const handleFullscreenZoomReset = () => {
+    setFullscreenZoom(150) // Reset to larger default
+    setFullscreenPosition({ x: 0, y: 0 }) // Reset position when resetting zoom
+  }
+
+  // Fullscreen Pan/Drag control functions
+  const handleFullscreenMouseDown = (e: React.MouseEvent) => {
+    if (fullscreenZoom > 100) {
+      setIsFullscreenDragging(true)
+      setFullscreenDragStart({ x: e.clientX, y: e.clientY })
+      setLastFullscreenPosition(fullscreenPosition)
+      e.preventDefault()
+      e.stopPropagation()
+    }
+  }
+
+  const handleFullscreenMouseMove = (e: React.MouseEvent) => {
+    if (isFullscreenDragging && fullscreenZoom > 100) {
+      e.preventDefault()
+      const deltaX = (e.clientX - fullscreenDragStart.x) * 0.8 // Damping factor for smoother movement
+      const deltaY = (e.clientY - fullscreenDragStart.y) * 0.8
+      setFullscreenPosition({
+        x: lastFullscreenPosition.x + deltaX,
+        y: lastFullscreenPosition.y + deltaY
+      })
+    }
+  }
+
+  const handleFullscreenMouseUp = () => {
+    if (isFullscreenDragging) {
+      setIsFullscreenDragging(false)
+    }
+  }
+
+  const handleFullscreenMouseLeave = () => {
+    if (isFullscreenDragging) {
+      setIsFullscreenDragging(false)
+    }
+  }
+
+  // Fullscreen wheel zoom for smoother zoom experience
+  const handleFullscreenWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault()
+      const delta = e.deltaY > 0 ? -25 : 25 // Larger increments for fullscreen
+      setFullscreenZoom((prev) => {
+        const newZoom = Math.max(100, Math.min(500, prev + delta))
+        return newZoom
+      })
+    }
   }
 
   // Pan/Drag control functions
@@ -323,22 +400,77 @@ export function VegaLiteViewer({
                   {title || "Vega-Lite Chart"}
                 </h2>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsFullscreen(false)}
-                className="hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                ✕
-              </Button>
+              
+              {/* Fullscreen Zoom Controls */}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-md p-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleFullscreenZoomOut}
+                    disabled={fullscreenZoom <= 100}
+                    className="h-8 w-8 p-0"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs font-mono px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded min-w-[3rem] text-center">
+                    {fullscreenZoom}%
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleFullscreenZoomIn}
+                    disabled={fullscreenZoom >= 500}
+                    className="h-8 w-8 p-0"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleFullscreenZoomReset}
+                    className="h-8 w-8 p-0"
+                    title="Reset Zoom"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsFullscreen(false)}
+                  className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  ✕
+                </Button>
+              </div>
             </div>
 
             {/* Fullscreen Content */}
             <div className="flex-1 p-6 overflow-auto bg-gray-50 dark:bg-gray-900">
-              <div className="flex justify-center items-center h-full">
+              <div 
+                className={`flex justify-center items-center h-full ${
+                  fullscreenZoom > 100 ? "cursor-move" : "cursor-default"
+                }`}
+                onMouseDown={handleFullscreenMouseDown}
+                onMouseMove={handleFullscreenMouseMove}
+                onMouseUp={handleFullscreenMouseUp}
+                onMouseLeave={handleFullscreenMouseLeave}
+                onWheel={handleFullscreenWheel}
+              >
                 <div
                   ref={fullscreenVegaRef}
-                  className="flex justify-center items-center max-w-full max-h-full"
+                  className="flex justify-center items-center max-w-full max-h-full transition-transform duration-200 ease-in-out"
+                  style={{
+                    transform: `scale(${fullscreenZoom / 100}) translate(${fullscreenPosition.x / (fullscreenZoom / 100)}px, ${fullscreenPosition.y / (fullscreenZoom / 100)}px)`,
+                    transformOrigin: "center",
+                    userSelect: fullscreenZoom > 100 ? "none" : "auto",
+                    pointerEvents: fullscreenZoom > 100 ? "none" : "auto",
+                    transition: isFullscreenDragging ? "none" : "transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)"
+                  }}
                   // Chart will be rendered directly into fullscreenVegaRef
                 />
               </div>
