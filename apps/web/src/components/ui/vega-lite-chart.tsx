@@ -2,6 +2,21 @@
 
 import { useState, useEffect, useRef } from "react"
 
+// Theme mapping for vega-themes
+const THEME_MAP: Record<string, string> = {
+  'default': 'default',
+  'dark': 'dark',
+  'excel': 'excel',
+  'ggplot2': 'ggplot2',
+  'quartz': 'quartz',
+  'vox': 'vox',
+  'fivethirtyeight': 'fivethirtyeight',
+  'latimes': 'latimes',
+  'urbaninstitute': 'urbaninstitute',
+  'googlecharts': 'googlecharts',
+  'powerbi': 'powerbi'
+}
+
 interface VegaChartData {
   parsedSpec: any
   isLoading: boolean
@@ -125,21 +140,23 @@ export async function renderVegaChart(
   container: HTMLElement, 
   parsedSpec: any,
   layout: "square" | "rectangular" = "rectangular",
-  title?: string
+  title?: string,
+  theme: string = "default"
 ) {
   if (!container || !parsedSpec) {
     console.log("VegaChart Renderer: Missing container or spec")
     return
   }
 
-  console.log("VegaChart Renderer: Starting render with layout:", layout)
+  console.log("VegaChart Renderer: Starting render with layout:", layout, "theme:", theme)
 
   try {
     // Try to use Vega-Lite if available, otherwise show placeholder
     try {
-      console.log("VegaChart Renderer: Attempting to import Vega-Lite...")
+      console.log("VegaChart Renderer: Attempting to import Vega-Lite and themes...")
       const vegaLiteImport = await import("vega-lite" as any).catch(() => null)
       const vegaImport = await import("vega" as any).catch(() => null)
+      const vegaThemesImport = await import("vega-themes" as any).catch(() => null)
       
       if (!vegaLiteImport || !vegaImport) {
         console.log("VegaChart Renderer: Vega-Lite not available, showing placeholder")
@@ -147,8 +164,26 @@ export async function renderVegaChart(
       }
 
       console.log("VegaChart Renderer: Vega-Lite imported successfully, compiling spec...")
+      
+      // Apply theme to the spec if theme is available and not default
+      let specWithTheme = { ...parsedSpec }
+      if (vegaThemesImport && theme !== "default" && THEME_MAP[theme]) {
+        console.log("VegaChart Renderer: Applying theme:", theme)
+        const themeConfig = vegaThemesImport[THEME_MAP[theme]]
+        if (themeConfig) {
+          specWithTheme = {
+            ...parsedSpec,
+            config: {
+              ...parsedSpec.config,
+              ...themeConfig
+            }
+          }
+          console.log("VegaChart Renderer: Theme applied successfully")
+        }
+      }
+      
       // Compile Vega-Lite spec to Vega spec
-      const vegaSpec = vegaLiteImport.compile(parsedSpec).spec
+      const vegaSpec = vegaLiteImport.compile(specWithTheme).spec
       console.log("VegaChart Renderer: Spec compiled successfully")
 
       // Create a new view and render

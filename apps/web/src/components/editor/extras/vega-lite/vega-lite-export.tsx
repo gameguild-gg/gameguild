@@ -40,8 +40,36 @@ export function VegaLiteExport({
 
       // Apply theme if specified
       if (theme && theme !== "default") {
-        parsedSpec.config = parsedSpec.config || {}
-        parsedSpec.config.theme = theme
+        try {
+          const vegaThemesImport = await import("vega-themes" as any)
+          const themeMap: Record<string, string> = {
+            'dark': 'dark',
+            'excel': 'excel',
+            'ggplot2': 'ggplot2',
+            'quartz': 'quartz',
+            'vox': 'vox',
+            'fivethirtyeight': 'fivethirtyeight',
+            'latimes': 'latimes',
+            'urbaninstitute': 'urbaninstitute',
+            'googlecharts': 'googlecharts',
+            'powerbi': 'powerbi'
+          }
+          
+          if (themeMap[theme]) {
+            const themeConfig = vegaThemesImport[themeMap[theme]]
+            if (themeConfig) {
+              parsedSpec = {
+                ...parsedSpec,
+                config: {
+                  ...parsedSpec.config,
+                  ...themeConfig
+                }
+              }
+            }
+          }
+        } catch (themeError) {
+          console.warn("Could not apply theme:", theme, themeError)
+        }
       }
 
       // Apply layout settings
@@ -111,8 +139,36 @@ export function VegaLiteExport({
 
       // Apply theme if specified
       if (theme && theme !== "default") {
-        parsedSpec.config = parsedSpec.config || {}
-        parsedSpec.config.theme = theme
+        try {
+          const vegaThemesImport = await import("vega-themes" as any)
+          const themeMap: Record<string, string> = {
+            'dark': 'dark',
+            'excel': 'excel',
+            'ggplot2': 'ggplot2',
+            'quartz': 'quartz',
+            'vox': 'vox',
+            'fivethirtyeight': 'fivethirtyeight',
+            'latimes': 'latimes',
+            'urbaninstitute': 'urbaninstitute',
+            'googlecharts': 'googlecharts',
+            'powerbi': 'powerbi'
+          }
+          
+          if (themeMap[theme]) {
+            const themeConfig = vegaThemesImport[themeMap[theme]]
+            if (themeConfig) {
+              parsedSpec = {
+                ...parsedSpec,
+                config: {
+                  ...parsedSpec.config,
+                  ...themeConfig
+                }
+              }
+            }
+          }
+        } catch (themeError) {
+          console.warn("Could not apply theme:", theme, themeError)
+        }
       }
 
       // Apply layout settings with higher resolution for PNG
