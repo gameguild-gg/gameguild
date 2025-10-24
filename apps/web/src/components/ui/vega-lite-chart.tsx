@@ -198,18 +198,32 @@ export async function renderVegaChart(
               const svgElement = container.firstElementChild as HTMLElement
               svgElement.style.display = "block"
               
+              // No transitions - instant rendering for real-time visualization
+              svgElement.style.transformOrigin = "center"
+              
+              // Force fixed dimensions to prevent movement
               if (layout === "square") {
-                svgElement.style.width = "400px"
-                svgElement.style.height = "400px"
+                svgElement.style.width = "400px !important"
+                svgElement.style.height = "400px !important"
                 svgElement.style.margin = "0 auto"
-                console.log("VegaChart Renderer: Applied square styles to SVG")
+                svgElement.style.minWidth = "400px"
+                svgElement.style.minHeight = "400px"
+                svgElement.style.maxWidth = "400px"
+                svgElement.style.maxHeight = "400px"
+                console.log("VegaChart Renderer: Applied fixed square styles to SVG")
               } else {
-                // Rectangular layout
+                // Rectangular layout - force fixed dimensions
                 svgElement.style.width = "100%"
-                svgElement.style.height = "auto"
+                svgElement.style.height = "300px !important"
                 svgElement.style.maxWidth = "100%"
-                console.log("VegaChart Renderer: Applied rectangular styles to SVG")
+                svgElement.style.minHeight = "300px"
+                svgElement.style.maxHeight = "300px"
+                console.log("VegaChart Renderer: Applied fixed rectangular styles to SVG")
               }
+              
+              // Prevent any auto-sizing that could cause movement
+              svgElement.style.overflow = "hidden"
+              svgElement.style.position = "relative"
               
               console.log("VegaChart Renderer: Applied styles to inserted SVG")
             }
@@ -226,19 +240,31 @@ export async function renderVegaChart(
               
               // Apply styles to canvas
               canvas.style.display = "block"
-              canvas.style.maxWidth = "100%"
-              canvas.style.height = "auto"
               
+              // No transitions - instant rendering for real-time visualization
+              canvas.style.transformOrigin = "center"
+              
+              // Force fixed dimensions to prevent movement
               if (layout === "square") {
-                canvas.style.width = "400px"
-                canvas.style.height = "400px"
+                canvas.style.width = "400px !important"
+                canvas.style.height = "400px !important"
                 canvas.style.margin = "0 auto"
+                canvas.style.minWidth = "400px"
+                canvas.style.minHeight = "400px"
+                canvas.style.maxWidth = "400px"
+                canvas.style.maxHeight = "400px"
               } else {
-                // Rectangular layout
-                canvas.style.width = "800px"
-                canvas.style.height = "300px"
+                // Rectangular layout - force fixed dimensions
+                canvas.style.width = "100%"
+                canvas.style.height = "300px !important"
                 canvas.style.maxWidth = "100%"
+                canvas.style.minHeight = "300px"
+                canvas.style.maxHeight = "300px"
               }
+              
+              // Prevent any auto-sizing that could cause movement
+              canvas.style.overflow = "hidden"
+              canvas.style.position = "relative"
               
               console.log("VegaChart Renderer: Canvas inserted and styled")
             } catch (canvasError) {
@@ -263,23 +289,35 @@ export async function renderVegaChart(
         if (container.firstElementChild) {
           const svgElement = container.firstElementChild as HTMLElement
           svgElement.style.display = "block"
-          svgElement.style.maxWidth = "100%"
-          svgElement.style.height = "auto"
+          
+          // No transitions - instant rendering for real-time visualization
+          svgElement.style.transformOrigin = "center"
           
           console.log("VegaChart Renderer: Applying styles for layout:", layout)
           
+          // Force fixed dimensions to prevent movement
           if (layout === "square") {
-            svgElement.style.width = "400px"
-            svgElement.style.height = "400px"
+            svgElement.style.width = "400px !important"
+            svgElement.style.height = "400px !important"
             svgElement.style.margin = "0 auto"
-            console.log("VegaChart Renderer: Applied square layout centering")
+            svgElement.style.minWidth = "400px"
+            svgElement.style.minHeight = "400px"
+            svgElement.style.maxWidth = "400px"
+            svgElement.style.maxHeight = "400px"
+            console.log("VegaChart Renderer: Applied fixed square layout centering")
           } else {
-            // Rectangular layout
-            svgElement.style.width = "800px"
-            svgElement.style.height = "auto"
+            // Rectangular layout - force fixed dimensions
+            svgElement.style.width = "100%"
+            svgElement.style.height = "300px !important"
             svgElement.style.maxWidth = "100%"
-            console.log("VegaChart Renderer: Applied rectangular layout styling")
+            svgElement.style.minHeight = "300px"
+            svgElement.style.maxHeight = "300px"
+            console.log("VegaChart Renderer: Applied fixed rectangular layout styling")
           }
+          
+          // Prevent any auto-sizing that could cause movement
+          svgElement.style.overflow = "hidden"
+          svgElement.style.position = "relative"
           
           // Force minimum dimensions if SVG has no size
           const rect = svgElement.getBoundingClientRect()
@@ -302,7 +340,7 @@ export async function renderVegaChart(
         } else {
           console.log("VegaChart Renderer: No SVG element found in container!")
         }
-      }, 200)
+      }, 50) // Reduced timeout for faster real-time rendering
     } catch (vegaError: any) {
       console.log("VegaChart Renderer: Vega error, showing placeholder:", vegaError.message)
       // If vega-lite is not available, show placeholder
