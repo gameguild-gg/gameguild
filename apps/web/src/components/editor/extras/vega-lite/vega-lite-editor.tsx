@@ -11,7 +11,6 @@ import type { VegaLiteData } from "@/components/editor/nodes/vega-lite-node"
 import { VegaLiteTemplateSelector } from "./vega-lite-template-selector"
 import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor"
 import { VegaLiteValidator, type VegaLiteValidationResult } from "./vega-lite-validator"
-import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
 import { VegaLiteExport } from "./vega-lite-export"
 import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer"
 
@@ -197,7 +196,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                   Theme:
                 </Label>
                 <Select value={data.theme} onValueChange={(value) => setData((prev) => ({ ...prev, theme: value as any }))}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -209,6 +208,9 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                     <SelectItem value="vox">Vox</SelectItem>
                     <SelectItem value="fivethirtyeight">FiveThirtyEight</SelectItem>
                     <SelectItem value="latimes">LA Times</SelectItem>
+                    <SelectItem value="urbaninstitute">Urban Institute</SelectItem>
+                    <SelectItem value="googlecharts">Google Charts</SelectItem>
+                    <SelectItem value="powerbi">Power BI</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
