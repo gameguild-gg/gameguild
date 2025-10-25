@@ -64,6 +64,35 @@ export interface ThemeOverride {
   style?: {
     [key: string]: any
   }
+  group?: {
+    fill?: string
+    [key: string]: any
+  }
+  arc?: {
+    fill?: string
+    [key: string]: any
+  }
+  area?: {
+    fill?: string
+    [key: string]: any
+  }
+  path?: {
+    stroke?: string
+    [key: string]: any
+  }
+  rect?: {
+    fill?: string
+    [key: string]: any
+  }
+  shape?: {
+    stroke?: string
+    [key: string]: any
+  }
+  symbol?: {
+    fill?: string
+    size?: number
+    [key: string]: any
+  }
 }
 
 /**
@@ -81,26 +110,8 @@ export const LIGHT_THEME_OVERRIDES: Record<string, ThemeOverride> = {
   // },
   
   "ggplot2": {
-  range: {
-    category: [
-      "#4cc9f0", // azul-claro
-      "#f72585", // magenta
-      "#b5179e", // violeta
-      "#7209b7", // roxo
-      "#560bad", // roxo escuro
-      "#480ca8", // azul arroxeado
-      "#3a0ca3", // azul royal
-      "#4361ee", // azul médio
-      "#4895ef", // azul claro
-      "#4cc9f0"  // ciano
-    ],
-    heatmap: ["#0d0887", "#6a00a8", "#b12a90", "#e16462", "#fca636", "#f0f921"]
-  },
   axis: {
     gridColor: "#f3f4f6",
-  },
-  line: {
-    strokeWidth: 2
   },
 
   },
@@ -171,27 +182,27 @@ export const DARK_THEME_OVERRIDES: Record<string, ThemeOverride> = {
   "ggplot2-dark": {
   range: {
     category: [
-      "#4cc9f0", // azul-claro
-      "#f72585", // magenta
-      "#b5179e", // violeta
-      "#7209b7", // roxo
-      "#560bad", // roxo escuro
-      "#480ca8", // azul arroxeado
-      "#3a0ca3", // azul royal
-      "#4361ee", // azul médio
-      "#4895ef", // azul claro
-      "#4cc9f0"  // ciano
+      "#ebe6e6",
+      "#7F7F7F",
+      "#1A1A1A",
+      "#999999",
+      "#333333",
+      "#B0B0B0",
+      "#4D4D4D",
+      "#C9C9C9",
+      "#666666",
+      "#DCDCDC"
     ],
-    heatmap: ["#0d0887", "#6a00a8", "#b12a90", "#e16462", "#fca636", "#f0f921"]
+    heatmap: ["#ebe6e6", "#7F7F7F", "#1A1A1A", "#999999", "#333333", "#B0B0B0"]
   },
-  line: {
-    stroke: "#ffffff",
-    strokeWidth: 2
-  },
-  mark: {
-    fill: "#4cc9f0",
-  }
-
+  group: {fill: "#fff"},
+  arc: {fill: "#fff"},
+  area: {fill: "#fff"},
+  line: {stroke: "#fff"},
+  path: {stroke: "#fff"},
+  rect: {fill: "#fff"},
+  shape: {stroke: "#fff"},
+  symbol: {fill: "#fff", "size": 40},
   },
 
   // Quartz dark - ajustar cores
@@ -418,6 +429,16 @@ export function applyThemeOverrides(baseTheme: any, overrides?: ThemeOverride): 
     },
     ...(overrides.mark && { mark: { ...baseTheme.mark, ...overrides.mark } }),
     ...(overrides.line && { line: { ...baseTheme.line, ...overrides.line } }),
+    ...(overrides.bar && { bar: { ...baseTheme.bar, ...overrides.bar } }),
+    ...(overrides.point && { point: { ...baseTheme.point, ...overrides.point } }),
+    ...(overrides.area && { area: { ...baseTheme.area, ...overrides.area } }),
+    ...(overrides.arc && { arc: { ...baseTheme.arc, ...overrides.arc } }),
+    ...(overrides.path && { path: { ...baseTheme.path, ...overrides.path } }),
+    ...(overrides.rect && { rect: { ...baseTheme.rect, ...overrides.rect } }),
+    ...(overrides.shape && { shape: { ...baseTheme.shape, ...overrides.shape } }),
+    ...(overrides.symbol && { symbol: { ...baseTheme.symbol, ...overrides.symbol } }),
+    ...(overrides.group && { group: { ...baseTheme.group, ...overrides.group } }),
+    ...(overrides.style && { style: { ...baseTheme.style, ...overrides.style } }),
     ...(overrides.range && { range: { ...baseTheme.range, ...overrides.range } })
   }
 }
