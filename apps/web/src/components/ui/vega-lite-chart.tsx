@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { applyThemeOverrides, LIGHT_THEME_OVERRIDES, DARK_THEME_OVERRIDES } from "@/lib/vega-theme-overrides"
 
 // Theme mapping for vega-themes
 const THEME_MAP: Record<string, string> = {
@@ -227,6 +228,17 @@ export async function renderVegaChart(
           if (isDarkTheme && baseThemeName !== 'dark') {
             console.log("VegaChart Renderer: Creating dark version of theme:", baseThemeName)
             finalThemeConfig = createDarkTheme(themeConfig)
+          }
+          
+          // Apply manual overrides from vega-theme-overrides.ts
+          const overrides = isDarkTheme ? DARK_THEME_OVERRIDES[theme] : LIGHT_THEME_OVERRIDES[theme]
+          if (overrides) {
+            console.log("VegaChart Renderer: Applying manual theme overrides for:", theme)
+            console.log("VegaChart Renderer: Override values:", JSON.stringify(overrides, null, 2))
+            finalThemeConfig = applyThemeOverrides(finalThemeConfig, overrides)
+            console.log("VegaChart Renderer: Final theme config:", JSON.stringify(finalThemeConfig, null, 2))
+          } else {
+            console.log("VegaChart Renderer: No overrides found for theme:", theme)
           }
           
           specWithTheme = {
