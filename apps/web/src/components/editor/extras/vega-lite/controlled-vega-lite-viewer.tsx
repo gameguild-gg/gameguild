@@ -6,7 +6,8 @@ import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
 interface ControlledVegaLiteViewerProps {
   spec: string
   layout?: "square" | "rectangular"
-  theme?: string
+  themeLight?: string
+  themeDark?: string
   title?: string
   caption?: string
   size?: number
@@ -19,7 +20,8 @@ interface ControlledVegaLiteViewerProps {
 export function ControlledVegaLiteViewer({ 
   spec,
   layout = "rectangular", 
-  theme = "default",
+  themeLight = "default",
+  themeDark = "dark",
   title,
   caption,
   size = 100,
@@ -30,7 +32,8 @@ export function ControlledVegaLiteViewer({
 }: ControlledVegaLiteViewerProps) {
   const [currentSpec, setCurrentSpec] = useState(spec)
   const [currentLayout, setCurrentLayout] = useState(layout)
-  const [currentTheme, setCurrentTheme] = useState(theme)
+  const [currentThemeLight, setCurrentThemeLight] = useState(themeLight)
+  const [currentThemeDark, setCurrentThemeDark] = useState(themeDark)
   const [currentTitle, setCurrentTitle] = useState(title)
   const [currentCaption, setCurrentCaption] = useState(caption)
   const [containerHeight, setContainerHeight] = useState<number | null>(null)
@@ -62,12 +65,13 @@ export function ControlledVegaLiteViewer({
       // Instant update - no delays or transitions
       setCurrentSpec(spec)
       setCurrentLayout(layout)
-      setCurrentTheme(theme)
+      setCurrentThemeLight(themeLight)
+      setCurrentThemeDark(themeDark)
       setCurrentTitle(title)
       setCurrentCaption(caption)
       previousUpdateTrigger.current = updateTrigger
     }
-  }, [updateTrigger, spec, layout, theme, title, caption, containerHeight])
+  }, [updateTrigger, spec, layout, themeLight, themeDark, title, caption, containerHeight])
 
   return (
     <div 
@@ -81,7 +85,8 @@ export function ControlledVegaLiteViewer({
       <VegaLiteViewer 
         spec={currentSpec}
         layout={currentLayout}
-        theme={currentTheme}
+        themeLight={currentThemeLight}
+        themeDark={currentThemeDark}
         title={currentTitle}
         caption={currentCaption}
         size={size}

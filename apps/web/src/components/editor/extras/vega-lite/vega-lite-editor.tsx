@@ -13,6 +13,7 @@ import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor"
 import { VegaLiteValidator, type VegaLiteValidationResult } from "./vega-lite-validator"
 import { VegaLiteExport } from "./vega-lite-export"
 import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer"
+import { getThemePair, AVAILABLE_THEMES, THEME_DESCRIPTIONS, THEME_MODE_DESCRIPTIONS } from "@/lib/vega-theme-helper"
 
 interface VegaLiteEditorProps {
   initialData?: VegaLiteData
@@ -28,7 +29,8 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       caption: "",
       size: 100,
       theme: "default",
-      layout: "rectangular", // Default to rectangular
+      themeMode: "system",
+      layout: "rectangular",
     },
   )
   const [autoUpdate, setAutoUpdate] = useState(true)
@@ -36,14 +38,15 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   const [validationResult, setValidationResult] = useState<VegaLiteValidationResult>({ isValid: true })
   const [errorPanelCollapsed, setErrorPanelCollapsed] = useState(false)
   const [alwaysCollapseErrors, setAlwaysCollapseErrors] = useState(false)
-  const [manualUpdateKey, setManualUpdateKey] = useState(0) // Key to force manual updates
-  const [previewSpec, setPreviewSpec] = useState(initialData?.spec || "") // Spec shown in preview
+  const [manualUpdateKey, setManualUpdateKey] = useState(0)
+  const [previewSpec, setPreviewSpec] = useState(initialData?.spec || "")
   const [previewData, setPreviewData] = useState<VegaLiteData>(initialData || {
     spec: "",
     title: "",
     caption: "",
     size: 100,
     theme: "default",
+    themeMode: "system",
     layout: "rectangular",
   })
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -149,7 +152,34 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Vega-Lite Chart Editor</h2>
-            <div className="flex items-center gap-1 ml-4">
+            
+            {/* Theme Display */}
+            <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
+              <div className="text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Theme:</span>
+                <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
+                  {data.theme ? THEME_DESCRIPTIONS[data.theme] : "Default"}
+                </span>
+              </div>
+              <div className="text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Mode:</span>
+                <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
+                  {THEME_MODE_DESCRIPTIONS[data.themeMode || "system"].label}
+                </span>
+              </div>
+              
+              {/* Preview of what theme pair will be used */}
+              {(() => {
+                const pair = getThemePair((data.theme as any) || "default", (data.themeMode as any) || "system")
+                return (
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    ({pair.themeLight} / {pair.themeDark})
+                  </div>
+                )
+              })()}
+            </div>
+            
+            <div className="flex items-center gap-1 ml-auto">
               {validationResult.isValid ? (
                 <div className="flex items-center gap-1 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
                   <CheckCircle className="h-4 w-4" />
@@ -191,36 +221,43 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                 />
               </div>
 
+              {/* Theme Selector */}
               <div className="flex items-center gap-2">
                 <Label htmlFor="theme" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Theme:
                 </Label>
-                <Select value={data.theme} onValueChange={(value) => setData((prev) => ({ ...prev, theme: value as any }))}>
+                <Select value={data.theme || "default"} onValueChange={(value) => setData((prev) => ({ ...prev, theme: value as any }))}>
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="max-h-60 overflow-y-auto">
-                    {/* Light and dark Themes */}
-                    <SelectItem value="default">Default</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="excel">Excel</SelectItem>
-                    <SelectItem value="excel-dark">Excel Dark</SelectItem>
-                    <SelectItem value="ggplot2">ggplot2</SelectItem>
-                    <SelectItem value="ggplot2-dark">ggplot2 Dark</SelectItem>
-                    <SelectItem value="quartz">Quartz</SelectItem>
-                    <SelectItem value="quartz-dark">Quartz Dark</SelectItem>
-                    <SelectItem value="vox">Vox</SelectItem>
-                    <SelectItem value="vox-dark">Vox Dark</SelectItem>
-                    <SelectItem value="fivethirtyeight">FiveThirtyEight</SelectItem>
-                    <SelectItem value="fivethirtyeight-dark">FiveThirtyEight Dark</SelectItem>
-                    <SelectItem value="latimes">LA Times</SelectItem>
-                    <SelectItem value="latimes-dark">LA Times Dark</SelectItem>
-                    <SelectItem value="urbaninstitute">Urban Institute</SelectItem>
-                    <SelectItem value="urbaninstitute-dark">Urban Institute Dark</SelectItem>
-                    <SelectItem value="googlecharts">Google Charts</SelectItem>
-                    <SelectItem value="googlecharts-dark">Google Charts Dark</SelectItem>
-                    <SelectItem value="powerbi">Power BI</SelectItem>
-                    <SelectItem value="powerbi-dark">Power BI Dark</SelectItem>
+                    {AVAILABLE_THEMES.map((theme) => (
+                      <SelectItem key={theme} value={theme}>
+                        {THEME_DESCRIPTIONS[theme]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Theme Mode Selector */}
+              <div className="flex items-center gap-2">
+                <Label htmlFor="theme-mode" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Mode:
+                </Label>
+                <Select value={data.themeMode || "system"} onValueChange={(value) => setData((prev) => ({ ...prev, themeMode: value as any }))}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(THEME_MODE_DESCRIPTIONS).map(([mode, { label, description }]) => (
+                      <SelectItem key={mode} value={mode}>
+                        <div>
+                          <div className="font-medium">{label}</div>
+                          <div className="text-xs text-gray-500">{description}</div>
+                        </div>
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -352,27 +389,39 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                     </h3>
                     
                     {/* Export Buttons */}
-                    <VegaLiteExport
-                      spec={previewSpec}
-                      theme={previewData.theme}
-                      layout={previewData.layout}
-                      title={previewData.title}
-                      isValid={validationResult.isValid && previewSpec.trim() !== ""}
-                    />
+                    {(() => {
+                      const themePair = getThemePair(previewData.theme as any || "default", previewData.themeMode as any || "system")
+                      return (
+                        <VegaLiteExport
+                          spec={previewSpec}
+                          themeLight={themePair.themeLight}
+                          themeDark={themePair.themeDark}
+                          layout={previewData.layout}
+                          title={previewData.title}
+                          isValid={validationResult.isValid && previewSpec.trim() !== ""}
+                        />
+                      )
+                    })()}
                   </div>
                 </div>
                 <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
                   {/* Use ControlledVegaLiteViewer for smooth updates */}
-                  <ControlledVegaLiteViewer 
-                    spec={previewSpec}
-                    layout={previewData.layout}
-                    theme={previewData.theme}
-                    title={previewData.title}
-                    showControls={true}
-                    allowFullscreen={false}
-                    className="h-full"
-                    updateTrigger={manualUpdateKey}
-                  />
+                  {(() => {
+                    const themePair = getThemePair(previewData.theme as any || "default", previewData.themeMode as any || "system")
+                    return (
+                      <ControlledVegaLiteViewer 
+                        spec={previewSpec}
+                        layout={previewData.layout}
+                        themeLight={themePair.themeLight}
+                        themeDark={themePair.themeDark}
+                        title={previewData.title}
+                        showControls={true}
+                        allowFullscreen={false}
+                        className="h-full"
+                        updateTrigger={manualUpdateKey}
+                      />
+                    )
+                  })()}
                 </div>
               </div>
             </div>
