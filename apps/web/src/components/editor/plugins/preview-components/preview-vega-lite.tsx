@@ -1,6 +1,7 @@
 "use client"
 
 import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
+import { getThemePair } from "@/lib/vega-theme-helper"
 
 interface PreviewVegaLiteProps {
   node: {
@@ -9,6 +10,7 @@ interface PreviewVegaLiteProps {
       title?: string
       caption?: string
       theme?: string
+      themeMode?: string
       layout?: "square" | "rectangular"
       size?: number
     }
@@ -16,13 +18,15 @@ interface PreviewVegaLiteProps {
 }
 
 export function PreviewVegaLite({ node }: PreviewVegaLiteProps) {
-  const { spec, title, caption, theme, layout, size } = node.data
+  const { spec, title, caption, theme, themeMode, layout, size } = node.data
+  const themePair = getThemePair((theme as any) || "default", (themeMode as any) || "system")
 
   return (
     <VegaLiteViewer
       spec={spec}
       layout={layout}
-      theme={theme}
+      themeLight={themePair.themeLight}
+      themeDark={themePair.themeDark}
       title={title}
       caption={caption}
       size={size}
