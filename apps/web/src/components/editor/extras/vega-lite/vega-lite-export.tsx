@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 import { useDarkMode } from "@/hooks/useDarkMode"
+import { applyThemeOverrides, LIGHT_THEME_OVERRIDES, DARK_THEME_OVERRIDES } from "@/lib/vega-theme-overrides"
 
 // Function to create dark version of any theme
 function createDarkTheme(baseTheme: any) {
@@ -117,6 +118,12 @@ export function VegaLiteExport({
               // If it's a dark theme variant, apply dark modifications
               if (isDarkTheme && baseThemeName !== 'dark') {
                 finalThemeConfig = createDarkTheme(themeConfig)
+              }
+              
+              // Apply manual overrides from vega-theme-overrides.ts
+              const overrides = isDarkTheme ? DARK_THEME_OVERRIDES[theme] : LIGHT_THEME_OVERRIDES[theme]
+              if (overrides) {
+                finalThemeConfig = applyThemeOverrides(finalThemeConfig, overrides)
               }
               
               parsedSpec = {
@@ -238,6 +245,12 @@ export function VegaLiteExport({
               // If it's a dark theme variant, apply dark modifications
               if (isDarkTheme && baseThemeName !== 'dark') {
                 finalThemeConfig = createDarkTheme(themeConfig)
+              }
+              
+              // Apply manual overrides from vega-theme-overrides.ts
+              const overrides = isDarkTheme ? DARK_THEME_OVERRIDES[theme] : LIGHT_THEME_OVERRIDES[theme]
+              if (overrides) {
+                finalThemeConfig = applyThemeOverrides(finalThemeConfig, overrides)
               }
               
               parsedSpec = {
