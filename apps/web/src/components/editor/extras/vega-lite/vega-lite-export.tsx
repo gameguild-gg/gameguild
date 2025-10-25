@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
+import { useDarkMode } from "@/hooks/useDarkMode"
 
 // Function to create dark version of any theme
 function createDarkTheme(baseTheme: any) {
@@ -39,7 +40,8 @@ function createDarkTheme(baseTheme: any) {
 
 interface VegaLiteExportProps {
   spec: string
-  theme?: string
+  themeLight?: string
+  themeDark?: string
   layout?: "square" | "rectangular"
   title?: string
   isValid: boolean
@@ -49,7 +51,8 @@ interface VegaLiteExportProps {
 
 export function VegaLiteExport({ 
   spec, 
-  theme = "default", 
+  themeLight = "default",
+  themeDark = "dark",
   layout = "rectangular", 
   title, 
   isValid, 
@@ -57,6 +60,8 @@ export function VegaLiteExport({
   className = "" 
 }: VegaLiteExportProps) {
   
+  const isDark = useDarkMode()
+  const theme = isDark ? themeDark : themeLight
   const isDisabled = disabled || !spec.trim() || !isValid
 
   const handleDownloadSVG = async () => {
