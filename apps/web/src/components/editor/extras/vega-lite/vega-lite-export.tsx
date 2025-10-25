@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 import { useDarkMode } from "@/hooks/useDarkMode"
-import { applyThemeOverrides, LIGHT_THEME_OVERRIDES, DARK_THEME_OVERRIDES } from "@/lib/vega-theme-overrides"
+import { applyThemeOverrides, DARK_THEME_OVERRIDES, LIGHT_THEME_OVERRIDES } from "@/lib/vega-theme-overrides"
+import { loadCsvDataIntoSpec } from "@/lib/vega-csv-loader"
 
 // Function to create dark version of any theme
 function createDarkTheme(baseTheme: any) {
@@ -48,6 +49,7 @@ interface VegaLiteExportProps {
   isValid: boolean
   disabled?: boolean
   className?: string
+  csvData?: Record<string, string>
 }
 
 export function VegaLiteExport({ 
@@ -58,7 +60,8 @@ export function VegaLiteExport({
   title, 
   isValid, 
   disabled = false,
-  className = "" 
+  className = "",
+  csvData = {}
 }: VegaLiteExportProps) {
   
   const isDark = useDarkMode()
@@ -69,10 +72,15 @@ export function VegaLiteExport({
     if (isDisabled) return
 
     try {
-      // Parse the specification
+      // Parse the specification and load CSV data
       let parsedSpec
       try {
-        parsedSpec = typeof spec === 'string' ? JSON.parse(spec) : spec
+        // Process CSV data if available
+        if (Object.keys(csvData).length > 0) {
+          parsedSpec = loadCsvDataIntoSpec(spec, csvData)
+        } else {
+          parsedSpec = typeof spec === 'string' ? JSON.parse(spec) : spec
+        }
       } catch (parseError) {
         console.error("Invalid JSON specification for download")
         return
@@ -196,10 +204,15 @@ export function VegaLiteExport({
     if (isDisabled) return
 
     try {
-      // Parse the specification
+      // Parse the specification and load CSV data
       let parsedSpec
       try {
-        parsedSpec = typeof spec === 'string' ? JSON.parse(spec) : spec
+        // Process CSV data if available
+        if (Object.keys(csvData).length > 0) {
+          parsedSpec = loadCsvDataIntoSpec(spec, csvData)
+        } else {
+          parsedSpec = typeof spec === 'string' ? JSON.parse(spec) : spec
+        }
       } catch (parseError) {
         console.error("Invalid JSON specification for download")
         return
