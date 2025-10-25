@@ -14,6 +14,7 @@ import { VegaLiteValidator, type VegaLiteValidationResult } from "./vega-lite-va
 import { VegaLiteExport } from "./vega-lite-export"
 import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer"
 import { getThemePair, AVAILABLE_THEMES, THEME_DESCRIPTIONS, THEME_MODE_DESCRIPTIONS } from "@/lib/vega-theme-helper"
+import { VegaLiteCsvManager } from "./vega-lite-csv-manager"
 
 interface VegaLiteEditorProps {
   initialData?: VegaLiteData
@@ -31,6 +32,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       theme: "default",
       themeMode: "system",
       layout: "rectangular",
+      csvData: {},
     },
   )
   const [autoUpdate, setAutoUpdate] = useState(true)
@@ -48,6 +50,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
     theme: "default",
     themeMode: "system",
     layout: "rectangular",
+    csvData: {},
   })
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -282,6 +285,10 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
               )}
 
               <div className="flex items-center gap-2 ml-auto">
+                <VegaLiteCsvManager
+                  csvData={data.csvData || {}}
+                  onCsvDataChange={(csvData) => setData((prev) => ({ ...prev, csvData }))}
+                />
                 <Button
                   variant="outline"
                   size="sm"
@@ -399,6 +406,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                           layout={previewData.layout}
                           title={previewData.title}
                           isValid={validationResult.isValid && previewSpec.trim() !== ""}
+                          csvData={previewData.csvData}
                         />
                       )
                     })()}
@@ -419,6 +427,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                         allowFullscreen={false}
                         className="h-full"
                         updateTrigger={manualUpdateKey}
+                        csvData={previewData.csvData}
                       />
                     )
                   })()}

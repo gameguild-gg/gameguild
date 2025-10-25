@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
+import { loadCsvDataIntoSpec } from "@/lib/vega-csv-loader"
 
 interface ControlledVegaLiteViewerProps {
   spec: string
@@ -15,6 +16,7 @@ interface ControlledVegaLiteViewerProps {
   allowFullscreen?: boolean
   className?: string
   updateTrigger: number // When this changes, update the chart
+  csvData?: Record<string, string> // CSV data for inline loading
 }
 
 export function ControlledVegaLiteViewer({ 
@@ -28,7 +30,8 @@ export function ControlledVegaLiteViewer({
   showControls = true,
   allowFullscreen = true,
   className = "",
-  updateTrigger
+  updateTrigger,
+  csvData = {}
 }: ControlledVegaLiteViewerProps) {
   const [currentSpec, setCurrentSpec] = useState(spec)
   const [currentLayout, setCurrentLayout] = useState(layout)
@@ -39,6 +42,20 @@ export function ControlledVegaLiteViewer({
   const [containerHeight, setContainerHeight] = useState<number | null>(null)
   const previousUpdateTrigger = useRef(updateTrigger)
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Process spec with CSV data
+  const processedSpec = (() => {
+    try {
+      if (Object.keys(csvData).length > 0) {
+        const processed = loadCsvDataIntoSpec(currentSpec, csvData)
+        return JSON.stringify(processed)
+      }
+      return currentSpec
+    } catch (error) {
+      console.error('Erro ao processar CSV:', error)
+      return currentSpec
+    }
+  })()
 
   // Capture initial container height
   useEffect(() => {
@@ -83,7 +100,7 @@ export function ControlledVegaLiteViewer({
       }}
     >
       <VegaLiteViewer 
-        spec={currentSpec}
+        spec={processedSpec}
         layout={currentLayout}
         themeLight={currentThemeLight}
         themeDark={currentThemeDark}
