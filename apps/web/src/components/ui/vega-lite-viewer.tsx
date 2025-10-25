@@ -5,6 +5,7 @@ import { BarChart3, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useVegaLiteChart, renderVegaChart } from "@/components/ui/vega-lite-chart"
 import { useDarkMode } from "@/hooks/useDarkMode"
+import { loadCsvDataIntoSpec } from "@/lib/vega-csv-loader"
 
 interface VegaLiteViewerProps {
   spec: string
@@ -17,6 +18,7 @@ interface VegaLiteViewerProps {
   showControls?: boolean
   allowFullscreen?: boolean
   className?: string
+  csvData?: Record<string, string>
 }
 
 export function VegaLiteViewer({ 
@@ -29,10 +31,25 @@ export function VegaLiteViewer({
   size = 100,
   showControls = true,
   allowFullscreen = true,
-  className = ""
+  className = "",
+  csvData = {}
 }: VegaLiteViewerProps) {
   const isDark = useDarkMode()
   const theme = isDark ? themeDark : themeLight
+  
+  // Process spec with CSV data
+  const processedSpec = (() => {
+    try {
+      if (Object.keys(csvData).length > 0) {
+        const processed = loadCsvDataIntoSpec(spec, csvData)
+        return JSON.stringify(processed)
+      }
+      return spec
+    } catch (error) {
+      console.error('Erro ao processar CSV:', error)
+      return spec
+    }
+  })()
   
   const [zoom, setZoom] = useState(100)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -48,7 +65,7 @@ export function VegaLiteViewer({
 
   // Use the new hook for chart data processing
   const { parsedSpec, isLoading, error, vegaRef, fullscreenVegaRef } = useVegaLiteChart({
-    spec,
+    spec: processedSpec,
     layout,
     theme,
     title
