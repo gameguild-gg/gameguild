@@ -4,11 +4,13 @@ import { useEffect, useState, useRef } from "react"
 import { BarChart3, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useVegaLiteChart, renderVegaChart } from "@/components/ui/vega-lite-chart"
+import { useDarkMode } from "@/hooks/useDarkMode"
 
 interface VegaLiteViewerProps {
   spec: string
   layout?: "square" | "rectangular"
-  theme?: string
+  themeLight?: string
+  themeDark?: string
   title?: string
   caption?: string
   size?: number
@@ -20,7 +22,8 @@ interface VegaLiteViewerProps {
 export function VegaLiteViewer({ 
   spec,
   layout = "rectangular", 
-  theme = "default",
+  themeLight = "default",
+  themeDark = "dark",
   title,
   caption,
   size = 100,
@@ -28,6 +31,9 @@ export function VegaLiteViewer({
   allowFullscreen = true,
   className = ""
 }: VegaLiteViewerProps) {
+  const isDark = useDarkMode()
+  const theme = isDark ? themeDark : themeLight
+  
   const [zoom, setZoom] = useState(100)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [fullscreenZoom, setFullscreenZoom] = useState(150) // Start larger in fullscreen

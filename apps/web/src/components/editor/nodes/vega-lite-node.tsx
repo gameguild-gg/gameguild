@@ -21,6 +21,7 @@ import { Edit } from "lucide-react"
 import { VegaLiteEditor } from "@/components/editor/extras/vega-lite/vega-lite-editor"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import { VegaLiteViewer } from "@/components/ui/vega-lite-viewer"
+import { getThemePair } from "@/lib/vega-theme-helper"
 import type { JSX } from "react/jsx-runtime"
 
 export interface VegaLiteData {
@@ -28,8 +29,10 @@ export interface VegaLiteData {
   title?: string
   caption?: string
   size?: number
-  theme?: "default" | "dark" | "excel" | "ggplot2" | "quartz" | "vox" | "fivethirtyeight" | "latimes"
-  layout?: "square" | "rectangular" // New layout option
+  // Theme configuration: single theme base with mode selector
+  theme?: "default" | "excel" | "ggplot2" | "quartz" | "vox" | "fivethirtyeight" | "latimes" | "urbaninstitute" | "googlecharts" | "powerbi"
+  themeMode?: "system" | "only-light" | "only-dark" // Mode for theme application
+  layout?: "square" | "rectangular" // Layout option
 }
 
 export class VegaLiteNode extends DecoratorNode<JSX.Element> {
@@ -189,17 +192,23 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
     <>
       <div className="relative group my-4 vega-lite-node-container">
         {/* Use VegaLiteViewer component with all its functionality */}
-        <VegaLiteViewer 
-          spec={data.spec}
-          layout={data.layout}
-          theme={data.theme}
-          title={data.title}
-          caption={data.caption}
-          size={data.size}
-          showControls={true}
-          allowFullscreen={true}
-          className=""
-        />
+        {(() => {
+          const themePair = getThemePair(data.theme as any || "default", data.themeMode as any || "system")
+          return (
+            <VegaLiteViewer 
+              spec={data.spec}
+              layout={data.layout}
+              themeLight={themePair.themeLight}
+              themeDark={themePair.themeDark}
+              title={data.title}
+              caption={data.caption}
+              size={data.size}
+              showControls={true}
+              allowFullscreen={true}
+              className=""
+            />
+          )
+        })()}
 
         {/* ContentEditMenu for lateral edit button */}
         <ContentEditMenu
