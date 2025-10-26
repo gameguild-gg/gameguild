@@ -16,7 +16,7 @@ interface ControlledVegaLiteViewerProps {
   allowFullscreen?: boolean
   className?: string
   updateTrigger: number // When this changes, update the chart
-  csvData?: Record<string, string> // CSV data for inline loading
+  data?: Record<string, string> // Data files for inline loading (CSV/JSON)
 }
 
 export function ControlledVegaLiteViewer({ 
@@ -31,7 +31,7 @@ export function ControlledVegaLiteViewer({
   allowFullscreen = true,
   className = "",
   updateTrigger,
-  csvData = {}
+  data = {}
 }: ControlledVegaLiteViewerProps) {
   const [currentSpec, setCurrentSpec] = useState(spec)
   const [currentLayout, setCurrentLayout] = useState(layout)
@@ -43,16 +43,16 @@ export function ControlledVegaLiteViewer({
   const previousUpdateTrigger = useRef(updateTrigger)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Process spec with CSV data
+  // Process spec with data files (CSV and JSON)
   const processedSpec = (() => {
     try {
-      if (Object.keys(csvData).length > 0) {
-        const processed = loadCsvDataIntoSpec(currentSpec, csvData)
+      if (Object.keys(data).length > 0) {
+        const processed = loadCsvDataIntoSpec(currentSpec, data)
         return JSON.stringify(processed)
       }
       return currentSpec
     } catch (error) {
-      console.error('Erro ao processar CSV:', error)
+      console.error('Erro ao processar dados:', error)
       return currentSpec
     }
   })()
