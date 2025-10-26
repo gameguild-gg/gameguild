@@ -18,7 +18,7 @@ interface VegaLiteViewerProps {
   showControls?: boolean
   allowFullscreen?: boolean
   className?: string
-  csvData?: Record<string, string>
+  data?: Record<string, string>
 }
 
 export function VegaLiteViewer({ 
@@ -32,21 +32,21 @@ export function VegaLiteViewer({
   showControls = true,
   allowFullscreen = true,
   className = "",
-  csvData = {}
+  data = {}
 }: VegaLiteViewerProps) {
   const isDark = useDarkMode()
   const theme = isDark ? themeDark : themeLight
   
-  // Process spec with CSV data
+  // Process spec with data files (CSV and JSON)
   const processedSpec = (() => {
     try {
-      if (Object.keys(csvData).length > 0) {
-        const processed = loadCsvDataIntoSpec(spec, csvData)
+      if (Object.keys(data).length > 0) {
+        const processed = loadCsvDataIntoSpec(spec, data)
         return JSON.stringify(processed)
       }
       return spec
     } catch (error) {
-      console.error('Erro ao processar CSV:', error)
+      console.error('Erro ao processar dados:', error)
       return spec
     }
   })()

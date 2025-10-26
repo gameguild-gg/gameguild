@@ -49,7 +49,7 @@ interface VegaLiteExportProps {
   isValid: boolean
   disabled?: boolean
   className?: string
-  csvData?: Record<string, string>
+  data?: Record<string, string>
 }
 
 export function VegaLiteExport({ 
@@ -61,7 +61,7 @@ export function VegaLiteExport({
   isValid, 
   disabled = false,
   className = "",
-  csvData = {}
+  data = {}
 }: VegaLiteExportProps) {
   
   const isDark = useDarkMode()
@@ -72,12 +72,12 @@ export function VegaLiteExport({
     if (isDisabled) return
 
     try {
-      // Parse the specification and load CSV data
+      // Parse the specification and load data files
       let parsedSpec
       try {
-        // Process CSV data if available
-        if (Object.keys(csvData).length > 0) {
-          parsedSpec = loadCsvDataIntoSpec(spec, csvData)
+        // Process data files if available
+        if (Object.keys(data).length > 0) {
+          parsedSpec = loadCsvDataIntoSpec(spec, data)
         } else {
           parsedSpec = typeof spec === 'string' ? JSON.parse(spec) : spec
         }
@@ -204,12 +204,12 @@ export function VegaLiteExport({
     if (isDisabled) return
 
     try {
-      // Parse the specification and load CSV data
+      // Parse the specification and load data files
       let parsedSpec
       try {
-        // Process CSV data if available
-        if (Object.keys(csvData).length > 0) {
-          parsedSpec = loadCsvDataIntoSpec(spec, csvData)
+        // Process data files if available
+        if (Object.keys(data).length > 0) {
+          parsedSpec = loadCsvDataIntoSpec(spec, data)
         } else {
           parsedSpec = typeof spec === 'string' ? JSON.parse(spec) : spec
         }
