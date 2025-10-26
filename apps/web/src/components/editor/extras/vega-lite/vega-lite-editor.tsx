@@ -32,7 +32,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       theme: "default",
       themeMode: "system",
       layout: "rectangular",
-      csvData: {},
+      data: {},
     },
   )
   const [autoUpdate, setAutoUpdate] = useState(true)
@@ -50,7 +50,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
     theme: "default",
     themeMode: "system",
     layout: "rectangular",
-    csvData: {},
+    data: {},
   })
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -286,8 +286,8 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
 
               <div className="flex items-center gap-2 ml-auto">
                 <VegaLiteCsvManager
-                  csvData={data.csvData || {}}
-                  onCsvDataChange={(csvData) => setData((prev) => ({ ...prev, csvData }))}
+                  data={data.data || {}}
+                  onDataChange={(data) => setData((prev) => ({ ...prev, data }))}
                 />
                 <Button
                   variant="outline"
@@ -406,7 +406,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                           layout={previewData.layout}
                           title={previewData.title}
                           isValid={validationResult.isValid && previewSpec.trim() !== ""}
-                          csvData={previewData.csvData}
+                          data={previewData.data}
                         />
                       )
                     })()}
@@ -427,7 +427,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                         allowFullscreen={false}
                         className="h-full"
                         updateTrigger={manualUpdateKey}
-                        csvData={previewData.csvData}
+                        data={previewData.data}
                       />
                     )
                   })()}
