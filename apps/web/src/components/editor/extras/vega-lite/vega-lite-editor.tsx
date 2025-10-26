@@ -14,7 +14,7 @@ import { VegaLiteValidator, type VegaLiteValidationResult } from "./vega-lite-va
 import { VegaLiteExport } from "./vega-lite-export"
 import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer"
 import { getThemePair, AVAILABLE_THEMES, THEME_DESCRIPTIONS, THEME_MODE_DESCRIPTIONS } from "@/lib/vega-theme-helper"
-import { VegaLiteCsvManager } from "./vega-lite-csv-manager"
+import { VegaLiteManager } from "./vega-lite-manager"
 
 interface VegaLiteEditorProps {
   initialData?: VegaLiteData
@@ -285,7 +285,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
               )}
 
               <div className="flex items-center gap-2 ml-auto">
-                <VegaLiteCsvManager
+                <VegaLiteManager
                   data={data.data || {}}
                   onDataChange={(data) => setData((prev) => ({ ...prev, data }))}
                 />

@@ -20,7 +20,7 @@ interface VegaLiteCsvManagerProps {
   onDataChange: (data: Record<string, string>) => void
 }
 
-export function VegaLiteCsvManager({ data, onDataChange }: VegaLiteCsvManagerProps) {
+export function VegaLiteManager({ data, onDataChange }: VegaLiteCsvManagerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [copiedFile, setCopiedFile] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
