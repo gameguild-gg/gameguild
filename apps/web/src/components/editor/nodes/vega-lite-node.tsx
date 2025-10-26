@@ -33,8 +33,8 @@ export interface VegaLiteData {
   theme?: "default" | "excel" | "ggplot2" | "quartz" | "vox" | "fivethirtyeight" | "latimes" | "urbaninstitute" | "googlecharts" | "powerbi"
   themeMode?: "system" | "only-light" | "only-dark" // Mode for theme application
   layout?: "square" | "rectangular" // Layout option
-  // CSV data storage
-  csvData?: Record<string, string> // Map of filename -> CSV content
+  // Data storage - unified for CSV and JSON
+  data?: Record<string, string> // Map of filename -> file content (CSV or JSON)
 }
 
 export class VegaLiteNode extends DecoratorNode<JSX.Element> {
@@ -208,7 +208,7 @@ function VegaLiteComponent({ nodeKey, data }: VegaLiteComponentProps) {
               showControls={true}
               allowFullscreen={true}
               className=""
-              csvData={data.csvData}
+              data={data.data}
             />
           )
         })()}

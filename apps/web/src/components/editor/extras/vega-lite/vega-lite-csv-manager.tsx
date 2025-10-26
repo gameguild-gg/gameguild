@@ -4,7 +4,7 @@ import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Upload, Trash2, FileText, Copy, Check } from "lucide-react"
+import { Upload, Trash2, FileText, Copy, Check, FileJson } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -16,11 +16,11 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface VegaLiteCsvManagerProps {
-  csvData: Record<string, string>
-  onCsvDataChange: (csvData: Record<string, string>) => void
+  data: Record<string, string>
+  onDataChange: (data: Record<string, string>) => void
 }
 
-export function VegaLiteCsvManager({ csvData, onCsvDataChange }: VegaLiteCsvManagerProps) {
+export function VegaLiteCsvManager({ data, onDataChange }: VegaLiteCsvManagerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [copiedFile, setCopiedFile] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -29,28 +29,42 @@ export function VegaLiteCsvManager({ csvData, onCsvDataChange }: VegaLiteCsvMana
     const files = event.target.files
     if (!files || files.length === 0) return
 
-    const newCsvData = { ...csvData }
+    const newData = { ...data }
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       if (!file) continue
       
+      const filename = file.name
+      const isCSV = filename.endsWith('.csv')
+      const isJSON = filename.endsWith('.json')
+      
       // Validate file type
-      if (!file.name.endsWith('.csv')) {
-        alert(`Arquivo "${file.name}" não é CSV. Por favor, envie apenas arquivos .csv`)
+      if (!isCSV && !isJSON) {
+        alert(`Arquivo "${filename}" não é CSV ou JSON. Por favor, envie apenas arquivos .csv ou .json`)
         continue
       }
 
       try {
         const content = await file.text()
-        newCsvData[file.name] = content
+        
+        // Validate JSON files
+        if (isJSON) {
+          JSON.parse(content) // Throws if invalid
+        }
+        
+        newData[filename] = content
       } catch (error) {
-        console.error(`Erro ao ler arquivo ${file.name}:`, error)
-        alert(`Erro ao ler arquivo "${file.name}"`)
+        console.error(`Erro ao ler arquivo ${filename}:`, error)
+        if (isJSON) {
+          alert(`Erro ao ler arquivo "${filename}". Verifique se é um JSON válido.`)
+        } else {
+          alert(`Erro ao ler arquivo "${filename}"`)
+        }
       }
     }
 
-    onCsvDataChange(newCsvData)
+    onDataChange(newData)
     
     // Reset input
     if (fileInputRef.current) {
@@ -59,9 +73,9 @@ export function VegaLiteCsvManager({ csvData, onCsvDataChange }: VegaLiteCsvMana
   }
 
   const handleDelete = (filename: string) => {
-    const newCsvData = { ...csvData }
-    delete newCsvData[filename]
-    onCsvDataChange(newCsvData)
+    const newData = { ...data }
+    delete newData[filename]
+    onDataChange(newData)
   }
 
   const handleCopyUrl = (filename: string) => {
@@ -71,7 +85,14 @@ export function VegaLiteCsvManager({ csvData, onCsvDataChange }: VegaLiteCsvMana
     setTimeout(() => setCopiedFile(null), 2000)
   }
 
-  const fileCount = Object.keys(csvData).length
+  const totalCount = Object.keys(data).length
+
+  const getFileIcon = (filename: string) => {
+    if (filename.endsWith('.json')) {
+      return <FileJson className="h-4 w-4 text-blue-500 flex-shrink-0" />
+    }
+    return <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -82,32 +103,32 @@ export function VegaLiteCsvManager({ csvData, onCsvDataChange }: VegaLiteCsvMana
           className="gap-2"
         >
           <FileText className="h-4 w-4" />
-          Dados CSV
-          {fileCount > 0 && (
+          Dados
+          {totalCount > 0 && (
             <span className="ml-1 rounded-full bg-blue-500 px-2 py-0.5 text-xs text-white">
-              {fileCount}
+              {totalCount}
             </span>
           )}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Gerenciar Dados CSV</DialogTitle>
+          <DialogTitle>Gerenciar Dados</DialogTitle>
           <DialogDescription>
-            Envie arquivos CSV para usar no seu gráfico Vega-Lite. Os arquivos serão salvos junto com a especificação.
+            Envie arquivos CSV ou JSON para usar no seu gráfico Vega-Lite. Os arquivos serão salvos junto com a especificação.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-4">
           {/* Upload Section */}
           <div className="space-y-2">
-            <Label htmlFor="csv-upload">Enviar arquivos CSV</Label>
+            <Label htmlFor="data-upload">Enviar arquivos CSV ou JSON</Label>
             <div className="flex gap-2">
               <Input
-                id="csv-upload"
+                id="data-upload"
                 ref={fileInputRef}
                 type="file"
-                accept=".csv"
+                accept=".csv,.json"
                 multiple
                 onChange={handleFileUpload}
                 className="flex-1"
@@ -127,20 +148,22 @@ export function VegaLiteCsvManager({ csvData, onCsvDataChange }: VegaLiteCsvMana
           <Alert>
             <FileText className="h-4 w-4" />
             <AlertDescription>
-              <strong>Como usar:</strong> Após enviar um arquivo CSV, use a URL{" "}
-              <code className="bg-muted px-1 py-0.5 rounded text-sm">data:nome-do-arquivo.csv</code>{" "}
+              <strong>Como usar:</strong> Após enviar um arquivo, use a URL{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-sm">data:arquivo.csv</code> ou{" "}
+              <code className="bg-muted px-1 py-0.5 rounded text-sm">data:arquivo.json</code>{" "}
               na especificação Vega-Lite.
             </AlertDescription>
           </Alert>
 
           {/* Files List */}
-          {fileCount > 0 ? (
+          {totalCount > 0 ? (
             <div className="space-y-2">
-              <Label>Arquivos enviados ({fileCount})</Label>
+              <Label>Arquivos enviados ({totalCount})</Label>
               <div className="border rounded-md divide-y max-h-[300px] overflow-y-auto">
-                {Object.entries(csvData).map(([filename, content]) => {
+                {Object.entries(data).map(([filename, content]) => {
                   const lines = content.split('\n').filter(l => l.trim())
                   const sizeKb = (new Blob([content]).size / 1024).toFixed(1)
+                  const fileType = filename.endsWith('.json') ? 'JSON' : 'CSV'
                   
                   return (
                     <div
@@ -149,8 +172,11 @@ export function VegaLiteCsvManager({ csvData, onCsvDataChange }: VegaLiteCsvMana
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          {getFileIcon(filename)}
                           <span className="font-mono text-sm truncate">{filename}</span>
+                          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                            {fileType}
+                          </span>
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
                           {lines.length} linhas • {sizeKb} KB
@@ -195,8 +221,8 @@ export function VegaLiteCsvManager({ csvData, onCsvDataChange }: VegaLiteCsvMana
           ) : (
             <div className="text-center py-8 text-muted-foreground border rounded-md border-dashed">
               <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Nenhum arquivo CSV enviado ainda</p>
-              <p className="text-xs mt-1">Clique em "Selecionar" para enviar arquivos</p>
+              <p className="text-sm">Nenhum arquivo enviado ainda</p>
+              <p className="text-xs mt-1">Envie arquivos CSV ou JSON para usar nos gráficos</p>
             </div>
           )}
         </div>
