@@ -8,6 +8,7 @@ export default {
   icon: BarChart3,
   category: "single-view-plots",
   subcategory: "bar-charts",
+  previewImage: "simple-bar.png",
   spec: {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "description": "A simple bar chart with embedded data.",
