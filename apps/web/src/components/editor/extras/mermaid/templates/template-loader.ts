@@ -10,6 +10,7 @@ export interface MermaidTemplate {
   code: string
   preview: string
   category: string
+  previewImage?: string // Optional preview image filename
 }
 
 /**
