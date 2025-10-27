@@ -16,6 +16,7 @@ export interface VegaLiteTemplate {
   category: string
   subcategory: string
   spec: Record<string, any>
+  previewImage?: string  // Path to preview image (e.g., "simple-bar.png")
 }
 
 export interface TemplateCategory {
