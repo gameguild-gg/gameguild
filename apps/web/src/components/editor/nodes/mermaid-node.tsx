@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Edit, Trash2, ZoomIn, ZoomOut, RotateCcw, Maximize2, X } from "lucide-react"
 import { MermaidEditor } from "@/components/editor/extras/mermaid/mermaid-editor"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
+import { ControlledMermaidViewer } from "@/components/editor/extras/mermaid/controlled-mermaid-viewer"
 import type { JSX } from "react/jsx-runtime"
 
 export interface MermaidData {
@@ -99,9 +100,6 @@ function MermaidComponent({ nodeKey, data }: MermaidComponentProps) {
   const [editor] = useLexicalComposerContext()
   const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
   const [showEditor, setShowEditor] = useState(false)
-  const [svgContent, setSvgContent] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string>("")
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
   const [zoom, setZoom] = useState(100)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -171,51 +169,6 @@ function MermaidComponent({ nodeKey, data }: MermaidComponentProps) {
       setFullscreenZoom(100) // Reset fullscreen zoom when opening
     }
   }
-
-  useEffect(() => {
-    const renderDiagram = async () => {
-      if (!data.code || !mermaidRef.current) return
-
-      setIsLoading(true)
-      setError("")
-
-      try {
-        // Dynamic import to ensure mermaid is loaded
-        const mermaid = (await import("mermaid")).default
-
-        // Initialize mermaid with proper configuration
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: "default",
-          securityLevel: "loose",
-          fontFamily: "inherit",
-          flowchart: {
-            useMaxWidth: true,
-            htmlLabels: true,
-          },
-        })
-
-        // Generate unique ID for this diagram
-        const id = `mermaid-${nodeKey}-${Date.now()}`
-
-        // Clear any existing content
-        setSvgContent("")
-
-        // Render the diagram
-        const { svg } = await mermaid.render(id, data.code)
-        setSvgContent(svg)
-        setError("")
-      } catch (err: any) {
-        console.error("Error rendering Mermaid diagram:", err)
-        setError(err?.message || "Failed to render diagram")
-        setSvgContent("")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    renderDiagram()
-  }, [data.code, nodeKey])
 
   useEffect(() => {
     return mergeRegister(
@@ -322,29 +275,15 @@ function MermaidComponent({ nodeKey, data }: MermaidComponentProps) {
             </Button>
           </div>
 
-          {/* Zoom Controls */}
+          {/* Diagram Content */}
           <div className="w-full flex justify-center items-center min-h-[500px] relative overflow-auto max-h-[700px]">
-            {isLoading ? (
-              <div className="text-gray-500 dark:text-gray-400">Rendering diagram...</div>
-            ) : error ? (
-              <div className="text-red-500 p-4 border border-red-300 rounded bg-red-50 dark:bg-red-900/20 dark:border-red-700 max-w-full">
-                <div className="font-medium">Error rendering diagram:</div>
-                <div className="text-sm mt-1">{error}</div>
-              </div>
-            ) : svgContent ? (
-              <div
-                className="flex justify-center items-center transition-transform duration-200 ease-in-out"
-                style={{
-                  transform: `scale(${zoom / 100})`,
-                  transformOrigin: "center",
-                  minWidth: data.type === "sequence" ? "600px" : "auto",
-                  minHeight: data.type === "sequence" ? "400px" : "auto",
-                }}
-                dangerouslySetInnerHTML={{ __html: svgContent }}
-              />
-            ) : (
-              <div className="text-gray-500 dark:text-gray-400">Click Edit to create your diagram</div>
-            )}
+            <ControlledMermaidViewer
+              data={data}
+              zoom={zoom}
+              className="w-full min-h-[500px]"
+              showError={true}
+              showLoading={true}
+            />
           </div>
 
           {data.caption && (
@@ -440,25 +379,13 @@ function MermaidComponent({ nodeKey, data }: MermaidComponentProps) {
 
             {/* Fullscreen Content */}
             <div className="flex-1 flex items-center justify-center p-8 overflow-auto bg-gray-50 dark:bg-gray-900">
-              {isLoading ? (
-                <div className="text-gray-700 dark:text-white">Rendering diagram...</div>
-              ) : error ? (
-                <div className="text-red-600 dark:text-red-400 p-4 border border-red-300 dark:border-red-600 rounded bg-red-50 dark:bg-red-900/20 max-w-full">
-                  <div className="font-medium">Error rendering diagram:</div>
-                  <div className="text-sm mt-1">{error}</div>
-                </div>
-              ) : svgContent ? (
-                <div
-                  className="transition-transform duration-200 ease-in-out"
-                  style={{
-                    transform: `scale(${fullscreenZoom / 100})`,
-                    transformOrigin: "center",
-                  }}
-                  dangerouslySetInnerHTML={{ __html: svgContent }}
-                />
-              ) : (
-                <div className="text-gray-500 dark:text-gray-400">No diagram to display</div>
-              )}
+              <ControlledMermaidViewer
+                data={data}
+                zoom={fullscreenZoom}
+                className="w-full min-h-full"
+                showError={true}
+                showLoading={true}
+              />
             </div>
 
             {/* Fullscreen Footer */}
