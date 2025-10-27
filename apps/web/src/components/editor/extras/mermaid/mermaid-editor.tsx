@@ -10,6 +10,7 @@ import type { MermaidData } from "@/components/editor/nodes/mermaid-node"
 import { MermaidTemplateSelector } from "./mermaid-template-selector"
 import { MonacoMermaidEditor } from "./monaco-mermaid-editor"
 import { MermaidValidator, type MermaidValidationResult } from "./mermaid-validator"
+import { ControlledMermaidViewer } from "./controlled-mermaid-viewer"
 
 interface MermaidEditorProps {
   initialData?: MermaidData
@@ -28,116 +29,57 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
     },
   )
   const [autoUpdate, setAutoUpdate] = useState(true)
-  const [svgContent, setSvgContent] = useState<string>("")
   const [lastValidSvg, setLastValidSvg] = useState<string>("")
   const [showTemplateSelector, setShowTemplateSelector] = useState(!initialData)
-  const [error, setError] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [renderError, setRenderError] = useState<string>("")
   const [validationResult, setValidationResult] = useState<MermaidValidationResult>({ isValid: true })
   const [zoomLevel, setZoomLevel] = useState(100)
   const [errorPanelCollapsed, setErrorPanelCollapsed] = useState(false)
   const [alwaysCollapseErrors, setAlwaysCollapseErrors] = useState(false)
-  const previewRef = useRef<HTMLDivElement>(null)
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  const renderDiagram = async (code: string, forceValidation = false) => {
-    if (!code.trim()) {
-      setSvgContent("")
-      setLastValidSvg("")
-      setError("")
-      return
-    }
-
-    setIsLoading(true)
-    setError("")
-
-    try {
-      // Always validate before rendering if forced or if current validation is invalid
-      let currentValidation = validationResult
-      if (forceValidation || !validationResult.isValid) {
-        currentValidation = await MermaidValidator.validateCode(code)
-        setValidationResult(currentValidation)
-      }
-
-      // Stop rendering if validation fails
-      if (!currentValidation.isValid) {
-        setError(currentValidation.error || "Invalid Mermaid code")
-        setIsLoading(false)
-        return
-      }
-
-      // Dynamic import to ensure mermaid is loaded
-      const mermaid = (await import("mermaid")).default
-
-      // Initialize mermaid with proper configuration
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: "default",
-        securityLevel: "loose",
-        fontFamily: "inherit",
-        flowchart: {
-          useMaxWidth: true,
-          htmlLabels: true,
-        },
-        logLevel: "error",
-        suppressErrorRendering: true, // Ativado para evitar renderização de erros
-      })
-
-      // Generate unique ID for this diagram
-      const id = `mermaid-editor-${Date.now()}`
-
-      try {
-        const { svg } = await mermaid.render(id, code)
-        setSvgContent(svg)
-        setLastValidSvg(svg)
-        setError("")
-      } catch (renderError: any) {
-        console.error("Mermaid render error:", renderError)
-
-        const errorMessage = renderError?.message || "Failed to render diagram"
-
-        // Set validation as invalid if render fails
-        setValidationResult({ isValid: false, error: errorMessage })
-        setError(`Render error: ${errorMessage}`)
-      }
-    } catch (err: any) {
-      console.error("Error loading Mermaid:", err)
-      setError("Failed to load Mermaid library. Please try again.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleCodeChange = (newCode: string | undefined) => {
     const code = newCode || ""
     setData((prev) => ({ ...prev, code }))
 
     if (autoUpdate) {
-      // Debounce the update with forced validation
+      // Debounce the validation
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current)
       }
-      updateTimeoutRef.current = setTimeout(() => {
-        renderDiagram(code, true) // Force validation
+      updateTimeoutRef.current = setTimeout(async () => {
+        if (code.trim()) {
+          const result = await MermaidValidator.validateCode(code)
+          setValidationResult(result)
+        } else {
+          setValidationResult({ isValid: true })
+        }
       }, 500)
+    }
+  }
+
+  const handleManualUpdate = async () => {
+    if (!data.code.trim()) {
+      setRenderError("Please enter some Mermaid code")
+      return
+    }
+
+    const result = await MermaidValidator.validateCode(data.code)
+    setValidationResult(result)
+
+    if (!result.isValid) {
+      setRenderError("Cannot update diagram with syntax errors. Please fix the errors first.")
     }
   }
 
   const handleValidationChange = (result: MermaidValidationResult) => {
     setValidationResult(result)
 
-    if (!result.isValid) {
-      setError(result.error || "Invalid Mermaid code")
-      if (!alwaysCollapseErrors) {
-        setErrorPanelCollapsed(false)
-      }
-    } else {
+    if (!result.isValid && !alwaysCollapseErrors) {
+      setErrorPanelCollapsed(false)
+    } else if (result.isValid) {
       setErrorPanelCollapsed(true)
     }
-  }
-
-  const handleManualUpdate = () => {
-    renderDiagram(data.code, true) // Force validation
   }
 
   const handleTemplateSelect = (template: { type: MermaidData["type"]; code: string }) => {
@@ -147,31 +89,21 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
       code: template.code,
     }))
     setShowTemplateSelector(false)
-    if (autoUpdate) {
-      renderDiagram(template.code)
-    }
   }
 
   const handleSave = () => {
     if (!data.code.trim()) {
-      setError("Please enter some Mermaid code")
+      setRenderError("Please enter some Mermaid code")
       return
     }
 
     if (!validationResult.isValid) {
-      setError("Cannot save diagram with syntax errors. Please fix the errors first.")
+      setRenderError("Cannot save diagram with syntax errors. Please fix the errors first.")
       return
     }
 
     onSave(data)
   }
-
-  // Initial render
-  useEffect(() => {
-    if (initialData?.code && autoUpdate) {
-      renderDiagram(initialData.code, true) // Force validation
-    }
-  }, [])
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -356,7 +288,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                               <span>Syntax Error</span>
                             </div>
                             <div className="text-sm whitespace-pre-line font-mono bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800 p-3 rounded-lg shadow-sm">
-                              {validationResult.error || error}
+                              {validationResult.error || "Unknown error"}
                             </div>
                             <div className="mt-3 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-2 rounded border border-red-200 dark:border-red-800">
                               💡 <strong>Tip:</strong> Check your Mermaid syntax and make sure all connections are
@@ -413,51 +345,26 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                   </div>
                 </div>
                 <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
-                        Rendering diagram...
-                      </div>
-                    </div>
-                  ) : error && !svgContent && !lastValidSvg ? (
-                    <div className="text-red-500 dark:text-red-400 p-4 border border-red-300 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-950/30 shadow-sm">
+                  {renderError && (
+                    <div className="mb-4 text-red-500 dark:text-red-400 p-4 border border-red-300 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-950/30 shadow-sm">
                       <div className="font-medium mb-2 flex items-center gap-1">
                         <span>⚠️</span>
-                        <span>Diagram Error</span>
+                        <span>Editor Error</span>
                       </div>
-                      <div className="text-sm whitespace-pre-line">{error}</div>
-                      <div className="mt-3 text-xs text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/40 p-2 rounded border border-red-200 dark:border-red-800">
-                        💡 <strong>Tip:</strong> Check your Mermaid syntax and make sure all connections are properly
-                        formed.
-                      </div>
-                    </div>
-                  ) : svgContent || lastValidSvg ? (
-                    <div className="relative">
-                      {error && (
-                        <div className="absolute top-2 right-2 z-10 bg-red-100 dark:bg-red-900/90 border border-red-300 dark:border-red-700 rounded-lg p-2 shadow-lg max-w-xs backdrop-blur-sm">
-                          <div className="flex items-center gap-1 text-red-700 dark:text-red-300 text-xs">
-                            <AlertCircle className="h-3 w-3" />
-                            <span className="font-medium">Syntax Error</span>
-                          </div>
-                          <div className="text-xs text-red-600 dark:text-red-400 mt-1">Showing last valid diagram</div>
-                        </div>
-                      )}
-                      <div
-                        ref={previewRef}
-                        className="flex justify-center items-start p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm"
-                        style={{ transform: `scale(${zoomLevel / 100})`, transformOrigin: "top center" }}
-                        dangerouslySetInnerHTML={{ __html: svgContent || lastValidSvg }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                      <div className="text-center">
-                        <FileText className="h-12 w-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" />
-                        <p>Enter Mermaid code to see preview</p>
-                      </div>
+                      <div className="text-sm whitespace-pre-line">{renderError}</div>
                     </div>
                   )}
+                  <ControlledMermaidViewer
+                    data={data}
+                    zoom={zoomLevel}
+                    className="min-h-[400px]"
+                    showError={true}
+                    showLoading={true}
+                    onRenderSuccess={(svg) => setLastValidSvg(svg)}
+                    onRenderError={() => {
+                      // Errors are handled by the component itself
+                    }}
+                  />
                 </div>
               </div>
             </div>
