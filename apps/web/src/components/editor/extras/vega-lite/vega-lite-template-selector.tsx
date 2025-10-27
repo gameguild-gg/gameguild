@@ -111,39 +111,50 @@ export function VegaLiteTemplateSelector({ onSelect, onCancel }: VegaLiteTemplat
   }
 
   return (
-    <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
-              Choose a Chart Template
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Start with a template and customize it to your needs
-            </p>
+    <div 
+      className="flex flex-col h-[80vh] border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 overflow-hidden"
+      onWheel={(e) => {
+        e.stopPropagation()
+        e.preventDefault()
+      }}
+      onTouchMove={(e) => {
+        e.stopPropagation()
+        e.preventDefault()
+      }}
+    >
+      <div className="flex-none p-6 pb-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                Choose a Chart Template
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Start with a template and customize it to your needs
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <Button variant="ghost" size="sm" onClick={onCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
 
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search templates..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-            />
+          {/* Search */}
+          <div className="mb-4">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search templates..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Category Navigation */}
-        {!searchTerm && (
-          <div className="mb-6">
-            <div className="flex gap-2 mb-4 flex-wrap">
+          {/* Category Navigation */}
+          {!searchTerm && (
+            <div className="mb-4">
+              <div className="flex gap-2 mb-3 flex-wrap">
               <Button
                 variant={selectedCategory === "all" ? "default" : "outline"}
                 size="sm"
@@ -192,85 +203,101 @@ export function VegaLiteTemplateSelector({ onSelect, onCancel }: VegaLiteTemplat
             )}
           </div>
         )}
+        </div>
+      </div>
 
-        {/* Template Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-          {filteredTemplates.map((template) => {
-            const IconComponent = template.icon
-            return (
-              <Card
-                key={template.id}
-                className="cursor-pointer hover:shadow-lg transition-all duration-200 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 bg-white dark:bg-gray-800"
-                onClick={() => handleTemplateSelect(template)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                      <IconComponent className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {template.title}
-                      </CardTitle>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 capitalize mt-1">
-                        {template.subcategory.replace(/-/g, ' ')}
+      {/* Scrollable Template Area */}
+      <div 
+        className="flex-1 overflow-y-auto px-6 pb-6"
+        onWheel={(e) => {
+          e.stopPropagation()
+          // Allow internal scrolling but prevent propagation
+        }}
+        onTouchMove={(e) => {
+          e.stopPropagation()
+          // Allow internal scrolling but prevent propagation
+        }}
+      >
+        <div className="max-w-6xl mx-auto">
+          {/* Template Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
+            {filteredTemplates.map((template) => {
+              const IconComponent = template.icon
+              return (
+                <Card
+                  key={template.id}
+                  className="cursor-pointer hover:shadow-lg transition-all duration-200 border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 bg-white dark:bg-gray-800"
+                  onClick={() => handleTemplateSelect(template)}
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                        <IconComponent className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {template.title}
+                        </CardTitle>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 capitalize mt-1">
+                          {template.subcategory.replace(/-/g, ' ')}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <CardDescription className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                    {template.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-
-        {filteredTemplates.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 dark:text-gray-600 mb-2">
-              <Search className="h-12 w-12 mx-auto" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
-              No templates found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-300">
-              Try adjusting your search or filter criteria
-            </p>
-          </div>
-        )}
-
-        {/* Custom Template Option */}
-        <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-          <Card
-            className="cursor-pointer hover:shadow-lg transition-all duration-200 border-dashed border-2 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 bg-gray-50 dark:bg-gray-800/50"
-            onClick={() => onSelect({ 
-              type: "custom", 
-              spec: JSON.stringify({
-                "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-                "data": {
-                  "values": []
-                },
-                "mark": "point",
-                "encoding": {}
-              }, null, 2), 
-              title: "Custom Chart" 
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <CardDescription className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {template.description}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              )
             })}
-          >
-            <CardContent className="p-6 text-center">
-              <div className="p-3 rounded-lg bg-gray-200 dark:bg-gray-700 inline-block mb-3">
-                <BarChart3 className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+          </div>
+
+          {filteredTemplates.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 dark:text-gray-600 mb-2">
+                <Search className="h-12 w-12 mx-auto" />
               </div>
-              <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-1">
-                Start from Blank
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
+                No templates found
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Create your own custom Vega-Lite specification
+              <p className="text-gray-600 dark:text-gray-300">
+                Try adjusting your search or filter criteria
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          )}
+
+          {/* Custom Template Option */}
+          <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+            <Card
+              className="cursor-pointer hover:shadow-lg transition-all duration-200 border-dashed border-2 border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 bg-gray-50 dark:bg-gray-800/50"
+              onClick={() => onSelect({ 
+                type: "custom", 
+                spec: JSON.stringify({
+                  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+                  "data": {
+                    "values": []
+                  },
+                  "mark": "point",
+                  "encoding": {}
+                }, null, 2), 
+                title: "Custom Chart" 
+              })}
+            >
+              <CardContent className="p-6 text-center">
+                <div className="p-3 rounded-lg bg-gray-200 dark:bg-gray-700 inline-block mb-3">
+                  <BarChart3 className="h-6 w-6 text-gray-600 dark:text-gray-400" />
+                </div>
+                <h3 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-1">
+                  Start from Blank
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Create your own custom Vega-Lite specification
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
     </div>
