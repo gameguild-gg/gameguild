@@ -102,6 +102,69 @@ async function loadTemplatesFromFolder(): Promise<VegaLiteTemplate[]> {
     const stackedBar = await import("./single-view-plots/bar-charts/stacked-bar")
     templates.push(stackedBar.default)
 
+    const responsiveBar = await import("./single-view-plots/bar-charts/responsive-bar")
+    templates.push(responsiveBar.default)
+
+    const aggregateBar = await import("./single-view-plots/bar-charts/aggregate-bar")
+    templates.push(aggregateBar.default)
+
+    const aggregateBarSorted = await import("./single-view-plots/bar-charts/aggregate-bar-sorted")
+    templates.push(aggregateBarSorted.default)
+
+    const groupedBarMultiMeasure = await import("./single-view-plots/bar-charts/grouped-bar-multi-measure")
+    templates.push(groupedBarMultiMeasure.default)
+
+    const stackedBarRounded = await import("./single-view-plots/bar-charts/stacked-bar-rounded")
+    templates.push(stackedBarRounded.default)
+
+    const horizontalStackedBar = await import("./single-view-plots/bar-charts/horizontal-stacked-bar")
+    templates.push(horizontalStackedBar.default)
+
+    const normalizedStackedBar = await import("./single-view-plots/bar-charts/normalized-stacked-bar")
+    templates.push(normalizedStackedBar.default)
+
+    const normalizedStackedLabels = await import("./single-view-plots/bar-charts/normalized-stacked-labels")
+    templates.push(normalizedStackedLabels.default)
+
+    const ganttChart = await import("./single-view-plots/bar-charts/gantt-chart")
+    templates.push(ganttChart.default)
+
+    const barEncodingColor = await import("./single-view-plots/bar-charts/bar-encoding-color")
+    templates.push(barEncodingColor.default)
+
+    const layeredBar = await import("./single-view-plots/bar-charts/layered-bar")
+    templates.push(layeredBar.default)
+
+    const divergingStackedBar = await import("./single-view-plots/bar-charts/diverging-stacked-bar")
+    templates.push(divergingStackedBar.default)
+
+    const divergingStackedNeutral = await import("./single-view-plots/bar-charts/diverging-stacked-neutral")
+    templates.push(divergingStackedNeutral.default)
+
+    const barWithLabels = await import("./single-view-plots/bar-charts/bar-with-labels")
+    templates.push(barWithLabels.default)
+
+    const barLabelOverlays = await import("./single-view-plots/bar-charts/bar-label-overlays")
+    templates.push(barLabelOverlays.default)
+
+    const barMonthInitials = await import("./single-view-plots/bar-charts/bar-month-initials")
+    templates.push(barMonthInitials.default)
+
+    const barCenterAligned = await import("./single-view-plots/bar-charts/bar-center-aligned")
+    templates.push(barCenterAligned.default)
+
+    const barNegativeValues = await import("./single-view-plots/bar-charts/bar-negative-values")
+    templates.push(barNegativeValues.default)
+
+    const horizontalBarNegative = await import("./single-view-plots/bar-charts/horizontal-bar-negative")
+    templates.push(horizontalBarNegative.default)
+
+    const barSpacingSaving = await import("./single-view-plots/bar-charts/bar-spacing-saving")
+    templates.push(barSpacingSaving.default)
+
+    const heatLaneChart = await import("./single-view-plots/bar-charts/heat-lane-chart")
+    templates.push(heatLaneChart.default)
+
     // Single-View Plots - Line Charts
     const simpleLine = await import("./single-view-plots/line-charts/simple-line")
     templates.push(simpleLine.default)
