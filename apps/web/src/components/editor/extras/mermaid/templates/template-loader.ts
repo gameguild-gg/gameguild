@@ -98,6 +98,14 @@ async function loadTemplatesFromFolder(): Promise<MermaidTemplate[]> {
     // Sankey Diagram
     const basicSankey = await import("./sankey")
     templates.push(basicSankey.default)
+
+    // User Journey
+    const basicUserJourney = await import("./user-journey")
+    templates.push(basicUserJourney.default)
+
+    // Treemap Chart
+    const basicTreemap = await import("./treemap-beta")
+    templates.push(basicTreemap.default)
   } catch (error) {
     console.error("Error loading Mermaid templates:", error)
   }
