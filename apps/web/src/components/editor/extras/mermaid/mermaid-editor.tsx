@@ -10,7 +10,7 @@ import type { MermaidData } from "@/components/editor/nodes/mermaid-node"
 import { MermaidTemplateSelector } from "./mermaid-template-selector"
 import { MonacoMermaidEditor } from "./monaco-mermaid-editor"
 import { MermaidValidator, type MermaidValidationResult } from "./mermaid-validator"
-import { ControlledMermaidViewer } from "./controlled-mermaid-viewer"
+import { MermaidViewer } from "@/components/ui/mermaid-viewer"
 
 interface MermaidEditorProps {
   initialData?: MermaidData
@@ -33,7 +33,6 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
   const [showTemplateSelector, setShowTemplateSelector] = useState(!initialData)
   const [renderError, setRenderError] = useState<string>("")
   const [validationResult, setValidationResult] = useState<MermaidValidationResult>({ isValid: true })
-  const [zoomLevel, setZoomLevel] = useState(100)
   const [errorPanelCollapsed, setErrorPanelCollapsed] = useState(false)
   const [alwaysCollapseErrors, setAlwaysCollapseErrors] = useState(false)
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -113,19 +112,6 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
       }
     }
   }, [])
-
-  // Functions for zoom control
-  const handleZoomIn = () => {
-    setZoomLevel((prev) => Math.min(prev + 25, 300))
-  }
-
-  const handleZoomOut = () => {
-    setZoomLevel((prev) => Math.max(prev - 25, 25))
-  }
-
-  const handleZoomReset = () => {
-    setZoomLevel(100)
-  }
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -305,44 +291,10 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
               {/* Right Panel - Preview */}
               <div className="w-1/2 flex flex-col bg-white dark:bg-gray-900">
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
-                      <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      Live Preview
-                    </h3>
-                    {/* Zoom Controls */}
-                    <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleZoomOut}
-                        disabled={zoomLevel <= 25}
-                        className="h-7 w-7 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 bg-transparent"
-                      >
-                        -
-                      </Button>
-                      <span className="text-sm font-mono min-w-[4rem] text-center text-gray-700 dark:text-gray-300 px-2">
-                        {zoomLevel}%
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleZoomIn}
-                        disabled={zoomLevel >= 300}
-                        className="h-7 w-7 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700"
-                      >
-                        +
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleZoomReset}
-                        className="h-7 px-2 text-xs border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 bg-transparent"
-                      >
-                        Reset
-                      </Button>
-                    </div>
-                  </div>
+                  <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                    <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    Live Preview
+                  </h3>
                 </div>
                 <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
                   {renderError && (
@@ -354,16 +306,12 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                       <div className="text-sm whitespace-pre-line">{renderError}</div>
                     </div>
                   )}
-                  <ControlledMermaidViewer
+                  <MermaidViewer
                     data={data}
-                    zoom={zoomLevel}
+                    size={100}
+                    showControls={true}
+                    allowFullscreen={true}
                     className="min-h-[400px]"
-                    showError={true}
-                    showLoading={true}
-                    onRenderSuccess={(svg) => setLastValidSvg(svg)}
-                    onRenderError={() => {
-                      // Errors are handled by the component itself
-                    }}
                   />
                 </div>
               </div>
