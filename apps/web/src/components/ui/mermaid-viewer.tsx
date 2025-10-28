@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from "react"
 import { GitBranch, ZoomIn, ZoomOut, RotateCcw, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { MermaidData } from "@/components/editor/nodes/mermaid-node"
+import { getMermaidThemePair, getCurrentMermaidTheme, type MermaidTheme } from "@/lib/mermaid-theme-helper"
+import { getMermaidConfigWithDarkTheme } from "@/lib/mermaid-dark-themes"
+import { useTheme } from "next-themes"
 
 interface MermaidViewerProps {
   data: MermaidData
@@ -44,6 +47,17 @@ export function MermaidViewer({
   const containerRef = useRef<HTMLDivElement>(null)
   const fullscreenContainerRef = useRef<HTMLDivElement>(null)
   const svgRef = useRef<HTMLDivElement>(null)
+
+  // Get current theme
+  const { theme: systemTheme, resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === "dark"
+
+  // Calculate the actual theme to use
+  const themePair = getMermaidThemePair(
+    (data.theme as MermaidTheme) || "default",
+    (data.themeMode as any) || "system",
+  )
+  const currentTheme = getCurrentMermaidTheme(themePair.themeLight, themePair.themeDark, isDarkMode)
 
   // Calcula o fator de escala para que o SVG se ajuste ao container (100% = fit-to-container)
   const calculateBaseScale = () => {
@@ -135,18 +149,28 @@ export function MermaidViewer({
 
         await new Promise<void>((resolve, reject) => {
           try {
-            mermaid.initialize({
-              startOnLoad: false,
-              theme: "default",
-              securityLevel: "loose",
-              fontFamily: "inherit",
-              flowchart: {
-                useMaxWidth: true,
-                htmlLabels: true,
-              },
-              logLevel: "error",
-              suppressErrorRendering: true,
-            })
+            // Check if using a custom dark theme
+            if (currentTheme.endsWith("-dark")) {
+              // Use custom dark theme configuration
+              const config = getMermaidConfigWithDarkTheme(
+                currentTheme as "default-dark" | "forest-dark" | "neutral-dark" | "base-dark"
+              )
+              mermaid.initialize(config)
+            } else {
+              // Use standard Mermaid theme
+              mermaid.initialize({
+                startOnLoad: false,
+                theme: currentTheme as "default" | "dark" | "forest" | "neutral" | "base",
+                securityLevel: "loose",
+                fontFamily: "inherit",
+                flowchart: {
+                  useMaxWidth: true,
+                  htmlLabels: true,
+                },
+                logLevel: "error",
+                suppressErrorRendering: true,
+              })
+            }
             resolve()
           } catch (initError) {
             reject(initError)
@@ -198,7 +222,7 @@ export function MermaidViewer({
     }
 
     renderDiagram()
-  }, [data.code])
+  }, [data.code, currentTheme])
 
   // Handle escape key for fullscreen
   useEffect(() => {
