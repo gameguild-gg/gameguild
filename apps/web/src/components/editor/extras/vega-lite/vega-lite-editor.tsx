@@ -15,6 +15,7 @@ import { VegaLiteExport } from "./vega-lite-export"
 import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer"
 import { getThemePair, AVAILABLE_THEMES, THEME_DESCRIPTIONS, THEME_MODE_DESCRIPTIONS } from "@/lib/vega-theme-helper"
 import { VegaLiteManager } from "./vega-lite-manager"
+import { useTheme } from "next-themes"
 
 interface VegaLiteEditorProps {
   initialData?: VegaLiteData
@@ -23,6 +24,9 @@ interface VegaLiteEditorProps {
 }
 
 export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditorProps) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === "dark"
+  
   const [data, setData] = useState<VegaLiteData>(
     initialData || {
       spec: "",
@@ -320,7 +324,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                         onChange={handleSpecChange}
                         onValidationChange={handleValidationChange}
                         height="100%"
-                        theme="light"
+                        theme={isDarkMode ? "dark" : "light"}
                       />
                     </div>
                   </div>
