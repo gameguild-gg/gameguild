@@ -155,7 +155,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Vega-Lite Chart Editor</h2>
@@ -214,7 +214,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
         {!showTemplateSelector && (
           <>
             {/* Settings Bar */}
-            <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+            <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <div className="flex items-center gap-2">
                 <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Title:
@@ -307,8 +307,8 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
             {/* Editor Content */}
             <div className="flex-1 flex min-h-0">
               {/* Left Panel - Spec Editor */}
-              <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-900">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+              <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-900">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
                   <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
                     <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     Vega-Lite Specification
@@ -318,7 +318,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                 {/* Editor Area */}
                 <div className="flex-1 flex flex-col min-h-0">
                   <div className={`${!validationResult.isValid && !errorPanelCollapsed ? "h-1/2" : "flex-1"} min-h-0`}>
-                    <div className="h-full p-4 bg-gray-50 dark:bg-gray-900">
+                    <div className="h-full p-4 bg-white dark:bg-gray-950">
                       <MonacoVegaLiteEditor
                         value={data.spec}
                         onChange={handleSpecChange}
@@ -336,7 +336,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                         errorPanelCollapsed ? "h-10" : "h-1/2"
                       }`}
                     >
-                      <div className="flex items-center justify-between p-2 border-b border-red-200 dark:border-red-800 bg-gradient-to-r from-red-100 to-red-50 dark:from-red-900/50 dark:to-red-950/50">
+                      <div className="flex items-center justify-between p-2 border-b border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50">
                         <div className="flex items-center gap-2">
                           <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                           <span className="text-sm font-medium text-red-800 dark:text-red-300">
@@ -392,7 +392,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
 
               {/* Right Panel - Preview */}
               <div className="w-1/2 flex flex-col bg-white dark:bg-gray-900">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
                   <div className="flex items-center justify-between">
                     <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
                       <BarChart3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -416,7 +416,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                     })()}
                   </div>
                 </div>
-                <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
+                <div className="flex-1 p-4 overflow-auto bg-white dark:bg-gray-950">
                   {/* Use ControlledVegaLiteViewer for smooth updates */}
                   {(() => {
                     const themePair = getThemePair(previewData.theme as any || "default", previewData.themeMode as any || "system")
@@ -440,7 +440,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <div className="flex items-center gap-4">
                 <div className="flex-1 grid grid-cols-2 gap-4">
                   <div>
