@@ -18,6 +18,7 @@ import {
   MERMAID_THEME_DESCRIPTIONS,
   MERMAID_THEME_MODE_DESCRIPTIONS,
 } from "@/lib/mermaid-theme-helper"
+import { useTheme } from "next-themes"
 
 interface MermaidEditorProps {
   initialData?: MermaidData
@@ -26,6 +27,9 @@ interface MermaidEditorProps {
 }
 
 export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorProps) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === "dark"
+  
   const [data, setData] = useState<MermaidData>(
     initialData || {
       code: "",
@@ -300,7 +304,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                         onChange={handleCodeChange}
                         onValidationChange={handleValidationChange}
                         height="100%"
-                        theme="light"
+                        theme={isDarkMode ? "dark" : "light"}
                       />
                     </div>
                   </div>
