@@ -130,7 +130,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
             <GitBranch className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Mermaid Diagram Editor</h2>
@@ -189,7 +189,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
         {!showTemplateSelector && (
           <>
             {/* Settings Bar */}
-            <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+            <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <div className="flex items-center gap-2">
                 <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   Title:
@@ -287,8 +287,8 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
             {/* Editor Content */}
             <div className="flex-1 flex min-h-0">
               {/* Left Panel - Code Editor */}
-              <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-900">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+              <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-900">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
                   <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
                     <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     Mermaid Code
@@ -298,7 +298,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                 {/* Editor Area - ajustando altura baseado no estado da aba de erros */}
                 <div className="flex-1 flex flex-col min-h-0">
                   <div className={`${!validationResult.isValid && !errorPanelCollapsed ? "h-1/2" : "flex-1"} min-h-0`}>
-                    <div className="h-full p-4 bg-gray-50 dark:bg-gray-900">
+                    <div className="h-full p-4 bg-white dark:bg-gray-950">
                       <MonacoMermaidEditor
                         value={data.code}
                         onChange={handleCodeChange}
@@ -317,7 +317,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                       }`}
                     >
                       {/* Header da aba de erros */}
-                      <div className="flex items-center justify-between p-2 border-b border-red-200 dark:border-red-800 bg-gradient-to-r from-red-100 to-red-50 dark:from-red-900/50 dark:to-red-950/50">
+                      <div className="flex items-center justify-between p-2 border-b border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/50">
                         <div className="flex items-center gap-2">
                           <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
                           <span className="text-sm font-medium text-red-800 dark:text-red-300">
@@ -377,13 +377,13 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
 
               {/* Right Panel - Preview */}
               <div className="w-1/2 flex flex-col bg-white dark:bg-gray-900">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
                   <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
                     <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     Live Preview
                   </h3>
                 </div>
-                <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
+                <div className="flex-1 p-4 overflow-auto bg-white dark:bg-gray-950">
                   {renderError && (
                     <div className="mb-4 text-red-500 dark:text-red-400 p-4 border border-red-300 dark:border-red-700 rounded-lg bg-red-50 dark:bg-red-950/30 shadow-sm">
                       <div className="font-medium mb-2 flex items-center gap-1">
@@ -405,7 +405,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   <Label htmlFor="caption" className="text-sm font-medium text-gray-700 dark:text-gray-300">
