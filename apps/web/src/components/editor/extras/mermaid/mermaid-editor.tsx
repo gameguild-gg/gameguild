@@ -5,12 +5,19 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X, Save, FileText, GitBranch, Users, AlertCircle, CheckCircle } from "lucide-react"
 import type { MermaidData } from "@/components/editor/nodes/mermaid-node"
 import { MermaidTemplateSelector } from "./mermaid-template-selector"
 import { MonacoMermaidEditor } from "./monaco-mermaid-editor"
 import { MermaidValidator, type MermaidValidationResult } from "./mermaid-validator"
 import { MermaidViewer } from "@/components/ui/mermaid-viewer"
+import {
+  getMermaidThemePair,
+  AVAILABLE_MERMAID_THEMES,
+  MERMAID_THEME_DESCRIPTIONS,
+  MERMAID_THEME_MODE_DESCRIPTIONS,
+} from "@/lib/mermaid-theme-helper"
 
 interface MermaidEditorProps {
   initialData?: MermaidData
@@ -26,6 +33,8 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
       title: "",
       caption: "",
       size: 100,
+      theme: "default",
+      themeMode: "system",
     },
   )
   const [autoUpdate, setAutoUpdate] = useState(true)
@@ -121,6 +130,33 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
           <div className="flex items-center gap-2">
             <GitBranch className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Mermaid Diagram Editor</h2>
+            
+            {/* Theme Display */}
+            <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
+              <div className="text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Theme:</span>
+                <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
+                  {data.theme ? MERMAID_THEME_DESCRIPTIONS[data.theme] : "Default"}
+                </span>
+              </div>
+              <div className="text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Mode:</span>
+                <span className="ml-2 font-medium text-gray-800 dark:text-gray-200">
+                  {MERMAID_THEME_MODE_DESCRIPTIONS[data.themeMode || "system"].label}
+                </span>
+              </div>
+              
+              {/* Preview of what theme pair will be used */}
+              {(() => {
+                const pair = getMermaidThemePair((data.theme as any) || "default", (data.themeMode as any) || "system")
+                return (
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    ({pair.themeLight} / {pair.themeDark})
+                  </div>
+                )
+              })()}
+            </div>
+            
             <div className="flex items-center gap-1 ml-4">
               {validationResult.isValid ? (
                 <div className="flex items-center gap-1 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full">
@@ -161,6 +197,53 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                   placeholder="Diagram title (optional)"
                   className="w-48 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                 />
+              </div>
+
+              {/* Theme Selector */}
+              <div className="flex items-center gap-2">
+                <Label htmlFor="theme" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Theme:
+                </Label>
+                <Select 
+                  value={data.theme || "default"} 
+                  onValueChange={(value) => setData((prev) => ({ ...prev, theme: value as any }))}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {AVAILABLE_MERMAID_THEMES.map((theme) => (
+                      <SelectItem key={theme} value={theme}>
+                        {MERMAID_THEME_DESCRIPTIONS[theme]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Theme Mode Selector */}
+              <div className="flex items-center gap-2">
+                <Label htmlFor="theme-mode" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Mode:
+                </Label>
+                <Select 
+                  value={data.themeMode || "system"} 
+                  onValueChange={(value) => setData((prev) => ({ ...prev, themeMode: value as any }))}
+                >
+                  <SelectTrigger className="w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(MERMAID_THEME_MODE_DESCRIPTIONS).map(([mode, { label, description }]) => (
+                      <SelectItem key={mode} value={mode}>
+                        <div>
+                          <div className="font-medium">{label}</div>
+                          <div className="text-xs text-gray-500">{description}</div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-center gap-2">
