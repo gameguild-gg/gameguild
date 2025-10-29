@@ -42,6 +42,7 @@ export interface AdmonitionData {
   type: AdmonitionType
   customBorderColor?: string
   customTextColor?: string
+  design?: "default" | "compact" | "bordered" | "vertical-bar"
   isNew?: boolean
 }
 
@@ -70,6 +71,7 @@ export class AdmonitionNode extends DecoratorNode<JSX.Element> {
       type: data.type || "note",
       customBorderColor: data.customBorderColor || "",
       customTextColor: data.customTextColor || "",
+      design: data.design || "default",
       isNew: data.isNew,
     }
   }
@@ -139,6 +141,7 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
   const [type, setType] = useState<AdmonitionType>(data.type || "note")
   const [customBorderColor, setCustomBorderColor] = useState(data.customBorderColor || "")
   const [customTextColor, setCustomTextColor] = useState(data.customTextColor || "")
+  const [design, setDesign] = useState<"default" | "compact" | "bordered" | "vertical-bar">(data.design || "default")
 
   useEffect(() => {
     if (data.isNew) {
@@ -192,6 +195,11 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
     updateAdmonition({ customTextColor: newColor })
   }
 
+  const handleDesignChange = (newDesign: "default" | "compact" | "bordered" | "vertical-bar") => {
+    setDesign(newDesign)
+    updateAdmonition({ design: newDesign })
+  }
+
   if (!isEditing) {
     return (
       <div className="my-4 relative">
@@ -201,6 +209,7 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
           type={type} 
           customBorderColor={customBorderColor}
           customTextColor={customTextColor}
+          design={design}
         />
         <ContentEditMenu
           options={[
@@ -240,6 +249,37 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
           </div>
 
           <div className="grid gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="admonition-design" className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                Design Style
+              </label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-between bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  >
+                    <div className="flex items-center gap-2 capitalize">{design}</div>
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <DropdownMenuItem onClick={() => handleDesignChange("default")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">
+                    Default - Full background
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDesignChange("compact")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">
+                    Compact - Left border
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDesignChange("bordered")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">
+                    Bordered - Full border
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDesignChange("vertical-bar")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">
+                    Vertical Bar - Left accent
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
             <div className="grid gap-2">
               <label htmlFor="admonition-type" className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Type
@@ -419,6 +459,7 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
                   type={type} 
                   customBorderColor={customBorderColor}
                   customTextColor={customTextColor}
+                  design={design}
                 />
               </div>
             </div>
