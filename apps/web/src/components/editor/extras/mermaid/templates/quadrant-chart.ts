@@ -14,10 +14,10 @@ export default {
     x-axis Low Impact --> High Impact
     y-axis Low Effort --> High Effort
     
-    quadrant-1 Quick Wins (High Impact, Low Effort)
-    quadrant-2 Major Projects (High Impact, High Effort)
-    quadrant-3 Low Priority (Low Impact, Low Effort)
-    quadrant-4 Time Sinks (Low Impact, High Effort)
+    quadrant-1 Quick Wins
+    quadrant-2 Major Projects
+    quadrant-3 Low Priority
+    quadrant-4 Time Sinks
     
     Task A: [0.3, 0.6]
     Task B: [0.45, 0.23]
