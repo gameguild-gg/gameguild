@@ -163,9 +163,15 @@ export function FloatingContentInsertPlugin() {
       const isTopLevel = node.getTopLevelElement() === node
       const isEmpty = node.getTextContent().trim() === ""
       const isAtStart = selection.anchor.offset === 0
+      const isCollapsed = selection.isCollapsed()
 
-      setShow(isEmpty && isTopLevel && isAtStart)
-      if (isEmpty && isAtStart) {
+      // Mostrar o botão se:
+      // 1. A linha está vazia E o cursor está no início
+      // 2. OU se o cursor está em uma linha (mesmo com texto) e a seleção está colapsada (sem texto selecionado)
+      const shouldShow = (isEmpty && isTopLevel && isAtStart) || (isTopLevel && isCollapsed)
+      
+      setShow(shouldShow)
+      if (shouldShow) {
         updateMenuPosition()
       }
     })
@@ -189,6 +195,20 @@ export function FloatingContentInsertPlugin() {
       1,
     )
   }, [editor, checkEmpty])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (show) {
+        setShow(false)
+        setShowMenu(false)
+      }
+    }
+
+    window.addEventListener("scroll", handleScroll, true)
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true)
+    }
+  }, [show])
 
   const handleImageSelected = (result: MediaUploadResult | MediaUploadResult[]) => {
     const results = Array.isArray(result) ? result : [result]
@@ -545,7 +565,7 @@ export function FloatingContentInsertPlugin() {
           position: "fixed",
           left: `${position.x}px`,
           top: `${position.y}px`,
-          zIndex: 100,
+          zIndex: 5,
         }}
       >
         <Popover open={showMenu} onOpenChange={setShowMenu}>
