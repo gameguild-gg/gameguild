@@ -537,16 +537,36 @@ export function MermaidViewer({
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
             {/* Fullscreen Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-4 p-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
                 <GitBranch className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 truncate">
                   {title || data.title || "Mermaid Diagram"}
                 </h2>
               </div>
 
+              {/* Zoom Slider Bar - Centered */}
+              <div className="flex items-center gap-3 flex-1 max-w-md mx-auto">
+                <ZoomOut className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+                <input
+                  type="range"
+                  min="100"
+                  max="500"
+                  step="25"
+                  value={fullscreenZoom}
+                  onChange={(e) => setFullscreenZoom(Number(e.target.value))}
+                  className="flex-1 h-2 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 dark:[&::-webkit-slider-thumb]:bg-blue-400 [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-600 dark:[&::-moz-range-thumb]:bg-blue-400 [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-md"
+                  style={{
+                    background: isDarkMode
+                      ? `linear-gradient(to right, rgb(96, 165, 250) 0%, rgb(96, 165, 250) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(55, 65, 81) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(55, 65, 81) 100%)`
+                      : `linear-gradient(to right, rgb(37, 99, 235) 0%, rgb(37, 99, 235) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(229, 231, 235) ${((fullscreenZoom - 100) / 400) * 100}%, rgb(229, 231, 235) 100%)`,
+                  }}
+                />
+                <ZoomIn className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
+              </div>
+
               {/* Fullscreen Zoom Controls */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-shrink-0">
                 <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-md p-1">
                   <Button
                     variant="ghost"
