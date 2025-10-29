@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils"
 import {
   AlertCircle,
   Info,
+  Notebook,
   CheckCircle,
   AlertTriangle,
   Flame,
@@ -93,7 +94,7 @@ const typeToLabel = {
 }
 
 const typeToIcon = {
-  note: <Info className="h-5 w-5 mr-2" />,
+  note: <Notebook className="h-5 w-5 mr-2" />,
   abstract: <FileText className="h-5 w-5 mr-2" />,
   info: <Info className="h-5 w-5 mr-2" />,
   tip: <Flame className="h-5 w-5 mr-2" />,
