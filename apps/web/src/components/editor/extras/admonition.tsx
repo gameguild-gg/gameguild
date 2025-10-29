@@ -13,6 +13,12 @@ import {
   List,
   Quote,
   FileText,
+  Zap,
+  ShieldAlert,
+  Bell,
+  Lightbulb,
+  Check,
+  BookMarked,
 } from "lucide-react"
 
 export type AdmonitionType =
@@ -28,6 +34,12 @@ export type AdmonitionType =
   | "bug"
   | "example"
   | "quote"
+  | "important"
+  | "caution"
+  | "attention"
+  | "hint"
+  | "check"
+  | "summary"
 
 export interface AdmonitionProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: React.ReactNode
@@ -48,6 +60,12 @@ const admonitionVariants = {
   bug: "border-stone-500 bg-stone-900 text-stone-100",
   example: "border-teal-500 bg-teal-900 text-teal-100",
   quote: "border-pink-500 bg-pink-900 text-pink-100",
+  important: "border-purple-500 bg-purple-900 text-purple-100",
+  caution: "border-rose-500 bg-rose-900 text-rose-100",
+  attention: "border-fuchsia-500 bg-fuchsia-900 text-fuchsia-100",
+  hint: "border-emerald-500 bg-emerald-900 text-emerald-100",
+  check: "border-indigo-500 bg-indigo-900 text-indigo-100",
+  summary: "border-violet-500 bg-violet-900 text-violet-100",
 }
 
 const typeToLabel = {
@@ -63,6 +81,12 @@ const typeToLabel = {
   bug: "Bug",
   example: "Example",
   quote: "Quote",
+  important: "Important",
+  caution: "Caution",
+  attention: "Attention",
+  hint: "Hint",
+  check: "Check",
+  summary: "Summary",
 }
 
 const typeToIcon = {
@@ -78,15 +102,19 @@ const typeToIcon = {
   bug: <Bug className="h-5 w-5 mr-2" />,
   example: <List className="h-5 w-5 mr-2" />,
   quote: <Quote className="h-5 w-5 mr-2" />,
+  important: <Zap className="h-5 w-5 mr-2" />,
+  caution: <ShieldAlert className="h-5 w-5 mr-2" />,
+  attention: <Bell className="h-5 w-5 mr-2" />,
+  hint: <Lightbulb className="h-5 w-5 mr-2" />,
+  check: <Check className="h-5 w-5 mr-2" />,
+  summary: <BookMarked className="h-5 w-5 mr-2" />,
 }
 
 export function Admonition({ className, type = "note", title, content, ...props }: AdmonitionProps) {
   return (
     <div className={cn("rounded-md border p-4 text-sm", admonitionVariants[type], className)} {...props}>
       <div className="font-medium flex items-center gap-1.5">
-        {React.cloneElement(typeToIcon[type] as React.ReactElement, {
-          className: "h-5 w-5 mr-2",
-        })}
+        {typeToIcon[type]}
         {title || typeToLabel[type]}
       </div>
       {content && <div className="mt-2 bg-background rounded-md p-2 text-foreground">{content}</div>}
