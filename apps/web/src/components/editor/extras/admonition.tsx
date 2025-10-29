@@ -41,10 +41,12 @@ export type AdmonitionType =
   | "check"
   | "summary"
 
-export interface AdmonitionProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface AdmonitionProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'title' | 'content'> {
   title?: React.ReactNode
   content?: React.ReactNode
   type?: AdmonitionType
+  customBorderColor?: string
+  customTextColor?: string
 }
 
 const admonitionVariants = {
@@ -110,10 +112,24 @@ const typeToIcon = {
   summary: <BookMarked className="h-5 w-5 mr-2" />,
 }
 
-export function Admonition({ className, type = "note", title, content, ...props }: AdmonitionProps) {
+export function Admonition({ className, type = "note", title, content, customBorderColor, customTextColor, ...props }: AdmonitionProps) {
+  const baseStyle = customBorderColor 
+    ? "" 
+    : admonitionVariants[type]
+    
   return (
-    <div className={cn("rounded-md border p-4 text-sm", admonitionVariants[type], className)} {...props}>
-      <div className="font-medium flex items-center gap-1.5">
+    <div 
+      className={cn("rounded-md border p-4 text-sm", baseStyle, className)} 
+      style={customBorderColor ? { 
+        borderColor: customBorderColor,
+        backgroundColor: `${customBorderColor}`,
+      } : undefined}
+      {...props}
+    >
+      <div 
+        className="font-medium flex items-center gap-1.5"
+        style={customTextColor ? { color: customTextColor } : undefined}
+      >
         {typeToIcon[type]}
         {title || typeToLabel[type]}
       </div>
