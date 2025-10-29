@@ -154,17 +154,22 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
       onClick={() => setIsEditing(false)}
     >
       <div
-        className="bg-white rounded-lg border shadow-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-medium">Configure Admonition</h3>
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+          <div className="flex items-center justify-between mb-4 border-b border-gray-200 dark:border-gray-700 pb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Configure Admonition</h3>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setIsEditing(false)}
+              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
               <Check className="h-4 w-4 mr-2" />
               Done
             </Button>
@@ -172,35 +177,38 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
 
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <label htmlFor="admonition-type" className="text-sm font-medium">
+              <label htmlFor="admonition-type" className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Type
               </label>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="w-full justify-between">
-                    <div className="flex items-center gap-2">{type}</div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-between bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  >
+                    <div className="flex items-center gap-2 capitalize">{type}</div>
                     <ChevronDown className="h-4 w-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full">
-                  <DropdownMenuItem onClick={() => handleTypeChange("note")}>Note</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("abstract")}>Abstract</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("info")}>Info</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("tip")}>Tip</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("success")}>Success</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("question")}>Question</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("warning")}>Warning</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("failure")}>Failure</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("danger")}>Danger</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("bug")}>Bug</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("example")}>Example</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTypeChange("quote")}>Quote</DropdownMenuItem>
+                <DropdownMenuContent className="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <DropdownMenuItem onClick={() => handleTypeChange("note")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Note</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("abstract")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Abstract</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("info")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Info</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("tip")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Tip</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("success")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Success</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("question")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Question</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("warning")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Warning</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("failure")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Failure</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("danger")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Danger</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("bug")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Bug</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("example")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Example</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("quote")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Quote</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
 
             <div className="grid gap-2">
-              <label htmlFor="admonition-title" className="text-sm font-medium">
+              <label htmlFor="admonition-title" className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Title (optional)
               </label>
               <Input
@@ -208,11 +216,12 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Admonition title"
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
               />
             </div>
 
             <div className="grid gap-2">
-              <label htmlFor="admonition-content" className="text-sm font-medium">
+              <label htmlFor="admonition-content" className="text-sm font-medium text-gray-900 dark:text-gray-100">
                 Content
               </label>
               <Textarea
@@ -221,12 +230,15 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
                 onChange={(e) => handleContentChange(e.target.value)}
                 placeholder="Admonition content"
                 rows={4}
+                className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
               />
             </div>
 
-            <div className="mt-4">
-              <h4 className="text-sm font-medium mb-2">Preview</h4>
-              <UIAdmonition title={title} content={content} type={type} />
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <h4 className="text-sm font-medium mb-3 text-gray-900 dark:text-gray-100">Preview</h4>
+              <div className="rounded-lg bg-gray-50 dark:bg-gray-800/50 p-4">
+                <UIAdmonition title={title} content={content} type={type} />
+              </div>
             </div>
           </div>
         </div>
