@@ -203,6 +203,12 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
                   <DropdownMenuItem onClick={() => handleTypeChange("bug")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Bug</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleTypeChange("example")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Example</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleTypeChange("quote")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Quote</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("important")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Important</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("caution")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Caution</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("attention")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Attention</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("hint")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Hint</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("check")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Check</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleTypeChange("summary")} className="dark:hover:bg-gray-700 dark:focus:bg-gray-700">Summary</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
