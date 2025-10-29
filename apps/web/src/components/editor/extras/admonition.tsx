@@ -47,6 +47,7 @@ export interface AdmonitionProps extends Omit<React.HTMLAttributes<HTMLDivElemen
   type?: AdmonitionType
   customBorderColor?: string
   customTextColor?: string
+  design?: "default" | "compact" | "bordered" | "vertical-bar"
 }
 
 const admonitionVariants = {
@@ -112,17 +113,163 @@ const typeToIcon = {
   summary: <BookMarked className="h-5 w-5 mr-2" />,
 }
 
-export function Admonition({ className, type = "note", title, content, customBorderColor, customTextColor, ...props }: AdmonitionProps) {
+const typeToColor = {
+  note: "#3b82f6",      // blue-500
+  abstract: "#0ea5e9",  // sky-500
+  info: "#06b6d4",      // cyan-500
+  tip: "#84cc16",       // lime-500
+  success: "#22c55e",   // green-500
+  question: "#f59e0b",  // amber-500
+  warning: "#eab308",   // yellow-500
+  failure: "#ef4444",   // red-500
+  danger: "#f97316",    // orange-500
+  bug: "#78716c",       // stone-500
+  example: "#14b8a6",   // teal-500
+  quote: "#ec4899",     // pink-500
+  important: "#a855f7", // purple-500
+  caution: "#f43f5e",   // rose-500
+  attention: "#d946ef", // fuchsia-500
+  hint: "#10b981",      // emerald-500
+  check: "#6366f1",     // indigo-500
+  summary: "#8b5cf6",   // violet-500
+}
+
+export function Admonition({ 
+  className, 
+  type = "note", 
+  title, 
+  content, 
+  customBorderColor, 
+  customTextColor,
+  design = "default",
+  ...props 
+}: AdmonitionProps) {
   const baseStyle = customBorderColor 
     ? "" 
     : admonitionVariants[type]
+  
+  // Design "default" - estilo atual com fundo colorido
+  if (design === "default") {
+    return (
+      <div 
+        className={cn("rounded-md border p-4 text-sm", baseStyle, className)} 
+        style={customBorderColor ? { 
+          borderColor: customBorderColor,
+          backgroundColor: `${customBorderColor}15`,
+        } : undefined}
+        {...props}
+      >
+        <div 
+          className="font-medium flex items-center gap-1.5"
+          style={customTextColor ? { color: customTextColor } : undefined}
+        >
+          {typeToIcon[type]}
+          {title || typeToLabel[type]}
+        </div>
+        {content && <div className="mt-2 bg-background rounded-md p-2 text-foreground">{content}</div>}
+      </div>
+    )
+  }
+  
+  // Design "compact" - estilo compacto com borda lateral (primeiro exemplo da imagem)
+  if (design === "compact") {
+    const color = customBorderColor || typeToColor[type]
+    return (
+      <div 
+        className={cn("rounded-md border-l-4 p-3 text-sm", className)}
+        style={{ 
+          borderLeftColor: color,
+          backgroundColor: `${color}40`, // 40% opacity for light background
+        }}
+        {...props}
+      >
+        <div 
+          className="font-semibold flex items-center gap-2 mb-1"
+        >
+          <div style={{ color }}>
+            {typeToIcon[type]}
+          </div>
+          <span 
+            className={!customTextColor ? "text-gray-900 dark:text-white" : ""}
+            style={customTextColor ? { color: customTextColor } : undefined}
+          >
+            {title || typeToLabel[type]}
+          </span>
+        </div>
+        {content && (
+          <div 
+            className={!customTextColor ? "text-gray-800/90 dark:text-white/90 ml-7" : "ml-7"}
+            style={customTextColor ? { color: customTextColor } : undefined}
+          >
+            {content}
+          </div>
+        )}
+      </div>
+    )
+  }
+  
+  // Design "bordered" - estilo com borda completa (segundo exemplo da imagem)
+  if (design === "bordered") {
+    return (
+      <div 
+        className={cn(
+          "rounded-md border-2 bg-background p-4 text-sm",
+          !customBorderColor && `border-${type === "note" ? "blue" : type === "info" ? "cyan" : "blue"}-500/30`,
+          className
+        )}
+        style={customBorderColor ? { 
+          borderColor: customBorderColor,
+          backgroundColor: `${customBorderColor}05`,
+        } : undefined}
+        {...props}
+      >
+        <div 
+          className="font-semibold flex items-center gap-2 mb-2"
+          style={customTextColor ? { color: customTextColor } : customBorderColor ? { color: customBorderColor } : undefined}
+        >
+          {typeToIcon[type]}
+          {title || typeToLabel[type]}
+        </div>
+        {content && <div className="text-foreground/90">{content}</div>}
+      </div>
+    )
+  }
+  
+  // Design "vertical-bar" - estilo com barra vertical no lado esquerdo (terceiro exemplo)
+  if (design === "vertical-bar") {
+    return (
+      <div 
+        className={cn(
+          "relative bg-muted/40 dark:bg-muted/20 pl-4 pr-4 py-3 text-sm overflow-hidden",
+          className
+        )}
+        {...props}
+      >
+        <div 
+          className="absolute left-0 top-0 bottom-0 w-1"
+          style={{ 
+            backgroundColor: customBorderColor || (type === "note" ? "#3b82f6" : type === "info" ? "#06b6d4" : "#3b82f6")
+          }}
+        />
+        <div 
+          className="font-semibold flex items-center gap-2 mb-1.5"
+          style={customTextColor ? { color: customTextColor } : customBorderColor ? { color: customBorderColor } : undefined}
+        >
+          {typeToIcon[type]}
+          {title || typeToLabel[type]}
+        </div>
+        {content && <div className="text-foreground/80">{content}</div>}
+      </div>
+    )
+  }
     
+  // Fallback para default
   return (
     <div 
       className={cn("rounded-md border p-4 text-sm", baseStyle, className)} 
       style={customBorderColor ? { 
         borderColor: customBorderColor,
-        backgroundColor: `${customBorderColor}`,
+        backgroundColor: `${customBorderColor}15`,
       } : undefined}
       {...props}
     >
