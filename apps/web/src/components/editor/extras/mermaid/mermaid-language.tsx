@@ -52,13 +52,14 @@ export const mermaidTokensProvider: languages.IMonarchLanguage = {
     "c4Component",
     "c4Dynamic",
     "c4Deployment",
-    "C4Context", // Added C4 Context support
+    "C4Context",
     "C4Container",
     "C4Component",
-    "xychart-beta", // Added XY Chart support
-    "radar-beta", // Added Radar Chart support
-    "sankey-beta", // Added Sankey Diagram support
-    "treemap-beta", // Added Treemap support
+    "xychart-beta",
+    "radar-beta",
+    "sankey-beta",
+    "treemap-beta",
+    "kanban",
 
     // Directions
     "TD",
@@ -274,7 +275,7 @@ export const mermaidTokensProvider: languages.IMonarchLanguage = {
 
       // Diagram type declarations
       [
-        /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|gitGraph|mindmap|timeline|quadrantChart|requirement|requirementDiagram|architecture|architecture-beta|c4Context|c4Container|c4Component|c4Dynamic|c4Deployment|C4Context|C4Container|C4Component|xychart-beta|radar-beta|sankey-beta|treemap-beta)\b/,
+        /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|journey|gantt|pie|gitgraph|gitGraph|mindmap|timeline|quadrantChart|requirement|requirementDiagram|architecture|architecture-beta|c4Context|c4Container|c4Component|c4Dynamic|c4Deployment|C4Context|C4Container|C4Component|xychart-beta|radar-beta|sankey-beta|treemap-beta|kanban)\b/,
         "keyword.diagram",
       ],
 
