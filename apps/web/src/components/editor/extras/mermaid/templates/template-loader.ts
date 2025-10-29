@@ -106,6 +106,11 @@ async function loadTemplatesFromFolder(): Promise<MermaidTemplate[]> {
     // Treemap Chart
     const basicTreemap = await import("./treemap-beta")
     templates.push(basicTreemap.default)
+
+    // Kanban Board
+    const basicKanban = await import("./kanban")
+    templates.push(basicKanban.default)
+
   } catch (error) {
     console.error("Error loading Mermaid templates:", error)
   }
