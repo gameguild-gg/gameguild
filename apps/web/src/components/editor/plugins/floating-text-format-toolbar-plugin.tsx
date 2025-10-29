@@ -67,6 +67,7 @@ export function FloatingTextFormatToolbarPlugin() {
   const [currentCaseFormat, setCurrentCaseFormat] = useState<"uppercase" | "lowercase" | "capitalize" | null>(null)
   const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null)
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
+  const [forceShow, setForceShow] = useState(false)
   const [currentHeadingLevel, setCurrentHeadingLevel] = useState<HeadingTagType | null>(null)
   const [isQuote, setIsQuote] = useState(false)
   const [currentFontFamily, setCurrentFontFamily] = useState<string>("")
@@ -90,6 +91,7 @@ export function FloatingTextFormatToolbarPlugin() {
       setIsOverline(false)
       setIsStrikethrough(false)
       setCurrentCaseFormat(null)
+      setPosition(null)
       return
     }
 
@@ -130,7 +132,14 @@ export function FloatingTextFormatToolbarPlugin() {
       setCurrentCaseFormat(null)
     }
 
-    setIsText(selection.getTextContent().length > 0)
+    const hasText = selection.getTextContent().length > 0
+    setIsText(hasText)
+    
+    // Se não há texto e não está forçando mostrar, limpar posição
+    if (!hasText && !forceShow) {
+      setPosition(null)
+      return
+    }
 
     const anchorNode = selection.anchor.getNode()
     const element = anchorNode.getKey() === "root" ? anchorNode : anchorNode.getTopLevelElementOrThrow()
@@ -213,18 +222,23 @@ export function FloatingTextFormatToolbarPlugin() {
       setCurrentListType("")
     }
 
+    // Calcular posição do toolbar - funciona tanto para texto selecionado quanto linha vazia
     const nativeSelection = window.getSelection()
-    const range = nativeSelection?.getRangeAt(0)
-    const rect = range?.getBoundingClientRect()
+    if (nativeSelection && nativeSelection.rangeCount > 0) {
+      const range = nativeSelection.getRangeAt(0)
+      const rect = range.getBoundingClientRect()
 
-    if (rect) {
-      const toolbarHeight = 60
-      const toolbarWidth = 240
+      if (rect && (rect.width > 0 || rect.height > 0)) {
+        const toolbarHeight = 60
+        const toolbarWidth = 240
 
-      setPosition({
-        top: rect.top - toolbarHeight - 12,
-        left: Math.max(8, rect.left + (rect.width - toolbarWidth) / 2),
-      })
+        setPosition({
+          top: rect.top - toolbarHeight - 12 + window.scrollY,
+          left: Math.max(8, rect.left + (rect.width - toolbarWidth) / 2),
+        })
+      } else {
+        setPosition(null)
+      }
     } else {
       setPosition(null)
     }
@@ -287,9 +301,58 @@ export function FloatingTextFormatToolbarPlugin() {
     )
   }, [editor, updateToolbar])
 
-  if (!isText) {
-    return null
-  }
+  useEffect(() => {
+    const handleDoubleClick = () => {
+      setForceShow(true)
+      // Aguardar um pouco para garantir que a seleção foi atualizada
+      setTimeout(() => {
+        editor.getEditorState().read(() => {
+          updateToolbar()
+        })
+      }, 50)
+    }
+
+    const editorElement = editor.getRootElement()
+    if (editorElement) {
+      editorElement.addEventListener('dblclick', handleDoubleClick)
+      return () => {
+        editorElement.removeEventListener('dblclick', handleDoubleClick)
+      }
+    }
+  }, [editor, updateToolbar])
+
+  // Resetar forceShow quando houver mudança de seleção com texto
+  useEffect(() => {
+    const unregister = editor.registerCommand(
+      SELECTION_CHANGE_COMMAND,
+      () => {
+        editor.getEditorState().read(() => {
+          const selection = $getSelection()
+          if ($isRangeSelection(selection) && selection.getTextContent().length > 0) {
+            setForceShow(false)
+          }
+        })
+        return false
+      },
+      1,
+    )
+    return unregister
+  }, [editor])
+
+  // Fechar toolbar ao clicar fora dele
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (toolbarRef.current && !toolbarRef.current.contains(event.target as Node) && forceShow) {
+        setForceShow(false)
+        setPosition(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [forceShow])
 
   return (
     <>
