@@ -1,5 +1,13 @@
 # Pseudo Random Number Generation
 
+::: note
+
+Read this article about damage rolls first: [Damage Rolls](https://www.redblobgames.com/articles/probability/damage-rolls.html)
+
+And this one: [Efficiently generating random numbers without bias](https://www.adammil.net/blog/v134_Efficiently_generating_random_numbers_without_bias.html)
+
+:::
+
 You are a game developer in charge to create a fast an reliable random number generator for a procedural content generation system. The requirements are:
 
 - Do not rely on external libraries;
