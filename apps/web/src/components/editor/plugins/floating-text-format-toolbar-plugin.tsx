@@ -54,6 +54,7 @@ import { $createParagraphNode } from "lexical"
 export function FloatingTextFormatToolbarPlugin() {
   const [editor] = useLexicalComposerContext()
   const toolbarRef = useRef<HTMLDivElement>(null)
+  const isDropdownOpenRef = useRef(false)
   const [isText, setIsText] = useState(false)
   const [isLink, setIsLink] = useState(false)
   const [isBold, setIsBold] = useState(false)
@@ -77,6 +78,7 @@ export function FloatingTextFormatToolbarPlugin() {
   const [currentBackgroundColor, setCurrentBackgroundColor] = useState<string>("")
   const [currentAlignment, setCurrentAlignment] = useState<string>("")
   const [currentListType, setCurrentListType] = useState<string>("")
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection()
@@ -291,15 +293,17 @@ export function FloatingTextFormatToolbarPlugin() {
   }, [editor])
 
   useEffect(() => {
-    return editor.registerCommand(
-      SELECTION_CHANGE_COMMAND,
-      () => {
-        updateToolbar()
-        return false
-      },
-      1,
-    )
-  }, [editor, updateToolbar])
+    // Forçar inicialização do Radix UI para permitir hover imediato
+    const timer = setTimeout(() => {
+      if (toolbarRef.current) {
+        // Simular uma interação mínima para ativar o Radix UI
+        const event = new MouseEvent('mouseenter', { bubbles: false });
+        toolbarRef.current.dispatchEvent(event);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleDoubleClick = () => {
@@ -321,38 +325,50 @@ export function FloatingTextFormatToolbarPlugin() {
     }
   }, [editor, updateToolbar])
 
-  // Resetar forceShow quando houver mudança de seleção com texto
+  const forceShowRef = useRef(forceShow)
+  const toolbarRefForListener = useRef(toolbarRef)
+  
+  // Atualizar refs quando os valores mudarem
   useEffect(() => {
-    const unregister = editor.registerCommand(
-      SELECTION_CHANGE_COMMAND,
-      () => {
-        editor.getEditorState().read(() => {
-          const selection = $getSelection()
-          if ($isRangeSelection(selection) && selection.getTextContent().length > 0) {
-            setForceShow(false)
-          }
-        })
-        return false
-      },
-      1,
-    )
-    return unregister
-  }, [editor])
+    forceShowRef.current = forceShow
+  }, [forceShow])
 
-  // Fechar toolbar ao clicar fora dele
+  // Fechar toolbar ao clicar fora dele (mas não quando apenas o submenu fechar)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (toolbarRef.current && !toolbarRef.current.contains(event.target as Node) && forceShow) {
-        setForceShow(false)
-        setPosition(null)
+      // Não fazer nada se toolbar não está visível
+      if (!forceShowRef.current) return
+      
+      const target = event.target as HTMLElement
+      
+      // Verificar se o clique foi dentro do toolbar principal
+      const isClickInsideToolbar = toolbarRef.current?.contains(target)
+      if (isClickInsideToolbar) {
+        return
       }
+      
+      // Usar setTimeout para permitir que Radix UI processe o evento primeiro
+      setTimeout(() => {
+        // Se há algum dropdown aberto, não fechar
+        const menuContent = document.querySelector('[data-slot="dropdown-menu-content"]')
+        if (menuContent !== null) {
+          return
+        }
+        
+        // Clicou fora de tudo - fechar o toolbar apenas se nenhum dropdown está aberto
+        if (forceShowRef.current) {
+          setForceShow(false)
+          setPosition(null)
+        }
+      }, 0)
     }
 
-    document.addEventListener('mousedown', handleClickOutside)
+    // Usar 'click' em fase de bubbling após todos os eventos serem processados
+    document.addEventListener('click', handleClickOutside, false)
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('click', handleClickOutside, false)
     }
-  }, [forceShow])
+  }, [])
 
   return (
     <>
@@ -372,18 +388,54 @@ export function FloatingTextFormatToolbarPlugin() {
               e.stopPropagation()
             }
           }}
+          
+          onMouseDown={(e) => {
+            e.stopPropagation()
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+          onMouseLeave={(e) => {
+            // Fechar dropdown quando o mouse sai do toolbar
+            setOpenDropdown(null)
+            e.stopPropagation()
+          }}
         >
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdown === "formatting"} 
+            onOpenChange={(open) => setOpenDropdown(open ? "formatting" : null)}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
+                onMouseEnter={() => {
+                  setOpenDropdown("formatting")
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Alternar entre abrir e fechar quando clica
+                  setOpenDropdown(prev => prev === "formatting" ? null : "formatting")
+                }}
               >
                 <Bold className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-48">
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-48"
+              onMouseDown={(e) => {
+                e.stopPropagation()
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Formatting</div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -523,17 +575,41 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdown === "style"} 
+            onOpenChange={(open) => setOpenDropdown(open ? "style" : null)}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
+                onMouseEnter={() => {
+                  setOpenDropdown("style")
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Alternar entre abrir e fechar quando clica
+                  setOpenDropdown(prev => prev === "style" ? null : "style")
+                }}
               >
                 <Palette className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-64">
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-64"
+              onMouseDown={(e) => {
+                e.stopPropagation()
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Style</div>
               <DropdownMenuSeparator />
 
@@ -561,17 +637,41 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdown === "structure"} 
+            onOpenChange={(open) => setOpenDropdown(open ? "structure" : null)}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
+                onMouseEnter={() => {
+                  setOpenDropdown("structure")
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Alternar entre abrir e fechar quando clica
+                  setOpenDropdown(prev => prev === "structure" ? null : "structure")
+                }}
               >
                 <AlignLeft className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-auto">
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-auto"
+              onMouseDown={(e) => {
+                e.stopPropagation()
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Structure</div>
               <DropdownMenuSeparator />
               <DropdownMenuSub>
@@ -813,17 +913,41 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdown === "insert"} 
+            onOpenChange={(open) => setOpenDropdown(open ? "insert" : null)}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
+                onMouseEnter={() => {
+                  setOpenDropdown("insert")
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Alternar entre abrir e fechar quando clica
+                  setOpenDropdown(prev => prev === "insert" ? null : "insert")
+                }}
               >
                 <TextCursorInput className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-48">
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-48"
+              onMouseDown={(e) => {
+                e.stopPropagation()
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Insert</div>
               <DropdownMenuSeparator />
               <LinkMenuComponent />
