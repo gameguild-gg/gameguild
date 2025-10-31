@@ -119,7 +119,7 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
 
       if (style.includes("text-transform: uppercase")) {
         setCurrentCaseFormat("uppercase")
@@ -160,9 +160,9 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const fontFamilyMatch = style.match(/font-family:\s*([^;]+)/)
-      if (fontFamilyMatch) {
+      if (fontFamilyMatch && fontFamilyMatch[1]) {
         setCurrentFontFamily(fontFamilyMatch[1].replace(/['"]/g, ""))
       } else {
         setCurrentFontFamily("")
@@ -173,9 +173,9 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const fontSizeMatch = style.match(/font-size:\s*([^;]+)/)
-      if (fontSizeMatch) {
+      if (fontSizeMatch && fontSizeMatch[1]) {
         setCurrentFontSize(fontSizeMatch[1].replace(/['']/g, ""))
       } else {
         setCurrentFontSize("")
@@ -186,9 +186,9 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const colorMatch = style.match(/(?<!background-)color:\s*([^;]+)/)
-      if (colorMatch) {
+      if (colorMatch && colorMatch[1]) {
         setCurrentTextColor(colorMatch[1].replace(/['']/g, "").trim())
       } else {
         setCurrentTextColor("")
@@ -199,9 +199,9 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const backgroundColorMatch = style.match(/background-color:\s*([^;]+)/)
-      if (backgroundColorMatch) {
+      if (backgroundColorMatch && backgroundColorMatch[1]) {
         setCurrentBackgroundColor(backgroundColorMatch[1].replace(/['']/g, "").trim())
       } else {
         setCurrentBackgroundColor("")
@@ -212,7 +212,7 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection) {
       const element = anchorNode.getTopLevelElementOrThrow()
-      setCurrentAlignment(element.getFormat())
+      setCurrentAlignment(String(element.getFormat()))
     } else {
       setCurrentAlignment("")
     }
