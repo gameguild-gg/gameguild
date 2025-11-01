@@ -161,6 +161,13 @@ export function ProjectCard({
                   e.stopPropagation()
                   onOpen(project.id, e)
                 }}
+                onMouseDown={(e) => {
+                  if (e.button === 1) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onOpen(project.id, { ctrlKey: true } as React.MouseEvent)
+                  }
+                }}
                 size="sm"
                 className="flex-1 h-8 bg-blue-600 hover:bg-blue-700 text-white"
               >
@@ -171,6 +178,13 @@ export function ProjectCard({
                 onClick={(e) => {
                   e.stopPropagation()
                   onView?.(project.id, e)
+                }}
+                onMouseDown={(e) => {
+                  if (e.button === 1) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onView?.(project.id, { ctrlKey: true } as React.MouseEvent)
+                  }
                 }}
                 size="sm"
                 variant="outline"
@@ -328,6 +342,12 @@ export function ProjectCard({
               {/* Primary actions */}
               <Button
                 onClick={(e) => onOpen(project.id, e)}
+                onMouseDown={(e) => {
+                  if (e.button === 1) {
+                    e.preventDefault()
+                    onOpen(project.id, { ctrlKey: true } as React.MouseEvent)
+                  }
+                }}
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
@@ -336,6 +356,12 @@ export function ProjectCard({
               </Button>
               <Button
                 onClick={(e) => onView?.(project.id, e)}
+                onMouseDown={(e) => {
+                  if (e.button === 1) {
+                    e.preventDefault()
+                    onView?.(project.id, { ctrlKey: true } as React.MouseEvent)
+                  }
+                }}
                 size="sm"
                 variant="outline"
               >
