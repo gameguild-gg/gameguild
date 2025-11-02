@@ -174,9 +174,23 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
     // Ensure all localData is synchronized before closing
     onChange(localData)
     
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
     if (onSave) {
       onSave()
     } else if (onClose) {
+      onClose()
+    }
+  }
+
+  const handleClose = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
+    if (onClose) {
       onClose()
     }
   }
@@ -302,11 +316,11 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
     <div 
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       style={{ pointerEvents: 'auto' }}
-      onClick={onClose}
+      onClick={handleClose}
       onMouseDown={(e) => e.stopPropagation()}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
-          onClose?.()
+          handleClose()
         }
         // Prevent all keyboard events from propagating to the editor
         e.stopPropagation()
@@ -355,7 +369,7 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+          <Button variant="ghost" size="sm" onClick={handleClose} className="hover:bg-gray-100 dark:hover:bg-gray-800">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -454,7 +468,7 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
           <div className="flex items-center justify-end gap-2">
             <Button
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
             >
               Cancel
