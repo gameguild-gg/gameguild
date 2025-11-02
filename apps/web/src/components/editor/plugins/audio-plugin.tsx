@@ -17,10 +17,9 @@ export function AudioPlugin() {
       INSERT_AUDIO_COMMAND,
       (payload: AudioData) => {
         editor.update(() => {
-          // Adicione um flag para indicar que este é um áudio recém-inserido
           const audioNode = $createAudioNode({
             ...payload,
-            isNew: true, // Este flag será usado para mostrar o controle de tamanho automaticamente
+            isNew: true, // Flag to show editor automatically on new audio
           })
           $insertNodes([audioNode])
         })
