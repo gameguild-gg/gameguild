@@ -201,11 +201,6 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
     return (
       <div style={{ width: `${data.size}%` }} className="mx-auto">
         <div className="bg-card border rounded-lg p-4">
-          {data.artist && (
-            <div className="mb-4">
-              <p className="text-sm text-muted-foreground">{data.artist}</p>
-            </div>
-          )}
           <audio src={data.src} controls className="w-full">
             <source src={data.src} type={data.audioType || "audio/mpeg"} />
             Seu navegador não suporta áudio.
