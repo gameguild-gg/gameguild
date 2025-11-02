@@ -320,13 +320,6 @@ export function MediaPreview({ data }: MediaPreviewProps) {
                 <source src={data.src} type={data.audioType || "audio/mpeg"} />
               </audio>
 
-              {/* Audio info */}
-              {data.artist && (
-                <div className="mb-4">
-                  <p className="text-sm text-muted-foreground">{data.artist}</p>
-                </div>
-              )}
-
               {/* Custom controls */}
               <div className="space-y-2">
                 <Slider

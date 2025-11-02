@@ -20,7 +20,6 @@ export interface BaseMediaData {
   // Audio specific
   audioType?: string
   embedAudioType?: "direct" | "youtube" | "spotify" | "soundcloud"
-  artist?: string
 }
 
 export interface SerializedMediaNode extends SerializedLexicalNode {

@@ -7,7 +7,6 @@ import { MediaComponent } from "./media-component"
 export interface AudioData {
   src: string
   type?: string
-  artist?: string
   caption?: string
   size?: number
   isNew?: boolean
@@ -40,7 +39,6 @@ export class AudioNode extends MediaNodeBase {
     const baseData: BaseMediaData = {
       type: "audio",
       src: data.src,
-      artist: (data as AudioData).artist || (data as BaseMediaData).artist,
       caption: data.caption,
       size: data.size ?? 100,
       isNew: (data as AudioData).isNew || (data as BaseMediaData).isNew,
