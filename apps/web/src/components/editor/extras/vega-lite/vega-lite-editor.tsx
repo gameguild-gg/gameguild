@@ -58,6 +58,17 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   })
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Block body scroll and pointer events when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    document.body.style.pointerEvents = 'none'
+    
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.pointerEvents = ''
+    }
+  }, [])
+
   const handleSpecChange = (newSpec: string | undefined) => {
     const spec = newSpec || ""
     console.log("Spec changed, new length:", spec.length)
@@ -106,7 +117,19 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
       return
     }
 
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
     onSave(data)
+  }
+
+  const handleCancel = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
+    onCancel()
   }
 
   const handleManualUpdate = () => {
@@ -152,8 +175,23 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
   }, [])
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      style={{ pointerEvents: 'auto' }}
+      onClick={handleCancel}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape') {
+          handleCancel()
+        }
+      }}
+      onKeyUp={(e) => e.stopPropagation()}
+      onKeyPress={(e) => e.stopPropagation()}
+    >
+      <div 
+        className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
@@ -200,7 +238,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={onCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+          <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -496,7 +534,7 @@ export function VegaLiteEditor({ initialData, onSave, onCancel }: VegaLiteEditor
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={onCancel}
+                    onClick={handleCancel}
                     className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                   >
                     Cancel
