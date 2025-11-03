@@ -145,6 +145,19 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
   const [customTextColor, setCustomTextColor] = useState(data.customTextColor || "")
   const [design, setDesign] = useState<"default" | "compact" | "bordered" | "vertical-bar">(data.design || "default")
 
+  // Block body scroll and pointer events when modal is open
+  useEffect(() => {
+    if (isEditing) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.pointerEvents = 'none'
+      
+      return () => {
+        document.body.style.overflow = ''
+        document.body.style.pointerEvents = ''
+      }
+    }
+  }, [isEditing])
+
   useEffect(() => {
     if (data.isNew) {
       editor.update(() => {
@@ -202,6 +215,13 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
     updateAdmonition({ design: newDesign })
   }
 
+  const handleClose = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    setIsEditing(false)
+  }
+
   if (!isEditing) {
     return (
       <div className="my-4 relative">
@@ -230,7 +250,16 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
   return (
     <div
       className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-50"
-      onClick={() => setIsEditing(false)}
+      style={{ pointerEvents: 'auto' }}
+      onClick={handleClose}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape') {
+          handleClose()
+        }
+      }}
+      onKeyUp={(e) => e.stopPropagation()}
+      onKeyPress={(e) => e.stopPropagation()}
     >
       <div
         className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
@@ -242,7 +271,7 @@ function AdmonitionComponent({ data, nodeKey }: AdmonitionComponentProps) {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => setIsEditing(false)}
+              onClick={handleClose}
               className="hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <Check className="h-4 w-4 mr-2" />
