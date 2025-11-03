@@ -39,6 +39,19 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
   const [previewShowFeedback, setPreviewShowFeedback] = useState(false)
   const [previewIsCorrect, setPreviewIsCorrect] = useState(false)
 
+  // Block body scroll and pointer events when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.pointerEvents = 'none'
+      
+      return () => {
+        document.body.style.overflow = ''
+        document.body.style.pointerEvents = ''
+      }
+    }
+  }, [isOpen])
+
   useEffect(() => {
     if (isOpen) {
       setShowTypeSelector(!data.question)
@@ -174,22 +187,50 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       ratingScale,
       correctRating,
     }
+    
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
     onSave(quizData)
+    onClose()
+  }
+
+  const handleClose = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
     onClose()
   }
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      style={{ pointerEvents: 'auto' }}
+      onClick={handleClose}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape') {
+          handleClose()
+        }
+      }}
+      onKeyUp={(e) => e.stopPropagation()}
+      onKeyPress={(e) => e.stopPropagation()}
+    >
+      <div 
+        className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
           <div className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Quiz Builder</h2>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+          <Button variant="ghost" size="sm" onClick={handleClose} className="hover:bg-gray-100 dark:hover:bg-gray-800">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -488,7 +529,7 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
               <div className="flex gap-2 justify-end">
                 <Button
                   variant="outline"
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                 >
                   Cancel
