@@ -5,11 +5,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { X, Save, Image, Video, Music, FileText, Eye } from "lucide-react"
 import { MediaPreview } from "./media-preview"
 import { ImageSizeControl } from "@/components/editor/extras/image-size-control"
+import { ImageOptions } from "./image-options"
+import { VideoOptions } from "./video-options"
+import { AudioOptions } from "./audio-options"
+import {
+  detectVideoEmbedType,
+  detectAudioEmbedType,
+  detectVideoFileType,
+  detectAudioFileType
+} from "./url-detection"
 import type { BaseMediaData } from "@/components/editor/nodes/base/media-node-base"
 
 interface UnifiedMediaEditorProps {
@@ -19,99 +26,20 @@ interface UnifiedMediaEditorProps {
   onSave?: () => void
 }
 
-// Helper functions to detect URL type
-function detectVideoEmbedType(url: string): "youtube" | "vimeo" | "dailymotion" | "direct" {
-  if (!url) return "direct"
-  
-  // YouTube
-  if (/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i.test(url)) {
-    return "youtube"
-  }
-  
-  // Vimeo
-  if (/(?:vimeo\.com\/(?:video\/)?|player\.vimeo\.com\/video\/)([0-9]+)/i.test(url)) {
-    return "vimeo"
-  }
-  
-  // Dailymotion
-  if (/(?:dailymotion\.com\/(?:video\/|embed\/video\/)|dai\.ly\/)([a-zA-Z0-9]+)/i.test(url)) {
-    return "dailymotion"
-  }
-  
-  return "direct"
-}
-
-function detectAudioEmbedType(url: string): "youtube" | "spotify" | "soundcloud" | "direct" {
-  if (!url) return "direct"
-  
-  // YouTube
-  if (/(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i.test(url)) {
-    return "youtube"
-  }
-  
-  // Spotify
-  if (/(?:spotify\.com\/track\/|spotify:track:)([a-zA-Z0-9]+)/i.test(url)) {
-    return "spotify"
-  }
-  
-  // SoundCloud
-  if (/soundcloud\.com\/([^/]+\/[^/]+)/i.test(url)) {
-    return "soundcloud"
-  }
-  
-  return "direct"
-}
-
-function detectVideoFileType(url: string): string {
-  if (!url) return "video/mp4"
-  
-  const extension = url.split('.').pop()?.toLowerCase()
-  switch (extension) {
-    case "webm":
-      return "video/webm"
-    case "ogg":
-    case "ogv":
-      return "video/ogg"
-    case "mp4":
-    default:
-      return "video/mp4"
-  }
-}
-
-function detectAudioFileType(url: string): string {
-  if (!url) return "audio/mpeg"
-  
-  const extension = url.split('.').pop()?.toLowerCase()
-  switch (extension) {
-    case "wav":
-      return "audio/wav"
-    case "ogg":
-    case "oga":
-      return "audio/ogg"
-    case "mp3":
-    default:
-      return "audio/mpeg"
-  }
-}
-
 export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedMediaEditorProps) {
   const [localData, setLocalData] = useState<BaseMediaData>(data)
   const [urlDetectionEnabled, setUrlDetectionEnabled] = useState(true)
 
   // Block body scroll and pointer events when modal is open
   useEffect(() => {
-    // Store original values
-    const originalOverflow = document.body.style.overflow
-    const originalPointerEvents = document.body.style.pointerEvents
-    
     // Disable scroll and pointer events on body
     document.body.style.overflow = 'hidden'
     document.body.style.pointerEvents = 'none'
     
-    // Cleanup on unmount
+    // Cleanup on unmount - always restore to empty string (default)
     return () => {
-      document.body.style.overflow = originalOverflow
-      document.body.style.pointerEvents = originalPointerEvents
+      document.body.style.overflow = ''
+      document.body.style.pointerEvents = ''
     }
   }, [])
 
@@ -220,95 +148,12 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
   const renderMediaSpecificOptions = () => {
     switch (localData.type) {
       case "video":
-        return (
-          <>
-                        <div className="flex items-center gap-2">
-              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
-                Source:
-              </Label>
-              <div className="flex-1">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md text-sm font-medium border border-blue-200 dark:border-blue-800">
-                  {localData.embedType === "direct" && "📁 Direct File"}
-                  {localData.embedType === "youtube" && "▶️ YouTube"}
-                  {localData.embedType === "vimeo" && "🎬 Vimeo"}
-                  {localData.embedType === "dailymotion" && "📺 Dailymotion"}
-                  {!localData.embedType && "📁 Direct File"}
-                </span>
-              </div>
-            </div>
-            
-            {localData.embedType === "direct" && (
-              <div className="flex items-center gap-2">
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
-                  Format:
-                </Label>
-                <div className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300">
-                  {localData.videoType === "video/mp4" && "📹 MP4 (H.264)"}
-                  {localData.videoType === "video/webm" && "📹 WebM (VP8/VP9)"}
-                  {localData.videoType === "video/ogg" && "📹 Ogg (Theora)"}
-                  {!localData.videoType && "📹 MP4 (H.264)"}
-                </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400" title="Detected from file extension">
-                  �
-                </span>
-              </div>
-            )}
-          </>
-        )
-      
+        return <VideoOptions data={localData} onChange={handleChange} />
       case "audio":
-        return (
-          <>
-            <div className="flex items-center gap-2">
-              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
-                Source:
-              </Label>
-              <div className="flex-1">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-md text-sm font-medium border border-blue-200 dark:border-blue-800">
-                  {localData.embedAudioType === "direct" && "📁 Direct File"}
-                  {localData.embedAudioType === "youtube" && "▶️ YouTube"}
-                  {localData.embedAudioType === "spotify" && "🎵 Spotify"}
-                  {localData.embedAudioType === "soundcloud" && "☁️ SoundCloud"}
-                  {!localData.embedAudioType && "📁 Direct File"}
-                </span>
-              </div>
-            </div>
-            
-            {localData.embedAudioType === "direct" && (
-              <div className="flex items-center gap-2">
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
-                  Format:
-                </Label>
-                <div className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300">
-                  {localData.audioType === "audio/mpeg" && "🎵 MP3 (MPEG)"}
-                  {localData.audioType === "audio/wav" && "🎵 WAV (Lossless)"}
-                  {localData.audioType === "audio/ogg" && "🎵 Ogg (Vorbis)"}
-                  {!localData.audioType && "🎵 MP3 (MPEG)"}
-                </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400" title="Detected from file extension">
-                  �
-                </span>
-              </div>
-            )}
-          </>
-        )
-      
+        return <AudioOptions data={localData} onChange={handleChange} />
       case "image":
       default:
-        return (
-          <div className="flex items-center gap-2">
-            <Label htmlFor="alt" className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
-              Alt Text:
-            </Label>
-            <Input
-              id="alt"
-              value={localData.alt || ""}
-              onChange={(e) => handleChange("alt", e.target.value)}
-              placeholder="Image description"
-              className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-            />
-          </div>
-        )
+        return <ImageOptions data={localData} onChange={handleChange} />
     }
   }
 
