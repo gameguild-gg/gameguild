@@ -50,6 +50,23 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
   const [alwaysCollapseErrors, setAlwaysCollapseErrors] = useState(false)
   const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Block body scroll and pointer events when modal is open
+  useEffect(() => {
+    // Store original values
+    const originalOverflow = document.body.style.overflow
+    const originalPointerEvents = document.body.style.pointerEvents
+    
+    // Disable scroll and pointer events on body
+    document.body.style.overflow = 'hidden'
+    document.body.style.pointerEvents = 'none'
+    
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = originalOverflow
+      document.body.style.pointerEvents = originalPointerEvents
+    }
+  }, [])
+
   const handleCodeChange = (newCode: string | undefined) => {
     const code = newCode || ""
     setData((prev) => ({ ...prev, code }))
@@ -114,7 +131,19 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
       return
     }
 
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+
     onSave(data)
+  }
+
+  const handleCancel = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
+    onCancel()
   }
 
   // Cleanup timeout on unmount
@@ -127,8 +156,27 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
   }, [])
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      style={{ pointerEvents: 'auto' }}
+      onClick={handleCancel}
+      onMouseDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          handleCancel()
+        }
+        // Prevent all keyboard events from propagating to the editor
+        e.stopPropagation()
+      }}
+    >
+      <div 
+        className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        style={{ pointerEvents: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
+        onKeyPress={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
@@ -175,14 +223,14 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
               )}
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={onCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+          <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
             <X className="h-4 w-4" />
           </Button>
         </div>
 
         {/* Template Selector */}
         {showTemplateSelector && (
-          <MermaidTemplateSelector onSelect={handleTemplateSelect} onCancel={() => setShowTemplateSelector(false)} />
+          <MermaidTemplateSelector onSelect={handleTemplateSelect} onCancel={handleCancel} />
         )}
 
         {/* Main Content */}
@@ -423,7 +471,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={onCancel}
+                    onClick={handleCancel}
                     className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                   >
                     Cancel
