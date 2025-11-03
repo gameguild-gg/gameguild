@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection"
 import { mergeRegister } from "@lexical/utils"
+import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import {
   $getNodeByKey,
   $getSelection,
@@ -15,7 +16,7 @@ import {
   type NodeKey,
   SELECTION_CHANGE_COMMAND,
 } from "lexical"
-import { Settings } from "lucide-react"
+import { Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MediaNodeBase, type BaseMediaData } from "./base/media-node-base"
 import { UnifiedMediaEditor } from "@/components/editor/extras/media/unified-media-editor"
@@ -273,24 +274,23 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
         onMouseLeave={() => setShowMenu(false)}
       >
         <div className="relative flex justify-center">
-          <div onClick={() => setShowEditor(true)} className="cursor-pointer w-full">
+          <div className="w-full">
             {renderMediaContent()}
           </div>
 
           {/* Settings button */}
-          {showMenu && (
-            <div className="absolute top-2 right-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setShowEditor(true)
-                }}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
+          {(
+            <div className="my-4 relative">
+              <ContentEditMenu
+                options={[
+                  {
+                    id: "edit",
+                    icon: <Pencil className="h-4 w-4" />,
+                    label: "Edit Admonition",
+                    action: () => setShowEditor(true),
+                  },
+                ]}
+              />
             </div>
           )}
         </div>
