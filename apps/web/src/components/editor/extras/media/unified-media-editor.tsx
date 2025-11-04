@@ -5,12 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { X, Save, Image, Video, Music, FileText, Eye } from "lucide-react"
+import { X, Save, Image, Video, Music, FileText, Eye, Grid } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { MediaPreview } from "./media-preview"
 import { ImageSizeControl } from "@/components/editor/extras/image-size-control"
 import { ImageOptions } from "./image-options"
 import { VideoOptions } from "./video-options"
 import { AudioOptions } from "./audio-options"
+import { MediaListTab } from "./media-list-tab"
+import { LayoutTab } from "./layout-tab"
+import { CaptionsTab } from "./captions-tab"
 import {
   detectVideoEmbedType,
   detectAudioEmbedType,
@@ -23,12 +27,53 @@ interface UnifiedMediaEditorProps {
   data: BaseMediaData
   onChange: (data: Partial<BaseMediaData>) => void
   onClose?: () => void
-  onSave?: () => void
+  onSave?: (items?: BaseMediaData[], columns?: number, caption?: string) => void
+  mode?: "single" | "gallery"
+  galleryItems?: BaseMediaData[]
+  onGalleryItemsChange?: (items: BaseMediaData[]) => void
+  galleryColumns?: number
+  onGalleryColumnsChange?: (columns: number) => void
+  galleryCaption?: string
+  onGalleryCaptionChange?: (caption: string) => void
 }
 
-export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedMediaEditorProps) {
+export function UnifiedMediaEditor({ 
+  data, 
+  onChange, 
+  onClose, 
+  onSave,
+  mode = "single",
+  galleryItems = [],
+  onGalleryItemsChange,
+  galleryColumns = 2,
+  onGalleryColumnsChange,
+  galleryCaption = "",
+  onGalleryCaptionChange
+}: UnifiedMediaEditorProps) {
   const [localData, setLocalData] = useState<BaseMediaData>(data)
   const [urlDetectionEnabled, setUrlDetectionEnabled] = useState(true)
+  const [activeTab, setActiveTab] = useState<string>("media")
+  
+  // Only allow gallery mode for images (video/audio always single)
+  const canUseGallery = data.type === "image"
+  
+  // Sempre trabalha em modo galeria, começando com 1 item (apenas para imagens)
+  const [localGalleryItems, setLocalGalleryItems] = useState<BaseMediaData[]>(
+    canUseGallery ? (galleryItems.length > 0 ? galleryItems : [data]) : [data]
+  )
+  const [localColumns, setLocalColumns] = useState(galleryColumns)
+  const [localGlobalCaption, setLocalGlobalCaption] = useState(galleryCaption)
+  
+  // Determina se é galeria baseado no número de itens (apenas para imagens)
+  const isGalleryMode = canUseGallery && localGalleryItems.length > 1
+
+  // Sincroniza localData com o primeiro item da galeria
+  useEffect(() => {
+    const firstItem = localGalleryItems[0]
+    if (firstItem && !isGalleryMode) {
+      setLocalData(firstItem)
+    }
+  }, [localGalleryItems, isGalleryMode])
 
   // Block body scroll and pointer events when modal is open
   useEffect(() => {
@@ -99,17 +144,35 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
   }
 
   const handleSave = () => {
-    // Ensure all localData is synchronized before closing
-    onChange(localData)
-    
     // Restore body styles before closing
     document.body.style.overflow = ''
     document.body.style.pointerEvents = ''
     
     if (onSave) {
-      onSave()
-    } else if (onClose) {
-      onClose()
+      // Pass all data to onSave - it will decide what to do
+      // Only pass gallery data if canUseGallery is true
+      if (canUseGallery) {
+        onSave(localGalleryItems, localColumns, localGlobalCaption)
+      } else {
+        // For video/audio, just save the single item
+        onSave([localData], undefined, undefined)
+      }
+    } else {
+      // Fallback to old behavior
+      if (isGalleryMode && canUseGallery) {
+        // Save gallery data (múltiplos itens) - only for images
+        if (onGalleryItemsChange) onGalleryItemsChange(localGalleryItems)
+        if (onGalleryColumnsChange) onGalleryColumnsChange(localColumns)
+        if (onGalleryCaptionChange) onGalleryCaptionChange(localGlobalCaption)
+      } else {
+        // Save single media data (1 item apenas ou video/audio)
+        const singleItem = localGalleryItems[0] || localData
+        onChange(singleItem)
+      }
+      
+      if (onClose) {
+        onClose()
+      }
     }
   }
 
@@ -135,7 +198,11 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
   }
 
   const getMediaTitle = () => {
-    switch (localData.type) {
+    if (isGalleryMode) {
+      return "Gallery Editor"
+    }
+    const firstItem = localGalleryItems[0] || localData
+    switch (firstItem.type) {
       case "image":
         return "Image Editor"
       case "video":
@@ -143,6 +210,13 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
       case "audio":
         return "Audio Editor"
     }
+  }
+  
+  const getHeaderIcon = () => {
+    if (isGalleryMode) {
+      return <Grid className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+    }
+    return getMediaIcon()
   }
 
   const renderMediaSpecificOptions = () => {
@@ -182,11 +256,21 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
-            {getMediaIcon()}
+            {getHeaderIcon()}
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{getMediaTitle()}</h2>
             
-            {/* Media Type Display */}
-            <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
+            {/* Gallery Info Display */}
+            {isGalleryMode ? (
+              <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  Items: <span className="font-medium text-gray-800 dark:text-gray-200">{localGalleryItems.length}</span>
+                </span>
+                <span className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
+                  Columns: <span className="font-medium text-blue-600 dark:text-blue-400">{localColumns}</span>
+                </span>
+              </div>
+            ) : (
+              <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
               <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                 Type: <span className="font-medium text-gray-800 dark:text-gray-200 capitalize">{localData.type}</span>
               </span>
@@ -212,7 +296,8 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
                   <span className="font-medium text-green-600 dark:text-green-400">{localData.audioType}</span>
                 </span>
               )}
-            </div>
+              </div>
+            )}
           </div>
           <Button variant="ghost" size="sm" onClick={handleClose} className="hover:bg-gray-100 dark:hover:bg-gray-800">
             <X className="h-4 w-4" />
@@ -230,67 +315,77 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
               </h3>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* URL Field */}
-              <div className="space-y-2">
-                <Label htmlFor="src" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Media URL:
-                </Label>
-                <Input
-                  id="src"
-                  value={localData.src}
-                  onChange={(e) => handleUrlChange(e.target.value)}
-                  placeholder={
-                    localData.type === "video" 
-                      ? "https://youtube.com/... or https://example.com/video.mp4"
-                      : localData.type === "audio"
-                      ? "https://spotify.com/... or https://example.com/audio.mp3"
-                      : "https://example.com/image.jpg"
-                  }
-                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
-                />
-                {(localData.type === "video" || localData.type === "audio") && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    💡 Auto-detects YouTube, Vimeo, Spotify, SoundCloud and file URLs
-                  </p>
-                )}
-              </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {canUseGallery ? (
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 mb-4">
+                    <TabsTrigger value="media">Media</TabsTrigger>
+                    <TabsTrigger value="layout">Layout</TabsTrigger>
+                    <TabsTrigger value="captions">Captions</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="media" className="space-y-4">
+                    <MediaListTab
+                      items={localGalleryItems}
+                      onItemsChange={setLocalGalleryItems}
+                      allowMixedTypes={true}
+                      defaultType={localData.type}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="layout" className="space-y-4">
+                    <LayoutTab
+                      items={localGalleryItems}
+                      onItemsChange={setLocalGalleryItems}
+                      columns={localColumns}
+                      onColumnsChange={setLocalColumns}
+                    />
+                  </TabsContent>
+                  
+                  <TabsContent value="captions" className="space-y-4">
+                    <CaptionsTab
+                      items={localGalleryItems}
+                      onItemsChange={setLocalGalleryItems}
+                      globalCaption={localGlobalCaption}
+                      onGlobalCaptionChange={setLocalGlobalCaption}
+                    />
+                  </TabsContent>
+                </Tabs>
+              ) : (
+                <div className="space-y-4">
+                  {/* URL Field */}
+                  <div className="space-y-2">
+                    <Label htmlFor="src" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Media URL:
+                    </Label>
+                    <Input
+                      id="src"
+                      value={localData.src}
+                      onChange={(e) => handleUrlChange(e.target.value)}
+                      placeholder={
+                        localData.type === "video" 
+                          ? "https://youtube.com/... or https://example.com/video.mp4"
+                          : localData.type === "audio"
+                          ? "https://spotify.com/... or https://example.com/audio.mp3"
+                          : "https://example.com/image.jpg"
+                      }
+                      className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
+                    />
+                    {(localData.type === "video" || localData.type === "audio") && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        💡 Auto-detects YouTube, Vimeo, Spotify, SoundCloud and file URLs
+                      </p>
+                    )}
+                  </div>
 
-              {/* Media Specific Options - Only show if URL is provided */}
-              {localData.src && (
-                <div className="space-y-3 pt-2">
-                  {renderMediaSpecificOptions()}
+                  {/* Media Specific Options - Only show if URL is provided */}
+                  {localData.src && (
+                    <div className="space-y-3 pt-2">
+                      {renderMediaSpecificOptions()}
+                    </div>
+                  )}
                 </div>
               )}
-
-              {/* Divider */}
-              <div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
-
-              {/* Size Control */}
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Size: {localData.size}%
-                </Label>
-                <ImageSizeControl
-                  size={localData.size || 100}
-                  onChange={(value) => handleChange("size", value)}
-                />
-              </div>
-
-              {/* Caption */}
-              <div className="space-y-2">
-                <Label htmlFor="caption" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Caption:
-                </Label>
-                <Textarea
-                  id="caption"
-                  value={localData.caption || ""}
-                  onChange={(e) => handleChange("caption", e.target.value)}
-                  placeholder="Add a caption (optional)"
-                  rows={3}
-                  className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
-                />
-              </div>
             </div>
           </div>
 
@@ -302,8 +397,53 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
                 Live Preview
               </h3>
             </div>
-            <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950">
-              <MediaPreview data={localData} />
+            <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950 p-4">
+              {isGalleryMode ? (
+                <div className="space-y-4">
+                  <div 
+                    className="grid gap-3"
+                    style={{ gridTemplateColumns: `repeat(${localColumns}, 1fr)` }}
+                  >
+                    {localGalleryItems.map((item, index) => (
+                      <div key={index} className="space-y-2">
+                        <div 
+                          className="relative overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700"
+                          style={{ 
+                            width: `${item.size || 100}%`,
+                            aspectRatio: item.type === "image" ? "auto" : "16/9"
+                          }}
+                        >
+                          {item.type === "image" && item.src && (
+                            <img src={item.src} alt={item.alt || ""} className="w-full h-auto" />
+                          )}
+                          {item.type === "video" && (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Video className="h-8 w-8 text-gray-400" />
+                            </div>
+                          )}
+                          {item.type === "audio" && (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Music className="h-8 w-8 text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                        {item.caption && (
+                          <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
+                            {item.caption}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {localGlobalCaption && (
+                    <div className="text-sm text-gray-600 dark:text-gray-400 text-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                      {localGlobalCaption}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <MediaPreview data={localData} />
+              )}
             </div>
           </div>
         </div>
@@ -323,7 +463,7 @@ export function UnifiedMediaEditor({ data, onChange, onClose, onSave }: UnifiedM
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
               <Save className="h-4 w-4" />
-              Save Media
+              {isGalleryMode ? "Save Gallery" : "Save Media"}
             </Button>
           </div>
         </div>

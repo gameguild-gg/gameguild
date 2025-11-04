@@ -62,6 +62,41 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
     [editor, nodeKey, data, NodeClass],
   )
 
+  // Handler for converting to gallery when multiple items are added
+  const handleConvertToGallery = useCallback(
+    (items: BaseMediaData[], columns: number, globalCaption: string) => {
+      editor.update(() => {
+        const node = $getNodeByKey(nodeKey)
+        if (node) {
+          // Import GalleryNode dynamically
+          const { GalleryNode } = require('./gallery-node')
+          
+          // Convert BaseMediaData to GalleryImage format
+          const galleryImages = items.map(item => ({
+            id: Math.random().toString(36).substring(7),
+            src: item.src,
+            alt: item.alt || '',
+            caption: item.caption || '',
+            displayMode: 'crop' as const,
+            span: '1x1' as const,
+          }))
+          
+          // Create gallery node
+          const galleryNode = new GalleryNode({
+            images: galleryImages,
+            layout: columns.toString() as '1' | '2' | '3' | '4',
+            caption: globalCaption,
+            defaultDisplayMode: 'crop',
+          })
+          
+          // Replace current node with gallery node
+          node.replace(galleryNode)
+        }
+      })
+    },
+    [editor, nodeKey],
+  )
+
   useEffect(() => {
     return mergeRegister(
       editor.registerCommand(
@@ -307,6 +342,30 @@ export function MediaComponent({ nodeKey, data, NodeClass }: MediaComponentProps
           data={data}
           onChange={updateMedia}
           onClose={() => setShowEditor(false)}
+          onGalleryItemsChange={(items) => {
+            // If multiple items, we need to handle gallery conversion
+            if (items.length > 1) {
+              // This will be handled by onSave
+            }
+          }}
+          onSave={(items?: BaseMediaData[], columns?: number, caption?: string) => {
+            if (data.type === "image") {
+              // Image node - can convert to gallery
+              if (items && items.length > 1 && columns !== undefined) {
+                // Convert to gallery (only for images)
+                handleConvertToGallery(items, columns, caption || '')
+              } else if (items && items.length === 1 && items[0]) {
+                // Update single image
+                updateMedia(items[0])
+              }
+            } else {
+              // Video/Audio node - always single item
+              if (items && items[0]) {
+                updateMedia(items[0])
+              }
+            }
+            setShowEditor(false)
+          }}
         />
       )}
     </>
