@@ -13,6 +13,7 @@ import intro2gproUnityPlatformer from './week07/unity-platformer.md';
 import intro2gproAssignment from './week08/assignment.md';
 import intro2gproProduction from './week08/production.md';
 import intro2gproGameMechanics from './week09/game-mechanics.md';
+import intro2gproTestingSession from './week10/testing-session.md';
 
 // Program
 export const intro2gproProgram: Program = {
@@ -367,6 +368,30 @@ const intro2gproGameMechanicsContent: ProgramContent = {
   slug: 'game-mechanics',
 };
 
+const intro2gproTestingSessionContent: ProgramContent = {
+  id: 'intro2gpro-testing-session',
+  programId: 'intro2gpro-program-1',
+  parentId: undefined,
+  title: 'Week 10: Testing Session',
+  description:
+    'Instructions for publishing, playtesting, and preparing a core-mechanic prototype for QA.',
+  type: 0,
+  body: intro2gproTestingSession,
+  sortOrder: 13,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: intro2gproProgram,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: '2023-01-01T00:00:00Z',
+  updatedAt: '2023-01-01T00:00:00Z',
+  slug: 'testing-session',
+};
+
 // Child content for gamedev-issues
 const intro2gproTechnicalChallengesContent: ProgramContent = {
   id: 'intro2gpro-technical-challenges',
@@ -451,6 +476,7 @@ intro2gproProgram.programContents = [
   intro2gproProductionContent,
   intro2gproAssignmentContent,
   intro2gproGameMechanicsContent,
+  intro2gproTestingSessionContent,
   intro2gproTechnicalChallengesContent,
   intro2gproDesignChallengesContent,
   intro2gproBusinessChallengesContent,
