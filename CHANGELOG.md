@@ -1,3 +1,10 @@
+# [2.23.0](https://github.com/gameguild-gg/gameguild/compare/v2.22.1...v2.23.0) (2025-11-06)
+
+
+### Features
+
+* **web:** Add testing session content for Intro2GPro ([bc3ade5](https://github.com/gameguild-gg/gameguild/commit/bc3ade5b0bab75f930aa0fbb65fb439a8df61177))
+
 ## [2.22.1](https://github.com/gameguild-gg/gameguild/compare/v2.22.0...v2.22.1) (2025-10-17)
 
 
