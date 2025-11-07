@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { cn } from '@/lib/utils';
-import { BarChart3, BookOpen, ChevronDown, ChevronRight, ClipboardList, Code, FileText, HelpCircle, MessageSquare, Trophy, Folder, FolderOpen } from 'lucide-react';
+import { BarChart3, ClipboardList, Code, FileText, HelpCircle, MessageSquare, Trophy, Folder, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';

@@ -5,7 +5,6 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 // import { CookieIcon, Settings, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCookies } from '@/hooks/use-cookies';
-import { CookiePreferences } from './cookie-preferences';
 
 type CookieConsentProps = {
   className?: string;
