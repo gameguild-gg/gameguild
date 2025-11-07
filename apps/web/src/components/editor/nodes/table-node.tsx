@@ -144,6 +144,19 @@ function TableComponent({ node }: { node: TableNode }) {
   const [tempData, setTempData] = useState<TableData>(currentData)
   const isLoading = useContext(EditorLoadingContext)
 
+  // Block body scroll and pointer events when modal is open
+  useEffect(() => {
+    if (showEditor) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.pointerEvents = 'none'
+      
+      return () => {
+        document.body.style.overflow = ''
+        document.body.style.pointerEvents = ''
+      }
+    }
+  }, [showEditor])
+
   useEffect(() => {
     const data = node.getData()
     // Ensure we have valid cells data
@@ -206,10 +219,19 @@ function TableComponent({ node }: { node: TableNode }) {
         setCurrentData(updatedData)
       }
     })
+    
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
     setShowEditor(false)
   }
 
   const handleCancel = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
     if (currentData.isNew) {
       editor.update(() => {
         node.remove()
@@ -496,8 +518,23 @@ function TableComponent({ node }: { node: TableNode }) {
 
       {/* Table Editor Modal */}
       {showEditor && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col">
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          style={{ pointerEvents: 'auto' }}
+          onClick={handleCancel}
+          onKeyDown={(e) => {
+            e.stopPropagation()
+            if (e.key === 'Escape') {
+              handleCancel()
+            }
+          }}
+          onKeyUp={(e) => e.stopPropagation()}
+          onKeyPress={(e) => e.stopPropagation()}
+        >
+          <div 
+            className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
               <div className="flex items-center gap-3">

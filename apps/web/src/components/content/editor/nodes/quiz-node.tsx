@@ -11,9 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { QuizDisplay } from '@/components/editor/ui/quiz/quiz-display';
-import { QuizWrapper } from '@/components/editor/ui/quiz/quiz-wrapper';
-import { QuizAnswerItem } from '@/components/editor/ui/quiz/quiz-answer-item';
+import { QuizDisplay } from '@/components/editor/extras/quiz/quiz-display';
+import { QuizWrapper } from '@/components/editor/extras/quiz/quiz-wrapper';
+import { QuizAnswerItem } from '@/components/editor/extras/quiz/quiz-answer-item';
 import { useQuizLogic } from '@/hooks/editor/use-quiz-logic';
 import { ContentEditMenu } from '@/components/ui/content-edit-menu';
 
@@ -421,7 +421,11 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                   <Plus className="mr-1 h-4 w-4" />
                   Add Alternative
                 </Button>
-                {blankCount === 0 && <p className="text-sm text-muted-foreground">Add "___" to your question to create blanks first.</p>}
+                {blankCount === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Add &quot;___&quot; to your question to create blanks first.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -523,16 +527,15 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
         )}
         <QuizWrapper backgroundColor={backgroundColor}>
           {!isEditing && (
-            <ContentEditMenu
-              options={[
-                {
-                  id: 'edit',
-                  icon: <Pencil className="h-4 w-4" />,
-                  label: 'Edit Quiz',
-                  action: () => setIsEditing(true),
-                },
-              ]}
-            />
+          <ContentEditMenu
+            options={[
+              {
+                icon: <Pencil className="h-4 w-4" />,
+                label: 'Edit Quiz',
+                onClick: () => setIsEditing(true),
+              },
+            ]}
+          />
           )}
           {!isEditing && showFeedback && !allowRetry && (
             <div className="flex justify-end mt-4 pt-3 border-t border-border/50">
