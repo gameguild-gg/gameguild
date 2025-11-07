@@ -39,13 +39,14 @@ export default async function CourseContentLayout({ children, params }: CourseCo
     const topLevel = await getTopLevelProgramContent({
       path: { programId: programData.id! }
     });
-    contentItems = (topLevel?.data as any) ?? [];
+    contentItems = (topLevel?.data as ProgramContent[]) ?? [];
 
     // If API returns empty data, fallback to mock data
     if (contentItems.length === 0 && programData.programContents) {
       contentItems = programData.programContents;
     }
-  } catch (error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     // Fallback to mock data content
     if (programData.programContents) {
       contentItems = programData.programContents;

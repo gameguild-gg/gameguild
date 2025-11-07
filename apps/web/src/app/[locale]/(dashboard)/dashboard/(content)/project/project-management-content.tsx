@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+
 import { toast } from 'sonner';
 import {
   getProjectsData,
@@ -175,7 +176,8 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
     }
   };
 
-  const handleArchive = async (project: Project) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleArchive = async (project: Project) => {
     try {
       setLoading(true);
       await archiveProject(project.id!);
@@ -218,7 +220,7 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const getStatusBadge = (status: any) => {
+  const getStatusBadge = (status: string | number | undefined) => {
     const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
       '0': { label: 'Draft', variant: 'outline' },
       '1': { label: 'Published', variant: 'default' },
@@ -226,7 +228,8 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
       '3': { label: 'Deleted', variant: 'destructive' },
     };
 
-    const statusInfo = statusMap[status?.toString()] || { label: 'Unknown', variant: 'outline' as const };
+    const statusKey = status?.toString() || '';
+    const statusInfo = statusMap[statusKey] || { label: 'Unknown', variant: 'outline' as const };
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
 

@@ -62,6 +62,40 @@ export default function PreviewPage() {
         await dbStorage.current.init()
         setIsDbInitialized(true)
         await loadAvailableTags()
+        
+        // Check if there's a selected project from the main page
+        const checkSelectedProject = async () => {
+          try {
+            const selectedProjectData = localStorage.getItem('selectedProject')
+            if (selectedProjectData) {
+              const projectData = JSON.parse(selectedProjectData)
+              
+              // Clear the localStorage item
+              localStorage.removeItem('selectedProject')
+              
+              // Set the current project for viewing
+              if (projectData.id && projectData.data) {
+                setCurrentProject(projectData)
+                
+                toast.success("Projeto carregado", {
+                  description: `"${projectData.name}" foi aberto para visualização`,
+                  duration: 2500,
+                  icon: "👁️",
+                })
+              }
+            }
+          } catch (error) {
+            console.error("Error checking selected project:", error)
+            toast.error("Erro ao carregar projeto", {
+              description: "Não foi possível carregar o projeto selecionado",
+              duration: 4000,
+              icon: "❌",
+            })
+          }
+        }
+        
+        await checkSelectedProject()
+        
       } catch (error) {
         console.error("Failed to initialize IndexedDB:", error)
         toast.error("Storage error", {

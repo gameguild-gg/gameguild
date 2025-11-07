@@ -84,6 +84,19 @@ function DividerComponent({ data, nodeKey }: DividerComponentProps) {
   const [style, setStyle] = useState<DividerStyle>(data.style || "simple")
   const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading)
 
+  // Block body scroll and pointer events when modal is open
+  useEffect(() => {
+    if (isEditing) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.pointerEvents = 'none'
+      
+      return () => {
+        document.body.style.overflow = ''
+        document.body.style.pointerEvents = ''
+      }
+    }
+  }, [isEditing])
+
   useEffect(() => {
     if (data.isNew) {
       editor.update(() => {
@@ -114,6 +127,14 @@ function DividerComponent({ data, nodeKey }: DividerComponentProps) {
   const handleStyleChange = (newStyle: DividerStyle) => {
     setStyle(newStyle)
     updateDivider({ style: newStyle })
+  }
+
+  const handleClose = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
+    setIsEditing(false)
   }
 
   const renderDivider = () => {
@@ -181,8 +202,23 @@ function DividerComponent({ data, nodeKey }: DividerComponentProps) {
   return (
     <>
       {renderDivider()}
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border p-4 max-w-md w-full mx-4">
+      <div 
+        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        style={{ pointerEvents: 'auto' }}
+        onClick={handleClose}
+        onKeyDown={(e) => {
+          e.stopPropagation()
+          if (e.key === 'Escape') {
+            handleClose()
+          }
+        }}
+        onKeyUp={(e) => e.stopPropagation()}
+        onKeyPress={(e) => e.stopPropagation()}
+      >
+        <div 
+          className="bg-white dark:bg-gray-800 rounded-lg border p-4 max-w-md w-full mx-4"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <DropdownMenu>
@@ -201,7 +237,7 @@ function DividerComponent({ data, nodeKey }: DividerComponentProps) {
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+            <Button variant="ghost" size="sm" onClick={handleClose}>
               <Check className="h-4 w-4 mr-2" />
               Done
             </Button>
