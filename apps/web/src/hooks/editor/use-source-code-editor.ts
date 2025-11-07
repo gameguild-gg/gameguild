@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Play, Settings, Pencil } from "lucide-react"
 import type { EditMenuOption } from "@/components/editor/extras/content-edit-menu"
-import type { ReactElement } from "react"
 import type { CodeFile, ProgrammingLanguage, SourceCodeData } from "@/components/editor/extras/source-code/types"
 import { useCodeExecution } from "./use-code-execution"
 import React from "react"

@@ -13,7 +13,7 @@ import { useTerminal } from "@/hooks/editor/use-terminal"
 import { useCodeExecution } from "@/hooks/editor/use-code-execution"
 import { useFileManagement } from "@/hooks/editor/use-file-management"
 import { useFileState } from "@/hooks/editor/use-file-state"
-import { useFileContent, insertSolutionTemplate } from "@/hooks/editor/use-file-content"
+import { useFileContent } from "@/hooks/editor/use-file-content"
 import { useLanguageSettings } from "@/hooks/editor/use-language-settings"
 import { useEditorStyles } from "@/hooks/editor/use-editor-styles"
 

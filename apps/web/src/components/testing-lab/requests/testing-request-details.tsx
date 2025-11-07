@@ -3,20 +3,19 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Calendar, Clock, Download, FileText, Send, Users, Star, MessageSquare, BarChart3, CheckCircle, XCircle, AlertTriangle, TestTube } from 'lucide-react';
+import { Calendar, Download, FileText, Send, Users, Star, MessageSquare, BarChart3, TestTube } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingRequest } from '@/lib/api/generated/types.gen';
-import { joinTestingRequest, leaveTestingRequest, checkTestingRequestParticipation, submitTestingRequestFeedback } from '@/lib/testing-lab/testing-lab.actions';
+import { joinTestingRequest, leaveTestingRequest, submitTestingRequestFeedback } from '@/lib/testing-lab/testing-lab.actions';
 
 interface TestingRequestDetailsProps {
   data: TestingRequest;

@@ -3,7 +3,6 @@
 import { getProgramById, getProgramWithContent, getPrograms, getPublishedPrograms, getProgramBySlug } from './programs.actions';
 import { getProgramBySlug as getMockProgramBySlug } from '@/data/courses/mock-data';
 import { Program } from '@/lib/api/generated/types.gen';
-import type { Course } from '@/lib/types';
 
 /**
  * Get a program by slug

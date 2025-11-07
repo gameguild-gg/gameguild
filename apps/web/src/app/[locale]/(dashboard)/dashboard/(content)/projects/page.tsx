@@ -1,13 +1,10 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link';
-import { Search, Filter, Grid3X3, List, Plus, Star, Users, Tag, Gamepad2 } from 'lucide-react';
+import { Search, Filter, Grid3X3, List, Gamepad2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { getAllProjectsService } from '@/lib/content-management/projects/projects.service';
 import { transformProjectToGameProject } from '@/lib/content-management/projects/projects.utils';
 import { ProjectCreateDrawer } from '@/components/projects/project-create-drawer';
