@@ -446,8 +446,6 @@ function TableComponent({ node }: { node: TableNode }) {
     <div className="table-node my-4 max-w-full">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Grid3X3 className="h-5 w-5 text-muted-foreground" />
-          <span className="text-sm font-medium">Table</span>
           {safeData.caption && <span className="text-sm text-muted-foreground">- {safeData.caption}</span>}
         </div>
         <div className="flex items-center my-4">
