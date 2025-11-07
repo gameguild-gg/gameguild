@@ -48,7 +48,7 @@ async function findContentByPath(
         parentId: content.id!
       }
     });
-    children = (childrenResult?.data as any) ?? [];
+    children = (childrenResult?.data as ProgramContentDto[]) ?? [];
   } catch (error) {
     // If API fails, return empty children array
     console.log('🚨 Failed to get children for content:', content.id, error);
@@ -108,7 +108,7 @@ export default async function ContentPage({ params }: PageProps) {
 
   // Find the content item by path using slug-based lookup
   let content = null;
-  let breadcrumb: any[] = [];
+  let breadcrumb: ProgramContentDto[] = [];
 
   // Try API first, then fallback to mock data
   if (allContent.length > 0) {
@@ -152,7 +152,7 @@ export default async function ContentPage({ params }: PageProps) {
           parentId: content.id
         }
       });
-      children = (childrenResult?.data as any) ?? [];
+      children = (childrenResult?.data as ProgramContentDto[]) ?? [];
     } catch (error) {
       console.log('🚨 Failed to get children from API (likely auth issue), using empty array:', error);
       // For unauthenticated users, we'll just show no children
@@ -178,7 +178,7 @@ export default async function ContentPage({ params }: PageProps) {
           parentId: parent.id
         }
       });
-      siblings = (siblingsResult?.data as any) ?? [];
+      siblings = (siblingsResult?.data as ProgramContentDto[]) ?? [];
       currentIndex = siblings.findIndex(item => item.id === content.id);
     }
   }
@@ -188,12 +188,15 @@ export default async function ContentPage({ params }: PageProps) {
 
   // Generate navigation paths
   const basePath = `/courses/${slug}/content`;
-  const currentPath = contentPath.join('/');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _currentPath = contentPath.join('/');
   const parentPath = contentPath.length > 1 ? contentPath.slice(0, -1).join('/') : '';
 
-  const previousPath = previousContent ?
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _previousPath = previousContent ?
     (parentPath ? `${parentPath}/${previousContent.id}` : previousContent.id!) : null;
-  const nextPath = nextContent ?
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _nextPath = nextContent ?
     (parentPath ? `${parentPath}/${nextContent.id}` : nextContent.id!) : null;
 
   return (

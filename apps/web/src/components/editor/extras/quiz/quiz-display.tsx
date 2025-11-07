@@ -1,6 +1,6 @@
 "use client"
 import { QuizFeedback } from "./quiz-feedback"
-import type { QuizAnswer, QuestionType, FillBlankField } from "../../nodes/quiz-node"
+import type { QuizAnswer, QuestionType, FillBlankAlternative } from "../../nodes/quiz-node"
 
 interface QuizDisplayProps {
   question: string
@@ -16,7 +16,10 @@ interface QuizDisplayProps {
   checkAnswers: () => void
   toggleAnswer: (answerId: string) => void
   resetQuiz?: () => void
-  fillBlankFields?: FillBlankField[]
+  // Fill-in-the-blank support (optional)
+  blanks?: string[]
+  fillBlankMode?: "text" | "multiple-choice"
+  fillBlankAlternatives?: FillBlankAlternative[]
   ratingScale?: { min: number; max: number; step: number }
   correctRating?: number
 }
@@ -35,7 +38,6 @@ export function QuizDisplay({
   checkAnswers,
   toggleAnswer,
   resetQuiz,
-  fillBlankFields = [],
   ratingScale = { min: 1, max: 5, step: 1 },
   correctRating = 3,
 }: QuizDisplayProps) {

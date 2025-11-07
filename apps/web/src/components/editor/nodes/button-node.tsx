@@ -104,6 +104,19 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
   const [size, setSize] = useState<ButtonSize>(data.size || "default")
   const [showIcon, setShowIcon] = useState(data.showIcon ?? true)
 
+  // Block body scroll and pointer events when modal is open
+  useEffect(() => {
+    if (isEditing) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.pointerEvents = 'none'
+      
+      return () => {
+        document.body.style.overflow = ''
+        document.body.style.pointerEvents = ''
+      }
+    }
+  }, [isEditing])
+
   useEffect(() => {
     if (data.isNew) {
       editor.update(() => {
@@ -159,6 +172,14 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
   const handleShowIconChange = (newShowIcon: boolean) => {
     setShowIcon(newShowIcon)
     updateButton({ showIcon: newShowIcon })
+  }
+
+  const handleClose = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ''
+    document.body.style.pointerEvents = ''
+    
+    setIsEditing(false)
   }
 
   const getActionTypeLabel = (type: ButtonActionType): string => {
@@ -270,8 +291,23 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-lg border max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl">
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      style={{ pointerEvents: 'auto' }}
+      onClick={handleClose}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Escape') {
+          handleClose()
+        }
+      }}
+      onKeyUp={(e) => e.stopPropagation()}
+      onKeyPress={(e) => e.stopPropagation()}
+    >
+      <div 
+        className="bg-white dark:bg-gray-900 rounded-lg border max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="sticky top-0 bg-white dark:bg-gray-900 border-b px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
@@ -282,7 +318,7 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
               <p className="text-sm text-muted-foreground">Personalize o texto, ação e aparência do botão</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
+          <Button variant="ghost" size="sm" onClick={handleClose}>
             <Check className="h-4 w-4 mr-2" />
             Concluído
           </Button>
