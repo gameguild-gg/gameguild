@@ -6,12 +6,10 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Calendar, Star, MessageSquare, User, ThumbsUp, ThumbsDown, TestTube } from 'lucide-react';
+import { Star, MessageSquare, ThumbsUp, ThumbsDown, TestTube } from 'lucide-react';
 import Link from 'next/link';
 import type { TestingFeedback } from '@/lib/api/generated/types.gen';
 

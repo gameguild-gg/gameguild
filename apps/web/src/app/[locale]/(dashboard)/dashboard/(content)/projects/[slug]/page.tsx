@@ -9,9 +9,7 @@ import {
   Download,
   Eye,
   MessageSquare,
-  type LucideIcon,
   DollarSign,
-  AlertCircle,
   TrendingUp,
   Activity,
 } from "lucide-react"

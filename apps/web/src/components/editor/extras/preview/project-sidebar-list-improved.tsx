@@ -1,12 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { FileText, Tag, Calendar, ChevronDown, Search, Filter, Pin, PinOff } from "lucide-react"
+import { FileText, Calendar, Filter, Pin, PinOff } from "lucide-react"
 import { ProjectSearchFilters } from "../../extras/project-dialog/project-search-filters"
 
 interface ProjectData {
