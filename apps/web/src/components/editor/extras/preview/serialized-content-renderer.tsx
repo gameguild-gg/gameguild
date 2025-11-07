@@ -27,6 +27,7 @@ import { PreviewListItem } from "@/components/editor/plugins/preview-components/
 import { PreviewLink } from "@/components/editor/plugins/preview-components/preview-link"
 import { PreviewHeading } from "@/components/editor/plugins/preview-components/preview-heading"
 import { PreviewVegaLite } from "@/components/editor/plugins/preview-components/preview-vega-lite"
+import { PreviewTable } from "@/components/editor/plugins/preview-components/preview-table"
 
 interface SerializedContentRendererProps {
   serializedState: SerializedEditorState
@@ -136,6 +137,11 @@ export function SerializedContentRenderer({
     // For Vega-Lite charts
     if (node.type === "vega-lite") {
       return <PreviewVegaLite key={uniqueKey} node={node} />
+    }
+
+    // For table nodes
+    if (node.type === "table") {
+      return <PreviewTable key={uniqueKey} node={node} />
     }
 
     if (node.children) {
