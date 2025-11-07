@@ -12,7 +12,6 @@ import {
   Users,
   Activity,
   Clock,
-  Calendar,
   Download,
   RefreshCw,
   Loader2

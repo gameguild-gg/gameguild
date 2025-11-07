@@ -1,4 +1,5 @@
 @import "tailwindcss/preflight";
+@reference "../../../styles/globals.css";
 @tailwind utilities;
 
 body {
