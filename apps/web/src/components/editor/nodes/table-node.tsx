@@ -536,17 +536,10 @@ function TableComponent({ node }: { node: TableNode }) {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                  <Grid3X3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Table Editor</h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    Configure and edit your table structure and content
-                  </p>
-                </div>
+                <Grid3X3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Table Editor</h2>
               </div>
               <Button variant="ghost" size="sm" onClick={handleCancel} className="hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-4 w-4" />
@@ -556,12 +549,12 @@ function TableComponent({ node }: { node: TableNode }) {
             {/* Main Content */}
             <div className="flex-1 overflow-hidden flex">
               {/* Left Panel - Configuration */}
-              <div className="w-80 flex-shrink-0 border-r border-gray-200 dark:border-gray-700 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
-                <div className="h-full overflow-y-auto p-6 space-y-6">
+              <div className="w-80 shrink-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+                <div className="h-full overflow-y-auto p-6 space-y-6 bg-white dark:bg-gray-950">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-600">
-                      <Grid3X3 className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide">Structure</h3>
+                    <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                      <Grid3X3 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Structure</h3>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
@@ -573,7 +566,7 @@ function TableComponent({ node }: { node: TableNode }) {
                             size="sm"
                             onClick={removeRow}
                             disabled={tempData.rows <= 1}
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
@@ -608,9 +601,14 @@ function TableComponent({ node }: { node: TableNode }) {
                                 cells: newCells,
                               })
                             }}
-                            className="w-16 text-center h-8"
+                            className="w-16 text-center h-8 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
                           />
-                          <Button variant="outline" size="sm" onClick={addRow} className="h-8 w-8 p-0">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={addRow} 
+                            className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+                          >
                             <Plus className="h-4 w-4" />
                           </Button>
                         </div>
@@ -624,7 +622,7 @@ function TableComponent({ node }: { node: TableNode }) {
                             size="sm"
                             onClick={removeColumn}
                             disabled={tempData.columns <= 1}
-                            className="h-8 w-8 p-0"
+                            className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
@@ -659,9 +657,14 @@ function TableComponent({ node }: { node: TableNode }) {
                                 cells: newCells,
                               })
                             }}
-                            className="w-16 text-center h-8"
+                            className="w-16 text-center h-8 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
                           />
-                          <Button variant="outline" size="sm" onClick={addColumn} className="h-8 w-8 p-0">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={addColumn} 
+                            className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+                          >
                             <Plus className="h-4 w-4" />
                           </Button>
                         </div>
@@ -670,16 +673,16 @@ function TableComponent({ node }: { node: TableNode }) {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-600">
-                      <div className="h-4 w-4 rounded bg-gradient-to-br from-blue-500 to-purple-600"></div>
-                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide">Appearance</h3>
+                    <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
+                      <div className="h-4 w-4 rounded bg-blue-600 dark:bg-blue-400"></div>
+                      <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Appearance</h3>
                     </div>
                     
                     <div className="space-y-3">
                       <Label htmlFor="table-style" className="text-sm font-medium text-gray-700 dark:text-gray-300">Table Style</Label>
                       
                       {/* Style Preview Grid */}
-                      <div className="grid grid-cols-1 gap-2 p-3 border rounded-lg bg-white dark:bg-gray-800 max-h-80 overflow-y-auto">
+                      <div className="grid grid-cols-1 gap-2 p-3 border rounded-lg bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 max-h-80 overflow-y-auto">
                         {[
                           { value: "default", name: "Plain Table", preview: "Simple clean design" },
                           { value: "striped", name: "Table Striped", preview: "Alternating row colors" },
@@ -699,12 +702,12 @@ function TableComponent({ node }: { node: TableNode }) {
                             className={cn(
                               "flex items-center gap-3 p-3 rounded-lg border-2 transition-all hover:shadow-md",
                               tempData.style === style.value
-                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800"
+                                ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800"
                                 : "border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/30"
                             )}
                           >
                             {/* Mini table preview */}
-                            <div className="flex-shrink-0 w-20 h-14 border border-gray-300 dark:border-gray-600 rounded overflow-hidden bg-white dark:bg-gray-900">
+                            <div className="shrink-0 w-20 h-14 border border-gray-300 dark:border-gray-600 rounded overflow-hidden bg-white dark:bg-gray-900">
                               <div className={cn(
                                 "w-full h-full scale-[1] origin-top-left",
                                 getTableStyleClasses(style.value as TableStyle)
@@ -752,11 +755,11 @@ function TableComponent({ node }: { node: TableNode }) {
                     </div>
 
                     <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
                         <Switch
                           id="show-header"
                           checked={tempData.showHeader}
-                          onCheckedChange={(checked) => {
+                          onCheckedChange={(checked: boolean) => {
                             const newCells = [...tempData.cells]
                             if (newCells[0]) {
                               newCells[0] = newCells[0].map((cell, j) => ({
@@ -771,24 +774,24 @@ function TableComponent({ node }: { node: TableNode }) {
                         <Label htmlFor="show-header" className="text-sm font-medium text-gray-700 dark:text-gray-300">Show Header Row</Label>
                       </div>
 
-                      <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
                         <Switch
                           id="show-borders"
                           checked={tempData.showBorders}
-                          onCheckedChange={(checked) => setTempData({ ...tempData, showBorders: checked })}
+                          onCheckedChange={(checked: boolean) => setTempData({ ...tempData, showBorders: checked })}
                         />
                         <Label htmlFor="show-borders" className="text-sm font-medium text-gray-700 dark:text-gray-300">Show Table Borders</Label>
                       </div>
                     </div>
 
                     <div>
-                      <Label htmlFor="table-caption" className="text-sm font-medium text-gray-700 dark:text-gray-300">Caption (Optional)</Label>
+                      <Label htmlFor="table-caption" className="text-xs text-gray-600 dark:text-gray-400">Caption (Optional)</Label>
                       <Input
                         id="table-caption"
                         placeholder="Table caption..."
                         value={tempData.caption || ""}
                         onChange={(e) => setTempData({ ...tempData, caption: e.target.value })}
-                        className="mt-1"
+                        className="mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                       />
                     </div>
                   </div>
@@ -797,20 +800,29 @@ function TableComponent({ node }: { node: TableNode }) {
 
               {/* Right Panel - Table Preview and Editing */}
               <div className="flex-1 flex flex-col">
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wide">Preview & Edit Content</h3>
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                  <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Preview & Edit Content</h3>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={handleCancel} className="text-gray-600 dark:text-gray-400">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleCancel} 
+                      className="text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+                    >
                       Cancel
                     </Button>
-                    <Button size="sm" onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button 
+                      size="sm" 
+                      onClick={handleSave} 
+                      className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
+                    >
                       <Save className="h-4 w-4 mr-2" />
                       Save Table
                     </Button>
                   </div>
                 </div>
                 
-                <div className="flex-1 overflow-auto p-6 bg-white dark:bg-gray-900">
+                <div className="flex-1 overflow-auto p-6 bg-white dark:bg-gray-950">
                   <div className="min-h-full">
                     {/* Ensure tempData has valid cells for editing */}
                     {(() => {
