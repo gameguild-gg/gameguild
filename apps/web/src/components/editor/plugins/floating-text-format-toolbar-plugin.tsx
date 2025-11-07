@@ -51,6 +51,7 @@ import { $createParagraphNode } from "lexical"
 export function FloatingTextFormatToolbarPlugin() {
   const [editor] = useLexicalComposerContext()
   const toolbarRef = useRef<HTMLDivElement>(null)
+  const isDropdownOpenRef = useRef(false)
   const [isText, setIsText] = useState(false)
   const [isLink, setIsLink] = useState(false)
   const [isBold, setIsBold] = useState(false)
@@ -64,6 +65,7 @@ export function FloatingTextFormatToolbarPlugin() {
   const [currentCaseFormat, setCurrentCaseFormat] = useState<"uppercase" | "lowercase" | "capitalize" | null>(null)
   const [selectedElementKey, setSelectedElementKey] = useState<string | null>(null)
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null)
+  const [forceShow, setForceShow] = useState(false)
   const [currentHeadingLevel, setCurrentHeadingLevel] = useState<HeadingTagType | null>(null)
   const [isQuote, setIsQuote] = useState(false)
   const [currentFontFamily, setCurrentFontFamily] = useState<string>("")
@@ -73,6 +75,7 @@ export function FloatingTextFormatToolbarPlugin() {
   const [currentBackgroundColor, setCurrentBackgroundColor] = useState<string>("")
   const [currentAlignment, setCurrentAlignment] = useState<string>("")
   const [currentListType, setCurrentListType] = useState<string>("")
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection()
@@ -87,6 +90,7 @@ export function FloatingTextFormatToolbarPlugin() {
       setIsOverline(false)
       setIsStrikethrough(false)
       setCurrentCaseFormat(null)
+      setPosition(null)
       return
     }
 
@@ -112,7 +116,7 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
 
       if (style.includes("text-transform: uppercase")) {
         setCurrentCaseFormat("uppercase")
@@ -127,7 +131,14 @@ export function FloatingTextFormatToolbarPlugin() {
       setCurrentCaseFormat(null)
     }
 
-    setIsText(selection.getTextContent().length > 0)
+    const hasText = selection.getTextContent().length > 0
+    setIsText(hasText)
+    
+    // Se não há texto e não está forçando mostrar, limpar posição
+    if (!hasText && !forceShow) {
+      setPosition(null)
+      return
+    }
 
     const anchorNode = selection.anchor.getNode()
     const element = anchorNode.getKey() === "root" ? anchorNode : anchorNode.getTopLevelElementOrThrow()
@@ -146,9 +157,9 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const fontFamilyMatch = style.match(/font-family:\s*([^;]+)/)
-      if (fontFamilyMatch) {
+      if (fontFamilyMatch && fontFamilyMatch[1]) {
         setCurrentFontFamily(fontFamilyMatch[1].replace(/['"]/g, ""))
       } else {
         setCurrentFontFamily("")
@@ -159,9 +170,9 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const fontSizeMatch = style.match(/font-size:\s*([^;]+)/)
-      if (fontSizeMatch) {
+      if (fontSizeMatch && fontSizeMatch[1]) {
         setCurrentFontSize(fontSizeMatch[1].replace(/['']/g, ""))
       } else {
         setCurrentFontSize("")
@@ -172,9 +183,9 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const colorMatch = style.match(/(?<!background-)color:\s*([^;]+)/)
-      if (colorMatch) {
+      if (colorMatch && colorMatch[1]) {
         setCurrentTextColor(colorMatch[1].replace(/['']/g, "").trim())
       } else {
         setCurrentTextColor("")
@@ -185,9 +196,9 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection.getNodes().length > 0) {
       const firstNode = selection.getNodes()[0]
-      const style = firstNode.getStyle ? String(firstNode.getStyle()) : ""
+      const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const backgroundColorMatch = style.match(/background-color:\s*([^;]+)/)
-      if (backgroundColorMatch) {
+      if (backgroundColorMatch && backgroundColorMatch[1]) {
         setCurrentBackgroundColor(backgroundColorMatch[1].replace(/['']/g, "").trim())
       } else {
         setCurrentBackgroundColor("")
@@ -198,7 +209,7 @@ export function FloatingTextFormatToolbarPlugin() {
 
     if (selection) {
       const element = anchorNode.getTopLevelElementOrThrow()
-      setCurrentAlignment(element.getFormat())
+      setCurrentAlignment(String(element.getFormat()))
     } else {
       setCurrentAlignment("")
     }
@@ -210,18 +221,23 @@ export function FloatingTextFormatToolbarPlugin() {
       setCurrentListType("")
     }
 
+    // Calcular posição do toolbar - funciona tanto para texto selecionado quanto linha vazia
     const nativeSelection = window.getSelection()
-    const range = nativeSelection?.getRangeAt(0)
-    const rect = range?.getBoundingClientRect()
+    if (nativeSelection && nativeSelection.rangeCount > 0) {
+      const range = nativeSelection.getRangeAt(0)
+      const rect = range.getBoundingClientRect()
 
-    if (rect) {
-      const toolbarHeight = 60
-      const toolbarWidth = 240
+      if (rect && (rect.width > 0 || rect.height > 0)) {
+        const toolbarHeight = 60
+        const toolbarWidth = 240
 
-      setPosition({
-        top: rect.top - toolbarHeight - 12,
-        left: Math.max(8, rect.left + (rect.width - toolbarWidth) / 2),
-      })
+        setPosition({
+          top: rect.top - toolbarHeight - 12 + window.scrollY,
+          left: Math.max(8, rect.left + (rect.width - toolbarWidth) / 2),
+        })
+      } else {
+        setPosition(null)
+      }
     } else {
       setPosition(null)
     }
@@ -274,19 +290,82 @@ export function FloatingTextFormatToolbarPlugin() {
   }, [editor])
 
   useEffect(() => {
-    return editor.registerCommand(
-      SELECTION_CHANGE_COMMAND,
-      () => {
-        updateToolbar()
-        return false
-      },
-      1,
-    )
+    // Forçar inicialização do Radix UI para permitir hover imediato
+    const timer = setTimeout(() => {
+      if (toolbarRef.current) {
+        // Simular uma interação mínima para ativar o Radix UI
+        const event = new MouseEvent('mouseenter', { bubbles: false });
+        toolbarRef.current.dispatchEvent(event);
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleDoubleClick = () => {
+      setForceShow(true)
+      // Aguardar um pouco para garantir que a seleção foi atualizada
+      setTimeout(() => {
+        editor.getEditorState().read(() => {
+          updateToolbar()
+        })
+      }, 50)
+    }
+
+    const editorElement = editor.getRootElement()
+    if (editorElement) {
+      editorElement.addEventListener('dblclick', handleDoubleClick)
+      return () => {
+        editorElement.removeEventListener('dblclick', handleDoubleClick)
+      }
+    }
   }, [editor, updateToolbar])
 
-  if (!isText) {
-    return null
-  }
+  const forceShowRef = useRef(forceShow)
+  const toolbarRefForListener = useRef(toolbarRef)
+  
+  // Atualizar refs quando os valores mudarem
+  useEffect(() => {
+    forceShowRef.current = forceShow
+  }, [forceShow])
+
+  // Fechar toolbar ao clicar fora dele (mas não quando apenas o submenu fechar)
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Não fazer nada se toolbar não está visível
+      if (!forceShowRef.current) return
+      
+      const target = event.target as HTMLElement
+      
+      // Verificar se o clique foi dentro do toolbar principal
+      const isClickInsideToolbar = toolbarRef.current?.contains(target)
+      if (isClickInsideToolbar) {
+        return
+      }
+      
+      // Usar setTimeout para permitir que Radix UI processe o evento primeiro
+      setTimeout(() => {
+        // Se há algum dropdown aberto, não fechar
+        const menuContent = document.querySelector('[data-slot="dropdown-menu-content"]')
+        if (menuContent !== null) {
+          return
+        }
+        
+        // Clicou fora de tudo - fechar o toolbar apenas se nenhum dropdown está aberto
+        if (forceShowRef.current) {
+          setForceShow(false)
+          setPosition(null)
+        }
+      }, 0)
+    }
+
+    // Usar 'click' em fase de bubbling após todos os eventos serem processados
+    document.addEventListener('click', handleClickOutside, false)
+    return () => {
+      document.removeEventListener('click', handleClickOutside, false)
+    }
+  }, [])
 
   return (
     <>
@@ -306,18 +385,54 @@ export function FloatingTextFormatToolbarPlugin() {
               e.stopPropagation()
             }
           }}
+          
+          onMouseDown={(e) => {
+            e.stopPropagation()
+          }}
+          onClick={(e) => {
+            e.stopPropagation()
+          }}
+          onMouseLeave={(e) => {
+            // Fechar dropdown quando o mouse sai do toolbar
+            setOpenDropdown(null)
+            e.stopPropagation()
+          }}
         >
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdown === "formatting"} 
+            onOpenChange={(open) => setOpenDropdown(open ? "formatting" : null)}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
+                onMouseEnter={() => {
+                  setOpenDropdown("formatting")
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Alternar entre abrir e fechar quando clica
+                  setOpenDropdown(prev => prev === "formatting" ? null : "formatting")
+                }}
               >
                 <Bold className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-48">
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-48"
+              onMouseDown={(e) => {
+                e.stopPropagation()
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Formatting</div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -457,17 +572,41 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdown === "style"} 
+            onOpenChange={(open) => setOpenDropdown(open ? "style" : null)}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
+                onMouseEnter={() => {
+                  setOpenDropdown("style")
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Alternar entre abrir e fechar quando clica
+                  setOpenDropdown(prev => prev === "style" ? null : "style")
+                }}
               >
                 <Palette className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-64">
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-64"
+              onMouseDown={(e) => {
+                e.stopPropagation()
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Style</div>
               <DropdownMenuSeparator />
 
@@ -495,17 +634,41 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdown === "structure"} 
+            onOpenChange={(open) => setOpenDropdown(open ? "structure" : null)}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
+                onMouseEnter={() => {
+                  setOpenDropdown("structure")
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Alternar entre abrir e fechar quando clica
+                  setOpenDropdown(prev => prev === "structure" ? null : "structure")
+                }}
               >
                 <AlignLeft className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-auto">
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-auto"
+              onMouseDown={(e) => {
+                e.stopPropagation()
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Structure</div>
               <DropdownMenuSeparator />
               <DropdownMenuSub>
@@ -747,17 +910,41 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu>
+          <DropdownMenu 
+            open={openDropdown === "insert"} 
+            onOpenChange={(open) => setOpenDropdown(open ? "insert" : null)}
+          >
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-12 w-12 hover:bg-accent/80 transition-colors duration-150"
+                onMouseEnter={() => {
+                  setOpenDropdown("insert")
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Alternar entre abrir e fechar quando clica
+                  setOpenDropdown(prev => prev === "insert" ? null : "insert")
+                }}
               >
                 <TextCursorInput className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-48">
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-48"
+              onMouseDown={(e) => {
+                e.stopPropagation()
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+              }}
+            >
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Insert</div>
               <DropdownMenuSeparator />
               <LinkMenuComponent />

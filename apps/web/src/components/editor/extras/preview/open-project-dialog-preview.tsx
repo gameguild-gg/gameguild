@@ -168,6 +168,7 @@ export function OpenProjectDialogPreview({
               itemsPerPage={itemsPerPage}
               searchTerm={searchTerm}
               selectedTags={selectedTags}
+              viewMode="grid"
               onOpen={handleOpen}
               onDownload={handleDownload}
               showDeleteButton={false}

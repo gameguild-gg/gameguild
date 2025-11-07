@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ProgramContentDto } from '@/lib/api/generated/types.gen';
 
 interface CourseContentPageClientProps {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     programData: any;
     content: ProgramContentDto;
     contentPath: string[];
@@ -13,10 +14,10 @@ interface CourseContentPageClientProps {
 }
 
 export function CourseContentPageClient({
-    programData,
+    programData: _programData, // eslint-disable-line @typescript-eslint/no-unused-vars
     content,
-    contentPath,
-    basePath,
+    contentPath: _contentPath, // eslint-disable-line @typescript-eslint/no-unused-vars
+    basePath: _basePath, // eslint-disable-line @typescript-eslint/no-unused-vars
     children
 }: CourseContentPageClientProps) {
 
@@ -33,7 +34,7 @@ export function CourseContentPageClient({
                                     <MarkdownRenderer content={content.body} />
                                 ) : (
                                     <pre className="whitespace-pre-wrap">
-                                        {String(content.body || '')}
+                                        {String(content.body)}
                                     </pre>
                                 )}
                             </div>

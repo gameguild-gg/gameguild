@@ -130,8 +130,66 @@ export default function Page() {
   useEffect(() => {
     if (!isDbInitialized) return
     
-    setIsFirstTime(false)
+    // Check if there's a selected project from the main page
+    const checkSelectedProject = async () => {
+      try {
+        const selectedProjectData = localStorage.getItem('selectedProject')
+        if (selectedProjectData) {
+          const projectData = JSON.parse(selectedProjectData)
+          
+          // Clear the localStorage item
+          localStorage.removeItem('selectedProject')
+          
+          // Load the project into the editor
+          if (projectData.id && projectData.data && editorRef.current) {
+            try {
+              // Validate JSON format first
+              let parsedData
+              try {
+                parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
+              } catch (parseError) {
+                throw new Error("Project data is not valid JSON")
+              }
+              
+              // Validate Lexical editor state structure
+              if (!parsedData || typeof parsedData !== 'object' || !parsedData.root) {
+                throw new Error("Project data is not in expected Lexical format")
+              }
+              
+              const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
+              editorRef.current.setEditorState(editorState)
+              
+              // Set current project info
+              setCurrentProjectId(projectData.id)
+              setCurrentProjectName(projectData.name)
+              setProjectTags(projectData.tags || [])
+              
+              toast.success("Projeto carregado", {
+                description: `"${projectData.name}" foi aberto com sucesso`,
+                duration: 2500,
+                icon: "📂",
+              })
+              
+              return // Exit early, don't show first time dialog
+            } catch (error) {
+              console.error("Failed to load selected project:", error)
+              toast.error("Erro ao carregar projeto", {
+                description: `Não foi possível carregar o projeto selecionado: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                duration: 4000,
+                icon: "❌",
+              })
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error checking selected project:", error)
+      }
+      
+      // If no project was loaded or loading failed, show first time dialog if needed
+      setIsFirstTime(false)
+    }
     
+    checkSelectedProject()
   }, [isDbInitialized])
 
   // Atualizar informações de armazenamento sempre que o editor mudar
