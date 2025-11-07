@@ -2,7 +2,7 @@
 
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import { client } from '@/lib/api/generated/client.gen';
-import type { TestingLocation, LocationStatus, TestingSession, CreateTestingLocationDto, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
+import type { TestingLocation, TestingSession, CreateTestingLocationDto, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
 
 // Re-export the generated types for convenience
 export type { CreateTestingLocationDto as CreateTestingLocationRequest, UpdateTestingLocationDto as UpdateTestingLocationRequest } from '@/lib/api/generated/types.gen';

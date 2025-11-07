@@ -4,7 +4,7 @@ import React from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { Toaster } from '@/components/ui/sonner';
 import { EditorProvider, useEditorContext, useEditorActions } from './editor-provider';
-import { defaultEditorConfig, EditorConfig, EditorErrorType, EditorState } from './types';
+import { defaultEditorConfig, EditorConfig, EditorState } from './types';
 
 type EditorInternalProps = {
   config?: Partial<EditorConfig>;
