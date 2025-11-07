@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useContext } from "react"
+import { useState, useEffect, useContext, createContext } from "react"
 import { DecoratorNode, type SerializedLexicalNode } from "lexical"
 import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
@@ -12,8 +12,10 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import type { JSX } from "react/jsx-runtime"
-import { EditorLoadingContext } from "../lexical-editor"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
+
+// Create a local context for editor loading state
+const EditorLoadingContext = createContext<boolean>(false)
 
 export type TableStyle = "default" | "striped" | "bordered" | "minimal" | "modern" | "grid" | "accent" | "dark" | "colorful" | "professional"
 
@@ -143,7 +145,7 @@ function TableComponent({ node }: { node: TableNode }) {
     return initialData
   })
   const [tempData, setTempData] = useState<TableData>(currentData)
-  const isLoading = useContext(EditorLoadingContext)
+  const isLoading = useContext(EditorLoadingContext) ?? false
 
   // Block body scroll and pointer events when modal is open
   useEffect(() => {
@@ -444,13 +446,10 @@ function TableComponent({ node }: { node: TableNode }) {
 
   return (
     <div className="table-node my-4 max-w-full">
-      <div className="flex items-center justify-between mb-4">
+      <div className="relative group my-4">
         <div className="flex items-center gap-2">
           {safeData.caption && <span className="text-sm text-muted-foreground">- {safeData.caption}</span>}
-        </div>
-        <div className="flex items-center my-4">
-          {!showEditor ? (
-            <>
+          <div className="">
               <ContentEditMenu
                 options={[
                   {
@@ -461,19 +460,9 @@ function TableComponent({ node }: { node: TableNode }) {
                   },
                 ]}
               />
-            </>
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={handleSave}>
-                <Check className="h-4 w-4 mr-2" />
-                Save
-              </Button>
-            </>
-          )}
+          </div>
         </div>
+        
       </div>
 
       <div className="overflow-x-auto">
@@ -557,48 +546,19 @@ function TableComponent({ node }: { node: TableNode }) {
                             variant="outline"
                             size="sm"
                             onClick={removeRow}
-                            disabled={tempData.rows <= 1}
+                            disabled={tempData.rows <= 2}
                             className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
-                          <Input
-                            id="table-rows"
-                            type="number"
-                            min="1"
-                            max="20"
-                            value={tempData.rows}
-                            onChange={(e) => {
-                              const newRows = Number.parseInt(e.target.value) || 1
-                              const newCells = [...tempData.cells]
-                              
-                              // Add or remove rows as needed
-                              while (newCells.length < newRows) {
-                                const newRow: TableCellData[] = []
-                                for (let j = 0; j < tempData.columns; j++) {
-                                  newRow.push({
-                                    content: `Cell ${newCells.length + 1}-${j + 1}`,
-                                    isHeader: false,
-                                  })
-                                }
-                                newCells.push(newRow)
-                              }
-                              while (newCells.length > newRows) {
-                                newCells.pop()
-                              }
-                              
-                              setTempData({
-                                ...tempData,
-                                rows: newRows,
-                                cells: newCells,
-                              })
-                            }}
-                            className="w-16 text-center h-8 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                          />
+                          <div className="w-16 text-center h-8 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md flex items-center justify-center text-sm font-medium">
+                            {tempData.rows}
+                          </div>
                           <Button 
                             variant="outline" 
                             size="sm" 
                             onClick={addRow} 
+                            disabled={tempData.rows >= 50}
                             className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                           >
                             <Plus className="h-4 w-4" />
@@ -613,48 +573,19 @@ function TableComponent({ node }: { node: TableNode }) {
                             variant="outline"
                             size="sm"
                             onClick={removeColumn}
-                            disabled={tempData.columns <= 1}
+                            disabled={tempData.columns <= 2}
                             className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
-                          <Input
-                            id="table-columns"
-                            type="number"
-                            min="1"
-                            max="10"
-                            value={tempData.columns}
-                            onChange={(e) => {
-                              const newColumns = Number.parseInt(e.target.value) || 1
-                              const newCells = tempData.cells.map((row, i) => {
-                                const newRow = [...row]
-                                
-                                // Add or remove columns as needed
-                                while (newRow.length < newColumns) {
-                                  newRow.push({
-                                    content: i === 0 && tempData.showHeader ? `Header ${newRow.length + 1}` : `Cell ${i + 1}-${newRow.length + 1}`,
-                                    isHeader: i === 0 && tempData.showHeader,
-                                  })
-                                }
-                                while (newRow.length > newColumns) {
-                                  newRow.pop()
-                                }
-                                
-                                return newRow
-                              })
-                              
-                              setTempData({
-                                ...tempData,
-                                columns: newColumns,
-                                cells: newCells,
-                              })
-                            }}
-                            className="w-16 text-center h-8 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
-                          />
+                          <div className="w-16 text-center h-8 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md flex items-center justify-center text-sm font-medium">
+                            {tempData.columns}
+                          </div>
                           <Button 
                             variant="outline" 
                             size="sm" 
                             onClick={addColumn} 
+                            disabled={tempData.columns >= 10}
                             className="h-8 w-8 p-0 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                           >
                             <Plus className="h-4 w-4" />
@@ -665,10 +596,6 @@ function TableComponent({ node }: { node: TableNode }) {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center gap-2 pb-2 border-b border-gray-200 dark:border-gray-700">
-                      <div className="h-4 w-4 rounded bg-blue-600 dark:bg-blue-400"></div>
-                      <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Appearance</h3>
-                    </div>
                     
                     <div className="space-y-3">
                       <Label htmlFor="table-style" className="text-sm font-medium text-gray-700 dark:text-gray-300">Table Style</Label>
@@ -792,26 +719,8 @@ function TableComponent({ node }: { node: TableNode }) {
 
               {/* Right Panel - Table Preview and Editing */}
               <div className="flex-1 flex flex-col">
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                  <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Preview & Edit Content</h3>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleCancel} 
-                      className="text-gray-600 dark:text-gray-400 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      onClick={handleSave} 
-                      className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Table
-                    </Button>
-                  </div>
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                  <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 uppercase tracking-wide">Live Preview</h3>
                 </div>
                 
                 <div className="flex-1 overflow-auto p-6 bg-white dark:bg-gray-950">
@@ -880,6 +789,26 @@ function TableComponent({ node }: { node: TableNode }) {
                     })()}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                >
+                  <Save className="h-4 w-4" />
+                  Save Table
+                </Button>
               </div>
             </div>
           </div>
