@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import type { JSX } from "react/jsx-runtime"
 import { EditorLoadingContext } from "../lexical-editor"
+import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 
 export type TableStyle = "default" | "striped" | "bordered" | "minimal" | "modern" | "grid" | "accent" | "dark" | "colorful" | "professional"
 
@@ -449,26 +450,19 @@ function TableComponent({ node }: { node: TableNode }) {
           <span className="text-sm font-medium">Table</span>
           {safeData.caption && <span className="text-sm text-muted-foreground">- {safeData.caption}</span>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center my-4">
           {!showEditor ? (
             <>
-              <Button variant="ghost" size="sm" onClick={() => {
-                setTempData(currentData)
-                setShowEditor(true)
-              }}>
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  editor.update(() => {
-                    node.remove()
-                  })
-                }}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <ContentEditMenu
+                options={[
+                  {
+                    id: "edit",
+                    icon: <Pencil className="h-4 w-4" />,
+                    label: "Edit Quiz",
+                    action: () => setShowEditor(true),
+                  },
+                ]}
+              />
             </>
           ) : (
             <>
