@@ -8,7 +8,6 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { 
   Users, 
-  Calendar, 
   Activity, 
   BarChart3, 
   TrendingUp, 

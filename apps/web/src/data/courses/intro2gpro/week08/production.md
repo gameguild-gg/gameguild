@@ -32,13 +32,14 @@ note to my future self: add image here!
     - Technical Decisions: Choosing the game engine, tools, and software needed for development (e.g., Unity, Unreal Engine, custom engines).
     - Technical writing: Writing technical documentation, such as coding standards, architecture diagrams, and asset pipelines. Also, the creation of the Technical Design Document (TDD) or Yellowpaper.
     - Team Formation: Identifying and assembling a development team (artists, designers, programmers, sound designers, etc.).
+
 ::: note
 
 note to my future self: add image here!
 
 :::
 
-```mermaid
+``` mermaid
 flowchart TD
     B[Brainstorming] --> C[Game Design Document]
     C --> D[Prototyping]
@@ -78,10 +79,15 @@ flowchart TD
     E[Design] --> F[Game Design]
     E --> G[Level Design]
 ```
-<div style="text-align: center;">
-<img src="img_3.png" width="320">
-</div>
-```mermaid
+
+::: note
+
+note to my future self: add image here!
+
+:::
+
+
+``` mermaid
 flowchart TD
     H[Iteration] --> I[Feedback & Testing]
     I --> J[Milestones]

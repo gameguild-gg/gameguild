@@ -6,8 +6,8 @@ Graphs are a type of data structures that interconnects nodes (or vertices) with
 
 ## Basic Definitions
 
-- **Nodes or vertices** are the basic entities in a graph and hold the data. 
-- **Edges** are the connections and relation between the nodes. The relationship can be enriched in multiple ways such as direction, weight, and others. 
+- **Nodes or vertices** are the basic entities in a graph and hold the data.
+- **Edges** are the connections and relation between the nodes. The relationship can be enriched in multiple ways such as direction, weight, and others.
 - **Neighbours** are the nodes that are connected to a specific node.
 - **Path** is the sequence of edges and nodes that allows you to go from one node to another.
 - **Degree** of a node is the number of edges connected to it.
@@ -22,7 +22,7 @@ A graph is composed by a set of vertices(nodes) and edges. There are multiple wa
 
 Assuming every node is labeled with a number from `0` to `n-1`, an adjacency matrix is a 2D array of size `n` x `n`. The entry `a[i][j]` is 1 if there is an edge from node i to node j, and 0 otherwise. The adjacency matrix for a graph is always a square matrix.
 
-```c++
+``` c++
 // adjacency matrix
 // NUMBER_OF_NODES is the number of nodes
 // bool marks if there is an edge between the nodes.
@@ -32,7 +32,7 @@ bool adj_matrix[NUMBER_OF_NODES][NUMBER_OF_NODES];
 vector<Node> nodes;
 ```
 
-- **Pros**: it is simple and easy to implement and blazing fast for checking if there is an edge between two nodes. 
+- **Pros**: it is simple and easy to implement and blazing fast for checking if there is an edge between two nodes.
 - **Cons**: it consumes a lot of space, especially for sparse graphs.
 
 ### Adjacency list
@@ -54,7 +54,7 @@ vector<Node> nodes;
 
 ### Edge list
 
-It is a collection of edges, where each egge can be represented as a pair of nodes, a pair of node ids, or a pair of references to nodes.  
+It is a collection of edges, where each egge can be represented as a pair of nodes, a pair of node ids, or a pair of references to nodes.
 
 ```c++
 // edge list
@@ -128,7 +128,7 @@ void dfs_interactive(const std::string& node) {
 
     // visit the node
     std::cout << current << std::endl;
-    
+
     // produce the next node to visit
     for (const auto& neighbor : graph[current]) {
       if (!visited.contains(neighbor)) {
@@ -258,7 +258,6 @@ int main() {
 ```
 
 ![img_3.png](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?preview=true&prefix=dsa%2F10-graphs%2Fimg_3.png) [source](https://www.deviantart.com/eleew/art/Carl-Graph-Theory-D8-208366409)
-
 
 https://www.redblobgames.com/pathfinding/grids/graphs.html
 
