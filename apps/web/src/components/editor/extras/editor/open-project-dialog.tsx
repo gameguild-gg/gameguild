@@ -8,7 +8,8 @@ import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
-import { FolderOpen, Upload, Cloud } from "lucide-react"
+import { useProjectActions } from "@/hooks/editor/use-project-actions"
+import { FolderOpen, Upload, Info, Cloud } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
 import type { LexicalEditor } from "lexical"
@@ -86,12 +87,15 @@ export function OpenProjectDialog({
     loadProject,
   } = useProjectDialog({ isDbInitialized, storageAdapter })
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
-  const [infoDialogOpen, setInfoDialogOpen] = useState(false)
-  const [projectToEdit, setProjectToEdit] = useState<ProjectData | null>(null)
   const [googleDriveAuthDialogOpen, setGoogleDriveAuthDialogOpen] = useState(false)
+
+  // Project actions (info, download, delete)
+  const projectActions = useProjectActions({
+    storageAdapter,
+    onProjectsListUpdate,
+    onProjectUpdate: async () => { onProjectsListUpdate() }
+  })
 
   // Google Drive authentication hook
   const { isAuthenticated, isLoading, authenticate, signOut, refreshAuthState } = useGoogleDriveAuth()
@@ -195,59 +199,7 @@ export function OpenProjectDialog({
     return Date.now().toString() + Math.random().toString(36).substr(2, 9)
   }
 
-  const handleOpenInfo = (project: ProjectData) => {
-    setProjectToEdit(project)
-    setInfoDialogOpen(true)
-  }
 
-  const handleSaveInfo = async (projectId: string, newName: string, newTags: string[], storageType: StorageOption) => {
-    const projectToUpdate = await storageAdapter.load(projectId)
-    if (!projectToUpdate) {
-      toast.error("Error finding project to update.")
-      return
-    }
-
-    try {
-      await storageAdapter.save(projectId, newName, projectToUpdate.data, newTags, storageType)
-      toast.success("Project updated", {
-        description: `"${newName}" has been updated successfully.`,
-      })
-      onProjectsListUpdate() // Re-fetch projects
-    } catch (error) {
-      console.error("Failed to save info:", error)
-      toast.error("Failed to update project.")
-      throw error // re-throw to prevent dialog from closing
-    }
-  }
-
-  const handleConfirmDelete = (projectId: string, projectName: string) => {
-    setProjectToDelete({ id: projectId, name: projectName })
-    setDeleteDialogOpen(true)
-  }
-
-  const handleDelete = async () => {
-    if (!projectToDelete) return
-
-    try {
-      await storageAdapter.delete(projectToDelete.id)
-      await onProjectsListUpdate()
-
-      toast.success("Projeto excluído", {
-        description: `"${projectToDelete.name}" foi removido permanentemente`,
-        duration: 3000,
-        icon: "🗑️",
-      })
-    } catch (error) {
-      console.error("Delete error:", error)
-      toast.error("Erro ao excluir projeto", {
-        description: "Não foi possível excluir o projeto. Tente novamente.",
-        duration: 4000,
-        icon: "❌",
-      })
-    } finally {
-      setProjectToDelete(null)
-    }
-  }
 
   return (
     <>
@@ -340,10 +292,11 @@ export function OpenProjectDialog({
                 itemsPerPage={itemsPerPage}
                 searchTerm={searchTerm}
                 selectedTags={selectedTags}
+                viewMode="grid"
                 onOpen={handleOpen}
-                onDelete={handleConfirmDelete}
-                onDownload={handleDownload}
-                onInfo={handleOpenInfo}
+                onDelete={projectActions.handleConfirmDelete}
+                onDownload={projectActions.handleDownload}
+                onInfo={projectActions.handleOpenInfo}
                 showDeleteButton={true}
                 openButtonText="Open"
               />
@@ -401,11 +354,11 @@ export function OpenProjectDialog({
       </Dialog>
 
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        itemName={projectToDelete?.name}
+        open={projectActions.deleteDialogOpen}
+        onOpenChange={projectActions.setDeleteDialogOpen}
+        itemName={projectActions.projectToDelete?.name}
         itemType="projeto"
-        onConfirm={handleDelete}
+        onConfirm={projectActions.handleDelete}
         title={""}
       />
 
@@ -441,10 +394,10 @@ export function OpenProjectDialog({
         />
       
       <InfoDialog
-        open={infoDialogOpen}
-        onOpenChange={setInfoDialogOpen}
-        project={projectToEdit}
-        onSave={handleSaveInfo}
+        open={projectActions.infoDialogOpen}
+        onOpenChange={projectActions.setInfoDialogOpen}
+        project={projectActions.projectToEdit}
+        onSave={projectActions.handleSaveInfo}
         availableTags={availableTags}
         storageAdapter={storageAdapter}
       />

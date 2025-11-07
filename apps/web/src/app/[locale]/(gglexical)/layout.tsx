@@ -1,10 +1,7 @@
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
 import "./globals.css"
 import { TopMenu } from "@/components/editor/top-menu"
 import React from 'react';
-
-const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "GameGuild Editor",

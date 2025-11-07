@@ -1,7 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { TestSession } from '@/lib/api/testing-lab/test-sessions';
+import Link from 'next/link';
+import { Shield, Users, Clock, Monitor, Star, Trophy, ArrowLeft, Search, X, ChevronDown, LayoutGrid, Rows, List } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
+import { PeriodSelector } from '@/components/common/filters/period-selector';
+import { TestSessionGrid } from './test-session-grid';
+import { TestSessionRow } from './test-session-row';
+import { TestSessionTable } from './test-session-table';
+
+// Interface for the backup component - different from the main API types
+interface TestSession {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  sessionType: string;
+  sessionDate: string;
+  maxTesters: number;
+  currentTesters: number;
+  slug: string;
+}
 
 interface TestingLabSessionsProps {
   testSessions: TestSession[];
@@ -205,7 +227,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                     }
                   >
                     <div className="flex items-center gap-2">
-                      {selectedStatuses.length === 0 ? getStatusIcon('all') : selectedStatuses.length === 1 ? getStatusIcon(selectedStatuses[0]) : <Shield className="h-4 w-4 text-slate-400" />}
+                      {selectedStatuses.length === 0 ? getStatusIcon('all') : selectedStatuses.length === 1 ? getStatusIcon(selectedStatuses[0] || 'all') : <Shield className="h-4 w-4 text-slate-400" />}
                       <span>
                         {getDisplayText(selectedStatuses, 'All Status', [
                           { value: 'open', label: 'Open' },
@@ -270,7 +292,7 @@ export function TestingLabSessions({ testSessions }: TestingLabSessionsProps) {
                     }
                   >
                     <div className="flex items-center gap-2">
-                      {selectedSessionTypes.length === 0 ? getSessionTypeIcon('all') : selectedSessionTypes.length === 1 ? getSessionTypeIcon(selectedSessionTypes[0]) : <Trophy className="h-4 w-4 text-slate-400" />}
+                      {selectedSessionTypes.length === 0 ? getSessionTypeIcon('all') : selectedSessionTypes.length === 1 ? getSessionTypeIcon(selectedSessionTypes[0] || 'all') : <Trophy className="h-4 w-4 text-slate-400" />}
                       <span>
                         {getDisplayText(selectedSessionTypes, 'All Types', [
                           { value: 'gameplay', label: 'Gameplay' },

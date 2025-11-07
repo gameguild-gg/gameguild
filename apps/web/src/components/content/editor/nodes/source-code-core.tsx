@@ -486,26 +486,23 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
       // Preview mode - only show view/execution options
       return [
         {
-          id: 'settings',
           icon: <Settings className="h-4 w-4" />,
           label: 'Settings',
-          action: () => setShowSettings(!showSettings),
+          onClick: () => setShowSettings(!showSettings),
         },
         {
-          id: 'execute',
           icon: <Play className="h-4 w-4" />,
           label: 'Run Code',
-          action: handleExecute,
+          onClick: handleExecute,
         },
       ];
     } else {
       // Normal mode - show all options including edit
       return [
         {
-          id: 'edit',
           icon: <Code className="h-4 w-4" />,
           label: 'Edit Code',
-          action: () => {
+          onClick: () => {
             // Reset state to original data from the node when entering edit mode
             setFiles(
               data.files || [
@@ -533,16 +530,14 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
           },
         },
         {
-          id: 'settings',
           icon: <Settings className="h-4 w-4" />,
           label: 'Settings',
-          action: () => setShowSettings(!showSettings),
+          onClick: () => setShowSettings(!showSettings),
         },
         {
-          id: 'execute',
           icon: <Play className="h-4 w-4" />,
           label: 'Run Code',
-          action: () => executeCode(activeFileId),
+          onClick: () => executeCode(activeFileId),
         },
       ];
     }
