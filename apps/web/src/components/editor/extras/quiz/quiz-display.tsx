@@ -1,6 +1,6 @@
 "use client"
 import { QuizFeedback } from "./quiz-feedback"
-import type { QuizAnswer, QuestionType, FillBlankAlternative } from "../../nodes/quiz-node"
+import type { QuizAnswer, QuestionType, FillBlankAlternative, FillBlankField } from "../../nodes/quiz-node"
 
 interface QuizDisplayProps {
   question: string
@@ -20,6 +20,7 @@ interface QuizDisplayProps {
   blanks?: string[]
   fillBlankMode?: "text" | "multiple-choice"
   fillBlankAlternatives?: FillBlankAlternative[]
+  fillBlankFields?: FillBlankField[]
   ratingScale?: { min: number; max: number; step: number }
   correctRating?: number
 }
