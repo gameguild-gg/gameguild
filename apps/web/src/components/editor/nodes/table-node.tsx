@@ -307,9 +307,12 @@ function TableComponent({ node }: { node: TableNode }) {
   }
 
   const getTableStyleClasses = (style: TableStyle) => {
+    const baseClasses = "[&_th]:truncate [&_td]:truncate [&_th]:max-w-0 [&_td]:max-w-0"
+    
     switch (style) {
       case "striped":
         return cn(
+          baseClasses,
           "border-collapse border border-gray-300 dark:border-gray-600",
           "[&_tr:nth-child(even)]:bg-gray-50 dark:[&_tr:nth-child(even)]:bg-gray-800/30",
           "[&_tr:nth-child(odd)]:bg-white dark:[&_tr:nth-child(odd)]:bg-gray-900",
@@ -320,6 +323,7 @@ function TableComponent({ node }: { node: TableNode }) {
         )
       case "bordered":
         return cn(
+          baseClasses,
           "border-collapse border-2 border-gray-400 dark:border-gray-500",
           "[&_th]:border-2 [&_th]:border-gray-400 dark:[&_th]:border-gray-500",
           "[&_td]:border [&_td]:border-gray-300 dark:[&_td]:border-gray-600",
@@ -329,6 +333,7 @@ function TableComponent({ node }: { node: TableNode }) {
         )
       case "minimal":
         return cn(
+          baseClasses,
           "border-collapse",
           "[&_th]:border-b-2 [&_th]:border-gray-300 dark:[&_th]:border-gray-600",
           "[&_th]:font-semibold [&_th]:text-gray-800 dark:[&_th]:text-gray-200",
@@ -338,6 +343,7 @@ function TableComponent({ node }: { node: TableNode }) {
         )
       case "modern":
         return cn(
+          baseClasses,
           "border-collapse shadow-lg rounded-lg overflow-hidden",
           "[&_th]:bg-gradient-to-r [&_th]:from-blue-600 [&_th]:to-blue-700 dark:[&_th]:from-blue-700 dark:[&_th]:to-blue-800",
           "[&_th]:text-white [&_th]:font-bold [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wider",
@@ -349,6 +355,7 @@ function TableComponent({ node }: { node: TableNode }) {
         )
       case "grid":
         return cn(
+          baseClasses,
           "border-collapse border border-gray-400 dark:border-gray-500",
           "[&_th]:border [&_th]:border-gray-400 dark:[&_th]:border-gray-500",
           "[&_td]:border [&_td]:border-gray-400 dark:[&_td]:border-gray-500",
@@ -359,6 +366,7 @@ function TableComponent({ node }: { node: TableNode }) {
         )
       case "accent":
         return cn(
+          baseClasses,
           "border-collapse shadow-md rounded-lg overflow-hidden",
           "[&_th]:bg-gradient-to-r [&_th]:from-emerald-500 [&_th]:to-emerald-600 dark:[&_th]:from-emerald-600 dark:[&_th]:to-emerald-700",
           "[&_th]:text-white [&_th]:font-semibold",
@@ -371,6 +379,7 @@ function TableComponent({ node }: { node: TableNode }) {
         )
       case "dark":
         return cn(
+          baseClasses,
           "border-collapse shadow-xl rounded-lg overflow-hidden",
           "[&_th]:bg-gray-800 dark:[&_th]:bg-gray-900",
           "[&_th]:text-gray-100 [&_th]:font-bold [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide",
@@ -381,6 +390,7 @@ function TableComponent({ node }: { node: TableNode }) {
         )
       case "colorful":
         return cn(
+          baseClasses,
           "border-collapse shadow-lg rounded-lg overflow-hidden",
           "[&_th]:bg-gradient-to-r [&_th]:from-purple-500 [&_th]:via-pink-500 [&_th]:to-red-500",
           "[&_th]:text-white [&_th]:font-bold [&_th]:text-center",
@@ -393,6 +403,7 @@ function TableComponent({ node }: { node: TableNode }) {
         )
       case "professional":
         return cn(
+          baseClasses,
           "border-collapse shadow-md",
           "[&_th]:bg-slate-700 dark:[&_th]:bg-slate-800",
           "[&_th]:text-white [&_th]:font-semibold [&_th]:text-sm [&_th]:tracking-wide",
@@ -406,6 +417,7 @@ function TableComponent({ node }: { node: TableNode }) {
         )
       default:
         return cn(
+          baseClasses,
           "border-collapse",
           "[&_th]:border-b [&_th]:border-gray-200 dark:[&_th]:border-gray-700",
           "[&_th]:font-medium [&_th]:text-left",
@@ -446,55 +458,56 @@ function TableComponent({ node }: { node: TableNode }) {
 
   return (
     <div className="table-node my-4 max-w-full">
-      <div className="relative group my-4">
-        <div className="flex items-center gap-2">
-          {safeData.caption && <span className="text-sm text-muted-foreground">- {safeData.caption}</span>}
-          <div className="">
-              <ContentEditMenu
-                options={[
-                  {
-                    id: "edit",
-                    icon: <Pencil className="h-4 w-4" />,
-                    label: "Edit Quiz",
-                    action: () => setShowEditor(true),
-                  },
-                ]}
-              />
+      <div className="relative">
+        {safeData.caption && (
+          <div className="mb-2">
+            <span className="text-sm text-muted-foreground">- {safeData.caption}</span>
           </div>
-        </div>
+        )}
         
-      </div>
+        {/* ContentEditMenu for lateral edit button */}
+        <ContentEditMenu
+          options={[
+            {
+              id: "edit",
+              icon: <Pencil className="h-4 w-4" />,
+              label: "Edit Table",
+              action: () => setShowEditor(true),
+            },
+          ]}
+        />
 
-      <div className="overflow-x-auto">
-        <Table className={cn(
-          getTableStyleClasses(safeData.style),
-          !safeData.showBorders && "[&_th]:border-0 [&_td]:border-0",
-          "w-full"
-        )}>
-          {safeData.caption && <caption className="text-sm text-muted-foreground mb-2">{safeData.caption}</caption>}
-          {safeData.showHeader && (
-            <TableHeader>
-              <TableRow>
-                {safeData.cells[0]?.map((cell, colIndex) => (
-                  <TableHead key={colIndex}>
-                    {cell.content}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-          )}
-          <TableBody>
-            {safeData.cells.slice(safeData.showHeader ? 1 : 0).map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                {row.map((cell, colIndex) => (
-                  <TableCell key={colIndex}>
-                    {cell.content}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div>
+          <Table className={cn(
+            getTableStyleClasses(safeData.style),
+            !safeData.showBorders && "[&_th]:border-0 [&_td]:border-0",
+            "w-full table-fixed"
+          )}>
+            {safeData.caption && <caption className="text-sm text-muted-foreground mb-2">{safeData.caption}</caption>}
+            {safeData.showHeader && (
+              <TableHeader>
+                <TableRow>
+                  {safeData.cells[0]?.map((cell, colIndex) => (
+                    <TableHead key={colIndex} title={cell.content}>
+                      {cell.content}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+            )}
+            <TableBody>
+              {safeData.cells.slice(safeData.showHeader ? 1 : 0).map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {row.map((cell, colIndex) => (
+                    <TableCell key={colIndex} title={cell.content}>
+                      {cell.content}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Table Editor Modal */}
@@ -749,18 +762,18 @@ function TableComponent({ node }: { node: TableNode }) {
                         <Table className={cn(
                           getTableStyleClasses(safeTempData.style),
                           !safeTempData.showBorders && "[&_th]:border-0 [&_td]:border-0",
-                          "w-full"
+                          "w-full table-fixed"
                         )}>
                           {safeTempData.caption && <caption className="text-sm text-gray-600 dark:text-gray-400 mb-4 font-medium">{safeTempData.caption}</caption>}
                           {safeTempData.showHeader && (
                             <TableHeader>
                               <TableRow>
                                 {safeTempData.cells[0]?.map((cell, colIndex) => (
-                                  <TableHead key={colIndex} className="min-w-[120px]">
+                                  <TableHead key={colIndex}>
                                     <Input
                                       value={cell.content}
                                       onChange={(e) => updateCellContent(0, colIndex, e.target.value)}
-                                      className="w-full h-9 text-sm font-medium border-0 bg-transparent focus:bg-white dark:focus:bg-gray-800 focus:ring-2 focus:ring-blue-500 rounded"
+                                      className="w-full h-9 text-sm font-medium border-0 bg-transparent focus:bg-white dark:focus:bg-gray-800 focus:ring-2 focus:ring-blue-500 rounded px-2"
                                       placeholder={`Header ${colIndex + 1}`}
                                     />
                                   </TableHead>
@@ -772,11 +785,11 @@ function TableComponent({ node }: { node: TableNode }) {
                             {safeTempData.cells.slice(safeTempData.showHeader ? 1 : 0).map((row, rowIndex) => (
                               <TableRow key={rowIndex}>
                                 {row.map((cell, colIndex) => (
-                                  <TableCell key={colIndex} className="min-w-[120px]">
+                                  <TableCell key={colIndex}>
                                     <Input
                                       value={cell.content}
                                       onChange={(e) => updateCellContent(rowIndex + (safeTempData.showHeader ? 1 : 0), colIndex, e.target.value)}
-                                      className="w-full h-9 text-sm border-0 bg-transparent focus:bg-white dark:focus:bg-gray-800 focus:ring-2 focus:ring-blue-500 rounded"
+                                      className="w-full h-9 text-sm border-0 bg-transparent focus:bg-white dark:focus:bg-gray-800 focus:ring-2 focus:ring-blue-500 rounded px-2"
                                       placeholder={`Cell ${rowIndex + 1}-${colIndex + 1}`}
                                     />
                                   </TableCell>
