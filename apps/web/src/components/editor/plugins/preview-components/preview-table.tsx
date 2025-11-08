@@ -34,9 +34,12 @@ export function PreviewTable({ node }: PreviewTableProps) {
   }
 
   const getTableStyleClasses = (style: TableStyle) => {
+    const baseClasses = "[&_th]:truncate [&_td]:truncate [&_th]:max-w-0 [&_td]:max-w-0"
+    
     switch (style) {
       case "striped":
         return cn(
+          baseClasses,
           "border-collapse border border-gray-300 dark:border-gray-600",
           "[&_tr:nth-child(even)]:bg-gray-50 dark:[&_tr:nth-child(even)]:bg-gray-800/30",
           "[&_tr:nth-child(odd)]:bg-white dark:[&_tr:nth-child(odd)]:bg-gray-900",
@@ -47,6 +50,7 @@ export function PreviewTable({ node }: PreviewTableProps) {
         )
       case "bordered":
         return cn(
+          baseClasses,
           "border-collapse border-2 border-gray-400 dark:border-gray-500",
           "[&_th]:border-2 [&_th]:border-gray-400 dark:[&_th]:border-gray-500",
           "[&_td]:border [&_td]:border-gray-300 dark:[&_td]:border-gray-600",
@@ -56,6 +60,7 @@ export function PreviewTable({ node }: PreviewTableProps) {
         )
       case "minimal":
         return cn(
+          baseClasses,
           "border-collapse",
           "[&_th]:border-b-2 [&_th]:border-gray-300 dark:[&_th]:border-gray-600",
           "[&_th]:font-semibold [&_th]:text-gray-800 dark:[&_th]:text-gray-200",
@@ -65,6 +70,7 @@ export function PreviewTable({ node }: PreviewTableProps) {
         )
       case "modern":
         return cn(
+          baseClasses,
           "border-collapse shadow-lg rounded-lg overflow-hidden",
           "[&_th]:bg-gradient-to-r [&_th]:from-blue-600 [&_th]:to-blue-700 dark:[&_th]:from-blue-700 dark:[&_th]:to-blue-800",
           "[&_th]:text-white [&_th]:font-bold [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wider",
@@ -76,6 +82,7 @@ export function PreviewTable({ node }: PreviewTableProps) {
         )
       case "grid":
         return cn(
+          baseClasses,
           "border-collapse border border-gray-400 dark:border-gray-500",
           "[&_th]:border [&_th]:border-gray-400 dark:[&_th]:border-gray-500",
           "[&_td]:border [&_td]:border-gray-400 dark:[&_td]:border-gray-500",
@@ -86,6 +93,7 @@ export function PreviewTable({ node }: PreviewTableProps) {
         )
       case "accent":
         return cn(
+          baseClasses,
           "border-collapse shadow-md rounded-lg overflow-hidden",
           "[&_th]:bg-gradient-to-r [&_th]:from-emerald-500 [&_th]:to-emerald-600 dark:[&_th]:from-emerald-600 dark:[&_th]:to-emerald-700",
           "[&_th]:text-white [&_th]:font-semibold",
@@ -98,6 +106,7 @@ export function PreviewTable({ node }: PreviewTableProps) {
         )
       case "dark":
         return cn(
+          baseClasses,
           "border-collapse shadow-xl rounded-lg overflow-hidden",
           "[&_th]:bg-gray-800 dark:[&_th]:bg-gray-900",
           "[&_th]:text-gray-100 [&_th]:font-bold [&_th]:text-sm [&_th]:uppercase [&_th]:tracking-wide",
@@ -108,6 +117,7 @@ export function PreviewTable({ node }: PreviewTableProps) {
         )
       case "colorful":
         return cn(
+          baseClasses,
           "border-collapse shadow-lg rounded-lg overflow-hidden",
           "[&_th]:bg-gradient-to-r [&_th]:from-purple-500 [&_th]:via-pink-500 [&_th]:to-red-500",
           "[&_th]:text-white [&_th]:font-bold [&_th]:text-center",
@@ -120,6 +130,7 @@ export function PreviewTable({ node }: PreviewTableProps) {
         )
       case "professional":
         return cn(
+          baseClasses,
           "border-collapse shadow-md",
           "[&_th]:bg-slate-700 dark:[&_th]:bg-slate-800",
           "[&_th]:text-white [&_th]:font-semibold [&_th]:text-sm [&_th]:tracking-wide",
@@ -133,6 +144,7 @@ export function PreviewTable({ node }: PreviewTableProps) {
         )
       default:
         return cn(
+          baseClasses,
           "border-collapse",
           "[&_th]:border-b [&_th]:border-gray-200 dark:[&_th]:border-gray-700",
           "[&_th]:font-medium [&_th]:text-left",
@@ -144,42 +156,44 @@ export function PreviewTable({ node }: PreviewTableProps) {
 
   return (
     <div className="table-node my-4 max-w-full">
-      {safeData.caption && (
-        <div className="mb-2">
-          <span className="text-sm text-muted-foreground">- {safeData.caption}</span>
+      <div className="relative">
+        {safeData.caption && (
+          <div className="mb-2">
+            <span className="text-sm text-muted-foreground">- {safeData.caption}</span>
+          </div>
+        )}
+        
+        <div>
+          <Table className={cn(
+            getTableStyleClasses(safeData.style),
+            !safeData.showBorders && "[&_th]:border-0 [&_td]:border-0",
+            "w-full table-fixed"
+          )}>
+            {safeData.caption && <caption className="text-sm text-muted-foreground mb-2">{safeData.caption}</caption>}
+            {safeData.showHeader && (
+              <TableHeader>
+                <TableRow>
+                  {safeData.cells[0]?.map((cell, colIndex) => (
+                    <TableHead key={colIndex} title={cell.content}>
+                      {cell.content}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              </TableHeader>
+            )}
+            <TableBody>
+              {safeData.cells.slice(safeData.showHeader ? 1 : 0).map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {row.map((cell, colIndex) => (
+                    <TableCell key={colIndex} title={cell.content}>
+                      {cell.content}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
-      )}
-      
-      <div className="overflow-x-auto">
-        <Table className={cn(
-          getTableStyleClasses(safeData.style),
-          !safeData.showBorders && "[&_th]:border-0 [&_td]:border-0",
-          "w-full"
-        )}>
-          {safeData.caption && <caption className="text-sm text-muted-foreground mb-2">{safeData.caption}</caption>}
-          {safeData.showHeader && (
-            <TableHeader>
-              <TableRow>
-                {safeData.cells[0]?.map((cell, colIndex) => (
-                  <TableHead key={colIndex}>
-                    {cell.content}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-          )}
-          <TableBody>
-            {safeData.cells.slice(safeData.showHeader ? 1 : 0).map((row, rowIndex) => (
-              <TableRow key={rowIndex}>
-                {row.map((cell, colIndex) => (
-                  <TableCell key={colIndex}>
-                    {cell.content}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
       </div>
     </div>
   )
