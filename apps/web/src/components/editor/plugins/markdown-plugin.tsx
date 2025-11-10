@@ -1,27 +1,30 @@
 "use client"
 
-import { useEffect } from "react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { $insertNodes } from "lexical"
-import { INSERT_MARKDOWN_COMMAND } from "./floating-content-insert-plugin"
-import { $createMarkdownNode } from "../nodes/markdown-node"
+import { $insertNodeToNearestRoot } from "@lexical/utils"
+import { COMMAND_PRIORITY_EDITOR } from "lexical"
+import { useEffect } from "react"
+import type { JSX } from "react/jsx-runtime"
 
-export function MarkdownPlugin() {
+import { $createMarkdownNode, MarkdownNode, type MarkdownData } from "../nodes/markdown-node"
+import { INSERT_MARKDOWN_COMMAND } from "./floating-content-insert-plugin"
+
+export function MarkdownPlugin(): JSX.Element | null {
   const [editor] = useLexicalComposerContext()
 
   useEffect(() => {
-    if (!editor) return
+    if (!editor.hasNodes([MarkdownNode])) {
+      throw new Error("MarkdownPlugin: MarkdownNode not registered on editor")
+    }
 
-    return editor.registerCommand(
+    return editor.registerCommand<MarkdownData>(
       INSERT_MARKDOWN_COMMAND,
-      () => {
-        editor.update(() => {
-          const markdownNode = $createMarkdownNode()
-          $insertNodes([markdownNode])
-        })
+      (payload) => {
+        const markdownNode = $createMarkdownNode(payload)
+        $insertNodeToNearestRoot(markdownNode)
         return true
       },
-      1,
+      COMMAND_PRIORITY_EDITOR,
     )
   }, [editor])
 

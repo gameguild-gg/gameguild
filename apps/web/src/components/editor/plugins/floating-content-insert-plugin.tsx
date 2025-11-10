@@ -15,6 +15,7 @@ import {
   Music,
   Music2,
   Music3,
+  FileText,
   Plus,
   SeparatorHorizontal,
   Twitter,
@@ -393,15 +394,15 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
-    /*
     {
-      icon: MarkdownIcon,
+      icon: FileText,
       label: "Markdown",
       action: () => {
         editor.dispatchCommand(INSERT_MARKDOWN_COMMAND, undefined)
         setShowMenu(false)
       },
     },
+    /*
     {
       icon: Code2,
       label: "HTML",
