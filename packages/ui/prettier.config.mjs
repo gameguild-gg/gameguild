@@ -1,9 +1,9 @@
-import baseConfig from '@gameguild/prettier-config';
+import baseConfig from '@game-guild/prettier-config';
 
 /**
  * @see https://prettier.io/docs/en/configuration.html
  * @type {import('prettier').Config}
  */
-const config = { ...baseConfig };
+const config = {...baseConfig};
 
 export default config;
