@@ -145,11 +145,11 @@ By starring this repository, you:
     <img style="width: 64px;" src="https://img.icons8.com/?size=100&id=3veRWJpxPPDH&format=png&color=000000" alt="TikTok" style="vertical-align: middle;"/>
   </a>
   <!-- Patreon -->
-  <a href="https://mastodon.social/@gameguild" target="_blank" style="text-decoration: none; margin: 0 15px;">
+  <a href="https://mastodon.social/@game-guild" target="_blank" style="text-decoration: none; margin: 0 15px;">
     <img style="width: 64px;" src="https://img.icons8.com/?size=100&id=I49RSKuKXYoP&format=png&color=000000" alt="Patreon" style="vertical-align: middle;"/>
   </a>
   <!-- Mastodon -->
-  <a href="https://mastodon.social/@gameguild" target="_blank" style="text-decoration: none; margin: 0 15px;">
+  <a href="https://mastodon.social/@game-guild" target="_blank" style="text-decoration: none; margin: 0 15px;">
     <img style="width: 64px;" src="https://img.icons8.com/?size=100&id=SjG6BzZwdP2-&format=png&color=000000" alt="Mastodon" style="vertical-align: middle;"/>
   </a>
   <!-- Twitch -->
@@ -161,7 +161,7 @@ By starring this repository, you:
     <img style="width: 64px;" src="https://img.icons8.com/?size=100&id=XrWrgAx9pAYM&format=png&color=000000" alt="Itch.io" style="vertical-align: middle;"/>
   </a>
   <!-- GameJolt -->
-  <a href="https://gamejolt.com/@GameGuild" target="_blank" style="text-decoration: none; margin: 0 15px;">
+  <a href="https://gamejolt.com/@game-guild" target="_blank" style="text-decoration: none; margin: 0 15px;">
     <img style="width: 64px;" src="https://img.icons8.com/?size=100&id=QxjoLwAXiCXT&format=png&color=000000" alt="GameJolt" style="vertical-align: middle;"/>
   </a>
 </div>

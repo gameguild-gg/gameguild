@@ -1,5 +1,5 @@
 {
-  "name": "gameguild",
+  "name": "game-guild",
   "version": "0.1.0",
   "description": "",
   "author": "Matheus Martins <contact@matheusmartins.com>",
@@ -47,10 +47,10 @@
     "npm": ">=10.0.0"
   },
   "devDependencies": {
-    "@gameguild/eslint-config": "0.1.0",
-    "@gameguild/prettier-config": "0.1.0",
-    "@gameguild/tailwind-config": "0.1.0",
-    "@gameguild/typescript-config": "0.1.0",
+    "@game-guild/eslint-config": "0.1.0",
+    "@game-guild/prettier-config": "0.1.0",
+    "@game-guild/tailwind-config": "0.1.0",
+    "@game-guild/typescript-config": "0.1.0",
     "@next/third-parties": "^15.4.6",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20.0.0",
