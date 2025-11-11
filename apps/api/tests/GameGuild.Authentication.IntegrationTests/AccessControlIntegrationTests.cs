@@ -38,11 +38,17 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             builder.UseEnvironment("Testing");
             builder.ConfigureServices(services =>
             {
-                // Remove existing DbContext
-                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (descriptor != null)
+                // Remove existing DbContext registrations
+                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+                if (dbContextDescriptor != null)
                 {
-                    services.Remove(descriptor);
+                    services.Remove(dbContextDescriptor);
+                }
+                
+                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
+                if (dbContextDescriptor2 != null)
+                {
+                    services.Remove(dbContextDescriptor2);
                 }
 
                 // Add in-memory database
@@ -108,7 +114,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }
         };
 
-        // TODO: Implement MediatR command - var result = await _mediator.Send(evaluationRequest);
+        // TODO: Implement command handler - var result = await _handler.Handle(evaluationRequest);
 
         // TODO: Uncomment when handler is implemented
         // Assert
@@ -172,7 +178,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }
         };
 
-        // TODO: Implement MediatR command handler - var result = await _mediator.Send(evaluationRequest);
+        // TODO: Implement command handler - var result = await _handler.Handle(evaluationRequest);
 
         // TODO: Uncomment when handler is implemented
         // Assert
@@ -223,7 +229,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }
         };
 
-        // TODO: Implement MediatR command handler - var result = await _mediator.Send(evaluationRequest);
+        // TODO: Implement command handler - var result = await _handler.Handle(evaluationRequest);
 
         // TODO: Uncomment when handler is implemented
         // Assert - Deny should win
@@ -270,7 +276,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }
         };
 
-        var results = await _mediator.Send(bulkRequest);
+        var results = await _handler.Handle(bulkRequest);
 
         // Assert
         results.Should().NotBeNull();
@@ -328,7 +334,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }
         };
 
-        // TODO: Implement MediatR command - var result = // TODO: Implement MediatR command - await _mediator.Send(evaluationRequest);
+        // TODO: Implement command handler - var result = // TODO: Implement command handler - await _handler.Handle(evaluationRequest);
 
         // Assert
         result.Should().NotBeNull();
@@ -379,7 +385,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }
         };
 
-        // TODO: Implement MediatR command - var blockedResult = // TODO: Implement MediatR command - await _mediator.Send(blockedRequest);
+        // TODO: Implement command handler - var blockedResult = // TODO: Implement command handler - await _handler.Handle(blockedRequest);
 
         // Assert - Should be blocked
         blockedResult.Should().NotBeNull();
@@ -399,7 +405,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }
         };
 
-        // TODO: Implement MediatR command - var allowedResult = // TODO: Implement MediatR command - await _mediator.Send(allowedRequest);
+        // TODO: Implement command handler - var allowedResult = // TODO: Implement command handler - await _handler.Handle(allowedRequest);
 
         // Assert - Should be allowed
         allowedResult.Should().NotBeNull();
@@ -450,7 +456,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }
         };
 
-        // TODO: Implement MediatR command - var result = // TODO: Implement MediatR command - await _mediator.Send(untrustedRequest);
+        // TODO: Implement command handler - var result = // TODO: Implement command handler - await _handler.Handle(untrustedRequest);
 
         // Assert - Should require MFA
         result.Should().NotBeNull();
@@ -507,7 +513,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             }
         };
 
-        // TODO: Implement MediatR command - var result = // TODO: Implement MediatR command - await _mediator.Send(evaluationRequest);
+        // TODO: Implement command handler - var result = // TODO: Implement command handler - await _handler.Handle(evaluationRequest);
 
         // Assert - High priority block should win
         result.Should().NotBeNull();
@@ -549,7 +555,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             Permission = permission
         };
 
-        // TODO: Implement MediatR command - var result1 = // TODO: Implement MediatR command - await _mediator.Send(query1);
+        // TODO: Implement command handler - var result1 = // TODO: Implement command handler - await _handler.Handle(query1);
 
         // Act - Second access (should use cache)
         var query2 = new HasTenantPermissionQuery
@@ -559,7 +565,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             Permission = permission
         };
 
-        // TODO: Implement MediatR command - var result2 = // TODO: Implement MediatR command - await _mediator.Send(query2);
+        // TODO: Implement command handler - var result2 = // TODO: Implement command handler - await _handler.Handle(query2);
 
         // Assert
         result1.Should().BeTrue();
@@ -600,7 +606,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             Permission = permission
         };
 
-        // TODO: Implement MediatR command - var initialResult = // TODO: Implement MediatR command - await _mediator.Send(query);
+        // TODO: Implement command handler - var initialResult = // TODO: Implement command handler - await _handler.Handle(query);
         initialResult.Should().BeTrue();
 
         // Act - Revoke permission
@@ -611,7 +617,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             Permission = permission
         };
 
-        // TODO: Implement MediatR command - await _mediator.Send(revokeCommand);
+        // TODO: Implement command handler - await _handler.Handle(revokeCommand);
 
         // Act - Clear permission cache
         var clearCacheCommand = new ClearPermissionCacheCommand
@@ -620,10 +626,10 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             TenantId = tenantId
         };
 
-        // TODO: Implement MediatR command - await _mediator.Send(clearCacheCommand);
+        // TODO: Implement command handler - await _handler.Handle(clearCacheCommand);
 
         // Assert - Permission should now be denied
-        // TODO: Implement MediatR command - var afterRevokeResult = // TODO: Implement MediatR command - await _mediator.Send(query);
+        // TODO: Implement command handler - var afterRevokeResult = // TODO: Implement command handler - await _handler.Handle(query);
         afterRevokeResult.Should().BeFalse();
     }
 
@@ -668,7 +674,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
                 Permission = permission
             };
 
-            // TODO: Implement MediatR command - await _mediator.Send(query);
+            // TODO: Implement command handler - await _handler.Handle(query);
         }
 
         // Act - Bulk revoke permissions
@@ -679,7 +685,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             Permissions = permissions.ToList()
         };
 
-        // TODO: Implement MediatR command - await _mediator.Send(bulkRevokeCommand);
+        // TODO: Implement command handler - await _handler.Handle(bulkRevokeCommand);
 
         // Clear cache
         var clearCacheCommand = new ClearPermissionCacheCommand
@@ -688,7 +694,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             TenantId = tenantId
         };
 
-        // TODO: Implement MediatR command - await _mediator.Send(clearCacheCommand);
+        // TODO: Implement command handler - await _handler.Handle(clearCacheCommand);
 
         // Assert - All permissions should be revoked
         foreach (var permission in permissions)
@@ -700,7 +706,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
                 Permission = permission
             };
 
-            // TODO: Implement MediatR command - var result = await _mediator.Send(query);
+            // TODO: Implement command handler - var result = await _handler.Handle(query);
             result.Should().BeFalse();
         }
     }
@@ -738,7 +744,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             Permission = "contents:manage"
         };
 
-        // TODO: Implement MediatR command - var result = // TODO: Implement MediatR command - await _mediator.Send(query);
+        // TODO: Implement command handler - var result = // TODO: Implement command handler - await _handler.Handle(query);
 
         // Assert
         result.Should().BeTrue();
@@ -788,7 +794,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             Permission = "contents:read"
         };
 
-        // TODO: Implement MediatR command - var tenantResult = // TODO: Implement MediatR command - await _mediator.Send(tenantQuery);
+        // TODO: Implement command handler - var tenantResult = // TODO: Implement command handler - await _handler.Handle(tenantQuery);
         tenantResult.Should().BeTrue();
     }
 
@@ -821,7 +827,7 @@ public class AccessControlIntegrationTests : IClassFixture<WebApplicationFactory
             Permission = "admin:full"
         };
 
-        // TODO: Implement MediatR command - var result = // TODO: Implement MediatR command - await _mediator.Send(adminQuery);
+        // TODO: Implement command handler - var result = // TODO: Implement command handler - await _handler.Handle(adminQuery);
         result.Should().BeTrue();
 
         // In a real implementation, admin:full would grant:

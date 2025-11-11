@@ -60,6 +60,7 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthenticationAttemptRepository, AuthenticationAttemptRepository>();
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
         services.AddScoped<IMfaAttemptRepository, MfaAttemptRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
 
         // Core authentication services
         services.AddScoped<IAuthService, AuthService>();
