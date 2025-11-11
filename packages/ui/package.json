@@ -1,10 +1,10 @@
 {
-  "name": "@gameguild/ui",
+  "name": "@game-guild/ui",
   "version": "0.1.0",
   "type": "module",
   "description": "UI components and utilities for the website and related projects",
   "author": "Matheus Martins <contact@matheusmartins.com>",
-  "homepage": "https://gameguild.gg",
+  "homepage": "https://matheusmartins.com",
   "license": "UNLICENSED",
   "private": true,
   "exports": {
@@ -64,10 +64,10 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.0.0",
-    "@gameguild/eslint-config": "0.1.0",
-    "@gameguild/prettier-config": "0.1.0",
-    "@gameguild/tailwind-config": "0.1.0",
-    "@gameguild/typescript-config": "0.1.0",
+    "@game-guild/eslint-config": "0.1.0",
+    "@game-guild/prettier-config": "0.1.0",
+    "@game-guild/tailwind-config": "0.1.0",
+    "@game-guild/typescript-config": "0.1.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^20.0.0",
     "@types/react": "^19.0.0",

@@ -11,10 +11,10 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@gameguild/ui/components",
-    "utils": "@gameguild/ui/lib/utils",
-    "hooks": "@gameguild/ui/hooks",
-    "lib": "@gameguild/ui/lib",
-    "ui": "@gameguild/ui/components"
+    "components": "@game-guild/ui/components",
+    "utils": "@game-guild/ui/lib/utils",
+    "hooks": "@game-guild/ui/hooks",
+    "lib": "@game-guild/ui/lib",
+    "ui": "@game-guild/ui/components"
   }
 }

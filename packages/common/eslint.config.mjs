@@ -1,4 +1,4 @@
-import baseConfig from '@gameguild/eslint-config';
+import baseConfig from '@game-guild/eslint-config';
 
 /**
  * @see https://eslint.org/docs/latest/use/configure/configuration-files

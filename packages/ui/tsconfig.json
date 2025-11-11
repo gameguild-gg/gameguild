@@ -1,15 +1,22 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "@gameguild/typescript-config/tsconfig.react.json",
+  "extends": "@game-guild/typescript-config/tsconfig.react.json",
   "display": "UI",
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
-      "@gameguild/ui/*": ["./src/*"]
+      "@game-guild/ui/*": [
+        "./src/*"
+      ]
     }
   },
-  "include": ["."],
+  "include": [
+    "./"
+  ],
   "files": [],
   "references": [],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

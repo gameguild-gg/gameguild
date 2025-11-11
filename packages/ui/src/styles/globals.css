@@ -10,8 +10,8 @@
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
-    /*--font-sans: var(--font-geist-sans);*/
-    /*--font-mono: var(--font-geist-mono);*/
+    --font-sans: var(--font-geist-sans);
+    --font-mono: var(--font-geist-mono);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -121,30 +121,7 @@
         @apply border-border outline-ring/50;
     }
 
-    html,
-    body {
-        @apply h-screen w-screen;
-        @apply m-0 p-0;
-    }
-    
     body {
         @apply bg-background text-foreground;
-    }
-}
-
-@layer utilities {
-    /* Para navegadores Webkit (Chrome, Safari) */
-    .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-    }
-
-    /* Para Firefox */
-    .scrollbar-hide {
-        scrollbar-width: none;
-    }
-
-    /* Para IE e Edge */
-    .scrollbar-hide {
-        -ms-overflow-style: none;
     }
 }
