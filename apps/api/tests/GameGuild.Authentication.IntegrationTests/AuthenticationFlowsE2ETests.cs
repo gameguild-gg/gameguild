@@ -48,11 +48,17 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
             builder.UseEnvironment("Testing");
             builder.ConfigureServices(services =>
             {
-                // Remove existing DbContext configuration
-                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (descriptor != null)
+                // Remove existing DbContext registrations
+                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+                if (dbContextDescriptor != null)
                 {
-                    services.Remove(descriptor);
+                    services.Remove(dbContextDescriptor);
+                }
+                
+                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
+                if (dbContextDescriptor2 != null)
+                {
+                    services.Remove(dbContextDescriptor2);
                 }
 
                 // Add in-memory database for testing
@@ -279,6 +285,16 @@ public class AuthenticationFlowsE2ETests : IClassFixture<WebApplicationFactory<G
         // Setup MFA
         var setupResult = await _mfaService.InitiateMfaSetupAsync(userId);
         var originalBackupCodes = setupResult.BackupCodes;
+
+        // Complete MFA setup by enabling it directly in the database (test workaround)
+        // In production, this would be done by verifying a valid TOTP code
+        var mfaConfig = await _dbContext.Set<UserMfaConfiguration>().FirstOrDefaultAsync(c => c.UserId == userId);
+        if (mfaConfig != null)
+        {
+            mfaConfig.IsEnabled = true;
+            mfaConfig.EnabledAt = DateTime.UtcNow;
+            await _dbContext.SaveChangesAsync();
+        }
 
         // Act: Regenerate backup codes
         var newBackupCodes = await _mfaService.GenerateBackupCodesAsync(userId);

@@ -1,13 +1,13 @@
 using GameGuild.Modules.TestingLab.Entities;
-using GameGuild.Database;
+using GameGuild.Abstractions;
 
 
 namespace GameGuild.Modules.TestingLab;
 
 public class TestingRequestRepository : ITestingRequestRepository {
-  private readonly ApplicationDbContext _context;
+  private readonly IApplicationDbContext _context;
 
-  public TestingRequestRepository(ApplicationDbContext context) { _context = context; }
+  public TestingRequestRepository(IApplicationDbContext context) { _context = context; }
 
   public async Task<IEnumerable<TestingRequest>> GetWithPaginationAsync(int skip = 0, int take = 50) {
     return await _context.TestingRequests.Where(r => r.DeletedAt == null).Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).Skip(skip).Take(take).ToListAsync();
