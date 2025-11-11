@@ -39,11 +39,17 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
             builder.UseEnvironment("Testing");
             builder.ConfigureServices(services =>
             {
-                // Remove existing DbContext
-                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (descriptor != null)
+                // Remove existing DbContext registrations
+                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+                if (dbContextDescriptor != null)
                 {
-                    services.Remove(descriptor);
+                    services.Remove(dbContextDescriptor);
+                }
+                
+                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
+                if (dbContextDescriptor2 != null)
+                {
+                    services.Remove(dbContextDescriptor2);
                 }
 
                 // Add in-memory database
@@ -159,7 +165,7 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
         await _dbContext.SaveChangesAsync();
 
         // Act - Terminate all sessions except current
-        // TODO: Implement method - await _sessionService.TerminateOtherSessionsAsync(userId, currentSessionId);
+        await _sessionService.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.UserLogout, currentSessionId);
 
         // Assert
         var remainingSessions = await _dbContext.Set<UserSession>()
@@ -193,7 +199,7 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
         await _dbContext.SaveChangesAsync();
 
         // Act - Terminate all sessions
-        // TODO: Implement method - await _sessionService.TerminateAllSessionsAsync(userId);
+        await _sessionService.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.UserLogout);
 
         // Assert
         var activeSessions = await _dbContext.Set<UserSession>()

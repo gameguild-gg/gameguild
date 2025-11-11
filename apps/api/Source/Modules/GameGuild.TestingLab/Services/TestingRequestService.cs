@@ -1,13 +1,13 @@
 using GameGuild.Modules.TestingLab.Entities;
-using GameGuild.Database;
+using GameGuild.Abstractions;
 
 
 namespace GameGuild.Modules.TestingLab;
 
 public class TestingRequestService : ITestingRequestService {
-  private readonly ApplicationDbContext _context;
+  private readonly IApplicationDbContext _context;
 
-  public TestingRequestService(ApplicationDbContext context) { _context = context; }
+  public TestingRequestService(IApplicationDbContext context) { _context = context; }
 
   public async Task<IEnumerable<TestingRequest>> GetAllAsync() {
     return await _context.TestingRequests.Include(r => r.CreatedBy).Include(r => r.ProjectVersion).ThenInclude(pv => pv.Project).OrderByDescending(r => r.CreatedAt).ToListAsync();
