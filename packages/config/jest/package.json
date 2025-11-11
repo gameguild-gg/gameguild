@@ -1,11 +1,11 @@
 {
-  "name": "@gameguild/jest-config",
+  "name": "@game-guild/jest-config",
   "version": "0.1.0",
-  "type": "module",
-  "description": "",
-  "author": "Matheus Martins <contact@matheusmartins.com>",
+  "description": "Jest testing configuration for matheusmartins.com website and related projects",
   "license": "UNLICENSED",
+  "author": "Matheus Martins <contact@matheusmartins.com>",
   "private": true,
+  "type": "module",
   "main": "src/index.js",
   "devDependencies": {
     "@types/jest": "^29.5.14"
