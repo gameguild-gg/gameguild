@@ -14,7 +14,7 @@
     "components": "@/components",
     "hooks": "@/hooks",
     "lib": "@/lib",
-    "utils": "@gameguild/ui/lib/utils",
-    "ui": "@gameguild/ui/components"
+    "utils": "@game-guild/ui/lib/utils",
+    "ui": "@game-guild/ui/components"
   }
 }

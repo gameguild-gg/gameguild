@@ -7,65 +7,65 @@ import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import nextJsPlugin from '@next/eslint-plugin-next';
 import prettierPlugin from 'eslint-plugin-prettier';
-import prettierConfig from '@gameguild/prettier-config';
+import prettierConfig from '@game-guild/prettier-config';
 
 /**
  * @see https://eslint.org/docs/latest/use/configure/configuration-files
  * @type {import('eslint').Linter.Config[]}
  */
 const config = [
-  { files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}'] },
-  {
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-        ...globals.jest,
-      },
-      sourceType: 'module',
+    {files: ['**/*.{js,mjs,cjs,ts,jsx,tsx}']},
+    {
+        languageOptions: {
+            globals: {
+                ...globals.browser,
+                ...globals.node,
+                ...globals.jest,
+            },
+            sourceType: 'module',
+        },
     },
-  },
-  eslint.configs.recommended, // eslint recommended rules
-  eslintConfigPrettier,
-  eslintPluginPrettierRecommended, // prettier recommended rules
-  typescriptEslint.configs.recommended, // typescript-eslint recommended rules
-  {
-    ...reactPlugin.configs.flat.recommended,
-    languageOptions: {
-      ...reactPlugin.configs.flat.recommended.languageOptions,
-      globals: {
-        ...globals.serviceworker,
-      },
+    eslint.configs.recommended, // eslint recommended rules
+    eslintConfigPrettier,
+    eslintPluginPrettierRecommended, // prettier recommended rules
+    typescriptEslint.configs.recommended, // typescript-eslint recommended rules
+    {
+        ...reactPlugin.configs.flat.recommended,
+        languageOptions: {
+            ...reactPlugin.configs.flat.recommended.languageOptions,
+            globals: {
+                ...globals.serviceworker,
+            },
+        },
     },
-  },
-  {
-    plugins: { prettier: prettierPlugin },
-    rules: { 'prettier/prettier': ['error', prettierConfig] },
-  },
-  {
-    plugins: {
-      '@next/next': nextJsPlugin,
+    {
+        plugins: {prettier: prettierPlugin},
+        rules: {'prettier/prettier': ['error', prettierConfig]},
     },
-    rules: {
-      ...nextJsPlugin.configs.recommended.rules,
-      ...nextJsPlugin.configs['core-web-vitals'].rules,
+    {
+        plugins: {
+            '@next/next': nextJsPlugin,
+        },
+        rules: {
+            ...nextJsPlugin.configs.recommended.rules,
+            ...nextJsPlugin.configs['core-web-vitals'].rules,
+        },
     },
-  },
-  {
-    plugins: {
-      'react-hooks': reactHooksPlugin,
+    {
+        plugins: {
+            'react-hooks': reactHooksPlugin,
+        },
+        settings: {react: {version: 'detect'}},
+        rules: {
+            ...reactHooksPlugin.configs.recommended.rules,
+            // React scope no longer necessary with the new JSX transform.
+            'react/react-in-jsx-scope': 'off',
+            'react/prop-types': 'off',
+        },
     },
-    settings: { react: { version: 'detect' } },
-    rules: {
-      ...reactHooksPlugin.configs.recommended.rules,
-      // React scope no longer necessary with the new JSX transform.
-      'react/react-in-jsx-scope': 'off',
-      'react/prop-types': 'off',
+    {
+        ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**', '.next/**', 'out/**', 'public/**'],
     },
-  },
-  {
-    ignores: ['dist/**', 'build/**', 'coverage/**', 'node_modules/**', '.next/**', 'out/**', 'public/**'],
-  },
 ];
 
 export default config.flat();

@@ -1,9 +1,9 @@
 {
-  "name": "@gameguild/typescript-config",
+  "name": "@game-guild/typescript-config",
   "version": "0.1.0",
-  "type": "module",
-  "description": "TypeScript configuration for the website and related projects",
-  "author": "Matheus Martins <contact@matheusmartins.com>",
+  "description": "TypeScript configuration for matheusmartins.com website and related projects",
   "license": "UNLICENSED",
-  "private": true
+  "author": "Matheus Martins <contact@matheusmartins.com>",
+  "private": true,
+  "type": "module"
 }
