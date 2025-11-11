@@ -14,13 +14,17 @@
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
 
 
-<!--            <EnableNETAnalyzers>true</EnableNETAnalyzers>-->
-<!--            <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>-->
-<!--            <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>-->
-<!--            <RunCodeAnalysis>true</RunCodeAnalysis>-->
-<!--            <TreatWarningsAsErrors>false</TreatWarningsAsErrors>-->
-<!--            <WarningsAsErrors/>-->
-<!--            <WarningsNotAsErrors/>-->
+        <!--            <EnableNETAnalyzers>true</EnableNETAnalyzers>-->
+        <!--            <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>-->
+        <!--            <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>-->
+        <!--            <RunCodeAnalysis>true</RunCodeAnalysis>-->
+        <!--            <TreatWarningsAsErrors>false</TreatWarningsAsErrors>-->
+        <!--            <WarningsAsErrors/>-->
+        <!--            <WarningsNotAsErrors/>-->
+
+        <!-- Enable XML documentation for Swagger -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <NoWarn>$(NoWarn);1591</NoWarn> <!-- Suppress missing XML comment warnings -->
     </PropertyGroup>
     <!-- Opt-in flag for Sonar analyzers. Disabled by default to unblock current build. -->
     <PropertyGroup>
@@ -28,7 +32,7 @@
     </PropertyGroup>
 
     <ItemGroup
-        Condition="'$(MSBuildProjectExtension)' != '.dcproj' AND '$(IncludeSonarAnalyzers)' == 'true'">
+            Condition="'$(MSBuildProjectExtension)' != '.dcproj' AND '$(IncludeSonarAnalyzers)' == 'true'">
         <PackageReference Include="SonarAnalyzer.CSharp">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

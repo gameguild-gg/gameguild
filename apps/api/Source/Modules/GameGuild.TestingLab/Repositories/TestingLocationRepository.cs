@@ -1,13 +1,13 @@
 using GameGuild.Modules.TestingLab.Entities;
-using GameGuild.Database;
+using GameGuild.Abstractions;
 
 
 namespace GameGuild.Modules.TestingLab;
 
 public class TestingLocationRepository : ITestingLocationRepository {
-  private readonly ApplicationDbContext _context;
+  private readonly IApplicationDbContext _context;
 
-  public TestingLocationRepository(ApplicationDbContext context) { _context = context; }
+  public TestingLocationRepository(IApplicationDbContext context) { _context = context; }
 
   public async Task<TestingLocation?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) { return await _context.TestingLocations.Where(tl => tl.Id == id && tl.DeletedAt == null).FirstOrDefaultAsync(cancellationToken); }
 

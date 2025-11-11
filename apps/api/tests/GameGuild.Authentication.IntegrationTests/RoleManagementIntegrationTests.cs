@@ -7,6 +7,7 @@ using GameGuild.Authentication.Enums;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 
@@ -32,19 +33,11 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
         _factory = factory.WithWebHostBuilder(builder =>
         {
             builder.UseEnvironment("Testing");
-            builder.ConfigureServices(services =>
+            builder.ConfigureAppConfiguration((context, config) =>
             {
-                // Remove existing DbContext registration
-                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (descriptor != null)
+                config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database for testing
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"RoleTestDb_{Guid.NewGuid()}");
+                    ["Database:ConnectionString"] = $"RoleTestDb_{Guid.NewGuid()}"
                 });
             });
         });
@@ -59,9 +52,19 @@ public class RoleManagementIntegrationTests : IClassFixture<WebApplicationFactor
 
     public void Dispose()
     {
-        _scope?.Dispose();
-        _dbContext?.Database.EnsureDeleted();
-        _dbContext?.Dispose();
+        try
+        {
+            _dbContext?.Database.EnsureDeleted();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Database already disposed
+        }
+        finally
+        {
+            _dbContext?.Dispose();
+            _scope?.Dispose();
+        }
     }
 
     private Role CreateTestRole(string name, Guid? tenantId = null)

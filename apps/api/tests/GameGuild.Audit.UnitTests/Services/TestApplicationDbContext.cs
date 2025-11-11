@@ -1,6 +1,6 @@
 using GameGuild.API.Data;
 using GameGuild.Audit;
-using GameGuild.Permissions.Entities;
+using GameGuild.Permissions.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Tests.Audit.Unit.Services;

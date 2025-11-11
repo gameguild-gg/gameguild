@@ -171,9 +171,9 @@ var policy = new ConditionalPolicy
 **Affected Files**:
 - SessionManagementIntegrationTests.cs (line 748)
 
-### 3. Missing MediatR Commands/Queries (40+ errors)
+### 3. Missing Command/Query Handlers (40+ errors)
 
-**Problem**: Tests reference MediatR commands/queries that don't exist:
+**Problem**: Tests reference command/query handlers that don't exist:
 - `EvaluateAbacPoliciesCommand`
 - `EvaluateConditionalPoliciesCommand`
 - `BulkEvaluateAbacPoliciesCommand`
@@ -182,14 +182,14 @@ var policy = new ConditionalPolicy
 - `ClearPermissionCacheCommand`
 - `BulkRevokeTenantPermissionsCommand`
 
-**Problem**: Tests reference `_mediator` field which doesn't exist in test class
+**Problem**: Tests reference `_handler` field which doesn't exist in test class
 
 **Solution Options**:
-1. Remove MediatR usage and test services directly
+1. Test services directly instead of using handlers
 2. Create these command/query handlers if they should exist
 3. Use HTTP client to test via API endpoints
 
-**Recommended Fix**: Remove `_mediator` references and test services directly
+**Recommended Fix**: Remove handler references and test services directly
 
 **Affected Files**:
 - AccessControlIntegrationTests.cs (all policy evaluation tests)
@@ -258,8 +258,8 @@ var policy = new ConditionalPolicy
 1. Replace all `CreateAsync` → `AddAsync`
 2. Fix all `AssignRoleToUserAsync` calls to use `UserRole` object
 
-### Phase 3: Remove Invalid Service/MediatR Usage
-1. Remove all `_mediator` references
+### Phase 3: Remove Invalid Service/Handler Usage
+1. Remove all `_handler` references
 2. Either implement missing service methods or remove those test cases
 3. Document which features are not yet implemented
 
@@ -277,7 +277,7 @@ var policy = new ConditionalPolicy
 
 2. **AccessControlIntegrationTests.cs** (~100 fixes needed)
    - All TenantId assignments
-   - All MediatR command removals
+   - All handler references removed
    - AbacPolicy property fixes
    - ConditionalPolicy property fixes
    - Permission entity property fixes

@@ -12,6 +12,7 @@ using GameGuild.Users.Entities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 using GameGuild.Tests.Authentication.Integration.TestHelpers;
@@ -35,44 +36,47 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
 
         _factory = factory.WithWebHostBuilder(builder => {
             builder.UseEnvironment("Testing");
-            builder.ConfigureServices(services => {
-                // Add in-memory database for testing
-                services.AddDbContext<ApplicationDbContext>(options => {
-                    options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
+            builder.ConfigureAppConfiguration((context, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Database:ConnectionString"] = $"AuthTestDb_{Guid.NewGuid()}"
                 });
-
-                // Ensure the database is created
-                var serviceProvider = services.BuildServiceProvider();
-                using var scope = serviceProvider.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                context.Database.EnsureCreated();
             });
         });
 
         _client = _factory.CreateClient();
         _scope = _factory.Services.CreateScope();
+        
+        // Ensure the database is created
+        var context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        context.Database.EnsureCreated();
     }
     [Fact]
     public async Task LocalSignUp_ShouldCreateUser_WhenValidDataProvided() {
         // Arrange
-        var signUpCommand = new LocalSignUpCommand {
+        var signUpRequest = new LocalSignUpRequest {
             Email = "integration.test@example.com",
             Username = "integrationtest",
             Password = "IntegrationTest123!"
         };
 
         // Act
-        var response = await _client.PostAsJsonAsync("/api/auth/signup", signUpCommand);
+        var response = await _client.PostAsJsonAsync("/api/v1/auth/sign-up", signUpRequest);
 
         // Assert
         response.Should().NotBeNull();
+        
+        // Check response status
+        var content = await response.Content.ReadAsStringAsync();
+        response.IsSuccessStatusCode.Should().BeTrue($"Response status: {response.StatusCode}, Content: {content}");
 
-        // Verify user was created in database
+        // Verify auth user was created in database
         var context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var user = await context.Set<User>().FirstOrDefaultAsync(u => u.Email == signUpCommand.Email);
+        var authUser = await context.Set<GameGuild.Authentication.Entities.AuthUser>().FirstOrDefaultAsync(u => u.Email == signUpRequest.Email);
 
-        user.Should().NotBeNull();
-        user!.Email.Should().Be(signUpCommand.Email);
+        authUser.Should().NotBeNull();
+        authUser!.Email.Should().Be(signUpRequest.Email);
     }
 
     [Fact]

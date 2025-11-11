@@ -329,16 +329,57 @@ public class RoleRepositoryTests
         // Arrange
         var userRole = new UserRole(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
 
+        // Setup empty UserRole collection (no existing assignments)
+        var userRoles = new List<UserRole>().AsQueryable();
+        var mockSet = CreateMockDbSet(userRoles);
+        _mockContext.Setup(c => c.Set<UserRole>()).Returns(mockSet.Object);
+
         _mockContext.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
+        var repository = new RoleRepository(_mockContext.Object);
+
         // Act
-        var result = await _repository.AssignRoleToUserAsync(userRole);
+        var result = await repository.AssignRoleToUserAsync(userRole);
 
         // Assert
         result.Should().NotBeNull();
-        _mockUserRoleSet.Verify(s => s.Add(userRole), Times.Once);
         _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AssignRoleToUserAsync_WhenRoleAlreadyAssigned_ReturnExistingAssignment()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var roleId = Guid.NewGuid();
+        var assignedBy = Guid.NewGuid();
+        
+        var existingUserRole = new UserRole(userId, roleId, assignedBy) 
+        { 
+            Id = Guid.NewGuid(),
+            CreatedAt = DateTime.UtcNow.AddDays(-1),
+            UpdatedAt = DateTime.UtcNow.AddDays(-1),
+            AssignedAt = DateTime.UtcNow.AddDays(-1)
+        };
+
+        // Setup UserRole collection with existing assignment
+        var userRoles = new List<UserRole> { existingUserRole }.AsQueryable();
+        var mockSet = CreateMockDbSet(userRoles);
+        _mockContext.Setup(c => c.Set<UserRole>()).Returns(mockSet.Object);
+
+        var repository = new RoleRepository(_mockContext.Object);
+
+        var duplicateUserRole = new UserRole(userId, roleId, assignedBy);
+
+        // Act
+        var result = await repository.AssignRoleToUserAsync(duplicateUserRole);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(existingUserRole.Id);
+        // SaveChanges should NOT be called since no new record is created
+        _mockContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

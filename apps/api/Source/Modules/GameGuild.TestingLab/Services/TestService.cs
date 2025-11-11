@@ -1,5 +1,5 @@
 using GameGuild.Modules.TestingLab.Entities;
-using GameGuild.Database;
+using GameGuild.Abstractions;
 using GameGuild.Modules.Projects;
 using ProjectEntity = GameGuild.Modules.Projects.Entities.Project;
 using ProjectReleaseEntity = GameGuild.Modules.Projects.Entities.ProjectRelease;
@@ -8,7 +8,7 @@ using ProjectReleaseEntity = GameGuild.Modules.Projects.Entities.ProjectRelease;
 namespace GameGuild.Modules.TestingLab;
 
 /// <summary> Service implementation for Testing operations Comprehensive testing session and request management capabilities </summary>
-public class TestService(ApplicationDbContext context) : ITestService {
+public class TestService(IApplicationDbContext context) : ITestService {
   #region Testing Request Operations
 
   public async Task<IEnumerable<TestingRequest>> GetAllTestingRequestsAsync() {

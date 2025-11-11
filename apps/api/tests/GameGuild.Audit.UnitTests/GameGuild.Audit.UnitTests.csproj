@@ -22,12 +22,15 @@
         <PackageReference Include="Moq" />
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
         <PackageReference Include="AutoFixture" />
         <PackageReference Include="AutoFixture.Xunit2" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\GameGuild.csproj" />
+        <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Audit\GameGuild.Audit.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>
 
 </Project>

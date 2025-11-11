@@ -28,7 +28,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\GameGuild.csproj" />
+        <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Audit\GameGuild.Audit.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>
 
 </Project>
