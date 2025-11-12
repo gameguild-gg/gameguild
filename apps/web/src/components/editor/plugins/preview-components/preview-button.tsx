@@ -1,7 +1,13 @@
 "use client"
 
 import type { SerializedButtonNode } from "../../nodes/button-node"
-import { ArrowRight, Copy, Download, ExternalLink, Mail } from "lucide-react"
+import { 
+  ArrowRight, Copy, Download, ExternalLink, Mail,
+  Link, Link2,
+  ArrowDownToLine, FileDown,
+  ClipboardCopy, CopyCheck,
+  AtSign, Send
+} from "lucide-react"
 
 export function PreviewButton({ node }: { node: SerializedButtonNode }) {
   if (!node?.data) {
@@ -9,21 +15,39 @@ export function PreviewButton({ node }: { node: SerializedButtonNode }) {
     return null
   }
 
-  const { text, url, actionType, variant, size, showIcon } = node.data
+  const { text, url, actionType, variant, size, showIcon, iconVariant, iconPosition, iconSize } = node.data
 
   const getActionIcon = () => {
-    switch (actionType) {
-      case "url":
-        return <ExternalLink className="h-4 w-4" />
-      case "download":
-        return <Download className="h-4 w-4" />
-      case "copy":
-        return <Copy className="h-4 w-4" />
-      case "email":
-        return <Mail className="h-4 w-4" />
-      default:
-        return <ArrowRight className="h-4 w-4" />
+    const iconSizeClass = {
+      sm: "h-3 w-3",
+      md: "h-4 w-4",
+      lg: "h-5 w-5",
+    }[iconSize || "md"]
+
+    const iconsByType = {
+      url: [
+        <ExternalLink className={iconSizeClass} key="url-0" />,
+        <Link2 className={iconSizeClass} key="url-1" />,
+        <Link className={iconSizeClass} key="url-2" />,
+      ],
+      download: [
+        <Download className={iconSizeClass} key="download-0" />,
+        <ArrowDownToLine className={iconSizeClass} key="download-1" />,
+        <FileDown className={iconSizeClass} key="download-2" />,
+      ],
+      copy: [
+        <Copy className={iconSizeClass} key="copy-0" />,
+        <ClipboardCopy className={iconSizeClass} key="copy-1" />,
+        <CopyCheck className={iconSizeClass} key="copy-2" />,
+      ],
+      email: [
+        <Mail className={iconSizeClass} key="email-0" />,
+        <AtSign className={iconSizeClass} key="email-1" />,
+        <Send className={iconSizeClass} key="email-2" />,
+      ],
     }
+
+    return iconsByType[actionType][iconVariant || 0] || iconsByType[actionType][0]
   }
 
   const getButtonStyles = () => {
@@ -43,7 +67,14 @@ export function PreviewButton({ node }: { node: SerializedButtonNode }) {
       minimal: "text-blue-600 dark:text-blue-400 bg-transparent border-b-2 border-transparent hover:border-blue-600 dark:hover:border-blue-400 rounded-none px-2",
     }
 
-    return `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]}`
+    const layoutStyles = {
+      top: "flex-col",
+      bottom: "flex-col-reverse",
+      left: "flex-row-reverse",
+      right: "flex-row",
+    }
+
+    return `${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${layoutStyles[iconPosition || "right"]}`
   }
 
   const handleButtonAction = () => {
@@ -68,11 +99,18 @@ export function PreviewButton({ node }: { node: SerializedButtonNode }) {
     }
   }
 
+  const iconSpacingClass = {
+    top: "mb-2",
+    bottom: "mt-2",
+    left: "mr-2",
+    right: "ml-2",
+  }[iconPosition || "right"]
+
   return (
     <div className="my-4 flex justify-center">
       <button className={getButtonStyles()} onClick={handleButtonAction}>
         {text}
-        {showIcon && <span className="ml-2">{getActionIcon()}</span>}
+        {showIcon && <span className={iconSpacingClass}>{getActionIcon()}</span>}
       </button>
     </div>
   )
