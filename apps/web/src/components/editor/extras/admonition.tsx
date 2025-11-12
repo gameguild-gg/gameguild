@@ -211,25 +211,27 @@ export function Admonition({
   
   // Design "bordered" - estilo com borda completa (segundo exemplo da imagem)
   if (design === "bordered") {
+    const color = customBorderColor || typeToColor[type]
     return (
       <div 
         className={cn(
           "rounded-md border-2 bg-background p-4 text-sm",
-          !customBorderColor && `border-${type === "note" ? "blue" : type === "info" ? "cyan" : "blue"}-500/30`,
           className
         )}
-        style={customBorderColor ? { 
-          borderColor: customBorderColor,
-          backgroundColor: `${customBorderColor}05`,
-        } : undefined}
+        style={{ 
+          borderColor: `${color}4d`, // 30% opacity
+          backgroundColor: customBorderColor ? `${customBorderColor}0d` : undefined, // 5% opacity
+        }}
         {...props}
       >
         <div 
           className="font-semibold flex items-center gap-2 mb-2"
-          style={customTextColor ? { color: customTextColor } : customBorderColor ? { color: customBorderColor } : undefined}
+          style={{ color: customTextColor || color }}
         >
-          {typeToIcon[type]}
-          {title || typeToLabel[type]}
+          <div style={{ color }}>
+            {typeToIcon[type]}
+          </div>
+          <span>{title || typeToLabel[type]}</span>
         </div>
         {content && <div className="text-foreground/90">{content}</div>}
       </div>
@@ -238,6 +240,7 @@ export function Admonition({
   
   // Design "vertical-bar" - estilo com barra vertical no lado esquerdo (terceiro exemplo)
   if (design === "vertical-bar") {
+    const color = customBorderColor || typeToColor[type]
     return (
       <div 
         className={cn(
@@ -248,16 +251,16 @@ export function Admonition({
       >
         <div 
           className="absolute left-0 top-0 bottom-0 w-1"
-          style={{ 
-            backgroundColor: customBorderColor || (type === "note" ? "#3b82f6" : type === "info" ? "#06b6d4" : "#3b82f6")
-          }}
+          style={{ backgroundColor: color }}
         />
         <div 
           className="font-semibold flex items-center gap-2 mb-1.5"
-          style={customTextColor ? { color: customTextColor } : customBorderColor ? { color: customBorderColor } : undefined}
+          style={{ color: customTextColor || color }}
         >
-          {typeToIcon[type]}
-          {title || typeToLabel[type]}
+          <div style={{ color }}>
+            {typeToIcon[type]}
+          </div>
+          <span>{title || typeToLabel[type]}</span>
         </div>
         {content && <div className="text-foreground/80">{content}</div>}
       </div>
