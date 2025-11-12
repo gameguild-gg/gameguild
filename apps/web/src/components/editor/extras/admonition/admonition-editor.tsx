@@ -60,6 +60,28 @@ const typeToIcon = {
   summary: <BookMarked className="h-4 w-4 text-violet-500" />,
 }
 
+// Icons for miniatures (without color class for inline styling)
+const typeToIconMiniature: Record<AdmonitionType, React.ReactNode> = {
+  note: <Notebook className="w-3 h-3" />,
+  abstract: <FileText className="w-3 h-3" />,
+  info: <Info className="w-3 h-3" />,
+  tip: <Flame className="w-3 h-3" />,
+  success: <CheckCircle className="w-3 h-3" />,
+  question: <HelpCircle className="w-3 h-3" />,
+  warning: <AlertTriangle className="w-3 h-3" />,
+  failure: <AlertCircle className="w-3 h-3" />,
+  danger: <Skull className="w-3 h-3" />,
+  bug: <Bug className="w-3 h-3" />,
+  example: <List className="w-3 h-3" />,
+  quote: <Quote className="w-3 h-3" />,
+  important: <Zap className="w-3 h-3" />,
+  caution: <ShieldAlert className="w-3 h-3" />,
+  attention: <Bell className="w-3 h-3" />,
+  hint: <Lightbulb className="w-3 h-3" />,
+  check: <Check className="w-3 h-3" />,
+  summary: <BookMarked className="w-3 h-3" />,
+}
+
 const admonitionTypes: { value: AdmonitionType; label: string }[] = [
   { value: "note", label: "Note" },
   { value: "abstract", label: "Abstract" },
@@ -87,6 +109,28 @@ const designStyles: { value: "default" | "compact" | "bordered" | "vertical-bar"
   { value: "bordered", label: "Bordered", description: "Full border outline" },
   { value: "vertical-bar", label: "Vertical Bar", description: "Left accent bar" },
 ]
+
+// Map of colors by type (Tailwind color values)
+const typeToColorValues: Record<AdmonitionType, { border: string; bg: string; bgDark: string; text: string; textDark: string }> = {
+  note: { border: "#3b82f6", bg: "#1e3a8a", bgDark: "#1e3a8a", text: "#dbeafe", textDark: "#60a5fa" },
+  abstract: { border: "#0ea5e9", bg: "#0c4a6e", bgDark: "#0c4a6e", text: "#e0f2fe", textDark: "#38bdf8" },
+  info: { border: "#06b6d4", bg: "#164e63", bgDark: "#164e63", text: "#cffafe", textDark: "#22d3ee" },
+  tip: { border: "#84cc16", bg: "#365314", bgDark: "#365314", text: "#ecfccb", textDark: "#a3e635" },
+  success: { border: "#22c55e", bg: "#14532d", bgDark: "#14532d", text: "#dcfce7", textDark: "#4ade80" },
+  question: { border: "#f59e0b", bg: "#78350f", bgDark: "#78350f", text: "#fef3c7", textDark: "#fbbf24" },
+  warning: { border: "#eab308", bg: "#713f12", bgDark: "#713f12", text: "#fef9c3", textDark: "#facc15" },
+  failure: { border: "#ef4444", bg: "#7f1d1d", bgDark: "#7f1d1d", text: "#fee2e2", textDark: "#f87171" },
+  danger: { border: "#f97316", bg: "#7c2d12", bgDark: "#7c2d12", text: "#ffedd5", textDark: "#fb923c" },
+  bug: { border: "#78716c", bg: "#292524", bgDark: "#292524", text: "#e7e5e4", textDark: "#a8a29e" },
+  example: { border: "#14b8a6", bg: "#134e4a", bgDark: "#134e4a", text: "#ccfbf1", textDark: "#2dd4bf" },
+  quote: { border: "#ec4899", bg: "#831843", bgDark: "#831843", text: "#fce7f3", textDark: "#f472b6" },
+  important: { border: "#a855f7", bg: "#581c87", bgDark: "#581c87", text: "#f3e8ff", textDark: "#c084fc" },
+  caution: { border: "#f43f5e", bg: "#881337", bgDark: "#881337", text: "#ffe4e6", textDark: "#fb7185" },
+  attention: { border: "#d946ef", bg: "#701a75", bgDark: "#701a75", text: "#fae8ff", textDark: "#e879f9" },
+  hint: { border: "#10b981", bg: "#064e3b", bgDark: "#064e3b", text: "#d1fae5", textDark: "#34d399" },
+  check: { border: "#6366f1", bg: "#3730a3", bgDark: "#3730a3", text: "#e0e7ff", textDark: "#818cf8" },
+  summary: { border: "#8b5cf6", bg: "#4c1d95", bgDark: "#4c1d95", text: "#ede9fe", textDark: "#a78bfa" },
+}
 
 export function AdmonitionEditor({ initialData, onSave, onCancel }: AdmonitionEditorProps) {
   const [data, setData] = useState<AdmonitionData>(
@@ -257,10 +301,16 @@ export function AdmonitionEditor({ initialData, onSave, onCancel }: AdmonitionEd
                           {/* Miniature preview */}
                           <div className="relative">
                             {style.value === "default" && (
-                              <div className="h-12 rounded border border-blue-500 bg-blue-900/80 p-1.5 text-xs flex flex-col gap-0.5">
-                                <div className="font-semibold text-blue-100 flex items-center gap-1">
-                                  <div className="w-3 h-3 flex items-center justify-center">
-                                    <Notebook className="w-3 h-3" />
+                              <div 
+                                className="h-12 rounded border p-1.5 text-xs flex flex-col gap-0.5"
+                                style={{
+                                  borderColor: typeToColorValues[data.type].border,
+                                  backgroundColor: typeToColorValues[data.type].bgDark + "cc", // 80% opacity
+                                }}
+                              >
+                                <div className="font-semibold flex items-center gap-1" style={{ color: typeToColorValues[data.type].text }}>
+                                  <div className="w-3 h-3 flex items-center justify-center" style={{ color: typeToColorValues[data.type].text }}>
+                                    {typeToIconMiniature[data.type]}
                                   </div>
                                   <span>Example</span>
                                 </div>
@@ -270,24 +320,33 @@ export function AdmonitionEditor({ initialData, onSave, onCancel }: AdmonitionEd
                               </div>
                             )}
                             {style.value === "compact" && (
-                              <div className="h-12 rounded border-l-4 border-blue-500 bg-blue-500/25 p-2 text-xs">
+                              <div 
+                                className="h-12 rounded border-l-4 p-2 text-xs"
+                                style={{
+                                  borderColor: typeToColorValues[data.type].border,
+                                  backgroundColor: typeToColorValues[data.type].border + "40", // 25% opacity
+                                }}
+                              >
                                 <div className="font-semibold flex items-center gap-1">
-                                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: typeToColorValues[data.type].border }}></div>
                                   <span className="text-gray-900 dark:text-gray-100">Example</span>
                                 </div>
                                 <div className="text-gray-700 dark:text-gray-300 ml-4">Sample text</div>
                               </div>
                             )}
                             {style.value === "bordered" && (
-                              <div className="h-12 rounded border-2 border-blue-500/30 bg-white dark:bg-gray-900 p-2 text-xs">
-                                <div className="font-semibold text-blue-600 dark:text-blue-400">Example</div>
+                              <div 
+                                className="h-12 rounded border-2 bg-white dark:bg-gray-900 p-2 text-xs"
+                                style={{ borderColor: typeToColorValues[data.type].border + "4d" }} // 30% opacity
+                              >
+                                <div className="font-semibold" style={{ color: typeToColorValues[data.type].textDark }}>Example</div>
                                 <div className="text-gray-700 dark:text-gray-300">Sample text</div>
                               </div>
                             )}
                             {style.value === "vertical-bar" && (
                               <div className="h-12 rounded bg-gray-100 dark:bg-gray-800 p-2 text-xs relative pl-3">
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l"></div>
-                                <div className="font-semibold text-blue-600 dark:text-blue-400">Example</div>
+                                <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l" style={{ backgroundColor: typeToColorValues[data.type].border }}></div>
+                                <div className="font-semibold" style={{ color: typeToColorValues[data.type].textDark }}>Example</div>
                                 <div className="text-gray-700 dark:text-gray-300">Sample text</div>
                               </div>
                             )}
