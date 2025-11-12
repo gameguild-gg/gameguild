@@ -23,6 +23,7 @@ import {
   getLayoutStyles,
   getIconSpacingClass,
   getIconSizeClass,
+  getColorStyles,
 } from "@/components/editor/extras/button/button-styles"
 
 export type ButtonVariant = "solid" | "outline" | "soft" | "minimal"
@@ -191,40 +192,9 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
     return iconsByType[data.actionType][data.iconVariant] || iconsByType[data.actionType][0]
   }
 
-  const getColorStyles = () => {
-    const palettes = {
-      blue: {
-        solid: "from-blue-600 to-indigo-600 shadow-blue-500/30 hover:shadow-blue-500/40 hover:from-blue-700 hover:to-indigo-700",
-        outline: "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white",
-        soft: "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800/40",
-        minimal: "text-blue-600 dark:text-blue-400 hover:border-blue-600 dark:hover:border-blue-400",
-      },
-      green: {
-        solid: "from-green-600 to-emerald-600 shadow-green-500/30 hover:shadow-green-500/40 hover:from-green-700 hover:to-emerald-700",
-        outline: "border-green-600 text-green-600 dark:text-green-400 dark:border-green-400 hover:bg-green-600 hover:text-white dark:hover:bg-green-500 dark:hover:text-white",
-        soft: "bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-100 hover:bg-green-200 dark:hover:bg-green-800/40",
-        minimal: "text-green-600 dark:text-green-400 hover:border-green-600 dark:hover:border-green-400",
-      },
-      orange: {
-        solid: "from-orange-600 to-amber-600 shadow-orange-500/30 hover:shadow-orange-500/40 hover:from-orange-700 hover:to-amber-700",
-        outline: "border-orange-600 text-orange-600 dark:text-orange-400 dark:border-orange-400 hover:bg-orange-600 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white",
-        soft: "bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-100 hover:bg-orange-200 dark:hover:bg-orange-800/40",
-        minimal: "text-orange-600 dark:text-orange-400 hover:border-orange-600 dark:hover:border-orange-400",
-      },
-      red: {
-        solid: "from-red-600 to-rose-600 shadow-red-500/30 hover:shadow-red-500/40 hover:from-red-700 hover:to-rose-700",
-        outline: "border-red-600 text-red-600 dark:text-red-400 dark:border-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 dark:hover:text-white",
-        soft: "bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-100 hover:bg-red-200 dark:hover:bg-red-800/40",
-        minimal: "text-red-600 dark:text-red-400 hover:border-red-600 dark:hover:border-red-400",
-      },
-    }
-
-    return palettes[data.colorPalette === "custom" ? "blue" : data.colorPalette][data.variant]
-  }
-
   const getButtonStyles = () => {
     const isVerticalIcon = data.showIcon && (data.iconPosition === "top" || data.iconPosition === "bottom")
-    return `${BASE_BUTTON_STYLES} ${getSizeStyles(data.size, isVerticalIcon)} ${getVariantBaseStyles(data.variant, data.size)} ${getColorStyles()} ${getLayoutStyles(data.iconPosition)}`
+    return `${BASE_BUTTON_STYLES} ${getSizeStyles(data.size, isVerticalIcon)} ${getVariantBaseStyles(data.variant, data.size)} ${getColorStyles(data.colorPalette, data.variant)} ${getLayoutStyles(data.iconPosition)}`
   }
 
   const handleButtonAction = () => {
