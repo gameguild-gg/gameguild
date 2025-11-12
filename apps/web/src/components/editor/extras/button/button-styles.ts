@@ -1,15 +1,15 @@
-import type { ButtonSize, ButtonVariant, IconSize, IconPosition, ColorPalette } from "@/components/editor/nodes/button-node"
+import type { ButtonSize, ButtonVariant, IconSize, IconPosition, ColorPalette, FontFamily, FontSize } from "@/components/editor/nodes/button-node"
 
 /**
  * Retorna as classes de tamanho do botão baseado no tamanho e se o ícone está em posição vertical
  */
 export function getSizeStyles(size: ButtonSize, isVerticalIcon: boolean): string {
   const sizeMap = {
-    sm: isVerticalIcon ? "min-h-12 py-2 px-4 text-sm" : "h-9 px-4 text-sm",
-    md: isVerticalIcon ? "min-h-16 py-3 px-6 text-base" : "h-12 px-6 text-base",
-    lg: isVerticalIcon ? "min-h-20 py-4 px-8 text-lg" : "h-16 px-8 text-lg",
-    xl: isVerticalIcon ? "min-h-28 py-6 px-12 text-2xl" : "h-24 px-12 text-2xl",
-    xxl: isVerticalIcon ? "min-h-36 py-8 px-16 text-3xl" : "h-32 px-16 text-3xl",
+    sm: isVerticalIcon ? "min-h-12 py-2 px-4" : "h-9 px-4",
+    md: isVerticalIcon ? "min-h-16 py-3 px-6" : "h-12 px-6",
+    lg: isVerticalIcon ? "min-h-20 py-4 px-8" : "h-16 px-8",
+    xl: isVerticalIcon ? "min-h-28 py-6 px-12" : "h-24 px-12",
+    xxl: isVerticalIcon ? "min-h-36 py-8 px-16" : "h-32 px-16",
   }
   return sizeMap[size]
 }
@@ -136,6 +136,32 @@ export function getColorStyles(colorPalette: ColorPalette, variant: ButtonVarian
   }
   
   return palettes[colorPalette][variant]
+}
+
+/**
+ * Retorna a classe de família de fonte
+ */
+export function getFontFamilyClass(fontFamily: FontFamily): string {
+  const fontMap = {
+    sans: "font-sans",
+    display: "font-bold tracking-tight",
+    roboto: "font-roboto",
+  }
+  return fontMap[fontFamily]
+}
+
+/**
+ * Retorna a classe de tamanho de fonte baseado no tamanho do botão e tamanho relativo da fonte
+ */
+export function getFontSizeClass(buttonSize: ButtonSize, fontSize: FontSize): string {
+  const fontSizeMap: Record<ButtonSize, Record<FontSize, string>> = {
+    sm: { sm: "text-xs", md: "text-sm", lg: "text-base" },
+    md: { sm: "text-sm", md: "text-base", lg: "text-lg" },
+    lg: { sm: "text-base", md: "text-lg", lg: "text-xl" },
+    xl: { sm: "text-lg", md: "text-2xl", lg: "text-3xl" },
+    xxl: { sm: "text-2xl", md: "text-3xl", lg: "text-4xl" },
+  }
+  return fontSizeMap[buttonSize][fontSize]
 }
 
 /**

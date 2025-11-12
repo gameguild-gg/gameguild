@@ -16,6 +16,8 @@ import {
   getIconSpacingClass,
   getIconSizeClass,
   getColorStyles,
+  getFontFamilyClass,
+  getFontSizeClass,
 } from "@/components/editor/extras/button/button-styles"
 
 export function PreviewButton({ node }: { node: SerializedButtonNode }) {
@@ -24,7 +26,7 @@ export function PreviewButton({ node }: { node: SerializedButtonNode }) {
     return null
   }
 
-  const { text, url, actionType, variant, size, showIcon, iconVariant, iconPosition, iconSize, colorPalette, customColors } = node.data
+  const { text, url, actionType, variant, size, showIcon, iconVariant, iconPosition, iconSize, colorPalette, customColors, fontFamily, fontSize } = node.data
 
   const getActionIcon = () => {
     const iconSizeClass = getIconSizeClass(size, iconSize || "md")
@@ -58,7 +60,9 @@ export function PreviewButton({ node }: { node: SerializedButtonNode }) {
   const getButtonStyles = () => {
     const isVerticalIcon = showIcon && (iconPosition === "top" || iconPosition === "bottom")
     const palette = colorPalette || "blue"
-    return `${BASE_BUTTON_STYLES} cursor-pointer ${getSizeStyles(size, isVerticalIcon)} ${getVariantBaseStyles(variant, size)} ${getColorStyles(palette, variant)} ${getLayoutStyles(iconPosition || "right")}`
+    const font = fontFamily || "sans"
+    const textSize = fontSize || "md"
+    return `${BASE_BUTTON_STYLES} cursor-pointer ${getSizeStyles(size, isVerticalIcon)} ${getVariantBaseStyles(variant, size)} ${getColorStyles(palette, variant)} ${getLayoutStyles(iconPosition || "right")} ${getFontFamilyClass(font)} ${getFontSizeClass(size, textSize)}`
   }
 
   const getCustomStyle = () => {
