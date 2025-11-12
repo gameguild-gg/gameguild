@@ -24,6 +24,8 @@ import {
   getIconSpacingClass,
   getIconSizeClass,
   getColorStyles,
+  getFontFamilyClass,
+  getFontSizeClass,
 } from "@/components/editor/extras/button/button-styles"
 
 export type ButtonVariant = "solid" | "outline" | "soft" | "minimal"
@@ -33,6 +35,8 @@ export type IconVariant = 0 | 1 | 2
 export type IconPosition = "left" | "right" | "top" | "bottom"
 export type IconSize = "sm" | "md" | "lg"
 export type ColorPalette = "blue" | "green" | "orange" | "red" | "custom"
+export type FontFamily = "sans" | "display" | "roboto"
+export type FontSize = "sm" | "md" | "lg"
 
 export interface ButtonData {
   text: string
@@ -53,6 +57,8 @@ export interface ButtonData {
     hoverSecondary: string
     hoverText: string
   }
+  fontFamily: FontFamily
+  fontSize: FontSize
   isNew?: boolean
 }
 
@@ -87,6 +93,8 @@ export class ButtonNode extends DecoratorNode<JSX.Element> {
       iconSize: data.iconSize || "md",
       colorPalette: data.colorPalette || "blue",
       customColors: data.customColors,
+      fontFamily: data.fontFamily || "sans",
+      fontSize: data.fontSize || "md",
       isNew: data.isNew,
     }
   }
@@ -194,7 +202,7 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
 
   const getButtonStyles = () => {
     const isVerticalIcon = data.showIcon && (data.iconPosition === "top" || data.iconPosition === "bottom")
-    return `${BASE_BUTTON_STYLES} ${getSizeStyles(data.size, isVerticalIcon)} ${getVariantBaseStyles(data.variant, data.size)} ${getColorStyles(data.colorPalette, data.variant)} ${getLayoutStyles(data.iconPosition)}`
+    return `${BASE_BUTTON_STYLES} ${getSizeStyles(data.size, isVerticalIcon)} ${getVariantBaseStyles(data.variant, data.size)} ${getColorStyles(data.colorPalette, data.variant)} ${getLayoutStyles(data.iconPosition)} ${getFontFamilyClass(data.fontFamily)} ${getFontSizeClass(data.size, data.fontSize)}`
   }
 
   const handleButtonAction = () => {
@@ -307,6 +315,8 @@ export function $createButtonNode(data: Partial<ButtonData> = {}): ButtonNode {
     iconSize: data.iconSize || "md",
     colorPalette: data.colorPalette || "blue",
     customColors: data.customColors,
+    fontFamily: data.fontFamily || "sans",
+    fontSize: data.fontSize || "md",
     isNew: true,
   })
 }
