@@ -6,10 +6,10 @@ import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { Pencil, ExternalLink, Download, ArrowRight, Mail, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import type { JSX } from "react/jsx-runtime"
 import { EditorLoadingContext } from "../lexical-editor"
 import { ButtonEditor } from "@/components/editor/extras/button"
+import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 
 export type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
 export type ButtonSize = "default" | "sm" | "lg" | "icon"
@@ -166,22 +166,21 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
 
   if (!isEditing) {
     return (
-      <div className="my-4 relative group flex justify-center">
-        <Button variant={data.variant} size={data.size} className="relative group-hover:opacity-90" onClick={handleButtonAction}>
+      <div className="my-4 relative flex justify-center">
+        <Button variant={data.variant} size={data.size} onClick={handleButtonAction}>
           {data.text}
           {data.showIcon && <span className="ml-2">{getActionIcon()}</span>}
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => {
-            e.stopPropagation()
-            setIsEditing(true)
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
+        <ContentEditMenu
+          options={[
+            {
+              id: "edit",
+              icon: <Pencil className="h-4 w-4" />,
+              label: "Edit Button",
+              action: () => setIsEditing(true),
+            },
+          ]}
+        />
       </div>
     )
   }
