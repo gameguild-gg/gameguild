@@ -12,7 +12,7 @@ import { ButtonEditor } from "@/components/editor/extras/button"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 
 export type ButtonVariant = "solid" | "outline" | "soft" | "minimal"
-export type ButtonSize = "default" | "sm" | "lg" | "icon"
+export type ButtonSize = "sm" | "md" | "lg" | "xl"
 export type ButtonActionType = "url" | "download" | "copy" | "email"
 
 export interface ButtonData {
@@ -49,7 +49,7 @@ export class ButtonNode extends DecoratorNode<JSX.Element> {
       url: data.url || "",
       actionType: data.actionType || "url",
       variant: data.variant || "solid",
-      size: data.size || "default",
+      size: data.size || "md",
       showIcon: data.showIcon ?? true,
       isNew: data.isNew,
     }
@@ -147,9 +147,9 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
     
     const sizeStyles = {
       sm: "h-9 px-4 text-sm",
-      default: "h-11 px-6 text-base",
-      lg: "h-13 px-8 text-lg",
-      icon: "h-10 w-10",
+      md: "h-12 px-6 text-base",
+      lg: "h-16 px-8 text-lg",
+      xl: "h-24 px-12 text-2xl",
     }
 
     const variantStyles = {
@@ -214,7 +214,7 @@ export function $createButtonNode(data: Partial<ButtonData> = {}): ButtonNode {
     url: data.url || "",
     actionType: data.actionType || "url",
     variant: data.variant || "solid",
-    size: data.size || "default",
+    size: data.size || "md",
     showIcon: data.showIcon ?? true,
     isNew: true,
   })
