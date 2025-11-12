@@ -1,0 +1,472 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { X, Save, FileText, Eye, AlertCircle, Check } from "lucide-react"
+import {
+  Notebook,
+  Info,
+  Flame,
+  CheckCircle,
+  HelpCircle,
+  AlertTriangle,
+  Skull,
+  Bug,
+  List,
+  Quote,
+  Zap,
+  ShieldAlert,
+  Bell,
+  Lightbulb,
+  BookMarked,
+} from "lucide-react"
+import type { AdmonitionData } from "@/components/editor/nodes/admonition-node"
+import type { AdmonitionType } from "@/components/editor/extras/admonition"
+import { Admonition } from "@/components/editor/extras/admonition"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+
+interface AdmonitionEditorProps {
+  initialData?: AdmonitionData
+  onSave: (data: AdmonitionData) => void
+  onCancel: () => void
+}
+
+const typeToIcon = {
+  note: <Notebook className="h-4 w-4 text-blue-500" />,
+  abstract: <FileText className="h-4 w-4 text-sky-500" />,
+  info: <Info className="h-4 w-4 text-cyan-500" />,
+  tip: <Flame className="h-4 w-4 text-lime-500" />,
+  success: <CheckCircle className="h-4 w-4 text-green-500" />,
+  question: <HelpCircle className="h-4 w-4 text-amber-500" />,
+  warning: <AlertTriangle className="h-4 w-4 text-yellow-500" />,
+  failure: <AlertCircle className="h-4 w-4 text-red-500" />,
+  danger: <Skull className="h-4 w-4 text-orange-500" />,
+  bug: <Bug className="h-4 w-4 text-stone-500" />,
+  example: <List className="h-4 w-4 text-teal-500" />,
+  quote: <Quote className="h-4 w-4 text-pink-500" />,
+  important: <Zap className="h-4 w-4 text-purple-500" />,
+  caution: <ShieldAlert className="h-4 w-4 text-rose-500" />,
+  attention: <Bell className="h-4 w-4 text-fuchsia-500" />,
+  hint: <Lightbulb className="h-4 w-4 text-emerald-500" />,
+  check: <Check className="h-4 w-4 text-indigo-500" />,
+  summary: <BookMarked className="h-4 w-4 text-violet-500" />,
+}
+
+const admonitionTypes: { value: AdmonitionType; label: string }[] = [
+  { value: "note", label: "Note" },
+  { value: "abstract", label: "Abstract" },
+  { value: "info", label: "Info" },
+  { value: "tip", label: "Tip" },
+  { value: "success", label: "Success" },
+  { value: "question", label: "Question" },
+  { value: "warning", label: "Warning" },
+  { value: "failure", label: "Failure" },
+  { value: "danger", label: "Danger" },
+  { value: "bug", label: "Bug" },
+  { value: "example", label: "Example" },
+  { value: "quote", label: "Quote" },
+  { value: "important", label: "Important" },
+  { value: "caution", label: "Caution" },
+  { value: "attention", label: "Attention" },
+  { value: "hint", label: "Hint" },
+  { value: "check", label: "Check" },
+  { value: "summary", label: "Summary" },
+]
+
+const designStyles: { value: "default" | "compact" | "bordered" | "vertical-bar"; label: string; description: string }[] = [
+  { value: "default", label: "Default", description: "Full colored background" },
+  { value: "compact", label: "Compact", description: "Left border with subtle background" },
+  { value: "bordered", label: "Bordered", description: "Full border outline" },
+  { value: "vertical-bar", label: "Vertical Bar", description: "Left accent bar" },
+]
+
+export function AdmonitionEditor({ initialData, onSave, onCancel }: AdmonitionEditorProps) {
+  const [data, setData] = useState<AdmonitionData>(
+    initialData || {
+      title: "",
+      content: "",
+      type: "note",
+      design: "default",
+    }
+  )
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false)
+
+  // Block body scroll and pointer events when modal is open
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow
+    const originalPointerEvents = document.body.style.pointerEvents
+
+    document.body.style.overflow = "hidden"
+    document.body.style.pointerEvents = "none"
+
+    return () => {
+      document.body.style.overflow = originalOverflow
+      document.body.style.pointerEvents = originalPointerEvents
+    }
+  }, [])
+
+  const handleSave = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ""
+    document.body.style.pointerEvents = ""
+
+    onSave(data)
+  }
+
+  const handleCancel = () => {
+    // Restore body styles before closing
+    document.body.style.overflow = ""
+    document.body.style.pointerEvents = ""
+
+    onCancel()
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      style={{ pointerEvents: "auto" }}
+      onClick={handleCancel}
+      onMouseDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          handleCancel()
+        }
+        e.stopPropagation()
+      }}
+    >
+      <div
+        className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        style={{ pointerEvents: "auto" }}
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => e.stopPropagation()}
+        onKeyUp={(e) => e.stopPropagation()}
+        onKeyPress={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Admonition Editor</h2>
+
+            {/* Current type and style display */}
+            <div className="ml-4 flex items-center gap-3 pl-4 border-l border-gray-300 dark:border-gray-600">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Type:</span>
+                <div className="flex items-center gap-1 font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  {typeToIcon[data.type]}
+                  <span>{data.type}</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Design:</span>
+                <span className="font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                  {designStyles.find(s => s.value === (data.design || "default"))?.label}
+                </span>
+              </div>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCancel}
+            className="hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Settings Bar */}
+        <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Admonition Type:
+            </Label>
+            <DropdownMenu open={typeDropdownOpen} onOpenChange={setTypeDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  {typeToIcon[data.type]}
+                  <span className="capitalize">{data.type}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[420px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-2 gap-1 p-1">
+                  {admonitionTypes.map((type) => (
+                    <DropdownMenuItem
+                      key={type.value}
+                      onSelect={(e) => {
+                        e.preventDefault()
+                        setData((prev) => ({ ...prev, type: type.value }))
+                      }}
+                      className="cursor-pointer dark:hover:bg-gray-700 dark:focus:bg-gray-700"
+                    >
+                      <div className="flex items-center gap-2">
+                        {typeToIcon[type.value]}
+                        <span>{type.label}</span>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              Design Style:
+            </Label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="gap-2 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  <span className="capitalize">{designStyles.find(s => s.value === (data.design || "default"))?.label}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[500px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-3">
+                <div className="space-y-2">
+                  {designStyles.map((style) => (
+                    <button
+                      key={style.value}
+                      onClick={() => setData((prev) => ({ ...prev, design: style.value }))}
+                      className={`w-full text-left p-3 rounded-lg border-2 transition-all hover:border-blue-500 dark:hover:border-blue-400 ${
+                        data.design === style.value || (!data.design && style.value === "default")
+                          ? "border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950/30"
+                          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
+                            {style.label}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                            {style.description}
+                          </div>
+                          {/* Miniature preview */}
+                          <div className="relative">
+                            {style.value === "default" && (
+                              <div className="h-12 rounded border border-blue-500 bg-blue-900/80 p-1.5 text-xs flex flex-col gap-0.5">
+                                <div className="font-semibold text-blue-100 flex items-center gap-1">
+                                  <div className="w-3 h-3 flex items-center justify-center">
+                                    <Notebook className="w-3 h-3" />
+                                  </div>
+                                  <span>Example</span>
+                                </div>
+                                <div className="bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 rounded px-1.5 py-0.5 text-[10px]">
+                                  Sample text
+                                </div>
+                              </div>
+                            )}
+                            {style.value === "compact" && (
+                              <div className="h-12 rounded border-l-4 border-blue-500 bg-blue-500/25 p-2 text-xs">
+                                <div className="font-semibold flex items-center gap-1">
+                                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                  <span className="text-gray-900 dark:text-gray-100">Example</span>
+                                </div>
+                                <div className="text-gray-700 dark:text-gray-300 ml-4">Sample text</div>
+                              </div>
+                            )}
+                            {style.value === "bordered" && (
+                              <div className="h-12 rounded border-2 border-blue-500/30 bg-white dark:bg-gray-900 p-2 text-xs">
+                                <div className="font-semibold text-blue-600 dark:text-blue-400">Example</div>
+                                <div className="text-gray-700 dark:text-gray-300">Sample text</div>
+                              </div>
+                            )}
+                            {style.value === "vertical-bar" && (
+                              <div className="h-12 rounded bg-gray-100 dark:bg-gray-800 p-2 text-xs relative pl-3">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l"></div>
+                                <div className="font-semibold text-blue-600 dark:text-blue-400">Example</div>
+                                <div className="text-gray-700 dark:text-gray-300">Sample text</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {(data.design === style.value || (!data.design && style.value === "default")) && (
+                          <Check className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Editor Content */}
+        <div className="flex-1 flex min-h-0">
+          {/* Left Panel - Editor */}
+          <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-900">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+              <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                Content Editor
+              </h3>
+            </div>
+
+            <div className="flex-1 p-4 overflow-auto bg-white dark:bg-gray-950">
+              <div className="space-y-4">
+                {/* Title */}
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Title (optional)
+                  </Label>
+                  <Input
+                    id="title"
+                    value={data.title || ""}
+                    onChange={(e) => setData((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="Custom title (leave empty for default)"
+                    className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
+                  />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Leave empty to use the default title for the selected type
+                  </p>
+                </div>
+
+                {/* Content */}
+                <div className="space-y-2">
+                  <Label htmlFor="content" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Content *
+                  </Label>
+                  <Textarea
+                    id="content"
+                    value={data.content}
+                    onChange={(e) => setData((prev) => ({ ...prev, content: e.target.value }))}
+                    placeholder="Enter your admonition content here..."
+                    rows={12}
+                    className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400 font-mono text-sm"
+                  />
+                </div>
+
+                {/* Custom Colors */}
+                <div className="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Custom Colors (optional)</h4>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="border-color" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Border & Background Color
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        id="border-color"
+                        type="color"
+                        value={data.customBorderColor || "#3b82f6"}
+                        onChange={(e) => setData((prev) => ({ ...prev, customBorderColor: e.target.value }))}
+                        className="w-16 h-10 cursor-pointer p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={data.customBorderColor || ""}
+                        onChange={(e) => setData((prev) => ({ ...prev, customBorderColor: e.target.value }))}
+                        placeholder="#3b82f6"
+                        className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+                      />
+                      {data.customBorderColor && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setData((prev) => ({ ...prev, customBorderColor: "" }))}
+                          className="border-gray-300 dark:border-gray-600"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="text-color" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Text Color
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <Input
+                        id="text-color"
+                        type="color"
+                        value={data.customTextColor || "#ffffff"}
+                        onChange={(e) => setData((prev) => ({ ...prev, customTextColor: e.target.value }))}
+                        className="w-16 h-10 cursor-pointer p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={data.customTextColor || ""}
+                        onChange={(e) => setData((prev) => ({ ...prev, customTextColor: e.target.value }))}
+                        placeholder="#ffffff"
+                        className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600"
+                      />
+                      {data.customTextColor && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setData((prev) => ({ ...prev, customTextColor: "" }))}
+                          className="border-gray-300 dark:border-gray-600"
+                        >
+                          Reset
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Custom colors override the default colors for the selected type
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel - Preview */}
+          <div className="w-1/2 flex flex-col bg-white dark:bg-gray-900">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+              <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                Live Preview
+              </h3>
+            </div>
+            <div className="flex-1 p-8 overflow-auto bg-white dark:bg-gray-950">
+              <Admonition
+                title={data.title}
+                content={data.content || "Enter your content here..."}
+                type={data.type}
+                customBorderColor={data.customBorderColor}
+                customTextColor={data.customTextColor}
+                design={data.design}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+          <div className="flex items-center justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancel}
+              className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+            >
+              <Save className="h-4 w-4" />
+              Save Admonition
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
