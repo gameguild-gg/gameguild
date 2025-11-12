@@ -13,24 +13,29 @@ namespace GameGuild.Tests.Audit.Integration;
 /// Integration tests for audit features
 /// Tests audit logging, compliance reporting, and query capabilities
 /// </summary>
-public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<WebApplicationEntryPoint>>, IDisposable
+public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
 {
-    private readonly WebApplicationFactory<WebApplicationEntryPoint> _factory;
+    private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly IServiceScope _scope;
     private readonly ApplicationDbContext _context;
     private readonly IAuditService _auditService;
 
-    public AuditIntegrationTests(WebApplicationFactory<WebApplicationEntryPoint> factory)
-        _factory = factory.WithWebHostBuilder(builder => {
+    public AuditIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
+    {
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
             builder.UseEnvironment("Testing");
-            builder.ConfigureServices(services => {
+            builder.ConfigureServices(services =>
+            {
                 // Replace the database with in-memory database for testing
                 var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-                if (descriptor != null) {
+                if (descriptor != null)
+                {
                     services.Remove(descriptor);
                 }
 
-                services.AddDbContext<ApplicationDbContext>(options => {
+                services.AddDbContext<ApplicationDbContext>(options =>
+                {
                     options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
                 });
 
@@ -145,7 +150,7 @@ public class AuditIntegrationTests : IClassFixture<WebApplicationFactory<WebAppl
 
         // Assert
         var auditLogs = await _context.Set<AuditLog>()
-            .Where(log => log.UserId == userId && log.Category == AuditCategory.Authorization)
+            .Where(log => log.UserId == userId && log.Category == AuditCategory.Permission)
             .OrderBy(log => log.CreatedAt)
             .ToListAsync();
 

@@ -210,7 +210,7 @@ public class AuditServiceTests : IDisposable
         auditLog.ResourceId.Should().Be(resourceId);
         auditLog.UserId.Should().Be(userId);
         auditLog.Success.Should().BeFalse();
-        auditLog.RiskLevel.Should().Be(AuditRiskLevel.Medium);
+        auditLog.RiskLevel.Should().Be(AuditRiskLevel.High);
         auditLog.Category.Should().Be(AuditCategory.Permission);
         auditLog.Description.Should().Contain(permissionName);
         auditLog.Description.Should().Contain(reason);

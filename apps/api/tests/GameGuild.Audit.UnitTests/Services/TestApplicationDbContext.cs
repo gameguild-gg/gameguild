@@ -1,6 +1,5 @@
 using GameGuild.API.Data;
 using GameGuild.Audit;
-using GameGuild.Permissions.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Tests.Audit.Unit.Services;
@@ -17,10 +16,5 @@ public class TestApplicationDbContext(DbContextOptions<ApplicationDbContext> opt
 
         // Explicitly configure AuditLog entity for testing
         modelBuilder.Entity<AuditLog>();
-
-        // Ignore entities with Dictionary properties that can't be mapped by in-memory provider
-        modelBuilder.Ignore<PermissionAuditLog>();
-        modelBuilder.Ignore<PermissionDelegation>();
-        modelBuilder.Ignore<PermissionTemplate>();
     }
 }
