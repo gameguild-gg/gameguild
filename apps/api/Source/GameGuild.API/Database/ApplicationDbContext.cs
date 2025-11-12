@@ -97,6 +97,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     #endregion
 
+    #region Audit Module
+
+    public DbSet<GameGuild.Audit.AuditLog> AuditLogs { get => Set<GameGuild.Audit.AuditLog>(); }
+
+    #endregion
+
     #region Authentication Module
 
     public DbSet<AuthUser> AuthUsers { get => Set<AuthUser>(); }
@@ -112,6 +118,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<MfaAttempt> MfaAttempts { get => Set<MfaAttempt>(); }
 
     public DbSet<UserMfaConfiguration> UserMfaConfigurations { get => Set<UserMfaConfiguration>(); }
+
+    public DbSet<Role> Roles { get => Set<Role>(); }
+
+    public DbSet<UserRole> UserRoles { get => Set<UserRole>(); }
+
+    public DbSet<AbacPolicy> AbacPolicies { get => Set<AbacPolicy>(); }
+
+    public DbSet<ConditionalPolicy> ConditionalPolicies { get => Set<ConditionalPolicy>(); }
+
+    public DbSet<TenantPermission> TenantPermissions { get => Set<TenantPermission>(); }
 
     #endregion
 

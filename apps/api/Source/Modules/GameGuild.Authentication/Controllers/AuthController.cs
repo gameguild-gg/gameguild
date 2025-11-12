@@ -31,6 +31,7 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
     /// </summary>
     /// <param name="request">User registration details</param>
     /// <returns>Authentication response with tokens</returns>
+    [AllowAnonymous]
     [HttpPost("sign-up")]
     [ProducesResponseType(typeof(SignInResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -77,6 +78,7 @@ public class AuthController(IMediator mediator, ILogger<AuthController> logger) 
     /// </summary>
     /// <param name="request">User login credentials</param>
     /// <returns>Authentication response with tokens</returns>
+    [AllowAnonymous]
     [HttpPost("sign-in")]
     [ProducesResponseType(typeof(SignInResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]

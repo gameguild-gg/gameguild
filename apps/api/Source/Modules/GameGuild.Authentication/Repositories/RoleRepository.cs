@@ -126,6 +126,16 @@ public class RoleRepository(IApplicationDbContext context) : IRoleRepository
 
     public async Task<UserRole> AssignRoleToUserAsync(UserRole userRole, CancellationToken cancellationToken = default)
     {
+        // Check if the role is already assigned to the user
+        var existingUserRole = await UserRoles
+            .FirstOrDefaultAsync(ur => ur.UserId == userRole.UserId && ur.RoleId == userRole.RoleId, cancellationToken);
+
+        if (existingUserRole != null)
+        {
+            // Role is already assigned, return the existing assignment
+            return existingUserRole;
+        }
+
         userRole.CreatedAt = DateTime.UtcNow;
         userRole.UpdatedAt = DateTime.UtcNow;
         userRole.AssignedAt = DateTime.UtcNow;
