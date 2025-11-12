@@ -28,12 +28,10 @@ const actionTypes: { value: ButtonActionType; label: string; icon: React.ReactNo
 ]
 
 const variants: { value: ButtonVariant; label: string; description: string }[] = [
-  { value: "default", label: "Default", description: "Primary button with solid background" },
-  { value: "secondary", label: "Secondary", description: "Muted alternative to default" },
-  { value: "destructive", label: "Destructive", description: "For dangerous actions" },
-  { value: "outline", label: "Outline", description: "Border with transparent background" },
-  { value: "ghost", label: "Ghost", description: "Minimal styling, subtle hover" },
-  { value: "link", label: "Link", description: "Styled as hyperlink" },
+  { value: "solid", label: "Solid", description: "Bold button with vibrant gradient background" },
+  { value: "outline", label: "Outline", description: "Elegant border with hover fill effect" },
+  { value: "soft", label: "Soft", description: "Subtle background with smooth transitions" },
+  { value: "minimal", label: "Minimal", description: "Clean underline style, text-focused" },
 ]
 
 const sizes: { value: ButtonSize; label: string }[] = [
@@ -48,7 +46,7 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
       text: "Click me",
       url: "",
       actionType: "url",
-      variant: "default",
+      variant: "solid",
       size: "default",
       showIcon: true,
     }
@@ -87,6 +85,26 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
   const getActionIcon = () => {
     const action = actionTypes.find((a) => a.value === data.actionType)
     return action?.icon || <ArrowRight className="h-4 w-4" />
+  }
+
+  const getButtonStyles = () => {
+    const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
+    
+    const sizeStyles = {
+      sm: "h-9 px-4 text-sm",
+      default: "h-11 px-6 text-base",
+      lg: "h-13 px-8 text-lg",
+      icon: "h-10 w-10",
+    }
+
+    const variantStyles = {
+      solid: "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-700 hover:to-purple-700 active:scale-95",
+      outline: "border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 bg-transparent hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 hover:shadow-md",
+      soft: "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800/40 hover:shadow-sm",
+      minimal: "text-blue-600 dark:text-blue-400 bg-transparent border-b-2 border-transparent hover:border-blue-600 dark:hover:border-blue-400 rounded-none px-2",
+    }
+
+    return `${baseStyles} ${sizeStyles[data.size]} ${variantStyles[data.variant]}`
   }
 
   const getUrlPlaceholder = () => {
@@ -219,26 +237,46 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
                   <span className="capitalize">{variants.find((v) => v.value === data.variant)?.label}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[320px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-2">
-                <div className="space-y-1">
-                  {variants.map((variant) => (
-                    <button
-                      key={variant.value}
-                      onClick={() => setData((prev) => ({ ...prev, variant: variant.value }))}
-                      className={`w-full text-left p-2 rounded transition-all hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                        data.variant === variant.value
-                          ? "bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800"
-                          : "border border-transparent"
-                      }`}
-                    >
-                      <div className="font-medium text-sm text-gray-900 dark:text-gray-100">
-                        {variant.label}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {variant.description}
-                      </div>
-                    </button>
-                  ))}
+              <DropdownMenuContent className="w-[400px] bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 p-3">
+                <div className="space-y-2">
+                  {variants.map((variant) => {
+                    const miniVariantStyles = {
+                      solid: "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md",
+                      outline: "border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 bg-transparent",
+                      soft: "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100",
+                      minimal: "text-blue-600 dark:text-blue-400 bg-transparent border-b-2 border-blue-600 dark:border-blue-400 rounded-none",
+                    }
+                    
+                    return (
+                      <button
+                        key={variant.value}
+                        onClick={() => setData((prev) => ({ ...prev, variant: variant.value }))}
+                        className={`w-full text-left p-3 rounded transition-all hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                          data.variant === variant.value
+                            ? "bg-blue-50 dark:bg-blue-950/30 ring-2 ring-blue-500 dark:ring-blue-400"
+                            : "border border-gray-200 dark:border-gray-600"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                              {variant.label}
+                            </div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {variant.description}
+                            </div>
+                          </div>
+                          <div className="shrink-0">
+                            <div 
+                              className={`px-4 py-2 text-xs font-medium rounded inline-flex items-center ${miniVariantStyles[variant.value]}`}
+                            >
+                              Preview
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -355,10 +393,10 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
                   Button appearance in your content
                 </div>
                 <div className="flex justify-center">
-                  <Button variant={data.variant} size={data.size} className="pointer-events-none">
+                  <button className={getButtonStyles()}>
                     {data.text}
                     {data.showIcon && <span className="ml-2">{getActionIcon()}</span>}
-                  </Button>
+                  </button>
                 </div>
                 
                 {/* Visual indicators */}
