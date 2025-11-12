@@ -13,7 +13,7 @@ import {
   AtSign, Send,
   MoveUp, MoveDown, MoveLeft, MoveRight
 } from "lucide-react"
-import type { ButtonData, ButtonActionType, ButtonVariant, ButtonSize, IconVariant, IconPosition, IconSize } from "@/components/editor/nodes/button-node"
+import type { ButtonData, ButtonActionType, ButtonVariant, ButtonSize, IconVariant, IconPosition, IconSize, ColorPalette } from "@/components/editor/nodes/button-node"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,6 +87,39 @@ const getIconVariantsByType = (type: ButtonActionType) => {
   return variants[type] || variants.url
 }
 
+const colorPalettes: { value: ColorPalette; label: string; description: string; colors: { primary: string; secondary: string } }[] = [
+  { 
+    value: "blue", 
+    label: "Blue", 
+    description: "Trust, professionalism, stability",
+    colors: { primary: "#2563eb", secondary: "#6366f1" }
+  },
+  { 
+    value: "green", 
+    label: "Green", 
+    description: "Success, growth, eco-friendly",
+    colors: { primary: "#16a34a", secondary: "#10b981" }
+  },
+  { 
+    value: "orange", 
+    label: "Orange", 
+    description: "Energy, creativity, enthusiasm",
+    colors: { primary: "#ea580c", secondary: "#f59e0b" }
+  },
+  { 
+    value: "red", 
+    label: "Red", 
+    description: "Urgency, passion, importance",
+    colors: { primary: "#dc2626", secondary: "#f43f5e" }
+  },
+  { 
+    value: "custom", 
+    label: "Custom", 
+    description: "Define your own colors",
+    colors: { primary: "#3b82f6", secondary: "#8b5cf6" }
+  },
+]
+
 export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProps) {
   const [data, setData] = useState<ButtonData>(
     initialData || {
@@ -99,6 +132,15 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
       iconVariant: 0,
       iconPosition: "right",
       iconSize: "md",
+      colorPalette: "blue",
+      customColors: {
+        primary: "#3b82f6",
+        secondary: "#8b5cf6",
+        text: "#ffffff",
+        hoverPrimary: "#1d4ed8",
+        hoverSecondary: "#7c3aed",
+        hoverText: "#ffffff",
+      },
     }
   )
 
@@ -165,6 +207,37 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
     return iconsByType[data.actionType][data.iconVariant] || iconsByType[data.actionType][0]
   }
 
+  const getColorStyles = () => {
+    const palettes = {
+      blue: {
+        solid: "from-blue-600 to-indigo-600 shadow-blue-500/30 hover:shadow-blue-500/40 hover:from-blue-700 hover:to-indigo-700",
+        outline: "border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 dark:hover:text-white",
+        soft: "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800/40",
+        minimal: "text-blue-600 dark:text-blue-400 hover:border-blue-600 dark:hover:border-blue-400",
+      },
+      green: {
+        solid: "from-green-600 to-emerald-600 shadow-green-500/30 hover:shadow-green-500/40 hover:from-green-700 hover:to-emerald-700",
+        outline: "border-green-600 text-green-600 dark:text-green-400 dark:border-green-400 hover:bg-green-600 hover:text-white dark:hover:bg-green-500 dark:hover:text-white",
+        soft: "bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-100 hover:bg-green-200 dark:hover:bg-green-800/40",
+        minimal: "text-green-600 dark:text-green-400 hover:border-green-600 dark:hover:border-green-400",
+      },
+      orange: {
+        solid: "from-orange-600 to-amber-600 shadow-orange-500/30 hover:shadow-orange-500/40 hover:from-orange-700 hover:to-amber-700",
+        outline: "border-orange-600 text-orange-600 dark:text-orange-400 dark:border-orange-400 hover:bg-orange-600 hover:text-white dark:hover:bg-orange-500 dark:hover:text-white",
+        soft: "bg-orange-100 text-orange-900 dark:bg-orange-900/30 dark:text-orange-100 hover:bg-orange-200 dark:hover:bg-orange-800/40",
+        minimal: "text-orange-600 dark:text-orange-400 hover:border-orange-600 dark:hover:border-orange-400",
+      },
+      red: {
+        solid: "from-red-600 to-rose-600 shadow-red-500/30 hover:shadow-red-500/40 hover:from-red-700 hover:to-rose-700",
+        outline: "border-red-600 text-red-600 dark:text-red-400 dark:border-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 dark:hover:text-white",
+        soft: "bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-100 hover:bg-red-200 dark:hover:bg-red-800/40",
+        minimal: "text-red-600 dark:text-red-400 hover:border-red-600 dark:hover:border-red-400",
+      },
+    }
+
+    return palettes[data.colorPalette === "custom" ? "blue" : data.colorPalette][data.variant]
+  }
+
   const getButtonStyles = () => {
     const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
     
@@ -175,11 +248,11 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
       xl: "h-24 px-12 text-2xl",
     }
 
-    const variantStyles = {
-      solid: "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-700 hover:to-purple-700 active:scale-95",
-      outline: "border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 bg-transparent hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 hover:shadow-md",
-      soft: "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800/40 hover:shadow-sm",
-      minimal: "text-blue-600 dark:text-blue-400 bg-transparent border-b-2 border-transparent hover:border-blue-600 dark:hover:border-blue-400 rounded-none px-2",
+    const variantBaseStyles = {
+      solid: "bg-gradient-to-r text-white shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200",
+      outline: "border-2 bg-transparent hover:shadow-md transition-all duration-200",
+      soft: "hover:shadow-sm transition-all duration-200",
+      minimal: "bg-transparent border-b-2 border-transparent rounded-none px-2 transition-all duration-200",
     }
 
     const layoutStyles = {
@@ -189,7 +262,43 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
       right: "flex-row",
     }
 
-    return `${baseStyles} ${sizeStyles[data.size]} ${variantStyles[data.variant]} ${layoutStyles[data.iconPosition]}`
+    return `${baseStyles} ${sizeStyles[data.size]} ${variantBaseStyles[data.variant]} ${getColorStyles()} ${layoutStyles[data.iconPosition]}`
+  }
+
+  const getCustomStyle = () => {
+    if (data.colorPalette === "custom" && data.customColors) {
+      const { primary, secondary, text, hoverPrimary, hoverSecondary, hoverText } = data.customColors
+      if (data.variant === "solid") {
+        return {
+          background: `linear-gradient(to right, ${primary}, ${secondary})`,
+          color: text,
+          "--hover-bg": `linear-gradient(to right, ${hoverPrimary}, ${hoverSecondary})`,
+          "--hover-text": hoverText,
+        } as React.CSSProperties
+      } else if (data.variant === "outline") {
+        return {
+          borderColor: primary,
+          color: text,
+          "--hover-bg": hoverPrimary,
+          "--hover-border": hoverPrimary,
+          "--hover-text": hoverText,
+        } as React.CSSProperties
+      } else if (data.variant === "soft") {
+        return {
+          backgroundColor: `${primary}20`,
+          color: text,
+          "--hover-bg": `${hoverPrimary}30`,
+          "--hover-text": hoverText,
+        } as React.CSSProperties
+      } else if (data.variant === "minimal") {
+        return {
+          color: text,
+          "--hover-border": hoverPrimary,
+          "--hover-text": hoverText,
+        } as React.CSSProperties
+      }
+    }
+    return {}
   }
 
   const getUrlPlaceholder = () => {
@@ -523,6 +632,201 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
                   </div>
                 )}
 
+                {/* Color Palette */}
+                <div className="space-y-4 p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-100">Color Palette</h4>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Choose Color Theme
+                    </Label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {colorPalettes.map((palette) => (
+                        <button
+                          key={palette.value}
+                          onClick={() => setData((prev) => ({ 
+                            ...prev, 
+                            colorPalette: palette.value,
+                            customColors: palette.value === "custom" ? {
+                              primary: prev.customColors?.primary || "#3b82f6",
+                              secondary: prev.customColors?.secondary || "#8b5cf6",
+                              text: prev.customColors?.text || "#ffffff",
+                              hoverPrimary: prev.customColors?.hoverPrimary || "#1d4ed8",
+                              hoverSecondary: prev.customColors?.hoverSecondary || "#7c3aed",
+                              hoverText: prev.customColors?.hoverText || "#ffffff",
+                            } : prev.customColors
+                          }))}
+                          className={`p-3 rounded-lg border-2 transition-all text-left ${
+                            data.colorPalette === palette.value
+                              ? "border-purple-500 bg-purple-100 dark:bg-purple-900/30"
+                              : "border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="flex gap-1">
+                              <div 
+                                className="w-4 h-4 rounded"
+                                style={{ backgroundColor: palette.colors.primary }}
+                              />
+                              <div 
+                                className="w-4 h-4 rounded"
+                                style={{ backgroundColor: palette.colors.secondary }}
+                              />
+                            </div>
+                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                              {palette.label}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">
+                            {palette.description}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Colors */}
+                  {data.colorPalette === "custom" && (
+                    <div className="space-y-4 pt-3 border-t border-purple-200 dark:border-purple-800">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Normal State Colors
+                        </Label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                            <Label htmlFor="primary-color" className="text-xs text-gray-600 dark:text-gray-400">
+                              Primary
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="primary-color"
+                                type="color"
+                                value={data.customColors?.primary || "#3b82f6"}
+                                onChange={(e) => setData((prev) => ({
+                                  ...prev,
+                                  customColors: {
+                                    ...prev.customColors!,
+                                    primary: e.target.value,
+                                  }
+                                }))}
+                                className="h-10 w-full cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="secondary-color" className="text-xs text-gray-600 dark:text-gray-400">
+                              Secondary
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="secondary-color"
+                                type="color"
+                                value={data.customColors?.secondary || "#8b5cf6"}
+                                onChange={(e) => setData((prev) => ({
+                                  ...prev,
+                                  customColors: {
+                                    ...prev.customColors!,
+                                    secondary: e.target.value,
+                                  }
+                                }))}
+                                className="h-10 w-full cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="text-color" className="text-xs text-gray-600 dark:text-gray-400">
+                              Text
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="text-color"
+                                type="color"
+                                value={data.customColors?.text || "#ffffff"}
+                                onChange={(e) => setData((prev) => ({
+                                  ...prev,
+                                  customColors: {
+                                    ...prev.customColors!,
+                                    text: e.target.value,
+                                  }
+                                }))}
+                                className="h-10 w-full cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Hover State Colors
+                        </Label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                            <Label htmlFor="hover-primary-color" className="text-xs text-gray-600 dark:text-gray-400">
+                              Primary
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="hover-primary-color"
+                                type="color"
+                                value={data.customColors?.hoverPrimary || "#1d4ed8"}
+                                onChange={(e) => setData((prev) => ({
+                                  ...prev,
+                                  customColors: {
+                                    ...prev.customColors!,
+                                    hoverPrimary: e.target.value,
+                                  }
+                                }))}
+                                className="h-10 w-full cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="hover-secondary-color" className="text-xs text-gray-600 dark:text-gray-400">
+                              Secondary
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="hover-secondary-color"
+                                type="color"
+                                value={data.customColors?.hoverSecondary || "#7c3aed"}
+                                onChange={(e) => setData((prev) => ({
+                                  ...prev,
+                                  customColors: {
+                                    ...prev.customColors!,
+                                    hoverSecondary: e.target.value,
+                                  }
+                                }))}
+                                className="h-10 w-full cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label htmlFor="hover-text-color" className="text-xs text-gray-600 dark:text-gray-400">
+                              Text
+                            </Label>
+                            <div className="flex items-center gap-2">
+                              <Input
+                                id="hover-text-color"
+                                type="color"
+                                value={data.customColors?.hoverText || "#ffffff"}
+                                onChange={(e) => setData((prev) => ({
+                                  ...prev,
+                                  customColors: {
+                                    ...prev.customColors!,
+                                    hoverText: e.target.value,
+                                  }
+                                }))}
+                                className="h-10 w-full cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Info Section */}
                 <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
@@ -548,12 +852,22 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
               </h3>
             </div>
             <div className="flex-1 p-8 overflow-auto bg-white dark:bg-gray-950 flex items-center justify-center">
+              <style>{`
+                .custom-button-hover:hover {
+                  background: var(--hover-bg) !important;
+                  color: var(--hover-text) !important;
+                  border-color: var(--hover-border) !important;
+                }
+              `}</style>
               <div className="space-y-4 w-full max-w-md">
                 <div className="text-center text-sm text-gray-600 dark:text-gray-400 mb-8">
                   Button appearance in your content
                 </div>
                 <div className="flex justify-center">
-                  <button className={getButtonStyles()}>
+                  <button 
+                    className={`${getButtonStyles()} ${data.colorPalette === "custom" ? "custom-button-hover" : ""}`}
+                    style={getCustomStyle()}
+                  >
                     {data.text}
                     {data.showIcon && (
                       <span className={{
