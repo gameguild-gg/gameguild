@@ -688,7 +688,38 @@ public sealed class MfaService(ILogger<MfaService> logger, IUserMfaConfiguration
             var userEmail = $"user_{userId}@game-guild.com"; // TODO: Get actual user email
             (var qrCodeUri, var secretKey) = await SetupTotpAsync(userId, userEmail, cancellationToken);
 
-            return new MfaSetupResult { Success = true, SecretKey = secretKey, QrCodeUri = qrCodeUri, QrCodeUrl = qrCodeUri, Message = "MFA setup initiated successfully" };
+            // Generate backup codes during setup
+            var backupCodes = new List<string>();
+            for (var i = 0; i < BackupCodesCount; i++)
+            {
+                backupCodes.Add(GenerateBackupCode());
+            }
+
+            // Store hashed backup codes
+            var mfaConfig = await mfaConfigRepository.GetByUserIdAsync(userId, cancellationToken);
+            if (mfaConfig != null)
+            {
+                var hashedCodes = new List<string>();
+                foreach (var code in backupCodes)
+                {
+                    var hashedCode = await HashBackupCodeAsync(code, cancellationToken);
+                    hashedCodes.Add(hashedCode);
+                }
+                
+                mfaConfig.BackupCodes = string.Join(",", hashedCodes);
+                mfaConfig.UpdatedAt = DateTime.UtcNow;
+                await mfaConfigRepository.UpdateAsync(mfaConfig, cancellationToken);
+            }
+
+            return new MfaSetupResult 
+            { 
+                Success = true, 
+                SecretKey = secretKey, 
+                QrCodeUri = qrCodeUri, 
+                QrCodeUrl = qrCodeUri, 
+                BackupCodes = backupCodes.ToArray(),
+                Message = "MFA setup initiated successfully" 
+            };
         }
         catch (Exception ex)
         {
