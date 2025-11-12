@@ -18,11 +18,16 @@ export function PreviewButton({ node }: { node: SerializedButtonNode }) {
   const { text, url, actionType, variant, size, showIcon, iconVariant, iconPosition, iconSize, colorPalette, customColors } = node.data
 
   const getActionIcon = () => {
-    const iconSizeClass = {
-      sm: "h-3 w-3",
-      md: "h-4 w-4",
-      lg: "h-5 w-5",
-    }[iconSize || "md"]
+    // Tamanhos base para cada combinação de buttonSize e iconSize
+    const iconSizeMap: Record<import("@/components/editor/nodes/button-node").ButtonSize, Record<import("@/components/editor/nodes/button-node").IconSize, string>> = {
+      sm: { sm: "h-3 w-3", md: "h-3.5 w-3.5", lg: "h-4 w-4"},
+      md: { sm: "h-4 w-4", md: "h-5 w-5", lg: "h-6 w-6"},
+      lg: { sm: "h-5 w-5", md: "h-6 w-6", lg: "h-7 w-7"},
+      xl: { sm: "h-6 w-6", md: "h-8 w-8", lg: "h-10 w-10"},
+      xxl: { sm: "h-8 w-8", md: "h-10 w-10", lg: "h-12 w-12"},
+    }
+    
+    const iconSizeClass = iconSizeMap[size][iconSize || "md"]
 
     const iconsByType = {
       url: [
@@ -85,23 +90,44 @@ export function PreviewButton({ node }: { node: SerializedButtonNode }) {
   const getButtonStyles = () => {
     const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer"
     
+    // Verifica se o ícone está visível e em posição vertical
+    const isVerticalIcon = showIcon && (iconPosition === "top" || iconPosition === "bottom")
+    
     const sizeStyles = {
-      sm: "h-9 px-4 text-sm",
-      md: "h-12 px-6 text-base",
-      lg: "h-16 px-8 text-lg",
-      xl: "h-24 px-12 text-2xl",
+      sm: isVerticalIcon ? "min-h-12 py-2 px-4 text-sm" : "h-9 px-4 text-sm",
+      md: isVerticalIcon ? "min-h-16 py-3 px-6 text-base" : "h-12 px-6 text-base",
+      lg: isVerticalIcon ? "min-h-20 py-4 px-8 text-lg" : "h-16 px-8 text-lg",
+      xl: isVerticalIcon ? "min-h-28 py-6 px-12 text-2xl" : "h-24 px-12 text-2xl",
+      xxl: isVerticalIcon ? "min-h-36 py-8 px-16 text-3xl" : "h-32 px-16 text-3xl",
     }
+
+    // Largura da borda baseada no tamanho do botão
+    const outlineBorderWidth = {
+      sm: "border-2",
+      md: "border-2",
+      lg: "border-[3px]",
+      xl: "border-4",
+      xxl: "border-[5px]",
+    }[size]
+
+    const minimalBorderWidth = {
+      sm: "border-b-2",
+      md: "border-b-2",
+      lg: "border-b-[3px]",
+      xl: "border-b-4",
+      xxl: "border-b-[5px]",
+    }[size]
 
     const variantBaseStyles = {
       solid: "bg-gradient-to-r text-white shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-200",
-      outline: "border-2 bg-transparent hover:shadow-md transition-all duration-200",
+      outline: `${outlineBorderWidth} bg-transparent hover:shadow-md transition-all duration-200`,
       soft: "hover:shadow-sm transition-all duration-200",
-      minimal: "bg-transparent border-b-2 border-transparent rounded-none px-2 transition-all duration-200",
+      minimal: `bg-transparent ${minimalBorderWidth} border-transparent rounded-none px-2 transition-all duration-200`,
     }
 
     const layoutStyles = {
-      top: "flex-col",
-      bottom: "flex-col-reverse",
+      top: "flex-col-reverse",
+      bottom: "flex-col",
       left: "flex-row-reverse",
       right: "flex-row",
     }
