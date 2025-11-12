@@ -87,6 +87,7 @@ public static class DataDependencyInjection
         services.AddScoped<IAuthenticationAnomalyDetectionService, AuthenticationAnomalyDetectionService>();
         services.AddScoped<IUserEnumerationProtectionService, UserEnumerationProtectionService>();
         services.AddScoped<IEncryptionService, EncryptionService>();
+        services.AddScoped<ISiemIntegrationService, SiemIntegrationService>();
 
         // Note: These services have interface mismatches and need interface updates
         // to match GameGuild implementation signatures before registering with interfaces

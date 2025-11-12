@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Modules\GameGuild.Audit\GameGuild.Audit.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Authentication\GameGuild.Authentication.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Billing\GameGuild.Billing.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Features\GameGuild.Features.csproj" />

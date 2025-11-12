@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using GameGuild.Abstractions;
 using GameGuild.API.Authorization;
 using GameGuild.API.Data;
+using GameGuild.Audit;
 using GameGuild.Authentication.Controllers;
 using GameGuild.Authentication.Entities;
 using GameGuild.Authentication.Extensions;
@@ -188,6 +189,9 @@ public static class DependencyInjection
 
         // Register Resources module (Application layer)
         services.AddResourcesModule(configuration);
+
+        // Register Audit module
+        services.AddAuditServices();
 
         // Register repositories
         services.AddRepositories();
