@@ -5,8 +5,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { X, Save, MousePointerClick, Eye, ExternalLink, Download, Copy, Mail, ArrowRight } from "lucide-react"
-import type { ButtonData, ButtonActionType, ButtonVariant, ButtonSize } from "@/components/editor/nodes/button-node"
+import { 
+  X, Save, MousePointerClick, Eye, ExternalLink, Download, Copy, Mail, ArrowRight,
+  Link, Link2, ExternalLinkIcon,
+  ArrowDownToLine, FileDown,
+  Clipboard, ClipboardCopy, CopyCheck,
+  AtSign, Send,
+  MoveUp, MoveDown, MoveLeft, MoveRight
+} from "lucide-react"
+import type { ButtonData, ButtonActionType, ButtonVariant, ButtonSize, IconVariant, IconPosition, IconSize } from "@/components/editor/nodes/button-node"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,6 +48,45 @@ const sizes: { value: ButtonSize; label: string }[] = [
   { value: "xl", label: "Extra Large" },
 ]
 
+const iconSizes: { value: IconSize; label: string }[] = [
+  { value: "sm", label: "Small" },
+  { value: "md", label: "Medium" },
+  { value: "lg", label: "Large" },
+]
+
+const iconPositions: { value: IconPosition; label: string; icon: React.ReactNode }[] = [
+  { value: "left", label: "Left", icon: <MoveLeft className="h-4 w-4" /> },
+  { value: "right", label: "Right", icon: <MoveRight className="h-4 w-4" /> },
+  { value: "top", label: "Top", icon: <MoveUp className="h-4 w-4" /> },
+  { value: "bottom", label: "Bottom", icon: <MoveDown className="h-4 w-4" /> },
+]
+
+const getIconVariantsByType = (type: ButtonActionType) => {
+  const variants = {
+    url: [
+      { value: 0 as IconVariant, icon: <ExternalLink className="h-5 w-5" />, label: "External Link" },
+      { value: 1 as IconVariant, icon: <Link2 className="h-5 w-5" />, label: "Chain Link" },
+      { value: 2 as IconVariant, icon: <Link className="h-5 w-5" />, label: "Simple Link" },
+    ],
+    download: [
+      { value: 0 as IconVariant, icon: <Download className="h-5 w-5" />, label: "Download Arrow" },
+      { value: 1 as IconVariant, icon: <ArrowDownToLine className="h-5 w-5" />, label: "Arrow to Line" },
+      { value: 2 as IconVariant, icon: <FileDown className="h-5 w-5" />, label: "File Download" },
+    ],
+    copy: [
+      { value: 0 as IconVariant, icon: <Copy className="h-5 w-5" />, label: "Copy" },
+      { value: 1 as IconVariant, icon: <ClipboardCopy className="h-5 w-5" />, label: "Clipboard" },
+      { value: 2 as IconVariant, icon: <CopyCheck className="h-5 w-5" />, label: "Copy Check" },
+    ],
+    email: [
+      { value: 0 as IconVariant, icon: <Mail className="h-5 w-5" />, label: "Mail" },
+      { value: 1 as IconVariant, icon: <AtSign className="h-5 w-5" />, label: "At Sign" },
+      { value: 2 as IconVariant, icon: <Send className="h-5 w-5" />, label: "Send" },
+    ],
+  }
+  return variants[type] || variants.url
+}
+
 export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProps) {
   const [data, setData] = useState<ButtonData>(
     initialData || {
@@ -50,6 +96,9 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
       variant: "solid",
       size: "md",
       showIcon: true,
+      iconVariant: 0,
+      iconPosition: "right",
+      iconSize: "md",
     }
   )
 
@@ -84,8 +133,36 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
   }
 
   const getActionIcon = () => {
-    const action = actionTypes.find((a) => a.value === data.actionType)
-    return action?.icon || <ArrowRight className="h-4 w-4" />
+    const iconSizeClass = {
+      sm: "h-3 w-3",
+      md: "h-4 w-4",
+      lg: "h-5 w-5",
+    }[data.iconSize]
+
+    const iconsByType = {
+      url: [
+        <ExternalLink className={iconSizeClass} key="url-0" />,
+        <Link2 className={iconSizeClass} key="url-1" />,
+        <Link className={iconSizeClass} key="url-2" />,
+      ],
+      download: [
+        <Download className={iconSizeClass} key="download-0" />,
+        <ArrowDownToLine className={iconSizeClass} key="download-1" />,
+        <FileDown className={iconSizeClass} key="download-2" />,
+      ],
+      copy: [
+        <Copy className={iconSizeClass} key="copy-0" />,
+        <ClipboardCopy className={iconSizeClass} key="copy-1" />,
+        <CopyCheck className={iconSizeClass} key="copy-2" />,
+      ],
+      email: [
+        <Mail className={iconSizeClass} key="email-0" />,
+        <AtSign className={iconSizeClass} key="email-1" />,
+        <Send className={iconSizeClass} key="email-2" />,
+      ],
+    }
+
+    return iconsByType[data.actionType][data.iconVariant] || iconsByType[data.actionType][0]
   }
 
   const getButtonStyles = () => {
@@ -105,7 +182,14 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
       minimal: "text-blue-600 dark:text-blue-400 bg-transparent border-b-2 border-transparent hover:border-blue-600 dark:hover:border-blue-400 rounded-none px-2",
     }
 
-    return `${baseStyles} ${sizeStyles[data.size]} ${variantStyles[data.variant]}`
+    const layoutStyles = {
+      top: "flex-col",
+      bottom: "flex-col-reverse",
+      left: "flex-row-reverse",
+      right: "flex-row",
+    }
+
+    return `${baseStyles} ${sizeStyles[data.size]} ${variantStyles[data.variant]} ${layoutStyles[data.iconPosition]}`
   }
 
   const getUrlPlaceholder = () => {
@@ -364,6 +448,81 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
                   </Label>
                 </div>
 
+                {/* Icon Settings */}
+                {data.showIcon && (
+                  <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">Icon Settings</h4>
+                    
+                    {/* Icon Variant */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Icon Style
+                      </Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {getIconVariantsByType(data.actionType).map((icon) => (
+                          <button
+                            key={icon.value}
+                            onClick={() => setData((prev) => ({ ...prev, iconVariant: icon.value }))}
+                            className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-2 ${
+                              data.iconVariant === icon.value
+                                ? "border-blue-500 bg-blue-100 dark:bg-blue-900/30"
+                                : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700"
+                            }`}
+                          >
+                            <div className="text-gray-700 dark:text-gray-300">{icon.icon}</div>
+                            <span className="text-xs text-gray-600 dark:text-gray-400">{icon.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Icon Size */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Icon Size
+                      </Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {iconSizes.map((size) => (
+                          <button
+                            key={size.value}
+                            onClick={() => setData((prev) => ({ ...prev, iconSize: size.value }))}
+                            className={`p-2 rounded-lg border-2 transition-all text-sm ${
+                              data.iconSize === size.value
+                                ? "border-blue-500 bg-blue-100 dark:bg-blue-900/30 font-medium"
+                                : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700"
+                            }`}
+                          >
+                            {size.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Icon Position */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Icon Position
+                      </Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {iconPositions.map((position) => (
+                          <button
+                            key={position.value}
+                            onClick={() => setData((prev) => ({ ...prev, iconPosition: position.value }))}
+                            className={`p-3 rounded-lg border-2 transition-all flex items-center gap-2 justify-center ${
+                              data.iconPosition === position.value
+                                ? "border-blue-500 bg-blue-100 dark:bg-blue-900/30 font-medium"
+                                : "border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700"
+                            }`}
+                          >
+                            {position.icon}
+                            <span className="text-sm">{position.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Info Section */}
                 <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
                   <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">
@@ -396,7 +555,16 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
                 <div className="flex justify-center">
                   <button className={getButtonStyles()}>
                     {data.text}
-                    {data.showIcon && <span className="ml-2">{getActionIcon()}</span>}
+                    {data.showIcon && (
+                      <span className={{
+                        top: "mb-2",
+                        bottom: "mt-2",
+                        left: "mr-2",
+                        right: "ml-2",
+                      }[data.iconPosition]}>
+                        {getActionIcon()}
+                      </span>
+                    )}
                   </button>
                 </div>
                 
@@ -421,7 +589,9 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-400">Icon:</span>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">{data.showIcon ? "Visible" : "Hidden"}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        {data.showIcon ? `${iconPositions.find((p) => p.value === data.iconPosition)?.label} (${iconSizes.find((s) => s.value === data.iconSize)?.label})` : "Hidden"}
+                      </span>
                     </div>
                   </div>
                 </div>
