@@ -28,6 +28,8 @@ import {
   getIconSpacingClass,
   getIconSizeClass,
   getColorStyles,
+  getFontFamilyClass,
+  getFontSizeClass,
 } from "@/components/editor/extras/button/button-styles"
 
 interface ButtonEditorProps {
@@ -151,6 +153,8 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
         hoverSecondary: "#7c3aed",
         hoverText: "#ffffff",
       },
+      fontFamily: "sans",
+      fontSize: "md",
     }
   )
 
@@ -216,7 +220,7 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
   const getButtonStyles = () => {
     const isVerticalIcon = data.showIcon && (data.iconPosition === "top" || data.iconPosition === "bottom")
     
-    return `${BASE_BUTTON_STYLES} ${getSizeStyles(data.size, isVerticalIcon)} ${getVariantBaseStyles(data.variant, data.size)} ${getColorStyles(data.colorPalette, data.variant)} ${getLayoutStyles(data.iconPosition)}`
+    return `${BASE_BUTTON_STYLES} ${getSizeStyles(data.size, isVerticalIcon)} ${getVariantBaseStyles(data.variant, data.size)} ${getColorStyles(data.colorPalette, data.variant)} ${getLayoutStyles(data.iconPosition)} ${getFontFamilyClass(data.fontFamily)} ${getFontSizeClass(data.size, data.fontSize)}`
   }
 
   const getCustomStyle = () => {
@@ -585,6 +589,66 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
                     </div>
                   </div>
                 )}
+
+                {/* Font Settings */}
+                <div className="space-y-4 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <h4 className="text-sm font-semibold text-green-900 dark:text-green-100">Font Settings</h4>
+                  
+                  {/* Font Family */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Font Family
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: "sans" as const, label: "Sans Serif", example: "Aa" },
+                        { value: "display" as const, label: "Display", example: "Aa" },
+                        { value: "roboto" as const, label: "Roboto", example: "Aa" },
+                      ].map((font) => (
+                        <button
+                          key={font.value}
+                          onClick={() => setData((prev) => ({ ...prev, fontFamily: font.value }))}
+                          className={`p-3 rounded-lg border-2 transition-all flex flex-col items-center gap-1 ${
+                            data.fontFamily === font.value
+                              ? "border-green-500 bg-green-100 dark:bg-green-900/30 font-medium"
+                              : "border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700"
+                          }`}
+                        >
+                          <span className={`text-xl ${font.value === "sans" ? "font-sans" : font.value === "display" ? "font-bold tracking-tight" : "font-roboto"}`}>
+                            {font.example}
+                          </span>
+                          <span className="text-xs text-gray-600 dark:text-gray-400">{font.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Font Size */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Font Size (scales with button size)
+                    </Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { value: "sm" as const, label: "Small" },
+                        { value: "md" as const, label: "Medium" },
+                        { value: "lg" as const, label: "Large" },
+                      ].map((size) => (
+                        <button
+                          key={size.value}
+                          onClick={() => setData((prev) => ({ ...prev, fontSize: size.value }))}
+                          className={`p-2 rounded-lg border-2 transition-all text-sm ${
+                            data.fontSize === size.value
+                              ? "border-green-500 bg-green-100 dark:bg-green-900/30 font-medium"
+                              : "border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-700"
+                          }`}
+                        >
+                          {size.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
                 {/* Color Palette */}
                 <div className="space-y-4 p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
