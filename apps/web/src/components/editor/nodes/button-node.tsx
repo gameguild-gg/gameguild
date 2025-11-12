@@ -11,7 +11,7 @@ import { EditorLoadingContext } from "../lexical-editor"
 import { ButtonEditor } from "@/components/editor/extras/button"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 
-export type ButtonVariant = "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+export type ButtonVariant = "solid" | "outline" | "soft" | "minimal"
 export type ButtonSize = "default" | "sm" | "lg" | "icon"
 export type ButtonActionType = "url" | "download" | "copy" | "email"
 
@@ -48,7 +48,7 @@ export class ButtonNode extends DecoratorNode<JSX.Element> {
       text: data.text || "Click me",
       url: data.url || "",
       actionType: data.actionType || "url",
-      variant: data.variant || "default",
+      variant: data.variant || "solid",
       size: data.size || "default",
       showIcon: data.showIcon ?? true,
       isNew: data.isNew,
@@ -142,6 +142,26 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
     }
   }
 
+  const getButtonStyles = () => {
+    const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+    
+    const sizeStyles = {
+      sm: "h-9 px-4 text-sm",
+      default: "h-11 px-6 text-base",
+      lg: "h-13 px-8 text-lg",
+      icon: "h-10 w-10",
+    }
+
+    const variantStyles = {
+      solid: "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 hover:from-blue-700 hover:to-purple-700 active:scale-95",
+      outline: "border-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400 bg-transparent hover:bg-blue-600 hover:text-white dark:hover:bg-blue-500 hover:shadow-md",
+      soft: "bg-blue-100 text-blue-900 dark:bg-blue-900/30 dark:text-blue-100 hover:bg-blue-200 dark:hover:bg-blue-800/40 hover:shadow-sm",
+      minimal: "text-blue-600 dark:text-blue-400 bg-transparent border-b-2 border-transparent hover:border-blue-600 dark:hover:border-blue-400 rounded-none px-2",
+    }
+
+    return `${baseStyles} ${sizeStyles[data.size]} ${variantStyles[data.variant]}`
+  }
+
   const handleButtonAction = () => {
     switch (data.actionType) {
       case "url":
@@ -167,10 +187,10 @@ function ButtonComponent({ data, nodeKey }: ButtonComponentProps) {
   if (!isEditing) {
     return (
       <div className="my-4 relative flex justify-center">
-        <Button variant={data.variant} size={data.size} onClick={handleButtonAction}>
+        <button className={getButtonStyles()} onClick={handleButtonAction}>
           {data.text}
           {data.showIcon && <span className="ml-2">{getActionIcon()}</span>}
-        </Button>
+        </button>
         <ContentEditMenu
           options={[
             {
@@ -193,7 +213,7 @@ export function $createButtonNode(data: Partial<ButtonData> = {}): ButtonNode {
     text: data.text || "Click me",
     url: data.url || "",
     actionType: data.actionType || "url",
-    variant: data.variant || "default",
+    variant: data.variant || "solid",
     size: data.size || "default",
     showIcon: data.showIcon ?? true,
     isNew: true,
