@@ -36,8 +36,9 @@ const variants: { value: ButtonVariant; label: string; description: string }[] =
 
 const sizes: { value: ButtonSize; label: string }[] = [
   { value: "sm", label: "Small" },
-  { value: "default", label: "Medium" },
+  { value: "md", label: "Medium" },
   { value: "lg", label: "Large" },
+  { value: "xl", label: "Extra Large" },
 ]
 
 export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProps) {
@@ -47,7 +48,7 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
       url: "",
       actionType: "url",
       variant: "solid",
-      size: "default",
+      size: "md",
       showIcon: true,
     }
   )
@@ -92,9 +93,9 @@ export function ButtonEditor({ initialData, onSave, onCancel }: ButtonEditorProp
     
     const sizeStyles = {
       sm: "h-9 px-4 text-sm",
-      default: "h-11 px-6 text-base",
-      lg: "h-13 px-8 text-lg",
-      icon: "h-10 w-10",
+      md: "h-12 px-6 text-base",
+      lg: "h-16 px-8 text-lg",
+      xl: "h-24 px-12 text-2xl",
     }
 
     const variantStyles = {
