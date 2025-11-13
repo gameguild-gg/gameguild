@@ -1,7 +1,7 @@
-using GameGuild.Modules.Audit.Entities;
-using GameGuild.Modules.Audit.Enums;
+using GameGuild.Audit.Entities;
+using GameGuild.Audit.Enums;
 
-namespace GameGuild.Modules.Audit.Services;
+namespace GameGuild.Audit.Services;
 
 /// <summary>
 /// Service for managing tamper-evident audit logs with cryptographic hash chains (WORM storage).

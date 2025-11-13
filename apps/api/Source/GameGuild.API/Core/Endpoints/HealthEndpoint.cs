@@ -22,6 +22,7 @@ internal class HealthEndpoint : IEndpoint
             .WithDescription("Returns the current health status of the application including dependencies.")
             .Produces<HealthResponse>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)
             .Produces(StatusCodes.Status503ServiceUnavailable)
+            .AllowAnonymous()
             .WithOpenApi();
     }
 
