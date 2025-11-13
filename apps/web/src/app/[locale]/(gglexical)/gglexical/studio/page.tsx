@@ -937,28 +937,6 @@ export default function Page() {
                 />
               </div>
             </div>
-
-            {/* Help Section */}
-            <div className="grid grid-cols-1 gap-4 pt-4 md:grid-cols-3">
-              <div className="border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/30">
-                <h3 className="mb-2 font-semibold text-blue-900 dark:text-blue-100">Rich Formatting</h3>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Add headings, lists, links, and text formatting
-                </p>
-              </div>
-              <div className="border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/30">
-                <h3 className="mb-2 font-semibold text-green-900 dark:text-green-100">Media & Content</h3>
-                <p className="text-sm text-green-700 dark:text-green-300">
-                  Insert images, videos, code blocks, and more
-                </p>
-              </div>
-              <div className="border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-900/30">
-                <h3 className="mb-2 font-semibold text-purple-900 dark:text-purple-100">Interactive Elements</h3>
-                <p className="text-sm text-purple-700 dark:text-purple-300">
-                  Create quizzes, callouts, and interactive content
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
