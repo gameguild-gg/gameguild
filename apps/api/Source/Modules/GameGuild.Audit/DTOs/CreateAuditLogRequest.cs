@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Audit;
+﻿namespace GameGuild.Audit;
 
 /// <summary>
 /// Request to create an audit log entry

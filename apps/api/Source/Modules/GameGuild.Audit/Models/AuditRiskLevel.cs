@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Audit;
+﻿namespace GameGuild.Audit;
 
 /// <summary>
 /// Risk level for audit events

@@ -1,6 +1,6 @@
-using GameGuild.Modules.Audit.Enums;
+using GameGuild.Audit.Enums;
 
-namespace GameGuild.Modules.Audit.Entities;
+namespace GameGuild.Audit.Entities;
 
 /// <summary>
 /// Field-level data access audit for tracking read/write operations on sensitive fields with PII masking.

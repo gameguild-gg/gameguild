@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Audit.Entities;
+namespace GameGuild.Audit.Entities;
 
 /// <summary>
 /// Tamper-evident audit log entry with cryptographic hash chain for immutability (WORM - Write Once Read Many).

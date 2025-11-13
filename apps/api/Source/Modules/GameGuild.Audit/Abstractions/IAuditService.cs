@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Audit;
+﻿namespace GameGuild.Audit;
 
 /// <summary>
 /// Service for creating and managing audit logs

@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Modules.Audit;
+﻿namespace GameGuild.Audit;
 
 /// <summary>
 /// Query parameters for retrieving audit logs

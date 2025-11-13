@@ -1,6 +1,6 @@
-using GameGuild.Modules.Audit.Entities;
+using GameGuild.Audit.Entities;
 
-namespace GameGuild.Modules.Audit.Services;
+namespace GameGuild.Audit.Services;
 
 /// <summary>
 /// Comprehensive service interface for all 6 advanced audit features.

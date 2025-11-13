@@ -120,6 +120,9 @@ public static class DependencyInjection
                 }
             );
 
+        // Register minimal API endpoints (IEndpoint implementations)
+        services.AddEndpoints(typeof(DependencyInjection).Assembly);
+
         // 18. API Explorer - MUST be called AFTER controllers and application parts are registered
         if (options.EnableApiExplorer) services.SetupApiExplorer(configuration, options.ApiVersioning);
 

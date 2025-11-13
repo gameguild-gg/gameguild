@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Audit.Entities;
+namespace GameGuild.Audit.Entities;
 
 /// <summary>
 /// Real-time anomaly detection on privileged operations for security monitoring.

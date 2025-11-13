@@ -1,6 +1,6 @@
-using GameGuild.Modules.Audit.Enums;
+using GameGuild.Audit.Enums;
 
-namespace GameGuild.Modules.Audit.Entities;
+namespace GameGuild.Audit.Entities;
 
 /// <summary>
 /// Compliance evidence package for audit compliance reports (SOC2, ISO 27001, GDPR, HIPAA).

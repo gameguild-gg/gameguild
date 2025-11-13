@@ -84,7 +84,7 @@ public class HealthEndpointIntegrationTests : IClassFixture<WebApplicationFactor
 
         // Assert
         response.Should().NotBeNull();
-        content.Should().Contain("Version");
+        content.Should().Contain("version");
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class HealthEndpointIntegrationTests : IClassFixture<WebApplicationFactor
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain("Timestamp");
+        content.Should().Contain("timestamp");
     }
 
     [Fact]

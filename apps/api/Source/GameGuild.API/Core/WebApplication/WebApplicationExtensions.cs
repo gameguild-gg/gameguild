@@ -78,8 +78,7 @@ public static class WebApplicationExtensions
         app.MapGet("/", () => Results.Redirect("/docs")).ExcludeFromDescription();
 
         // Map all registered IEndpoint implementations
-        // Temporarily disabled to show only module controllers in Swagger
-        // app.MapEndpoints(null);
+        app.MapEndpoints(null);
 
         // Map authentication endpoints
         // Disabled - using Authentication module controllers instead
