@@ -133,26 +133,65 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
       alt: img.alt,
       caption: img.caption,
       size: 100,
+      // Preserve placeholder and static properties stored in alt field as JSON
+      ...(() => {
+        try {
+          // Check if alt contains our metadata
+          if (img.alt && img.alt.startsWith('__metadata__:')) {
+            const metadata = JSON.parse(img.alt.substring(13))
+            return {
+              isPlaceholder: metadata.isPlaceholder,
+              isStatic: metadata.isStatic,
+              gridPosition: metadata.gridPosition,
+              alt: metadata.originalAlt || '',
+            }
+          }
+        } catch (e) {
+          // Not metadata, just regular alt
+        }
+        return {}
+      })(),
     }))
   }
 
   // Convert BaseMediaData back to GalleryImage
   const mediaItemsToGallery = (items: BaseMediaData[]): GalleryImage[] => {
-    return items.map(item => ({
-      id: Math.random().toString(36).substring(7),
-      src: item.src,
-      alt: item.alt || '',
-      caption: item.caption || '',
-      displayMode: 'adaptive' as const, // Use adaptive to maintain aspect ratio
-      span: '1x1' as const,
-    }))
+    return items.map(item => {
+      // Store metadata in alt field if item is placeholder or static
+      let altText = item.alt || ''
+      if (item.isPlaceholder || item.isStatic) {
+        const metadata = {
+          isPlaceholder: item.isPlaceholder,
+          isStatic: item.isStatic,
+          gridPosition: item.gridPosition,
+          originalAlt: item.alt || '',
+        }
+        altText = `__metadata__:${JSON.stringify(metadata)}`
+      }
+      
+      return {
+        id: Math.random().toString(36).substring(7),
+        src: item.src || '', // Ensure src is always a string
+        alt: altText,
+        caption: item.caption || '',
+        displayMode: 'adaptive' as const,
+        span: '1x1' as const,
+      }
+    })
   }
 
   const handleSaveGallery = (items?: BaseMediaData[], columns?: number, caption?: string) => {
     if (!items || items.length === 0) return
     
-    // Se tem apenas 1 item, converte de volta para ImageNode simples
-    if (items.length === 1) {
+    // Filter items: keep those with src OR those that are placeholders
+    const validItems = items.filter(item => 
+      item.isPlaceholder || (item.src && item.src.trim() !== "")
+    )
+    
+    if (validItems.length === 0) return
+    
+    // Se tem apenas 1 item e não é placeholder, converte de volta para ImageNode simples
+    if (validItems.length === 1 && !validItems[0]?.isPlaceholder) {
       editor.update(() => {
         const node = $getNodeByKey(nodeKey)
         if (node) {
@@ -160,7 +199,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
           const { ImageNode } = require('./image-node')
           
           // Create simple image node
-          const imageNode = new ImageNode(items[0])
+          const imageNode = new ImageNode(validItems[0])
           
           // Replace gallery with simple image
           node.replace(imageNode)
@@ -170,8 +209,8 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
       return
     }
     
-    // Se tem 2+ itens, mantém como galeria
-    const galleryImages = mediaItemsToGallery(items)
+    // Se tem 2+ itens ou 1 placeholder, mantém como galeria
+    const galleryImages = mediaItemsToGallery(validItems)
     
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
@@ -214,29 +253,40 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                   gridTemplateColumns: getGridTemplateColumns(),
                 }}
               >
-                {data.images.map((image) => (
-                  <div key={image.id} className="space-y-2">
-                    <div 
-                      className="relative overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700"
-                      style={{ aspectRatio: image.displayMode === "crop" ? "1/1" : "auto" }}
-                    >
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className={
-                          image.displayMode === "crop"
-                            ? "h-full w-full object-cover"
-                            : "h-auto w-full object-contain"
-                        }
-                      />
+                {data.images.map((image) => {
+                  // Check if this is a placeholder (has metadata in alt)
+                  const isPlaceholder = image.alt && image.alt.startsWith('__metadata__:')
+                  
+                  return (
+                    <div key={image.id} className="space-y-2">
+                      <div 
+                        className="relative overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700"
+                        style={{ aspectRatio: image.displayMode === "crop" ? "1/1" : "16/9" }}
+                      >
+                        {isPlaceholder || !image.src ? (
+                          // Render empty space for placeholders - maintains aspect ratio from parent
+                          <div className="h-full w-full" />
+                        ) : (
+                          // Render actual image
+                          <img
+                            src={image.src}
+                            alt={image.alt}
+                            className={
+                              image.displayMode === "crop"
+                                ? "h-full w-full object-cover"
+                                : "h-auto w-full object-contain"
+                            }
+                          />
+                        )}
+                      </div>
+                      {image.caption && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                          {image.caption}
+                        </p>
+                      )}
                     </div>
-                    {image.caption && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        {image.caption}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
               {data.caption && (
                 <div className="mt-4 text-sm text-gray-600 dark:text-gray-400 text-center">
@@ -272,29 +322,40 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                 gridTemplateColumns: getGridTemplateColumns(),
               }}
             >
-              {data.images.map((image) => (
-                <div key={image.id} className="space-y-2">
-                  <div 
-                    className="relative overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700"
-                    style={{ aspectRatio: image.displayMode === "crop" ? "1/1" : "auto" }}
-                  >
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      className={
-                        image.displayMode === "crop"
-                          ? "h-full w-full object-cover"
-                          : "h-auto w-full object-contain"
-                      }
-                    />
+              {data.images.map((image) => {
+                // Check if this is a placeholder (has metadata in alt)
+                const isPlaceholder = image.alt && image.alt.startsWith('__metadata__:')
+                
+                return (
+                  <div key={image.id} className="space-y-2">
+                    <div 
+                      className="relative overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700"
+                      style={{ aspectRatio: image.displayMode === "crop" ? "1/1" : "16/9" }}
+                    >
+                      {isPlaceholder || !image.src ? (
+                        // Render empty space for placeholders - maintains aspect ratio from parent
+                        <div className="h-full w-full" />
+                      ) : (
+                        // Render actual image
+                        <img
+                          src={image.src}
+                          alt={image.alt}
+                          className={
+                            image.displayMode === "crop"
+                              ? "h-full w-full object-cover"
+                              : "h-auto w-full object-contain"
+                          }
+                        />
+                      )}
+                    </div>
+                    {image.caption && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                        {image.caption}
+                      </p>
+                    )}
                   </div>
-                  {image.caption && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                      {image.caption}
-                    </p>
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
           ) : (
             <div className="flex items-center justify-center h-40 bg-muted/20 rounded-lg border border-dashed">

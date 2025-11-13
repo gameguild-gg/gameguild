@@ -57,21 +57,33 @@ export function UnifiedMediaEditor({
   // Only allow gallery mode for images (video/audio always single)
   const canUseGallery = data.type === "image"
   
-  // Sempre trabalha em modo galeria, começando com 1 item (apenas para imagens)
-  const [localGalleryItems, setLocalGalleryItems] = useState<BaseMediaData[]>(
-    canUseGallery ? (galleryItems.length > 0 ? galleryItems : [data]) : [data]
-  )
+  // Sempre trabalha em modo galeria, começando vazio ou com items existentes
+  const [localGalleryItems, setLocalGalleryItems] = useState<BaseMediaData[]>(() => {
+    if (!canUseGallery) {
+      // Para video/audio, sempre usa o item único se tiver src
+      return data.src ? [data] : []
+    }
+    // Para imagens, usa galleryItems se tiver, senão usa data apenas se tiver src válida
+    if (galleryItems.length > 0) {
+      return galleryItems
+    }
+    // Só inclui o data inicial se tiver uma src válida (não vazia)
+    return data.src && data.src.trim() !== "" ? [data] : []
+  })
   const [localColumns, setLocalColumns] = useState(galleryColumns)
   const [localGlobalCaption, setLocalGlobalCaption] = useState(galleryCaption)
   
   // Determina se é galeria baseado no número de itens (apenas para imagens)
   const isGalleryMode = canUseGallery && localGalleryItems.length > 1
 
-  // Sincroniza localData com o primeiro item da galeria
+  // Sincroniza localData com o primeiro item da galeria ou mantém vazio
   useEffect(() => {
     const firstItem = localGalleryItems[0]
     if (firstItem && !isGalleryMode) {
       setLocalData(firstItem)
+    } else if (!firstItem && localGalleryItems.length === 0) {
+      // Se não há items, mantém localData com src vazio
+      setLocalData(prev => ({ ...prev, src: "" }))
     }
   }, [localGalleryItems, isGalleryMode])
 
@@ -148,25 +160,31 @@ export function UnifiedMediaEditor({
     document.body.style.overflow = ''
     document.body.style.pointerEvents = ''
     
+    // Filter out items without src that are not placeholders
+    const validItems = localGalleryItems.filter(item => 
+      item.isPlaceholder || (item.src && item.src.trim() !== "")
+    )
+    
     if (onSave) {
       // Pass all data to onSave - it will decide what to do
       // Only pass gallery data if canUseGallery is true
       if (canUseGallery) {
-        onSave(localGalleryItems, localColumns, localGlobalCaption)
+        onSave(validItems, localColumns, localGlobalCaption)
       } else {
-        // For video/audio, just save the single item
-        onSave([localData], undefined, undefined)
+        // For video/audio, just save the single item if valid
+        const itemToSave = validItems.length > 0 ? validItems : [localData]
+        onSave(itemToSave, undefined, undefined)
       }
     } else {
       // Fallback to old behavior
       if (isGalleryMode && canUseGallery) {
         // Save gallery data (múltiplos itens) - only for images
-        if (onGalleryItemsChange) onGalleryItemsChange(localGalleryItems)
+        if (onGalleryItemsChange) onGalleryItemsChange(validItems)
         if (onGalleryColumnsChange) onGalleryColumnsChange(localColumns)
         if (onGalleryCaptionChange) onGalleryCaptionChange(localGlobalCaption)
       } else {
         // Save single media data (1 item apenas ou video/audio)
-        const singleItem = localGalleryItems[0] || localData
+        const singleItem = validItems[0] || localData
         onChange(singleItem)
       }
       
@@ -399,12 +417,13 @@ export function UnifiedMediaEditor({
             </div>
             <div className="flex-1 overflow-auto bg-gray-50 dark:bg-gray-950 p-4">
               {isGalleryMode ? (
-                <div className="space-y-4">
-                  <div 
-                    className="grid gap-3"
-                    style={{ gridTemplateColumns: `repeat(${localColumns}, 1fr)` }}
-                  >
-                    {localGalleryItems.map((item, index) => (
+                localGalleryItems.length > 0 ? (
+                  <div className="space-y-4">
+                    <div 
+                      className="grid gap-3"
+                      style={{ gridTemplateColumns: `repeat(${localColumns}, 1fr)` }}
+                    >
+                      {localGalleryItems.map((item, index) => (
                       <div key={index} className="space-y-2">
                         <div 
                           className="relative overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700"
@@ -433,14 +452,23 @@ export function UnifiedMediaEditor({
                           </p>
                         )}
                       </div>
-                    ))}
-                  </div>
-                  {localGlobalCaption && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400 text-center pt-2 border-t border-gray-200 dark:border-gray-700">
-                      {localGlobalCaption}
+                      ))}
                     </div>
-                  )}
-                </div>
+                    {localGlobalCaption && (
+                      <div className="text-sm text-gray-600 dark:text-gray-400 text-center pt-2 border-t border-gray-200 dark:border-gray-700">
+                        {localGlobalCaption}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                    <div className="text-center">
+                      <Grid className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>No items in gallery</p>
+                      <p className="text-sm">Add images in the Media tab</p>
+                    </div>
+                  </div>
+                )
               ) : (
                 <MediaPreview data={localData} />
               )}
