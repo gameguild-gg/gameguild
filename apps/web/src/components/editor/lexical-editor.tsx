@@ -431,7 +431,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
           <EditorToolbar />
           <div className="relative">
             <RichTextPlugin
-              contentEditable={<ContentEditable className="min-h-[150px] p-3 outline-none" />}
+              contentEditable={<ContentEditable className="min-h-[450px] p-3 outline-none" />}
               placeholder={
                 <div className="pointer-events-none absolute left-[13px] top-[13px] select-none text-muted-foreground">
                   Start typing...
