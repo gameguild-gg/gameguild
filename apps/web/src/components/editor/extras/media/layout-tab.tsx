@@ -34,15 +34,6 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
     }
   }
 
-  const handleSizeChange = (index: number, newSize: number) => {
-    const newItems = [...items]
-    const item = newItems[index]
-    if (item) {
-      newItems[index] = { ...item, size: newSize }
-      onItemsChange(newItems)
-    }
-  }
-
   return (
     <div className="space-y-6">
       {/* Column Selection */}
@@ -83,7 +74,7 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
               className="relative group cursor-move bg-gray-100 dark:bg-gray-800 rounded-lg p-3 border-2 border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-400 transition-colors"
             >
               {/* Item Preview */}
-              <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded overflow-hidden mb-2">
+              <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded overflow-hidden">
                 {item.type === "image" && item.src && (
                   <img src={item.src} alt="" className="w-full h-full object-cover" />
                 )}
@@ -92,23 +83,6 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
                     {item.type}
                   </div>
                 )}
-              </div>
-
-              {/* Size Control */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                  <span>Width</span>
-                  <span>{item.size || 100}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="25"
-                  max="200"
-                  value={item.size || 100}
-                  onChange={(e) => handleSizeChange(index, parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                  onClick={(e) => e.stopPropagation()}
-                />
               </div>
 
               {/* Position Badge */}
