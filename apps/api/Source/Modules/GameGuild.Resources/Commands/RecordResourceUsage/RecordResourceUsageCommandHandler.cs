@@ -20,10 +20,9 @@ public class RecordResourceUsageCommandHandler(IUsageRecordRepository usageRecor
             Id = Guid.NewGuid(), Type = request.ResourceUsageType, Count = request.Count, PeriodStart = request.PeriodStart, PeriodEnd = request.PeriodEnd, Metadata = request.Metadata, CreatedAt = DateTime.UtcNow
         };
 
-        // Set TenantId using helper method
         // Set TenantId using reflection since the setter is protected
         var tenantIdProperty = typeof(UsageRecord).GetProperty("TenantId");
-        tenantIdProperty?.SetValue(usageRecord, new TenantId(request.TenantId));
+        tenantIdProperty?.GetSetMethod(nonPublic: true)?.Invoke(usageRecord, new object[] { request.TenantId });
 
         await usageRecordRepository.CreateAsync(usageRecord, cancellationToken).ConfigureAwait(false);
 
