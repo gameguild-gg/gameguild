@@ -426,14 +426,14 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
       }}
     >
       <EditorLoadingProvider value={isLoadingProject}>
-        <div className={cn("rounded-lg border", className)}>
+        <div className={cn("border border-gray-200 dark:border-gray-700", className)}>
           <YouTubeAudioStyle />
           <EditorToolbar />
           <div className="relative">
             <RichTextPlugin
-              contentEditable={<ContentEditable className="min-h-[450px] p-3 outline-none" />}
+              contentEditable={<ContentEditable className="min-h-[450px] p-3 outline-none text-gray-900 dark:text-gray-100" />}
               placeholder={
-                <div className="pointer-events-none absolute left-[13px] top-[13px] select-none text-muted-foreground">
+                <div className="pointer-events-none absolute left-[13px] top-[13px] select-none text-gray-400 dark:text-gray-500">
                   Start typing...
                 </div>
               }
