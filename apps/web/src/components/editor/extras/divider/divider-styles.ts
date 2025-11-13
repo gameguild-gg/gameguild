@@ -28,11 +28,11 @@ export function getThicknessStyles(thickness: DividerThickness, style: DividerSt
  */
 export function getSpacingStyles(spacing: DividerSpacing): string {
   const spacingMap = {
-    xs: "my-2",
-    sm: "my-4",
-    md: "my-6",
-    lg: "my-8",
-    xl: "my-12",
+    xs: "my-4",
+    sm: "my-8",
+    md: "my-12",
+    lg: "my-16",
+    xl: "my-24",
   }
   return spacingMap[spacing]
 }
