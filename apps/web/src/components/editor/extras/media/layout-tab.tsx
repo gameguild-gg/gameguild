@@ -24,35 +24,48 @@ interface LayoutTabProps {
 export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: LayoutTabProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
+  const [hasDropped, setHasDropped] = useState(false)
 
   // Calculate total grid slots - always show at least one empty row below content
   const minSlots = columns * 2
   const currentRows = Math.ceil(items.length / columns)
   const totalSlots = Math.max(minSlots, (currentRows + 1) * columns) // +1 row for empty space
   
-  // Create grid slots array respecting static positions
-  const gridSlots: (BaseMediaData | null)[] = Array(totalSlots).fill(null)
-  
-  // First, place all static items at their fixed positions
-  const staticItems = items.filter(item => item.isStatic && item.gridPosition !== undefined)
-  staticItems.forEach(item => {
-    if (item.gridPosition !== undefined && item.gridPosition < totalSlots) {
-      gridSlots[item.gridPosition] = item
+  // ARRAY 1: Static items map (position -> item)
+  const staticItemsMap = new Map<number, BaseMediaData>()
+  items.forEach(item => {
+    if (item.isStatic && item.gridPosition !== undefined) {
+      staticItemsMap.set(item.gridPosition, item)
     }
   })
   
-  // Then, place non-static items in remaining slots
-  const nonStaticItems = items.filter(item => !item.isStatic || item.gridPosition === undefined)
-  let nonStaticIndex = 0
-  for (let i = 0; i < totalSlots && nonStaticIndex < nonStaticItems.length; i++) {
+  // ARRAY 2: Dynamic items (ordered list of non-static items)
+  const dynamicItems = items.filter(item => !item.isStatic || item.gridPosition === undefined)
+  
+  // ARRAY 3: Final grid (combines static at fixed positions + dynamic in remaining slots)
+  const gridSlots: (BaseMediaData | null)[] = Array(totalSlots).fill(null)
+  
+  // Place static items at their fixed positions
+  staticItemsMap.forEach((item, position) => {
+    if (position < totalSlots) {
+      gridSlots[position] = item
+    }
+  })
+  
+  // Fill remaining slots with dynamic items in order
+  let dynamicIndex = 0
+  for (let i = 0; i < totalSlots && dynamicIndex < dynamicItems.length; i++) {
     if (gridSlots[i] === null) {
-      const item = nonStaticItems[nonStaticIndex]
+      const item = dynamicItems[dynamicIndex]
       if (item) {
         gridSlots[i] = item
       }
-      nonStaticIndex++
+      dynamicIndex++
     }
   }
+  
+  // Helper: Get list of static items for display
+  const staticItems = Array.from(staticItemsMap.values())
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     const item = gridSlots[index]
@@ -62,11 +75,14 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
     }
     e.dataTransfer.effectAllowed = "move"
     setDraggedIndex(index)
+    setHasDropped(false) // Reset drop flag
   }
 
   const handleDragEnd = () => {
+    // If drag ended without a successful drop, just clear states (cancel)
     setDraggedIndex(null)
     setDragOverIndex(null)
+    setHasDropped(false)
   }
 
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -92,15 +108,18 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
 
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault()
+    e.stopPropagation() // Prevent event bubbling
     
     if (draggedIndex === null || draggedIndex === targetIndex) {
       setDragOverIndex(null)
+      setHasDropped(true) // Mark as dropped (even if same position)
       return
     }
 
     const targetItem = gridSlots[targetIndex]
     if (targetItem?.isStatic) {
       setDragOverIndex(null)
+      setHasDropped(true)
       return
     }
 
@@ -108,38 +127,68 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
     
     if (!draggedItem) {
       setDragOverIndex(null)
+      setHasDropped(true)
       return
     }
 
-    // Create new items array maintaining static positions
-    const newItems: BaseMediaData[] = []
+    // Reconstruct items array using the 3-array approach
+    const newStaticMap = new Map(staticItemsMap) // Copy static map
+    const newDynamicItems = [...dynamicItems] // Copy dynamic list
     
-    // First, keep all static items with their positions
-    items.forEach(item => {
-      if (item.isStatic && item.gridPosition !== undefined) {
-        newItems.push(item)
+    // Create temp grid to perform swap
+    const tempGrid: (BaseMediaData | null)[] = Array(totalSlots).fill(null)
+    
+    // Place static items at their fixed positions
+    newStaticMap.forEach((item, position) => {
+      if (position < totalSlots) {
+        tempGrid[position] = item
       }
     })
     
-    // Then rebuild non-static items with the swap applied
-    const newSlots = [...gridSlots]
-    newSlots[draggedIndex] = newSlots[targetIndex] ?? null
-    newSlots[targetIndex] = draggedItem
+    // Fill remaining slots with dynamic items
+    let dynIdx = 0
+    for (let i = 0; i < totalSlots; i++) {
+      if (tempGrid[i] === null && dynIdx < newDynamicItems.length) {
+        const item = newDynamicItems[dynIdx]
+        if (item) {
+          tempGrid[i] = item
+        }
+        dynIdx++
+      }
+    }
     
-    // Collect non-static items in their new order (excluding static positions)
-    newSlots.forEach((item, index) => {
-      if (item && (!item.isStatic || item.gridPosition === undefined)) {
-        // Check if this position is occupied by a static item
-        const hasStaticAtPosition = items.some(
-          staticItem => staticItem.isStatic && staticItem.gridPosition === index
-        )
-        if (!hasStaticAtPosition) {
-          newItems.push(item)
+    // Perform swap in tempGrid
+    const temp = tempGrid[draggedIndex] ?? null
+    tempGrid[draggedIndex] = tempGrid[targetIndex] ?? null
+    tempGrid[targetIndex] = temp
+    
+    // Rebuild final items array from tempGrid, preserving static positions
+    const newItems: BaseMediaData[] = []
+    
+    // For static items, preserve their gridPosition property
+    // For dynamic items, add them in the order they appear in tempGrid
+    tempGrid.forEach((item, index) => {
+      if (item) {
+        if (newStaticMap.has(index)) {
+          // This is a static item - ensure gridPosition is set
+          newItems.push({
+            ...item,
+            isStatic: true,
+            gridPosition: index
+          })
+        } else {
+          // This is a dynamic item - no gridPosition
+          newItems.push({
+            ...item,
+            isStatic: false,
+            gridPosition: undefined
+          })
         }
       }
     })
     
     onItemsChange(newItems)
+    setHasDropped(true) // Mark as successfully dropped
     
     setDraggedIndex(null)
     setDragOverIndex(null)
@@ -224,48 +273,54 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
       return gridSlots
     }
     
-    // Create visual array respecting static positions
+    // Create visual grid using the 3-array approach
     const visual: (BaseMediaData | null)[] = Array(totalSlots).fill(null)
     
-    // First, place all static items at their fixed positions (unchanged)
-    staticItems.forEach(item => {
-      if (item.gridPosition !== undefined && item.gridPosition < totalSlots) {
-        visual[item.gridPosition] = item
+    // Place static items at their fixed positions (unchanged during drag)
+    staticItemsMap.forEach((item, position) => {
+      if (position < totalSlots) {
+        visual[position] = item
       }
     })
     
-    // Then place non-static items with the swap preview
-    const nonStaticWithSwap = [...nonStaticItems]
-    const draggedNonStaticIndex = nonStaticWithSwap.findIndex(item => item === draggedItem)
+    // Create a copy of dynamic items for swap preview
+    const dynamicWithSwap = [...dynamicItems]
     
-    // Find what non-static item is at the target position (if any)
-    const targetNonStaticItem = targetItem && !targetItem.isStatic ? targetItem : null
+    // Find indices in dynamic array
+    const draggedDynamicIndex = dynamicItems.findIndex(item => item === draggedItem)
+    const targetDynamicIndex = dynamicItems.findIndex(item => item === targetItem)
     
-    if (draggedNonStaticIndex !== -1) {
-      // Remove dragged item from its current position
-      nonStaticWithSwap.splice(draggedNonStaticIndex, 1)
+    if (draggedDynamicIndex !== -1 && targetDynamicIndex !== -1) {
+      // Swap in dynamic array
+      const temp = dynamicWithSwap[draggedDynamicIndex]
+      const target = dynamicWithSwap[targetDynamicIndex]
+      if (temp && target) {
+        dynamicWithSwap[draggedDynamicIndex] = target
+        dynamicWithSwap[targetDynamicIndex] = temp
+      }
+    } else if (draggedDynamicIndex !== -1 && targetItem === null) {
+      // Dragging to empty slot - reorder in dynamic array
+      dynamicWithSwap.splice(draggedDynamicIndex, 1)
       
-      // Calculate insertion index in the non-static array
+      // Calculate where to insert in dynamic array based on target position
       let insertIndex = 0
       for (let i = 0; i < dragOverIndex; i++) {
-        if (visual[i] === null) {
+        if (!staticItemsMap.has(i)) {
           insertIndex++
         }
       }
-      
-      // Insert at new position
-      nonStaticWithSwap.splice(insertIndex, 0, draggedItem)
+      dynamicWithSwap.splice(Math.min(insertIndex, dynamicWithSwap.length), 0, draggedItem)
     }
     
-    // Fill remaining slots with non-static items
-    let nonStaticIdx = 0
-    for (let i = 0; i < totalSlots && nonStaticIdx < nonStaticWithSwap.length; i++) {
+    // Fill remaining slots with reordered dynamic items
+    let dynIdx = 0
+    for (let i = 0; i < totalSlots && dynIdx < dynamicWithSwap.length; i++) {
       if (visual[i] === null) {
-        const item = nonStaticWithSwap[nonStaticIdx]
+        const item = dynamicWithSwap[dynIdx]
         if (item) {
           visual[i] = item
         }
-        nonStaticIdx++
+        dynIdx++
       }
     }
     
@@ -311,6 +366,18 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
         <div 
           className="grid gap-3"
           style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
+          onDragOver={(e) => {
+            // Allow drop on the grid container itself
+            e.preventDefault()
+          }}
+          onDrop={(e) => {
+            // If dropped on grid container (not on a specific slot), cancel
+            e.preventDefault()
+            e.stopPropagation()
+            setDraggedIndex(null)
+            setDragOverIndex(null)
+            setHasDropped(true)
+          }}
         >
           {visualSlots.map((slot, slotIndex) => {
             const isDragging = draggedIndex === slotIndex

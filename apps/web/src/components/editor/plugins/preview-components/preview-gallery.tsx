@@ -61,8 +61,8 @@ export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
         }}
       >
         {images.map((image) => {
-          // Check if this is a placeholder (has metadata in alt)
-          const isPlaceholder = image.alt && image.alt.startsWith('__metadata__:')
+          // Check if this is a placeholder (empty src means it's a placeholder)
+          const isPlaceholder = !image.src || image.src.trim() === ''
           
           // Calculate grid area style
           const gridAreaStyle = {
@@ -73,7 +73,7 @@ export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
           return (
             <div key={image.id} className="space-y-1" style={gridAreaStyle}>
               <div
-                className="relative overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700"
+                className="relative overflow-hidden rounded-md"
                 style={{ aspectRatio: image.displayMode === "crop" ? "1/1" : "16/9" }}
               >
                 {isPlaceholder || !image.src ? (
