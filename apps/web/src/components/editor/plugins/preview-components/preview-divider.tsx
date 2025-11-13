@@ -1,6 +1,13 @@
 "use client"
 
 import type { SerializedDividerNode } from "../../nodes/divider-node"
+import {
+  getThicknessStyles,
+  getSpacingStyles,
+  getColorStyles,
+  getStyleClasses,
+  getPaletteColor,
+} from "@/components/editor/extras/divider/divider-styles"
 
 export function PreviewDivider({ node }: { node: SerializedDividerNode }) {
   if (!node?.data) {
@@ -8,30 +15,62 @@ export function PreviewDivider({ node }: { node: SerializedDividerNode }) {
     return null
   }
 
-  const { style } = node.data
+  const { style, thickness, spacing, colorPalette, customColor } = node.data
 
-  switch (style) {
-    case "simple":
-      return <hr className="my-6 border-t border-gray-300 dark:border-gray-700" />
-    case "double":
-      return <hr className="my-6 border-t-2 border-double border-gray-300 dark:border-gray-700" />
-    case "dashed":
-      return <hr className="my-6 border-t-2 border-dashed border-gray-300 dark:border-gray-700" />
-    case "dotted":
-      return <hr className="my-6 border-t-2 border-dotted border-gray-300 dark:border-gray-700" />
-    case "gradient":
-      return (
-        <div className="my-6 h-px bg-gradient-to-r from-transparent via-primary to-transparent" aria-hidden="true" />
-      )
-    case "icon":
-      return (
-        <div className="my-6 flex items-center justify-center">
-          <div className="flex-1 border-t border-gray-300 dark:border-gray-700" />
-          <div className="mx-4 text-gray-500 dark:text-gray-400">●</div>
-          <div className="flex-1 border-t border-gray-300 dark:border-gray-700" />
-        </div>
-      )
-    default:
-      return <hr className="my-6 border-t border-gray-300 dark:border-gray-700" />
+  const spacingClass = getSpacingStyles(spacing)
+  const thicknessClass = getThicknessStyles(thickness, style)
+  const colorClass = getColorStyles(colorPalette, style)
+  const styleClass = getStyleClasses(style)
+  const paletteColor = getPaletteColor(colorPalette, customColor)
+
+  const customStyle = colorPalette === "custom" && customColor ? {
+    borderColor: customColor,
+    backgroundColor: customColor,
+  } : {}
+
+  const renderDivider = () => {
+    switch (style) {
+      case "gradient":
+        return (
+          <div className={`${spacingClass} ${thicknessClass} ${colorClass}`} style={customStyle} aria-hidden="true" />
+        )
+      case "double":
+        // Duas linhas perpendiculares (paralelas horizontais)
+        const doubleThickness = thickness === "thin" ? "1px" : thickness === "medium" ? "2px" : "3px"
+        const doubleGap = thickness === "thin" ? "2px" : thickness === "medium" ? "3px" : "4px"
+        return (
+          <div className={spacingClass}>
+            <div 
+              className="relative"
+              style={{ 
+                height: `calc(${doubleThickness} * 2 + ${doubleGap})`,
+              }}
+            >
+              <div 
+                className="absolute top-0 left-0 right-0"
+                style={{ 
+                  height: doubleThickness,
+                  backgroundColor: paletteColor
+                }}
+              />
+              <div 
+                className="absolute bottom-0 left-0 right-0"
+                style={{ 
+                  height: doubleThickness,
+                  backgroundColor: paletteColor
+                }}
+              />
+            </div>
+          </div>
+        )
+      default:
+        return <hr className={`${spacingClass} ${thicknessClass} ${colorClass} ${styleClass}`} style={customStyle} />
+    }
   }
+
+  return (
+    <div className="my-4">
+      {renderDivider()}
+    </div>
+  )
 }
