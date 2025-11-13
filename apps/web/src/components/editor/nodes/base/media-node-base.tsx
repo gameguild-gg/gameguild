@@ -20,6 +20,11 @@ export interface BaseMediaData {
   // Audio specific
   audioType?: string
   embedAudioType?: "direct" | "youtube" | "spotify" | "soundcloud"
+  
+  // Grid positioning
+  isPlaceholder?: boolean // If true, this is an empty placeholder
+  isStatic?: boolean // If true, position is fixed and won't auto-reorder
+  gridPosition?: number // Absolute position in the grid (for static items)
 }
 
 export interface SerializedMediaNode extends SerializedLexicalNode {
