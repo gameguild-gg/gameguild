@@ -254,8 +254,8 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                 }}
               >
                 {data.images.map((image) => {
-                  // Check if this is a placeholder (has metadata in alt)
-                  const isPlaceholder = image.alt && image.alt.startsWith('__metadata__:')
+                  // Check if this is a placeholder (empty src means it's a placeholder)
+                  const isPlaceholder = !image.src || image.src.trim() === ''
                   
                   return (
                     <div key={image.id} className="space-y-2">
@@ -323,8 +323,8 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
               }}
             >
               {data.images.map((image) => {
-                // Check if this is a placeholder (has metadata in alt)
-                const isPlaceholder = image.alt && image.alt.startsWith('__metadata__:')
+                // Check if this is a placeholder (empty src means it's a placeholder)
+                const isPlaceholder = !image.src || image.src.trim() === ''
                 
                 return (
                   <div key={image.id} className="space-y-2">
