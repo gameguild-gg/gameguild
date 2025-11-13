@@ -1,7 +1,9 @@
-using GameGuild.Modules.Core.Controllers;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Modules.Audit;
+namespace GameGuild.Audit;
 
 /// <summary>
 /// Controller for audit log management (admin only)
@@ -9,8 +11,23 @@ namespace GameGuild.Modules.Audit;
 [ApiController]
 [Route("api/admin/audit")]
 [Authorize(Roles = "Admin")] // Restrict to admin users only
-public class AuditController(IAuditService auditService, ILogger<AuditController> logger) : BaseController
+public class AuditController(IAuditService auditService, ILogger<AuditController> logger) : ControllerBase
 {
+    /// <summary>
+    /// Gets the current user ID from the JWT claims
+    /// </summary>
+    protected Guid? GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return null;
+        }
+        
+        return userId;
+    }
+
     /// <summary>
     /// Get audit logs with filtering and pagination
     /// </summary>
@@ -149,11 +166,6 @@ public class AuditController(IAuditService auditService, ILogger<AuditController
 
             return StatusCode(500, "Failed to export audit logs");
         }
-    }
-
-    protected new Guid? GetCurrentUserId()
-    {
-        return base.GetCurrentUserId();
     }
 
     private AuditLogDto MapToDto(AuditLog log)

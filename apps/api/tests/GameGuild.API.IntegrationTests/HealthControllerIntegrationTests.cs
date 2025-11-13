@@ -87,8 +87,8 @@ public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFact
         // Assert
         response.Should().NotBeNull();
         var content = await response.Content.ReadAsStringAsync();
-        content.Should().Contain("Status");
-        content.Should().Contain("Timestamp");
+        content.Should().Contain("status");
+        content.Should().Contain("timestamp");
     }
 
     [Fact]

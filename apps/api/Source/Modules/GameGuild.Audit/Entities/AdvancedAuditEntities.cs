@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Audit.Entities;
+namespace GameGuild.Audit.Entities;
 
 /// <summary>
 /// Retention policy with simulation engine for storage cost forecasting and "what-if" analysis.
