@@ -6,4 +6,4 @@ namespace GameGuild.Tenants.Queries;
 /// <summary>
 ///     Query to get all active tenants
 /// </summary>
-public abstract record GetActiveTenantsQuery : IQuery<IEnumerable<Tenant>>;
+public record GetActiveTenantsQuery : IQuery<IEnumerable<Tenant>>;

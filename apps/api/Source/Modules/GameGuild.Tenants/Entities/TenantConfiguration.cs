@@ -35,7 +35,7 @@ public class TenantConfiguration : IEntityTypeConfiguration<Tenant>
 
         builder.HasIndex(t => t.IsActive);
 
-        // Soft delete
-        builder.HasQueryFilter(t => !t.IsDeleted);
+        // Soft delete - use DeletedAt instead of IsDeleted for EF Core translation
+        builder.HasQueryFilter(t => t.DeletedAt == null);
     }
 }
