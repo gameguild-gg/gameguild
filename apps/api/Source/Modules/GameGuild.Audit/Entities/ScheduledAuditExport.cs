@@ -1,6 +1,6 @@
-using GameGuild.Modules.Audit.Enums;
+using GameGuild.Audit.Enums;
 
-namespace GameGuild.Modules.Audit.Entities;
+namespace GameGuild.Audit.Entities;
 
 /// <summary>
 /// Scheduled audit export job configuration for automated export to SFTP, S3, Azure Blob Storage, etc.

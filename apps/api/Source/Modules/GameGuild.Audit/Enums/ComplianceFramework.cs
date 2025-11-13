@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Audit.Enums;
+namespace GameGuild.Audit.Enums;
 
 /// <summary>
 /// Compliance frameworks for audit and evidence packaging

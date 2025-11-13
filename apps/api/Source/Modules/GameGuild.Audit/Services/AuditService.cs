@@ -1,9 +1,12 @@
 using System.Text.Json;
-using GameGuild.Database;
+using GameGuild.Abstractions;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Modules.Audit;
+namespace GameGuild.Audit;
 
-public class AuditService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor, ILogger<AuditService> logger) : IAuditService
+public class AuditService(IApplicationDbContext context, IHttpContextAccessor httpContextAccessor, ILogger<AuditService> logger) : IAuditService
 {
     public async Task LogAsync(CreateAuditLogRequest request)
     {
@@ -85,7 +88,7 @@ public class AuditService(ApplicationDbContext context, IHttpContextAccessor htt
                 Description = $"Permission '{permissionName}' denied: {reason}",
                 Metadata = new { PermissionName = permissionName, Reason = reason },
                 Success = false,
-                RiskLevel = AuditRiskLevel.Medium,
+                RiskLevel = AuditRiskLevel.High,
                 Category = AuditCategory.Permission
             }
         );

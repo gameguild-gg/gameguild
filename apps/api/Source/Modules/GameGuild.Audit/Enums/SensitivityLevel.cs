@@ -1,4 +1,4 @@
-namespace GameGuild.Modules.Audit.Enums;
+namespace GameGuild.Audit.Enums;
 
 /// <summary>
 /// Defines sensitivity levels for data access auditing

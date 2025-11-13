@@ -1,4 +1,7 @@
-namespace GameGuild.Modules.Audit;
+using GameGuild.SharedKernel;
+using System.ComponentModel.DataAnnotations;
+
+namespace GameGuild.Audit;
 
 /// <summary>
 /// Audit log entry for tracking security-sensitive operations

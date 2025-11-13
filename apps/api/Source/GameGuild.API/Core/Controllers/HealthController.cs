@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
@@ -10,6 +11,7 @@ namespace GameGuild.API.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Tags("Health")]
+[AllowAnonymous]
 public class HealthController(HealthCheckService healthCheckService, ILogger<HealthController> logger) : ControllerBase
 {
     private readonly HealthCheckService _healthCheckService = healthCheckService ?? throw new ArgumentNullException(nameof(healthCheckService));
