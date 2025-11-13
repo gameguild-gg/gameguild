@@ -1,3 +1,55 @@
+## GameGuild — AI Agent Quick Guide
+
+This file is a concise reference for automated coding agents to be productive in the GameGuild monorepo.
+
+- Repository shape: modular monolith. Backend is a .NET 9 Web API (apps/api/Source). Frontend is a Next.js 15 React app (apps/web) written in TypeScript.
+- Primary workflows: local DB (Docker Compose), backend (dotnet), frontend (Next.js + codegen).
+
+Essential commands (paths relative to repo root):
+
+- Start DB:  `docker-compose up -d adminer` (compose.yaml at repo root).
+- Start API (dev): use the VS Code task `start-api` or run:
+  `dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj`
+- Start Web (dev + codegen): in `apps/web/` run `npm run dev` — this runs `api:gen`, `graphql:gen` and `next dev` in parallel.
+- Frontend codegen (must run after API/schema changes):
+  - `cd apps/web && npm run api:gen` (OpenAPI client)
+  - `cd apps/web && npm run graphql:gen` (GraphQL hooks)
+
+Key project conventions and patterns:
+
+- Backend modules: look under `apps/api/Source/Modules/` — each module commonly contains Commands/, Queries/, Entities/, Configuration/, Controllers/, GraphQL/. Modules implement an `IModule` interface exposing `ConfigureServices()` and `MapEndpoints()`.
+- CQRS + FluentValidation: Commands/Queries use a custom CQRS implementation (`GameGuild.CQRS` namespace, NOT MediatR). Handlers implement `IRequestHandler<TRequest, TResponse>` or `ICommandHandler`/`IQueryHandler`. Use the project Result<T> pattern; global exception filters convert to ProblemDetails.
+- EF Core: entities inherit from `EntityBase` (audit fields), use global soft-delete filters, and a `Version` property for optimistic concurrency.
+- Tenant & auth: multi-tenant context is passed via `X-Tenant-Id`. Auth uses JWT (backend) and NextAuth (frontend). Frontend has an authenticated client helper (import pattern: `from '@/lib/api'` or `@/lib/api/authenticated-client`).
+
+Frontend structure & patterns:
+
+- Feature-first libs live under `apps/web/src/lib/` (e.g. `user-management`, `content-management`, `core`). Import by feature: `from '@/lib/<feature>'`.
+- Code generation is required when the API schema changes; failing to run `api:gen` or `graphql:gen` will cause type/runtime mismatches.
+- Scripts of interest: `apps/web/package.json` scripts `dev`, `api:gen`, `graphql:gen`, `build`.
+
+Testing & CI:
+
+- Backend tests: `apps/api/Tests/` (unit and integration). Integration tests use TestHost and an in-memory DB provider.
+- Frontend tests: Jest unit tests and Playwright for E2E; see `apps/web/package.json` for test scripts.
+
+Files & locations to consult for specifics:
+
+- Module examples: `apps/api/Source/Modules/*`
+- API project file: `apps/api/Source/GameGuild.API/GameGuild.API.csproj`
+- Frontend package scripts + codegen: `apps/web/package.json`, `apps/web/src/lib/api/scripts/`
+- Env templates: root `.env.example`, and `apps/api/.env.example` if present. Copy to `.env` for local dev.
+
+Quick tips for agents (do these before code changes):
+
+- Run the codegen commands in `apps/web` after any API/GraphQL change.
+- When editing backend modules, follow the Commands/Queries/Handlers/Validators pattern and register services in `IModule` implementations.
+- Use VS Code tasks (`start-api`, `start-web`) when available — they encapsulate common flags.
+
+If anything below is unclear or you want more examples (small handler, a module skeleton, or a codegen verification script), tell me which area to expand and I will add an example or tests.
+
+---
+Last updated: automated merge — please review for any team-specific secrets or CI notes to add.
 # GameGuild Platform - AI Agent Instructions
 
 ## Architecture Overview
