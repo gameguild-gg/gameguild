@@ -229,8 +229,7 @@ export function FloatingContentInsertPlugin() {
     results.forEach((item) => {
       editor.dispatchCommand(INSERT_AUDIO_COMMAND, {
         src: item.data,
-        title: item.name || "Audio",
-        caption: "",
+        caption: item.name || "Audio",
         size: 100,
       })
     })
@@ -558,13 +557,18 @@ export function FloatingContentInsertPlugin() {
       >
         <Popover open={showMenu} onOpenChange={setShowMenu}>
           <PopoverTrigger asChild>
-            <Button ref={buttonRef} variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted">
-              <Plus className="h-6 w-6" />
+            <Button 
+              ref={buttonRef} 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 shadow-sm"
+            >
+              <Plus className="h-6 w-6 text-gray-700 dark:text-gray-300" />
             </Button>
           </PopoverTrigger>
           <PopoverContent
             side="left"
-            className="w-80 p-0 max-h-[500px] overflow-y-auto shadow-lg border-0 bg-background/95 backdrop-blur-sm"
+            className="w-80 p-0 max-h-[500px] overflow-y-auto shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
           >
             {/*
             <div className="px-2 py-1.5">
@@ -593,7 +597,7 @@ export function FloatingContentInsertPlugin() {
                 <>
                   {/*<Separator className="my-2" />*/}
                   <div className="px-2 py-1">
-                    <h4 className="text-xs font-medium text-muted-foreground">PLUGINS</h4>
+                    <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">PLUGINS</h4>
                   </div>
                   <div className="grid grid-cols-2 gap-1">
                     {primaryOptions.slice(0).map((option) => (
@@ -602,12 +606,12 @@ export function FloatingContentInsertPlugin() {
                         onClick={() => {
                           option.action()
                         }}
-                        className="flex flex-col items-center gap-2 rounded-md px-2 py-3 text-xs hover:bg-accent hover:text-accent-foreground transition-colors duration-150 group"
+                        className="flex flex-col items-center gap-2 px-2 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 group border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                       >
-                        <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-muted group-hover:bg-background transition-colors duration-150">
-                          <option.icon className="h-3 w-3" />
+                        <div className="flex h-6 w-6 items-center justify-center bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors duration-150">
+                          <option.icon className="h-3 w-3 text-gray-700 dark:text-gray-300" />
                         </div>
-                        <span className="text-center leading-tight">{option.label}</span>
+                        <span className="text-center leading-tight text-gray-700 dark:text-gray-300">{option.label}</span>
                       </button>
                     ))}
                   </div>
@@ -804,7 +808,7 @@ export function FloatingContentInsertPlugin() {
             {youtubeError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-red-800">Invalid URL</p>
                     <p className="text-sm text-red-700 mt-1">{youtubeError}</p>
@@ -925,7 +929,7 @@ export function FloatingContentInsertPlugin() {
             {spotifyError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-red-800">Invalid URL</p>
                     <p className="text-sm text-red-700 mt-1">{spotifyError}</p>

@@ -24,8 +24,14 @@ export function EditorToolbar() {
   }
 
   return (
-    <div className="flex items-center gap-1 border-b p-1">
-      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={addNewLineAtTop} title="Add new line at top">
+    <div className="flex items-center justify-center gap-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2">
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        className="h-8 gap-2 hover:bg-gray-100 dark:hover:bg-gray-800" 
+        onClick={addNewLineAtTop} 
+        title="Add new line at top"
+      >
         <ArrowUp className="h-4 w-4" />
       </Button>
       <PreviewPlugin />
