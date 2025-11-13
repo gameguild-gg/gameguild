@@ -30,10 +30,9 @@ public class SetResourceQuotaCommandHandler(IResourceQuotaRepository repository)
                 ResetTime = request.ResetTime
             };
 
-            // Set TenantId using helper method
             // Set TenantId using reflection since the setter is protected
             var tenantIdProperty = typeof(ResourceQuota).GetProperty("TenantId");
-            tenantIdProperty?.SetValue(quota, new TenantId(request.TenantId));
+            tenantIdProperty?.GetSetMethod(nonPublic: true)?.Invoke(quota, new object[] { request.TenantId });
 
             await repository.CreateAsync(quota, cancellationToken).ConfigureAwait(false);
         }

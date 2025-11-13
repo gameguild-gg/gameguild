@@ -1,0 +1,200 @@
+using FluentAssertions;
+using GameGuild.API.Controllers;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
+
+namespace GameGuild.API.UnitTests.Controllers;
+
+/// <summary>
+/// Unit tests for HealthController
+/// </summary>
+public class HealthControllerTests
+{
+    private readonly Mock<HealthCheckService> _healthCheckServiceMock;
+    private readonly Mock<ILogger<HealthController>> _loggerMock;
+    private readonly HealthController _controller;
+
+    public HealthControllerTests()
+    {
+        _healthCheckServiceMock = new Mock<HealthCheckService>();
+        _loggerMock = new Mock<ILogger<HealthController>>();
+        _controller = new HealthController(_healthCheckServiceMock.Object, _loggerMock.Object);
+    }
+
+    [Fact]
+    public void Constructor_WithNullHealthCheckService_ShouldThrowArgumentNullException()
+    {
+        // Arrange, Act & Assert
+        var act = () => new HealthController(null!, _loggerMock.Object);
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("healthCheckService");
+    }
+
+    [Fact]
+    public void Constructor_WithNullLogger_ShouldThrowArgumentNullException()
+    {
+        // Arrange, Act & Assert
+        var act = () => new HealthController(_healthCheckServiceMock.Object, null!);
+        act.Should().Throw<ArgumentNullException>()
+            .WithParameterName("logger");
+    }
+
+    [Fact]
+    public async Task GetHealth_WhenAllChecksHealthy_ShouldReturn200WithHealthyStatus()
+    {
+        // Arrange
+        var healthReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>
+            {
+                ["Database"] = new HealthReportEntry(
+                    HealthStatus.Healthy,
+                    "Database is healthy",
+                    TimeSpan.FromMilliseconds(10),
+                    null,
+                    null)
+            },
+            TimeSpan.FromMilliseconds(10)
+        );
+
+        _healthCheckServiceMock
+            .Setup(x => x.CheckHealthAsync(It.IsAny<Func<HealthCheckRegistration, bool>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(healthReport);
+
+        // Act
+        var result = await _controller.GetHealth();
+
+        // Assert
+        result.Should().NotBeNull();
+        var okResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
+        okResult.StatusCode.Should().Be(200);
+        
+        var response = okResult.Value.Should().BeOfType<HealthCheckResponse>().Subject;
+        response.Status.Should().Be("Healthy");
+        response.Checks.Should().ContainKey("Database");
+    }
+
+    [Fact]
+    public async Task GetHealth_WhenCheckUnhealthy_ShouldReturn503WithUnhealthyStatus()
+    {
+        // Arrange
+        var healthReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>
+            {
+                ["Database"] = new HealthReportEntry(
+                    HealthStatus.Unhealthy,
+                    "Database connection failed",
+                    TimeSpan.FromMilliseconds(100),
+                    new Exception("Connection timeout"),
+                    null)
+            },
+            TimeSpan.FromMilliseconds(100)
+        );
+
+        _healthCheckServiceMock
+            .Setup(x => x.CheckHealthAsync(It.IsAny<Func<HealthCheckRegistration, bool>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(healthReport);
+
+        // Act
+        var result = await _controller.GetHealth();
+
+        // Assert
+        result.Should().NotBeNull();
+        var serviceUnavailableResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
+        serviceUnavailableResult.StatusCode.Should().Be(503);
+        
+        var response = serviceUnavailableResult.Value.Should().BeOfType<HealthCheckResponse>().Subject;
+        response.Status.Should().Be("Unhealthy");
+    }
+
+    [Fact]
+    public async Task GetHealth_WhenCheckThrowsException_ShouldReturn503WithErrorMessage()
+    {
+        // Arrange
+        var expectedException = new InvalidOperationException("Health check failed");
+        _healthCheckServiceMock
+            .Setup(x => x.CheckHealthAsync(It.IsAny<Func<HealthCheckRegistration, bool>>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(expectedException);
+
+        // Act
+        var result = await _controller.GetHealth();
+
+        // Assert
+        result.Should().NotBeNull();
+        var serviceUnavailableResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
+        serviceUnavailableResult.StatusCode.Should().Be(503);
+        
+        var response = serviceUnavailableResult.Value.Should().BeOfType<HealthCheckResponse>().Subject;
+        response.Status.Should().Be("Unhealthy");
+        response.Error.Should().Be("Health check failed");
+    }
+
+    [Fact]
+    public async Task GetReadiness_ShouldReturnOkWithReadyStatus()
+    {
+        // Arrange
+        var healthReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(),
+            TimeSpan.FromMilliseconds(5)
+        );
+
+        _healthCheckServiceMock
+            .Setup(x => x.CheckHealthAsync(It.IsAny<Func<HealthCheckRegistration, bool>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(healthReport);
+
+        // Act
+        var result = await _controller.GetReadiness();
+
+        // Assert
+        result.Should().NotBeNull();
+        var okResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
+        okResult.StatusCode.Should().Be(200);
+        
+        var response = okResult.Value.Should().BeOfType<ReadinessResponse>().Subject;
+        response.Status.Should().Be("Healthy");
+        response.Ready.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetLiveness_ShouldReturnOkWithAliveStatus()
+    {
+        // Act
+        var result = _controller.GetLiveness();
+
+        // Assert
+        result.Should().NotBeNull();
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        
+        var response = okResult.Value.Should().BeOfType<LivenessResponse>().Subject;
+        response.Status.Should().Be("Healthy");
+        response.Alive.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetHealth_ShouldIncludeTimestamp()
+    {
+        // Arrange
+        var beforeCall = DateTime.UtcNow;
+        var healthReport = new HealthReport(
+            new Dictionary<string, HealthReportEntry>(),
+            TimeSpan.FromMilliseconds(5)
+        );
+
+        _healthCheckServiceMock
+            .Setup(x => x.CheckHealthAsync(It.IsAny<Func<HealthCheckRegistration, bool>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(healthReport);
+
+        // Act
+        var result = await _controller.GetHealth();
+        var afterCall = DateTime.UtcNow;
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<ObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<HealthCheckResponse>().Subject;
+        
+        response.Timestamp.Should().BeOnOrAfter(beforeCall);
+        response.Timestamp.Should().BeOnOrBefore(afterCall);
+    }
+}
