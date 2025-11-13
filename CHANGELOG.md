@@ -1,3 +1,10 @@
+# [2.24.0](https://github.com/gameguild-gg/gameguild/compare/v2.23.1...v2.24.0) (2025-11-13)
+
+
+### Features
+
+* contact/links page ([9e48e60](https://github.com/gameguild-gg/gameguild/commit/9e48e60b9a60f8b833e649b0091f1b63a0e4b6f7))
+
 ## [2.23.1](https://github.com/gameguild-gg/gameguild/compare/v2.23.0...v2.23.1) (2025-11-07)
 
 
