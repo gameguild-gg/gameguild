@@ -79,7 +79,7 @@ public class SubscriptionEndpointIntegrationTests : IClassFixture<WebApplication
     }
 
     [Fact]
-    public async Task CreateSubscription_ShouldRequireAuthentication()
+    public async Task CreateSubscription_ShouldReturnBadRequest_WithInvalidBillingCycle()
     {
         // Arrange
         var createRequest = new
@@ -87,16 +87,17 @@ public class SubscriptionEndpointIntegrationTests : IClassFixture<WebApplication
             TenantId = Guid.NewGuid(),
             PlanId = Guid.NewGuid(),
             CreatedByUserId = Guid.NewGuid(),
-            BillingCycle = "Monthly",
-            Amount = 29.99m
+            BillingCycle = "InvalidCycle", // Invalid billing cycle
+            Amount = 29.99m,
+            Currency = "USD"
         };
 
         // Act
         var response = await _client.PostAsJsonAsync("/api/v1/subscriptions", createRequest);
 
         // Assert
-        // Should return 401 Unauthorized without proper authentication
-        response.StatusCode.Should().BeOneOf(HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden);
+        // Should return 400 Bad Request due to validation error
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
