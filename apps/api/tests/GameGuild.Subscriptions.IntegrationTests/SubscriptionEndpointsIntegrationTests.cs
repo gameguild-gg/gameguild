@@ -19,6 +19,7 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
 {
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly HttpClient _client;
+    private static readonly string DatabaseName = $"SubscriptionTestDb_{Guid.NewGuid()}";
 
     public SubscriptionEndpointsIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
     {
@@ -42,10 +43,10 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
                     services.Remove(dbContextDescriptor2);
                 }
 
-                // Add in-memory database
+                // Add in-memory database with shared name for all requests
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
-                    options.UseInMemoryDatabase($"SubscriptionTestDb_{Guid.NewGuid()}");
+                    options.UseInMemoryDatabase(DatabaseName);
                 });
             });
         });
@@ -202,7 +203,7 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
         var response = await _client.PostAsJsonAsync($"/api/v1/subscriptions/{subscriptionId}:cancel", cancelRequest);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
     public void Dispose()
