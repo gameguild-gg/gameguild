@@ -228,11 +228,12 @@ export function FloatingTextFormatToolbarPlugin() {
       const rect = range.getBoundingClientRect()
 
       if (rect && (rect.width > 0 || rect.height > 0)) {
-        const toolbarHeight = 60
+        const toolbarHeight = 70 // Altura estimada do toolbar
         const toolbarWidth = 240
+        const spacing = 8 // Espaço entre toolbar e texto
 
         setPosition({
-          top: rect.top - toolbarHeight - 12 + window.scrollY,
+          top: rect.top - toolbarHeight - spacing,
           left: Math.max(8, rect.left + (rect.width - toolbarWidth) / 2),
         })
       } else {
@@ -385,17 +386,9 @@ export function FloatingTextFormatToolbarPlugin() {
               e.stopPropagation()
             }
           }}
-          
-          onMouseDown={(e) => {
-            e.stopPropagation()
-          }}
-          onClick={(e) => {
-            e.stopPropagation()
-          }}
           onMouseLeave={(e) => {
             // Fechar dropdown quando o mouse sai do toolbar
             setOpenDropdown(null)
-            e.stopPropagation()
           }}
         >
           <DropdownMenu 
