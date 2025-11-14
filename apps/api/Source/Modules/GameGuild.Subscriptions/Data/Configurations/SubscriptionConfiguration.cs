@@ -40,7 +40,11 @@ public class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
         builder.Property(x => x.LastPaymentAt);
 
         // Configure Amount as owned type (Money value object) 
-        builder.OwnsOne(x => x.Amount);
+        builder.OwnsOne(x => x.Amount, money =>
+        {
+            money.Property(m => m.Amount).HasColumnName("Amount").IsRequired();
+            money.Property(m => m.Currency).HasColumnName("Currency").IsRequired().HasMaxLength(3);
+        });
 
         // Configure trial
         builder.Property(x => x.TrialEndDate);
