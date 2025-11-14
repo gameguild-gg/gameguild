@@ -28,6 +28,7 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
     private readonly HttpClient _client;
     private readonly IServiceScope _scope;
+    private static readonly string DatabaseName = $"AuthTestDb_{Guid.NewGuid()}";
 
     public AuthenticationIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
     {
@@ -36,11 +37,25 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
 
         _factory = factory.WithWebHostBuilder(builder => {
             builder.UseEnvironment("Testing");
-            builder.ConfigureAppConfiguration((context, config) =>
+            builder.ConfigureServices(services =>
             {
-                config.AddInMemoryCollection(new Dictionary<string, string?>
+                // Remove existing DbContext registrations
+                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+                if (dbContextDescriptor != null)
                 {
-                    ["Database:ConnectionString"] = $"AuthTestDb_{Guid.NewGuid()}"
+                    services.Remove(dbContextDescriptor);
+                }
+
+                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
+                if (dbContextDescriptor2 != null)
+                {
+                    services.Remove(dbContextDescriptor2);
+                }
+
+                // Add in-memory database with shared name for all requests
+                services.AddDbContext<ApplicationDbContext>(options =>
+                {
+                    options.UseInMemoryDatabase(DatabaseName);
                 });
             });
         });
