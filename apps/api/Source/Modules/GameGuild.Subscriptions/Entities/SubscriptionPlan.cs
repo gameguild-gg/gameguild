@@ -13,7 +13,7 @@ namespace GameGuild.Subscriptions.SubscriptionPlans.Entities;
 [Table("SubscriptionPlans")]
 [Index(nameof(Name), IsUnique = true)]
 [Index(nameof(ExternalId), IsUnique = true)]
-public abstract class SubscriptionPlan : EntityBase, ISubscriptionPlan
+public class SubscriptionPlan : EntityBase, ISubscriptionPlan
 {
     /// <summary>
     ///     Default constructor for EF

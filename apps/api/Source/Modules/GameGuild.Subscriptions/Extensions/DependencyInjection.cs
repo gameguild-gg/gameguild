@@ -22,19 +22,41 @@ public static class DependencyInjection
     {
         // Register Command Handlers (only existing ones)
         services.AddScoped<ICommandHandler<ActivateSubscriptionCommand>, ActivateSubscriptionCommandHandler>();
+        services.AddScoped<IRequestHandler<ActivateSubscriptionCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<ActivateSubscriptionCommand>>());
+        
         services.AddScoped<ICommandHandler<CancelSubscriptionCommand>, CancelSubscriptionCommandHandler>();
+        services.AddScoped<IRequestHandler<CancelSubscriptionCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<CancelSubscriptionCommand>>());
+        
         services.AddScoped<ICommandHandler<CreateSubscriptionCommand, Guid>, CreateSubscriptionCommandHandler>();
+        services.AddScoped<IRequestHandler<CreateSubscriptionCommand, Guid>>(sp => sp.GetRequiredService<ICommandHandler<CreateSubscriptionCommand, Guid>>());
+        
         services.AddScoped<ICommandHandler<RecordSubscriptionPaymentCommand>, RecordSubscriptionPaymentCommandHandler>();
+        services.AddScoped<IRequestHandler<RecordSubscriptionPaymentCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<RecordSubscriptionPaymentCommand>>());
+        
         services.AddScoped<ICommandHandler<RecordSubscriptionPaymentFailureCommand>, RecordSubscriptionPaymentFailureCommandHandler>();
+        services.AddScoped<IRequestHandler<RecordSubscriptionPaymentFailureCommand>>(sp => sp.GetRequiredService<ICommandHandler<RecordSubscriptionPaymentFailureCommand>>());
+        
         services.AddScoped<ICommandHandler<SetSubscriptionAutoRenewCommand>, SetSubscriptionAutoRenewCommandHandler>();
+        services.AddScoped<IRequestHandler<SetSubscriptionAutoRenewCommand>>(sp => sp.GetRequiredService<ICommandHandler<SetSubscriptionAutoRenewCommand>>());
+        
         services.AddScoped<ICommandHandler<SuspendSubscriptionCommand>, SuspendSubscriptionCommandHandler>();
+        services.AddScoped<IRequestHandler<SuspendSubscriptionCommand>>(sp => sp.GetRequiredService<ICommandHandler<SuspendSubscriptionCommand>>());
+        
         services.AddScoped<ICommandHandler<UpdateSubscriptionMetadataCommand>, UpdateSubscriptionMetadataCommandHandler>();
+        services.AddScoped<IRequestHandler<UpdateSubscriptionMetadataCommand>>(sp => sp.GetRequiredService<ICommandHandler<UpdateSubscriptionMetadataCommand>>());
 
         // Register Query Handlers (only existing ones)
         services.AddScoped<IQueryHandler<GetActiveTenantSubscriptionQuery, Subscription?>, GetActiveTenantSubscriptionQueryHandler>();
+        services.AddScoped<IRequestHandler<GetActiveTenantSubscriptionQuery, Subscription?>>(sp => sp.GetRequiredService<IQueryHandler<GetActiveTenantSubscriptionQuery, Subscription?>>());
+        
         services.AddScoped<IQueryHandler<GetPagedSubscriptionsQuery, PagedResult<Subscription>>, GetPagedSubscriptionsQueryHandler>();
+        services.AddScoped<IRequestHandler<GetPagedSubscriptionsQuery, PagedResult<Subscription>>>(sp => sp.GetRequiredService<IQueryHandler<GetPagedSubscriptionsQuery, PagedResult<Subscription>>>());
+        
         services.AddScoped<IQueryHandler<GetSubscriptionByIdQuery, Subscription?>, GetSubscriptionByIdQueryHandler>();
+        services.AddScoped<IRequestHandler<GetSubscriptionByIdQuery, Subscription?>>(sp => sp.GetRequiredService<IQueryHandler<GetSubscriptionByIdQuery, Subscription?>>());
+        
         services.AddScoped<IQueryHandler<GetTenantSubscriptionsQuery, IEnumerable<Subscription>>, GetTenantSubscriptionsQueryHandler>();
+        services.AddScoped<IRequestHandler<GetTenantSubscriptionsQuery, IEnumerable<Subscription>>>(sp => sp.GetRequiredService<IQueryHandler<GetTenantSubscriptionsQuery, IEnumerable<Subscription>>>());
 
         // Register FluentValidation Validators (only existing ones)
         services.AddScoped<FluentValidation.IValidator<ActivateSubscriptionCommand>, ActivateSubscriptionCommandValidator>();
