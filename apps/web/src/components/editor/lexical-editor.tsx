@@ -426,7 +426,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
       }}
     >
       <EditorLoadingProvider value={isLoadingProject}>
-        <div className={cn("border border-gray-200 dark:border-gray-700", className)}>
+        <div className={cn("rounded-lg border-2 border-gray-300 dark:border-gray-700", className)}>
           <YouTubeAudioStyle />
           <EditorToolbar />
           <div className="relative">
