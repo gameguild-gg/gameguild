@@ -11,7 +11,7 @@ namespace GameGuild.Subscriptions.Repositories;
 /// </summary>
 public class SubscriptionRepository(IApplicationDbContext context) : ISubscriptionRepository
 {
-    private DbSet<Subscription> Subscriptions { get => Subscriptions; }
+    private DbSet<Subscription> Subscriptions => context.Set<Subscription>();
 
     public async Task<Subscription?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {

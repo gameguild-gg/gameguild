@@ -44,6 +44,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // Apply Users module configurations
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(User).Assembly, type => type.Namespace?.StartsWith("GameGuild.Users.Entities") == true);
 
+        // Apply Subscriptions module configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(GameGuild.Subscriptions.Entities.Subscription).Assembly, type => type.Namespace?.StartsWith("GameGuild.Subscriptions.Data.Configurations") == true);
+
         base.OnModelCreating(modelBuilder);
     }
 
