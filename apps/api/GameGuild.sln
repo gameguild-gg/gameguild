@@ -124,7 +124,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Subscriptions.Per
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Payments.IntegrationTests", "Tests\GameGuild.Payments.IntegrationTests\GameGuild.Payments.IntegrationTests.csproj", "{2F8A9B4C-1D5E-4FA3-9C2B-8E6D7A3F4B1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Billing.IntegrationTests", "Tests\GameGuild.Billing.IntegrationTests\GameGuild.Billing.IntegrationTests.csproj", "{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Billing.IntegrationTests", "Tests\GameGuild.Billing.IntegrationTests\GameGuild.Billing.IntegrationTests.csproj", "{00000000-0000-0000-0000-000000000000}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -604,18 +604,7 @@ Global
 		{2F8A9B4C-1D5E-4FA3-9C2B-8E6D7A3F4B1C}.Release|x64.Build.0 = Release|Any CPU
 		{2F8A9B4C-1D5E-4FA3-9C2B-8E6D7A3F4B1C}.Release|x86.ActiveCfg = Release|Any CPU
 		{2F8A9B4C-1D5E-4FA3-9C2B-8E6D7A3F4B1C}.Release|x86.Build.0 = Release|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Debug|x64.Build.0 = Debug|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Debug|x86.Build.0 = Debug|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Release|x64.ActiveCfg = Release|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Release|x64.Build.0 = Release|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Release|x86.ActiveCfg = Release|Any CPU
-		{3A7B8C5D-2E6F-5GB4-AD3C-9F7E8B4G5C2D}.Release|x86.Build.0 = Release|Any CPU
+		{00000000-0000-0000-0000-000000000000}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -680,5 +669,7 @@ Global
 		{571568B5-CE69-4399-8A33-4B30F0310AC7} = {3E5E3798-9DEC-4CDB-86F7-0722667D13C5}
 		{ECF99133-3B0C-464F-9CF1-05C96CCF649A} = {3E5E3798-9DEC-4CDB-86F7-0722667D13C5}
 		{8BA0A063-AE96-4663-8347-5B226EA1610F} = {3E5E3798-9DEC-4CDB-86F7-0722667D13C5}
+		{00000000-0000-0000-0000-000000000000} = {3E5E3798-9DEC-4CDB-86F7-0722667D13C5}
+		{2F8A9B4C-1D5E-4FA3-9C2B-8E6D7A3F4B1C} = {3E5E3798-9DEC-4CDB-86F7-0722667D13C5}
 	EndGlobalSection
 EndGlobal
