@@ -5,6 +5,7 @@ using GameGuild.Billing.Exceptions;
 using GameGuild.Billing.Models;
 using GameGuild.Billing.Queries;
 using GameGuild.CQRS;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -17,6 +18,7 @@ namespace GameGuild.Billing.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/billing/webhooks")]
+[AllowAnonymous]
 public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWebhooksController> logger) : ControllerBase
 {
     /// <summary>
