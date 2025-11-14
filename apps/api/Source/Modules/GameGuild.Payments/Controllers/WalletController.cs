@@ -3,6 +3,7 @@ using GameGuild.CQRS;
 using GameGuild.Payments.Commands;
 using GameGuild.Payments.Entities;
 using GameGuild.Payments.Queries;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +15,7 @@ namespace GameGuild.Payments.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
+[AllowAnonymous]
 public sealed class WalletController(ISender sender) : ControllerBase
 {
     /// <summary>
