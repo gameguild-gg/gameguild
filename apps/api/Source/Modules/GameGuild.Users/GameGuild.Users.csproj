@@ -7,16 +7,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentValidation"/>
+        <PackageReference Include="FluentValidation" />
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Commands\"/>
-        <Folder Include="Queries\"/>
+        <Folder Include="Commands\" />
+        <Folder Include="Queries\" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
+        <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj" />
     </ItemGroup>
 
 </Project>
