@@ -14,32 +14,28 @@ public class TenantDomainConfiguration : IEntityTypeConfiguration<TenantDomain>
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).IsRequired();
+        // Configure TenantId as required (override nullable from base)
+        builder.Property(x => x.TenantId)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for TenantDomain
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // Configure relationship to Tenant
+        builder.HasOne(x => x.Tenant)
+            .WithMany()
+            .HasForeignKey(x => x.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        // Configure string properties
+        builder.Property(x => x.TopLevelDomain)
+            .HasMaxLength(255)
+            .IsRequired();
+
+        builder.Property(x => x.Subdomain)
+            .HasMaxLength(100);
 
         // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_tenantdomain_tenant_id");
-
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.HasIndex(x => new { x.TopLevelDomain, x.Subdomain })
+            .IsUnique();
+        
+        builder.HasIndex(x => new { x.TenantId, x.IsMainDomain });
     }
 }

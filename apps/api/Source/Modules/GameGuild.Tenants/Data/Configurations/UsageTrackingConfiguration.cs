@@ -14,33 +14,18 @@ public class UsageTrackingConfiguration : IEntityTypeConfiguration<UsageTracking
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).IsRequired();
+        // Configure TenantId as required (override nullable from base)
+        builder.Property(x => x.TenantId)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for UsageTracking
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // Configure relationship to Tenant
+        builder.HasOne(x => x.Tenant)
+            .WithMany()
+            .HasForeignKey(x => x.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
-
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_usagetracking_tenant_id");
-
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        // Configure indexes for common queries
+        builder.HasIndex(x => x.TenantId);
+        builder.HasIndex(x => x.CreatedAt);
     }
 }
