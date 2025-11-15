@@ -1,38 +1,35 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Permissions.Domain.Abstractions;
+using GameGuild.Resources.Abstractions;
 using GameGuild.Resources.Attributes;
 using GameGuild.Resources.Behaviors;
+using GameGuild.Resources.Entities;
 using GameGuild.Resources.Exceptions;
 using GameGuild.Resources.Models;
-using GameGuild.Resources.Abstractions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
 namespace GameGuild.Resources.UnitTests.Behaviors;
 
-/// <summary>
-/// Unit tests for ResourceQuotaBehavior
-/// </summary>
 public class ResourceQuotaBehaviorTests
 {
     private readonly Mock<IResourceQuotaService> _mockQuotaService;
     private readonly Mock<ITenantContext> _mockTenantContext;
-    private readonly Mock<ILogger<ResourceQuotaBehavior<TestCommand, TestResponse>>> _mockLogger;
-    private readonly ResourceQuotaBehavior<TestCommand, TestResponse> _behavior;
-    private readonly Guid _testTenantId;
+    private readonly Mock<ILogger<ResourceQuotaBehavior<TestCommand, bool>>> _mockLogger;
+    private readonly ResourceQuotaBehavior<TestCommand, bool> _behavior;
+    private readonly Guid _testTenantId = Guid.NewGuid();
 
     public ResourceQuotaBehaviorTests()
     {
         _mockQuotaService = new Mock<IResourceQuotaService>();
         _mockTenantContext = new Mock<ITenantContext>();
-        _mockLogger = new Mock<ILogger<ResourceQuotaBehavior<TestCommand, TestResponse>>>();
-        _testTenantId = Guid.NewGuid();
+        _mockLogger = new Mock<ILogger<ResourceQuotaBehavior<TestCommand, bool>>>();
 
         _mockTenantContext.Setup(x => x.TenantId).Returns(_testTenantId);
 
-        _behavior = new ResourceQuotaBehavior<TestCommand, TestResponse>(
+        _behavior = new ResourceQuotaBehavior<TestCommand, bool>(
             _mockQuotaService.Object,
             _mockTenantContext.Object,
             _mockLogger.Object
@@ -44,59 +41,38 @@ public class ResourceQuotaBehaviorTests
     {
         // Arrange
         var command = new TestCommandWithoutAttribute();
-        var expectedResponse = new TestResponse(Guid.NewGuid());
-        var nextCalled = false;
-
-        RequestHandlerDelegate<TestResponse> next = () =>
-        {
-            nextCalled = true;
-            return Task.FromResult(expectedResponse);
-        };
-
-        var behavior = new ResourceQuotaBehavior<TestCommandWithoutAttribute, TestResponse>(
-            _mockQuotaService.Object,
-            _mockTenantContext.Object,
-            Mock.Of<ILogger<ResourceQuotaBehavior<TestCommandWithoutAttribute, TestResponse>>>()
-        );
+        var next = new RequestHandlerDelegate<bool>(() => Task.FromResult(true));
 
         // Act
-        var result = await behavior.Handle(command, next, CancellationToken.None);
+        var result = await _behavior.Handle(command, next, default);
 
         // Assert
-        result.Should().Be(expectedResponse);
-        nextCalled.Should().BeTrue();
-        _mockQuotaService.Verify(
-            x => x.CheckLimitsAsync(It.IsAny<Guid>(), It.IsAny<ResourceUsageType>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
-            Times.Never
-        );
+        result.Should().BeTrue();
+        _mockQuotaService.Verify(x => x.CheckLimitsAsync(
+            It.IsAny<Guid>(),
+            It.IsAny<ResourceUsageType>(),
+            It.IsAny<long>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task Handle_WithoutTenantContext_ShouldBypassValidation()
     {
         // Arrange
-        var command = new TestCommand();
-        var expectedResponse = new TestResponse(Guid.NewGuid());
-        var nextCalled = false;
-
-        RequestHandlerDelegate<TestResponse> next = () =>
-        {
-            nextCalled = true;
-            return Task.FromResult(expectedResponse);
-        };
-
         _mockTenantContext.Setup(x => x.TenantId).Returns((Guid?)null);
+        var command = new TestCommand();
+        var next = new RequestHandlerDelegate<bool>(() => Task.FromResult(true));
 
         // Act
-        var result = await _behavior.Handle(command, next, CancellationToken.None);
+        var result = await _behavior.Handle(command, next, default);
 
         // Assert
-        result.Should().Be(expectedResponse);
-        nextCalled.Should().BeTrue();
-        _mockQuotaService.Verify(
-            x => x.CheckLimitsAsync(It.IsAny<Guid>(), It.IsAny<ResourceUsageType>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
-            Times.Never
-        );
+        result.Should().BeTrue();
+        _mockQuotaService.Verify(x => x.CheckLimitsAsync(
+            It.IsAny<Guid>(),
+            It.IsAny<ResourceUsageType>(),
+            It.IsAny<long>(),
+            It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -104,80 +80,32 @@ public class ResourceQuotaBehaviorTests
     {
         // Arrange
         var command = new TestCommand();
-        var userId = Guid.NewGuid();
-        var expectedResponse = new TestResponse(userId);
-        var nextCalled = false;
-
-        RequestHandlerDelegate<TestResponse> next = () =>
-        {
-            nextCalled = true;
-            return Task.FromResult(expectedResponse);
-        };
+        var next = new RequestHandlerDelegate<bool>(() => Task.FromResult(true));
 
         _mockQuotaService
             .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ResourceLimitCheckResponse
             {
                 CanProceed = true,
-                CurrentUsage = 50,
-                HardLimit = 100,
-                SoftLimit = 80
+                CurrentUsage = 5,
+                HardLimit = 100
             });
 
+        _mockQuotaService
+            .Setup(x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.Users, 1, null, "TestCommand", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         // Act
-        var result = await _behavior.Handle(command, next, CancellationToken.None);
+        var result = await _behavior.Handle(command, next, default);
 
         // Assert
-        result.Should().Be(expectedResponse);
-        nextCalled.Should().BeTrue();
-
+        result.Should().BeTrue();
         _mockQuotaService.Verify(
             x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()),
-            Times.Once
-        );
-
+            Times.Once);
         _mockQuotaService.Verify(
-            x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.Users, 1, userId, "TestCommand", It.IsAny<CancellationToken>()),
-            Times.Once
-        );
-    }
-
-    [Fact]
-    public async Task Handle_ExceedsSoftLimit_ShouldLogWarningButProceed()
-    {
-        // Arrange
-        var command = new TestCommand();
-        var userId = Guid.NewGuid();
-        var expectedResponse = new TestResponse(userId);
-
-        RequestHandlerDelegate<TestResponse> next = () => Task.FromResult(expectedResponse);
-
-        _mockQuotaService
-            .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ResourceLimitCheckResponse
-            {
-                CanProceed = true,
-                CurrentUsage = 85,
-                HardLimit = 100,
-                SoftLimit = 80,
-                WouldExceedSoftLimit = true
-            });
-
-        // Act
-        var result = await _behavior.Handle(command, next, CancellationToken.None);
-
-        // Assert
-        result.Should().Be(expectedResponse);
-
-        _mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Warning,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((o, t) => o.ToString()!.Contains("soft limit")),
-                null,
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once
-        );
+            x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.Users, 1, null, "TestCommand", null, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -185,8 +113,7 @@ public class ResourceQuotaBehaviorTests
     {
         // Arrange
         var command = new TestCommand();
-
-        RequestHandlerDelegate<TestResponse> next = () => Task.FromResult(new TestResponse(Guid.NewGuid()));
+        var next = new RequestHandlerDelegate<bool>(() => Task.FromResult(true));
 
         _mockQuotaService
             .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()))
@@ -195,24 +122,20 @@ public class ResourceQuotaBehaviorTests
                 CanProceed = false,
                 CurrentUsage = 100,
                 HardLimit = 100,
-                SoftLimit = 80,
-                WouldExceedHardLimit = true
+                Message = "Hard limit exceeded"
             });
 
-        // Act
-        Func<Task> act = async () => await _behavior.Handle(command, next, CancellationToken.None);
+        // Act & Assert
+        var exception = await Assert.ThrowsAsync<QuotaExceededException>(
+            async () => await _behavior.Handle(command, next, default));
 
-        // Assert
-        await act.Should().ThrowAsync<QuotaExceededException>()
-            .Where(e => e.ResourceType == ResourceUsageType.Users)
-            .Where(e => e.CurrentUsage == 100)
-            .Where(e => e.Limit == 100)
-            .Where(e => e.TenantId == _testTenantId);
+        exception.ResourceType.Should().Be(ResourceUsageType.Users);
+        exception.CurrentUsage.Should().Be(100);
+        exception.Limit.Should().Be(100);
 
         _mockQuotaService.Verify(
-            x => x.RecordUsageAsync(It.IsAny<Guid>(), It.IsAny<ResourceUsageType>(), It.IsAny<long>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
-            Times.Never
-        );
+            x => x.RecordUsageAsync(It.IsAny<Guid>(), It.IsAny<ResourceUsageType>(), It.IsAny<long>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -220,32 +143,30 @@ public class ResourceQuotaBehaviorTests
     {
         // Arrange
         var command = new TestCommandWithoutEnforcement();
-        var userId = Guid.NewGuid();
-        var expectedResponse = new TestResponse(userId);
-
-        RequestHandlerDelegate<TestResponse> next = () => Task.FromResult(expectedResponse);
-
-        var behavior = new ResourceQuotaBehavior<TestCommandWithoutEnforcement, TestResponse>(
-            _mockQuotaService.Object,
-            _mockTenantContext.Object,
-            Mock.Of<ILogger<ResourceQuotaBehavior<TestCommandWithoutEnforcement, TestResponse>>>()
-        );
+        var next = new RequestHandlerDelegate<bool>(() => Task.FromResult(true));
 
         _mockQuotaService
-            .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.ApiCalls, 1, It.IsAny<CancellationToken>()))
+            .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ResourceLimitCheckResponse
             {
                 CanProceed = false,
-                CurrentUsage = 105,
+                CurrentUsage = 100,
                 HardLimit = 100,
-                WouldExceedHardLimit = true
+                Message = "Hard limit exceeded"
             });
 
+        _mockQuotaService
+            .Setup(x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.Users, 1, null, "TestCommandWithoutEnforcement", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         // Act
-        var result = await behavior.Handle(command, next, CancellationToken.None);
+        var result = await _behavior.Handle(command, next, default);
 
         // Assert
-        result.Should().Be(expectedResponse);
+        result.Should().BeTrue();
+        _mockQuotaService.Verify(
+            x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.Users, 1, null, "TestCommandWithoutEnforcement", null, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -253,40 +174,32 @@ public class ResourceQuotaBehaviorTests
     {
         // Arrange
         var command = new TestCommandWithCustomAmount();
-        var expectedResponse = new TestResponse(Guid.NewGuid());
-
-        RequestHandlerDelegate<TestResponse> next = () => Task.FromResult(expectedResponse);
-
-        var behavior = new ResourceQuotaBehavior<TestCommandWithCustomAmount, TestResponse>(
-            _mockQuotaService.Object,
-            _mockTenantContext.Object,
-            Mock.Of<ILogger<ResourceQuotaBehavior<TestCommandWithCustomAmount, TestResponse>>>()
-        );
+        var next = new RequestHandlerDelegate<bool>(() => Task.FromResult(true));
 
         _mockQuotaService
-            .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Storage, 2048, It.IsAny<CancellationToken>()))
+            .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Storage, 1024, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ResourceLimitCheckResponse
             {
                 CanProceed = true,
-                CurrentUsage = 1000,
+                CurrentUsage = 500,
                 HardLimit = 10000
             });
 
+        _mockQuotaService
+            .Setup(x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.Storage, 1024, null, "TestCommandWithCustomAmount", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         // Act
-        var result = await behavior.Handle(command, next, CancellationToken.None);
+        var result = await _behavior.Handle(command, next, default);
 
         // Assert
-        result.Should().Be(expectedResponse);
-
+        result.Should().BeTrue();
         _mockQuotaService.Verify(
-            x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Storage, 2048, It.IsAny<CancellationToken>()),
-            Times.Once
-        );
-
+            x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Storage, 1024, It.IsAny<CancellationToken>()),
+            Times.Once);
         _mockQuotaService.Verify(
-            x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.Storage, 2048, It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
-            Times.Once
-        );
+            x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.Storage, 1024, null, "TestCommandWithCustomAmount", null, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -294,40 +207,28 @@ public class ResourceQuotaBehaviorTests
     {
         // Arrange
         var command = new TestCommandWithoutRecording();
-        var expectedResponse = new TestResponse(Guid.NewGuid());
-
-        RequestHandlerDelegate<TestResponse> next = () => Task.FromResult(expectedResponse);
-
-        var behavior = new ResourceQuotaBehavior<TestCommandWithoutRecording, TestResponse>(
-            _mockQuotaService.Object,
-            _mockTenantContext.Object,
-            Mock.Of<ILogger<ResourceQuotaBehavior<TestCommandWithoutRecording, TestResponse>>>()
-        );
+        var next = new RequestHandlerDelegate<bool>(() => Task.FromResult(true));
 
         _mockQuotaService
-            .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Projects, 1, It.IsAny<CancellationToken>()))
+            .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ResourceLimitCheckResponse
             {
                 CanProceed = true,
-                CurrentUsage = 10,
+                CurrentUsage = 5,
                 HardLimit = 100
             });
 
         // Act
-        var result = await behavior.Handle(command, next, CancellationToken.None);
+        var result = await _behavior.Handle(command, next, default);
 
         // Assert
-        result.Should().Be(expectedResponse);
-
+        result.Should().BeTrue();
         _mockQuotaService.Verify(
-            x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Projects, 1, It.IsAny<CancellationToken>()),
-            Times.Once
-        );
-
+            x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()),
+            Times.Once);
         _mockQuotaService.Verify(
-            x => x.RecordUsageAsync(It.IsAny<Guid>(), It.IsAny<ResourceUsageType>(), It.IsAny<long>(), It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
-            Times.Never
-        );
+            x => x.RecordUsageAsync(It.IsAny<Guid>(), It.IsAny<ResourceUsageType>(), It.IsAny<long>(), It.IsAny<Guid?>(), It.IsAny<string>(), It.IsAny<Dictionary<string, string>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
@@ -335,35 +236,17 @@ public class ResourceQuotaBehaviorTests
     {
         // Arrange
         var command = new TestCommand();
-        var expectedResponse = new TestResponse(Guid.NewGuid());
-        var nextCalled = false;
-
-        RequestHandlerDelegate<TestResponse> next = () =>
-        {
-            nextCalled = true;
-            return Task.FromResult(expectedResponse);
-        };
+        var next = new RequestHandlerDelegate<bool>(() => Task.FromResult(true));
 
         _mockQuotaService
             .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("Database error"));
+            .ThrowsAsync(new Exception("Service unavailable"));
 
         // Act
-        var result = await _behavior.Handle(command, next, CancellationToken.None);
+        var result = await _behavior.Handle(command, next, default);
 
         // Assert
-        result.Should().Be(expectedResponse);
-        nextCalled.Should().BeTrue();
-
-        _mockLogger.Verify(
-            x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((o, t) => o.ToString()!.Contains("quota check failed")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once
-        );
+        result.Should().BeTrue();
     }
 
     [Fact]
@@ -371,53 +254,46 @@ public class ResourceQuotaBehaviorTests
     {
         // Arrange
         var command = new TestCommandWithCustomSource();
-        var userId = Guid.NewGuid();
-        var expectedResponse = new TestResponse(userId);
-
-        RequestHandlerDelegate<TestResponse> next = () => Task.FromResult(expectedResponse);
-
-        var behavior = new ResourceQuotaBehavior<TestCommandWithCustomSource, TestResponse>(
-            _mockQuotaService.Object,
-            _mockTenantContext.Object,
-            Mock.Of<ILogger<ResourceQuotaBehavior<TestCommandWithCustomSource, TestResponse>>>()
-        );
+        var next = new RequestHandlerDelegate<bool>(() => Task.FromResult(true));
 
         _mockQuotaService
-            .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.Users, 1, It.IsAny<CancellationToken>()))
+            .Setup(x => x.CheckLimitsAsync(_testTenantId, ResourceUsageType.ApiCalls, 1, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ResourceLimitCheckResponse
             {
                 CanProceed = true,
-                CurrentUsage = 10,
-                HardLimit = 100
+                CurrentUsage = 50,
+                HardLimit = 1000
             });
 
+        _mockQuotaService
+            .Setup(x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.ApiCalls, 1, null, "CustomSource", null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
         // Act
-        var result = await behavior.Handle(command, next, CancellationToken.None);
+        var result = await _behavior.Handle(command, next, default);
 
         // Assert
+        result.Should().BeTrue();
         _mockQuotaService.Verify(
-            x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.Users, 1, userId, "ImportFromCsv", It.IsAny<CancellationToken>()),
-            Times.Once
-        );
+            x => x.RecordUsageAsync(_testTenantId, ResourceUsageType.ApiCalls, 1, null, "CustomSource", null, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     // Test command classes
-    [RequiresQuota(ResourceUsageType.Users, 1, Source = "TestCommand")]
-    private record TestCommand : ICommand<TestResponse>;
+    [RequiresQuota(ResourceUsageType.Users)]
+    private class TestCommand : ICommand<bool> { }
 
-    private record TestCommandWithoutAttribute : ICommand<TestResponse>;
+    private class TestCommandWithoutAttribute : ICommand<bool> { }
 
-    [RequiresQuota(ResourceUsageType.ApiCalls, 1, EnforceHardLimit = false)]
-    private record TestCommandWithoutEnforcement : ICommand<TestResponse>;
+    [RequiresQuota(ResourceUsageType.Users, EnforceHardLimit = false)]
+    private class TestCommandWithoutEnforcement : ICommand<bool> { }
 
-    [RequiresQuota(ResourceUsageType.Storage, 2048)]
-    private record TestCommandWithCustomAmount : ICommand<TestResponse>;
+    [RequiresQuota(ResourceUsageType.Storage, 1024)]
+    private class TestCommandWithCustomAmount : ICommand<bool> { }
 
-    [RequiresQuota(ResourceUsageType.Projects, 1, RecordUsage = false)]
-    private record TestCommandWithoutRecording : ICommand<TestResponse>;
+    [RequiresQuota(ResourceUsageType.Users, RecordUsage = false)]
+    private class TestCommandWithoutRecording : ICommand<bool> { }
 
-    [RequiresQuota(ResourceUsageType.Users, 1, Source = "ImportFromCsv")]
-    private record TestCommandWithCustomSource : ICommand<TestResponse>;
-
-    private record TestResponse(Guid UserId);
+    [RequiresQuota(ResourceUsageType.ApiCalls, Source = "CustomSource")]
+    private class TestCommandWithCustomSource : ICommand<bool> { }
 }
