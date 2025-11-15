@@ -101,21 +101,24 @@ public class QuotaExceededExceptionTests
     }
 
     [Fact]
-    public void RemainingQuota_OverLimit_ShouldReturnNegativeValue()
+    public void RemainingQuota_OverLimit_ShouldReturnZero()
     {
         // Arrange
-        var exception = new QuotaExceededException(
-            ResourceUsageType.ApiCalls,
-            150L,
-            100L,
-            Guid.NewGuid()
-        );
+        var testTenantId = Guid.NewGuid();
+        const long currentUsage = 150;
+        const long limit = 100;
 
         // Act
-        var remaining = exception.RemainingQuota;
+        var exception = new QuotaExceededException(
+            ResourceUsageType.Users,
+            currentUsage,
+            limit,
+            testTenantId
+        );
 
         // Assert
-        remaining.Should().Be(-50L);
+        var remaining = exception.RemainingQuota;
+        remaining.Should().Be(0); // Protected by Math.Max(0, ...)
     }
 
     [Theory]
@@ -207,7 +210,7 @@ public class QuotaExceededExceptionTests
         // Assert
         exception.CurrentUsage.Should().Be(1L);
         exception.Limit.Should().Be(0L);
-        exception.RemainingQuota.Should().Be(-1L);
+        exception.RemainingQuota.Should().Be(0L); // Protected by Math.Max(0, ...)
     }
 
     [Fact]
