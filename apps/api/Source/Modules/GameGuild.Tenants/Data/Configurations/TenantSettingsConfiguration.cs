@@ -14,33 +14,28 @@ public class TenantSettingsConfiguration : IEntityTypeConfiguration<TenantSettin
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).IsRequired();
+        // Configure TenantId as required (override nullable from base)
+        builder.Property(x => x.TenantId)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for TenantSettings
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // Configure relationship to Tenant (one-to-one)
+        builder.HasOne(x => x.Tenant)
+            .WithOne()
+            .HasForeignKey<TenantSettings>(x => x.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        // Configure string properties
+        builder.Property(x => x.DefaultLanguage)
+            .HasMaxLength(10);
 
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_tenantsettings_tenant_id");
+        builder.Property(x => x.DefaultTimezone)
+            .HasMaxLength(50);
 
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.Property(x => x.DefaultCurrency)
+            .HasMaxLength(3);
+
+        // Configure index on TenantId
+        builder.HasIndex(x => x.TenantId)
+            .IsUnique();
     }
 }
