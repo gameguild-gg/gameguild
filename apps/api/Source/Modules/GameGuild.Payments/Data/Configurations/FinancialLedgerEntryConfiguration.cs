@@ -43,5 +43,11 @@ public class FinancialLedgerEntryConfiguration : IEntityTypeConfiguration<Financ
         builder.HasIndex(x => x.FiscalYear);
         builder.HasIndex(x => x.FiscalPeriod);
         builder.HasIndex(x => x.CreatedAt);
+
+        // Configure relationship to RevenueEvent
+        builder.HasOne(x => x.RevenueEvent)
+            .WithOne(r => r.LedgerEntry)
+            .HasForeignKey<FinancialLedgerEntry>(x => x.RevenueEventId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }
