@@ -14,33 +14,18 @@ public class TenantStatisticsConfiguration : IEntityTypeConfiguration<TenantStat
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).IsRequired();
+        // Configure TenantId as required (override nullable from base)
+        builder.Property(x => x.TenantId)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for TenantStatistics
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // Configure relationship to Tenant (one-to-one)
+        builder.HasOne(x => x.Tenant)
+            .WithOne()
+            .HasForeignKey<TenantStatistics>(x => x.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
-
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_tenantstatistics_tenant_id");
-
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        // Configure index on TenantId
+        builder.HasIndex(x => x.TenantId)
+            .IsUnique();
     }
 }

@@ -14,33 +14,40 @@ public class TenantMemberConfiguration : IEntityTypeConfiguration<TenantMember>
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).IsRequired();
+        // Configure TenantId as required (override nullable from base)
+        builder.Property(x => x.TenantId)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for TenantMember
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // Configure UserId as required
+        builder.Property(x => x.UserId)
+            .IsRequired();
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        // Configure relationship to Tenant
+        builder.HasOne(x => x.Tenant)
+            .WithMany()
+            .HasForeignKey(x => x.TenantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure self-referencing relationship for hierarchy
+        builder.HasOne(x => x.ParentMember)
+            .WithMany(x => x.ChildMembers)
+            .HasForeignKey(x => x.ParentMemberId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configure string properties
+        builder.Property(x => x.Role)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        builder.Property(x => x.LeaveReason)
+            .HasMaxLength(500);
 
         // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_tenantmember_tenant_id");
-
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.HasIndex(x => new { x.UserId, x.TenantId })
+            .IsUnique();
+        
+        builder.HasIndex(x => new { x.TenantId, x.IsActive });
+        builder.HasIndex(x => x.JoinedAt);
+        builder.HasIndex(x => x.ParentMemberId);
     }
 }
