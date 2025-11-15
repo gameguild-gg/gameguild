@@ -146,6 +146,9 @@ public static class WebApplicationBuilderExtensions
         // Add CQRS services (handlers, behaviors, etc.)
         builder.Services.AddCqrs(assemblies);
 
+        // Add Resource Quota Pipeline Behavior
+        builder.Services.AddResourceQuotaBehavior();
+
         return builder;
     }
 
