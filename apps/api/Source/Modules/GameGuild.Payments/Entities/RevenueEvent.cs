@@ -52,7 +52,6 @@ public class RevenueEvent : EntityBase
     public Guid? LedgerEntryId { get; set; }
 
     /// <summary>Navigation property to ledger entry</summary>
-    [ForeignKey(nameof(LedgerEntryId))]
     public virtual FinancialLedgerEntry? LedgerEntry { get; set; }
 
     /// <summary>Processed timestamp</summary>
