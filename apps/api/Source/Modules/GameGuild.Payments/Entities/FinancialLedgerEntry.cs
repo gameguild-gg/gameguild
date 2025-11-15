@@ -50,10 +50,7 @@ public class FinancialLedgerEntry : EntityBase
     [MaxLength(500)]
     public string Description { get; set; } = string.Empty;
 
-    /// <summary>Foreign key to revenue event</summary>
-    public Guid? RevenueEventId { get; set; }
-
-    /// <summary>Navigation property to revenue event</summary>
+    /// <summary>Navigation property to revenue event (inverse of RevenueEvent.LedgerEntry)</summary>
     public virtual RevenueEvent? RevenueEvent { get; set; }
 
     /// <summary>Reference number</summary>
