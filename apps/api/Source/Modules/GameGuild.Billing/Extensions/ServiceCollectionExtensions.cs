@@ -2,6 +2,7 @@ using GameGuild.Billing.Abstractions;
 using GameGuild.Billing.Configuration;
 using GameGuild.Billing.Repositories;
 using GameGuild.Billing.Services;
+using GameGuild.CQRS;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,6 +18,9 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddBillingModule(this IServiceCollection services, IConfiguration configuration)
     {
+        // Register CQRS handlers from this assembly
+        services.AddCqrs(typeof(ServiceCollectionExtensions).Assembly);
+
         // Register configuration
         services.Configure<BillingConfiguration>(configuration.GetSection(BillingConfiguration.SectionName));
 

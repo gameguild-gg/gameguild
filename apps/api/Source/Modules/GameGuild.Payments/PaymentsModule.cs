@@ -1,3 +1,4 @@
+using GameGuild.CQRS;
 using GameGuild.Payments.Abstractions;
 using GameGuild.Payments.Repositories;
 using GameGuild.Payments.Services;
@@ -18,6 +19,9 @@ public static class PaymentsModule
     /// </summary>
     public static IServiceCollection AddPaymentsModule(this IServiceCollection services, IConfiguration configuration)
     {
+        // Register CQRS handlers from this assembly
+        services.AddCqrs(typeof(PaymentsModule).Assembly);
+
         // Register repositories (using shared ApplicationDbContext)
         services.AddScoped<IAuditTrailRepository, AuditTrailRepository>();
         services.AddScoped<IFinancialLedgerRepository, FinancialLedgerRepository>();

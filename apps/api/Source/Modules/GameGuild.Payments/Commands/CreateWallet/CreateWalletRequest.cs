@@ -1,6 +1,6 @@
 ﻿namespace GameGuild.Payments.Commands;
 
-public abstract record CreateWalletRequest
+public record CreateWalletRequest
 {
     public required Guid UserId { get; init; }
 
