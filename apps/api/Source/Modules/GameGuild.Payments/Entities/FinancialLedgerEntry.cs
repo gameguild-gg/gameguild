@@ -54,7 +54,6 @@ public class FinancialLedgerEntry : EntityBase
     public Guid? RevenueEventId { get; set; }
 
     /// <summary>Navigation property to revenue event</summary>
-    [ForeignKey(nameof(RevenueEventId))]
     public virtual RevenueEvent? RevenueEvent { get; set; }
 
     /// <summary>Reference number</summary>

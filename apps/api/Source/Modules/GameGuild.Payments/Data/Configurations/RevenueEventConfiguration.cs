@@ -11,39 +11,59 @@ public class RevenueEventConfiguration : IEntityTypeConfiguration<RevenueEvent>
 {
     public void Configure(EntityTypeBuilder<RevenueEvent> builder)
     {
-        // Configure table name (snake_case convention)
-        builder.ToTable("revenueevent", "gameguild.payments");
+        // Configure table with constraints
+        builder.ToTable(tb =>
+        {
+            tb.HasCheckConstraint("CK_RevenueEvent_Amount_Positive", "amount > 0");
+            tb.HasCheckConstraint("CK_RevenueEvent_ReferenceId_NotEmpty", "LENGTH(reference_id) > 0");
+        });
 
-        // Configure primary key
+        // Primary key configuration
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).HasColumnName("id").IsRequired();
+        // Property configurations
+        builder.Property(x => x.EventType)
+            .HasConversion<string>()
+            .IsRequired();
 
-        // TODO: Add specific property configurations for RevenueEvent
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        builder.Property(x => x.Amount)
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(x => x.Currency)
+            .HasMaxLength(3)
+            .IsRequired();
 
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_revenueevent_tenant_id");
+        builder.Property(x => x.Source)
+            .HasConversion<string>()
+            .IsRequired();
 
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.Property(x => x.ReferenceId)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        builder.Property(x => x.Timestamp)
+            .IsRequired();
+
+        builder.Property(x => x.Metadata)
+            .HasMaxLength(2000);
+
+        builder.Property(x => x.Status)
+            .HasConversion<string>()
+            .IsRequired();
+
+        builder.Property(x => x.ProcessingNotes)
+            .HasMaxLength(1000);
+
+        // Configure indexes for performance
+        builder.HasIndex(x => x.EventType);
+        builder.HasIndex(x => x.Source);
+        builder.HasIndex(x => x.Status);
+        builder.HasIndex(x => x.Timestamp);
+        builder.HasIndex(x => x.UserId);
+        builder.HasIndex(x => x.ReferenceId);
+
+        // Note: Relationship to FinancialLedgerEntry is configured in FinancialLedgerEntryConfiguration
+        // to avoid circular configuration issues
     }
 }
