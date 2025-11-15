@@ -76,7 +76,6 @@ public class RevenueAuditService(
             Amount = amount,
             Currency = currency,
             Description = description,
-            RevenueEventId = revenueEventId,
             ReferenceNumber = referenceNumber ?? Guid.NewGuid().ToString(),
             IsReconciled = false,
             FiscalYear = DateTime.UtcNow.Year,
@@ -87,10 +86,10 @@ public class RevenueAuditService(
         await ledgerRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         // Mark revenue event as processed if linked
+        // The relationship is configured with RevenueEvent.LedgerEntryId as FK
         if (revenueEventId.HasValue)
         {
             var revenueEvent = await revenueEventRepository.GetByIdAsync(revenueEventId.Value, cancellationToken).ConfigureAwait(false);
-
             if (revenueEvent != null)
             {
                 revenueEvent.MarkAsProcessed(entry.Id);
