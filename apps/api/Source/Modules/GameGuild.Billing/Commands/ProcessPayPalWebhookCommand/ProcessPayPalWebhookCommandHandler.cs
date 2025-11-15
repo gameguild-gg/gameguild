@@ -24,9 +24,9 @@ public class ProcessPayPalWebhookCommandHandler(
         
         return new WebhookProcessingResult
         {
-            Success = false,
-            Message = "PayPal webhook processing not yet implemented",
-            ProcessedAt = DateTime.UtcNow
+            Processed = false,
+            ErrorMessage = "PayPal webhook processing not yet implemented",
+            RequiresRetry = false
         };
     }
 }
