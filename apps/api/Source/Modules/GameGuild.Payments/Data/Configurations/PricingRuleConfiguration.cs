@@ -6,44 +6,14 @@ namespace GameGuild.Payments.Data.Configurations;
 
 /// <summary>
 ///     Entity Type Configuration for PricingRule
+///     NOTE: PricingRule is abstract, so this configuration is disabled.
+///     Derived concrete classes should have their own configurations.
 /// </summary>
 public class PricingRuleConfiguration : IEntityTypeConfiguration<PricingRule>
 {
     public void Configure(EntityTypeBuilder<PricingRule> builder)
     {
-        // Configure table name (snake_case convention)
-        builder.ToTable("pricingrule", "gameguild.payments");
-
-        // Configure primary key
-        builder.HasKey(x => x.Id);
-
-        // Configure Id property
-        builder.Property(x => x.Id).HasColumnName("id").IsRequired();
-
-        // TODO: Add specific property configurations for PricingRule
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
-
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
-
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_pricingrule_tenant_id");
-
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        // Ignore the abstract base class - only concrete derived types should be mapped
+        builder.Ignore();
     }
 }
