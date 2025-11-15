@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using GameGuild.CQRS;
 using GameGuild.SharedKernel.Configuration;
+using GameGuild.Resources.Extensions;
 
 namespace GameGuild.Core;
 
