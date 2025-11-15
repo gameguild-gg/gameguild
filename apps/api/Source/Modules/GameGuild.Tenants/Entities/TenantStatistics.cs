@@ -73,7 +73,6 @@ public class TenantStatistics : EntityBase, ITenantable
     /// <summary>
     ///     Navigation property to the tenant
     /// </summary>
-    [ForeignKey(nameof(TenantId))]
     public Tenant? Tenant { get; set; }
 
     /// <summary>
