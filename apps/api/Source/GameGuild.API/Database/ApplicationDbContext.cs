@@ -142,5 +142,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<AuditTrail> AuditTrails { get => Set<AuditTrail>(); }
 
+    public DbSet<UserWallet> UserWallets { get => Set<UserWallet>(); }
+
+    public DbSet<WalletTransaction> WalletTransactions { get => Set<WalletTransaction>(); }
+
+    public DbSet<PaymentDispute> PaymentDisputes { get => Set<PaymentDispute>(); }
+
+    public DbSet<DisputeEvidence> DisputeEvidences { get => Set<DisputeEvidence>(); }
+
+    public DbSet<TaxRate> TaxRates { get => Set<TaxRate>(); }
+
+    public DbSet<TaxRule> TaxRules { get => Set<TaxRule>(); }
+
+    public DbSet<TaxJurisdiction> TaxJurisdictions { get => Set<TaxJurisdiction>(); }
+
+    public DbSet<PricingTier> PricingTiers { get => Set<PricingTier>(); }
+
+
+    public DbSet<PromoStackingRule> PromoStackingRules { get => Set<PromoStackingRule>(); }
+
     #endregion
 }
