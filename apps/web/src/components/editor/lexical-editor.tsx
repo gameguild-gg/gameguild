@@ -78,6 +78,10 @@ import { SpotifyPlugin } from "./plugins/spotify-plugin"
 import { SourceCodeNode } from "./nodes/source-code-node"
 import { SourceCodePlugin } from "./plugins/source-code-plugin"
 
+// Add the import for the CodeStudioNode and CodeStudioPlugin:
+import { CodeStudioNode } from "./nodes/code-studio-node"
+import { CodeStudioPlugin } from "./plugins/code-studio-plugin"
+
 import { MermaidNode } from "./nodes/mermaid-node"
 import { MermaidPlugin } from "./plugins/mermaid-plugin"
 import { VegaLiteNode } from "./nodes/vega-lite-node"
@@ -141,6 +145,7 @@ function StructureDeleteConfirmPlugin() {
           node.getType() === "youtube" ||
           node.getType() === "spotify" ||
           node.getType() === "source-code" ||
+          node.getType() === "code-studio" ||
           node.getType() === "button" ||
           node.getType() === "admonition" ||
           node.getType() === "divider" ||
@@ -166,6 +171,7 @@ function StructureDeleteConfirmPlugin() {
                 node.getType() === "youtube" ||
                 node.getType() === "spotify" ||
                 node.getType() === "source-code" ||
+                node.getType() === "code-studio" ||
                 node.getType() === "button" ||
                 node.getType() === "admonition" ||
                 node.getType() === "divider" ||
@@ -207,6 +213,7 @@ function StructureDeleteConfirmPlugin() {
             node.getType() === "youtube" ||
             node.getType() === "spotify" ||
             node.getType() === "source-code" ||
+            node.getType() === "code-studio" ||
             node.getType() === "button" ||
             node.getType() === "admonition" ||
             node.getType() === "divider" ||
@@ -231,6 +238,7 @@ function StructureDeleteConfirmPlugin() {
                   node.getType() === "youtube" ||
                   node.getType() === "spotify" ||
                   node.getType() === "source-code" ||
+                  node.getType() === "code-studio" ||
                   node.getType() === "button" ||
                   node.getType() === "admonition" ||
                   node.getType() === "divider" ||
@@ -312,6 +320,7 @@ const initialConfig = {
     YouTubeNode,
     SpotifyNode,
     SourceCodeNode,
+    CodeStudioNode,
     MermaidNode,
     VegaLiteNode,
     CustomTableNode,
@@ -460,6 +469,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <SpotifyPlugin />
             <CodePlugin />
             <SourceCodePlugin />
+            <CodeStudioPlugin />
             <MermaidPlugin />
             <VegaLitePlugin />
             <TablePlugin />
