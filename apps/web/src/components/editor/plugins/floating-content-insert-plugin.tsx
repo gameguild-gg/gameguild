@@ -91,6 +91,7 @@ export const INSERT_SOURCE_COMMAND = createCommand("INSERT_SOURCE_COMMAND")
 export const INSERT_YOUTUBE_COMMAND = createCommand<YouTubeData>("INSERT_YOUTUBE_COMMAND")
 export const INSERT_SPOTIFY_COMMAND = createCommand<SpotifyData>("INSERT_SPOTIFY_COMMAND")
 export const INSERT_SOURCE_CODE_COMMAND = createCommand("INSERT_SOURCE_CODE_COMMAND")
+export const INSERT_CODE_STUDIO_COMMAND = createCommand("INSERT_CODE_STUDIO_COMMAND")
 export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID_COMMAND")
 export const INSERT_VEGA_LITE_COMMAND = createCommand<VegaLiteData>("INSERT_VEGA_LITE_COMMAND")
 export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TABLE_COMMAND")
@@ -476,6 +477,14 @@ export function FloatingContentInsertPlugin() {
           caption: "",
           size: 100,
         })
+        setShowMenu(false)
+      },
+    },
+    {
+      icon: CodepenIcon,
+      label: "Code Studio",
+      action: () => {
+        editor.dispatchCommand(INSERT_CODE_STUDIO_COMMAND, undefined)
         setShowMenu(false)
       },
     },
