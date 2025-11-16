@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using GameGuild.Features.Middleware;
+using Microsoft.AspNetCore.Builder;
 
 namespace GameGuild.Features.Extensions;
 
@@ -15,7 +16,6 @@ public static class UsageEnforcementMiddlewareExtensions
     /// <returns>The application builder for chaining</returns>
     public static IApplicationBuilder UseUsageEnforcement(this IApplicationBuilder builder)
     {
-        // TODO: Implement UsageEnforcementMiddleware class
-        return builder; // .UseMiddleware<UsageEnforcementMiddleware>();
+        return builder.UseMiddleware<UsageEnforcementMiddleware>();
     }
 }
