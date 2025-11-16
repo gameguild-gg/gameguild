@@ -21,12 +21,13 @@ export function ResultPanel({
   testCases,
   activeFile,
 }: ResultPanelProps) {
-  if (mode === "execute" || mode === "output" || mode === "repl") {
+  // EXECUTION MODE: Console com output
+  if (mode === "execution") {
     return (
       <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-950">
-        {/* Terminal Header */}
+        {/* Console Header */}
         <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
-          <span className="text-xs font-mono text-gray-600 dark:text-gray-400">Terminal Output</span>
+          <span className="text-xs font-mono text-gray-600 dark:text-gray-400">Console Output</span>
           <div className="flex items-center gap-2">
             {isExecuting ? (
               <Button variant="ghost" size="sm" className="h-7 text-xs">
@@ -42,7 +43,7 @@ export function ResultPanel({
           </div>
         </div>
 
-        {/* Terminal Content */}
+        {/* Console Content */}
         <div className="flex-1 p-4 overflow-auto font-mono text-sm">
           {isExecuting ? (
             <div className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
@@ -61,6 +62,7 @@ export function ResultPanel({
     )
   }
 
+  // TEST MODE: Casos de teste
   if (mode === "test") {
     return (
       <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-950">
@@ -101,44 +103,6 @@ export function ResultPanel({
     )
   }
 
-  if (mode === "preview") {
-    return (
-      <div className="h-full flex flex-col bg-white dark:bg-gray-950">
-        {/* Preview Header */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Live Preview</span>
-        </div>
-
-        {/* Preview Content */}
-        <div className="flex-1 p-4 overflow-auto">
-          {activeFile?.language === "html" && (
-            <iframe
-              srcDoc={activeFile.content}
-              className="w-full h-full border-0 bg-white"
-              sandbox="allow-scripts"
-              title="HTML Preview"
-            />
-          )}
-          {activeFile?.language === "markdown" && (
-            <div className="prose dark:prose-invert max-w-none">
-              <div className="text-gray-400 dark:text-gray-600 italic text-center py-8">
-                Markdown preview will be rendered here
-              </div>
-            </div>
-          )}
-          {activeFile?.language === "css" && (
-            <div className="text-gray-400 dark:text-gray-600 italic text-center py-8">
-              CSS preview (combine with HTML to see results)
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="h-full flex items-center justify-center text-gray-400 dark:text-gray-600">
-      <p>No preview available for this mode</p>
-    </div>
-  )
+  // VIEW MODE: Não mostra nada (modo apenas visualização)
+  return null
 }
