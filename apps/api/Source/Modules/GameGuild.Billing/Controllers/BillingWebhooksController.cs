@@ -99,6 +99,57 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
     }
 
     /// <summary>
+    ///     Handle Apple Pay webhook events
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Webhook processing confirmation</returns>
+    /// <remarks>
+    ///     Processes Apple Pay webhook notifications for payment processing and transaction updates.
+    ///     Required Headers:
+    ///     - Apple-Pay-Merchant-Id: Merchant identifier for validation
+    ///     - Apple-Pay-Signature: Signature for webhook verification
+    /// </remarks>
+    [HttpPost("apple-pay")]
+    [EndpointSummary("Handle Apple Pay webhook events for transaction notifications")]
+    [EndpointDescription("Processes Apple Pay webhook notifications for payment completions and transaction status updates.")]
+    [ProducesResponseType<object>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> HandleApplePayWebhook(CancellationToken ct)
+    {
+        try
+        {
+            using var reader = new StreamReader(Request.Body);
+            var payload = await reader.ReadToEndAsync(ct);
+
+            var merchantId = Request.Headers["Apple-Pay-Merchant-Id"].ToString();
+            var signature = Request.Headers["Apple-Pay-Signature"].ToString();
+
+            if (string.IsNullOrEmpty(merchantId))
+            {
+                logger.LogWarning("Missing Apple Pay merchant ID header");
+                return BadRequest(new { error = "Missing merchant ID header" });
+            }
+
+            if (string.IsNullOrEmpty(signature))
+            {
+                logger.LogWarning("Missing Apple Pay signature header");
+                return BadRequest(new { error = "Missing signature header" });
+            }
+
+            logger.LogInformation("Processing Apple Pay webhook for merchant: {MerchantId}", merchantId);
+
+            // TODO: Implement actual Apple Pay webhook processing
+            return Ok(new { received = true, processed = false, message = "Apple Pay webhook processing not yet implemented" });
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error processing Apple Pay webhook");
+            return StatusCode(500, new { error = "Webhook processing failed" });
+        }
+    }
+    /// <summary>
     ///     Handle Stripe webhook events with signature verification
     /// </summary>
     /// <param name="ct">Cancellation token</param>
@@ -170,6 +221,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
         "Processes PayPal Instant Payment Notification (IPN) webhook events for subscription billing, payment confirmations, and account updates. PayPal IPN provides real-time transaction status updates and subscription lifecycle management for PayPal-based billing integrations."
     )]
     [ProducesResponseType<object>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> HandlePayPalWebhook(CancellationToken ct)
     {
@@ -177,6 +229,21 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
         {
             using var reader = new StreamReader(Request.Body);
             var payload = await reader.ReadToEndAsync(ct);
+
+            // PayPal IPN requires specific headers for verification
+            var transmissionId = Request.Headers["PayPal-Transmission-Id"].ToString();
+            var transmissionTime = Request.Headers["PayPal-Transmission-Time"].ToString();
+            var transmissionSig = Request.Headers["PayPal-Transmission-Sig"].ToString();
+            var certUrl = Request.Headers["PayPal-Cert-Url"].ToString();
+            var authAlgo = Request.Headers["PayPal-Auth-Algo"].ToString();
+
+            if (string.IsNullOrEmpty(transmissionId) || 
+                string.IsNullOrEmpty(transmissionTime) || 
+                string.IsNullOrEmpty(transmissionSig))
+            {
+                logger.LogWarning("Missing required PayPal IPN headers");
+                return BadRequest(new { error = "Missing required PayPal headers" });
+            }
 
             var result = await sender.Send(new ProcessPayPalWebhookCommand(payload), ct).ConfigureAwait(false);
 
