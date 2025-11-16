@@ -4,7 +4,7 @@ import { DecoratorNode, type SerializedLexicalNode } from "lexical"
 import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import type { JSX } from "react/jsx-runtime"
-import { useContext } from "react"
+import { useContext, useState, useEffect } from "react"
 import { EditorLoadingContext } from "../lexical-editor"
 
 import type { CodeStudioData } from "../extras/code-studio/types"
@@ -31,7 +31,7 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
     super(key)
     this.__data = {
       files: data.files || [],
-      mode: data.mode || "execute",
+      mode: data.mode || "execution",
       language: data.language || "javascript",
       readonly: data.readonly ?? false,
       showLineNumbers: data.showLineNumbers ?? true,
@@ -80,6 +80,8 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
 function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey: string }) {
   const [editor] = useLexicalComposerContext()
   const isLoading = useContext(EditorLoadingContext)
+  const [showEditor, setShowEditor] = useState(false)
+  const [hasAutoOpened, setHasAutoOpened] = useState(false)
 
   const handleUpdateCodeStudio = (newData: Partial<CodeStudioData>) => {
     editor.update(() => {
@@ -94,17 +96,55 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
     })
   }
 
-  const handleSave = () => {
-    console.log("Code Studio saved")
+  const handleSave = (updatedData: CodeStudioData) => {
+    editor.update(() => {
+      const node = $getNodeByKey(nodeKey)
+      if (node instanceof CodeStudioNode) {
+        node.setData(updatedData)
+      }
+    })
+    setShowEditor(false)
   }
 
+  const handleCancel = () => {
+    setShowEditor(false)
+  }
+
+  const handleEdit = () => {
+    setShowEditor(true)
+  }
+
+  // Auto-open editor for new/empty code studio
+  useEffect(() => {
+    const isNew = !data.files || data.files.length === 0 || 
+                  (data.files.length === 1 && data.files[0] && !data.files[0].content)
+    
+    if (isNew && !hasAutoOpened) {
+      setShowEditor(true)
+      setHasAutoOpened(true)
+    }
+  }, [data.files, hasAutoOpened])
+
   return (
-    <CodeStudioEditor
-      data={data}
-      isPreview={false}
-      onUpdate={handleUpdateCodeStudio}
-      onSave={handleSave}
-    />
+    <>
+      {showEditor ? (
+        <CodeStudioEditor
+          data={data}
+          isPreview={false}
+          onUpdate={handleUpdateCodeStudio}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      ) : (
+        <CodeStudioEditor
+          data={data}
+          isPreview={true}
+          onUpdate={handleUpdateCodeStudio}
+          onSave={handleSave}
+          onEdit={handleEdit}
+        />
+      )}
+    </>
   )
 }
 
@@ -120,7 +160,7 @@ export function $createCodeStudioNode(): CodeStudioNode {
         isVisible: true,
       },
     ],
-    mode: "execute",
+    mode: "execution",
     language: "javascript",
     readonly: false,
     showLineNumbers: true,
