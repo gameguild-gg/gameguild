@@ -10,11 +10,9 @@ export type SupportedLanguage =
   | "markdown"
 
 export type EditorMode = 
-  | "execute"    // Executa código com terminal
-  | "test"       // Modo de testes
-  | "preview"    // Preview HTML/CSS/MD
-  | "output"     // Apenas output sem input
-  | "repl"       // REPL interativo
+  | "execution"  // Executa código com console na direita
+  | "test"       // Modo de testes (a definir)
+  | "view"       // Visualização - apenas mostra código centralizado
 
 export interface CodeFile {
   id: string
@@ -80,10 +78,10 @@ export interface ModeConfig {
 }
 
 export const MODE_CONFIGS: Record<EditorMode, ModeConfig> = {
-  execute: {
-    id: "execute",
-    label: "Execute",
-    description: "Run code and see output in terminal",
+  execution: {
+    id: "execution",
+    label: "Execution",
+    description: "Run code and see output in console",
     icon: "Play",
     supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp"],
     showTerminal: true,
@@ -100,33 +98,13 @@ export const MODE_CONFIGS: Record<EditorMode, ModeConfig> = {
     showTests: true,
     showPreview: false,
   },
-  preview: {
-    id: "preview",
-    label: "Preview",
-    description: "Live preview for HTML/CSS/Markdown",
+  view: {
+    id: "view",
+    label: "View",
+    description: "Display code in read-only mode",
     icon: "Eye",
-    supportedLanguages: ["html", "css", "markdown"],
+    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "html", "css", "markdown"],
     showTerminal: false,
-    showTests: false,
-    showPreview: true,
-  },
-  output: {
-    id: "output",
-    label: "Output",
-    description: "Show only output, no input",
-    icon: "Terminal",
-    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp"],
-    showTerminal: true,
-    showTests: false,
-    showPreview: false,
-  },
-  repl: {
-    id: "repl",
-    label: "REPL",
-    description: "Interactive Read-Eval-Print Loop",
-    icon: "Command",
-    supportedLanguages: ["javascript", "typescript", "python", "lua"],
-    showTerminal: true,
     showTests: false,
     showPreview: false,
   },
