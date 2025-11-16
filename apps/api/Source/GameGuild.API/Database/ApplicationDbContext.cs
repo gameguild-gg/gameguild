@@ -38,8 +38,26 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // Apply Authentication module configurations
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AuthUser).Assembly, type => type.Namespace?.StartsWith("GameGuild.Authentication.Entities") == true);
 
-        // Apply Payments module configurations  
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(RevenueEvent).Assembly, type => type.Namespace?.StartsWith("GameGuild.Payments.Entities") == true);
+        // Apply Payments module configurations - filter out abstract types
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(RevenueEvent).Assembly, 
+            type => type.Namespace?.StartsWith("GameGuild.Payments.Entities") == true 
+                    && !type.IsAbstract);
+        
+        // Explicitly ignore abstract types from Payments module that EF Core might discover
+        var paymentsAssembly = typeof(RevenueEvent).Assembly;
+        var abstractTypesToIgnore = paymentsAssembly.GetTypes()
+            .Where(t => t.IsAbstract && t.IsClass && t.Namespace?.StartsWith("GameGuild.Payments") == true);
+        
+        foreach (var abstractType in abstractTypesToIgnore)
+        {
+            // Use reflection to call modelBuilder.Ignore<T>() for each abstract type
+            var ignoreMethod = typeof(ModelBuilder).GetMethod("Ignore", new[] { typeof(Type) });
+            if (ignoreMethod != null)
+            {
+                ignoreMethod.Invoke(modelBuilder, new object[] { abstractType });
+            }
+        }
 
         // Apply Users module configurations
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(User).Assembly, type => type.Namespace?.StartsWith("GameGuild.Users.Entities") == true);
@@ -149,17 +167,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<PaymentDispute> PaymentDisputes { get => Set<PaymentDispute>(); }
 
     public DbSet<DisputeEvidence> DisputeEvidences { get => Set<DisputeEvidence>(); }
-
-    public DbSet<TaxRate> TaxRates { get => Set<TaxRate>(); }
-
-    public DbSet<TaxRule> TaxRules { get => Set<TaxRule>(); }
-
-    public DbSet<TaxJurisdiction> TaxJurisdictions { get => Set<TaxJurisdiction>(); }
-
-    public DbSet<PricingTier> PricingTiers { get => Set<PricingTier>(); }
-
-
-    public DbSet<PromoStackingRule> PromoStackingRules { get => Set<PromoStackingRule>(); }
 
     #endregion
 }

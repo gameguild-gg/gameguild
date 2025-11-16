@@ -28,6 +28,11 @@ public sealed class WalletController(ISender sender) : ControllerBase
     {
         ArgumentNullException.ThrowIfNull(request);
 
+        if (request.UserId == Guid.Empty)
+        {
+            return BadRequest(new { error = "UserId cannot be empty" });
+        }
+
         var command = new CreateWalletCommand(request.UserId, request.Currency ?? "USD");
         var result = await sender.Send(command, ct).ConfigureAwait(false);
 

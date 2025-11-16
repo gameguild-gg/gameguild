@@ -16,6 +16,8 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
+        <ProjectReference Include="..\GameGuild.Permissions\GameGuild.Permissions.csproj"/>
+        <ProjectReference Include="..\GameGuild.Subscriptions\GameGuild.Subscriptions.csproj"/>
     </ItemGroup>
     <ItemGroup>
         <Folder Include="Context\"/>

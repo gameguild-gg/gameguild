@@ -101,6 +101,21 @@ public sealed class PaymentsController(ISender sender) : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Process([FromBody] ProcessPaymentRequest body, CancellationToken ct)
     {
+        if (body.TenantId == Guid.Empty)
+        {
+            return BadRequest(new { error = "TenantId cannot be empty" });
+        }
+
+        if (body.Amount <= 0)
+        {
+            return BadRequest(new { error = "Amount must be greater than zero" });
+        }
+
+        if (string.IsNullOrWhiteSpace(body.PaymentMethodId))
+        {
+            return BadRequest(new { error = "PaymentMethodId is required" });
+        }
+
         var result = await sender.Send(new ProcessPaymentCommand(body.TenantId, body.SubscriptionId, body.Amount, body.PaymentMethodId), ct);
 
         return CreatedAtRoute("GetPaymentById", new { paymentId = result.PaymentId }, result);
@@ -482,9 +497,9 @@ public sealed class PaymentsController(ISender sender) : ControllerBase
         return Ok(r);
     }
 
-    public abstract record ProcessPaymentRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId);
+    public record ProcessPaymentRequest(Guid TenantId, Guid SubscriptionId, decimal Amount, string PaymentMethodId);
 
-    public abstract record RefundRequest(decimal? Amount, string? Reason);
+    public record RefundRequest(decimal? Amount, string? Reason);
 
-    public abstract record CancelPaymentRequest(string CancellationReason, Guid? CanceledBy = null, string? Notes = null);
+    public record CancelPaymentRequest(string CancellationReason, Guid? CanceledBy = null, string? Notes = null);
 }
