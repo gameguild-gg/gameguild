@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { X, Save, Code2, Play } from "lucide-react"
+import { Edit } from "lucide-react"
 import type { CodeStudioData } from "./types"
 import { ModeSelector } from "./mode-selector"
 import { MonacoCodeEditor } from "./monaco-code-editor"
@@ -16,8 +17,9 @@ interface CodeStudioEditorProps {
   data: CodeStudioData
   isPreview?: boolean
   onUpdate?: (data: Partial<CodeStudioData>) => void
-  onSave?: () => void
+  onSave?: (data: CodeStudioData) => void
   onCancel?: () => void
+  onEdit?: () => void
 }
 
 export function CodeStudioEditor({ 
@@ -25,7 +27,8 @@ export function CodeStudioEditor({
   isPreview = false, 
   onUpdate, 
   onSave, 
-  onCancel 
+  onCancel,
+  onEdit,
 }: CodeStudioEditorProps) {
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme === "dark"
@@ -41,6 +44,11 @@ export function CodeStudioEditor({
 
   const currentMode = MODE_CONFIGS[localData.mode]
   const activeFile = localData.files.find(f => f.id === localData.activeFileId) || localData.files[0]
+  
+  // Determinar o layout baseado no modo
+  const isViewMode = localData.mode === "view"
+  const isExecutionMode = localData.mode === "execution"
+  const isTestMode = localData.mode === "test"
 
   const handleDataChange = (newData: Partial<CodeStudioData>) => {
     const updated = { ...localData, ...newData }
@@ -72,7 +80,7 @@ export function CodeStudioEditor({
   }
 
   const handleSaveClick = () => {
-    onSave?.()
+    onSave?.(localData)
   }
 
   const handleCancelClick = () => {
@@ -89,40 +97,68 @@ export function CodeStudioEditor({
             <Code2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span className="font-medium text-sm">{localData.title || "Code Studio"}</span>
           </div>
-          <ModeSelector 
-            currentMode={localData.mode} 
-            onModeChange={handleModeChange}
-            compact
-          />
-        </div>
-
-        {/* Layout vertical para preview (código acima, resultado abaixo) */}
-        <div className="flex flex-col">
-          {/* Editor */}
-          <div className="h-96 border-b border-gray-200 dark:border-gray-800">
-            <MonacoCodeEditor
-              value={activeFile?.content || ""}
-              language={activeFile?.language || "javascript"}
-              onChange={handleCodeChange}
-              readonly={localData.readonly || false}
-              theme={isDarkMode ? "vs-dark" : "vs-light"}
-              fontSize={localData.fontSize}
-              showLineNumbers={localData.showLineNumbers}
+          <div className="flex items-center gap-2">
+            <ModeSelector 
+              currentMode={localData.mode} 
+              onModeChange={handleModeChange}
+              compact
             />
-          </div>
-
-          {/* Resultado */}
-          <div className="h-64">
-            <ResultPanel
-              mode={localData.mode}
-              output={output}
-              isExecuting={isExecuting}
-              onExecute={handleExecute}
-              testCases={localData.testCases?.[activeFile?.id || ""] || []}
-              activeFile={activeFile}
-            />
+            {onEdit && (
+              <Button variant="outline" size="sm" onClick={onEdit} className="h-7">
+                <Edit className="h-3 w-3 mr-1" />
+                Edit
+              </Button>
+            )}
           </div>
         </div>
+
+        {/* Layout baseado no modo */}
+        {isViewMode ? (
+          /* VIEW MODE: Apenas editor centralizado */
+          <div className="p-4">
+            <div className="max-w-4xl mx-auto">
+              <div className="h-96 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <MonacoCodeEditor
+                  value={activeFile?.content || ""}
+                  language={activeFile?.language || "javascript"}
+                  onChange={handleCodeChange}
+                  readonly={true}
+                  theme={isDarkMode ? "vs-dark" : "vs-light"}
+                  fontSize={localData.fontSize}
+                  showLineNumbers={localData.showLineNumbers}
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* EXECUTION/TEST MODE: Layout vertical (código acima, resultado abaixo) */
+          <div className="flex flex-col">
+            {/* Editor */}
+            <div className="h-96 border-b border-gray-200 dark:border-gray-800">
+              <MonacoCodeEditor
+                value={activeFile?.content || ""}
+                language={activeFile?.language || "javascript"}
+                onChange={handleCodeChange}
+                readonly={localData.readonly || false}
+                theme={isDarkMode ? "vs-dark" : "vs-light"}
+                fontSize={localData.fontSize}
+                showLineNumbers={localData.showLineNumbers}
+              />
+            </div>
+
+            {/* Resultado */}
+            <div className="h-64">
+              <ResultPanel
+                mode={localData.mode}
+                output={output}
+                isExecuting={isExecuting}
+                onExecute={handleExecute}
+                testCases={localData.testCases?.[activeFile?.id || ""] || []}
+                activeFile={activeFile}
+              />
+            </div>
+          </div>
+        )}
 
         {localData.caption && (
           <div className="p-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800">
@@ -177,62 +213,82 @@ export function CodeStudioEditor({
             />
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleExecute}
-              disabled={isExecuting}
-              className="flex items-center gap-2"
-            >
-              <Play className="h-4 w-4" />
-              {isExecuting ? "Running..." : "Run Code"}
-            </Button>
-          </div>
+          {!isViewMode && (
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleExecute}
+                disabled={isExecuting}
+                className="flex items-center gap-2"
+              >
+                <Play className="h-4 w-4" />
+                {isExecuting ? "Running..." : "Run Code"}
+              </Button>
+            </div>
+          )}
         </div>
 
-        {/* Main Content - Layout horizontal (editor à esquerda, resultado à direita) */}
-        <div className="flex-1 flex min-h-0">
-          {/* Left Panel - Editor */}
-          <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col">
-            <div className="p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-              <h3 className="font-medium text-sm flex items-center gap-2">
-                <Code2 className="h-4 w-4" />
-                {activeFile?.name || "Code"}
-              </h3>
-            </div>
-            <div className="flex-1">
+        {/* Main Content - Layout baseado no modo */}
+        {isViewMode ? (
+          /* VIEW MODE: Editor centralizado */
+          <div className="flex-1 flex items-center justify-center p-8 overflow-auto">
+            <div className="w-full max-w-4xl h-full">
               <MonacoCodeEditor
                 value={activeFile?.content || ""}
                 language={activeFile?.language || "javascript"}
                 onChange={handleCodeChange}
-                readonly={localData.readonly || false}
+                readonly={true}
                 theme={isDarkMode ? "vs-dark" : "vs-light"}
                 fontSize={localData.fontSize}
                 showLineNumbers={localData.showLineNumbers}
               />
             </div>
           </div>
-
-          {/* Right Panel - Result */}
-          <div className="w-1/2 flex flex-col">
-            <div className="p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-              <h3 className="font-medium text-sm">
-                {currentMode.label}
-              </h3>
+        ) : (
+          /* EXECUTION/TEST MODE: Layout horizontal (editor à esquerda, resultado à direita) */
+          <div className="flex-1 flex min-h-0">
+            {/* Left Panel - Editor */}
+            <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col">
+              <div className="p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 className="font-medium text-sm flex items-center gap-2">
+                  <Code2 className="h-4 w-4" />
+                  {activeFile?.name || "Code"}
+                </h3>
+              </div>
+              <div className="flex-1">
+                <MonacoCodeEditor
+                  value={activeFile?.content || ""}
+                  language={activeFile?.language || "javascript"}
+                  onChange={handleCodeChange}
+                  readonly={localData.readonly || false}
+                  theme={isDarkMode ? "vs-dark" : "vs-light"}
+                  fontSize={localData.fontSize}
+                  showLineNumbers={localData.showLineNumbers}
+                />
+              </div>
             </div>
-            <div className="flex-1 overflow-auto">
-              <ResultPanel
-                mode={localData.mode}
-                output={output}
-                isExecuting={isExecuting}
-                onExecute={handleExecute}
-                testCases={localData.testCases?.[activeFile?.id || ""] || []}
-                activeFile={activeFile}
-              />
+
+            {/* Right Panel - Result */}
+            <div className="w-1/2 flex flex-col">
+              <div className="p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <h3 className="font-medium text-sm">
+                  {currentMode.label}
+                </h3>
+              </div>
+              <div className="flex-1 overflow-auto">
+                <ResultPanel
+                  mode={localData.mode}
+                  output={output}
+                  isExecuting={isExecuting}
+                  onExecute={handleExecute}
+                  testCases={localData.testCases?.[activeFile?.id || ""] || []}
+                  activeFile={activeFile}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
