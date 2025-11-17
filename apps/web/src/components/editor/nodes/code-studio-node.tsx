@@ -6,12 +6,14 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import type { JSX } from "react/jsx-runtime"
 import { useContext, useState, useEffect } from "react"
 import { EditorLoadingContext } from "../lexical-editor"
+import { Edit } from "lucide-react"
 
 import type { CodeStudioData } from "../extras/code-studio/types"
 import { CodeStudioEditor } from "../extras/code-studio/code-studio-editor"
 import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
 import type { EditorMode } from "../extras/code-studio/types"
 import { LANGUAGE_CONFIGS } from "../extras/code-studio/types"
+import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 
 export interface SerializedCodeStudioNode extends SerializedLexicalNode {
   type: "code-studio"
@@ -196,13 +198,27 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
           onCancel={handleCancel}
         />
       ) : (
-        <CodeStudioEditor
-          data={data}
-          isPreview={true}
-          onUpdate={handleUpdateCodeStudio}
-          onSave={handleSave}
-          onEdit={handleEdit}
-        />
+        <div className="relative">
+          <CodeStudioEditor
+            data={data}
+            isPreview={true}
+            onUpdate={handleUpdateCodeStudio}
+            onSave={handleSave}
+            onEdit={handleEdit}
+          />
+          
+          {/* ContentEditMenu for lateral edit button */}
+          <ContentEditMenu
+            options={[
+              {
+                id: "edit",
+                icon: <Edit className="h-4 w-4" />,
+                label: "Edit Code Studio",
+                action: handleEdit,
+              },
+            ]}
+          />
+        </div>
       )}
     </>
   )
