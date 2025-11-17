@@ -70,6 +70,7 @@ export interface CodeStudioData {
   fontSize?: number
   theme?: "light" | "dark" | "system"
   isViewMode?: boolean // Se true, mostra apenas código sem console/testes (modo visualização)
+  showFileExplorer?: boolean // Se false, esconde file explorer fora do editor modal
   
   // Configurações de execução
   clearOnRun?: boolean
