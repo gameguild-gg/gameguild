@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { X, Save, Code2, Play, Eye, Terminal, Menu, Lock, Unlock, Type, Hash, FolderTree } from "lucide-react"
+import { X, Save, Code2, Play, Eye, Terminal, Menu, Lock, Unlock, Type, Hash, FolderTree, Palette } from "lucide-react"
 import { Edit } from "lucide-react"
-import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage } from "./types"
+import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, ShikiTheme } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
-import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
+import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension, SHIKI_THEME_CONFIGS } from "./types"
 import { useTheme } from "next-themes"
 import { FileExplorer } from "./file-explorer"
 import { FileTabs } from "./file-tabs"
@@ -303,6 +303,7 @@ export function CodeStudioEditor({
                   onChange={handleCodeChange}
                   readonly={localData.readonly || false}
                   theme={isDarkMode ? "vs-dark" : "vs-light"}
+                  shikiTheme={localData.shikiTheme || "github"}
                   fontSize={localData.fontSize}
                   showLineNumbers={localData.showLineNumbers}
                 />
@@ -349,6 +350,7 @@ export function CodeStudioEditor({
                     onChange={handleCodeChange}
                     readonly={localData.readonly || false}
                     theme={isDarkMode ? "vs-dark" : "vs-light"}
+                    shikiTheme={localData.shikiTheme || "github"}
                     fontSize={localData.fontSize}
                     showLineNumbers={localData.showLineNumbers}
                   />
@@ -515,6 +517,28 @@ export function CodeStudioEditor({
                         className="w-full"
                       />
                     </div>
+                    
+                    {/* Shiki Theme */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Palette className="h-4 w-4 text-indigo-500" />
+                        <Label htmlFor="shikiTheme" className="text-sm font-medium">
+                          Syntax Theme
+                        </Label>
+                      </div>
+                      <select
+                        id="shikiTheme"
+                        value={localData.shikiTheme || "github"}
+                        onChange={(e) => handleDataChange({ shikiTheme: e.target.value as ShikiTheme })}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                      >
+                        {Object.entries(SHIKI_THEME_CONFIGS).map(([key, config]) => (
+                          <option key={key} value={key}>
+                            {config.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -617,6 +641,7 @@ export function CodeStudioEditor({
                   onChange={handleCodeChange}
                   readonly={false}
                   theme={isDarkMode ? "vs-dark" : "vs-light"}
+                  shikiTheme={localData.shikiTheme || "github"}
                   fontSize={localData.fontSize}
                   showLineNumbers={localData.showLineNumbers}
                 />
@@ -661,6 +686,7 @@ export function CodeStudioEditor({
                     onChange={handleCodeChange}
                     readonly={false}
                     theme={isDarkMode ? "vs-dark" : "vs-light"}
+                    shikiTheme={localData.shikiTheme || "github"}
                     fontSize={localData.fontSize}
                     showLineNumbers={localData.showLineNumbers}
                   />
