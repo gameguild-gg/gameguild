@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { X, Save, Code2, Play, Eye, Terminal } from "lucide-react"
+import { X, Save, Code2, Play, Eye, Terminal, Menu, Lock, Unlock, Type, Hash } from "lucide-react"
 import { Edit } from "lucide-react"
 import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
@@ -38,11 +38,27 @@ export function CodeStudioEditor({
   const [localData, setLocalData] = useState<CodeStudioData>(data)
   const [isExecuting, setIsExecuting] = useState(false)
   const [output, setOutput] = useState<string>("")
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
 
   // Sincronizar com mudanças externas
   useEffect(() => {
     setLocalData(data)
   }, [data])
+
+  // Fechar menu de settings quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (showSettingsMenu && !target.closest('.settings-menu-container')) {
+        setShowSettingsMenu(false)
+      }
+    }
+    
+    if (showSettingsMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showSettingsMenu])
 
   // Se não há modo definido, não renderizar nada
   if (!localData.mode) {
@@ -239,6 +255,12 @@ export function CodeStudioEditor({
             <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full">
               {currentMode.label}
             </span>
+            {localData.readonly && (
+              <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-full flex items-center gap-1">
+                <Lock className="h-3 w-3" />
+                Read Only
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {onEdit && (
@@ -267,7 +289,7 @@ export function CodeStudioEditor({
                   value={activeFile?.content || ""}
                   language={activeFile?.language || "javascript"}
                   onChange={handleCodeChange}
-                  readonly={isViewMode || localData.readonly || false}
+                  readonly={localData.readonly || false}
                   theme={isDarkMode ? "vs-dark" : "vs-light"}
                   fontSize={localData.fontSize}
                   showLineNumbers={localData.showLineNumbers}
@@ -373,6 +395,98 @@ export function CodeStudioEditor({
 
         {/* Settings Bar */}
         <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+          {/* Settings Menu Button */}
+          <div className="relative settings-menu-container">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              className="h-8 w-8 p-0"
+              title="Settings"
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+            
+            {/* Settings Dropdown Menu */}
+            {showSettingsMenu && (
+              <div className="absolute top-10 left-0 z-50 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+                <div className="p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Settings</h3>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowSettingsMenu(false)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-3">
+                    {/* Read Only Global */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {localData.readonly ? (
+                            <Lock className="h-4 w-4 text-red-500" />
+                          ) : (
+                            <Unlock className="h-4 w-4 text-green-500" />
+                          )}
+                          <Label htmlFor="readonly" className="text-sm font-medium cursor-pointer">
+                            Read Only Outside Editor
+                          </Label>
+                        </div>
+                        <Switch
+                          id="readonly"
+                          checked={localData.readonly || false}
+                          onCheckedChange={(checked) => handleDataChange({ readonly: checked })}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 ml-6">
+                        When enabled, code is not editable in preview mode
+                      </p>
+                    </div>
+                    
+                    {/* Show Line Numbers */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Hash className="h-4 w-4 text-blue-500" />
+                        <Label htmlFor="lineNumbers" className="text-sm font-medium cursor-pointer">
+                          Line Numbers
+                        </Label>
+                      </div>
+                      <Switch
+                        id="lineNumbers"
+                        checked={localData.showLineNumbers ?? true}
+                        onCheckedChange={(checked) => handleDataChange({ showLineNumbers: checked })}
+                      />
+                    </div>
+                    
+                    {/* Font Size */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Type className="h-4 w-4 text-purple-500" />
+                        <Label htmlFor="fontSize" className="text-sm font-medium">
+                          Font Size: {localData.fontSize || 14}px
+                        </Label>
+                      </div>
+                      <input
+                        id="fontSize"
+                        type="range"
+                        min="10"
+                        max="24"
+                        value={localData.fontSize || 14}
+                        onChange={(e) => handleDataChange({ fontSize: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <div className="flex items-center gap-2">
             <Label htmlFor="title" className="text-sm font-medium">
               Title:
@@ -449,7 +563,7 @@ export function CodeStudioEditor({
                   value={activeFile?.content || ""}
                   language={activeFile?.language || "javascript"}
                   onChange={handleCodeChange}
-                  readonly={isViewMode}
+                  readonly={false}
                   theme={isDarkMode ? "vs-dark" : "vs-light"}
                   fontSize={localData.fontSize}
                   showLineNumbers={localData.showLineNumbers}
@@ -493,7 +607,7 @@ export function CodeStudioEditor({
                     value={activeFile?.content || ""}
                     language={activeFile?.language || "javascript"}
                     onChange={handleCodeChange}
-                    readonly={localData.readonly || false}
+                    readonly={false}
                     theme={isDarkMode ? "vs-dark" : "vs-light"}
                     fontSize={localData.fontSize}
                     showLineNumbers={localData.showLineNumbers}
