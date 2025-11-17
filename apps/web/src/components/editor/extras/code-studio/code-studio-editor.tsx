@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { X, Save, Code2, Play, Eye, Terminal, Menu, Lock, Unlock, Type, Hash } from "lucide-react"
+import { X, Save, Code2, Play, Eye, Terminal, Menu, Lock, Unlock, Type, Hash, FolderTree } from "lucide-react"
 import { Edit } from "lucide-react"
 import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
@@ -266,17 +266,37 @@ export function CodeStudioEditor({
 
         {/* Layout baseado no modo */}
         {isViewMode ? (
-          /* VIEW MODE: Apenas editor centralizado */
-          <div className="p-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="h-96 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                <FileTabs
+          /* VIEW MODE: Editor com File Explorer */
+          <div className="h-96 border-b border-gray-200 dark:border-gray-800 flex">
+            {/* File Explorer - 200px de largura (condicional) */}
+            {(localData.showFileExplorer ?? true) && (
+              <div className="w-[200px] shrink-0">
+                <FileExplorer
                   files={localData.files}
-                  openTabs={localData.openTabs || []}
+                  folders={localData.folders || []}
                   activeFileId={localData.activeFileId}
-                  onSelectTab={handleFileSelect}
-                  onCloseTab={handleCloseTab}
+                  onFileSelect={handleFileSelect}
+                  onCreateFile={handleCreateFile}
+                  onCreateFolder={handleCreateFolder}
+                  onDeleteFile={handleDeleteFile}
+                  onDeleteFolder={handleDeleteFolder}
+                  onRenameFile={handleRenameFile}
+                  onRenameFolder={handleRenameFolder}
+                  onToggleFolder={handleToggleFolder}
                 />
+              </div>
+            )}
+            
+            {/* Editor com Tabs */}
+            <div className="flex-1 flex flex-col min-w-0">
+              <FileTabs
+                files={localData.files}
+                openTabs={localData.openTabs || []}
+                activeFileId={localData.activeFileId}
+                onSelectTab={handleFileSelect}
+                onCloseTab={localData.showFileExplorer ?? true ? handleCloseTab : undefined}
+              />
+              <div className="flex-1">
                 <MonacoCodeEditor
                   value={activeFile?.content || ""}
                   language={activeFile?.language || "javascript"}
@@ -294,22 +314,24 @@ export function CodeStudioEditor({
           <div className="flex flex-col">
             {/* Editor com File Explorer e Tabs */}
             <div className="h-96 border-b border-gray-200 dark:border-gray-800 flex">
-              {/* File Explorer - 200px de largura */}
-              <div className="w-[200px] shrink-0">
-                <FileExplorer
-                  files={localData.files}
-                  folders={localData.folders || []}
-                  activeFileId={localData.activeFileId}
-                  onFileSelect={handleFileSelect}
-                  onCreateFile={handleCreateFile}
-                  onCreateFolder={handleCreateFolder}
-                  onDeleteFile={handleDeleteFile}
-                  onDeleteFolder={handleDeleteFolder}
-                  onRenameFile={handleRenameFile}
-                  onRenameFolder={handleRenameFolder}
-                  onToggleFolder={handleToggleFolder}
-                />
-              </div>
+              {/* File Explorer - 200px de largura (condicional) */}
+              {(localData.showFileExplorer ?? true) && (
+                <div className="w-[200px] shrink-0">
+                  <FileExplorer
+                    files={localData.files}
+                    folders={localData.folders || []}
+                    activeFileId={localData.activeFileId}
+                    onFileSelect={handleFileSelect}
+                    onCreateFile={handleCreateFile}
+                    onCreateFolder={handleCreateFolder}
+                    onDeleteFile={handleDeleteFile}
+                    onDeleteFolder={handleDeleteFolder}
+                    onRenameFile={handleRenameFile}
+                    onRenameFolder={handleRenameFolder}
+                    onToggleFolder={handleToggleFolder}
+                  />
+                </div>
+              )}
               
               {/* Editor com Tabs */}
               <div className="flex-1 flex flex-col min-w-0">
@@ -318,7 +340,7 @@ export function CodeStudioEditor({
                   openTabs={localData.openTabs || []}
                   activeFileId={localData.activeFileId}
                   onSelectTab={handleFileSelect}
-                  onCloseTab={handleCloseTab}
+                  onCloseTab={localData.showFileExplorer ?? true ? handleCloseTab : undefined}
                 />
                 <div className="flex-1">
                   <MonacoCodeEditor
@@ -455,6 +477,26 @@ export function CodeStudioEditor({
                       />
                     </div>
                     
+                    {/* Show File Explorer */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FolderTree className="h-4 w-4 text-orange-500" />
+                          <Label htmlFor="showFileExplorer" className="text-sm font-medium cursor-pointer">
+                            Show File Explorer
+                          </Label>
+                        </div>
+                        <Switch
+                          id="showFileExplorer"
+                          checked={localData.showFileExplorer ?? true}
+                          onCheckedChange={(checked) => handleDataChange({ showFileExplorer: checked })}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 ml-6">
+                        Shows file explorer and allows closing tabs in preview
+                      </p>
+                    </div>
+                    
                     {/* Font Size */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
@@ -540,9 +582,27 @@ export function CodeStudioEditor({
 
         {/* Main Content - Layout baseado no modo */}
         {isViewMode ? (
-          // VIEW MODE: Editor centralizado com tabs
-          <div className="flex-1 flex items-center justify-center p-8 overflow-auto">
-            <div className="w-full max-w-4xl h-full flex flex-col">
+          // VIEW MODE: Editor com File Explorer
+          <div className="flex-1 flex min-h-0">
+            {/* File Explorer */}
+            <div className="w-[200px] shrink-0 border-r border-gray-200 dark:border-gray-800">
+              <FileExplorer
+                files={localData.files}
+                folders={localData.folders || []}
+                activeFileId={localData.activeFileId}
+                onFileSelect={handleFileSelect}
+                onCreateFile={handleCreateFile}
+                onCreateFolder={handleCreateFolder}
+                onDeleteFile={handleDeleteFile}
+                onDeleteFolder={handleDeleteFolder}
+                onRenameFile={handleRenameFile}
+                onRenameFolder={handleRenameFolder}
+                onToggleFolder={handleToggleFolder}
+              />
+            </div>
+            
+            {/* Editor com Tabs */}
+            <div className="flex-1 flex flex-col min-w-0">
               <FileTabs
                 files={localData.files}
                 openTabs={localData.openTabs || []}

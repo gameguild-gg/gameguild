@@ -52,6 +52,7 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
       title: data.title,
       caption: data.caption,
       isViewMode: data.isViewMode ?? false,
+      showFileExplorer: data.showFileExplorer ?? true,
     }
   }
 
@@ -238,5 +239,6 @@ export function $createCodeStudioNode(): CodeStudioNode {
     autoRun: false,
     showTests: false,
     testCases: {},
+    showFileExplorer: true,
   })
 }
