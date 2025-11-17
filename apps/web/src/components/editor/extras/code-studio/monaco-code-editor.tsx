@@ -1,9 +1,45 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import Editor from "@monaco-editor/react"
 import type { editor } from "monaco-editor"
-import type { SupportedLanguage } from "./types"
+import type { Monaco } from "@monaco-editor/react"
+import type { SupportedLanguage, ShikiTheme } from "./types"
+import { getShikiThemeName, SHIKI_THEME_CONFIGS } from "./types"
+import { shikiToMonaco } from "@shikijs/monaco"
+import { useTheme } from "next-themes"
+import { createHighlighter, type Highlighter } from "shiki"
+
+// Singleton para o highlighter do Shiki
+let shikiHighlighter: Highlighter | null = null
+let shikiPromise: Promise<Highlighter> | null = null
+let shikiAppliedToMonaco = false
+
+async function getShikiHighlighter(): Promise<Highlighter> {
+  if (shikiHighlighter) {
+    return shikiHighlighter
+  }
+  
+  if (!shikiPromise) {
+    shikiPromise = createHighlighter({
+      themes: [
+        'github-dark',
+        'github-light',
+        'github-dark-default',
+        'github-light-default',
+        'github-dark-dimmed',
+        'dark-plus',
+        'light-plus',
+      ],
+      langs: ['javascript', 'typescript', 'python', 'lua', 'c', 'cpp', 'html', 'css', 'markdown'],
+    }).then((highlighter) => {
+      shikiHighlighter = highlighter
+      return highlighter
+    })
+  }
+  
+  return shikiPromise
+}
 
 interface MonacoCodeEditorProps {
   value: string
@@ -11,6 +47,7 @@ interface MonacoCodeEditorProps {
   onChange?: (value: string) => void
   readonly?: boolean
   theme?: "vs-light" | "vs-dark"
+  shikiTheme?: ShikiTheme
   fontSize?: number
   showLineNumbers?: boolean
   height?: string
@@ -22,11 +59,41 @@ export function MonacoCodeEditor({
   onChange,
   readonly = false,
   theme = "vs-light",
+  shikiTheme = "github",
   fontSize = 14,
   showLineNumbers = true,
   height = "100%",
 }: MonacoCodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const monacoRef = useRef<Monaco | null>(null)
+  const [isShikiReady, setIsShikiReady] = useState(false)
+  const { resolvedTheme, theme: themeState } = useTheme()
+  
+  // Determinar o tema atual (dark ou light) - usa theme como fallback
+  const effectiveTheme = resolvedTheme || themeState
+  const isDarkMode = effectiveTheme === "dark"
+  const currentTheme = getShikiThemeName(shikiTheme, isDarkMode)
+
+  const handleEditorWillMount = async (monaco: Monaco) => {
+    monacoRef.current = monaco
+    
+    // Carregar Shiki ANTES de montar o editor (apenas uma vez globalmente)
+    if (!shikiAppliedToMonaco) {
+      try {
+        const highlighter = await getShikiHighlighter()
+        
+        // Apply Shiki to Monaco (apenas uma vez globalmente)
+        shikiToMonaco(highlighter, monaco)
+        shikiAppliedToMonaco = true
+        setIsShikiReady(true)
+      } catch (error) {
+        console.error('Failed to load Shiki:', error)
+      }
+    } else {
+      // Shiki já foi aplicado em outro editor
+      setIsShikiReady(true)
+    }
+  }
 
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     editorRef.current = editor
@@ -60,14 +127,22 @@ export function MonacoCodeEditor({
     }
   }, [readonly, fontSize, showLineNumbers])
 
+  // Atualizar tema do Monaco quando mudar
+  useEffect(() => {
+    if (monacoRef.current && isShikiReady) {
+      monacoRef.current.editor.setTheme(currentTheme)
+    }
+  }, [currentTheme, isShikiReady])
+
   return (
     <Editor
       height={height}
       language={language}
       value={value}
       onChange={handleChange}
+      beforeMount={handleEditorWillMount}
       onMount={handleEditorDidMount}
-      theme={theme}
+      theme={currentTheme}
       options={{
         readOnly: readonly,
         fontSize,
