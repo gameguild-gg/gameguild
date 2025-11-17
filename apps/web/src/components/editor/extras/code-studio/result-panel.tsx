@@ -3,6 +3,7 @@
 import { Play, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { EditorMode, TestCase, CodeFile } from "./types"
+import { XTermTerminal } from "./xterm-terminal"
 
 interface ResultPanelProps {
   mode: EditorMode
@@ -43,20 +44,12 @@ export function ResultPanel({
           </div>
         </div>
 
-        {/* Console Content */}
-        <div className="flex-1 p-4 overflow-auto font-mono text-sm">
-          {isExecuting ? (
-            <div className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span>Executing...</span>
-            </div>
-          ) : output ? (
-            <pre className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{output}</pre>
-          ) : (
-            <div className="text-gray-400 dark:text-gray-600 italic">
-              Click "Run" to execute the code
-            </div>
-          )}
+        {/* Console Content - XTerm Terminal */}
+        <div className="flex-1 overflow-hidden">
+          <XTermTerminal 
+            output={output} 
+            isExecuting={isExecuting}
+          />
         </div>
       </div>
     )
