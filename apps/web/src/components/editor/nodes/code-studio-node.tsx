@@ -49,6 +49,7 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
       activeFileId: data.activeFileId || data.files?.[0]?.id,
       title: data.title,
       caption: data.caption,
+      isViewMode: data.isViewMode ?? false,
     }
   }
 

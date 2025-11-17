@@ -11,8 +11,7 @@ export type SupportedLanguage =
 
 export type EditorMode = 
   | "execution"  // Executa código com console na direita
-  | "test"       // Modo de testes (a definir)
-  | "view"       // Visualização - apenas mostra código centralizado
+  | "test"       // Modo de testes
 
 export interface CodeFile {
   id: string
@@ -70,6 +69,7 @@ export interface CodeStudioData {
   showLineNumbers?: boolean
   fontSize?: number
   theme?: "light" | "dark" | "system"
+  isViewMode?: boolean // Se true, mostra apenas código sem console/testes (modo visualização)
   
   // Configurações de execução
   clearOnRun?: boolean
@@ -110,16 +110,6 @@ export const MODE_CONFIGS: Record<EditorMode, ModeConfig> = {
     supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp"],
     showTerminal: false,
     showTests: true,
-    showPreview: false,
-  },
-  view: {
-    id: "view",
-    label: "View",
-    description: "Display code in read-only mode",
-    icon: "Eye",
-    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "html", "css", "markdown"],
-    showTerminal: false,
-    showTests: false,
     showPreview: false,
   },
 }
