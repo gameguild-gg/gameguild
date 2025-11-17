@@ -88,9 +88,15 @@ export function CodeStudioEditor({
     const newOpenTabs = (localData.openTabs || []).filter(id => id !== fileId)
     const updates: Partial<CodeStudioData> = { openTabs: newOpenTabs }
     
-    // Se fechou a aba ativa, mudar para outra aba
-    if (fileId === localData.activeFileId && newOpenTabs.length > 0) {
-      updates.activeFileId = newOpenTabs[newOpenTabs.length - 1]
+    // Se fechou a aba ativa, mudar para outra aba ou limpar
+    if (fileId === localData.activeFileId) {
+      if (newOpenTabs.length > 0) {
+        // Mudar para a última aba da lista
+        updates.activeFileId = newOpenTabs[newOpenTabs.length - 1]
+      } else {
+        // Não há mais abas abertas, limpar activeFileId
+        updates.activeFileId = undefined
+      }
     }
     
     handleDataChange(updates)
@@ -100,8 +106,9 @@ export function CodeStudioEditor({
     const language = getLanguageFromExtension(name)
     const fullPath = path ? `${path}/${name}` : name
     
+    const newFileId = Date.now().toString()
     const newFile: CodeFile = {
-      id: Date.now().toString(),
+      id: newFileId,
       name,
       content: LANGUAGE_CONFIGS[language].defaultTemplate,
       language,
@@ -110,7 +117,12 @@ export function CodeStudioEditor({
       path: fullPath,
     }
     
-    handleDataChange({ files: [...localData.files, newFile] })
+    // Criar arquivo e abri-lo automaticamente em uma nova aba
+    handleDataChange({ 
+      files: [...localData.files, newFile],
+      openTabs: [...(localData.openTabs || []), newFileId],
+      activeFileId: newFileId,
+    })
   }
 
   const handleCreateFolder = (path: string, name: string) => {
@@ -245,7 +257,7 @@ export function CodeStudioEditor({
               <div className="h-96 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                 <FileTabs
                   files={localData.files}
-                  openTabs={localData.openTabs || [activeFile?.id || '']}
+                  openTabs={localData.openTabs || []}
                   activeFileId={localData.activeFileId}
                   onSelectTab={handleFileSelect}
                   onCloseTab={handleCloseTab}
@@ -288,7 +300,7 @@ export function CodeStudioEditor({
               <div className="flex-1 flex flex-col min-w-0">
                 <FileTabs
                   files={localData.files}
-                  openTabs={localData.openTabs || [activeFile?.id || '']}
+                  openTabs={localData.openTabs || []}
                   activeFileId={localData.activeFileId}
                   onSelectTab={handleFileSelect}
                   onCloseTab={handleCloseTab}
@@ -396,7 +408,7 @@ export function CodeStudioEditor({
             <div className="w-full max-w-4xl h-full flex flex-col">
               <FileTabs
                 files={localData.files}
-                openTabs={localData.openTabs || [activeFile?.id || '']}
+                openTabs={localData.openTabs || []}
                 activeFileId={localData.activeFileId}
                 onSelectTab={handleFileSelect}
                 onCloseTab={handleCloseTab}
@@ -440,7 +452,7 @@ export function CodeStudioEditor({
               <div className="flex-1 flex flex-col min-w-0">
                 <FileTabs
                   files={localData.files}
-                  openTabs={localData.openTabs || [activeFile?.id || '']}
+                  openTabs={localData.openTabs || []}
                   activeFileId={localData.activeFileId}
                   onSelectTab={handleFileSelect}
                   onCloseTab={handleCloseTab}
