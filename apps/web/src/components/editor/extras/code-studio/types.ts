@@ -46,7 +46,7 @@ export interface TestResult {
 export interface CodeStudioData {
   files: CodeFile[]
   activeFileId?: string
-  mode: EditorMode
+  mode?: EditorMode
   language: SupportedLanguage
   title?: string
   caption?: string
