@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { X, Save, Code2, Play } from "lucide-react"
 import { Edit } from "lucide-react"
 import type { CodeStudioData } from "./types"
-import { ModeSelector } from "./mode-selector"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
 import { MODE_CONFIGS } from "./types"
@@ -42,6 +41,11 @@ export function CodeStudioEditor({
     setLocalData(data)
   }, [data])
 
+  // Se não há modo definido, não renderizar nada
+  if (!localData.mode) {
+    return null
+  }
+
   const currentMode = MODE_CONFIGS[localData.mode]
   const activeFile = localData.files.find(f => f.id === localData.activeFileId) || localData.files[0]
   
@@ -63,10 +67,6 @@ export function CodeStudioEditor({
       f.id === activeFile.id ? { ...f, content } : f
     )
     handleDataChange({ files: updatedFiles })
-  }
-
-  const handleModeChange = (mode: CodeStudioData["mode"]) => {
-    handleDataChange({ mode })
   }
 
   const handleExecute = () => {
@@ -96,13 +96,11 @@ export function CodeStudioEditor({
           <div className="flex items-center gap-2">
             <Code2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span className="font-medium text-sm">{localData.title || "Code Studio"}</span>
+            <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full">
+              {currentMode.label}
+            </span>
           </div>
           <div className="flex items-center gap-2">
-            <ModeSelector 
-              currentMode={localData.mode} 
-              onModeChange={handleModeChange}
-              compact
-            />
             {onEdit && (
               <Button variant="outline" size="sm" onClick={onEdit} className="h-7">
                 <Edit className="h-3 w-3 mr-1" />
@@ -187,10 +185,9 @@ export function CodeStudioEditor({
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Code Studio</h2>
             </div>
             
-            <ModeSelector 
-              currentMode={localData.mode} 
-              onModeChange={handleModeChange}
-            />
+            <span className="text-sm px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium">
+              {currentMode.label} Mode
+            </span>
           </div>
           
           <Button variant="ghost" size="sm" onClick={handleCancelClick}>
