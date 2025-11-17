@@ -10,7 +10,7 @@ interface FileTabsProps {
   openTabs: string[]
   activeFileId?: string
   onSelectTab: (fileId: string) => void
-  onCloseTab: (fileId: string) => void
+  onCloseTab?: (fileId: string) => void
 }
 
 export function FileTabs({
@@ -49,20 +49,22 @@ export function FileTabs({
               <span className="text-xs truncate max-w-[120px]">
                 {file.name}
               </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={cn(
-                  "h-4 w-4 p-0 shrink-0 hover:bg-gray-300 dark:hover:bg-gray-700",
-                  isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                )}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onCloseTab(file.id)
-                }}
-              >
-                <X className="h-3 w-3" />
-              </Button>
+              {onCloseTab && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-4 w-4 p-0 shrink-0 hover:bg-gray-300 dark:hover:bg-gray-700",
+                    isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onCloseTab(file.id)
+                  }}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              )}
             </div>
           )
         })
