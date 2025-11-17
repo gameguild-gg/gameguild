@@ -21,7 +21,19 @@ export interface CodeFile {
   language: SupportedLanguage
   isMain: boolean
   isVisible: boolean
+  path: string // Caminho completo incluindo pastas, ex: "src/components/Button.tsx"
 }
+
+export interface FileTreeFolder {
+  id: string
+  name: string
+  path: string
+  isExpanded: boolean
+  children: (CodeFile | FileTreeFolder)[]
+  type: "folder"
+}
+
+export type FileTreeItem = CodeFile | FileTreeFolder
 
 export interface TestCase {
   id: string
@@ -45,6 +57,8 @@ export interface TestResult {
 
 export interface CodeStudioData {
   files: CodeFile[]
+  folders: FileTreeFolder[]
+  openTabs: string[] // IDs dos arquivos abertos em abas
   activeFileId?: string
   mode?: EditorMode
   language: SupportedLanguage
@@ -184,4 +198,20 @@ export const LANGUAGE_CONFIGS: Record<
     supportsExecution: false,
     defaultTemplate: '# Hello, World!\n\nThis is a **markdown** document.\n\n- Item 1\n- Item 2\n- Item 3',
   },
+}
+
+// Helper function to detect language from file extension
+export function getLanguageFromExtension(filename: string): SupportedLanguage {
+  const ext = filename.split('.').pop()?.toLowerCase()
+  
+  const languageEntry = Object.entries(LANGUAGE_CONFIGS).find(
+    ([_, config]) => config.defaultExtension === `.${ext}`
+  )
+  
+  return languageEntry ? (languageEntry[0] as SupportedLanguage) : 'javascript'
+}
+
+// Helper function to get Monaco language from our language type
+export function getMonacoLanguage(language: SupportedLanguage): string {
+  return LANGUAGE_CONFIGS[language].monacoLanguage
 }
