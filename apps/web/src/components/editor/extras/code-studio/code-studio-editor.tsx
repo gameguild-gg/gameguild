@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { X, Save, Code2, Play } from "lucide-react"
 import { Edit } from "lucide-react"
-import type { CodeStudioData } from "./types"
+import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
-import { MODE_CONFIGS } from "./types"
+import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
 import { useTheme } from "next-themes"
+import { FileExplorer } from "./file-explorer"
+import { FileTabs } from "./file-tabs"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -69,6 +71,131 @@ export function CodeStudioEditor({
     handleDataChange({ files: updatedFiles })
   }
 
+  // File Management
+  const handleFileSelect = (fileId: string) => {
+    // Adicionar à lista de abas abertas se não estiver
+    if (!localData.openTabs?.includes(fileId)) {
+      handleDataChange({ 
+        openTabs: [...(localData.openTabs || []), fileId],
+        activeFileId: fileId 
+      })
+    } else {
+      handleDataChange({ activeFileId: fileId })
+    }
+  }
+
+  const handleCloseTab = (fileId: string) => {
+    const newOpenTabs = (localData.openTabs || []).filter(id => id !== fileId)
+    const updates: Partial<CodeStudioData> = { openTabs: newOpenTabs }
+    
+    // Se fechou a aba ativa, mudar para outra aba
+    if (fileId === localData.activeFileId && newOpenTabs.length > 0) {
+      updates.activeFileId = newOpenTabs[newOpenTabs.length - 1]
+    }
+    
+    handleDataChange(updates)
+  }
+
+  const handleCreateFile = (path: string, name: string) => {
+    const language = getLanguageFromExtension(name)
+    const fullPath = path ? `${path}/${name}` : name
+    
+    const newFile: CodeFile = {
+      id: Date.now().toString(),
+      name,
+      content: LANGUAGE_CONFIGS[language].defaultTemplate,
+      language,
+      isMain: localData.files.length === 0,
+      isVisible: true,
+      path: fullPath,
+    }
+    
+    handleDataChange({ files: [...localData.files, newFile] })
+  }
+
+  const handleCreateFolder = (path: string, name: string) => {
+    const fullPath = path ? `${path}/${name}` : name
+    const newFolder: FileTreeFolder = {
+      id: Date.now().toString(),
+      name,
+      path: fullPath,
+      isExpanded: true,
+      children: [],
+      type: "folder",
+    }
+    
+    handleDataChange({ folders: [...(localData.folders || []), newFolder] })
+  }
+
+  const handleDeleteFile = (fileId: string) => {
+    const newFiles = localData.files.filter(f => f.id !== fileId)
+    const newOpenTabs = (localData.openTabs || []).filter(id => id !== fileId)
+    
+    handleDataChange({ 
+      files: newFiles,
+      openTabs: newOpenTabs,
+      activeFileId: newOpenTabs.length > 0 ? newOpenTabs[0] : newFiles[0]?.id,
+    })
+  }
+
+  const handleDeleteFolder = (folderId: string) => {
+    const folder = localData.folders?.find(f => f.id === folderId)
+    if (!folder) return
+    
+    // Remover pasta e arquivos dentro dela
+    const newFiles = localData.files.filter(f => !f.path.startsWith(folder.path))
+    const newFolders = (localData.folders || []).filter(f => f.id !== folderId)
+    
+    handleDataChange({ files: newFiles, folders: newFolders })
+  }
+
+  const handleRenameFile = (fileId: string, newName: string) => {
+    const updatedFiles = localData.files.map(f => {
+      if (f.id === fileId) {
+        const pathParts = f.path.split('/')
+        pathParts[pathParts.length - 1] = newName
+        return { ...f, name: newName, path: pathParts.join('/') }
+      }
+      return f
+    })
+    handleDataChange({ files: updatedFiles })
+  }
+
+  const handleRenameFolder = (folderId: string, newName: string) => {
+    const folder = localData.folders?.find(f => f.id === folderId)
+    if (!folder) return
+    
+    const oldPath = folder.path
+    const pathParts = oldPath.split('/')
+    pathParts[pathParts.length - 1] = newName
+    const newPath = pathParts.join('/')
+    
+    // Atualizar pasta
+    const updatedFolders = (localData.folders || []).map(f => {
+      if (f.id === folderId) {
+        return { ...f, name: newName, path: newPath }
+      }
+      return f
+    })
+    
+    // Atualizar caminhos dos arquivos dentro da pasta
+    const updatedFiles = localData.files.map(f => {
+      if (f.path.startsWith(oldPath)) {
+        return { ...f, path: f.path.replace(oldPath, newPath) }
+      }
+      return f
+    })
+    
+    handleDataChange({ folders: updatedFolders, files: updatedFiles })
+  }
+
+  const handleToggleFolder = (folderId: string) => {
+    const updatedFolders = (localData.folders || []).map(f =>
+      f.id === folderId ? { ...f, isExpanded: !f.isExpanded } : f
+    )
+    handleDataChange({ folders: updatedFolders })
+  }
+
   const handleExecute = () => {
     if (!activeFile) return
     setIsExecuting(true)
@@ -116,6 +243,13 @@ export function CodeStudioEditor({
           <div className="p-4">
             <div className="max-w-4xl mx-auto">
               <div className="h-96 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <FileTabs
+                  files={localData.files}
+                  openTabs={localData.openTabs || [activeFile?.id || '']}
+                  activeFileId={localData.activeFileId}
+                  onSelectTab={handleFileSelect}
+                  onCloseTab={handleCloseTab}
+                />
                 <MonacoCodeEditor
                   value={activeFile?.content || ""}
                   language={activeFile?.language || "javascript"}
@@ -131,17 +265,46 @@ export function CodeStudioEditor({
         ) : (
           /* EXECUTION/TEST MODE: Layout vertical (código acima, resultado abaixo) */
           <div className="flex flex-col">
-            {/* Editor */}
-            <div className="h-96 border-b border-gray-200 dark:border-gray-800">
-              <MonacoCodeEditor
-                value={activeFile?.content || ""}
-                language={activeFile?.language || "javascript"}
-                onChange={handleCodeChange}
-                readonly={localData.readonly || false}
-                theme={isDarkMode ? "vs-dark" : "vs-light"}
-                fontSize={localData.fontSize}
-                showLineNumbers={localData.showLineNumbers}
-              />
+            {/* Editor com File Explorer e Tabs */}
+            <div className="h-96 border-b border-gray-200 dark:border-gray-800 flex">
+              {/* File Explorer - 200px de largura */}
+              <div className="w-[200px] shrink-0">
+                <FileExplorer
+                  files={localData.files}
+                  folders={localData.folders || []}
+                  activeFileId={localData.activeFileId}
+                  onFileSelect={handleFileSelect}
+                  onCreateFile={handleCreateFile}
+                  onCreateFolder={handleCreateFolder}
+                  onDeleteFile={handleDeleteFile}
+                  onDeleteFolder={handleDeleteFolder}
+                  onRenameFile={handleRenameFile}
+                  onRenameFolder={handleRenameFolder}
+                  onToggleFolder={handleToggleFolder}
+                />
+              </div>
+              
+              {/* Editor com Tabs */}
+              <div className="flex-1 flex flex-col min-w-0">
+                <FileTabs
+                  files={localData.files}
+                  openTabs={localData.openTabs || [activeFile?.id || '']}
+                  activeFileId={localData.activeFileId}
+                  onSelectTab={handleFileSelect}
+                  onCloseTab={handleCloseTab}
+                />
+                <div className="flex-1">
+                  <MonacoCodeEditor
+                    value={activeFile?.content || ""}
+                    language={activeFile?.language || "javascript"}
+                    onChange={handleCodeChange}
+                    readonly={localData.readonly || false}
+                    theme={isDarkMode ? "vs-dark" : "vs-light"}
+                    fontSize={localData.fontSize}
+                    showLineNumbers={localData.showLineNumbers}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Resultado */}
@@ -228,41 +391,71 @@ export function CodeStudioEditor({
 
         {/* Main Content - Layout baseado no modo */}
         {isViewMode ? (
-          /* VIEW MODE: Editor centralizado */
+          // VIEW MODE: Editor centralizado com tabs
           <div className="flex-1 flex items-center justify-center p-8 overflow-auto">
-            <div className="w-full max-w-4xl h-full">
-              <MonacoCodeEditor
-                value={activeFile?.content || ""}
-                language={activeFile?.language || "javascript"}
-                onChange={handleCodeChange}
-                readonly={true}
-                theme={isDarkMode ? "vs-dark" : "vs-light"}
-                fontSize={localData.fontSize}
-                showLineNumbers={localData.showLineNumbers}
+            <div className="w-full max-w-4xl h-full flex flex-col">
+              <FileTabs
+                files={localData.files}
+                openTabs={localData.openTabs || [activeFile?.id || '']}
+                activeFileId={localData.activeFileId}
+                onSelectTab={handleFileSelect}
+                onCloseTab={handleCloseTab}
               />
-            </div>
-          </div>
-        ) : (
-          /* EXECUTION/TEST MODE: Layout horizontal (editor à esquerda, resultado à direita) */
-          <div className="flex-1 flex min-h-0">
-            {/* Left Panel - Editor */}
-            <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col">
-              <div className="p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 className="font-medium text-sm flex items-center gap-2">
-                  <Code2 className="h-4 w-4" />
-                  {activeFile?.name || "Code"}
-                </h3>
-              </div>
               <div className="flex-1">
                 <MonacoCodeEditor
                   value={activeFile?.content || ""}
                   language={activeFile?.language || "javascript"}
                   onChange={handleCodeChange}
-                  readonly={localData.readonly || false}
+                  readonly={true}
                   theme={isDarkMode ? "vs-dark" : "vs-light"}
                   fontSize={localData.fontSize}
                   showLineNumbers={localData.showLineNumbers}
                 />
+              </div>
+            </div>
+          </div>
+        ) : (
+          // EXECUTION/TEST MODE: Layout horizontal (File Explorer + Editor à esquerda, resultado à direita)
+          <div className="flex-1 flex min-h-0">
+            {/* Left Panel - File Explorer + Editor */}
+            <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex min-w-0">
+              {/* File Explorer */}
+              <div className="w-[200px] shrink-0">
+                <FileExplorer
+                  files={localData.files}
+                  folders={localData.folders || []}
+                  activeFileId={localData.activeFileId}
+                  onFileSelect={handleFileSelect}
+                  onCreateFile={handleCreateFile}
+                  onCreateFolder={handleCreateFolder}
+                  onDeleteFile={handleDeleteFile}
+                  onDeleteFolder={handleDeleteFolder}
+                  onRenameFile={handleRenameFile}
+                  onRenameFolder={handleRenameFolder}
+                  onToggleFolder={handleToggleFolder}
+                />
+              </div>
+              
+              {/* Editor com Tabs */}
+              <div className="flex-1 flex flex-col min-w-0">
+                <FileTabs
+                  files={localData.files}
+                  openTabs={localData.openTabs || [activeFile?.id || '']}
+                  activeFileId={localData.activeFileId}
+                  onSelectTab={handleFileSelect}
+                  onCloseTab={handleCloseTab}
+                />
+                <div className="flex-1">
+                  <MonacoCodeEditor
+                    value={activeFile?.content || ""}
+                    language={activeFile?.language || "javascript"}
+                    onChange={handleCodeChange}
+                    readonly={localData.readonly || false}
+                    theme={isDarkMode ? "vs-dark" : "vs-light"}
+                    fontSize={localData.fontSize}
+                    showLineNumbers={localData.showLineNumbers}
+                  />
+                </div>
               </div>
             </div>
 

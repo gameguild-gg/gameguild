@@ -34,6 +34,8 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
     super(key)
     this.__data = {
       files: data.files || [],
+      folders: data.folders || [],
+      openTabs: data.openTabs || [],
       mode: data.mode,
       language: data.language || "javascript",
       readonly: data.readonly ?? false,
@@ -108,6 +110,7 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
     // Criar arquivo inicial baseado na linguagem padrão
     const defaultLanguage = data.language || "javascript"
     const languageConfig = LANGUAGE_CONFIGS[defaultLanguage]
+    const fileId = "1"
     
     // Update node with selected mode and initial file
     editor.update(() => {
@@ -118,15 +121,18 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
           mode,
           files: [
             {
-              id: "1",
+              id: fileId,
               name: `main${languageConfig.defaultExtension}`,
               content: languageConfig.defaultTemplate,
               language: defaultLanguage,
               isMain: true,
               isVisible: true,
+              path: `main${languageConfig.defaultExtension}`,
             },
           ],
-          activeFileId: "1",
+          folders: [],
+          openTabs: [fileId],
+          activeFileId: fileId,
         }
         node.setData(updatedData)
       }
@@ -204,6 +210,8 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
 export function $createCodeStudioNode(): CodeStudioNode {
   return new CodeStudioNode({
     files: [],
+    folders: [],
+    openTabs: [],
     language: "javascript",
     readonly: false,
     showLineNumbers: true,
