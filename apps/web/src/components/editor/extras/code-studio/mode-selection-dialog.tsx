@@ -1,6 +1,6 @@
 "use client"
 
-import { Play, TestTube, Eye } from "lucide-react"
+import { Play, TestTube } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { EditorMode } from "./types"
 import { MODE_CONFIGS } from "./types"
@@ -13,7 +13,6 @@ interface ModeSelectionDialogProps {
 const ICON_MAP = {
   Play,
   TestTube,
-  Eye,
 }
 
 export function ModeSelectionDialog({ onSelect, onCancel }: ModeSelectionDialogProps) {
