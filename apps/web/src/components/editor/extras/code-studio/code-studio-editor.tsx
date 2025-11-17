@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, Save, Code2, Play } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { X, Save, Code2, Play, Eye, Terminal } from "lucide-react"
 import { Edit } from "lucide-react"
 import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
@@ -51,8 +52,8 @@ export function CodeStudioEditor({
   const currentMode = MODE_CONFIGS[localData.mode]
   const activeFile = localData.files.find(f => f.id === localData.activeFileId) || localData.files[0]
   
-  // Determinar o layout baseado no modo
-  const isViewMode = localData.mode === "view"
+  // Determinar o layout baseado no modo e isViewMode
+  const isViewMode = localData.isViewMode ?? false
   const isExecutionMode = localData.mode === "execution"
   const isTestMode = localData.mode === "test"
 
@@ -266,7 +267,7 @@ export function CodeStudioEditor({
                   value={activeFile?.content || ""}
                   language={activeFile?.language || "javascript"}
                   onChange={handleCodeChange}
-                  readonly={true}
+                  readonly={isViewMode || localData.readonly || false}
                   theme={isDarkMode ? "vs-dark" : "vs-light"}
                   fontSize={localData.fontSize}
                   showLineNumbers={localData.showLineNumbers}
@@ -385,6 +386,36 @@ export function CodeStudioEditor({
             />
           </div>
 
+          {isExecutionMode && (
+            <div className="flex items-center gap-2 ml-4 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Display:</span>
+              <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-md p-0.5">
+                <button
+                  onClick={() => handleDataChange({ isViewMode: false })}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    !isViewMode 
+                      ? "bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm" 
+                      : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  <Terminal className="h-3.5 w-3.5" />
+                  Execution
+                </button>
+                <button
+                  onClick={() => handleDataChange({ isViewMode: true })}
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                    isViewMode 
+                      ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm" 
+                      : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                  }`}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  View Only
+                </button>
+              </div>
+            </div>
+          )}
+
           {!isViewMode && (
             <div className="ml-auto flex items-center gap-2">
               <Button
@@ -418,7 +449,7 @@ export function CodeStudioEditor({
                   value={activeFile?.content || ""}
                   language={activeFile?.language || "javascript"}
                   onChange={handleCodeChange}
-                  readonly={true}
+                  readonly={isViewMode}
                   theme={isDarkMode ? "vs-dark" : "vs-light"}
                   fontSize={localData.fontSize}
                   showLineNumbers={localData.showLineNumbers}
