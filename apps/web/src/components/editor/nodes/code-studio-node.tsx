@@ -9,6 +9,9 @@ import { EditorLoadingContext } from "../lexical-editor"
 
 import type { CodeStudioData } from "../extras/code-studio/types"
 import { CodeStudioEditor } from "../extras/code-studio/code-studio-editor"
+import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
+import type { EditorMode } from "../extras/code-studio/types"
+import { LANGUAGE_CONFIGS } from "../extras/code-studio/types"
 
 export interface SerializedCodeStudioNode extends SerializedLexicalNode {
   type: "code-studio"
@@ -31,7 +34,7 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
     super(key)
     this.__data = {
       files: data.files || [],
-      mode: data.mode || "execution",
+      mode: data.mode,
       language: data.language || "javascript",
       readonly: data.readonly ?? false,
       showLineNumbers: data.showLineNumbers ?? true,
@@ -81,7 +84,9 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
   const [editor] = useLexicalComposerContext()
   const isLoading = useContext(EditorLoadingContext)
   const [showEditor, setShowEditor] = useState(false)
+  const [showModeSelection, setShowModeSelection] = useState(false)
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
+  const [selectedMode, setSelectedMode] = useState<EditorMode | null>(null)
 
   const handleUpdateCodeStudio = (newData: Partial<CodeStudioData>) => {
     editor.update(() => {
@@ -96,6 +101,41 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
     })
   }
 
+  const handleModeSelect = (mode: EditorMode) => {
+    setSelectedMode(mode)
+    setShowModeSelection(false)
+    
+    // Criar arquivo inicial baseado na linguagem padrão
+    const defaultLanguage = data.language || "javascript"
+    const languageConfig = LANGUAGE_CONFIGS[defaultLanguage]
+    
+    // Update node with selected mode and initial file
+    editor.update(() => {
+      const node = $getNodeByKey(nodeKey)
+      if (node instanceof CodeStudioNode) {
+        const updatedData: CodeStudioData = {
+          ...data,
+          mode,
+          files: [
+            {
+              id: "1",
+              name: `main${languageConfig.defaultExtension}`,
+              content: languageConfig.defaultTemplate,
+              language: defaultLanguage,
+              isMain: true,
+              isVisible: true,
+            },
+          ],
+          activeFileId: "1",
+        }
+        node.setData(updatedData)
+      }
+    })
+    
+    // Open editor after mode selection
+    setShowEditor(true)
+  }
+
   const handleSave = (updatedData: CodeStudioData) => {
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
@@ -108,25 +148,38 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
 
   const handleCancel = () => {
     setShowEditor(false)
+    setShowModeSelection(false)
   }
 
   const handleEdit = () => {
     setShowEditor(true)
   }
 
-  // Auto-open editor for new/empty code studio
+  // Auto-open mode selection for new/empty code studio
   useEffect(() => {
     const isNew = !data.files || data.files.length === 0 || 
                   (data.files.length === 1 && data.files[0] && !data.files[0].content)
     
-    if (isNew && !hasAutoOpened) {
+    // If new and no mode set, show mode selection
+    if (isNew && !hasAutoOpened && !data.mode) {
+      setShowModeSelection(true)
+      setHasAutoOpened(true)
+    } else if (isNew && !hasAutoOpened && data.mode) {
+      // If has mode but is new, open editor directly
       setShowEditor(true)
       setHasAutoOpened(true)
     }
-  }, [data.files, hasAutoOpened])
+  }, [data.files, data.mode, hasAutoOpened])
 
   return (
     <>
+      {showModeSelection && (
+        <ModeSelectionDialog
+          onSelect={handleModeSelect}
+          onCancel={handleCancel}
+        />
+      )}
+      
       {showEditor ? (
         <CodeStudioEditor
           data={data}
@@ -150,17 +203,7 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
 
 export function $createCodeStudioNode(): CodeStudioNode {
   return new CodeStudioNode({
-    files: [
-      {
-        id: "1",
-        name: "main.js",
-        content: '// Write your code here\nconsole.log("Hello, World!");',
-        language: "javascript",
-        isMain: true,
-        isVisible: true,
-      },
-    ],
-    mode: "execution",
+    files: [],
     language: "javascript",
     readonly: false,
     showLineNumbers: true,
