@@ -28,6 +28,7 @@ import { PreviewLink } from "@/components/editor/plugins/preview-components/prev
 import { PreviewHeading } from "@/components/editor/plugins/preview-components/preview-heading"
 import { PreviewVegaLite } from "@/components/editor/plugins/preview-components/preview-vega-lite"
 import { PreviewTable } from "@/components/editor/plugins/preview-components/preview-table"
+import { PreviewCodeStudio } from "@/components/editor/plugins/preview-components/preview-code-studio"
 
 interface SerializedContentRendererProps {
   serializedState: SerializedEditorState
@@ -142,6 +143,11 @@ export function SerializedContentRenderer({
     // For table nodes
     if (node.type === "table") {
       return <PreviewTable key={uniqueKey} node={node} />
+    }
+
+    // For CodeStudio nodes
+    if (node.type === "code-studio") {
+      return <PreviewCodeStudio key={uniqueKey} data={node.data} />
     }
 
     if (node.children) {
