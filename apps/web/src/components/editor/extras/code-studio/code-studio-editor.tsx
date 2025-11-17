@@ -68,8 +68,8 @@ export function CodeStudioEditor({
   const currentMode = MODE_CONFIGS[localData.mode]
   const activeFile = localData.files.find(f => f.id === localData.activeFileId) || localData.files[0]
   
-  // Determinar o layout baseado no modo e isViewMode
-  const isViewMode = localData.isViewMode ?? false
+  // Determinar o layout baseado no modo e isCodeMode
+  const isCodeMode = localData.isCodeMode ?? false
   const isExecutionMode = localData.mode === "execution"
   const isTestMode = localData.mode === "test"
 
@@ -265,8 +265,8 @@ export function CodeStudioEditor({
         </div>
 
         {/* Layout baseado no modo */}
-        {isViewMode ? (
-          /* VIEW MODE: Editor com File Explorer */
+        {isCodeMode ? (
+          /* CODE MODE: Editor com File Explorer */
           <div className="h-96 border-b border-gray-200 dark:border-gray-800 flex">
             {/* File Explorer - 200px de largura (condicional) */}
             {(localData.showFileExplorer ?? true) && (
@@ -539,9 +539,9 @@ export function CodeStudioEditor({
               <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Display:</span>
               <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-md p-0.5">
                 <button
-                  onClick={() => handleDataChange({ isViewMode: false })}
+                  onClick={() => handleDataChange({ isCodeMode: false })}
                   className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    !isViewMode 
+                    !isCodeMode 
                       ? "bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm" 
                       : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                   }`}
@@ -550,21 +550,21 @@ export function CodeStudioEditor({
                   Execution
                 </button>
                 <button
-                  onClick={() => handleDataChange({ isViewMode: true })}
+                  onClick={() => handleDataChange({ isCodeMode: true })}
                   className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    isViewMode 
+                    isCodeMode 
                       ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm" 
                       : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                   }`}
                 >
-                  <Eye className="h-3.5 w-3.5" />
-                  View Only
+                  <Code2 className="h-3.5 w-3.5" />
+                  Code
                 </button>
               </div>
             </div>
           )}
 
-          {!isViewMode && (
+          {!isCodeMode && (
             <div className="ml-auto flex items-center gap-2">
               <Button
                 variant="default"
@@ -581,8 +581,8 @@ export function CodeStudioEditor({
         </div>
 
         {/* Main Content - Layout baseado no modo */}
-        {isViewMode ? (
-          // VIEW MODE: Editor com File Explorer
+        {isCodeMode ? (
+          // CODE MODE: Editor com File Explorer
           <div className="flex-1 flex min-h-0">
             {/* File Explorer */}
             <div className="w-[200px] shrink-0 border-r border-gray-200 dark:border-gray-800">
