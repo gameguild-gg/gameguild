@@ -262,14 +262,6 @@ export function CodeStudioEditor({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {onEdit && (
-              <Button variant="outline" size="sm" onClick={onEdit} className="h-7">
-                <Edit className="h-3 w-3 mr-1" />
-                Edit
-              </Button>
-            )}
-          </div>
         </div>
 
         {/* Layout baseado no modo */}
