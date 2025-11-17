@@ -13,6 +13,12 @@ export type EditorMode =
   | "execution"  // Executa código com console na direita
   | "test"       // Modo de testes
 
+export type ShikiTheme = 
+  | "github"           // GitHub theme
+  | "github-default"   // GitHub Default theme
+  | "github-dimmed"    // GitHub Dimmed theme
+  | "plus"             // Plus theme
+
 export interface CodeFile {
   id: string
   name: string
@@ -69,6 +75,7 @@ export interface CodeStudioData {
   showLineNumbers?: boolean
   fontSize?: number
   theme?: "light" | "dark" | "system"
+  shikiTheme?: ShikiTheme // Tema do Shiki (syntax highlighting)
   isCodeMode?: boolean // Se true, mostra apenas código sem console/testes (modo código)
   showFileExplorer?: boolean // Se false, esconde file explorer fora do editor modal
   
@@ -205,4 +212,34 @@ export function getLanguageFromExtension(filename: string): SupportedLanguage {
 // Helper function to get Monaco language from our language type
 export function getMonacoLanguage(language: SupportedLanguage): string {
   return LANGUAGE_CONFIGS[language].monacoLanguage
+}
+
+// Shiki theme configurations
+export const SHIKI_THEME_CONFIGS: Record<ShikiTheme, { label: string; dark: string; light: string }> = {
+  "github": {
+    label: "GitHub",
+    dark: "github-dark",
+    light: "github-light",
+  },
+  "github-default": {
+    label: "GitHub Default",
+    dark: "github-dark-default",
+    light: "github-light-default",
+  },
+  "github-dimmed": {
+    label: "GitHub Dimmed",
+    dark: "github-dark-dimmed",
+    light: "github-light-default",
+  },
+  "plus": {
+    label: "Plus",
+    dark: "dark-plus",
+    light: "light-plus",
+  },
+}
+
+// Helper to get Shiki theme name based on color mode
+export function getShikiThemeName(shikiTheme: ShikiTheme, isDark: boolean): string {
+  const config = SHIKI_THEME_CONFIGS[shikiTheme]
+  return isDark ? config.dark : config.light
 }
