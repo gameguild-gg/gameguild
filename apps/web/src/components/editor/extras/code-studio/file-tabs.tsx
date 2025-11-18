@@ -4,7 +4,7 @@ import { X, File } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { CodeFile } from "./types"
 import { cn } from "@/lib/utils"
-import { useRef, useEffect } from "react"
+import { useRef, useEffect, useState } from "react"
 
 interface FileTabsProps {
   files: CodeFile[]
@@ -12,6 +12,7 @@ interface FileTabsProps {
   activeFileId?: string
   onSelectTab: (fileId: string) => void
   onCloseTab?: (fileId: string) => void
+  onReorderTabs: (newOrder: string[]) => void
 }
 
 export function FileTabs({
@@ -20,9 +21,12 @@ export function FileTabs({
   activeFileId,
   onSelectTab,
   onCloseTab,
+  onReorderTabs,
 }: FileTabsProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const activeTabRef = useRef<HTMLDivElement>(null)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
   
   const openFiles = openTabs
     .map(id => files.find(f => f.id === id))
@@ -55,6 +59,46 @@ export function FileTabs({
     return () => container.removeEventListener('wheel', handleWheel)
   }, [])
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === index) return
+    setDragOverIndex(index)
+  }
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault()
+    
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      setDraggedIndex(null)
+      setDragOverIndex(null)
+      return
+    }
+
+    const newOrder = [...openTabs]
+    const [movedItem] = newOrder.splice(draggedIndex, 1)
+    if (movedItem) {
+      newOrder.splice(dropIndex, 0, movedItem)
+    }
+    
+    onReorderTabs(newOrder)
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverIndex(null)
+  }
+
   return (
     <div 
       ref={scrollContainerRef}
@@ -65,18 +109,28 @@ export function FileTabs({
           No files open
         </div>
       ) : (
-        openFiles.map(file => {
+        openFiles.map((file, index) => {
           const isActive = file.id === activeFileId
+          const isDragging = draggedIndex === index
+          const isDragOver = dragOverIndex === index
           
           return (
             <div
               key={file.id}
               ref={isActive ? activeTabRef : null}
+              draggable
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
+              onDragEnd={handleDragEnd}
               className={cn(
-                "flex items-center gap-2 px-3 py-1.5 cursor-pointer border-r border-gray-200 dark:border-gray-800 group whitespace-nowrap shrink-0 select-none",
+                "flex items-center gap-2 px-3 py-1.5 cursor-pointer border-r border-gray-200 dark:border-gray-800 group whitespace-nowrap shrink-0 select-none transition-opacity",
                 isActive
                   ? "bg-white dark:bg-gray-950 text-blue-600 dark:text-blue-400"
-                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
+                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300",
+                isDragging && "opacity-50",
+                isDragOver && "border-l-2 border-l-blue-500"
               )}
               onClick={() => onSelectTab(file.id)}
             >
