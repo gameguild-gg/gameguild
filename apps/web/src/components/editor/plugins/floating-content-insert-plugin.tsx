@@ -407,7 +407,7 @@ export function FloatingContentInsertPlugin() {
       icon: FileText,
       label: "Markdown",
       action: () => {
-        editor.dispatchCommand(INSERT_MARKDOWN_COMMAND, undefined)
+        editor.dispatchCommand(INSERT_MARKDOWN_COMMAND, { content: "" })
         setShowMenu(false)
       },
     },
@@ -587,7 +587,7 @@ export function FloatingContentInsertPlugin() {
           <PopoverContent
             ref={popoverContentRef}
             side="left"
-            className="w-80 p-0 max-h-[500px] overflow-y-auto shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+            className="w-80 p-0 max-h-[600px] overflow-y-auto shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
             onWheel={(e) => {
               e.stopPropagation()
             }}
