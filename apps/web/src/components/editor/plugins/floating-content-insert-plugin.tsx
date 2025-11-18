@@ -118,6 +118,7 @@ export function FloatingContentInsertPlugin() {
 
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const popoverContentRef = useRef<HTMLDivElement>(null)
 
   const updateMenuPosition = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -185,19 +186,27 @@ export function FloatingContentInsertPlugin() {
     )
   }, [editor, checkEmpty])
 
+  // Removed global scroll listener to prevent closing menu when scrolling inside plugins list
+
+  // Prevent scroll events inside popover from propagating
   useEffect(() => {
-    const handleScroll = () => {
-      if (show) {
-        setShow(false)
-        setShowMenu(false)
-      }
+    const popoverElement = popoverContentRef.current
+    if (!popoverElement) return
+
+    const handlePopoverScroll = (event: Event) => {
+      event.stopPropagation()
     }
 
-    window.addEventListener("scroll", handleScroll, true)
+    popoverElement.addEventListener("scroll", handlePopoverScroll, true)
+    popoverElement.addEventListener("wheel", handlePopoverScroll, { passive: false, capture: true })
+    popoverElement.addEventListener("touchmove", handlePopoverScroll, { passive: false, capture: true })
+    
     return () => {
-      window.removeEventListener("scroll", handleScroll, true)
+      popoverElement.removeEventListener("scroll", handlePopoverScroll, true)
+      popoverElement.removeEventListener("wheel", handlePopoverScroll, { capture: true } as any)
+      popoverElement.removeEventListener("touchmove", handlePopoverScroll, { capture: true } as any)
     }
-  }, [show])
+  }, [showMenu])
 
   const handleImageSelected = (result: MediaUploadResult | MediaUploadResult[]) => {
     const results = Array.isArray(result) ? result : [result]
@@ -576,8 +585,18 @@ export function FloatingContentInsertPlugin() {
             </Button>
           </PopoverTrigger>
           <PopoverContent
+            ref={popoverContentRef}
             side="left"
             className="w-80 p-0 max-h-[500px] overflow-y-auto shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+            onWheel={(e) => {
+              e.stopPropagation()
+            }}
+            onTouchMove={(e) => {
+              e.stopPropagation()
+            }}
+            onScroll={(e) => {
+              e.stopPropagation()
+            }}
           >
             {/*
             <div className="px-2 py-1.5">
