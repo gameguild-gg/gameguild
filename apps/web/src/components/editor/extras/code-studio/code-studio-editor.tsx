@@ -264,9 +264,9 @@ export function CodeStudioEditor({
           </div>
         </div>
 
-        {/* Layout baseado no modo */}
-        {isCodeMode ? (
-          /* CODE MODE: Editor com File Explorer */
+        {/* Layout baseado no modo - sempre vertical (código acima, resultado abaixo) */}
+        <div className="flex flex-col">
+          {/* Editor com File Explorer e Tabs */}
           <div className="h-96 border-b border-gray-200 dark:border-gray-800 flex">
             {/* File Explorer - 200px de largura (condicional) */}
             {(localData.showFileExplorer ?? true) && (
@@ -310,67 +310,19 @@ export function CodeStudioEditor({
               </div>
             </div>
           </div>
-        ) : (
-          /* EXECUTION/TEST MODE: Layout vertical (código acima, resultado abaixo) */
-          <div className="flex flex-col">
-            {/* Editor com File Explorer e Tabs */}
-            <div className="h-96 border-b border-gray-200 dark:border-gray-800 flex">
-              {/* File Explorer - 200px de largura (condicional) */}
-              {(localData.showFileExplorer ?? true) && (
-                <div className="w-[200px] shrink-0">
-                  <FileExplorer
-                    files={localData.files}
-                    folders={localData.folders || []}
-                    activeFileId={localData.activeFileId}
-                    onFileSelect={handleFileSelect}
-                    onCreateFile={handleCreateFile}
-                    onCreateFolder={handleCreateFolder}
-                    onDeleteFile={handleDeleteFile}
-                    onDeleteFolder={handleDeleteFolder}
-                    onRenameFile={handleRenameFile}
-                    onRenameFolder={handleRenameFolder}
-                    onToggleFolder={handleToggleFolder}
-                  />
-                </div>
-              )}
-              
-              {/* Editor com Tabs */}
-              <div className="flex-1 flex flex-col min-w-0">
-                <FileTabs
-                  files={localData.files}
-                  openTabs={localData.openTabs || []}
-                  activeFileId={localData.activeFileId}
-                  onSelectTab={handleFileSelect}
-                  onCloseTab={localData.showFileExplorer ?? true ? handleCloseTab : undefined}
-                />
-                <div className="flex-1">
-                  <MonacoCodeEditor
-                    value={activeFile?.content || ""}
-                    language={activeFile?.language || "javascript"}
-                    onChange={handleCodeChange}
-                    readonly={localData.readonly || false}
-                    theme={isDarkMode ? "vs-dark" : "vs-light"}
-                    shikiTheme={localData.shikiTheme || "github"}
-                    fontSize={localData.fontSize}
-                    showLineNumbers={localData.showLineNumbers}
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* Resultado */}
-            <div className="h-64">
-              <ResultPanel
-                mode={localData.mode}
-                output={output}
-                isExecuting={isExecuting}
-                onExecute={handleExecute}
-                testCases={localData.testCases?.[activeFile?.id || ""] || []}
-                activeFile={activeFile}
-              />
-            </div>
+          {/* Resultado */}
+          <div className="h-64">
+            <ResultPanel
+              mode={localData.mode}
+              output={output}
+              isExecuting={isExecuting}
+              onExecute={handleExecute}
+              testCases={localData.testCases?.[activeFile?.id || ""] || []}
+              activeFile={activeFile}
+            />
           </div>
-        )}
+        </div>
 
         {localData.caption && (
           <div className="p-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800">
@@ -558,35 +510,33 @@ export function CodeStudioEditor({
             />
           </div>
 
-          {isExecutionMode && (
-            <div className="flex items-center gap-2 ml-4 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-              <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Display:</span>
-              <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-md p-0.5">
-                <button
-                  onClick={() => handleDataChange({ isCodeMode: false })}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    !isCodeMode 
-                      ? "bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm" 
-                      : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                  }`}
-                >
-                  <Terminal className="h-3.5 w-3.5" />
-                  Execution
-                </button>
-                <button
-                  onClick={() => handleDataChange({ isCodeMode: true })}
-                  className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                    isCodeMode 
-                      ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm" 
-                      : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                  }`}
-                >
-                  <Code2 className="h-3.5 w-3.5" />
-                  Code
-                </button>
-              </div>
+          <div className="flex items-center gap-2 ml-4 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Display:</span>
+            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-md p-0.5">
+              <button
+                onClick={() => handleDataChange({ isCodeMode: false })}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  !isCodeMode 
+                    ? "bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm" 
+                    : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+              >
+                <Terminal className="h-3.5 w-3.5" />
+                {isExecutionMode ? "Execution" : "Test"}
+              </button>
+              <button
+                onClick={() => handleDataChange({ isCodeMode: true })}
+                className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                  isCodeMode 
+                    ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm" 
+                    : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                }`}
+              >
+                <Code2 className="h-3.5 w-3.5" />
+                Code
+              </button>
             </div>
-          )}
+          </div>
 
           {!isCodeMode && (
             <div className="ml-auto flex items-center gap-2">
