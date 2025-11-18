@@ -119,6 +119,10 @@ export function CodeStudioEditor({
     handleDataChange(updates)
   }
 
+  const handleReorderTabs = (newOrder: string[]) => {
+    handleDataChange({ openTabs: newOrder })
+  }
+
   const handleCreateFile = (path: string, name: string) => {
     const language = getLanguageFromExtension(name)
     const fullPath = path ? `${path}/${name}` : name
@@ -295,6 +299,7 @@ export function CodeStudioEditor({
                 activeFileId={localData.activeFileId}
                 onSelectTab={handleFileSelect}
                 onCloseTab={localData.showFileExplorer ?? true ? handleCloseTab : undefined}
+                onReorderTabs={handleReorderTabs}
               />
               <div className="flex-1">
                 {activeFile ? (
@@ -598,6 +603,7 @@ export function CodeStudioEditor({
                 activeFileId={localData.activeFileId}
                 onSelectTab={handleFileSelect}
                 onCloseTab={handleCloseTab}
+                onReorderTabs={handleReorderTabs}
               />
               <div className="flex-1">
                 {activeFile ? (
@@ -658,6 +664,7 @@ export function CodeStudioEditor({
                   activeFileId={localData.activeFileId}
                   onSelectTab={handleFileSelect}
                   onCloseTab={handleCloseTab}
+                  onReorderTabs={handleReorderTabs}
                 />
                 <div className="flex-1">
                   {activeFile ? (
