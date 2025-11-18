@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
+import { DuplicateNameDialog } from "../dialogs/duplicate-name-dialog"
 import type { CodeFile, FileTreeFolder, FileTreeItem } from "./types"
 import { cn } from "@/lib/utils"
 
@@ -57,6 +58,14 @@ export function FileExplorer({
     type: "file" | "folder"
     id: string
     name: string
+  } | null>(null)
+  const [duplicateDialog, setDuplicateDialog] = useState<{
+    open: boolean
+    type: "file" | "folder"
+    originalName: string
+    path: string
+    mode: "create" | "rename"
+    itemId?: string
   } | null>(null)
 
   // Fechar menu ao clicar fora
@@ -103,8 +112,38 @@ export function FileExplorer({
     }
 
     if (creatingType === "file") {
+      // Verificar se já existe arquivo com mesmo nome no mesmo caminho
+      const fullPath = creatingPath ? `${creatingPath}/${newItemName}` : newItemName
+      const fileExists = files.some(f => f.path === fullPath)
+      
+      if (fileExists) {
+        setDuplicateDialog({
+          open: true,
+          type: "file",
+          originalName: newItemName,
+          path: creatingPath,
+          mode: "create",
+        })
+        return
+      }
+      
       onCreateFile(creatingPath, newItemName)
     } else if (creatingType === "folder") {
+      // Verificar se já existe pasta com mesmo nome no mesmo caminho
+      const fullPath = creatingPath ? `${creatingPath}/${newItemName}` : newItemName
+      const folderExists = folders.some(f => f.path === fullPath)
+      
+      if (folderExists) {
+        setDuplicateDialog({
+          open: true,
+          type: "folder",
+          originalName: newItemName,
+          path: creatingPath,
+          mode: "create",
+        })
+        return
+      }
+      
       onCreateFolder(creatingPath, newItemName)
     }
 
@@ -121,13 +160,92 @@ export function FileExplorer({
   const handleFinishRename = (id: string, isFolder: boolean) => {
     if (editingName.trim() && editingName !== (isFolder ? folders : files).find(f => f.id === id)?.name) {
       if (isFolder) {
+        const folder = folders.find(f => f.id === id)
+        if (!folder) return
+        
+        const pathParts = folder.path.split('/')
+        pathParts[pathParts.length - 1] = editingName
+        const newPath = pathParts.join('/')
+        
+        // Verificar se já existe pasta com mesmo nome no mesmo nível
+        const folderExists = folders.some(f => f.path === newPath && f.id !== id)
+        if (folderExists) {
+          setDuplicateDialog({
+            open: true,
+            type: "folder",
+            originalName: editingName,
+            path: pathParts.slice(0, -1).join('/'),
+            mode: "rename",
+            itemId: id,
+          })
+          setEditingId(null)
+          setEditingName("")
+          return
+        }
+        
         onRenameFolder(id, editingName)
       } else {
+        const file = files.find(f => f.id === id)
+        if (!file) return
+        
+        const pathParts = file.path.split('/')
+        pathParts[pathParts.length - 1] = editingName
+        const newPath = pathParts.join('/')
+        
+        // Verificar se já existe arquivo com mesmo nome no mesmo nível
+        const fileExists = files.some(f => f.path === newPath && f.id !== id)
+        if (fileExists) {
+          setDuplicateDialog({
+            open: true,
+            type: "file",
+            originalName: editingName,
+            path: pathParts.slice(0, -1).join('/'),
+            mode: "rename",
+            itemId: id,
+          })
+          setEditingId(null)
+          setEditingName("")
+          return
+        }
+        
         onRenameFile(id, editingName)
       }
     }
     setEditingId(null)
     setEditingName("")
+  }
+
+  const handleDuplicateConfirm = (newName: string) => {
+    if (!duplicateDialog) return
+
+    const { type, path, mode, itemId } = duplicateDialog
+
+    if (mode === "create") {
+      // Criar com o novo nome
+      if (type === "file") {
+        onCreateFile(path, newName)
+      } else {
+        onCreateFolder(path, newName)
+      }
+      setCreatingType(null)
+      setNewItemName("")
+      setCreatingPath("")
+    } else if (mode === "rename" && itemId) {
+      // Renomear com o novo nome
+      if (type === "file") {
+        onRenameFile(itemId, newName)
+      } else {
+        onRenameFolder(itemId, newName)
+      }
+    }
+
+    setDuplicateDialog(null)
+  }
+
+  const handleDuplicateCancel = () => {
+    setDuplicateDialog(null)
+    // Se estava criando, não limpar os campos para permitir correção
+    // Se estava renomeando, já foi limpo antes de abrir o dialog
   }
 
   const handleDeleteClick = (id: string, name: string, type: "file" | "folder") => {
@@ -494,6 +612,18 @@ export function FileExplorer({
           itemType={deleteDialog.type}
           onConfirm={handleConfirmDelete}
           description={getDeleteDescription()}
+        />
+      )}
+
+      {/* Duplicate Name Dialog */}
+      {duplicateDialog && (
+        <DuplicateNameDialog
+          open={duplicateDialog.open}
+          onOpenChange={(open) => !open && setDuplicateDialog(null)}
+          itemType={duplicateDialog.type}
+          originalName={duplicateDialog.originalName}
+          onConfirm={handleDuplicateConfirm}
+          onCancel={handleDuplicateCancel}
         />
       )}
     </div>
