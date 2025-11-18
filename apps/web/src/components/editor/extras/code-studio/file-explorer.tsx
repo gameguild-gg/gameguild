@@ -120,7 +120,7 @@ export function FileExplorer({
       <div key={folder.id}>
         <div
           className={cn(
-            "flex items-center gap-1 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer group",
+            "flex items-center gap-1 px-2 py-1 select-none hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer group",
             "text-sm"
           )}
           style={{ paddingLeft: `${level * 12 + 8}px` }}
@@ -248,7 +248,7 @@ export function FileExplorer({
       <div
         key={file.id}
         className={cn(
-          "flex items-center gap-1 px-2 py-1 cursor-pointer group text-sm",
+          "flex items-center gap-1 px-2 py-1 cursor-pointer group text-sm select-none",
           isActive 
             ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" 
             : "hover:bg-gray-100 dark:hover:bg-gray-800"
