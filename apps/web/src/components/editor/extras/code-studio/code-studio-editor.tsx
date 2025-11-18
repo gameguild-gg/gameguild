@@ -4,16 +4,15 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { X, Save, Code2, Play, Eye, Terminal, Menu, Lock, Unlock, Type, Hash, FolderTree, Palette, ArrowLeft } from "lucide-react"
-import { Edit } from "lucide-react"
-import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, ShikiTheme } from "./types"
+import { X, Save, Code2, Play, Terminal, Menu, ArrowLeft, Lock } from "lucide-react"
+import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
-import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension, SHIKI_THEME_CONFIGS } from "./types"
+import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
 import { useTheme } from "next-themes"
 import { FileExplorer } from "./file-explorer"
 import { FileTabs } from "./file-tabs"
+import { SettingsMenu } from "./settings-menu"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -397,123 +396,11 @@ export function CodeStudioEditor({
             
             {/* Settings Dropdown Menu */}
             {showSettingsMenu && (
-              <div className="absolute top-10 left-0 z-50 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
-                <div className="p-4 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Settings</h3>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowSettingsMenu(false)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  
-                  <div className="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-3">
-                    {/* Read Only Global */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {localData.readonly ? (
-                            <Lock className="h-4 w-4 text-red-500" />
-                          ) : (
-                            <Unlock className="h-4 w-4 text-green-500" />
-                          )}
-                          <Label htmlFor="readonly" className="text-sm font-medium cursor-pointer">
-                            Read Only Outside Editor
-                          </Label>
-                        </div>
-                        <Switch
-                          id="readonly"
-                          checked={localData.readonly || false}
-                          onCheckedChange={(checked) => handleDataChange({ readonly: checked })}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 ml-6">
-                        When enabled, code is not editable in preview mode
-                      </p>
-                    </div>
-                    
-                    {/* Show Line Numbers */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Hash className="h-4 w-4 text-blue-500" />
-                        <Label htmlFor="lineNumbers" className="text-sm font-medium cursor-pointer">
-                          Line Numbers
-                        </Label>
-                      </div>
-                      <Switch
-                        id="lineNumbers"
-                        checked={localData.showLineNumbers ?? true}
-                        onCheckedChange={(checked) => handleDataChange({ showLineNumbers: checked })}
-                      />
-                    </div>
-                    
-                    {/* Show File Explorer */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <FolderTree className="h-4 w-4 text-orange-500" />
-                          <Label htmlFor="showFileExplorer" className="text-sm font-medium cursor-pointer">
-                            Show File Explorer
-                          </Label>
-                        </div>
-                        <Switch
-                          id="showFileExplorer"
-                          checked={localData.showFileExplorer ?? true}
-                          onCheckedChange={(checked) => handleDataChange({ showFileExplorer: checked })}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 ml-6">
-                        Shows file explorer and allows closing tabs in preview
-                      </p>
-                    </div>
-                    
-                    {/* Font Size */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Type className="h-4 w-4 text-purple-500" />
-                        <Label htmlFor="fontSize" className="text-sm font-medium">
-                          Font Size: {localData.fontSize || 14}px
-                        </Label>
-                      </div>
-                      <input
-                        id="fontSize"
-                        type="range"
-                        min="10"
-                        max="24"
-                        value={localData.fontSize || 14}
-                        onChange={(e) => handleDataChange({ fontSize: parseInt(e.target.value) })}
-                        className="w-full"
-                      />
-                    </div>
-                    
-                    {/* Shiki Theme */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Palette className="h-4 w-4 text-indigo-500" />
-                        <Label htmlFor="shikiTheme" className="text-sm font-medium">
-                          Syntax Theme
-                        </Label>
-                      </div>
-                      <select
-                        id="shikiTheme"
-                        value={localData.shikiTheme || "github"}
-                        onChange={(e) => handleDataChange({ shikiTheme: e.target.value as ShikiTheme })}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      >
-                        {Object.entries(SHIKI_THEME_CONFIGS).map(([key, config]) => (
-                          <option key={key} value={key}>
-                            {config.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <SettingsMenu
+                data={localData}
+                onDataChange={handleDataChange}
+                onClose={() => setShowSettingsMenu(false)}
+              />
             )}
           </div>
           
