@@ -58,7 +58,7 @@ export function FileTabs({
   return (
     <div 
       ref={scrollContainerRef}
-      className="flex items-center gap-0.5 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 overflow-x-auto min-h-[32px] scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+      className="flex items-center gap-0.5 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 overflow-x-auto min-h-[40px] scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
     >
       {openFiles.length === 0 ? (
         <div className="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-600 italic">
@@ -73,10 +73,10 @@ export function FileTabs({
               key={file.id}
               ref={isActive ? activeTabRef : null}
               className={cn(
-                "flex items-center gap-2 px-3 py-1.5 cursor-pointer border-r border-gray-200 dark:border-gray-800 group whitespace-nowrap shrink-0",
+                "flex items-center gap-2 px-3 py-1.5 cursor-pointer border-r border-gray-200 dark:border-gray-800 group whitespace-nowrap shrink-0 select-none",
                 isActive
                   ? "bg-white dark:bg-gray-950 text-blue-600 dark:text-blue-400"
-                  : "hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+                  : "hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300"
               )}
               onClick={() => onSelectTab(file.id)}
             >
