@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
 import type { CodeFile, FileTreeFolder, FileTreeItem } from "./types"
 import { cn } from "@/lib/utils"
 
@@ -51,6 +52,12 @@ export function FileExplorer({
   const [creatingPath, setCreatingPath] = useState("")
   const [newItemName, setNewItemName] = useState("")
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean
+    type: "file" | "folder"
+    id: string
+    name: string
+  } | null>(null)
 
   // Fechar menu ao clicar fora
   useEffect(() => {
@@ -121,6 +128,66 @@ export function FileExplorer({
     }
     setEditingId(null)
     setEditingName("")
+  }
+
+  const handleDeleteClick = (id: string, name: string, type: "file" | "folder") => {
+    setDeleteDialog({
+      open: true,
+      type,
+      id,
+      name,
+    })
+    setOpenMenuId(null)
+  }
+
+  const handleConfirmDelete = () => {
+    if (!deleteDialog) return
+
+    if (deleteDialog.type === "folder") {
+      onDeleteFolder(deleteDialog.id)
+    } else {
+      onDeleteFile(deleteDialog.id)
+    }
+
+    setDeleteDialog(null)
+  }
+
+  const countFolderContents = (folderId: string): { files: number; folders: number } => {
+    const folder = folders.find(f => f.id === folderId)
+    if (!folder) return { files: 0, folders: 0 }
+
+    const filesInFolder = files.filter(f => f.path.startsWith(folder.path + "/"))
+    const foldersInFolder = folders.filter(f => f.path.startsWith(folder.path + "/") && f.id !== folderId)
+
+    return {
+      files: filesInFolder.length,
+      folders: foldersInFolder.length,
+    }
+  }
+
+  const getDeleteDescription = (): string => {
+    if (!deleteDialog) return ""
+
+    if (deleteDialog.type === "folder") {
+      const contents = countFolderContents(deleteDialog.id)
+      const totalItems = contents.files + contents.folders
+
+      if (totalItems === 0) {
+        return `Are you sure you want to delete "${deleteDialog.name}"? This folder will be permanently removed and cannot be recovered.`
+      }
+
+      const itemsText = []
+      if (contents.files > 0) {
+        itemsText.push(`${contents.files} file${contents.files > 1 ? "s" : ""}`)
+      }
+      if (contents.folders > 0) {
+        itemsText.push(`${contents.folders} subfolder${contents.folders > 1 ? "s" : ""}`)
+      }
+
+      return `Are you sure you want to delete "${deleteDialog.name}"? This folder contains ${itemsText.join(" and ")} that will also be permanently removed and cannot be recovered.`
+    }
+
+    return `Are you sure you want to delete "${deleteDialog.name}"? This file will be permanently removed and cannot be recovered.`
   }
 
   const renderFileIcon = (fileName: string) => {
@@ -232,8 +299,7 @@ export function FileExplorer({
                       className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600 dark:text-red-400"
                       onClick={(e) => {
                         e.stopPropagation()
-                        onDeleteFolder(folder.id)
-                        setOpenMenuId(null)
+                        handleDeleteClick(folder.id, folder.name, "folder")
                       }}
                     >
                       <Trash2 className="h-3 w-3" />
@@ -345,8 +411,7 @@ export function FileExplorer({
                     className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600 dark:text-red-400"
                     onClick={(e) => {
                       e.stopPropagation()
-                      onDeleteFile(file.id)
-                      setOpenMenuId(null)
+                      handleDeleteClick(file.id, file.name, "file")
                     }}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -418,6 +483,19 @@ export function FileExplorer({
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteDialog && (
+        <DeleteConfirmDialog
+          open={deleteDialog.open}
+          onOpenChange={(open) => !open && setDeleteDialog(null)}
+          title={deleteDialog.type === "folder" ? "Delete Folder" : "Delete File"}
+          itemName={deleteDialog.name}
+          itemType={deleteDialog.type}
+          onConfirm={handleConfirmDelete}
+          description={getDeleteDescription()}
+        />
+      )}
     </div>
   )
 }
