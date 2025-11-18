@@ -186,7 +186,21 @@ export function FloatingContentInsertPlugin() {
     )
   }, [editor, checkEmpty])
 
-  // Removed global scroll listener to prevent closing menu when scrolling inside plugins list
+  // Block body scroll when popover menu is open
+  useEffect(() => {
+    if (showMenu) {
+      // Store original overflow value
+      const originalOverflow = document.body.style.overflow
+      
+      // Disable scroll on body
+      document.body.style.overflow = 'hidden'
+      
+      // Cleanup on unmount or when menu closes
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [showMenu])
 
   // Prevent scroll events inside popover from propagating
   useEffect(() => {
@@ -587,7 +601,7 @@ export function FloatingContentInsertPlugin() {
           <PopoverContent
             ref={popoverContentRef}
             side="left"
-            className="w-80 p-0 max-h-[600px] overflow-y-auto shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+            className="w-80 p-0 max-h-[440px] overflow-y-auto shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
             onWheel={(e) => {
               e.stopPropagation()
             }}
