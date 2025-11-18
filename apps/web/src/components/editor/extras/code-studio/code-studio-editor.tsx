@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { X, Save, Code2, Play, Eye, Terminal, Menu, Lock, Unlock, Type, Hash, FolderTree, Palette } from "lucide-react"
+import { X, Save, Code2, Play, Eye, Terminal, Menu, Lock, Unlock, Type, Hash, FolderTree, Palette, ArrowLeft } from "lucide-react"
 import { Edit } from "lucide-react"
 import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, ShikiTheme } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
@@ -66,7 +66,7 @@ export function CodeStudioEditor({
   }
 
   const currentMode = MODE_CONFIGS[localData.mode]
-  const activeFile = localData.files.find(f => f.id === localData.activeFileId) || localData.files[0]
+  const activeFile = localData.files.find(f => f.id === localData.activeFileId)
   
   // Determinar o layout baseado no modo e isCodeMode
   const isCodeMode = localData.isCodeMode ?? false
@@ -297,16 +297,31 @@ export function CodeStudioEditor({
                 onCloseTab={localData.showFileExplorer ?? true ? handleCloseTab : undefined}
               />
               <div className="flex-1">
-                <MonacoCodeEditor
-                  value={activeFile?.content || ""}
-                  language={activeFile?.language || "javascript"}
-                  onChange={handleCodeChange}
-                  readonly={localData.readonly || false}
-                  theme={isDarkMode ? "vs-dark" : "vs-light"}
-                  shikiTheme={localData.shikiTheme || "github"}
-                  fontSize={localData.fontSize}
-                  showLineNumbers={localData.showLineNumbers}
-                />
+                {activeFile ? (
+                  <MonacoCodeEditor
+                    value={activeFile.content}
+                    language={activeFile.language}
+                    onChange={handleCodeChange}
+                    readonly={localData.readonly || false}
+                    theme={isDarkMode ? "vs-dark" : "vs-light"}
+                    shikiTheme={localData.shikiTheme || "github"}
+                    fontSize={localData.fontSize}
+                    showLineNumbers={localData.showLineNumbers}
+                  />
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                    <img 
+                      src="/assets/images/icons/icon-128x128.png" 
+                      alt="GameGuild Icon" 
+                      className="w-24 h-24 mb-6 opacity-50"
+                    />
+                    <h3 className="text-xl font-semibold mb-2">No File Open</h3>
+                    <p className="text-sm mb-4 flex items-center gap-2">
+                      <ArrowLeft className="h-4 w-4" />
+                      Open a file from the File Explorer
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -585,16 +600,31 @@ export function CodeStudioEditor({
                 onCloseTab={handleCloseTab}
               />
               <div className="flex-1">
-                <MonacoCodeEditor
-                  value={activeFile?.content || ""}
-                  language={activeFile?.language || "javascript"}
-                  onChange={handleCodeChange}
-                  readonly={false}
-                  theme={isDarkMode ? "vs-dark" : "vs-light"}
-                  shikiTheme={localData.shikiTheme || "github"}
-                  fontSize={localData.fontSize}
-                  showLineNumbers={localData.showLineNumbers}
-                />
+                {activeFile ? (
+                  <MonacoCodeEditor
+                    value={activeFile.content}
+                    language={activeFile.language}
+                    onChange={handleCodeChange}
+                    readonly={false}
+                    theme={isDarkMode ? "vs-dark" : "vs-light"}
+                    shikiTheme={localData.shikiTheme || "github"}
+                    fontSize={localData.fontSize}
+                    showLineNumbers={localData.showLineNumbers}
+                  />
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                    <img 
+                      src="/assets/images/icons/icon-128x128.png" 
+                      alt="GameGuild Icon" 
+                      className="w-24 h-24 mb-6 opacity-50"
+                    />
+                    <h3 className="text-xl font-semibold mb-2">No File Open</h3>
+                    <p className="text-sm mb-4 flex items-center gap-2">
+                      <ArrowLeft className="h-4 w-4" />
+                      Open a file from the File Explorer
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -630,16 +660,31 @@ export function CodeStudioEditor({
                   onCloseTab={handleCloseTab}
                 />
                 <div className="flex-1">
-                  <MonacoCodeEditor
-                    value={activeFile?.content || ""}
-                    language={activeFile?.language || "javascript"}
-                    onChange={handleCodeChange}
-                    readonly={false}
-                    theme={isDarkMode ? "vs-dark" : "vs-light"}
-                    shikiTheme={localData.shikiTheme || "github"}
-                    fontSize={localData.fontSize}
-                    showLineNumbers={localData.showLineNumbers}
-                  />
+                  {activeFile ? (
+                    <MonacoCodeEditor
+                      value={activeFile.content}
+                      language={activeFile.language}
+                      onChange={handleCodeChange}
+                      readonly={false}
+                      theme={isDarkMode ? "vs-dark" : "vs-light"}
+                      shikiTheme={localData.shikiTheme || "github"}
+                      fontSize={localData.fontSize}
+                      showLineNumbers={localData.showLineNumbers}
+                    />
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                      <img 
+                        src="/assets/images/icons/icon-128x128.png" 
+                        alt="GameGuild Icon" 
+                        className="w-24 h-24 mb-6 opacity-50"
+                      />
+                      <h3 className="text-xl font-semibold mb-2">No File Open</h3>
+                      <p className="text-sm mb-4 flex items-center gap-2">
+                        <ArrowLeft className="h-4 w-4" />
+                        Open a file from the File Explorer
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
