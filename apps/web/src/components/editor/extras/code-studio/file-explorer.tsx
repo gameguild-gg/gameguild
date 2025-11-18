@@ -115,6 +115,8 @@ export function FileExplorer({
     const isExpanded = folder.isExpanded
     const folderFiles = files.filter(f => f.path.startsWith(folder.path + "/") && 
                                           f.path.split("/").length === folder.path.split("/").length + 1)
+    const subFolders = folders.filter(f => f.path.startsWith(folder.path + "/") &&
+                                          f.path.split("/").length === folder.path.split("/").length + 1)
     
     return (
       <div key={folder.id}>
@@ -210,6 +212,7 @@ export function FileExplorer({
         
         {isExpanded && (
           <div>
+            {subFolders.map(subFolder => renderFolder(subFolder, level + 1))}
             {folderFiles.map(file => renderFile(file, level + 1))}
             {creatingType && creatingPath === folder.path && (
               <div 
