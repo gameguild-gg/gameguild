@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { 
   ChevronRight, 
   ChevronDown, 
@@ -10,7 +10,8 @@ import {
   Plus,
   FileText,
   Trash2,
-  Edit3
+  Edit3,
+  MoreVertical
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -49,6 +50,22 @@ export function FileExplorer({
   const [creatingType, setCreatingType] = useState<"file" | "folder" | null>(null)
   const [creatingPath, setCreatingPath] = useState("")
   const [newItemName, setNewItemName] = useState("")
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+
+  // Fechar menu ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (openMenuId && !target.closest('.context-menu-container')) {
+        setOpenMenuId(null)
+      }
+    }
+    
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [openMenuId])
 
   // Organizar arquivos em árvore
   const buildTree = (): FileTreeItem[] => {
@@ -160,51 +177,70 @@ export function FileExplorer({
               <span className="flex-1 truncate" onClick={() => onToggleFolder(folder.id)}>
                 {folder.name}
               </span>
-              <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1">
+              <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 relative context-menu-container">
                 <Button
                   variant="ghost"
                   size="sm"
                   className="h-5 w-5 p-0"
                   onClick={(e) => {
                     e.stopPropagation()
-                    handleStartCreating("file", folder.path)
+                    setOpenMenuId(openMenuId === folder.id ? null : folder.id)
                   }}
                 >
-                  <FileText className="h-3 w-3" />
+                  <MoreVertical className="h-3 w-3" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleStartCreating("folder", folder.path)
-                  }}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleStartRename(folder.id, folder.name)
-                  }}
-                >
-                  <Edit3 className="h-3 w-3" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-5 w-5 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDeleteFolder(folder.id)
-                  }}
-                >
-                  <Trash2 className="h-3 w-3 text-red-500" />
-                </Button>
+                
+                {openMenuId === folder.id && (
+                  <div 
+                    className="absolute right-0 top-6 z-50 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleStartCreating("file", folder.path)
+                        setOpenMenuId(null)
+                      }}
+                    >
+                      <FileText className="h-3 w-3" />
+                      New File
+                    </button>
+                    <button
+                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleStartCreating("folder", folder.path)
+                        setOpenMenuId(null)
+                      }}
+                    >
+                      <Plus className="h-3 w-3" />
+                      New Folder
+                    </button>
+                    <button
+                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleStartRename(folder.id, folder.name)
+                        setOpenMenuId(null)
+                      }}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                      Rename
+                    </button>
+                    <button
+                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600 dark:text-red-400"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteFolder(folder.id)
+                        setOpenMenuId(null)
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Delete
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -276,29 +312,48 @@ export function FileExplorer({
           <>
             {renderFileIcon(file.name)}
             <span className="flex-1 truncate">{file.name}</span>
-            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1">
+            <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 relative context-menu-container">
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-5 w-5 p-0"
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleStartRename(file.id, file.name)
+                  setOpenMenuId(openMenuId === file.id ? null : file.id)
                 }}
               >
-                <Edit3 className="h-3 w-3" />
+                <MoreVertical className="h-3 w-3" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-5 w-5 p-0"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDeleteFile(file.id)
-                }}
-              >
-                <Trash2 className="h-3 w-3 text-red-500" />
-              </Button>
+              
+              {openMenuId === file.id && (
+                <div 
+                  className="absolute right-0 top-6 z-50 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleStartRename(file.id, file.name)
+                      setOpenMenuId(null)
+                    }}
+                  >
+                    <Edit3 className="h-3 w-3" />
+                    Rename
+                  </button>
+                  <button
+                    className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600 dark:text-red-400"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDeleteFile(file.id)
+                      setOpenMenuId(null)
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                    Delete
+                  </button>
+                </div>
+              )}
             </div>
           </>
         )}
