@@ -42,6 +42,8 @@ export type FileTreeItem = CodeFile | FileTreeFolder
 
 export type PanelType = "explorer" | "editor" | "output"
 
+export type EditorInstance = "multiple" | "unique"
+
 export interface PanelConfig {
   id: string
   type: PanelType
@@ -49,12 +51,15 @@ export interface PanelConfig {
   col: number // 0-11 (grid de 12 colunas)
   rowSpan: number // quantas linhas ocupa (1-12)
   colSpan: number // quantas colunas ocupa (1-12)
+  editorInstance?: EditorInstance // Apenas para painéis tipo "editor"
 }
 
 export interface DisplayConfig {
   id: string // "display-1", "display-2", etc
   name: string // Título customizável pelo usuário
   panels: PanelConfig[]
+  uniqueOpenTabs?: string[] // Abas abertas específicas deste display (quando editor é unique)
+  uniqueActiveFileId?: string // Arquivo ativo específico deste display (quando editor é unique)
 }
 
 export interface LayoutConfig {
