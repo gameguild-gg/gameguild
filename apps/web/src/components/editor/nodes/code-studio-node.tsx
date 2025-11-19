@@ -8,10 +8,9 @@ import { useContext, useState, useEffect } from "react"
 import { EditorLoadingContext } from "../lexical-editor"
 import { Edit } from "lucide-react"
 
-import type { CodeStudioData } from "../extras/code-studio/types"
+import type { CodeStudioData, CodeStudioMode } from "../extras/code-studio/types"
 import { CodeStudioEditor } from "../extras/code-studio/code-studio-editor"
 import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
-import type { EditorMode } from "../extras/code-studio/types"
 import { LANGUAGE_CONFIGS } from "../extras/code-studio/types"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 
@@ -226,11 +225,12 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
   )
 }
 
-export function $createCodeStudioNode(): CodeStudioNode {
+export function $createCodeStudioNode(mode: CodeStudioMode = "execution"): CodeStudioNode {
   return new CodeStudioNode({
     files: [],
     folders: [],
     openTabs: [],
+    mode,
     language: "javascript",
     readonly: false,
     showLineNumbers: true,

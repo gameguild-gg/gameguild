@@ -55,6 +55,8 @@ import { extractSpotifyInfo } from "../nodes/spotify-node"
 import type { MermaidData } from "../nodes/mermaid-node"
 import type { VegaLiteData } from "../nodes/vega-lite-node"
 import type { TableData } from "../nodes/table-node"
+import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
+import type { CodeStudioMode } from "../extras/code-studio/types"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
 const IMAGE_INSERTION_MODE = 0
@@ -91,7 +93,7 @@ export const INSERT_SOURCE_COMMAND = createCommand("INSERT_SOURCE_COMMAND")
 export const INSERT_YOUTUBE_COMMAND = createCommand<YouTubeData>("INSERT_YOUTUBE_COMMAND")
 export const INSERT_SPOTIFY_COMMAND = createCommand<SpotifyData>("INSERT_SPOTIFY_COMMAND")
 export const INSERT_SOURCE_CODE_COMMAND = createCommand("INSERT_SOURCE_CODE_COMMAND")
-export const INSERT_CODE_STUDIO_COMMAND = createCommand("INSERT_CODE_STUDIO_COMMAND")
+export const INSERT_CODE_STUDIO_COMMAND = createCommand<CodeStudioMode>("INSERT_CODE_STUDIO_COMMAND")
 export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID_COMMAND")
 export const INSERT_VEGA_LITE_COMMAND = createCommand<VegaLiteData>("INSERT_VEGA_LITE_COMMAND")
 export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TABLE_COMMAND")
@@ -115,6 +117,7 @@ export function FloatingContentInsertPlugin() {
   const [spotifyUrl, setSpotifyUrl] = useState("")
   const [spotifyShowTheme, setSpotifyShowTheme] = useState(true)
   const [spotifyError, setSpotifyError] = useState("")
+  const [showModeSelectionDialog, setShowModeSelectionDialog] = useState(false)
 
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -507,7 +510,7 @@ export function FloatingContentInsertPlugin() {
       icon: CodepenIcon,
       label: "Code Studio",
       action: () => {
-        editor.dispatchCommand(INSERT_CODE_STUDIO_COMMAND, undefined)
+        setShowModeSelectionDialog(true)
         setShowMenu(false)
       },
     },
@@ -1019,6 +1022,17 @@ export function FloatingContentInsertPlugin() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Mode Selection Dialog for Code Studio */}
+      {showModeSelectionDialog && (
+        <ModeSelectionDialog
+          onSelect={(mode) => {
+            editor.dispatchCommand(INSERT_CODE_STUDIO_COMMAND, mode)
+            setShowModeSelectionDialog(false)
+          }}
+          onCancel={() => setShowModeSelectionDialog(false)}
+        />
+      )}
     </>
   )
 }
