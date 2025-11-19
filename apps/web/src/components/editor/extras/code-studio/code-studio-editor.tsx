@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { X, Save, Code2, Play, Terminal, Menu, ArrowLeft, Lock, Layout } from "lucide-react"
-import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, LayoutConfig, PanelConfig, DisplayConfig, PanelType } from "./types"
+import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, LayoutConfig, PanelConfig, DisplayConfig, PanelType, EditorInstance } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
 import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
@@ -89,7 +89,7 @@ export function CodeStudioEditor({
               name: "Display 1",
               panels: [
                 { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
-                { id: "editor-1", type: "editor", row: 0, col: 3, rowSpan: 8, colSpan: 9 },
+                { id: "editor-1", type: "editor", row: 0, col: 3, rowSpan: 8, colSpan: 9, editorInstance: "multiple" },
                 { id: "output-1", type: "output", row: 8, col: 3, rowSpan: 4, colSpan: 9 },
               ],
             },
@@ -98,7 +98,7 @@ export function CodeStudioEditor({
               name: "Display 2",
               panels: [
                 { id: "explorer-2", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
-                { id: "editor-2", type: "editor", row: 0, col: 3, rowSpan: 12, colSpan: 9 },
+                { id: "editor-2", type: "editor", row: 0, col: 3, rowSpan: 12, colSpan: 9, editorInstance: "multiple" },
               ],
             },
           ],
@@ -155,70 +155,119 @@ export function CodeStudioEditor({
   }
 
   // File Management
-  const handleFileSelect = (fileId: string) => {
+  const handleFileSelect = (fileId: string, panelId?: string) => {
     const file = localData.files.find(f => f.id === fileId)
-    if (!file) return
+    if (!file || !localData.layout) return
+
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+
+    // Determinar se o painel é único ou múltiplo
+    let panel = panelId ? activeDisplay.panels.find(p => p.id === panelId) : undefined
+    
+    // Se não foi passado panelId (clique do FileExplorer), verificar se há editor único no display atual
+    if (!panel) {
+      const uniqueEditorInDisplay = activeDisplay.panels.find(
+        p => p.type === "editor" && p.editorInstance === "unique"
+      )
+      if (uniqueEditorInDisplay) {
+        panel = uniqueEditorInDisplay
+      }
+    }
+    
+    const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
 
     // Expandir todas as pastas pai do arquivo
     const filePath = file.path
     const pathParts = filePath.split('/')
     
     // Se o arquivo está em uma pasta, expandir todas as pastas pai
+    let updatedFolders = localData.folders || []
     if (pathParts.length > 1) {
-      const updatedFolders = (localData.folders || []).map(folder => {
-        // Verificar se esta pasta é pai do arquivo
-        const folderPathParts = folder.path.split('/')
-        
-        // Expandir se o caminho do arquivo começa com o caminho da pasta
+      updatedFolders = updatedFolders.map(folder => {
         if (filePath.startsWith(folder.path + '/')) {
           return { ...folder, isExpanded: true }
         }
-        
         return folder
       })
+    }
 
-      // Adicionar à lista de abas abertas se não estiver
-      if (!localData.openTabs?.includes(fileId)) {
-        handleDataChange({ 
-          folders: updatedFolders,
-          openTabs: [...(localData.openTabs || []), fileId],
-          activeFileId: fileId 
-        })
-      } else {
-        handleDataChange({ 
-          folders: updatedFolders,
-          activeFileId: fileId 
-        })
-      }
+    if (isUniqueInstance) {
+      // Editor único: abas específicas do display
+      const currentTabs = activeDisplay.uniqueOpenTabs || []
+      const updatedTabs = currentTabs.includes(fileId) ? currentTabs : [...currentTabs, fileId]
+      
+      const updatedDisplays = localData.layout.displays.map(d => 
+        d.id === activeDisplay.id 
+          ? { ...d, uniqueOpenTabs: updatedTabs, uniqueActiveFileId: fileId }
+          : d
+      )
+
+      handleDataChange({
+        folders: updatedFolders,
+        layout: {
+          ...localData.layout,
+          displays: updatedDisplays,
+        },
+      })
     } else {
-      // Arquivo na raiz, não precisa expandir pastas
-      if (!localData.openTabs?.includes(fileId)) {
-        handleDataChange({ 
-          openTabs: [...(localData.openTabs || []), fileId],
-          activeFileId: fileId 
-        })
-      } else {
-        handleDataChange({ activeFileId: fileId })
-      }
+      // Editor múltiplo: abas globais
+      const currentTabs = localData.openTabs || []
+      const updatedTabs = currentTabs.includes(fileId) ? currentTabs : [...currentTabs, fileId]
+
+      handleDataChange({ 
+        folders: updatedFolders,
+        openTabs: updatedTabs,
+        activeFileId: fileId 
+      })
     }
   }
 
-  const handleCloseTab = (fileId: string) => {
-    const newOpenTabs = (localData.openTabs || []).filter(id => id !== fileId)
-    const updates: Partial<CodeStudioData> = { openTabs: newOpenTabs }
-    
-    // Se fechou a aba ativa, mudar para outra aba ou limpar
-    if (fileId === localData.activeFileId) {
-      if (newOpenTabs.length > 0) {
-        // Mudar para a última aba da lista
-        updates.activeFileId = newOpenTabs[newOpenTabs.length - 1]
-      } else {
-        // Não há mais abas abertas, limpar activeFileId
-        updates.activeFileId = undefined
+  const handleCloseTab = (fileId: string, panelId?: string) => {
+    if (!localData.layout) return
+
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+
+    const panel = panelId ? activeDisplay.panels.find(p => p.id === panelId) : undefined
+    const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
+
+    if (isUniqueInstance) {
+      // Editor único: fechar aba específica do display
+      const newOpenTabs = (activeDisplay.uniqueOpenTabs || []).filter(id => id !== fileId)
+      let newActiveFileId = activeDisplay.uniqueActiveFileId
+
+      if (fileId === activeDisplay.uniqueActiveFileId) {
+        newActiveFileId = newOpenTabs.length > 0 ? newOpenTabs[newOpenTabs.length - 1] : undefined
       }
+
+      const updatedDisplays = localData.layout.displays.map(d =>
+        d.id === activeDisplay.id
+          ? { ...d, uniqueOpenTabs: newOpenTabs, uniqueActiveFileId: newActiveFileId }
+          : d
+      )
+
+      handleDataChange({
+        layout: {
+          ...localData.layout,
+          displays: updatedDisplays,
+        },
+      })
+    } else {
+      // Editor múltiplo: fechar aba global
+      const newOpenTabs = (localData.openTabs || []).filter(id => id !== fileId)
+      const updates: Partial<CodeStudioData> = { openTabs: newOpenTabs }
+
+      if (fileId === localData.activeFileId) {
+        if (newOpenTabs.length > 0) {
+          updates.activeFileId = newOpenTabs[newOpenTabs.length - 1]
+        } else {
+          updates.activeFileId = undefined
+        }
+      }
+
+      handleDataChange(updates)
     }
-    
-    handleDataChange(updates)
   }
 
   const handleReorderTabs = (newOrder: string[]) => {
@@ -226,6 +275,11 @@ export function CodeStudioEditor({
   }
 
   const handleCreateFile = (path: string, name: string) => {
+    if (!localData.layout) return
+
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+
     const language = getLanguageFromExtension(name)
     const fullPath = path ? `${path}/${name}` : name
     
@@ -240,12 +294,37 @@ export function CodeStudioEditor({
       path: fullPath,
     }
     
-    // Criar arquivo e abri-lo automaticamente em uma nova aba
-    handleDataChange({ 
-      files: [...localData.files, newFile],
-      openTabs: [...(localData.openTabs || []), newFileId],
-      activeFileId: newFileId,
-    })
+    // Verificar se há editor único no display atual
+    const uniqueEditorInDisplay = activeDisplay.panels.find(
+      p => p.type === "editor" && p.editorInstance === "unique"
+    )
+
+    if (uniqueEditorInDisplay) {
+      // Editor único: adicionar às abas específicas do display
+      const currentTabs = activeDisplay.uniqueOpenTabs || []
+      const updatedTabs = [...currentTabs, newFileId]
+      
+      const updatedDisplays = localData.layout.displays.map(d => 
+        d.id === activeDisplay.id 
+          ? { ...d, uniqueOpenTabs: updatedTabs, uniqueActiveFileId: newFileId }
+          : d
+      )
+
+      handleDataChange({
+        files: [...localData.files, newFile],
+        layout: {
+          ...localData.layout,
+          displays: updatedDisplays,
+        },
+      })
+    } else {
+      // Editor múltiplo: abas globais
+      handleDataChange({ 
+        files: [...localData.files, newFile],
+        openTabs: [...(localData.openTabs || []), newFileId],
+        activeFileId: newFileId,
+      })
+    }
   }
 
   const handleCreateFolder = (path: string, name: string) => {
@@ -418,7 +497,7 @@ export function CodeStudioEditor({
       id: `display-${displayNumber}`,
       name: name || `Display ${displayNumber}`,
       panels: [
-        { id: `editor-${Date.now()}`, type: "editor", row: 0, col: 0, rowSpan: 12, colSpan: 12 },
+        { id: `editor-${Date.now()}`, type: "editor", row: 0, col: 0, rowSpan: 12, colSpan: 12, editorInstance: "multiple" },
       ],
     }
 
@@ -516,6 +595,7 @@ export function CodeStudioEditor({
       col: targetCol,
       rowSpan,
       colSpan,
+      ...(type === "editor" && { editorInstance: "multiple" as EditorInstance }),
     }
 
     handleUpdateCurrentDisplay({
@@ -568,6 +648,26 @@ export function CodeStudioEditor({
     })
   }
 
+  const handleToggleEditorInstance = (panelId: string) => {
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+
+    const updatedPanels = activeDisplay.panels.map(p => {
+      if (p.id === panelId && p.type === "editor") {
+        return {
+          ...p,
+          editorInstance: (p.editorInstance === "multiple" ? "unique" : "multiple") as EditorInstance,
+        }
+      }
+      return p
+    })
+
+    handleUpdateCurrentDisplay({
+      ...activeDisplay,
+      panels: updatedPanels,
+    })
+  }
+
   const handlePanelDragStart = (panelId: string) => {
     // Pode ser usado para feedback visual
     console.log('Dragging panel:', panelId)
@@ -579,8 +679,8 @@ export function CodeStudioEditor({
   }
 
   // Renderizar conteúdo de cada painel
-  const renderPanelContent = (panelType: "explorer" | "editor" | "output") => {
-    switch (panelType) {
+  const renderPanelContent = (panel: PanelConfig) => {
+    switch (panel.type) {
       case "explorer":
         return (
           <FileExplorer
@@ -601,29 +701,80 @@ export function CodeStudioEditor({
         )
       
       case "editor":
+        const activeDisplay = getActiveDisplay()
+        const isUniqueInstance = panel.editorInstance === "unique"
+        const currentOpenTabs = isUniqueInstance 
+          ? (activeDisplay?.uniqueOpenTabs || [])
+          : (localData.openTabs || [])
+        const currentActiveFileId = isUniqueInstance
+          ? activeDisplay?.uniqueActiveFileId
+          : localData.activeFileId
+        
         return (
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full relative">
+            {/* Editor Instance Switch */}
+            {panel.editorInstance && localData.layout?.editMode && (
+              <div
+                data-no-drag="true"
+                className="absolute top-2 right-2 z-50 flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg shadow-md border border-gray-200 dark:border-gray-700"
+                onMouseDown={(e) => {
+                  e.stopPropagation()
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+              >
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Instance:
+                </span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleToggleEditorInstance(panel.id)
+                  }}
+                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  style={{
+                    backgroundColor: panel.editorInstance === "multiple" ? "#3b82f6" : "#6b7280"
+                  }}
+                  title={panel.editorInstance === "multiple" ? "Multiple: Opens in all displays" : "Unique: Opens only in this display"}
+                >
+                  <span
+                    className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform pointer-events-none"
+                    style={{
+                      transform: panel.editorInstance === "multiple" ? "translateX(1.5rem)" : "translateX(0.25rem)"
+                    }}
+                  />
+                </button>
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 min-w-[1ch]">
+                  {panel.editorInstance === "multiple" ? "M" : "U"}
+                </span>
+              </div>
+            )}
+            
             <FileTabs
               files={localData.files}
-              openTabs={localData.openTabs || []}
-              activeFileId={localData.activeFileId}
-              onSelectTab={handleFileSelect}
-              onCloseTab={handleCloseTab}
+              openTabs={currentOpenTabs}
+              activeFileId={currentActiveFileId}
+              onSelectTab={(fileId) => handleFileSelect(fileId, panel.id)}
+              onCloseTab={(fileId) => handleCloseTab(fileId, panel.id)}
               onReorderTabs={handleReorderTabs}
             />
             <div className="flex-1 min-h-0">
-              {activeFile ? (
-                <MonacoCodeEditor
-                  value={activeFile.content}
-                  onChange={handleCodeChange}
-                  language={activeFile.language}
-                  readonly={localData.readonly}
-                  showLineNumbers={localData.showLineNumbers}
-                  fontSize={localData.fontSize}
-                  shikiTheme={localData.shikiTheme}
-                />
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+              {(() => {
+                const currentFile = localData.files.find(f => f.id === currentActiveFileId)
+                return currentFile ? (
+                  <MonacoCodeEditor
+                    value={currentFile.content}
+                    onChange={handleCodeChange}
+                    language={currentFile.language}
+                    readonly={localData.readonly}
+                    showLineNumbers={localData.showLineNumbers}
+                    fontSize={localData.fontSize}
+                    shikiTheme={localData.shikiTheme}
+                  />
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
                     <img 
                       src="/assets/images/icons/icon-128x128.png" 
                       alt="GameGuild Icon" 
@@ -634,7 +785,8 @@ export function CodeStudioEditor({
                       Open a file from the File Explorer
                     </p>
                   </div>
-              )}
+                )
+              })()}
             </div>
           </div>
         )
@@ -926,7 +1078,7 @@ export function CodeStudioEditor({
                         onDragStart={handlePanelDragStart}
                         onDragEnd={handlePanelDragEnd}
                       >
-                        {renderPanelContent(panel.type)}
+                        {renderPanelContent(panel)}
                       </ResizablePanel>
                     ))}
                   </div>
