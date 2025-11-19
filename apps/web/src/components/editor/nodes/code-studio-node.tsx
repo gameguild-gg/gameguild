@@ -50,7 +50,6 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
       activeFileId: data.activeFileId || data.files?.[0]?.id,
       title: data.title,
       caption: data.caption,
-      isCodeMode: data.isCodeMode ?? false,
       showFileExplorer: data.showFileExplorer ?? true,
       shikiTheme: data.shikiTheme ?? "github",
     }
@@ -92,7 +91,7 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
   const [showEditor, setShowEditor] = useState(false)
   const [showModeSelection, setShowModeSelection] = useState(false)
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
-  const [selectedMode, setSelectedMode] = useState<EditorMode | null>(null)
+  const [, setSelectedMode] = useState<CodeStudioMode | null>(null)
 
   const handleUpdateCodeStudio = (newData: Partial<CodeStudioData>) => {
     editor.update(() => {
@@ -107,7 +106,7 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
     })
   }
 
-  const handleModeSelect = (mode: EditorMode) => {
+  const handleModeSelect = (mode: CodeStudioMode) => {
     setSelectedMode(mode)
     setShowModeSelection(false)
     
