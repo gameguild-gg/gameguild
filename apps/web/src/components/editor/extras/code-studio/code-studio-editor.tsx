@@ -623,13 +623,17 @@ export function CodeStudioEditor({
                   shikiTheme={localData.shikiTheme}
                 />
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-400">
-                  <div className="text-center">
-                    <Code2 className="h-16 w-16 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm">No file selected</p>
-                    <p className="text-xs mt-1">Open a file from the explorer or create a new one</p>
+                <div className="h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
+                    <img 
+                      src="/assets/images/icons/icon-128x128.png" 
+                      alt="GameGuild Icon" 
+                      className="w-24 h-24 mb-6 opacity-50"
+                    />
+                    <h3 className="text-xl font-semibold mb-2">No File Open</h3>
+                    <p className="text-sm mb-4 flex items-center gap-2">
+                      Open a file from the File Explorer
+                    </p>
                   </div>
-                </div>
               )}
             </div>
           </div>
@@ -743,7 +747,6 @@ export function CodeStudioEditor({
                     />
                     <h3 className="text-xl font-semibold mb-2">No File Open</h3>
                     <p className="text-sm mb-4 flex items-center gap-2">
-                      <ArrowLeft className="h-4 w-4" />
                       Open a file from the File Explorer
                     </p>
                   </div>
@@ -793,7 +796,7 @@ export function CodeStudioEditor({
             </div>
             
             <span className="text-sm px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium">
-              {currentMode.label} Mode
+              {currentMode.label}
             </span>
           </div>
           
