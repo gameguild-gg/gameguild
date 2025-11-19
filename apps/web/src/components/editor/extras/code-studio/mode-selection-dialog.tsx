@@ -2,11 +2,11 @@
 
 import { Play, TestTube } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { EditorMode } from "./types"
+import type { CodeStudioMode } from "./types"
 import { MODE_CONFIGS } from "./types"
 
 interface ModeSelectionDialogProps {
-  onSelect: (mode: EditorMode) => void
+  onSelect: (mode: CodeStudioMode) => void
   onCancel: () => void
 }
 

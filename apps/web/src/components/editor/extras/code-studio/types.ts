@@ -40,6 +40,29 @@ export interface FileTreeFolder {
 
 export type FileTreeItem = CodeFile | FileTreeFolder
 
+export type PanelType = "explorer" | "editor" | "output"
+
+export interface PanelConfig {
+  id: string
+  type: PanelType
+  row: number // 0-11 (grid de 12 linhas)
+  col: number // 0-11 (grid de 12 colunas)
+  rowSpan: number // quantas linhas ocupa (1-12)
+  colSpan: number // quantas colunas ocupa (1-12)
+}
+
+export interface DisplayConfig {
+  id: string // "display-1", "display-2", etc
+  name: string // Título customizável pelo usuário
+  panels: PanelConfig[]
+}
+
+export interface LayoutConfig {
+  displays: DisplayConfig[]
+  activeDisplayId: string
+  editMode: boolean
+}
+
 export interface TestCase {
   id: string
   name: string
@@ -60,12 +83,14 @@ export interface TestResult {
   error?: string
 }
 
+export type CodeStudioMode = "execution" | "test"
+
 export interface CodeStudioData {
   files: CodeFile[]
   folders: FileTreeFolder[]
   openTabs: string[] // IDs dos arquivos abertos em abas
   activeFileId?: string
-  mode?: EditorMode
+  mode: CodeStudioMode
   language: SupportedLanguage
   title?: string
   caption?: string
@@ -76,8 +101,10 @@ export interface CodeStudioData {
   fontSize?: number
   theme?: "light" | "dark" | "system"
   shikiTheme?: ShikiTheme // Tema do Shiki (syntax highlighting)
-  isCodeMode?: boolean // Se true, mostra apenas código sem console/testes (modo código)
   showFileExplorer?: boolean // Se false, esconde file explorer fora do editor modal
+  
+  // Layout customizável
+  layout?: LayoutConfig
   
   // Configurações de execução
   clearOnRun?: boolean
@@ -89,36 +116,27 @@ export interface CodeStudioData {
 }
 
 export interface ModeConfig {
-  id: EditorMode
+  id: CodeStudioMode
   label: string
   description: string
   icon: string
   supportedLanguages: SupportedLanguage[]
-  showTerminal: boolean
-  showTests: boolean
-  showPreview: boolean
 }
 
-export const MODE_CONFIGS: Record<EditorMode, ModeConfig> = {
+export const MODE_CONFIGS: Record<CodeStudioMode, ModeConfig> = {
   execution: {
     id: "execution",
-    label: "Execution",
-    description: "Run code and see output in console",
+    label: "Execution Mode",
+    description: "Write and execute code with real-time output console. Perfect for development and debugging.",
     icon: "Play",
     supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp"],
-    showTerminal: true,
-    showTests: false,
-    showPreview: false,
   },
   test: {
     id: "test",
-    label: "Test",
-    description: "Write and run test cases",
+    label: "Test Mode",
+    description: "Run automated test cases against your code. Validate inputs, outputs, and expected behaviors.",
     icon: "TestTube",
     supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp"],
-    showTerminal: false,
-    showTests: true,
-    showPreview: false,
   },
 }
 

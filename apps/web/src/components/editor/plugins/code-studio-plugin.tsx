@@ -6,6 +6,7 @@ import { $insertNodes, COMMAND_PRIORITY_EDITOR } from "lexical"
 import { mergeRegister } from "@lexical/utils"
 import { INSERT_CODE_STUDIO_COMMAND } from "./floating-content-insert-plugin"
 import { $createCodeStudioNode, CodeStudioNode } from "@/components/editor/nodes/code-studio-node"
+import type { CodeStudioMode } from "../extras/code-studio/types"
 
 export function CodeStudioPlugin(): null {
   const [editor] = useLexicalComposerContext()
@@ -18,8 +19,8 @@ export function CodeStudioPlugin(): null {
     return mergeRegister(
       editor.registerCommand(
         INSERT_CODE_STUDIO_COMMAND,
-        () => {
-          const codeStudioNode = $createCodeStudioNode()
+        (mode: CodeStudioMode) => {
+          const codeStudioNode = $createCodeStudioNode(mode)
           $insertNodes([codeStudioNode])
           return true
         },
