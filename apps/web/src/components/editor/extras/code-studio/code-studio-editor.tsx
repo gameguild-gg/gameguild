@@ -228,6 +228,59 @@ export function CodeStudioEditor({
     handleDataChange({ folders: updatedFolders })
   }
 
+  const handleMoveFile = (fileId: string, newPath: string) => {
+    const file = localData.files.find(f => f.id === fileId)
+    if (!file) return
+
+    const fileName = file.path.split("/").pop() || file.name
+    const newFilePath = newPath ? `${newPath}/${fileName}` : fileName
+
+    // Verificar se já existe arquivo com mesmo nome no destino
+    const fileExists = localData.files.some(f => f.path === newFilePath && f.id !== fileId)
+    if (fileExists) return
+
+    const updatedFiles = localData.files.map(f =>
+      f.id === fileId ? { ...f, path: newFilePath, name: fileName } : f
+    )
+    handleDataChange({ files: updatedFiles })
+  }
+
+  const handleMoveFolder = (folderId: string, newPath: string) => {
+    const folder = (localData.folders || []).find(f => f.id === folderId)
+    if (!folder) return
+
+    const folderName = folder.path.split("/").pop() || folder.name
+    const newFolderPath = newPath ? `${newPath}/${folderName}` : folderName
+
+    // Verificar se já existe pasta com mesmo nome no destino
+    const folderExists = (localData.folders || []).some(f => f.path === newFolderPath && f.id !== folderId)
+    if (folderExists) return
+
+    const oldPath = folder.path
+    const updatedFolders = (localData.folders || []).map(f => {
+      if (f.id === folderId) {
+        return { ...f, path: newFolderPath, name: folderName }
+      }
+      // Atualizar subpastas
+      if (f.path.startsWith(oldPath + "/")) {
+        const relativePath = f.path.substring(oldPath.length + 1)
+        return { ...f, path: `${newFolderPath}/${relativePath}` }
+      }
+      return f
+    })
+
+    // Atualizar arquivos dentro da pasta
+    const updatedFiles = localData.files.map(f => {
+      if (f.path.startsWith(oldPath + "/")) {
+        const relativePath = f.path.substring(oldPath.length + 1)
+        return { ...f, path: `${newFolderPath}/${relativePath}` }
+      }
+      return f
+    })
+
+    handleDataChange({ folders: updatedFolders, files: updatedFiles })
+  }
+
   const handleExecute = () => {
     if (!activeFile) return
     setIsExecuting(true)
@@ -273,7 +326,7 @@ export function CodeStudioEditor({
           <div className="h-96 border-b border-gray-200 dark:border-gray-800 flex">
             {/* File Explorer - 200px de largura (condicional) */}
             {(localData.showFileExplorer ?? true) && (
-              <div className="w-[200px] shrink-0">
+              <div className="w-[220px] shrink-0">
                 <FileExplorer
                   files={localData.files}
                   folders={localData.folders || []}
@@ -286,6 +339,8 @@ export function CodeStudioEditor({
                   onRenameFile={handleRenameFile}
                   onRenameFolder={handleRenameFolder}
                   onToggleFolder={handleToggleFolder}
+                  onMoveFile={handleMoveFile}
+                  onMoveFolder={handleMoveFolder}
                 />
               </div>
             )}
@@ -466,7 +521,7 @@ export function CodeStudioEditor({
           // CODE MODE: Editor com File Explorer
           <div className="flex-1 flex min-h-0">
             {/* File Explorer */}
-            <div className="w-[200px] shrink-0 border-r border-gray-200 dark:border-gray-800">
+            <div className="w-[220px] shrink-0 border-r border-gray-200 dark:border-gray-800">
               <FileExplorer
                 files={localData.files}
                 folders={localData.folders || []}
@@ -479,6 +534,8 @@ export function CodeStudioEditor({
                 onRenameFile={handleRenameFile}
                 onRenameFolder={handleRenameFolder}
                 onToggleFolder={handleToggleFolder}
+                onMoveFile={handleMoveFile}
+                onMoveFolder={handleMoveFolder}
               />
             </div>
             
@@ -527,7 +584,7 @@ export function CodeStudioEditor({
             {/* Left Panel - File Explorer + Editor */}
             <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex min-w-0">
               {/* File Explorer */}
-              <div className="w-[200px] shrink-0">
+              <div className="w-[220px] shrink-0">
                 <FileExplorer
                   files={localData.files}
                   folders={localData.folders || []}
@@ -540,6 +597,8 @@ export function CodeStudioEditor({
                   onRenameFile={handleRenameFile}
                   onRenameFolder={handleRenameFolder}
                   onToggleFolder={handleToggleFolder}
+                  onMoveFile={handleMoveFile}
+                  onMoveFolder={handleMoveFolder}
                 />
               </div>
               

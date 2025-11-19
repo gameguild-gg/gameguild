@@ -11,10 +11,12 @@ import {
   FileText,
   Trash2,
   Edit3,
-  MoreVertical
+  MoreVertical,
+  GripVertical
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
 import { DuplicateNameDialog } from "../dialogs/duplicate-name-dialog"
 import type { CodeFile, FileTreeFolder, FileTreeItem } from "./types"
@@ -32,6 +34,8 @@ interface FileExplorerProps {
   onRenameFile: (fileId: string, newName: string) => void
   onRenameFolder: (folderId: string, newName: string) => void
   onToggleFolder: (folderId: string) => void
+  onMoveFile: (fileId: string, newPath: string) => void
+  onMoveFolder: (folderId: string, newPath: string) => void
 }
 
 export function FileExplorer({
@@ -46,6 +50,8 @@ export function FileExplorer({
   onRenameFile,
   onRenameFolder,
   onToggleFolder,
+  onMoveFile,
+  onMoveFolder,
 }: FileExplorerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
@@ -53,6 +59,9 @@ export function FileExplorer({
   const [creatingPath, setCreatingPath] = useState("")
   const [newItemName, setNewItemName] = useState("")
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [dragEnabled, setDragEnabled] = useState(false)
+  const [draggedItem, setDraggedItem] = useState<{ id: string; type: "file" | "folder" } | null>(null)
+  const [dropTarget, setDropTarget] = useState<string | null>(null)
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean
     type: "file" | "folder"
@@ -248,6 +257,76 @@ export function FileExplorer({
     // Se estava renomeando, já foi limpo antes de abrir o dialog
   }
 
+  // Drag and Drop handlers
+  const handleDragStart = (e: React.DragEvent, id: string, type: "file" | "folder") => {
+    if (!dragEnabled) return
+    setDraggedItem({ id, type })
+    e.dataTransfer.effectAllowed = "move"
+  }
+
+  const handleDragOver = (e: React.DragEvent, targetId: string) => {
+    if (!dragEnabled || !draggedItem) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = "move"
+    setDropTarget(targetId)
+  }
+
+  const handleDragLeave = () => {
+    setDropTarget(null)
+  }
+
+  const handleDrop = (e: React.DragEvent, targetId: string, targetType: "folder" | "root") => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!dragEnabled || !draggedItem) return
+
+    const { id: draggedId, type: draggedType } = draggedItem
+
+    // Não permitir dropar em si mesmo
+    if (draggedId === targetId) {
+      setDraggedItem(null)
+      setDropTarget(null)
+      return
+    }
+
+    // Determinar o novo path
+    let newPath = ""
+    if (targetType === "folder") {
+      const targetFolder = folders.find(f => f.id === targetId)
+      if (targetFolder) {
+        newPath = targetFolder.path
+        
+        // Verificar se está tentando mover uma pasta para dentro dela mesma ou de seus descendentes
+        if (draggedType === "folder") {
+          const draggedFolder = folders.find(f => f.id === draggedId)
+          if (draggedFolder) {
+            // Não permitir mover para si mesma ou para suas subpastas
+            if (newPath === draggedFolder.path || newPath.startsWith(draggedFolder.path + "/")) {
+              setDraggedItem(null)
+              setDropTarget(null)
+              return
+            }
+          }
+        }
+      }
+    }
+
+    // Executar a movimentação
+    if (draggedType === "file") {
+      onMoveFile(draggedId, newPath)
+    } else {
+      onMoveFolder(draggedId, newPath)
+    }
+
+    setDraggedItem(null)
+    setDropTarget(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedItem(null)
+    setDropTarget(null)
+  }
+
   const handleDeleteClick = (id: string, name: string, type: "file" | "folder") => {
     setDeleteDialog({
       open: true,
@@ -320,15 +399,29 @@ export function FileExplorer({
     const subFolders = folders.filter(f => f.path.startsWith(folder.path + "/") &&
                                           f.path.split("/").length === folder.path.split("/").length + 1)
     
+    const isDragging = draggedItem?.id === folder.id
+    const isDropTarget = dropTarget === folder.id
+    
     return (
       <div key={folder.id}>
         <div
           className={cn(
             "flex items-center gap-1 px-2 py-1 select-none hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer group",
-            "text-sm"
+            "text-sm",
+            isDragging && "opacity-50",
+            isDropTarget && "bg-blue-50 dark:bg-blue-900/20 border-l-2 border-blue-500"
           )}
           style={{ paddingLeft: `${level * 12 + 8}px` }}
+          draggable={dragEnabled && !editingId}
+          onDragStart={(e) => handleDragStart(e, folder.id, "folder")}
+          onDragOver={(e) => handleDragOver(e, folder.id)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, folder.id, "folder")}
+          onDragEnd={handleDragEnd}
         >
+          {dragEnabled && !editingId && (
+            <GripVertical className="h-3 w-3 text-gray-400 shrink-0 cursor-grab active:cursor-grabbing" />
+          )}
           <button
             onClick={() => onToggleFolder(folder.id)}
             className="p-0 hover:bg-transparent"
@@ -466,6 +559,7 @@ export function FileExplorer({
 
   const renderFile = (file: CodeFile, level: number = 0) => {
     const isActive = file.id === activeFileId
+    const isDragging = draggedItem?.id === file.id
     
     return (
       <div
@@ -474,11 +568,18 @@ export function FileExplorer({
           "flex items-center gap-1 px-2 py-1 cursor-pointer group text-sm select-none",
           isActive 
             ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" 
-            : "hover:bg-gray-100 dark:hover:bg-gray-800"
+            : "hover:bg-gray-100 dark:hover:bg-gray-800",
+          isDragging && "opacity-50"
         )}
         style={{ paddingLeft: `${level * 12 + 24}px` }}
         onClick={() => onFileSelect(file.id)}
+        draggable={dragEnabled && !editingId}
+        onDragStart={(e) => handleDragStart(e, file.id, "file")}
+        onDragEnd={handleDragEnd}
       >
+        {dragEnabled && !editingId && (
+          <GripVertical className="h-3 w-3 text-gray-400 shrink-0 cursor-grab active:cursor-grabbing" />
+        )}
         {editingId === file.id ? (
           <Input
             value={editingName}
@@ -548,10 +649,30 @@ export function FileExplorer({
   const rootFiles = files.filter(f => !f.path.includes("/"))
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800">
+    <div 
+      className="h-full flex flex-col bg-gray-50 dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800"
+      onDragOver={(e) => {
+        if (dragEnabled && draggedItem) {
+          e.preventDefault()
+        }
+      }}
+      onDrop={(e) => handleDrop(e, "", "root")}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-800 bg-gray-100 dark:bg-gray-900">
-        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">FILES</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">FILES</span>
+          <div className="flex items-center gap-1.5">
+            <Switch
+              checked={dragEnabled}
+              onCheckedChange={setDragEnabled}
+              className="scale-75"
+            />
+            <span className="text-[10px] text-gray-500 dark:text-gray-500">
+              {dragEnabled ? "Drag enabled" : "Drag disabled"}
+            </span>
+          </div>
+        </div>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
