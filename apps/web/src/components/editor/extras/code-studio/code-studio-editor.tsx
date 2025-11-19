@@ -75,7 +75,12 @@ export function CodeStudioEditor({
   const handleDataChange = (newData: Partial<CodeStudioData>) => {
     const updated = { ...localData, ...newData }
     setLocalData(updated)
-    onUpdate?.(newData)
+    
+    // Só propagar mudanças se NÃO for preview (ou seja, se for no editor modal)
+    // Preview não deve salvar modificações
+    if (!isPreview) {
+      onUpdate?.(newData)
+    }
   }
 
   const handleCodeChange = (content: string) => {
