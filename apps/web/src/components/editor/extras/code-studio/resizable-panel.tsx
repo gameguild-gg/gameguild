@@ -57,6 +57,13 @@ export function ResizablePanel({
   // Drag para mover painel
   const handleDragStart = (e: React.MouseEvent) => {
     if (!isEditMode || isResizing) return
+    
+    // Não iniciar drag se o clique foi em um elemento com data-no-drag
+    const target = e.target as HTMLElement
+    if (target.closest('[data-no-drag="true"]')) {
+      return
+    }
+    
     e.stopPropagation()
     
     setIsDragging(true)
@@ -193,7 +200,7 @@ export function ResizablePanel({
       )}
 
       {/* Conteúdo */}
-      <div className={cn("flex-1 min-h-0 w-full overflow-hidden", isEditMode && "pt-6 pointer-events-none")}>
+      <div className={cn("flex-1 min-h-0 w-full overflow-hidden", isEditMode && "pt-6")}>
         {children}
       </div>
 
