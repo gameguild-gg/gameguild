@@ -1,11 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { X, Save, Code2, Play, Terminal, Menu, ArrowLeft, Lock } from "lucide-react"
-import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage } from "./types"
+import { X, Save, Code2, Play, Terminal, Menu, ArrowLeft, Lock, Layout } from "lucide-react"
+import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, LayoutConfig, PanelConfig, DisplayConfig, PanelType } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
 import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
@@ -13,6 +13,10 @@ import { useTheme } from "next-themes"
 import { FileExplorer } from "./file-explorer"
 import { FileTabs } from "./file-tabs"
 import { SettingsMenu } from "./settings-menu"
+import { ResizablePanel } from "./resizable-panel"
+import { GridDropZone } from "./grid-drop-zone"
+import { DisplayManager } from "./display-manager"
+import { cn } from "@/lib/utils"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -34,14 +38,77 @@ export function CodeStudioEditor({
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme === "dark"
   
-  const [localData, setLocalData] = useState<CodeStudioData>(data)
+  const [localData, setLocalData] = useState<CodeStudioData>(() => {
+    // Criar layout padrão se não existir
+    if (!data.layout) {
+      return {
+        ...data,
+        mode: data.mode || "execution",
+        layout: {
+          displays: [
+            {
+              id: "display-1",
+              name: "Display 1",
+              panels: [
+                { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
+                { id: "editor-1", type: "editor", row: 0, col: 3, rowSpan: 8, colSpan: 9 },
+                { id: "output-1", type: "output", row: 8, col: 3, rowSpan: 4, colSpan: 9 },
+              ],
+            },
+            {
+              id: "display-2",
+              name: "Display 2",
+              panels: [
+                { id: "explorer-2", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
+                { id: "editor-2", type: "editor", row: 0, col: 3, rowSpan: 12, colSpan: 9 },
+              ],
+            },
+          ],
+          activeDisplayId: "display-1",
+          editMode: false,
+        },
+      }
+    }
+    return data
+  })
   const [isExecuting, setIsExecuting] = useState(false)
   const [output, setOutput] = useState<string>("")
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const gridContainerRef = useRef<HTMLDivElement | null>(null)
 
   // Sincronizar com mudanças externas
   useEffect(() => {
-    setLocalData(data)
+    if (!data.layout) {
+      setLocalData({
+        ...data,
+        mode: data.mode || "execution",
+        layout: {
+          displays: [
+            {
+              id: "display-1",
+              name: "Display 1",
+              panels: [
+                { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
+                { id: "editor-1", type: "editor", row: 0, col: 3, rowSpan: 8, colSpan: 9 },
+                { id: "output-1", type: "output", row: 8, col: 3, rowSpan: 4, colSpan: 9 },
+              ],
+            },
+            {
+              id: "display-2",
+              name: "Display 2",
+              panels: [
+                { id: "explorer-2", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
+                { id: "editor-2", type: "editor", row: 0, col: 3, rowSpan: 12, colSpan: 9 },
+              ],
+            },
+          ],
+          activeDisplayId: "display-1",
+          editMode: false,
+        },
+      })
+    } else {
+      setLocalData(data)
+    }
   }, [data])
 
   // Fechar menu de settings quando clicar fora
@@ -66,11 +133,6 @@ export function CodeStudioEditor({
 
   const currentMode = MODE_CONFIGS[localData.mode]
   const activeFile = localData.files.find(f => f.id === localData.activeFileId)
-  
-  // Determinar o layout baseado no modo e isCodeMode
-  const isCodeMode = localData.isCodeMode ?? false
-  const isExecutionMode = localData.mode === "execution"
-  const isTestMode = localData.mode === "test"
 
   const handleDataChange = (newData: Partial<CodeStudioData>) => {
     const updated = { ...localData, ...newData }
@@ -322,6 +384,270 @@ export function CodeStudioEditor({
     handleDataChange({ folders: updatedFolders, files: updatedFiles })
   }
 
+  // Layout handlers
+  const getActiveDisplay = (): DisplayConfig | undefined => {
+    if (!localData.layout) return undefined
+    return localData.layout.displays.find(d => d.id === localData.layout!.activeDisplayId)
+  }
+
+  const handleToggleLayoutEdit = () => {
+    if (!localData.layout) return
+    handleDataChange({
+      layout: {
+        ...localData.layout,
+        editMode: !localData.layout.editMode,
+      },
+    })
+  }
+
+  const handleSelectDisplay = (displayId: string) => {
+    if (!localData.layout) return
+    handleDataChange({
+      layout: {
+        ...localData.layout,
+        activeDisplayId: displayId,
+      },
+    })
+  }
+
+  const handleCreateDisplay = (name: string) => {
+    if (!localData.layout || localData.layout.displays.length >= 4) return
+    
+    const displayNumber = localData.layout.displays.length + 1
+    const newDisplay: DisplayConfig = {
+      id: `display-${displayNumber}`,
+      name: name || `Display ${displayNumber}`,
+      panels: [
+        { id: `editor-${Date.now()}`, type: "editor", row: 0, col: 0, rowSpan: 12, colSpan: 12 },
+      ],
+    }
+
+    handleDataChange({
+      layout: {
+        ...localData.layout,
+        displays: [...localData.layout.displays, newDisplay],
+        activeDisplayId: newDisplay.id,
+      },
+    })
+  }
+
+  const handleDeleteDisplay = (displayId: string) => {
+    if (!localData.layout || localData.layout.displays.length <= 2) return
+    
+    const updatedDisplays = localData.layout.displays.filter(d => d.id !== displayId)
+    const newActiveId = localData.layout.activeDisplayId === displayId 
+      ? updatedDisplays[0]?.id || ""
+      : localData.layout.activeDisplayId
+
+    handleDataChange({
+      layout: {
+        ...localData.layout,
+        displays: updatedDisplays,
+        activeDisplayId: newActiveId,
+      },
+    })
+  }
+
+  const handleRenameDisplay = (displayId: string, newName: string) => {
+    if (!localData.layout) return
+    
+    const updatedDisplays = localData.layout.displays.map(d =>
+      d.id === displayId ? { ...d, name: newName } : d
+    )
+
+    handleDataChange({
+      layout: {
+        ...localData.layout,
+        displays: updatedDisplays,
+      },
+    })
+  }
+
+  const handleUpdateCurrentDisplay = (updatedDisplay: DisplayConfig) => {
+    if (!localData.layout) return
+    
+    const updatedDisplays = localData.layout.displays.map(d =>
+      d.id === updatedDisplay.id ? updatedDisplay : d
+    )
+
+    handleDataChange({
+      layout: {
+        ...localData.layout,
+        displays: updatedDisplays,
+      },
+    })
+  }
+
+  const handleAddPanel = (type: PanelType, row?: number, col?: number) => {
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+    
+    // Se tiver coordenadas de drag-drop, usar elas
+    // Senão, encontrar primeira célula vazia no grid 12x12
+    let targetRow = row ?? 0
+    let targetCol = col ?? 0
+    let found = row !== undefined && col !== undefined
+
+    if (!found) {
+      // Buscar primeira célula vazia
+      for (let r = 0; r < 12 && !found; r++) {
+        for (let c = 0; c < 12 && !found; c++) {
+          const occupied = activeDisplay.panels.some(p =>
+            r >= p.row && r < p.row + p.rowSpan &&
+            c >= p.col && c < p.col + p.colSpan
+          )
+          if (!occupied) {
+            targetRow = r
+            targetCol = c
+            found = true
+          }
+        }
+      }
+    }
+
+    // Garantir que o painel não saia do grid (tamanho padrão 4x4)
+    const rowSpan = Math.min(4, 12 - targetRow)
+    const colSpan = Math.min(4, 12 - targetCol)
+
+    const newPanel: PanelConfig = {
+      id: `${type}-${Date.now()}`,
+      type,
+      row: targetRow,
+      col: targetCol,
+      rowSpan,
+      colSpan,
+    }
+
+    handleUpdateCurrentDisplay({
+      ...activeDisplay,
+      panels: [...activeDisplay.panels, newPanel],
+    })
+  }
+
+  const handleGridDrop = (row: number, col: number, type: PanelType) => {
+    handleAddPanel(type, row, col)
+  }
+
+  const handlePanelResize = (panelId: string, row: number, col: number, rowSpan: number, colSpan: number) => {
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+    
+    const updatedPanels = activeDisplay.panels.map(p =>
+      p.id === panelId ? { ...p, row, col, rowSpan, colSpan } : p
+    )
+    
+    handleUpdateCurrentDisplay({
+      ...activeDisplay,
+      panels: updatedPanels,
+    })
+  }
+
+  const handlePanelMove = (panelId: string, row: number, col: number) => {
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+    
+    const updatedPanels = activeDisplay.panels.map(p =>
+      p.id === panelId ? { ...p, row, col } : p
+    )
+    
+    handleUpdateCurrentDisplay({
+      ...activeDisplay,
+      panels: updatedPanels,
+    })
+  }
+
+  const handleRemovePanel = (panelId: string) => {
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+    
+    const updatedPanels = activeDisplay.panels.filter(p => p.id !== panelId)
+    
+    handleUpdateCurrentDisplay({
+      ...activeDisplay,
+      panels: updatedPanels,
+    })
+  }
+
+  const handlePanelDragStart = (panelId: string) => {
+    // Pode ser usado para feedback visual
+    console.log('Dragging panel:', panelId)
+  }
+
+  const handlePanelDragEnd = () => {
+    // Limpar feedback visual
+    console.log('Drag ended')
+  }
+
+  // Renderizar conteúdo de cada painel
+  const renderPanelContent = (panelType: "explorer" | "editor" | "output") => {
+    switch (panelType) {
+      case "explorer":
+        return (
+          <FileExplorer
+            files={localData.files}
+            folders={localData.folders || []}
+            activeFileId={localData.activeFileId}
+            onFileSelect={handleFileSelect}
+            onCreateFile={handleCreateFile}
+            onCreateFolder={handleCreateFolder}
+            onDeleteFile={handleDeleteFile}
+            onDeleteFolder={handleDeleteFolder}
+            onRenameFile={handleRenameFile}
+            onRenameFolder={handleRenameFolder}
+            onToggleFolder={handleToggleFolder}
+            onMoveFile={handleMoveFile}
+            onMoveFolder={handleMoveFolder}
+          />
+        )
+      
+      case "editor":
+        return (
+          <div className="flex flex-col h-full">
+            <FileTabs
+              files={localData.files}
+              openTabs={localData.openTabs || []}
+              activeFileId={localData.activeFileId}
+              onSelectTab={handleFileSelect}
+              onCloseTab={handleCloseTab}
+              onReorderTabs={handleReorderTabs}
+            />
+            <div className="flex-1 min-h-0">
+              {activeFile ? (
+                <MonacoCodeEditor
+                  value={activeFile.content}
+                  onChange={handleCodeChange}
+                  language={activeFile.language}
+                  readonly={localData.readonly}
+                  showLineNumbers={localData.showLineNumbers}
+                  fontSize={localData.fontSize}
+                  shikiTheme={localData.shikiTheme}
+                />
+              ) : (
+                <div className="h-full flex items-center justify-center text-gray-400">
+                  <div className="text-center">
+                    <Code2 className="h-16 w-16 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">No file selected</p>
+                    <p className="text-xs mt-1">Open a file from the explorer or create a new one</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      
+      case "output":
+        return (
+          <ResultPanel
+            output={output}
+            isExecuting={isExecuting}
+            mode={localData.mode!}
+            onExecute={handleExecute}
+            testCases={localData.testCases?.[localData.activeFileId || ""] || []}
+          />
+        )
+    }
+  }
+
   const handleExecute = () => {
     if (!activeFile) return
     setIsExecuting(true)
@@ -511,198 +837,101 @@ export function CodeStudioEditor({
               placeholder="Optional title"
               className="w-48"
             />
+
+            {/* Display Selector - Only when NOT editing layout */}
+            {!localData.layout?.editMode && localData.layout && (
+              <div className="flex items-center gap-1 ml-4 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+                {localData.layout.displays.map((display) => (
+                  <button
+                    key={display.id}
+                    onClick={() => handleSelectDisplay(display.id)}
+                    className={cn(
+                      "px-2.5 py-1 rounded text-xs font-medium transition-all",
+                      localData.layout?.activeDisplayId === display.id
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    )}
+                    title={display.name}
+                  >
+                    {display.name}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 ml-4 px-3 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Display:</span>
-            <div className="flex items-center gap-1 bg-gray-100 dark:bg-gray-900 rounded-md p-0.5">
-              <button
-                onClick={() => handleDataChange({ isCodeMode: false })}
-                className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                  !isCodeMode 
-                    ? "bg-white dark:bg-gray-700 text-green-600 dark:text-green-400 shadow-sm" 
-                    : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                <Terminal className="h-3.5 w-3.5" />
-                {isExecutionMode ? "Execution" : "Test"}
-              </button>
-              <button
-                onClick={() => handleDataChange({ isCodeMode: true })}
-                className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                  isCodeMode 
-                    ? "bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm" 
-                    : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                <Code2 className="h-3.5 w-3.5" />
-                Code
-              </button>
-            </div>
+          {/* Layout Edit Button */}
+          <div className="ml-auto flex items-center gap-2">
+            <Button
+              variant={localData.layout?.editMode ? "default" : "outline"}
+              size="sm"
+              onClick={handleToggleLayoutEdit}
+              className="h-8"
+              title={localData.layout?.editMode ? "Exit Layout Edit" : "Edit Layout"}
+            >
+              <Layout className="h-4 w-4 mr-2" />
+              {localData.layout?.editMode ? "Done" : "Layout"}
+            </Button>
           </div>
-
-          {!isCodeMode && (
-            <div className="ml-auto flex items-center gap-2">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleExecute}
-                disabled={isExecuting}
-                className="flex items-center gap-2"
-              >
-                <Play className="h-4 w-4" />
-                {isExecuting ? "Running..." : "Run Code"}
-              </Button>
-            </div>
-          )}
         </div>
 
-        {/* Main Content - Layout baseado no modo */}
-        {isCodeMode ? (
-          // CODE MODE: Editor com File Explorer
-          <div className="flex-1 flex min-h-0">
-            {/* File Explorer */}
-            <div className="w-[220px] shrink-0 border-r border-gray-200 dark:border-gray-800">
-              <FileExplorer
-                files={localData.files}
-                folders={localData.folders || []}
-                activeFileId={localData.activeFileId}
-                onFileSelect={handleFileSelect}
-                onCreateFile={handleCreateFile}
-                onCreateFolder={handleCreateFolder}
-                onDeleteFile={handleDeleteFile}
-                onDeleteFolder={handleDeleteFolder}
-                onRenameFile={handleRenameFile}
-                onRenameFolder={handleRenameFolder}
-                onToggleFolder={handleToggleFolder}
-                onMoveFile={handleMoveFile}
-                onMoveFolder={handleMoveFolder}
+        {/* Main Content - Grid Layout Customizável */}
+        <div className="flex-1 min-h-0 p-3 bg-gray-100 dark:bg-gray-950 overflow-hidden flex flex-col">
+          {/* Layout Edit Tools */}
+          {localData.layout?.editMode && (
+            <div className="mb-3 p-2 bg-white dark:bg-gray-900 border border-blue-500/30 rounded-lg shrink-0">
+              <DisplayManager
+                displays={localData.layout.displays}
+                activeDisplayId={localData.layout.activeDisplayId}
+                onSelectDisplay={handleSelectDisplay}
+                onCreateDisplay={handleCreateDisplay}
+                onDeleteDisplay={handleDeleteDisplay}
+                onRenameDisplay={handleRenameDisplay}
+                onAddPanel={handleAddPanel}
               />
             </div>
-            
-            {/* Editor com Tabs */}
-            <div className="flex-1 flex flex-col min-w-0">
-              <FileTabs
-                files={localData.files}
-                openTabs={localData.openTabs || []}
-                activeFileId={localData.activeFileId}
-                onSelectTab={handleFileSelect}
-                onCloseTab={handleCloseTab}
-                onReorderTabs={handleReorderTabs}
-              />
-              <div className="flex-1">
-                {activeFile ? (
-                  <MonacoCodeEditor
-                    value={activeFile.content}
-                    language={activeFile.language}
-                    onChange={handleCodeChange}
-                    readonly={false}
-                    theme={isDarkMode ? "vs-dark" : "vs-light"}
-                    shikiTheme={localData.shikiTheme || "github"}
-                    fontSize={localData.fontSize}
-                    showLineNumbers={localData.showLineNumbers}
-                  />
-                ) : (
-                  <div className="h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-                    <img 
-                      src="/assets/images/icons/icon-128x128.png" 
-                      alt="GameGuild Icon" 
-                      className="w-24 h-24 mb-6 opacity-50"
-                    />
-                    <h3 className="text-xl font-semibold mb-2">No File Open</h3>
-                    <p className="text-sm mb-4 flex items-center gap-2">
-                      <ArrowLeft className="h-4 w-4" />
-                      Open a file from the File Explorer
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          // EXECUTION/TEST MODE: Layout horizontal (File Explorer + Editor à esquerda, resultado à direita)
-          <div className="flex-1 flex min-h-0">
-            {/* Left Panel - File Explorer + Editor */}
-            <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex min-w-0">
-              {/* File Explorer */}
-              <div className="w-[220px] shrink-0">
-                <FileExplorer
-                  files={localData.files}
-                  folders={localData.folders || []}
-                  activeFileId={localData.activeFileId}
-                  onFileSelect={handleFileSelect}
-                  onCreateFile={handleCreateFile}
-                  onCreateFolder={handleCreateFolder}
-                  onDeleteFile={handleDeleteFile}
-                  onDeleteFolder={handleDeleteFolder}
-                  onRenameFile={handleRenameFile}
-                  onRenameFolder={handleRenameFolder}
-                  onToggleFolder={handleToggleFolder}
-                  onMoveFile={handleMoveFile}
-                  onMoveFolder={handleMoveFolder}
-                />
-              </div>
-              
-              {/* Editor com Tabs */}
-              <div className="flex-1 flex flex-col min-w-0">
-                <FileTabs
-                  files={localData.files}
-                  openTabs={localData.openTabs || []}
-                  activeFileId={localData.activeFileId}
-                  onSelectTab={handleFileSelect}
-                  onCloseTab={handleCloseTab}
-                  onReorderTabs={handleReorderTabs}
-                />
-                <div className="flex-1">
-                  {activeFile ? (
-                    <MonacoCodeEditor
-                      value={activeFile.content}
-                      language={activeFile.language}
-                      onChange={handleCodeChange}
-                      readonly={false}
-                      theme={isDarkMode ? "vs-dark" : "vs-light"}
-                      shikiTheme={localData.shikiTheme || "github"}
-                      fontSize={localData.fontSize}
-                      showLineNumbers={localData.showLineNumbers}
-                    />
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400">
-                      <img 
-                        src="/assets/images/icons/icon-128x128.png" 
-                        alt="GameGuild Icon" 
-                        className="w-24 h-24 mb-6 opacity-50"
-                      />
-                      <h3 className="text-xl font-semibold mb-2">No File Open</h3>
-                      <p className="text-sm mb-4 flex items-center gap-2">
-                        <ArrowLeft className="h-4 w-4" />
-                        Open a file from the File Explorer
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+          )}
 
-            {/* Right Panel - Result */}
-            <div className="w-1/2 flex flex-col">
-              <div className="p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <h3 className="font-medium text-sm">
-                  {currentMode.label}
-                </h3>
-              </div>
-              <div className="flex-1 overflow-auto">
-                <ResultPanel
-                  mode={localData.mode}
-                  output={output}
-                  isExecuting={isExecuting}
-                  onExecute={handleExecute}
-                  testCases={localData.testCases?.[activeFile?.id || ""] || []}
-                  activeFile={activeFile}
-                />
-              </div>
-            </div>
+          {/* Grid Container - Fixed 12x12 */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            {(() => {
+              const activeDisplay = getActiveDisplay()
+              if (!activeDisplay) return null
+
+              return (
+                <GridDropZone
+                  isActive={localData.layout?.editMode || false}
+                  onDrop={handleGridDrop}
+                >
+                  <div
+                    ref={gridContainerRef}
+                    className="h-full w-full grid gap-3"
+                    style={{
+                      gridTemplateColumns: "repeat(12, 1fr)",
+                      gridTemplateRows: "repeat(12, 1fr)",
+                    }}
+                  >
+                    {activeDisplay.panels.map(panel => (
+                      <ResizablePanel
+                        key={panel.id}
+                        panel={panel}
+                        isEditMode={localData.layout?.editMode || false}
+                        gridContainerRef={gridContainerRef}
+                        onResize={handlePanelResize}
+                        onMove={handlePanelMove}
+                        onRemove={handleRemovePanel}
+                        onDragStart={handlePanelDragStart}
+                        onDragEnd={handlePanelDragEnd}
+                      >
+                        {renderPanelContent(panel.type)}
+                      </ResizablePanel>
+                    ))}
+                  </div>
+                </GridDropZone>
+              )
+            })()}
           </div>
-        )}
+        </div>
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
