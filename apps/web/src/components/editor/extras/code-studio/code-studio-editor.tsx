@@ -89,14 +89,50 @@ export function CodeStudioEditor({
 
   // File Management
   const handleFileSelect = (fileId: string) => {
-    // Adicionar à lista de abas abertas se não estiver
-    if (!localData.openTabs?.includes(fileId)) {
-      handleDataChange({ 
-        openTabs: [...(localData.openTabs || []), fileId],
-        activeFileId: fileId 
+    const file = localData.files.find(f => f.id === fileId)
+    if (!file) return
+
+    // Expandir todas as pastas pai do arquivo
+    const filePath = file.path
+    const pathParts = filePath.split('/')
+    
+    // Se o arquivo está em uma pasta, expandir todas as pastas pai
+    if (pathParts.length > 1) {
+      const updatedFolders = (localData.folders || []).map(folder => {
+        // Verificar se esta pasta é pai do arquivo
+        const folderPathParts = folder.path.split('/')
+        
+        // Expandir se o caminho do arquivo começa com o caminho da pasta
+        if (filePath.startsWith(folder.path + '/')) {
+          return { ...folder, isExpanded: true }
+        }
+        
+        return folder
       })
+
+      // Adicionar à lista de abas abertas se não estiver
+      if (!localData.openTabs?.includes(fileId)) {
+        handleDataChange({ 
+          folders: updatedFolders,
+          openTabs: [...(localData.openTabs || []), fileId],
+          activeFileId: fileId 
+        })
+      } else {
+        handleDataChange({ 
+          folders: updatedFolders,
+          activeFileId: fileId 
+        })
+      }
     } else {
-      handleDataChange({ activeFileId: fileId })
+      // Arquivo na raiz, não precisa expandir pastas
+      if (!localData.openTabs?.includes(fileId)) {
+        handleDataChange({ 
+          openTabs: [...(localData.openTabs || []), fileId],
+          activeFileId: fileId 
+        })
+      } else {
+        handleDataChange({ activeFileId: fileId })
+      }
     }
   }
 
