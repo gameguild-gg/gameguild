@@ -14,6 +14,7 @@ interface DisplayManagerProps {
   onCreateDisplay: (name: string, aspectRatio: AspectRatio) => void
   onDeleteDisplay: (displayId: string) => void
   onRenameDisplay: (displayId: string, newName: string) => void
+  onChangeAspectRatio: (displayId: string, newAspectRatio: AspectRatio) => void
   onAddPanel: (type: PanelType, row?: number, col?: number) => void
 }
 
@@ -24,6 +25,7 @@ export function DisplayManager({
   onCreateDisplay,
   onDeleteDisplay,
   onRenameDisplay,
+  onChangeAspectRatio,
   onAddPanel,
 }: DisplayManagerProps) {
   const [isCreating, setIsCreating] = useState(false)
@@ -114,6 +116,16 @@ export function DisplayManager({
             
             {activeDisplayId === display.id && (
               <div className="flex items-center gap-0.5">
+                <select
+                  value={display.aspectRatio}
+                  onChange={(e) => onChangeAspectRatio(display.id, e.target.value as AspectRatio)}
+                  className="h-6 px-1.5 text-[10px] bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded"
+                  title="Change aspect ratio"
+                >
+                  <option value="2:1">🖥 2:1</option>
+                  <option value="1:1">⬜ 1:1</option>
+                  <option value="1:2">📱 1:2</option>
+                </select>
                 <button
                   onClick={() => handleStartRename(display)}
                   className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
