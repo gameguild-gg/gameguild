@@ -1,13 +1,5 @@
 import type { CodeStudioData, DisplayConfig, AspectRatio } from "./types"
-
-// Helper to get grid dimensions from aspect ratio
-function getGridDimensions(aspectRatio: "2:1" | "1:1" | "1:2") {
-  switch (aspectRatio) {
-    case "2:1": return { cols: 24, rows: 12 } // Landscape
-    case "1:1": return { cols: 12, rows: 12 } // Square
-    case "1:2": return { cols: 12, rows: 24 } // Portrait
-  }
-}
+import { getGridDimensions } from "./grid-utils"
 
 export function toggleLayoutEdit(data: CodeStudioData): Partial<CodeStudioData> {
   if (!data.layout) return {}

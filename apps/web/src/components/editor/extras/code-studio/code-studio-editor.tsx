@@ -20,24 +20,7 @@ import { cn } from "@/lib/utils"
 import { createDefaultLayout } from "./default-layouts"
 import * as FileOps from "./file-operations"
 import * as LayoutOps from "./layout-operations"
-
-// Helper to get grid dimensions from aspect ratio
-function getGridDimensions(aspectRatio: "2:1" | "1:1" | "1:2") {
-  switch (aspectRatio) {
-    case "2:1": return { cols: 24, rows: 12 } // Landscape
-    case "1:1": return { cols: 12, rows: 12 } // Square
-    case "1:2": return { cols: 12, rows: 24 } // Portrait
-  }
-}
-
-// Helper to get container dimensions from aspect ratio
-function getContainerDimensions(aspectRatio: "2:1" | "1:1" | "1:2") {
-  switch (aspectRatio) {
-    case "2:1": return { maxWidth: "1200px", maxHeight: "600px" } // Landscape 2:1
-    case "1:1": return { maxWidth: "600px", maxHeight: "600px" } // Square 1:1
-    case "1:2": return { maxWidth: "600px", maxHeight: "1200px" } // Portrait 1:2
-  }
-}
+import { getGridDimensions, getContainerDimensions } from "./grid-utils"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
