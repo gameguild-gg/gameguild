@@ -7,6 +7,7 @@ import type { PanelConfig } from "./types"
 
 interface ResizablePanelProps {
   panel: PanelConfig
+  allPanels: PanelConfig[]
   isEditMode: boolean
   gridContainerRef?: React.RefObject<HTMLDivElement | null>
   gridCols: number
@@ -21,6 +22,7 @@ interface ResizablePanelProps {
 
 export function ResizablePanel({
   panel,
+  allPanels,
   isEditMode,
   gridContainerRef,
   gridCols,
@@ -36,6 +38,26 @@ export function ResizablePanel({
   const [isDragging, setIsDragging] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const startPosRef = useRef({ x: 0, y: 0, row: 0, col: 0, rowSpan: 0, colSpan: 0 })
+
+  // Verificar se há colisão com outros painéis
+  const hasCollision = (row: number, col: number, rowSpan: number, colSpan: number): boolean => {
+    const endRow = row + rowSpan
+    const endCol = col + colSpan
+
+    return allPanels.some(otherPanel => {
+      // Não verificar colisão com o próprio painel
+      if (otherPanel.id === panel.id) return false
+
+      const otherEndRow = otherPanel.row + otherPanel.rowSpan
+      const otherEndCol = otherPanel.col + otherPanel.colSpan
+
+      // Verificar se há sobreposição
+      const rowOverlap = row < otherEndRow && endRow > otherPanel.row
+      const colOverlap = col < otherEndCol && endCol > otherPanel.col
+
+      return rowOverlap && colOverlap
+    })
+  }
 
   // Calcular célula do grid baseado na posição do mouse
   const getCellFromMousePosition = (clientX: number, clientY: number): { row: number; col: number } => {
@@ -164,7 +186,9 @@ export function ResizablePanel({
           }
         }
 
-        if (newRow !== panel.row || newCol !== panel.col || newColSpan !== panel.colSpan || newRowSpan !== panel.rowSpan) {
+        // Apenas aplicar resize se não houver colisão
+        if ((newRow !== panel.row || newCol !== panel.col || newColSpan !== panel.colSpan || newRowSpan !== panel.rowSpan) &&
+            !hasCollision(newRow, newCol, newRowSpan, newColSpan)) {
           onResize?.(panel.id, newRow, newCol, newRowSpan, newColSpan)
         }
       }
