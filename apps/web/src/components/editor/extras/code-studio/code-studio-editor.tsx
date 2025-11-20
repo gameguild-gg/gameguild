@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils"
 import { createDefaultLayout } from "./default-layouts"
 import * as FileOps from "./file-operations"
 import * as LayoutOps from "./layout-operations"
+import * as TabOps from "./tab-operations"
 import { getGridDimensions, getContainerDimensions } from "./grid-utils"
 
 interface CodeStudioEditorProps {
@@ -116,123 +117,24 @@ export function CodeStudioEditor({
 
   // File Management
   const handleFileSelect = (fileId: string, panelId?: string) => {
-    const file = localData.files.find(f => f.id === fileId)
-    if (!file || !localData.layout) return
-
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    // Determinar se o painel é único ou múltiplo
-    let panel = panelId ? activeDisplay.panels.find(p => p.id === panelId) : undefined
-    
-    // Se não foi passado panelId (clique do FileExplorer), verificar se há editor único no display atual
-    if (!panel) {
-      const uniqueEditorInDisplay = activeDisplay.panels.find(
-        p => p.type === "editor" && p.editorInstance === "unique"
-      )
-      if (uniqueEditorInDisplay) {
-        panel = uniqueEditorInDisplay
-      }
-    }
-    
-    const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
-
-    // Expandir todas as pastas pai do arquivo
-    const filePath = file.path
-    const pathParts = filePath.split('/')
-    
-    // Se o arquivo está em uma pasta, expandir todas as pastas pai
-    let updatedFolders = localData.folders || []
-    if (pathParts.length > 1) {
-      updatedFolders = updatedFolders.map(folder => {
-        if (filePath.startsWith(folder.path + '/')) {
-          return { ...folder, isExpanded: true }
-        }
-        return folder
-      })
-    }
-
-    if (isUniqueInstance) {
-      // Editor único: abas específicas do display
-      const currentTabs = activeDisplay.uniqueOpenTabs || []
-      const updatedTabs = currentTabs.includes(fileId) ? currentTabs : [...currentTabs, fileId]
-      
-      const updatedDisplays = localData.layout.displays.map(d => 
-        d.id === activeDisplay.id 
-          ? { ...d, uniqueOpenTabs: updatedTabs, uniqueActiveFileId: fileId }
-          : d
-      )
-
-      handleDataChange({
-        folders: updatedFolders,
-        activeFileId: fileId, // Atualizar também o activeFileId global para o FileExplorer
-        layout: {
-          ...localData.layout,
-          displays: updatedDisplays,
-        },
-      })
-    } else {
-      // Editor múltiplo: abas globais
-      const currentTabs = localData.openTabs || []
-      const updatedTabs = currentTabs.includes(fileId) ? currentTabs : [...currentTabs, fileId]
-
-      handleDataChange({ 
-        folders: updatedFolders,
-        openTabs: updatedTabs,
-        activeFileId: fileId 
-      })
-    }
+    const updates = TabOps.selectFile(localData, fileId, panelId, activeDisplay)
+    handleDataChange(updates)
   }
 
   const handleCloseTab = (fileId: string, panelId?: string) => {
-    if (!localData.layout) return
-
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    const panel = panelId ? activeDisplay.panels.find(p => p.id === panelId) : undefined
-    const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
-
-    if (isUniqueInstance) {
-      // Editor único: fechar aba específica do display
-      const newOpenTabs = (activeDisplay.uniqueOpenTabs || []).filter(id => id !== fileId)
-      let newActiveFileId = activeDisplay.uniqueActiveFileId
-
-      if (fileId === activeDisplay.uniqueActiveFileId) {
-        newActiveFileId = newOpenTabs.length > 0 ? newOpenTabs[newOpenTabs.length - 1] : undefined
-      }
-
-      const updatedDisplays = localData.layout.displays.map(d =>
-        d.id === activeDisplay.id
-          ? { ...d, uniqueOpenTabs: newOpenTabs, uniqueActiveFileId: newActiveFileId }
-          : d
-      )
-
-      handleDataChange({
-        layout: {
-          ...localData.layout,
-          displays: updatedDisplays,
-        },
-      })
-    } else {
-      // Editor múltiplo: fechar aba global
-      const newOpenTabs = (localData.openTabs || []).filter(id => id !== fileId)
-      const updates: Partial<CodeStudioData> = { openTabs: newOpenTabs }
-
-      if (fileId === localData.activeFileId) {
-        if (newOpenTabs.length > 0) {
-          updates.activeFileId = newOpenTabs[newOpenTabs.length - 1]
-        } else {
-          updates.activeFileId = undefined
-        }
-      }
-
-      handleDataChange(updates)
-    }
+    const updates = TabOps.closeTab(localData, fileId, panelId, activeDisplay)
+    handleDataChange(updates)
   }
 
   const handleReorderTabs = (newOrder: string[]) => {
-    handleDataChange({ openTabs: newOrder })
+    const updates = TabOps.reorderTabs(localData, newOrder)
+    handleDataChange(updates)
   }
 
   const handleCreateFile = (path: string, name: string) => {
