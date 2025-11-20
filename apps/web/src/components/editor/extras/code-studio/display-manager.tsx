@@ -4,14 +4,14 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, Trash2, Edit2 } from "lucide-react"
-import type { DisplayConfig, PanelType } from "./types"
+import type { DisplayConfig, PanelType, AspectRatio } from "./types"
 import { cn } from "@/lib/utils"
 
 interface DisplayManagerProps {
   displays: DisplayConfig[]
   activeDisplayId: string
   onSelectDisplay: (displayId: string) => void
-  onCreateDisplay: (name: string) => void
+  onCreateDisplay: (name: string, aspectRatio: AspectRatio) => void
   onDeleteDisplay: (displayId: string) => void
   onRenameDisplay: (displayId: string, newName: string) => void
   onAddPanel: (type: PanelType, row?: number, col?: number) => void
@@ -28,14 +28,16 @@ export function DisplayManager({
 }: DisplayManagerProps) {
   const [isCreating, setIsCreating] = useState(false)
   const [newDisplayName, setNewDisplayName] = useState("")
+  const [newAspectRatio, setNewAspectRatio] = useState<AspectRatio>("2:1")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
   const [draggedPanelType, setDraggedPanelType] = useState<PanelType | null>(null)
 
   const handleCreate = () => {
     if (newDisplayName.trim()) {
-      onCreateDisplay(newDisplayName.trim())
+      onCreateDisplay(newDisplayName.trim(), newAspectRatio)
       setNewDisplayName("")
+      setNewAspectRatio("2:1")
       setIsCreating(false)
     }
   }
@@ -98,7 +100,11 @@ export function DisplayManager({
                     ? "bg-blue-600 text-white shadow-sm"
                     : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600"
                 )}
+                title={`Aspect ratio: ${display.aspectRatio}`}
               >
+                <span className="text-[10px] opacity-60">
+                  {display.aspectRatio === "2:1" ? "🖥" : display.aspectRatio === "1:2" ? "📱" : "⬜"}
+                </span>
                 {display.name}
                 <span className="text-[10px] opacity-70">
                   ({display.panels.length})
@@ -130,7 +136,7 @@ export function DisplayManager({
         ))}
 
         {isCreating ? (
-          <div className="flex items-center gap-1 bg-white dark:bg-gray-700 rounded px-2 py-1">
+          <div className="flex items-center gap-2 bg-white dark:bg-gray-700 rounded px-2 py-1.5">
             <Input
               value={newDisplayName}
               onChange={(e) => setNewDisplayName(e.target.value)}
@@ -139,19 +145,30 @@ export function DisplayManager({
                 if (e.key === "Escape") {
                   setIsCreating(false)
                   setNewDisplayName("")
+                  setNewAspectRatio("2:1")
                 }
               }}
               placeholder="Display name"
-              className="h-6 w-32 text-xs"
+              className="h-7 w-32 text-xs"
               autoFocus
-              onBlur={() => {
-                if (newDisplayName.trim()) {
-                  handleCreate()
-                } else {
-                  setIsCreating(false)
-                }
-              }}
             />
+            <select
+              value={newAspectRatio}
+              onChange={(e) => setNewAspectRatio(e.target.value as AspectRatio)}
+              className="h-7 px-2 text-xs bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded"
+              title="Aspect ratio"
+            >
+              <option value="2:1">🖵 2:1</option>
+              <option value="1:1">⬜ 1:1</option>
+              <option value="1:2">📱 1:2</option>
+            </select>
+            <Button
+              onClick={handleCreate}
+              size="sm"
+              className="h-7 px-2 text-xs"
+            >
+              Create
+            </Button>
           </div>
         ) : displays.length < 4 ? (
           <button

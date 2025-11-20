@@ -9,6 +9,8 @@ interface ResizablePanelProps {
   panel: PanelConfig
   isEditMode: boolean
   gridContainerRef?: React.RefObject<HTMLDivElement | null>
+  gridCols: number
+  gridRows: number
   onResize?: (panelId: string, row: number, col: number, rowSpan: number, colSpan: number) => void
   onMove?: (panelId: string, row: number, col: number) => void
   onRemove?: (panelId: string) => void
@@ -21,6 +23,8 @@ export function ResizablePanel({
   panel,
   isEditMode,
   gridContainerRef,
+  gridCols,
+  gridRows,
   onResize,
   onMove,
   onRemove,
@@ -41,16 +45,15 @@ export function ResizablePanel({
     const x = clientX - rect.left
     const y = clientY - rect.top
     
-    // Grid 24x12 (24 colunas x 12 linhas)
-    const cellWidth = rect.width / 24
-    const cellHeight = rect.height / 12
+    const cellWidth = rect.width / gridCols
+    const cellHeight = rect.height / gridRows
     
     const col = Math.floor(x / cellWidth)
     const row = Math.floor(y / cellHeight)
     
     return {
-      row: Math.max(0, Math.min(11, row)),
-      col: Math.max(0, Math.min(23, col)),
+      row: Math.max(0, Math.min(gridRows - 1, row)),
+      col: Math.max(0, Math.min(gridCols - 1, col)),
     }
   }
 
@@ -104,8 +107,8 @@ export function ResizablePanel({
         const { row, col } = getCellFromMousePosition(e.clientX, e.clientY)
         
         // Garantir que o painel não saia do grid
-        const maxRow = Math.min(row, 12 - panel.rowSpan)
-        const maxCol = Math.min(col, 24 - panel.colSpan)
+        const maxRow = Math.min(row, gridRows - panel.rowSpan)
+        const maxCol = Math.min(col, gridCols - panel.colSpan)
         
         if (maxRow !== panel.row || maxCol !== panel.col) {
           onMove?.(panel.id, maxRow, maxCol)
@@ -114,8 +117,8 @@ export function ResizablePanel({
         const gridRect = panelRef.current.parentElement?.getBoundingClientRect()
         if (!gridRect) return
 
-        const cellWidth = gridRect.width / 24
-        const cellHeight = gridRect.height / 12
+        const cellWidth = gridRect.width / gridCols
+        const cellHeight = gridRect.height / gridRows
 
         const deltaX = e.clientX - startPosRef.current.x
         const deltaY = e.clientY - startPosRef.current.y
@@ -125,12 +128,12 @@ export function ResizablePanel({
 
         if (isResizing === 'se' || isResizing === 'e') {
           const colDelta = Math.round(deltaX / cellWidth)
-          newColSpan = Math.max(1, Math.min(24 - panel.col, startPosRef.current.colSpan + colDelta))
+          newColSpan = Math.max(1, Math.min(gridCols - panel.col, startPosRef.current.colSpan + colDelta))
         }
 
         if (isResizing === 'se' || isResizing === 's') {
           const rowDelta = Math.round(deltaY / cellHeight)
-          newRowSpan = Math.max(1, Math.min(12 - panel.row, startPosRef.current.rowSpan + rowDelta))
+          newRowSpan = Math.max(1, Math.min(gridRows - panel.row, startPosRef.current.rowSpan + rowDelta))
         }
 
         if (newColSpan !== panel.colSpan || newRowSpan !== panel.rowSpan) {

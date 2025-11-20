@@ -44,19 +44,27 @@ export type PanelType = "explorer" | "editor" | "output"
 
 export type EditorInstance = "multiple" | "unique"
 
+export type AspectRatio = "2:1" | "1:1" | "1:2"
+
+// Grid dimensions based on aspect ratio:
+// "2:1" (landscape) = 24x12 (24 cols x 12 rows)
+// "1:1" (square) = 12x12 (12 cols x 12 rows)
+// "1:2" (portrait) = 12x24 (12 cols x 24 rows)
+
 export interface PanelConfig {
   id: string
   type: PanelType
-  row: number // 0-11 (grid de 12 linhas)
-  col: number // 0-23 (grid de 24 colunas)
-  rowSpan: number // quantas linhas ocupa (1-12)
-  colSpan: number // quantas colunas ocupa (1-24)
+  row: number // 0 to (rows-1), depends on display aspect ratio
+  col: number // 0 to (cols-1), depends on display aspect ratio
+  rowSpan: number // 1 to rows, depends on display aspect ratio
+  colSpan: number // 1 to cols, depends on display aspect ratio
   editorInstance?: EditorInstance // Apenas para painéis tipo "editor"
 }
 
 export interface DisplayConfig {
   id: string // "display-1", "display-2", etc
   name: string // Título customizável pelo usuário
+  aspectRatio: AspectRatio // Proporção da área útil do display
   panels: PanelConfig[]
   uniqueOpenTabs?: string[] // Abas abertas específicas deste display (quando editor é unique)
   uniqueActiveFileId?: string // Arquivo ativo específico deste display (quando editor é unique)
