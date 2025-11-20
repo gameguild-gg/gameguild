@@ -50,7 +50,6 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
       activeFileId: data.activeFileId || data.files?.[0]?.id,
       title: data.title,
       caption: data.caption,
-      showFileExplorer: data.showFileExplorer ?? true,
       shikiTheme: data.shikiTheme ?? "github",
     }
   }
@@ -239,7 +238,6 @@ export function $createCodeStudioNode(mode: CodeStudioMode = "execution"): CodeS
     autoRun: false,
     showTests: false,
     testCases: {},
-    showFileExplorer: true,
     shikiTheme: "github",
   })
 }
