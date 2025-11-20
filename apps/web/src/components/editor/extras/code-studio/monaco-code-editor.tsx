@@ -108,6 +108,27 @@ export function MonacoCodeEditor({
       wordWrap: "on",
       automaticLayout: true,
     })
+
+    // Centralizar a command palette no container do Monaco
+    const container = editor.getDomNode()
+    if (container) {
+      // Adicionar estilo para centralizar widgets do Monaco
+      const style = document.createElement('style')
+      style.textContent = `
+        .monaco-editor .quick-input-widget {
+          position: fixed !important;
+          left: 50% !important;
+          top: 50% !important;
+          transform: translate(-50%, -50%) !important;
+          z-index: 9999 !important;
+          max-width: 600px !important;
+        }
+        .monaco-editor .monaco-workbench .part.editor > .content .monaco-editor .quick-input-widget {
+          position: absolute !important;
+        }
+      `
+      container.appendChild(style)
+    }
   }
 
   const handleChange = (value: string | undefined) => {
