@@ -115,6 +115,31 @@ export function XTermTerminal({ output, isExecuting }: XTermTerminalProps) {
     }
   }, [output, isExecuting])
 
+  // Capturar scroll para evitar que propague para a página principal
+  useEffect(() => {
+    const terminalElement = terminalRef.current
+    if (!terminalElement) return
+
+    const handleWheel = (e: WheelEvent) => {
+      // Sempre prevenir propagação do scroll para o elemento pai
+      e.stopPropagation()
+      e.preventDefault()
+      
+      // Scrollar manualmente o viewport do xterm
+      const viewport = terminalElement.querySelector('.xterm-viewport') as HTMLElement
+      if (viewport) {
+        viewport.scrollTop += e.deltaY
+      }
+    }
+
+    // Adicionar listener com capture: true para capturar em toda a área
+    terminalElement.addEventListener('wheel', handleWheel, { passive: false, capture: true })
+
+    return () => {
+      terminalElement.removeEventListener('wheel', handleWheel, { capture: true })
+    }
+  }, [])
+
   return (
     <div
       ref={terminalRef}
