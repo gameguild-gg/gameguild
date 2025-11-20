@@ -21,6 +21,7 @@ import { createDefaultLayout } from "./default-layouts"
 import * as FileOps from "./file-operations"
 import * as LayoutOps from "./layout-operations"
 import * as TabOps from "./tab-operations"
+import * as PanelOps from "./panel-operations"
 import { getGridDimensions, getContainerDimensions } from "./grid-utils"
 
 interface CodeStudioEditorProps {
@@ -231,50 +232,8 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
     
-    const { cols, rows } = getGridDimensions(activeDisplay.aspectRatio)
-    
-    // Se tiver coordenadas de drag-drop, usar elas
-    // Senão, encontrar primeira célula vazia no grid
-    let targetRow = row ?? 0
-    let targetCol = col ?? 0
-    let found = row !== undefined && col !== undefined
-
-    if (!found) {
-      // Buscar primeira célula vazia
-      for (let r = 0; r < rows && !found; r++) {
-        for (let c = 0; c < cols && !found; c++) {
-          const occupied = activeDisplay.panels.some(p =>
-            r >= p.row && r < p.row + p.rowSpan &&
-            c >= p.col && c < p.col + p.colSpan
-          )
-          if (!occupied) {
-            targetRow = r
-            targetCol = c
-            found = true
-          }
-        }
-      }
-    }
-
-    // Garantir que o painel não saia do grid (tamanho padrão 4 linhas x metade das colunas)
-    const defaultColSpan = Math.min(8, Math.floor(cols / 2))
-    const rowSpan = Math.min(4, rows - targetRow)
-    const colSpan = Math.min(defaultColSpan, cols - targetCol)
-
-    const newPanel: PanelConfig = {
-      id: `${type}-${Date.now()}`,
-      type,
-      row: targetRow,
-      col: targetCol,
-      rowSpan,
-      colSpan,
-      ...(type === "editor" && { editorInstance: "multiple" as EditorInstance }),
-    }
-
-    handleUpdateCurrentDisplay({
-      ...activeDisplay,
-      panels: [...activeDisplay.panels, newPanel],
-    })
+    const updates = PanelOps.addPanel(localData, activeDisplay, type, row, col)
+    handleDataChange(updates)
   }
 
   const handleGridDrop = (row: number, col: number, type: PanelType) => {
@@ -285,70 +244,40 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
     
-    const updatedPanels = activeDisplay.panels.map(p =>
-      p.id === panelId ? { ...p, row, col, rowSpan, colSpan } : p
-    )
-    
-    handleUpdateCurrentDisplay({
-      ...activeDisplay,
-      panels: updatedPanels,
-    })
+    const updates = PanelOps.resizePanel(localData, activeDisplay, panelId, row, col, rowSpan, colSpan)
+    handleDataChange(updates)
   }
 
   const handlePanelMove = (panelId: string, row: number, col: number) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
     
-    const updatedPanels = activeDisplay.panels.map(p =>
-      p.id === panelId ? { ...p, row, col } : p
-    )
-    
-    handleUpdateCurrentDisplay({
-      ...activeDisplay,
-      panels: updatedPanels,
-    })
+    const updates = PanelOps.movePanel(localData, activeDisplay, panelId, row, col)
+    handleDataChange(updates)
   }
 
   const handleRemovePanel = (panelId: string) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
     
-    const updatedPanels = activeDisplay.panels.filter(p => p.id !== panelId)
-    
-    handleUpdateCurrentDisplay({
-      ...activeDisplay,
-      panels: updatedPanels,
-    })
+    const updates = PanelOps.removePanel(localData, activeDisplay, panelId)
+    handleDataChange(updates)
   }
 
   const handleToggleEditorInstance = (panelId: string) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    const updatedPanels = activeDisplay.panels.map(p => {
-      if (p.id === panelId && p.type === "editor") {
-        return {
-          ...p,
-          editorInstance: (p.editorInstance === "multiple" ? "unique" : "multiple") as EditorInstance,
-        }
-      }
-      return p
-    })
-
-    handleUpdateCurrentDisplay({
-      ...activeDisplay,
-      panels: updatedPanels,
-    })
+    const updates = PanelOps.toggleEditorInstance(localData, activeDisplay, panelId)
+    handleDataChange(updates)
   }
 
   const handlePanelDragStart = (panelId: string) => {
-    // Pode ser usado para feedback visual
-    console.log('Dragging panel:', panelId)
+    PanelOps.onPanelDragStart(panelId)
   }
 
   const handlePanelDragEnd = () => {
-    // Limpar feedback visual
-    console.log('Drag ended')
+    PanelOps.onPanelDragEnd()
   }
 
   // Renderizar conteúdo de cada painel
