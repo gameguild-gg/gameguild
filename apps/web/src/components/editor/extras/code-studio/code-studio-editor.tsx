@@ -205,6 +205,7 @@ export function CodeStudioEditor({
 
       handleDataChange({
         folders: updatedFolders,
+        activeFileId: fileId, // Atualizar também o activeFileId global para o FileExplorer
         layout: {
           ...localData.layout,
           displays: updatedDisplays,
