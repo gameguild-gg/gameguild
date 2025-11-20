@@ -32,7 +32,7 @@ export function ResizablePanel({
   onDragEnd,
   children,
 }: ResizablePanelProps) {
-  const [isResizing, setIsResizing] = useState<'se' | 's' | 'e' | null>(null)
+  const [isResizing, setIsResizing] = useState<'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const startPosRef = useRef({ x: 0, y: 0, row: 0, col: 0, rowSpan: 0, colSpan: 0 })
@@ -82,7 +82,7 @@ export function ResizablePanel({
   }
 
   // Resize handlers
-  const handleResizeStart = (e: React.MouseEvent, direction: 'se' | 's' | 'e') => {
+  const handleResizeStart = (e: React.MouseEvent, direction: 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw') => {
     if (!isEditMode) return
     e.preventDefault()
     e.stopPropagation()
@@ -123,21 +123,49 @@ export function ResizablePanel({
         const deltaX = e.clientX - startPosRef.current.x
         const deltaY = e.clientY - startPosRef.current.y
 
+        let newRow = startPosRef.current.row
+        let newCol = startPosRef.current.col
         let newRowSpan = startPosRef.current.rowSpan
         let newColSpan = startPosRef.current.colSpan
 
-        if (isResizing === 'se' || isResizing === 'e') {
+        // Redimensionar pela direita (east)
+        if (isResizing === 'e' || isResizing === 'ne' || isResizing === 'se') {
           const colDelta = Math.round(deltaX / cellWidth)
-          newColSpan = Math.max(1, Math.min(gridCols - panel.col, startPosRef.current.colSpan + colDelta))
+          newColSpan = Math.max(1, Math.min(gridCols - startPosRef.current.col, startPosRef.current.colSpan + colDelta))
         }
 
-        if (isResizing === 'se' || isResizing === 's') {
+        // Redimensionar pela esquerda (west)
+        if (isResizing === 'w' || isResizing === 'nw' || isResizing === 'sw') {
+          const colDelta = Math.round(deltaX / cellWidth)
+          const potentialNewCol = Math.max(0, startPosRef.current.col + colDelta)
+          const potentialNewColSpan = startPosRef.current.colSpan - colDelta
+          
+          if (potentialNewColSpan >= 1 && potentialNewCol + potentialNewColSpan <= gridCols) {
+            newCol = potentialNewCol
+            newColSpan = potentialNewColSpan
+          }
+        }
+
+        // Redimensionar por baixo (south)
+        if (isResizing === 's' || isResizing === 'se' || isResizing === 'sw') {
           const rowDelta = Math.round(deltaY / cellHeight)
-          newRowSpan = Math.max(1, Math.min(gridRows - panel.row, startPosRef.current.rowSpan + rowDelta))
+          newRowSpan = Math.max(1, Math.min(gridRows - startPosRef.current.row, startPosRef.current.rowSpan + rowDelta))
         }
 
-        if (newColSpan !== panel.colSpan || newRowSpan !== panel.rowSpan) {
-          onResize?.(panel.id, panel.row, panel.col, newRowSpan, newColSpan)
+        // Redimensionar por cima (north)
+        if (isResizing === 'n' || isResizing === 'ne' || isResizing === 'nw') {
+          const rowDelta = Math.round(deltaY / cellHeight)
+          const potentialNewRow = Math.max(0, startPosRef.current.row + rowDelta)
+          const potentialNewRowSpan = startPosRef.current.rowSpan - rowDelta
+          
+          if (potentialNewRowSpan >= 1 && potentialNewRow + potentialNewRowSpan <= gridRows) {
+            newRow = potentialNewRow
+            newRowSpan = potentialNewRowSpan
+          }
+        }
+
+        if (newRow !== panel.row || newCol !== panel.col || newColSpan !== panel.colSpan || newRowSpan !== panel.rowSpan) {
+          onResize?.(panel.id, newRow, newCol, newRowSpan, newColSpan)
         }
       }
     }
@@ -210,21 +238,57 @@ export function ResizablePanel({
       {/* Resize handles */}
       {isEditMode && (
         <>
-          {/* East handle */}
+          {/* North handle */}
           <div
-            className="absolute top-0 right-0 bottom-0 w-1 cursor-ew-resize bg-blue-500/0 hover:bg-blue-500/50 transition-colors"
-            onMouseDown={(e) => handleResizeStart(e, 'e')}
+            className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize bg-blue-500/0 hover:bg-blue-500/50 transition-colors z-20"
+            onMouseDown={(e) => handleResizeStart(e, 'n')}
           />
 
           {/* South handle */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize bg-blue-500/0 hover:bg-blue-500/50 transition-colors"
+            className="absolute bottom-0 left-0 right-0 h-1 cursor-ns-resize bg-blue-500/0 hover:bg-blue-500/50 transition-colors z-20"
             onMouseDown={(e) => handleResizeStart(e, 's')}
           />
 
+          {/* East handle */}
+          <div
+            className="absolute top-0 right-0 bottom-0 w-1 cursor-ew-resize bg-blue-500/0 hover:bg-blue-500/50 transition-colors z-20"
+            onMouseDown={(e) => handleResizeStart(e, 'e')}
+          />
+
+          {/* West handle */}
+          <div
+            className="absolute top-0 left-0 bottom-0 w-1 cursor-ew-resize bg-blue-500/0 hover:bg-blue-500/50 transition-colors z-20"
+            onMouseDown={(e) => handleResizeStart(e, 'w')}
+          />
+
+          {/* Northwest corner handle */}
+          <div
+            className="absolute top-0 left-0 w-3 h-3 cursor-nwse-resize bg-blue-500/0 hover:bg-blue-500/70 transition-colors z-30"
+            onMouseDown={(e) => handleResizeStart(e, 'nw')}
+          >
+            <div className="absolute top-0 left-0 w-2 h-2 border-l-2 border-t-2 border-blue-500" />
+          </div>
+
+          {/* Northeast corner handle */}
+          <div
+            className="absolute top-0 right-0 w-3 h-3 cursor-nesw-resize bg-blue-500/0 hover:bg-blue-500/70 transition-colors z-30"
+            onMouseDown={(e) => handleResizeStart(e, 'ne')}
+          >
+            <div className="absolute top-0 right-0 w-2 h-2 border-r-2 border-t-2 border-blue-500" />
+          </div>
+
+          {/* Southwest corner handle */}
+          <div
+            className="absolute bottom-0 left-0 w-3 h-3 cursor-nesw-resize bg-blue-500/0 hover:bg-blue-500/70 transition-colors z-30"
+            onMouseDown={(e) => handleResizeStart(e, 'sw')}
+          >
+            <div className="absolute bottom-0 left-0 w-2 h-2 border-l-2 border-b-2 border-blue-500" />
+          </div>
+
           {/* Southeast corner handle */}
           <div
-            className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize bg-blue-500/0 hover:bg-blue-500/70 transition-colors"
+            className="absolute bottom-0 right-0 w-3 h-3 cursor-nwse-resize bg-blue-500/0 hover:bg-blue-500/70 transition-colors z-30"
             onMouseDown={(e) => handleResizeStart(e, 'se')}
           >
             <div className="absolute bottom-0 right-0 w-2 h-2 border-r-2 border-b-2 border-blue-500" />
