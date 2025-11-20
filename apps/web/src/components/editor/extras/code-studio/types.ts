@@ -48,9 +48,9 @@ export interface PanelConfig {
   id: string
   type: PanelType
   row: number // 0-11 (grid de 12 linhas)
-  col: number // 0-11 (grid de 12 colunas)
+  col: number // 0-23 (grid de 24 colunas)
   rowSpan: number // quantas linhas ocupa (1-12)
-  colSpan: number // quantas colunas ocupa (1-12)
+  colSpan: number // quantas colunas ocupa (1-24)
   editorInstance?: EditorInstance // Apenas para painéis tipo "editor"
 }
 

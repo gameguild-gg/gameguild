@@ -88,17 +88,17 @@ export function CodeStudioEditor({
               id: "display-1",
               name: "Display 1",
               panels: [
-                { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
-                { id: "editor-1", type: "editor", row: 0, col: 3, rowSpan: 8, colSpan: 9, editorInstance: "multiple" },
-                { id: "output-1", type: "output", row: 8, col: 3, rowSpan: 4, colSpan: 9 },
+                { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 6 },
+                { id: "editor-1", type: "editor", row: 0, col: 6, rowSpan: 8, colSpan: 18, editorInstance: "multiple" },
+                { id: "output-1", type: "output", row: 8, col: 6, rowSpan: 4, colSpan: 18 },
               ],
             },
             {
               id: "display-2",
               name: "Display 2",
               panels: [
-                { id: "explorer-2", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
-                { id: "editor-2", type: "editor", row: 0, col: 3, rowSpan: 12, colSpan: 9, editorInstance: "multiple" },
+                { id: "explorer-2", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 6 },
+                { id: "editor-2", type: "editor", row: 0, col: 6, rowSpan: 12, colSpan: 18, editorInstance: "multiple" },
               ],
             },
           ],
@@ -497,7 +497,7 @@ export function CodeStudioEditor({
       id: `display-${displayNumber}`,
       name: name || `Display ${displayNumber}`,
       panels: [
-        { id: `editor-${Date.now()}`, type: "editor", row: 0, col: 0, rowSpan: 12, colSpan: 12, editorInstance: "multiple" },
+        { id: `editor-${Date.now()}`, type: "editor", row: 0, col: 0, rowSpan: 12, colSpan: 24, editorInstance: "multiple" },
       ],
     }
 
@@ -570,7 +570,7 @@ export function CodeStudioEditor({
     if (!found) {
       // Buscar primeira célula vazia
       for (let r = 0; r < 12 && !found; r++) {
-        for (let c = 0; c < 12 && !found; c++) {
+        for (let c = 0; c < 24 && !found; c++) {
           const occupied = activeDisplay.panels.some(p =>
             r >= p.row && r < p.row + p.rowSpan &&
             c >= p.col && c < p.col + p.colSpan
@@ -584,9 +584,9 @@ export function CodeStudioEditor({
       }
     }
 
-    // Garantir que o painel não saia do grid (tamanho padrão 4x4)
+    // Garantir que o painel não saia do grid (tamanho padrão 4x8)
     const rowSpan = Math.min(4, 12 - targetRow)
-    const colSpan = Math.min(4, 12 - targetCol)
+    const colSpan = Math.min(8, 24 - targetCol)
 
     const newPanel: PanelConfig = {
       id: `${type}-${Date.now()}`,
@@ -1062,7 +1062,7 @@ export function CodeStudioEditor({
                     ref={gridContainerRef}
                     className="h-full w-full grid gap-3"
                     style={{
-                      gridTemplateColumns: "repeat(12, 1fr)",
+                      gridTemplateColumns: "repeat(24, 1fr)",
                       gridTemplateRows: "repeat(12, 1fr)",
                     }}
                   >
