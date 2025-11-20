@@ -19,6 +19,7 @@ import { DisplayManager } from "./display-manager"
 import { cn } from "@/lib/utils"
 import { createDefaultLayout } from "./default-layouts"
 import * as FileOps from "./file-operations"
+import * as LayoutOps from "./layout-operations"
 
 // Helper to get grid dimensions from aspect ratio
 function getGridDimensions(aspectRatio: "2:1" | "1:1" | "1:2") {
@@ -307,127 +308,38 @@ export function CodeStudioEditor({
   }
 
   const handleToggleLayoutEdit = () => {
-    if (!localData.layout) return
-    handleDataChange({
-      layout: {
-        ...localData.layout,
-        editMode: !localData.layout.editMode,
-      },
-    })
+    const updates = LayoutOps.toggleLayoutEdit(localData)
+    handleDataChange(updates)
   }
 
   const handleSelectDisplay = (displayId: string) => {
-    if (!localData.layout) return
-    handleDataChange({
-      layout: {
-        ...localData.layout,
-        activeDisplayId: displayId,
-      },
-    })
+    const updates = LayoutOps.selectDisplay(localData, displayId)
+    handleDataChange(updates)
   }
 
   const handleCreateDisplay = (name: string, aspectRatio: AspectRatio) => {
-    if (!localData.layout || localData.layout.displays.length >= 4) return
-    
-    const { cols, rows } = getGridDimensions(aspectRatio)
-    const displayNumber = localData.layout.displays.length + 1
-    const newDisplay: DisplayConfig = {
-      id: `display-${displayNumber}`,
-      name: name || `Display ${displayNumber}`,
-      aspectRatio,
-      panels: [
-        { id: `editor-${Date.now()}`, type: "editor", row: 0, col: 0, rowSpan: rows, colSpan: cols, editorInstance: "multiple" },
-      ],
-    }
-
-    handleDataChange({
-      layout: {
-        ...localData.layout,
-        displays: [...localData.layout.displays, newDisplay],
-        activeDisplayId: newDisplay.id,
-      },
-    })
+    const updates = LayoutOps.createDisplay(localData, name, aspectRatio)
+    handleDataChange(updates)
   }
 
   const handleDeleteDisplay = (displayId: string) => {
-    if (!localData.layout || localData.layout.displays.length <= 2) return
-    
-    const updatedDisplays = localData.layout.displays.filter(d => d.id !== displayId)
-    const newActiveId = localData.layout.activeDisplayId === displayId 
-      ? updatedDisplays[0]?.id || ""
-      : localData.layout.activeDisplayId
-
-    handleDataChange({
-      layout: {
-        ...localData.layout,
-        displays: updatedDisplays,
-        activeDisplayId: newActiveId,
-      },
-    })
+    const updates = LayoutOps.deleteDisplay(localData, displayId)
+    handleDataChange(updates)
   }
 
   const handleRenameDisplay = (displayId: string, newName: string) => {
-    if (!localData.layout) return
-    
-    const updatedDisplays = localData.layout.displays.map(d =>
-      d.id === displayId ? { ...d, name: newName } : d
-    )
-
-    handleDataChange({
-      layout: {
-        ...localData.layout,
-        displays: updatedDisplays,
-      },
-    })
+    const updates = LayoutOps.renameDisplay(localData, displayId, newName)
+    handleDataChange(updates)
   }
 
   const handleChangeAspectRatio = (displayId: string, newAspectRatio: AspectRatio) => {
-    if (!localData.layout) return
-    
-    const display = localData.layout.displays.find(d => d.id === displayId)
-    if (!display) return
-
-    const oldDimensions = getGridDimensions(display.aspectRatio)
-    const newDimensions = getGridDimensions(newAspectRatio)
-
-    // Calcular fatores de escala
-    const colScale = newDimensions.cols / oldDimensions.cols
-    const rowScale = newDimensions.rows / oldDimensions.rows
-
-    // Reescalar todos os painéis
-    const rescaledPanels = display.panels.map(panel => ({
-      ...panel,
-      col: Math.floor(panel.col * colScale),
-      row: Math.floor(panel.row * rowScale),
-      colSpan: Math.max(1, Math.min(Math.round(panel.colSpan * colScale), newDimensions.cols - Math.floor(panel.col * colScale))),
-      rowSpan: Math.max(1, Math.min(Math.round(panel.rowSpan * rowScale), newDimensions.rows - Math.floor(panel.row * rowScale))),
-    }))
-
-    const updatedDisplays = localData.layout.displays.map(d =>
-      d.id === displayId ? { ...d, aspectRatio: newAspectRatio, panels: rescaledPanels } : d
-    )
-
-    handleDataChange({
-      layout: {
-        ...localData.layout,
-        displays: updatedDisplays,
-      },
-    })
+    const updates = LayoutOps.changeAspectRatio(localData, displayId, newAspectRatio)
+    handleDataChange(updates)
   }
 
   const handleUpdateCurrentDisplay = (updatedDisplay: DisplayConfig) => {
-    if (!localData.layout) return
-    
-    const updatedDisplays = localData.layout.displays.map(d =>
-      d.id === updatedDisplay.id ? updatedDisplay : d
-    )
-
-    handleDataChange({
-      layout: {
-        ...localData.layout,
-        displays: updatedDisplays,
-      },
-    })
+    const updates = LayoutOps.updateCurrentDisplay(localData, updatedDisplay)
+    handleDataChange(updates)
   }
 
   const handleAddPanel = (type: PanelType, row?: number, col?: number) => {
