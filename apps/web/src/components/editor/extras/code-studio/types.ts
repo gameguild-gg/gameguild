@@ -114,7 +114,6 @@ export interface CodeStudioData {
   fontSize?: number
   theme?: "light" | "dark" | "system"
   shikiTheme?: ShikiTheme // Tema do Shiki (syntax highlighting)
-  showFileExplorer?: boolean // Se false, esconde file explorer fora do editor modal
   
   // Layout customizável
   layout?: LayoutConfig
