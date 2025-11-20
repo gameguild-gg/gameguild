@@ -48,10 +48,10 @@ export function CodeStudioEditor({
           displays: [
             {
               id: "display-1",
-              name: "Display 1",
+              name: "Base",
               panels: [
                 { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
-                { id: "editor-1", type: "editor", row: 0, col: 3, rowSpan: 8, colSpan: 9 },
+                { id: "editor-1", type: "editor", row: 0, col: 3, rowSpan: 8, colSpan: 9, editorInstance: "unique" },
                 { id: "output-1", type: "output", row: 8, col: 3, rowSpan: 4, colSpan: 9 },
               ],
             },
@@ -86,10 +86,10 @@ export function CodeStudioEditor({
           displays: [
             {
               id: "display-1",
-              name: "Display 1",
+              name: "Base",
               panels: [
                 { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 6 },
-                { id: "editor-1", type: "editor", row: 0, col: 6, rowSpan: 8, colSpan: 18, editorInstance: "multiple" },
+                { id: "editor-1", type: "editor", row: 0, col: 6, rowSpan: 8, colSpan: 18, editorInstance: "unique" },
                 { id: "output-1", type: "output", row: 8, col: 6, rowSpan: 4, colSpan: 18 },
               ],
             },
