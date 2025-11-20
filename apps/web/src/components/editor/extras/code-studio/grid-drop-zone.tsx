@@ -22,7 +22,7 @@ export function GridDropZone({ isActive, onDrop, children }: GridDropZoneProps) 
     const x = clientX - rect.left
     const y = clientY - rect.top
     
-    const cellWidth = rect.width / 12
+    const cellWidth = rect.width / 24
     const cellHeight = rect.height / 12
     
     const col = Math.floor(x / cellWidth)
@@ -30,7 +30,7 @@ export function GridDropZone({ isActive, onDrop, children }: GridDropZoneProps) 
     
     return {
       row: Math.max(0, Math.min(11, row)),
-      col: Math.max(0, Math.min(11, col)),
+      col: Math.max(0, Math.min(23, col)),
     }
   }
 
@@ -41,9 +41,9 @@ export function GridDropZone({ isActive, onDrop, children }: GridDropZoneProps) 
     
     const { row, col } = getCellFromMousePosition(e.clientX, e.clientY)
     
-    // Preview padrão: 4x4
+    // Preview padrão: 4x8 (4 linhas x 8 colunas)
     const rowSpan = Math.min(4, 12 - row)
-    const colSpan = Math.min(4, 12 - col)
+    const colSpan = Math.min(8, 24 - col)
     
     setDropPreview({ row, col, rowSpan, colSpan })
   }
