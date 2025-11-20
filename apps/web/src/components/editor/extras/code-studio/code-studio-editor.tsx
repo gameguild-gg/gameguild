@@ -605,6 +605,7 @@ export function CodeStudioEditor({
                       <ResizablePanel
                         key={panel.id}
                         panel={panel}
+                        allPanels={activeDisplay.panels}
                         isEditMode={localData.layout?.editMode || false}
                         gridContainerRef={gridContainerRef}
                         gridCols={cols}
