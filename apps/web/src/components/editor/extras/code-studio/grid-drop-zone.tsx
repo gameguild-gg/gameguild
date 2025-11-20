@@ -8,9 +8,11 @@ interface GridDropZoneProps {
   isActive: boolean
   onDrop: (row: number, col: number, type: PanelType) => void
   children: React.ReactNode
+  gridCols: number
+  gridRows: number
 }
 
-export function GridDropZone({ isActive, onDrop, children }: GridDropZoneProps) {
+export function GridDropZone({ isActive, onDrop, children, gridCols, gridRows }: GridDropZoneProps) {
   const [dropPreview, setDropPreview] = useState<{ row: number; col: number; rowSpan: number; colSpan: number } | null>(null)
   const [draggedType, setDraggedType] = useState<PanelType | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
@@ -22,15 +24,15 @@ export function GridDropZone({ isActive, onDrop, children }: GridDropZoneProps) 
     const x = clientX - rect.left
     const y = clientY - rect.top
     
-    const cellWidth = rect.width / 24
-    const cellHeight = rect.height / 12
+    const cellWidth = rect.width / gridCols
+    const cellHeight = rect.height / gridRows
     
     const col = Math.floor(x / cellWidth)
     const row = Math.floor(y / cellHeight)
     
     return {
-      row: Math.max(0, Math.min(11, row)),
-      col: Math.max(0, Math.min(23, col)),
+      row: Math.max(0, Math.min(gridRows - 1, row)),
+      col: Math.max(0, Math.min(gridCols - 1, col)),
     }
   }
 
@@ -41,9 +43,10 @@ export function GridDropZone({ isActive, onDrop, children }: GridDropZoneProps) 
     
     const { row, col } = getCellFromMousePosition(e.clientX, e.clientY)
     
-    // Preview padrão: 4x8 (4 linhas x 8 colunas)
-    const rowSpan = Math.min(4, 12 - row)
-    const colSpan = Math.min(8, 24 - col)
+    // Preview padrão: 4 linhas x metade das colunas (ou 8, o que for menor)
+    const defaultColSpan = Math.min(8, Math.floor(gridCols / 2))
+    const rowSpan = Math.min(4, gridRows - row)
+    const colSpan = Math.min(defaultColSpan, gridCols - col)
     
     setDropPreview({ row, col, rowSpan, colSpan })
   }
