@@ -567,6 +567,40 @@ export function CodeStudioEditor({
     })
   }
 
+  const handleChangeAspectRatio = (displayId: string, newAspectRatio: AspectRatio) => {
+    if (!localData.layout) return
+    
+    const display = localData.layout.displays.find(d => d.id === displayId)
+    if (!display) return
+
+    const oldDimensions = getGridDimensions(display.aspectRatio)
+    const newDimensions = getGridDimensions(newAspectRatio)
+
+    // Calcular fatores de escala
+    const colScale = newDimensions.cols / oldDimensions.cols
+    const rowScale = newDimensions.rows / oldDimensions.rows
+
+    // Reescalar todos os painéis
+    const rescaledPanels = display.panels.map(panel => ({
+      ...panel,
+      col: Math.floor(panel.col * colScale),
+      row: Math.floor(panel.row * rowScale),
+      colSpan: Math.max(1, Math.min(Math.round(panel.colSpan * colScale), newDimensions.cols - Math.floor(panel.col * colScale))),
+      rowSpan: Math.max(1, Math.min(Math.round(panel.rowSpan * rowScale), newDimensions.rows - Math.floor(panel.row * rowScale))),
+    }))
+
+    const updatedDisplays = localData.layout.displays.map(d =>
+      d.id === displayId ? { ...d, aspectRatio: newAspectRatio, panels: rescaledPanels } : d
+    )
+
+    handleDataChange({
+      layout: {
+        ...localData.layout,
+        displays: updatedDisplays,
+      },
+    })
+  }
+
   const handleUpdateCurrentDisplay = (updatedDisplay: DisplayConfig) => {
     if (!localData.layout) return
     
@@ -1071,6 +1105,7 @@ export function CodeStudioEditor({
                 onCreateDisplay={handleCreateDisplay}
                 onDeleteDisplay={handleDeleteDisplay}
                 onRenameDisplay={handleRenameDisplay}
+                onChangeAspectRatio={handleChangeAspectRatio}
                 onAddPanel={handleAddPanel}
               />
             </div>
