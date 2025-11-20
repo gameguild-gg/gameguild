@@ -41,8 +41,8 @@ export function ResizablePanel({
     const x = clientX - rect.left
     const y = clientY - rect.top
     
-    // Grid 12x12
-    const cellWidth = rect.width / 12
+    // Grid 24x12 (24 colunas x 12 linhas)
+    const cellWidth = rect.width / 24
     const cellHeight = rect.height / 12
     
     const col = Math.floor(x / cellWidth)
@@ -50,7 +50,7 @@ export function ResizablePanel({
     
     return {
       row: Math.max(0, Math.min(11, row)),
-      col: Math.max(0, Math.min(11, col)),
+      col: Math.max(0, Math.min(23, col)),
     }
   }
 
@@ -105,7 +105,7 @@ export function ResizablePanel({
         
         // Garantir que o painel não saia do grid
         const maxRow = Math.min(row, 12 - panel.rowSpan)
-        const maxCol = Math.min(col, 12 - panel.colSpan)
+        const maxCol = Math.min(col, 24 - panel.colSpan)
         
         if (maxRow !== panel.row || maxCol !== panel.col) {
           onMove?.(panel.id, maxRow, maxCol)
@@ -114,21 +114,21 @@ export function ResizablePanel({
         const gridRect = panelRef.current.parentElement?.getBoundingClientRect()
         if (!gridRect) return
 
-        const cellWidth = gridRect.width / 12
+        const cellWidth = gridRect.width / 24
         const cellHeight = gridRect.height / 12
 
         const deltaX = e.clientX - startPosRef.current.x
         const deltaY = e.clientY - startPosRef.current.y
 
-        let newColSpan = startPosRef.current.colSpan
         let newRowSpan = startPosRef.current.rowSpan
+        let newColSpan = startPosRef.current.colSpan
 
-        if (isResizing === 'e' || isResizing === 'se') {
+        if (isResizing === 'se' || isResizing === 'e') {
           const colDelta = Math.round(deltaX / cellWidth)
-          newColSpan = Math.max(1, Math.min(12 - panel.col, startPosRef.current.colSpan + colDelta))
+          newColSpan = Math.max(1, Math.min(24 - panel.col, startPosRef.current.colSpan + colDelta))
         }
 
-        if (isResizing === 's' || isResizing === 'se') {
+        if (isResizing === 'se' || isResizing === 's') {
           const rowDelta = Math.round(deltaY / cellHeight)
           newRowSpan = Math.max(1, Math.min(12 - panel.row, startPosRef.current.rowSpan + rowDelta))
         }
