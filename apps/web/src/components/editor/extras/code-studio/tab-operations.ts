@@ -122,7 +122,34 @@ export function closeTab(
 
 export function reorderTabs(
   data: CodeStudioData,
-  newOrder: string[]
+  newOrder: string[],
+  panelId: string | undefined,
+  activeDisplay: DisplayConfig | undefined
 ): Partial<CodeStudioData> {
-  return { openTabs: newOrder }
+  if (!data.layout || !activeDisplay || !panelId) {
+    // Se não tiver informações do painel, atualizar tabs globais (modo múltiplo)
+    return { openTabs: newOrder }
+  }
+
+  const panel = activeDisplay.panels.find(p => p.id === panelId)
+  const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
+
+  if (isUniqueInstance) {
+    // Editor único: reordenar abas específicas do display
+    const updatedDisplays = data.layout.displays.map(d =>
+      d.id === activeDisplay.id
+        ? { ...d, uniqueOpenTabs: newOrder }
+        : d
+    )
+
+    return {
+      layout: {
+        ...data.layout,
+        displays: updatedDisplays,
+      },
+    }
+  } else {
+    // Editor múltiplo: reordenar abas globais
+    return { openTabs: newOrder }
+  }
 }

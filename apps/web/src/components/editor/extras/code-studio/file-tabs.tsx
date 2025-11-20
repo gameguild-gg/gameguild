@@ -11,9 +11,10 @@ interface FileTabsProps {
   openTabs: string[]
   activeFileId?: string
   editorInstance?: EditorInstance
+  panelId?: string
   onSelectTab: (fileId: string) => void
   onCloseTab?: (fileId: string) => void
-  onReorderTabs: (newOrder: string[]) => void
+  onReorderTabs: (newOrder: string[], panelId?: string) => void
 }
 
 export function FileTabs({
@@ -21,6 +22,7 @@ export function FileTabs({
   openTabs,
   activeFileId,
   editorInstance,
+  panelId,
   onSelectTab,
   onCloseTab,
   onReorderTabs,
@@ -91,7 +93,7 @@ export function FileTabs({
       newOrder.splice(dropIndex, 0, movedItem)
     }
     
-    onReorderTabs(newOrder)
+    onReorderTabs(newOrder, panelId)
     setDraggedIndex(null)
     setDragOverIndex(null)
   }
