@@ -2,7 +2,7 @@
 
 import { X, File } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { CodeFile } from "./types"
+import type { CodeFile, EditorInstance } from "./types"
 import { cn } from "@/lib/utils"
 import { useRef, useEffect, useState } from "react"
 
@@ -10,6 +10,7 @@ interface FileTabsProps {
   files: CodeFile[]
   openTabs: string[]
   activeFileId?: string
+  editorInstance?: EditorInstance
   onSelectTab: (fileId: string) => void
   onCloseTab?: (fileId: string) => void
   onReorderTabs: (newOrder: string[]) => void
@@ -19,6 +20,7 @@ export function FileTabs({
   files,
   openTabs,
   activeFileId,
+  editorInstance,
   onSelectTab,
   onCloseTab,
   onReorderTabs,
@@ -104,6 +106,22 @@ export function FileTabs({
       ref={scrollContainerRef}
       className="flex items-center gap-0.5 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 overflow-x-auto min-h-[40px] scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
     >
+      {/* Editor Instance Indicator */}
+      {editorInstance && (
+        <div className="shrink-0 px-2 py-1.5 flex items-center gap-1.5 border-r border-gray-300 dark:border-gray-700">
+          <span
+            className="text-xs font-bold px-1.5 py-0.5 rounded"
+            style={{
+              backgroundColor: editorInstance === "multiple" ? "#3b82f6" : "#6b7280",
+              color: "#ffffff"
+            }}
+            title={editorInstance === "multiple" ? "Multiple: Shared tabs across displays" : "Unique: Independent tabs for this display"}
+          >
+            {editorInstance === "multiple" ? "M" : "U"}
+          </span>
+        </div>
+      )}
+      
       {openFiles.length === 0 ? (
         <div className="px-3 py-1.5 text-xs text-gray-400 dark:text-gray-600 italic">
           No files open
