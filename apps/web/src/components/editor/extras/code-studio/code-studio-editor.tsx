@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { X, Save, Code2, Play, Terminal, Menu, ArrowLeft, Lock, Layout } from "lucide-react"
-import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, LayoutConfig, PanelConfig, DisplayConfig, PanelType, EditorInstance } from "./types"
+import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, LayoutConfig, PanelConfig, DisplayConfig, PanelType, EditorInstance, AspectRatio } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
 import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
@@ -17,6 +17,24 @@ import { ResizablePanel } from "./resizable-panel"
 import { GridDropZone } from "./grid-drop-zone"
 import { DisplayManager } from "./display-manager"
 import { cn } from "@/lib/utils"
+
+// Helper to get grid dimensions from aspect ratio
+function getGridDimensions(aspectRatio: "2:1" | "1:1" | "1:2") {
+  switch (aspectRatio) {
+    case "2:1": return { cols: 24, rows: 12 } // Landscape
+    case "1:1": return { cols: 12, rows: 12 } // Square
+    case "1:2": return { cols: 12, rows: 24 } // Portrait
+  }
+}
+
+// Helper to get container dimensions from aspect ratio
+function getContainerDimensions(aspectRatio: "2:1" | "1:1" | "1:2") {
+  switch (aspectRatio) {
+    case "2:1": return { maxWidth: "1200px", maxHeight: "600px" } // Landscape 2:1
+    case "1:1": return { maxWidth: "800px", maxHeight: "800px" } // Square 1:1
+    case "1:2": return { maxWidth: "600px", maxHeight: "1200px" } // Portrait 1:2
+  }
+}
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -49,6 +67,7 @@ export function CodeStudioEditor({
             {
               id: "display-1",
               name: "Base",
+              aspectRatio: "1:1",
               panels: [
                 { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
                 { id: "editor-1", type: "editor", row: 0, col: 3, rowSpan: 8, colSpan: 9, editorInstance: "unique" },
@@ -58,6 +77,7 @@ export function CodeStudioEditor({
             {
               id: "display-2",
               name: "Display 2",
+              aspectRatio: "2:1",
               panels: [
                 { id: "explorer-2", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
                 { id: "editor-2", type: "editor", row: 0, col: 3, rowSpan: 12, colSpan: 9 },
@@ -87,15 +107,17 @@ export function CodeStudioEditor({
             {
               id: "display-1",
               name: "Base",
+              aspectRatio: "1:1",
               panels: [
-                { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 6 },
-                { id: "editor-1", type: "editor", row: 0, col: 6, rowSpan: 8, colSpan: 18, editorInstance: "unique" },
-                { id: "output-1", type: "output", row: 8, col: 6, rowSpan: 4, colSpan: 18 },
+                { id: "explorer-1", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 3 },
+                { id: "editor-1", type: "editor", row: 0, col: 3, rowSpan: 8, colSpan: 9, editorInstance: "unique" },
+                { id: "output-1", type: "output", row: 8, col: 3, rowSpan: 4, colSpan: 9 },
               ],
             },
             {
               id: "display-2",
               name: "Display 2",
+              aspectRatio: "2:1",
               panels: [
                 { id: "explorer-2", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 6 },
                 { id: "editor-2", type: "editor", row: 0, col: 6, rowSpan: 12, colSpan: 18, editorInstance: "multiple" },
@@ -490,15 +512,17 @@ export function CodeStudioEditor({
     })
   }
 
-  const handleCreateDisplay = (name: string) => {
+  const handleCreateDisplay = (name: string, aspectRatio: AspectRatio) => {
     if (!localData.layout || localData.layout.displays.length >= 4) return
     
+    const { cols, rows } = getGridDimensions(aspectRatio)
     const displayNumber = localData.layout.displays.length + 1
     const newDisplay: DisplayConfig = {
       id: `display-${displayNumber}`,
       name: name || `Display ${displayNumber}`,
+      aspectRatio,
       panels: [
-        { id: `editor-${Date.now()}`, type: "editor", row: 0, col: 0, rowSpan: 12, colSpan: 24, editorInstance: "multiple" },
+        { id: `editor-${Date.now()}`, type: "editor", row: 0, col: 0, rowSpan: rows, colSpan: cols, editorInstance: "multiple" },
       ],
     }
 
@@ -562,16 +586,18 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
     
+    const { cols, rows } = getGridDimensions(activeDisplay.aspectRatio)
+    
     // Se tiver coordenadas de drag-drop, usar elas
-    // Senão, encontrar primeira célula vazia no grid 12x12
+    // Senão, encontrar primeira célula vazia no grid
     let targetRow = row ?? 0
     let targetCol = col ?? 0
     let found = row !== undefined && col !== undefined
 
     if (!found) {
       // Buscar primeira célula vazia
-      for (let r = 0; r < 12 && !found; r++) {
-        for (let c = 0; c < 24 && !found; c++) {
+      for (let r = 0; r < rows && !found; r++) {
+        for (let c = 0; c < cols && !found; c++) {
           const occupied = activeDisplay.panels.some(p =>
             r >= p.row && r < p.row + p.rowSpan &&
             c >= p.col && c < p.col + p.colSpan
@@ -585,9 +611,10 @@ export function CodeStudioEditor({
       }
     }
 
-    // Garantir que o painel não saia do grid (tamanho padrão 4x8)
-    const rowSpan = Math.min(4, 12 - targetRow)
-    const colSpan = Math.min(8, 24 - targetCol)
+    // Garantir que o painel não saia do grid (tamanho padrão 4 linhas x metade das colunas)
+    const defaultColSpan = Math.min(8, Math.floor(cols / 2))
+    const rowSpan = Math.min(4, rows - targetRow)
+    const colSpan = Math.min(defaultColSpan, cols - targetCol)
 
     const newPanel: PanelConfig = {
       id: `${type}-${Date.now()}`,
@@ -1049,31 +1076,45 @@ export function CodeStudioEditor({
             </div>
           )}
 
-          {/* Grid Container - Fixed 12x12 */}
-          <div className="flex-1 min-h-0 overflow-hidden">
+          {/* Grid Container */}
+          <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center p-4">
             {(() => {
               const activeDisplay = getActiveDisplay()
               if (!activeDisplay) return null
 
+              const { cols, rows } = getGridDimensions(activeDisplay.aspectRatio)
+              const { maxWidth, maxHeight } = getContainerDimensions(activeDisplay.aspectRatio)
+
               return (
-                <GridDropZone
-                  isActive={localData.layout?.editMode || false}
-                  onDrop={handleGridDrop}
+                <div
+                  className="w-full h-full"
+                  style={{
+                    maxWidth,
+                    maxHeight,
+                  }}
                 >
-                  <div
-                    ref={gridContainerRef}
-                    className="h-full w-full grid gap-3"
-                    style={{
-                      gridTemplateColumns: "repeat(24, 1fr)",
-                      gridTemplateRows: "repeat(12, 1fr)",
-                    }}
+                  <GridDropZone
+                    isActive={localData.layout?.editMode || false}
+                    onDrop={handleGridDrop}
+                    gridCols={cols}
+                    gridRows={rows}
                   >
+                    <div
+                      ref={gridContainerRef}
+                      className="h-full w-full grid gap-3"
+                      style={{
+                        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+                        gridTemplateRows: `repeat(${rows}, 1fr)`,
+                      }}
+                    >
                     {activeDisplay.panels.map(panel => (
                       <ResizablePanel
                         key={panel.id}
                         panel={panel}
                         isEditMode={localData.layout?.editMode || false}
                         gridContainerRef={gridContainerRef}
+                        gridCols={cols}
+                        gridRows={rows}
                         onResize={handlePanelResize}
                         onMove={handlePanelMove}
                         onRemove={handleRemovePanel}
@@ -1085,6 +1126,7 @@ export function CodeStudioEditor({
                     ))}
                   </div>
                 </GridDropZone>
+                </div>
               )
             })()}
           </div>
