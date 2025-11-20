@@ -16,6 +16,7 @@ import { SettingsMenu } from "./settings-menu"
 import { ResizablePanel } from "./resizable-panel"
 import { GridDropZone } from "./grid-drop-zone"
 import { DisplayManager } from "./display-manager"
+import { EditorInstanceSwitch } from "./editor-instance-switch"
 import { cn } from "@/lib/utils"
 import { createDefaultLayout } from "./default-layouts"
 import * as FileOps from "./file-operations"
@@ -316,42 +317,10 @@ export function CodeStudioEditor({
           <div className="flex flex-col h-full relative">
             {/* Editor Instance Switch */}
             {panel.editorInstance && localData.layout?.editMode && (
-              <div
-                data-no-drag="true"
-                className="absolute top-2 right-2 z-50 flex items-center gap-2 bg-white dark:bg-gray-800 px-3 py-1.5 rounded-lg shadow-md border border-gray-200 dark:border-gray-700"
-                onMouseDown={(e) => {
-                  e.stopPropagation()
-                }}
-                onClick={(e) => {
-                  e.stopPropagation()
-                }}
-              >
-                <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                  Instance:
-                </span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleToggleEditorInstance(panel.id)
-                  }}
-                  className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  style={{
-                    backgroundColor: panel.editorInstance === "multiple" ? "#3b82f6" : "#6b7280"
-                  }}
-                  title={panel.editorInstance === "multiple" ? "Multiple: Opens in all displays" : "Unique: Opens only in this display"}
-                >
-                  <span
-                    className="inline-block h-4 w-4 transform rounded-full bg-white transition-transform pointer-events-none"
-                    style={{
-                      transform: panel.editorInstance === "multiple" ? "translateX(1.5rem)" : "translateX(0.25rem)"
-                    }}
-                  />
-                </button>
-                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 min-w-[1ch]">
-                  {panel.editorInstance === "multiple" ? "M" : "U"}
-                </span>
-              </div>
+              <EditorInstanceSwitch
+                editorInstance={panel.editorInstance}
+                onToggle={() => handleToggleEditorInstance(panel.id)}
+              />
             )}
             
             <FileTabs
