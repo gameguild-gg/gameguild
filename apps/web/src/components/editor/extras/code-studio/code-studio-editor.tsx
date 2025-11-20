@@ -135,8 +135,9 @@ export function CodeStudioEditor({
     handleDataChange(updates)
   }
 
-  const handleReorderTabs = (newOrder: string[]) => {
-    const updates = TabOps.reorderTabs(localData, newOrder)
+  const handleReorderTabs = (newOrder: string[], panelId?: string) => {
+    const activeDisplay = getActiveDisplay()
+    const updates = TabOps.reorderTabs(localData, newOrder, panelId, activeDisplay)
     handleDataChange(updates)
   }
 
@@ -333,6 +334,7 @@ export function CodeStudioEditor({
               openTabs={currentOpenTabs}
               activeFileId={currentActiveFileId}
               editorInstance={panel.editorInstance}
+              panelId={panel.id}
               onSelectTab={(fileId) => handleFileSelect(fileId, panel.id)}
               onCloseTab={canCloseTabs ? (fileId) => handleCloseTab(fileId, panel.id) : undefined}
               onReorderTabs={handleReorderTabs}
