@@ -756,6 +756,7 @@ export function CodeStudioEditor({
               files={localData.files}
               openTabs={currentOpenTabs}
               activeFileId={currentActiveFileId}
+              editorInstance={panel.editorInstance}
               onSelectTab={(fileId) => handleFileSelect(fileId, panel.id)}
               onCloseTab={(fileId) => handleCloseTab(fileId, panel.id)}
               onReorderTabs={handleReorderTabs}
