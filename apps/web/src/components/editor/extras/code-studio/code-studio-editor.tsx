@@ -18,6 +18,7 @@ import { GridDropZone } from "./grid-drop-zone"
 import { DisplayManager } from "./display-manager"
 import { cn } from "@/lib/utils"
 import { createDefaultLayout } from "./default-layouts"
+import * as FileOps from "./file-operations"
 
 // Helper to get grid dimensions from aspect ratio
 function getGridDimensions(aspectRatio: "2:1" | "1:1" | "1:2") {
@@ -32,7 +33,7 @@ function getGridDimensions(aspectRatio: "2:1" | "1:1" | "1:2") {
 function getContainerDimensions(aspectRatio: "2:1" | "1:1" | "1:2") {
   switch (aspectRatio) {
     case "2:1": return { maxWidth: "1200px", maxHeight: "600px" } // Landscape 2:1
-    case "1:1": return { maxWidth: "800px", maxHeight: "800px" } // Square 1:1
+    case "1:1": return { maxWidth: "600px", maxHeight: "600px" } // Square 1:1
     case "1:2": return { maxWidth: "600px", maxHeight: "1200px" } // Portrait 1:2
   }
 }
@@ -252,191 +253,51 @@ export function CodeStudioEditor({
 
   const handleCreateFile = (path: string, name: string) => {
     if (!localData.layout) return
-
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    const language = getLanguageFromExtension(name)
-    const fullPath = path ? `${path}/${name}` : name
-    
-    const newFileId = Date.now().toString()
-    const newFile: CodeFile = {
-      id: newFileId,
-      name,
-      content: LANGUAGE_CONFIGS[language].defaultTemplate,
-      language,
-      isMain: localData.files.length === 0,
-      isVisible: true,
-      path: fullPath,
-    }
-    
-    // Verificar se há editor único no display atual
-    const uniqueEditorInDisplay = activeDisplay.panels.find(
-      p => p.type === "editor" && p.editorInstance === "unique"
-    )
-
-    if (uniqueEditorInDisplay) {
-      // Editor único: adicionar às abas específicas do display
-      const currentTabs = activeDisplay.uniqueOpenTabs || []
-      const updatedTabs = [...currentTabs, newFileId]
-      
-      const updatedDisplays = localData.layout.displays.map(d => 
-        d.id === activeDisplay.id 
-          ? { ...d, uniqueOpenTabs: updatedTabs, uniqueActiveFileId: newFileId }
-          : d
-      )
-
-      handleDataChange({
-        files: [...localData.files, newFile],
-        layout: {
-          ...localData.layout,
-          displays: updatedDisplays,
-        },
-      })
-    } else {
-      // Editor múltiplo: abas globais
-      handleDataChange({ 
-        files: [...localData.files, newFile],
-        openTabs: [...(localData.openTabs || []), newFileId],
-        activeFileId: newFileId,
-      })
-    }
+    const updates = FileOps.createFile(localData, path, name, activeDisplay.id)
+    handleDataChange(updates)
   }
 
   const handleCreateFolder = (path: string, name: string) => {
-    const fullPath = path ? `${path}/${name}` : name
-    const newFolder: FileTreeFolder = {
-      id: Date.now().toString(),
-      name,
-      path: fullPath,
-      isExpanded: true,
-      children: [],
-      type: "folder",
-    }
-    
-    handleDataChange({ folders: [...(localData.folders || []), newFolder] })
+    const updates = FileOps.createFolder(localData, path, name)
+    handleDataChange(updates)
   }
 
   const handleDeleteFile = (fileId: string) => {
-    const newFiles = localData.files.filter(f => f.id !== fileId)
-    const newOpenTabs = (localData.openTabs || []).filter(id => id !== fileId)
-    
-    handleDataChange({ 
-      files: newFiles,
-      openTabs: newOpenTabs,
-      activeFileId: newOpenTabs.length > 0 ? newOpenTabs[0] : newFiles[0]?.id,
-    })
+    const updates = FileOps.deleteFile(localData, fileId)
+    handleDataChange(updates)
   }
 
   const handleDeleteFolder = (folderId: string) => {
-    const folder = localData.folders?.find(f => f.id === folderId)
-    if (!folder) return
-    
-    // Remover pasta e arquivos dentro dela
-    const newFiles = localData.files.filter(f => !f.path.startsWith(folder.path))
-    const newFolders = (localData.folders || []).filter(f => f.id !== folderId)
-    
-    handleDataChange({ files: newFiles, folders: newFolders })
+    const updates = FileOps.deleteFolder(localData, folderId)
+    handleDataChange(updates)
   }
 
   const handleRenameFile = (fileId: string, newName: string) => {
-    const updatedFiles = localData.files.map(f => {
-      if (f.id === fileId) {
-        const pathParts = f.path.split('/')
-        pathParts[pathParts.length - 1] = newName
-        return { ...f, name: newName, path: pathParts.join('/') }
-      }
-      return f
-    })
-    handleDataChange({ files: updatedFiles })
+    const updates = FileOps.renameFile(localData, fileId, newName)
+    handleDataChange(updates)
   }
 
   const handleRenameFolder = (folderId: string, newName: string) => {
-    const folder = localData.folders?.find(f => f.id === folderId)
-    if (!folder) return
-    
-    const oldPath = folder.path
-    const pathParts = oldPath.split('/')
-    pathParts[pathParts.length - 1] = newName
-    const newPath = pathParts.join('/')
-    
-    // Atualizar pasta
-    const updatedFolders = (localData.folders || []).map(f => {
-      if (f.id === folderId) {
-        return { ...f, name: newName, path: newPath }
-      }
-      return f
-    })
-    
-    // Atualizar caminhos dos arquivos dentro da pasta
-    const updatedFiles = localData.files.map(f => {
-      if (f.path.startsWith(oldPath)) {
-        return { ...f, path: f.path.replace(oldPath, newPath) }
-      }
-      return f
-    })
-    
-    handleDataChange({ folders: updatedFolders, files: updatedFiles })
+    const updates = FileOps.renameFolder(localData, folderId, newName)
+    handleDataChange(updates)
   }
 
   const handleToggleFolder = (folderId: string) => {
-    const updatedFolders = (localData.folders || []).map(f =>
-      f.id === folderId ? { ...f, isExpanded: !f.isExpanded } : f
-    )
-    handleDataChange({ folders: updatedFolders })
+    const updates = FileOps.toggleFolder(localData, folderId)
+    handleDataChange(updates)
   }
 
   const handleMoveFile = (fileId: string, newPath: string) => {
-    const file = localData.files.find(f => f.id === fileId)
-    if (!file) return
-
-    const fileName = file.path.split("/").pop() || file.name
-    const newFilePath = newPath ? `${newPath}/${fileName}` : fileName
-
-    // Verificar se já existe arquivo com mesmo nome no destino
-    const fileExists = localData.files.some(f => f.path === newFilePath && f.id !== fileId)
-    if (fileExists) return
-
-    const updatedFiles = localData.files.map(f =>
-      f.id === fileId ? { ...f, path: newFilePath, name: fileName } : f
-    )
-    handleDataChange({ files: updatedFiles })
+    const updates = FileOps.moveFile(localData, fileId, newPath)
+    handleDataChange(updates)
   }
 
   const handleMoveFolder = (folderId: string, newPath: string) => {
-    const folder = (localData.folders || []).find(f => f.id === folderId)
-    if (!folder) return
-
-    const folderName = folder.path.split("/").pop() || folder.name
-    const newFolderPath = newPath ? `${newPath}/${folderName}` : folderName
-
-    // Verificar se já existe pasta com mesmo nome no destino
-    const folderExists = (localData.folders || []).some(f => f.path === newFolderPath && f.id !== folderId)
-    if (folderExists) return
-
-    const oldPath = folder.path
-    const updatedFolders = (localData.folders || []).map(f => {
-      if (f.id === folderId) {
-        return { ...f, path: newFolderPath, name: folderName }
-      }
-      // Atualizar subpastas
-      if (f.path.startsWith(oldPath + "/")) {
-        const relativePath = f.path.substring(oldPath.length + 1)
-        return { ...f, path: `${newFolderPath}/${relativePath}` }
-      }
-      return f
-    })
-
-    // Atualizar arquivos dentro da pasta
-    const updatedFiles = localData.files.map(f => {
-      if (f.path.startsWith(oldPath + "/")) {
-        const relativePath = f.path.substring(oldPath.length + 1)
-        return { ...f, path: `${newFolderPath}/${relativePath}` }
-      }
-      return f
-    })
-
-    handleDataChange({ folders: updatedFolders, files: updatedFiles })
+    const updates = FileOps.moveFolder(localData, folderId, newPath)
+    handleDataChange(updates)
   }
 
   // Layout handlers
