@@ -69,26 +69,6 @@ export function SettingsMenu({ data, onDataChange, onClose }: SettingsMenuProps)
             />
           </div>
           
-          {/* Show File Explorer */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FolderTree className="h-4 w-4 text-orange-500" />
-                <Label htmlFor="showFileExplorer" className="text-sm font-medium cursor-pointer">
-                  Show File Explorer
-                </Label>
-              </div>
-              <Switch
-                id="showFileExplorer"
-                checked={data.showFileExplorer ?? true}
-                onCheckedChange={(checked) => onDataChange({ showFileExplorer: checked })}
-              />
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 ml-6">
-              Shows file explorer and allows closing tabs in preview
-            </p>
-          </div>
-          
           {/* Font Size */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">

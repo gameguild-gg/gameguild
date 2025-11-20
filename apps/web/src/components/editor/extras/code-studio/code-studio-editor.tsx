@@ -283,7 +283,7 @@ export function CodeStudioEditor({
   }
 
   // Renderizar conteúdo de cada painel
-  const renderPanelContent = (panel: PanelConfig) => {
+  const renderPanelContent = (panel: PanelConfig, displayConfig?: DisplayConfig) => {
     switch (panel.type) {
       case "explorer":
         return (
@@ -314,6 +314,10 @@ export function CodeStudioEditor({
           ? activeDisplay?.uniqueActiveFileId
           : localData.activeFileId
         
+        // No preview, verificar se há explorer no Display Base para permitir fechar tabs
+        const hasExplorer = displayConfig ? displayConfig.panels.some(p => p.type === 'explorer') : true
+        const canCloseTabs = isPreview ? hasExplorer : true
+        
         return (
           <div className="flex flex-col h-full relative">
             {/* Editor Instance Switch */}
@@ -330,7 +334,7 @@ export function CodeStudioEditor({
               activeFileId={currentActiveFileId}
               editorInstance={panel.editorInstance}
               onSelectTab={(fileId) => handleFileSelect(fileId, panel.id)}
-              onCloseTab={(fileId) => handleCloseTab(fileId, panel.id)}
+              onCloseTab={canCloseTabs ? (fileId) => handleCloseTab(fileId, panel.id) : undefined}
               onReorderTabs={handleReorderTabs}
             />
             <div className="flex-1 min-h-0">
@@ -387,6 +391,13 @@ export function CodeStudioEditor({
 
   // Se for preview (renderizado no documento), não mostra o modal
   if (isPreview) {
+    // Usar Display Base (display-1) como espelho do preview
+    const baseDisplay = localData.layout?.displays.find(d => d.id === 'display-1')
+    if (!baseDisplay) return null
+
+    // Verificar se há painel explorer no Display Base
+    const hasExplorer = baseDisplay.panels.some(p => p.type === 'explorer')
+
     return (
       <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
         {/* Header compacto */}
@@ -406,71 +417,27 @@ export function CodeStudioEditor({
           </div>
         </div>
 
-        {/* Layout baseado no modo - sempre vertical (código acima, resultado abaixo) */}
-        <div className="flex flex-col">
-          {/* Editor com File Explorer e Tabs */}
-          <div className="h-96 border-b border-gray-200 dark:border-gray-800 flex">
-            {/* File Explorer - 200px de largura (condicional) */}
-            {(localData.showFileExplorer ?? true) && (
-              <div className="w-[220px] shrink-0">
-                <FileExplorer
-                  files={localData.files}
-                  folders={localData.folders || []}
-                  activeFileId={localData.activeFileId}
-                  onFileSelect={handleFileSelect}
-                  onCreateFile={handleCreateFile}
-                  onCreateFolder={handleCreateFolder}
-                  onDeleteFile={handleDeleteFile}
-                  onDeleteFolder={handleDeleteFolder}
-                  onRenameFile={handleRenameFile}
-                  onRenameFolder={handleRenameFolder}
-                  onToggleFolder={handleToggleFolder}
-                  onMoveFile={handleMoveFile}
-                  onMoveFolder={handleMoveFolder}
-                />
-              </div>
-            )}
-            
-            {/* Editor com Tabs */}
-            <div className="flex-1 flex flex-col min-w-0">
-              <FileTabs
-                files={localData.files}
-                openTabs={localData.openTabs || []}
-                activeFileId={localData.activeFileId}
-                onSelectTab={handleFileSelect}
-                onCloseTab={localData.showFileExplorer ?? true ? handleCloseTab : undefined}
-                onReorderTabs={handleReorderTabs}
-              />
-              <div className="flex-1">
-                {activeFile ? (
-                  <MonacoCodeEditor
-                    value={activeFile.content}
-                    language={activeFile.language}
-                    onChange={handleCodeChange}
-                    readonly={localData.readonly || false}
-                    theme={isDarkMode ? "vs-dark" : "vs-light"}
-                    shikiTheme={localData.shikiTheme || "github"}
-                    fontSize={localData.fontSize}
-                    showLineNumbers={localData.showLineNumbers}
-                  />
-                ) : (
-                  <EmptyEditorState />
-                )}
-              </div>
+        {/* Layout renderizado com base no Display Base */}
+        <div 
+          className="grid gap-3 p-3"
+          style={{
+            gridTemplateColumns: `repeat(${baseDisplay.aspectRatio === '2:1' ? 24 : 12}, 1fr)`,
+            gridTemplateRows: `repeat(${baseDisplay.aspectRatio === '1:2' ? 24 : 12}, 1fr)`,
+            height: baseDisplay.aspectRatio === '2:1' ? '600px' : baseDisplay.aspectRatio === '1:2' ? '1200px' : '600px',
+          }}
+        >
+          {baseDisplay.panels.map(panel => (
+            <div
+              key={panel.id}
+              style={{
+                gridColumn: `${panel.col + 1} / span ${panel.colSpan}`,
+                gridRow: `${panel.row + 1} / span ${panel.rowSpan}`,
+              }}
+              className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
+            >
+              {renderPanelContent(panel, baseDisplay)}
             </div>
-          </div>
-
-          {/* Resultado */}
-          <div className="h-64">
-            <ResultPanel
-              mode={localData.mode}
-              output={output}
-              isExecuting={isExecuting}
-              onExecute={handleExecute}
-              testCases={localData.testCases?.[activeFile?.id || ""] || []}
-              activeFile={activeFile}
-            />
-          </div>
+          ))}
         </div>
 
         {localData.caption && (
