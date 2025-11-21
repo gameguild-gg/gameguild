@@ -19,6 +19,30 @@ Sistema de execução de código 100% no navegador usando WebAssembly.
 - Tamanho: ~3.5MB (esbuild) + ~368KB (quickjs) (comprimidos gzip)
 - Fonte: `/wasm/esbuild.wasm.gz` + `/wasm/quickjs-asyncify.wasm.gz`
 
+## Sistema de Cache
+
+Os arquivos WASM são armazenados em IndexedDB com verificação de integridade:
+
+1. **Primeiro acesso**: Baixa WASM comprimido, descompacta, calcula SHA-256 e salva no IndexedDB
+2. **Acessos seguintes**: Verifica hash SHA-256 remoto vs cache local
+3. **Hash diferente**: Baixa nova versão e atualiza cache
+4. **Hash igual**: Usa versão cacheada (sem download)
+
+### Arquivos de Hash
+
+Cada WASM possui um arquivo `.sha256` correspondente:
+- `esbuild.wasm.gz.sha256` - Hash do arquivo compactado
+- `quickjs-asyncify.wasm.gz.sha256` - Hash do arquivo compactado
+
+### Cache Management
+
+```typescript
+import { clearWasmCache } from './runners/wasm-loader'
+
+// Limpar cache (força re-download)
+await clearWasmCache()
+```
+
 ## Arquivos WASM
 
 Os arquivos WASM são servidos compactados (gzip) da pasta `public/wasm/`:
