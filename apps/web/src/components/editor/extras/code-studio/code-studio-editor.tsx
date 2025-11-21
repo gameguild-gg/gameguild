@@ -386,15 +386,31 @@ export function CodeStudioEditor({
   }
 
   const handleExecute = async () => {
-    if (!activeFile || !codeRunnerRef.current) return
+    if (!codeRunnerRef.current) return
+    
+    // Buscar arquivo ativo: primeiro tentar painéis únicos, depois global
+    const activeDisplay = getActiveDisplay()
+    let fileToExecute = activeFile // Padrão: arquivo global ativo
+    
+    // Se houver painéis com instância única, usar o arquivo ativo deles
+    if (activeDisplay) {
+      const uniqueEditorPanel = activeDisplay.panels.find(
+        p => p.type === 'editor' && p.editorInstance === 'unique'
+      )
+      if (uniqueEditorPanel && activeDisplay.uniqueActiveFileId) {
+        fileToExecute = localData.files.find(f => f.id === activeDisplay.uniqueActiveFileId)
+      }
+    }
+    
+    if (!fileToExecute) return
     
     setIsExecuting(true)
     setOutput('')
 
     try {
       const result = await codeRunnerRef.current.run(
-        activeFile.language,
-        activeFile.content
+        fileToExecute.language,
+        fileToExecute.content
       )
 
       let output = ''
