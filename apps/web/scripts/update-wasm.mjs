@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
-import { createReadStream, createWriteStream, existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs'
-import { createGzip, createGunzip } from 'zlib'
-import { createHash } from 'crypto'
+import { createReadStream, createWriteStream, existsSync, mkdirSync } from 'fs'
+import { createGzip } from 'zlib'
 import { pipeline } from 'stream/promises'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
@@ -42,38 +41,6 @@ async function compressFile(source, output) {
   return outputPath
 }
 
-async function calculateFileHash(filePath) {
-  return new Promise((resolve, reject) => {
-    const hash = createHash('sha256')
-    const stream = createReadStream(filePath)
-    
-    stream.on('data', (chunk) => hash.update(chunk))
-    stream.on('end', () => resolve(hash.digest('hex')))
-    stream.on('error', reject)
-  })
-}
-
-async function calculateDecompressedHash(compressedPath) {
-  return new Promise((resolve, reject) => {
-    const hash = createHash('sha256')
-    const input = createReadStream(compressedPath)
-    const gunzip = createGunzip()
-    
-    gunzip.on('data', (chunk) => hash.update(chunk))
-    gunzip.on('end', () => resolve(hash.digest('hex')))
-    gunzip.on('error', reject)
-    input.on('error', reject)
-    
-    input.pipe(gunzip)
-  })
-}
-
-async function saveHashFile(wasmPath, hash) {
-  const hashPath = wasmPath + '.sha256'
-  writeFileSync(hashPath, hash)
-  return hashPath
-}
-
 async function getFileSize(path) {
   const { statSync } = await import('fs')
   const stats = statSync(path)
@@ -103,10 +70,6 @@ async function main() {
       const compressedSize = statSync(outputPath).size
       const ratio = ((1 - compressedSize / originalSize) * 100).toFixed(1)
 
-      // Calculate hash of decompressed WASM (what browser will use)
-      const hash = await calculateDecompressedHash(outputPath)
-      const hashPath = await saveHashFile(outputPath, hash)
-
       totalOriginal += originalSize
       totalCompressed += compressedSize
 
@@ -114,9 +77,7 @@ async function main() {
       console.log(`   Source: ${file.source}`)
       console.log(`   Original: ${await getFileSize(sourcePath)}`)
       console.log(`   Compressed: ${await getFileSize(outputPath)}`)
-      console.log(`   Compression: ${ratio}% reduction`)
-      console.log(`   Hash (decompressed): ${hash.substring(0, 16)}...`)
-      console.log(`   Hash file: ${hashPath}\n`)
+      console.log(`   Compression: ${ratio}% reduction\n`)
     } catch (error) {
       console.error(`❌ Failed to compress ${file.name}:`, error.message)
       process.exit(1)
