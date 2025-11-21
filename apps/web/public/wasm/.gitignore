@@ -1,2 +1,3 @@
-# Keep compressed WASM files
-!*.wasm.gz
+# Keep compressed WASM files and hashes
+*.wasm.gz
+*.wasm.gz.sha256
