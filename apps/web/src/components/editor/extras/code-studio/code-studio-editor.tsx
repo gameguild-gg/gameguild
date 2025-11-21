@@ -25,6 +25,7 @@ import * as LayoutOps from "./layout-operations"
 import * as TabOps from "./tab-operations"
 import * as PanelOps from "./panel-operations"
 import { getGridDimensions, getContainerDimensions } from "./grid-utils"
+import { UnifiedCodeRunner } from "./runners"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -61,6 +62,16 @@ export function CodeStudioEditor({
   const [output, setOutput] = useState<string>("")
   const [showSettingsMenu, setShowSettingsMenu] = useState(false)
   const gridContainerRef = useRef<HTMLDivElement | null>(null)
+  const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
+
+  // Initialize runner
+  useEffect(() => {
+    codeRunnerRef.current = new UnifiedCodeRunner({ timeout: 30000 })
+    return () => {
+      codeRunnerRef.current?.dispose()
+      codeRunnerRef.current = null
+    }
+  }, [])
 
   // Sincronizar com mudanças externas
   useEffect(() => {
@@ -367,20 +378,51 @@ export function CodeStudioEditor({
             isExecuting={isExecuting}
             mode={localData.mode!}
             onExecute={handleExecute}
+            onStop={handleStop}
             testCases={localData.testCases?.[localData.activeFileId || ""] || []}
           />
         )
     }
   }
 
-  const handleExecute = () => {
-    if (!activeFile) return
+  const handleExecute = async () => {
+    if (!activeFile || !codeRunnerRef.current) return
+    
     setIsExecuting(true)
-    // Aqui será implementada a lógica de execução
-    setTimeout(() => {
-      setOutput(`Executed: ${activeFile.name}\n${activeFile.content}`)
+    setOutput('')
+
+    try {
+      const result = await codeRunnerRef.current.run(
+        activeFile.language,
+        activeFile.content
+      )
+
+      let output = ''
+      if (result.stdout) {
+        output += result.stdout
+      }
+      if (result.stderr) {
+        output += (output ? '\n' : '') + '\x1b[31m' + result.stderr + '\x1b[0m'
+      }
+      if (result.exitCode !== 0) {
+        output += (output ? '\n' : '') + `\x1b[33m[Process exited with code ${result.exitCode}]\x1b[0m`
+      }
+      output += `\n\x1b[90m[Execution time: ${result.executionTime.toFixed(2)}ms]\x1b[0m`
+
+      setOutput(output)
+    } catch (error) {
+      setOutput(`\x1b[31mExecution error: ${error instanceof Error ? error.message : String(error)}\x1b[0m`)
+    } finally {
       setIsExecuting(false)
-    }, 1000)
+    }
+  }
+
+  const handleStop = async () => {
+    if (codeRunnerRef.current) {
+      await codeRunnerRef.current.interrupt()
+      setIsExecuting(false)
+      setOutput(prev => prev + '\n\x1b[33m[Execution interrupted]\x1b[0m')
+    }
   }
 
   const handleSaveClick = () => {
