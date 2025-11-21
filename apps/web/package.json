@@ -14,7 +14,9 @@
     "build:next": "next build",
     "build:prod": "next build",
     "start": "next start",
-    "lint": "next lint --fix"
+    "lint": "next lint --fix",
+    "update-wasm": "node scripts/update-wasm.mjs",
+    "postinstall": "node scripts/postinstall.cjs"
   },
   "dependencies": {
     "@apollo/client": "^3.13.9",
