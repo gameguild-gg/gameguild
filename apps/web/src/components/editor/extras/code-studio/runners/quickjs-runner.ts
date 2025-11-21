@@ -31,6 +31,9 @@ export class QuickJSRunner implements CodeRunner {
   }
 
   async execute(code: string, stdin?: string): Promise<RunnerResult> {
+    // Small delay to avoid race condition with UI state
+    await new Promise(resolve => setTimeout(resolve, 5))
+    
     const startTime = performance.now()
     let stdout = ''
     let stderr = ''
