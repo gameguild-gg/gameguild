@@ -1,5 +1,22 @@
-import { getQuickJS, type QuickJSContext } from 'quickjs-emscripten'
+import { newQuickJSAsyncWASMModule, type QuickJSContext, RELEASE_ASYNC } from 'quickjs-emscripten'
 import type { CodeRunner, RunnerResult, RunnerOptions } from './types'
+import { loadCompressedWasm } from './wasm-loader'
+
+let quickJSModule: Awaited<ReturnType<typeof newQuickJSAsyncWASMModule>> | null = null
+
+async function getQuickJSModule() {
+  if (!quickJSModule) {
+    const wasmBinary = await loadCompressedWasm('/wasm/quickjs-asyncify.wasm.gz')
+    
+    const variant = {
+      ...RELEASE_ASYNC,
+      wasmBinary: new Uint8Array(wasmBinary),
+    }
+    
+    quickJSModule = await newQuickJSAsyncWASMModule(variant)
+  }
+  return quickJSModule
+}
 
 export class QuickJSRunner implements CodeRunner {
   private context: QuickJSContext | null = null
@@ -20,7 +37,7 @@ export class QuickJSRunner implements CodeRunner {
     let exitCode = 0
 
     try {
-      const QuickJS = await getQuickJS()
+      const QuickJS = await getQuickJSModule()
       this.context = QuickJS.newContext()
       this.isInterrupted = false
 

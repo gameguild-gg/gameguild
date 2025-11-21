@@ -1,13 +1,15 @@
 import * as esbuild from 'esbuild-wasm'
 import type { CodeRunner, RunnerResult, RunnerOptions } from './types'
 import { QuickJSRunner } from './quickjs-runner'
+import { loadCompressedWasm } from './wasm-loader'
 
 let esbuildInitialized = false
 
 async function initEsbuild() {
   if (!esbuildInitialized) {
+    const wasmBuffer = await loadCompressedWasm('/wasm/esbuild.wasm.gz')
     await esbuild.initialize({
-      wasmURL: 'https://unpkg.com/esbuild-wasm/esbuild.wasm',
+      wasmModule: await WebAssembly.compile(wasmBuffer),
     })
     esbuildInitialized = true
   }
