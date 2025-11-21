@@ -10,6 +10,7 @@ interface ResultPanelProps {
   output: string
   isExecuting: boolean
   onExecute: () => void
+  onStop?: () => void
   testCases: TestCase[]
   activeFile?: CodeFile
 }
@@ -19,6 +20,7 @@ export function ResultPanel({
   output,
   isExecuting,
   onExecute,
+  onStop,
   testCases,
   activeFile,
 }: ResultPanelProps) {
@@ -31,7 +33,7 @@ export function ResultPanel({
           <span className="text-xs font-mono text-gray-600 dark:text-gray-400">Console Output</span>
           <div className="flex items-center gap-2">
             {isExecuting ? (
-              <Button variant="ghost" size="sm" className="h-7 text-xs">
+              <Button variant="ghost" size="sm" onClick={onStop} className="h-7 text-xs">
                 <Square className="h-3 w-3 mr-1" />
                 Stop
               </Button>
