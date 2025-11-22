@@ -167,6 +167,7 @@ export function MonacoCodeEditor({
       beforeMount={handleEditorWillMount}
       onMount={handleEditorDidMount}
       theme={currentTheme}
+      loading="" // Remove mensagem "Loading..."
       options={{
         readOnly: readonly,
         fontSize,
