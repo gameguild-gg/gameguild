@@ -51,6 +51,7 @@ interface MonacoCodeEditorProps {
   fontSize?: number
   showLineNumbers?: boolean
   height?: string
+  fileId?: string // ID único do arquivo para garantir instâncias separadas
 }
 
 export function MonacoCodeEditor({
@@ -63,6 +64,7 @@ export function MonacoCodeEditor({
   fontSize = 14,
   showLineNumbers = true,
   height = "100%",
+  fileId,
 }: MonacoCodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
@@ -157,6 +159,7 @@ export function MonacoCodeEditor({
 
   return (
     <Editor
+      key={fileId} // Força nova instância do Monaco para cada arquivo
       height={height}
       language={language}
       value={value}
