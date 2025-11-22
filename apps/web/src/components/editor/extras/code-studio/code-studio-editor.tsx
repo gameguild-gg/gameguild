@@ -122,19 +122,13 @@ export function CodeStudioEditor({
     }
   }
 
-  const handleCodeChange = (content: string) => {
-    if (!activeFile) return
-    
+  const handleCodeChange = (content: string, fileId: string) => {
     setLocalData(draft => {
-      const file = draft.files.find(f => f.id === activeFile.id)
+      const file = draft.files.find(f => f.id === fileId)
       if (file) {
         file.content = content
       }
     })
-    
-    if (!isPreview) {
-      onUpdate?.({ files: localData.files })
-    }
   }
 
   // File Management
@@ -358,23 +352,40 @@ export function CodeStudioEditor({
               onCloseTab={canCloseTabs ? (fileId) => handleCloseTab(fileId, panel.id) : undefined}
               onReorderTabs={handleReorderTabs}
             />
-            <div className="flex-1 min-h-0">
-              {(() => {
-                const currentFile = localData.files.find(f => f.id === currentActiveFileId)
-                return currentFile ? (
-                  <MonacoCodeEditor
-                    value={currentFile.content}
-                    onChange={handleCodeChange}
-                    language={currentFile.language}
-                    readonly={localData.readonly}
-                    showLineNumbers={localData.showLineNumbers}
-                    fontSize={localData.fontSize}
-                    shikiTheme={localData.shikiTheme}
-                  />
-                ) : (
-                  <EmptyEditorState />
-                )
-              })()}
+            <div className="flex-1 min-h-0 relative">
+              {currentOpenTabs.length === 0 ? (
+                <EmptyEditorState />
+              ) : (
+                <>
+                  {currentOpenTabs.map((fileId) => {
+                    const file = localData.files.find(f => f.id === fileId)
+                    if (!file) return null
+                    const isActive = fileId === currentActiveFileId
+                    return (
+                      <div
+                        key={file.id}
+                        className="absolute inset-0"
+                        style={{ 
+                          visibility: isActive ? 'visible' : 'hidden',
+                          pointerEvents: isActive ? 'auto' : 'none',
+                          zIndex: isActive ? 1 : 0
+                        }}
+                      >
+                        <MonacoCodeEditor
+                          fileId={file.id}
+                          value={file.content}
+                          onChange={(content) => handleCodeChange(content, file.id)}
+                          language={file.language}
+                          readonly={localData.readonly}
+                          showLineNumbers={localData.showLineNumbers}
+                          fontSize={localData.fontSize}
+                          shikiTheme={localData.shikiTheme}
+                        />
+                      </div>
+                    )
+                  })}
+                </>
+              )}
             </div>
           </div>
         )
