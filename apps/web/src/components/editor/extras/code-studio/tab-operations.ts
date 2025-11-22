@@ -1,3 +1,4 @@
+import { produce } from "immer"
 import type { CodeStudioData, DisplayConfig } from "./types"
 
 export function selectFile(
@@ -6,69 +7,60 @@ export function selectFile(
   panelId: string | undefined,
   activeDisplay: DisplayConfig
 ): Partial<CodeStudioData> {
-  const file = data.files.find(f => f.id === fileId)
-  if (!file || !data.layout) return {}
+  return produce(data, draft => {
+    const file = draft.files.find(f => f.id === fileId)
+    if (!file || !draft.layout) return
 
-  // Determinar se o painel é único ou múltiplo
-  let panel = panelId ? activeDisplay.panels.find(p => p.id === panelId) : undefined
-  
-  // Se não foi passado panelId (clique do FileExplorer), verificar se há editor único no display atual
-  if (!panel) {
-    const uniqueEditorInDisplay = activeDisplay.panels.find(
-      p => p.type === "editor" && p.editorInstance === "unique"
-    )
-    if (uniqueEditorInDisplay) {
-      panel = uniqueEditorInDisplay
-    }
-  }
-  
-  const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
-
-  // Expandir todas as pastas pai do arquivo
-  const filePath = file.path
-  const pathParts = filePath.split('/')
-  
-  // Se o arquivo está em uma pasta, expandir todas as pastas pai
-  let updatedFolders = data.folders || []
-  if (pathParts.length > 1) {
-    updatedFolders = updatedFolders.map(folder => {
-      if (filePath.startsWith(folder.path + '/')) {
-        return { ...folder, isExpanded: true }
-      }
-      return folder
-    })
-  }
-
-  if (isUniqueInstance) {
-    // Editor único: abas específicas do display
-    const currentTabs = activeDisplay.uniqueOpenTabs || []
-    const updatedTabs = currentTabs.includes(fileId) ? currentTabs : [...currentTabs, fileId]
+    // Determinar se o painel é único ou múltiplo
+    let panel = panelId ? activeDisplay.panels.find(p => p.id === panelId) : undefined
     
-    const updatedDisplays = data.layout.displays.map(d => 
-      d.id === activeDisplay.id 
-        ? { ...d, uniqueOpenTabs: updatedTabs, uniqueActiveFileId: fileId }
-        : d
-    )
-
-    return {
-      folders: updatedFolders,
-      activeFileId: fileId, // Atualizar também o activeFileId global para o FileExplorer
-      layout: {
-        ...data.layout,
-        displays: updatedDisplays,
-      },
+    // Se não foi passado panelId (clique do FileExplorer), verificar se há editor único no display atual
+    if (!panel) {
+      const uniqueEditorInDisplay = activeDisplay.panels.find(
+        p => p.type === "editor" && p.editorInstance === "unique"
+      )
+      if (uniqueEditorInDisplay) {
+        panel = uniqueEditorInDisplay
+      }
     }
-  } else {
-    // Editor múltiplo: abas globais
-    const currentTabs = data.openTabs || []
-    const updatedTabs = currentTabs.includes(fileId) ? currentTabs : [...currentTabs, fileId]
+    
+    const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
 
-    return { 
-      folders: updatedFolders,
-      openTabs: updatedTabs,
-      activeFileId: fileId 
+    // Expandir todas as pastas pai do arquivo
+    const filePath = file.path
+    const pathParts = filePath.split('/')
+    
+    // Se o arquivo está em uma pasta, expandir todas as pastas pai
+    if (pathParts.length > 1 && draft.folders) {
+      draft.folders.forEach(folder => {
+        if (filePath.startsWith(folder.path + '/')) {
+          folder.isExpanded = true
+        }
+      })
     }
-  }
+
+    const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
+    if (!display) return
+
+    if (isUniqueInstance) {
+      // Editor único: abas específicas do display
+      if (!display.uniqueOpenTabs) {
+        display.uniqueOpenTabs = []
+      }
+      if (!display.uniqueOpenTabs.includes(fileId)) {
+        display.uniqueOpenTabs.push(fileId)
+      }
+      display.uniqueActiveFileId = fileId
+      draft.activeFileId = fileId // Atualizar também o activeFileId global para o FileExplorer
+    } else {
+      // Editor múltiplo: abas globais compartilhadas
+      if (!draft.openTabs?.includes(fileId)) {
+        draft.openTabs = draft.openTabs || []
+        draft.openTabs.push(fileId)
+      }
+      draft.activeFileId = fileId
+    }
+  })
 }
 
 export function closeTab(
@@ -77,47 +69,39 @@ export function closeTab(
   panelId: string | undefined,
   activeDisplay: DisplayConfig
 ): Partial<CodeStudioData> {
-  if (!data.layout) return {}
+  return produce(data, draft => {
+    if (!draft.layout) return
 
-  const panel = panelId ? activeDisplay.panels.find(p => p.id === panelId) : undefined
-  const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
+    const panel = panelId ? activeDisplay.panels.find(p => p.id === panelId) : undefined
+    const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
 
-  if (isUniqueInstance) {
-    // Editor único: fechar aba específica do display
-    const newOpenTabs = (activeDisplay.uniqueOpenTabs || []).filter(id => id !== fileId)
-    let newActiveFileId = activeDisplay.uniqueActiveFileId
+    const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
+    if (!display) return
 
-    if (fileId === activeDisplay.uniqueActiveFileId) {
-      newActiveFileId = newOpenTabs.length > 0 ? newOpenTabs[newOpenTabs.length - 1] : undefined
-    }
-
-    const updatedDisplays = data.layout.displays.map(d =>
-      d.id === activeDisplay.id
-        ? { ...d, uniqueOpenTabs: newOpenTabs, uniqueActiveFileId: newActiveFileId }
-        : d
-    )
-
-    return {
-      layout: {
-        ...data.layout,
-        displays: updatedDisplays,
-      },
-    }
-  } else {
-    // Editor múltiplo: fechar aba global
-    const newOpenTabs = (data.openTabs || []).filter(id => id !== fileId)
-    const updates: Partial<CodeStudioData> = { openTabs: newOpenTabs }
-
-    if (fileId === data.activeFileId) {
-      if (newOpenTabs.length > 0) {
-        updates.activeFileId = newOpenTabs[newOpenTabs.length - 1]
-      } else {
-        updates.activeFileId = undefined
+    if (isUniqueInstance) {
+      // Editor único: fechar aba específica do display
+      if (!display.uniqueOpenTabs) return
+      
+      display.uniqueOpenTabs = display.uniqueOpenTabs.filter(id => id !== fileId)
+      
+      if (fileId === display.uniqueActiveFileId) {
+        display.uniqueActiveFileId = display.uniqueOpenTabs.length > 0 
+          ? display.uniqueOpenTabs[display.uniqueOpenTabs.length - 1] 
+          : undefined
+      }
+    } else {
+      // Editor múltiplo: fechar aba global
+      if (!draft.openTabs) return
+      
+      draft.openTabs = draft.openTabs.filter(id => id !== fileId)
+      
+      if (fileId === draft.activeFileId) {
+        draft.activeFileId = draft.openTabs.length > 0
+          ? draft.openTabs[draft.openTabs.length - 1]
+          : undefined
       }
     }
-
-    return updates
-  }
+  })
 }
 
 export function reorderTabs(
@@ -126,30 +110,25 @@ export function reorderTabs(
   panelId: string | undefined,
   activeDisplay: DisplayConfig | undefined
 ): Partial<CodeStudioData> {
-  if (!data.layout || !activeDisplay || !panelId) {
-    // Se não tiver informações do painel, atualizar tabs globais (modo múltiplo)
-    return { openTabs: newOrder }
-  }
-
-  const panel = activeDisplay.panels.find(p => p.id === panelId)
-  const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
-
-  if (isUniqueInstance) {
-    // Editor único: reordenar abas específicas do display
-    const updatedDisplays = data.layout.displays.map(d =>
-      d.id === activeDisplay.id
-        ? { ...d, uniqueOpenTabs: newOrder }
-        : d
-    )
-
-    return {
-      layout: {
-        ...data.layout,
-        displays: updatedDisplays,
-      },
+  return produce(data, draft => {
+    if (!draft.layout || !activeDisplay || !panelId) {
+      // Se não tiver informações do painel, atualizar tabs globais (modo múltiplo)
+      draft.openTabs = newOrder
+      return
     }
-  } else {
-    // Editor múltiplo: reordenar abas globais
-    return { openTabs: newOrder }
-  }
+
+    const panel = activeDisplay.panels.find(p => p.id === panelId)
+    const isUniqueInstance = panel?.type === "editor" && panel?.editorInstance === "unique"
+
+    const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
+    if (!display) return
+
+    if (isUniqueInstance) {
+      // Editor único: reordenar abas específicas do display
+      display.uniqueOpenTabs = newOrder
+    } else {
+      // Editor múltiplo: reordenar abas globais
+      draft.openTabs = newOrder
+    }
+  })
 }
