@@ -5,11 +5,13 @@ import { createGzip } from 'zlib'
 import { pipeline } from 'stream/promises'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { Readable } from 'stream'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const rootDir = join(__dirname, '..')
 const publicWasmDir = join(rootDir, 'public', 'wasm')
+const publicPyodideDir = join(rootDir, 'public', 'pyodide')
 
 const WASM_FILES = [
   {
@@ -22,6 +24,16 @@ const WASM_FILES = [
     source: 'node_modules/@jitl/quickjs-wasmfile-release-asyncify/dist/emscripten-module.wasm',
     output: 'quickjs-asyncify.wasm.gz',
   },
+]
+
+const PYODIDE_VERSION = '0.26.4'
+const PYODIDE_BASE_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full`
+const PYODIDE_FILES = [
+  'pyodide.asm.js',
+  'pyodide.asm.wasm',
+  'pyodide.js',
+  'python_stdlib.zip',
+  'pyodide-lock.json',
 ]
 
 async function compressFile(source, output) {
@@ -49,6 +61,88 @@ async function getFileSize(path) {
   return stats.size > 1024 * 1024 ? `${mb}MB` : `${kb}KB`
 }
 
+async function downloadFile(url, outputPath) {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to download ${url}: ${response.statusText}`)
+  }
+
+  const arrayBuffer = await response.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+  
+  return buffer
+}
+
+async function compressAndSave(buffer, outputPath) {
+  const gzip = createGzip({ level: 9 })
+  const output = createWriteStream(outputPath)
+  const readable = Readable.from(buffer)
+
+  await pipeline(readable, gzip, output)
+}
+
+async function downloadPyodide() {
+  console.log(`\n🐍 Downloading Pyodide ${PYODIDE_VERSION}...\n`)
+
+  if (!existsSync(publicPyodideDir)) {
+    mkdirSync(publicPyodideDir, { recursive: true })
+  }
+
+  let totalOriginal = 0
+  let totalCompressed = 0
+
+  for (const filename of PYODIDE_FILES) {
+    try {
+      const url = `${PYODIDE_BASE_URL}/${filename}`
+      console.log(`📥 Downloading ${filename}...`)
+      
+      const buffer = await downloadFile(url)
+      const originalSize = buffer.length
+      totalOriginal += originalSize
+
+      // Arquivos ZIP já são compactados, não precisam de gzip adicional
+      const isAlreadyCompressed = filename.endsWith('.zip')
+      
+      // Todos os arquivos do Pyodide vão para /wasm/ (exceto pyodide.js que fica em /pyodide/)
+      const outputPath = (filename === 'pyodide.js')
+        ? join(publicPyodideDir, `${filename}.gz`)
+        : join(publicWasmDir, isAlreadyCompressed ? filename : `${filename}.gz`)
+      
+      if (isAlreadyCompressed) {
+        // Salvar diretamente sem compressão adicional
+        const { writeFile } = await import('fs/promises')
+        await writeFile(outputPath, buffer)
+        totalCompressed += originalSize
+        const origMB = (originalSize / 1024 / 1024).toFixed(2)
+        console.log(`   ✅ Saved: ${origMB}MB (already compressed)`)
+      } else {
+        // Comprimir com gzip
+        await compressAndSave(buffer, outputPath)
+        
+        const { statSync } = await import('fs')
+        const compressedSize = statSync(outputPath).size
+        totalCompressed += compressedSize
+        
+        const ratio = ((1 - compressedSize / originalSize) * 100).toFixed(1)
+        const origMB = (originalSize / 1024 / 1024).toFixed(2)
+        const compMB = (compressedSize / 1024 / 1024).toFixed(2)
+        console.log(`   ✅ Compressed: ${origMB}MB → ${compMB}MB (${ratio}% reduction)`)
+      }
+    } catch (error) {
+      console.error(`❌ Failed to download ${filename}:`, error.message)
+      process.exit(1)
+    }
+  }
+
+  const totalRatio = ((1 - totalCompressed / totalOriginal) * 100).toFixed(1)
+  console.log(`\n📊 Pyodide Summary:`)
+  console.log(`   Total original: ${(totalOriginal / 1024 / 1024).toFixed(2)}MB`)
+  console.log(`   Total compressed: ${(totalCompressed / 1024 / 1024).toFixed(2)}MB`)
+  console.log(`   Total reduction: ${totalRatio}%`)
+
+  return { original: totalOriginal, compressed: totalCompressed }
+}
+
 async function main() {
   console.log('🔄 Updating WASM files...\n')
 
@@ -60,6 +154,7 @@ async function main() {
   let totalOriginal = 0
   let totalCompressed = 0
 
+  // Process local WASM files from node_modules
   for (const file of WASM_FILES) {
     try {
       const sourcePath = join(rootDir, file.source)
@@ -84,15 +179,30 @@ async function main() {
     }
   }
 
-  const totalRatio = ((1 - totalCompressed / totalOriginal) * 100).toFixed(1)
-  const totalOriginalMB = (totalOriginal / 1024 / 1024).toFixed(2)
-  const totalCompressedMB = (totalCompressed / 1024 / 1024).toFixed(2)
+  const localRatio = ((1 - totalCompressed / totalOriginal) * 100).toFixed(1)
+  const localOriginalMB = (totalOriginal / 1024 / 1024).toFixed(2)
+  const localCompressedMB = (totalCompressed / 1024 / 1024).toFixed(2)
 
-  console.log('📊 Summary:')
-  console.log(`   Total original: ${totalOriginalMB}MB`)
-  console.log(`   Total compressed: ${totalCompressedMB}MB`)
-  console.log(`   Total reduction: ${totalRatio}%`)
-  console.log('\n✨ WASM files updated successfully!')
+  console.log('📊 Local WASM Summary:')
+  console.log(`   Total original: ${localOriginalMB}MB`)
+  console.log(`   Total compressed: ${localCompressedMB}MB`)
+  console.log(`   Total reduction: ${localRatio}%`)
+
+  // Download Pyodide from CDN
+  const pyodideStats = await downloadPyodide()
+
+  // Grand total
+  const grandOriginal = totalOriginal + pyodideStats.original
+  const grandCompressed = totalCompressed + pyodideStats.compressed
+  const grandRatio = ((1 - grandCompressed / grandOriginal) * 100).toFixed(1)
+
+  console.log('\n🎉 Grand Total:')
+  console.log(`   Total original: ${(grandOriginal / 1024 / 1024).toFixed(2)}MB`)
+  console.log(`   Total compressed/saved: ${(grandCompressed / 1024 / 1024).toFixed(2)}MB`)
+  console.log(`   Total reduction: ${grandRatio}%`)
+  console.log('\n✨ All WASM files updated successfully!')
+  console.log(`   Local WASM: public/wasm/`)
+  console.log(`   Pyodide runtime: public/pyodide/`)
 }
 
 main().catch((error) => {
