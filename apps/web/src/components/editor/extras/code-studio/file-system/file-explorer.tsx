@@ -17,9 +17,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
-import { DuplicateNameDialog } from "../dialogs/duplicate-name-dialog"
-import type { CodeFile, FileTreeFolder, FileTreeItem } from "./types"
+import { DeleteConfirmDialog } from "../../dialogs/delete-confirm-dialog"
+import { DuplicateNameDialog } from "../../dialogs/duplicate-name-dialog"
+import type { CodeFile, FileTreeFolder, FileTreeItem } from "../types"
 import { cn } from "@/lib/utils"
 
 interface FileExplorerProps {
