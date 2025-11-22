@@ -34,6 +34,117 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
+  // Rewrite requests for non-.gz files to .gz versions
+  async rewrites() {
+    return [
+      // WASM files
+      {
+        source: '/wasm/:file*.wasm',
+        destination: '/wasm/:file*.wasm.gz',
+      },
+      // WASM directory JS files (pyodide.asm.js)
+      {
+        source: '/wasm/:file*.js',
+        destination: '/wasm/:file*.js.gz',
+      },
+      // WASM directory JSON files (pyodide-lock.json)
+      {
+        source: '/wasm/:file*.json',
+        destination: '/wasm/:file*.json.gz',
+      },
+      // Pyodide loader JS (kept in /pyodide/)
+      {
+        source: '/pyodide/:file*.js',
+        destination: '/pyodide/:file*.js.gz',
+      },
+    ];
+  },
+  // Set headers for compressed files
+  async headers() {
+    return [
+      {
+        source: '/wasm/:path*.wasm',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/wasm',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/wasm/:path*.js',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/wasm/:path*.json',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/wasm/:path*.zip',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/zip',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/pyodide/:path*.js',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
   webpack: (config) => {
     // Allow importing .js files from TypeScript files
     // the api client generation requires this
