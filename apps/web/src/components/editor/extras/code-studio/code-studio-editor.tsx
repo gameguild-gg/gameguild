@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef } from "react"
+import { useImmer } from "use-immer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -47,7 +48,7 @@ export function CodeStudioEditor({
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme === "dark"
   
-  const [localData, setLocalData] = useState<CodeStudioData>(() => {
+  const [localData, setLocalData] = useImmer<CodeStudioData>(() => {
     // Criar layout padrão se não existir
     if (!data.layout) {
       return {
@@ -58,9 +59,9 @@ export function CodeStudioEditor({
     }
     return data
   })
-  const [isExecuting, setIsExecuting] = useState(false)
-  const [output, setOutput] = useState<string>("")
-  const [showSettingsMenu, setShowSettingsMenu] = useState(false)
+  const [isExecuting, setIsExecuting] = useImmer(false)
+  const [output, setOutput] = useImmer<string>("")
+  const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
   const gridContainerRef = useRef<HTMLDivElement | null>(null)
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
 
@@ -75,16 +76,16 @@ export function CodeStudioEditor({
 
   // Sincronizar com mudanças externas
   useEffect(() => {
-    if (!data.layout) {
-      setLocalData({
-        ...data,
-        mode: data.mode || "execution",
-        layout: createDefaultLayout(),
-      })
-    } else {
-      setLocalData(data)
-    }
-  }, [data])
+    setLocalData(draft => {
+      if (!data.layout) {
+        Object.assign(draft, data)
+        draft.mode = data.mode || "execution"
+        draft.layout = createDefaultLayout()
+      } else {
+        return data
+      }
+    })
+  }, [data, setLocalData])
 
   // Fechar menu de settings quando clicar fora
   useEffect(() => {
@@ -110,8 +111,9 @@ export function CodeStudioEditor({
   const activeFile = localData.files.find(f => f.id === localData.activeFileId)
 
   const handleDataChange = (newData: Partial<CodeStudioData>) => {
-    const updated = { ...localData, ...newData }
-    setLocalData(updated)
+    setLocalData(draft => {
+      Object.assign(draft, newData)
+    })
     
     // Só propagar mudanças se NÃO for preview (ou seja, se for no editor modal)
     // Preview não deve salvar modificações
@@ -123,10 +125,16 @@ export function CodeStudioEditor({
   const handleCodeChange = (content: string) => {
     if (!activeFile) return
     
-    const updatedFiles = localData.files.map(f =>
-      f.id === activeFile.id ? { ...f, content } : f
-    )
-    handleDataChange({ files: updatedFiles })
+    setLocalData(draft => {
+      const file = draft.files.find(f => f.id === activeFile.id)
+      if (file) {
+        file.content = content
+      }
+    })
+    
+    if (!isPreview) {
+      onUpdate?.({ files: localData.files })
+    }
   }
 
   // File Management
