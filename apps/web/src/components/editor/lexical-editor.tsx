@@ -2,7 +2,6 @@
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer"
 import { ContentEditable } from "@lexical/react/LexicalContentEditable"
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
 import { ListPlugin } from "@lexical/react/LexicalListPlugin"
@@ -482,7 +481,6 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             />
             <EditorRefPlugin editorRef={editorRef} />
             <StructureDeleteConfirmPlugin />
-            <HistoryPlugin />
             <ListPlugin />
             <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
           </div>
