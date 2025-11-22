@@ -1,4 +1,5 @@
 import type { CodeRunner, RunnerResult, RunnerOptions } from './types'
+import { loadCompressedScript } from './wasm-loader'
 
 // Pyodide module interface
 interface PyodideModule {
@@ -28,29 +29,11 @@ declare global {
 let pyodideInstance: PyodideModule | null = null
 let pyodidePromise: Promise<PyodideModule> | null = null
 
-async function loadCompressedScript(url: string): Promise<void> {
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.statusText}`)
-  }
-  
-  // Decompress using pako
-  const { ungzip } = await import('pako')
-  const compressed = await response.arrayBuffer()
-  const decompressed = ungzip(new Uint8Array(compressed))
-  const code = new TextDecoder().decode(decompressed)
-  
-  // Execute the script in global scope
-  const script = document.createElement('script')
-  script.textContent = code
-  document.head.appendChild(script)
-}
-
 async function loadPyodideRuntime(): Promise<void> {
   if (typeof window === 'undefined') return
   if (typeof window.loadPyodide !== 'undefined') return
 
-  // Load compressed Pyodide runtime scripts in order
+  // Load compressed Pyodide runtime scripts using wasm-loader
   await loadCompressedScript('/pyodide/pyodide.js.gz')
   
   // Wait a bit for the script to initialize
