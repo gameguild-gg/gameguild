@@ -2,6 +2,7 @@ import type { SupportedLanguage } from '../types'
 import type { CodeRunner, RunnerResult, RunnerOptions } from './types'
 import { QuickJSRunner } from './quickjs-runner'
 import { TypeScriptRunner } from './typescript-runner'
+import { PythonRunner } from './python-runner'
 
 export class UnifiedCodeRunner {
   private runners: Map<SupportedLanguage, CodeRunner> = new Map()
@@ -65,6 +66,8 @@ export class UnifiedCodeRunner {
         return new TypeScriptRunner(this.options)
       
       case 'python':
+        return new PythonRunner(this.options)
+      
       case 'lua':
       case 'c':
       case 'cpp':
@@ -82,3 +85,4 @@ export class UnifiedCodeRunner {
 export * from './types'
 export { QuickJSRunner } from './quickjs-runner'
 export { TypeScriptRunner } from './typescript-runner'
+export { PythonRunner } from './python-runner'
