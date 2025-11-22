@@ -115,11 +115,9 @@ export function CodeStudioEditor({
       Object.assign(draft, newData)
     })
     
-    // Só propagar mudanças se NÃO for preview (ou seja, se for no editor modal)
-    // Preview não deve salvar modificações
-    if (!isPreview) {
-      onUpdate?.(newData)
-    }
+    // Propagar mudanças apenas se for preview
+    // No modo editor (não preview), só salva quando clicar em Save
+    
   }
 
   const handleCodeChange = (content: string, fileId: string) => {
