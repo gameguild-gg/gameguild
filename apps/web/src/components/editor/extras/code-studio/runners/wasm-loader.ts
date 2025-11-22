@@ -14,6 +14,22 @@ export async function loadCompressedWasm(path: string): Promise<ArrayBuffer> {
   return decompressed.buffer
 }
 
+export async function loadCompressedScript(url: string): Promise<void> {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: ${response.statusText}`)
+  }
+  
+  const compressed = await response.arrayBuffer()
+  const decompressed = ungzip(new Uint8Array(compressed))
+  const code = new TextDecoder().decode(decompressed)
+  
+  // Execute the script in global scope
+  const script = document.createElement('script')
+  script.textContent = code
+  document.head.appendChild(script)
+}
+
 export async function loadAndCacheWasm(
   name: string,
   path: string
