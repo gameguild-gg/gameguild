@@ -2,7 +2,7 @@ import type { CodeRunner, RunnerResult, RunnerOptions, FileMap } from './types'
 import { QuickJSRunner } from './quickjs-runner'
 import { initEsbuild, esbuild } from './esbuild-shared'
 
-export class TypeScriptRunner implements CodeRunner {
+export class JavaScriptRunner implements CodeRunner {
   private jsRunner: QuickJSRunner
 
   constructor(options: RunnerOptions = {}) {
@@ -10,36 +10,8 @@ export class TypeScriptRunner implements CodeRunner {
   }
 
   async execute(code: string, stdin?: string): Promise<RunnerResult> {
-    const startTime = performance.now()
-
-    try {
-      await initEsbuild()
-
-      // Transpile TypeScript to JavaScript
-      const result = await esbuild.transform(code, {
-        loader: 'ts',
-        target: 'es2020',
-        format: 'iife',
-      })
-
-      const jsCode = result.code
-      const transpileTime = performance.now() - startTime
-
-      // Execute transpiled JavaScript
-      const execResult = await this.jsRunner.execute(jsCode, stdin)
-
-      return {
-        ...execResult,
-        executionTime: execResult.executionTime + transpileTime,
-      }
-    } catch (error) {
-      return {
-        stdout: '',
-        stderr: error instanceof Error ? error.message : String(error),
-        exitCode: 1,
-        executionTime: performance.now() - startTime,
-      }
-    }
+    // Execução simples sem imports
+    return this.jsRunner.execute(code, stdin)
   }
 
   async executeWithFiles(entryPoint: string, files: FileMap, stdin?: string): Promise<RunnerResult> {
@@ -73,7 +45,7 @@ export class TypeScriptRunner implements CodeRunner {
               
               // Tentar com extensões se não encontrar
               if (!files[resolved]) {
-                const extensions = ['.ts', '.tsx', '.js', '.jsx']
+                const extensions = ['.js', '.jsx', '.mjs']
                 for (const ext of extensions) {
                   if (files[resolved + ext]) {
                     resolved += ext
@@ -104,9 +76,8 @@ export class TypeScriptRunner implements CodeRunner {
             }
 
             // Determinar loader baseado na extensão
-            const ext = args.path.split('.').pop() || 'ts'
-            const loader = (ext === 'tsx' || ext === 'jsx') ? ext : 
-                          (ext === 'js') ? 'js' : 'ts'
+            const ext = args.path.split('.').pop() || 'js'
+            const loader = ext === 'jsx' ? 'jsx' : 'js'
 
             return {
               contents: content,
@@ -131,14 +102,14 @@ export class TypeScriptRunner implements CodeRunner {
       }
 
       const jsCode = result.outputFiles[0].text
-      const transpileTime = performance.now() - startTime
+      const bundleTime = performance.now() - startTime
 
-      // Execute transpiled JavaScript
+      // Execute bundled JavaScript
       const execResult = await this.jsRunner.execute(jsCode, stdin)
 
       return {
         ...execResult,
-        executionTime: execResult.executionTime + transpileTime,
+        executionTime: execResult.executionTime + bundleTime,
       }
     } catch (error) {
       return {
