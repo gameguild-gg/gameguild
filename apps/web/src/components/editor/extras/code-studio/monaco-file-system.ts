@@ -42,7 +42,6 @@ export async function syncFilesToMonacoFS(files: CodeFile[]) {
   }
 
   if (!fileSystemProvider) {
-    console.error('[Monaco FS] File system not available')
     return
   }
 
@@ -50,16 +49,44 @@ export async function syncFilesToMonacoFS(files: CodeFile[]) {
   currentFiles = files
 
   try {
+    // Coletar todos os diretórios únicos
+    const directories = new Set<string>()
+    files.forEach(file => {
+      const parts = file.path.split('/')
+      if (parts.length > 1) {
+        let currentPath = ''
+        for (let i = 0; i < parts.length - 1; i++) {
+          currentPath += (i > 0 ? '/' : '') + parts[i]
+          if (currentPath) {
+            directories.add(currentPath)
+          }
+        }
+      }
+    })
+
+    // Criar diretórios
+    for (const dir of Array.from(directories).sort()) {
+      try {
+        const dirUri = URI.file(`/${dir}`)
+        fileSystemProvider.mkdirSync(dirUri)
+      } catch {
+        // Diretório já existe
+      }
+    }
+
     // Criar/atualizar cada arquivo no sistema virtual
     for (const file of files) {
-      const uri = URI.file(`/${file.path}`)
-      
-      // Criar ou atualizar arquivo com opções completas
-      await fileSystemProvider.writeFile(
-        uri,
-        new TextEncoder().encode(file.content),
-        { create: true, overwrite: true, unlock: false, atomic: false }
-      )
+      try {
+        const uri = URI.file(`/${file.path}`)
+        
+        await fileSystemProvider.writeFile(
+          uri,
+          new TextEncoder().encode(file.content),
+          { create: true, overwrite: true, unlock: false, atomic: false }
+        )
+      } catch {
+        // Ignorar erros individuais de arquivos
+      }
     }
     
     // Se Monaco está disponível, adicionar arquivos como extra libs para TypeScript
@@ -80,28 +107,53 @@ export async function syncFilesToMonacoFS(files: CodeFile[]) {
         }
       })
     }
-    
-    console.log(`[Monaco FS] Synced ${files.length} files`)
   } catch (error) {
-    console.error('[Monaco FS] Failed to sync files:', error)
+    // Silenciar erros - não são críticos para a funcionalidade
   }
 }
 
 export async function updateMonacoFile(filePath: string, content: string) {
   if (!fileSystemProvider) {
-    console.warn('[Monaco FS] File system not initialized')
     return
   }
 
   try {
     const uri = URI.file(`/${filePath}`)
+    
+    // Criar diretórios se necessário
+    const parts = filePath.split('/')
+    if (parts.length > 1) {
+      let currentPath = ''
+      for (let i = 0; i < parts.length - 1; i++) {
+        currentPath += (i > 0 ? '/' : '') + parts[i]
+        if (currentPath) {
+          try {
+            const dirUri = URI.file(`/${currentPath}`)
+            fileSystemProvider.mkdirSync(dirUri)
+          } catch {
+            // Diretório já existe ou erro, continuar
+          }
+        }
+      }
+    }
+    
     await fileSystemProvider.writeFile(
       uri,
       new TextEncoder().encode(content),
       { create: true, overwrite: true, unlock: false, atomic: false }
     )
+    
+    // Atualizar extraLib se Monaco estiver disponível
+    if (monacoInstance) {
+      const fileExt = filePath.split('.').pop()
+      if (fileExt === 'ts' || fileExt === 'tsx' || fileExt === 'js' || fileExt === 'jsx') {
+        const libPath = `file:///${filePath}`
+        monacoInstance.languages.typescript.typescriptDefaults.addExtraLib(content, libPath)
+        monacoInstance.languages.typescript.javascriptDefaults.addExtraLib(content, libPath)
+      }
+    }
   } catch (error) {
-    console.error(`[Monaco FS] Failed to update file ${filePath}:`, error)
+    // Silenciar erros de file system - não são críticos
   }
 }
 
@@ -111,8 +163,8 @@ export async function deleteMonacoFile(filePath: string) {
   try {
     const uri = URI.file(`/${filePath}`)
     await fileSystemProvider.delete(uri)
-  } catch (error) {
-    console.error(`[Monaco FS] Failed to delete file ${filePath}:`, error)
+  } catch {
+    // Arquivo pode não existir, ignorar
   }
 }
 
@@ -123,8 +175,8 @@ export async function createMonacoDirectory(dirPath: string) {
     const uri = URI.file(`/${dirPath}`)
     // RegisteredFileSystemProvider usa mkdirSync ao invés de mkdir com parâmetro
     fileSystemProvider.mkdirSync(uri)
-  } catch (error) {
-    console.error(`[Monaco FS] Failed to create directory ${dirPath}:`, error)
+  } catch {
+    // Diretório pode já existir, ignorar
   }
 }
 
@@ -236,10 +288,64 @@ export function registerPathCompletionProvider(monaco: Monaco) {
     },
   })
 
-  // Registrar para TypeScript e JavaScript
+  // Provider para Python
+  const createPythonProvider = () => ({
+    triggerCharacters: ['"', "'", '/', '.'],
+    provideCompletionItems: (model: any, position: any) => {
+      const lineContent = model.getLineContent(position.lineNumber)
+      const textBeforeCursor = lineContent.substring(0, position.column - 1)
+      
+      // Detectar imports Python: from X import, import X
+      const importMatch = textBeforeCursor.match(/(?:from\s+|import\s+)([^\s'"]*?)$/)
+      if (!importMatch || !importMatch[1]) return { suggestions: [] }
+      
+      const currentPath = importMatch[1] || ''
+      const modelPath = model.uri.path || ''
+      const currentDir = modelPath.split('/').slice(0, -1).join('/')
+      
+      const suggestions: any[] = []
+      
+      // Sugerir arquivos Python disponíveis
+      currentFiles.forEach(file => {
+        if (file.language !== 'python') return
+        
+        const filePath = `/${file.path}`
+        const fileName = file.path.split('/').pop() || ''
+        const moduleName = fileName.replace(/\.py$/, '')
+        
+        // Não sugerir o próprio arquivo
+        if (filePath === modelPath) return
+        
+        const fileDir = filePath.split('/').slice(0, -1).join('/')
+        
+        // Se está no mesmo diretório, sugerir como módulo direto
+        if (fileDir === currentDir) {
+          suggestions.push({
+            label: moduleName,
+            kind: monaco.languages.CompletionItemKind.Module,
+            insertText: moduleName,
+            range: {
+              startLineNumber: position.lineNumber,
+              startColumn: position.column - currentPath.length,
+              endLineNumber: position.lineNumber,
+              endColumn: position.column,
+            },
+            detail: 'Python module',
+            documentation: `Import from ${file.path}`,
+            sortText: `0_${moduleName}`,
+          })
+        }
+      })
+      
+      return { suggestions }
+    },
+  })
+
+  // Registrar para TypeScript, JavaScript e Python
   const tsProvider = monaco.languages.registerCompletionItemProvider('typescript', createProvider())
   const jsProvider = monaco.languages.registerCompletionItemProvider('javascript', createProvider())
+  const pyProvider = monaco.languages.registerCompletionItemProvider('python', createPythonProvider())
 
-  completionDisposables.push(tsProvider, jsProvider)
+  completionDisposables.push(tsProvider, jsProvider, pyProvider)
   console.log('[Monaco FS] Path completion providers registered')
 }
