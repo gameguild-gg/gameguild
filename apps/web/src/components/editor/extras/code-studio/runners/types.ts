@@ -5,8 +5,13 @@ export interface RunnerResult {
   executionTime: number
 }
 
+export interface FileMap {
+  [path: string]: string
+}
+
 export interface CodeRunner {
   execute(code: string, stdin?: string): Promise<RunnerResult>
+  executeWithFiles?(entryPoint: string, files: FileMap, stdin?: string): Promise<RunnerResult>
   interrupt(): Promise<void>
   dispose(): void
 }
