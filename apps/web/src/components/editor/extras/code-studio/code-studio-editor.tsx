@@ -27,7 +27,7 @@ import * as TabOps from "./tab-operations"
 import * as PanelOps from "./panel-operations"
 import { getGridDimensions, getContainerDimensions } from "./grid-utils"
 import { UnifiedCodeRunner } from "./runners"
-import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, deleteMonacoFile, disposeMonacoFileSystem } from "./monaco-file-system"
+import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, deleteMonacoFile, disposeMonacoFileSystem, registerPathCompletionProvider } from "./monaco-file-system"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
