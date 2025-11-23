@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.13.9",
+    "@codingame/monaco-vscode-files-service-override": "^23.1.0",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@hookform/resolvers": "^5.2.1",
     "@lexical/code": "^0.38.2",

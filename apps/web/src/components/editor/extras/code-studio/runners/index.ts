@@ -1,6 +1,6 @@
 import type { SupportedLanguage } from '../types'
 import type { CodeRunner, RunnerResult, RunnerOptions } from './types'
-import { QuickJSRunner } from './quickjs-runner'
+import { JavaScriptRunner } from './javascript-runner'
 import { TypeScriptRunner } from './typescript-runner'
 import { PythonRunner } from './python-runner'
 
@@ -19,6 +19,29 @@ export class UnifiedCodeRunner {
       this.currentRunner = runner
       
       const result = await runner.execute(code, stdin)
+      this.currentRunner = null
+      
+      return result
+    } catch (error) {
+      this.currentRunner = null
+      return {
+        stdout: '',
+        stderr: error instanceof Error ? error.message : String(error),
+        exitCode: 1,
+        executionTime: 0,
+      }
+    }
+  }
+
+  async runWithFiles(language: SupportedLanguage, entryPoint: string, files: Record<string, string>, stdin?: string): Promise<RunnerResult> {
+    try {
+      const runner = await this.getRunner(language)
+      this.currentRunner = runner
+      
+      const result = runner.executeWithFiles 
+        ? await runner.executeWithFiles(entryPoint, files, stdin)
+        : await runner.execute(files[entryPoint] || '', stdin)
+      
       this.currentRunner = null
       
       return result
@@ -60,7 +83,7 @@ export class UnifiedCodeRunner {
   private createRunner(language: SupportedLanguage): CodeRunner {
     switch (language) {
       case 'javascript':
-        return new QuickJSRunner(this.options)
+        return new JavaScriptRunner(this.options)
       
       case 'typescript':
         return new TypeScriptRunner(this.options)
@@ -83,6 +106,6 @@ export class UnifiedCodeRunner {
 }
 
 export * from './types'
-export { QuickJSRunner } from './quickjs-runner'
+export { JavaScriptRunner } from './javascript-runner'
 export { TypeScriptRunner } from './typescript-runner'
 export { PythonRunner } from './python-runner'
