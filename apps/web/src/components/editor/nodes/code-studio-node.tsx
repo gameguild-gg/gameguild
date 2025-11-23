@@ -51,6 +51,7 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
       title: data.title,
       caption: data.caption,
       shikiTheme: data.shikiTheme ?? "github",
+      layout: data.layout, // Preservar layout do JSON
     }
   }
 
