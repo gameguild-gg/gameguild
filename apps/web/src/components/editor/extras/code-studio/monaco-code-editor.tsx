@@ -9,11 +9,13 @@ import { getShikiThemeName, SHIKI_THEME_CONFIGS } from "./types"
 import { shikiToMonaco } from "@shikijs/monaco"
 import { useTheme } from "next-themes"
 import { createHighlighter, type Highlighter } from "shiki"
+import { registerPathCompletionProvider } from "./monaco-file-system"
 
 // Singleton para o highlighter do Shiki
 let shikiHighlighter: Highlighter | null = null
 let shikiPromise: Promise<Highlighter> | null = null
 let shikiAppliedToMonaco = false
+let pathCompletionRegistered = false
 
 async function getShikiHighlighter(): Promise<Highlighter> {
   if (shikiHighlighter) {
@@ -80,6 +82,55 @@ export function MonacoCodeEditor({
 
   const handleEditorWillMount = async (monaco: Monaco) => {
     monacoRef.current = monaco
+    
+    // Configurar TypeScript/JavaScript compiler options
+    monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.ES2020,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.ESNext,
+      noEmit: true,
+      esModuleInterop: true,
+      jsx: monaco.languages.typescript.JsxEmit.React,
+      allowJs: true,
+      typeRoots: [],
+      allowSyntheticDefaultImports: true,
+      skipLibCheck: true,
+      skipDefaultLibCheck: true,
+    })
+
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.ES2020,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.ESNext,
+      noEmit: true,
+      esModuleInterop: true,
+      jsx: monaco.languages.typescript.JsxEmit.React,
+      allowJs: true,
+      allowSyntheticDefaultImports: true,
+      skipLibCheck: true,
+      skipDefaultLibCheck: true,
+    })
+
+    // Configurar diagnósticos - desabilitar validação semântica que causa erros
+    monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: true, // Desabilita erros de módulos não encontrados
+      noSyntaxValidation: false,
+      diagnosticCodesToIgnore: [],
+    })
+
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: true, // Desabilita erros de módulos não encontrados
+      noSyntaxValidation: false,
+      diagnosticCodesToIgnore: [],
+    })
+
+    // Registrar path completion provider (apenas uma vez)
+    if (!pathCompletionRegistered) {
+      registerPathCompletionProvider(monaco)
+      pathCompletionRegistered = true
+    }
     
     // Carregar Shiki ANTES de montar o editor (apenas uma vez globalmente)
     if (!shikiAppliedToMonaco) {
