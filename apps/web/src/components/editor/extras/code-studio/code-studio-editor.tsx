@@ -27,6 +27,7 @@ import * as TabOps from "./tab-operations"
 import * as PanelOps from "./panel-operations"
 import { getGridDimensions, getContainerDimensions } from "./grid-utils"
 import { UnifiedCodeRunner } from "./runners"
+import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, deleteMonacoFile, disposeMonacoFileSystem } from "./monaco-file-system"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -66,14 +67,31 @@ export function CodeStudioEditor({
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
   const initializedRef = useRef(false)
 
-  // Initialize runner
+  // Initialize runner and Monaco file system
   useEffect(() => {
     codeRunnerRef.current = new UnifiedCodeRunner({ timeout: 30000 })
+    
+    // Inicializar sistema de arquivos virtual do Monaco
+    initializeMonacoFileSystem().then(() => {
+      // Sincronizar arquivos iniciais
+      if (localData.files.length > 0) {
+        syncFilesToMonacoFS(localData.files)
+      }
+    })
+    
     return () => {
       codeRunnerRef.current?.dispose()
       codeRunnerRef.current = null
+      disposeMonacoFileSystem()
     }
   }, [])
+  
+  // Sincronizar arquivos quando mudarem
+  useEffect(() => {
+    if (localData.files.length > 0) {
+      syncFilesToMonacoFS(localData.files)
+    }
+  }, [localData.files])
 
   // Sincronizar com mudanças externas apenas na primeira montagem
   useEffect(() => {
@@ -133,6 +151,8 @@ export function CodeStudioEditor({
       const file = draft.files.find(f => f.id === fileId)
       if (file) {
         file.content = content
+        // Atualizar também no sistema de arquivos virtual do Monaco
+        updateMonacoFile(file.path, content)
       }
     })
   }
@@ -408,6 +428,7 @@ export function CodeStudioEditor({
                       >
                         <MonacoCodeEditor
                           fileId={file.id}
+                          filePath={file.path}
                           value={file.content}
                           onChange={(content) => handleCodeChange(content, file.id)}
                           language={file.language}
@@ -462,9 +483,17 @@ export function CodeStudioEditor({
     setOutput('')
 
     try {
-      const result = await codeRunnerRef.current.run(
+      // Criar mapa de arquivos para suportar imports
+      const filesMap: Record<string, string> = {}
+      localData.files.forEach(file => {
+        filesMap[`/${file.path}`] = file.content
+      })
+
+      // Usar runWithFiles para suportar imports entre arquivos
+      const result = await codeRunnerRef.current.runWithFiles(
         fileToExecute.language,
-        fileToExecute.content
+        `/${fileToExecute.path}`,
+        filesMap
       )
 
       let output = ''
