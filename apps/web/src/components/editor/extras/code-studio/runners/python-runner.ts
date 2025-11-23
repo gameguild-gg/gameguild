@@ -1,4 +1,4 @@
-import type { CodeRunner, RunnerResult, RunnerOptions } from './types'
+import type { CodeRunner, RunnerResult, RunnerOptions, FileMap } from './types'
 import { loadCompressedScript } from './wasm-loader'
 
 // Pyodide module interface
@@ -9,6 +9,13 @@ interface PyodideModule {
   setStdin(options: { stdin: () => string | null }): void
   setInterruptBuffer(buffer: Int32Array): void
   loadPackagesFromImports?(code: string): Promise<void>
+  FS: {
+    writeFile(path: string, data: string | Uint8Array): void
+    readFile(path: string): Uint8Array
+    mkdir(path: string): void
+    rmdir(path: string): void
+    unlink(path: string): void
+  }
   globals: {
     get(key: string): any
   }
@@ -139,6 +146,115 @@ export class PythonRunner implements CodeRunner {
       const errorMsg = error instanceof Error ? error.message : String(error)
       
       // Add error to stderr if not already there
+      if (!stderr.includes(errorMsg)) {
+        stderr += (stderr ? '\n' : '') + errorMsg
+      }
+    }
+
+    const executionTime = performance.now() - startTime
+
+    return {
+      stdout: stdout.trimEnd(),
+      stderr: stderr.trimEnd(),
+      exitCode,
+      executionTime,
+    }
+  }
+
+  async executeWithFiles(entryPoint: string, files: FileMap, stdin?: string): Promise<RunnerResult> {
+    await new Promise(resolve => setTimeout(resolve, 5))
+    
+    const startTime = performance.now()
+    let stdout = ''
+    let stderr = ''
+    let exitCode = 0
+
+    try {
+      const pyodide = await getPyodide()
+      this.isInterrupted = false
+
+      // Redirect stdout/stderr
+      pyodide.setStdout({ 
+        batched: (text) => { stdout += text }
+      })
+      pyodide.setStderr({ 
+        batched: (text) => { stderr += text }
+      })
+
+      // Setup stdin if provided
+      if (stdin !== undefined) {
+        const lines = stdin.split('\n')
+        let lineIndex = 0
+        pyodide.setStdin({
+          stdin: () => {
+            if (lineIndex < lines.length) {
+              return lines[lineIndex++] + '\n'
+            }
+            return null
+          },
+        })
+      }
+
+      // Criar estrutura de diretórios e escrever todos os arquivos no FS do Pyodide
+      const createdDirs = new Set<string>()
+      
+      for (const [path, content] of Object.entries(files)) {
+        // Remover leading slash se houver
+        const cleanPath = path.startsWith('/') ? path.substring(1) : path
+        
+        // Criar diretórios necessários
+        const parts = cleanPath.split('/')
+        if (parts.length > 1) {
+          let currentPath = ''
+          for (let i = 0; i < parts.length - 1; i++) {
+            currentPath += (currentPath ? '/' : '') + parts[i]
+            if (!createdDirs.has(currentPath)) {
+              try {
+                pyodide.FS.mkdir(currentPath)
+                createdDirs.add(currentPath)
+              } catch {
+                // Diretório já existe
+              }
+            }
+          }
+        }
+        
+        // Escrever arquivo
+        try {
+          pyodide.FS.writeFile(cleanPath, content)
+        } catch (error) {
+          console.error(`Failed to write file ${cleanPath}:`, error)
+        }
+      }
+
+      // Obter código do entry point
+      const mainCode = files[entryPoint]
+      if (!mainCode) {
+        throw new Error(`Entry point not found: ${entryPoint}`)
+      }
+
+      // Load packages from imports if available
+      if (pyodide.loadPackagesFromImports) {
+        try {
+          await pyodide.loadPackagesFromImports(mainCode)
+        } catch {
+          // Ignore package loading errors
+        }
+      }
+
+      // Execute with timeout
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Execution timeout')), this.options.timeout)
+      })
+
+      const execPromise = pyodide.runPythonAsync(mainCode)
+
+      await Promise.race([execPromise, timeoutPromise])
+
+    } catch (error) {
+      exitCode = 1
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      
       if (!stderr.includes(errorMsg)) {
         stderr += (stderr ? '\n' : '') + errorMsg
       }
