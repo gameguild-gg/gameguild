@@ -222,7 +222,35 @@ export function CodeStudioEditor({
 
   const handleSelectDisplay = (displayId: string) => {
     const updates = LayoutOps.selectDisplay(localData, displayId)
-    handleDataChange(updates)
+    
+    // Ao trocar de display, atualizar activeFileId para refletir o estado do novo display
+    const newDisplay = localData.layout?.displays.find(d => d.id === displayId)
+    if (newDisplay) {
+      const editorPanel = newDisplay.panels.find(p => p.type === 'editor')
+      if (editorPanel?.editorInstance === 'unique') {
+        // Display com editor único: usar uniqueActiveFileId
+        handleDataChange({
+          ...updates,
+          activeFileId: newDisplay.uniqueActiveFileId
+        })
+      } else {
+        // Display com editor múltiplo: manter activeFileId global se estiver nas tabs abertas
+        let newActiveFileId = localData.activeFileId
+        if (localData.openTabs && localData.openTabs.length > 0) {
+          if (!localData.activeFileId || !localData.openTabs.includes(localData.activeFileId)) {
+            newActiveFileId = localData.openTabs[localData.openTabs.length - 1]
+          }
+        } else {
+          newActiveFileId = undefined
+        }
+        handleDataChange({
+          ...updates,
+          activeFileId: newActiveFileId
+        })
+      }
+    } else {
+      handleDataChange(updates)
+    }
   }
 
   const handleCreateDisplay = (name: string, aspectRatio: AspectRatio) => {
