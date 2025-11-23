@@ -64,6 +64,7 @@ export function CodeStudioEditor({
   const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
   const gridContainerRef = useRef<HTMLDivElement | null>(null)
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
+  const initializedRef = useRef(false)
 
   // Initialize runner
   useEffect(() => {
@@ -74,15 +75,22 @@ export function CodeStudioEditor({
     }
   }, [])
 
-  // Sincronizar com mudanças externas
+  // Sincronizar com mudanças externas apenas na primeira montagem
   useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true
+      return // Skip na primeira vez, pois useState já inicializou
+    }
+    
+    // Só sincronizar quando data mudar externamente (edição fora deste componente)
     setLocalData(draft => {
       if (!data.layout) {
         Object.assign(draft, data)
         draft.mode = data.mode || "execution"
         draft.layout = createDefaultLayout()
       } else {
-        return data
+        // Usar dados do JSON exatamente como salvos
+        Object.assign(draft, data)
       }
     })
   }, [data, setLocalData])
@@ -317,13 +325,14 @@ export function CodeStudioEditor({
         )
       
       case "editor":
-        const activeDisplay = getActiveDisplay()
+        // No preview, usar displayConfig passado; no editor, usar activeDisplay
+        const displayToUse = isPreview && displayConfig ? displayConfig : getActiveDisplay()
         const isUniqueInstance = panel.editorInstance === "unique"
         const currentOpenTabs = isUniqueInstance 
-          ? (activeDisplay?.uniqueOpenTabs || [])
+          ? (displayToUse?.uniqueOpenTabs || [])
           : (localData.openTabs || [])
         const currentActiveFileId = isUniqueInstance
-          ? activeDisplay?.uniqueActiveFileId
+          ? displayToUse?.uniqueActiveFileId
           : localData.activeFileId
         
         // No preview, verificar se há explorer no Display Base para permitir fechar tabs
@@ -459,7 +468,47 @@ export function CodeStudioEditor({
   }
 
   const handleSaveClick = () => {
-    onSave?.(localData)
+    // Garantir que activeDisplayId seja sempre display-1 ao salvar
+    const display1 = localData.layout?.displays.find(d => d.id === 'display-1')
+    
+    // Determinar o tipo de editor no display-1
+    const display1Editor = display1?.panels.find(p => p.type === 'editor')
+    const isDisplay1Unique = display1Editor?.editorInstance === 'unique'
+    
+    // Sincronizar activeFileId com a aba ativa apropriada
+    let syncedActiveFileId = localData.activeFileId
+    
+    if (isDisplay1Unique) {
+      // Editor único: usar uniqueActiveFileId do display-1
+      if (display1?.uniqueOpenTabs && display1.uniqueOpenTabs.length > 0) {
+        syncedActiveFileId = display1.uniqueActiveFileId
+      } else {
+        syncedActiveFileId = undefined
+      }
+    } else {
+      // Editor múltiplo: usar openTabs global
+      if (localData.openTabs && localData.openTabs.length > 0) {
+        // Se já tem activeFileId e está nas tabs abertas, manter
+        // Senão, usar a última tab aberta
+        if (localData.activeFileId && localData.openTabs.includes(localData.activeFileId)) {
+          syncedActiveFileId = localData.activeFileId
+        } else {
+          syncedActiveFileId = localData.openTabs[localData.openTabs.length - 1]
+        }
+      } else {
+        syncedActiveFileId = undefined
+      }
+    }
+    
+    const dataToSave = {
+      ...localData,
+      layout: localData.layout ? {
+        ...localData.layout,
+        activeDisplayId: 'display-1'
+      } : undefined,
+      activeFileId: syncedActiveFileId
+    }
+    onSave?.(dataToSave)
   }
 
   const handleCancelClick = () => {
