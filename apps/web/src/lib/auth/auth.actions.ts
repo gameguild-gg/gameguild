@@ -62,14 +62,15 @@ export async function signInWithGoogle() {
 
 export async function localSign(payload: { email: string; password: string }): Promise<SignInResponse> {
   try {
-    const response = await fetch(`${environment.apiBaseUrl}/api/auth/sign-in`, {
+    const baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
+    const response = await fetch(`${baseUrl}/api/auth/sign-in`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        Email: payload.email,
-        Password: payload.password,
+        email: payload.email,
+        password: payload.password,
       }),
     });
 
@@ -84,14 +85,15 @@ export async function localSign(payload: { email: string; password: string }): P
 
 export async function googleIdTokenSignIn(request: GoogleSignInRequest): Promise<SignInResponse> {
   try {
-    const response = await fetch(`${environment.apiBaseUrl}/api/auth/google`, {
+    const baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
+    const response = await fetch(`${baseUrl}/api/auth/google`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        IdToken: request.idToken,
-        TenantId: request.tenantId,
+        idToken: request.idToken,
+        tenantId: request.tenantId,
       }),
     });
 
@@ -110,16 +112,17 @@ export async function refreshAccessToken(refreshToken: string): Promise<RefreshT
       throw new Error('Refresh token is empty or null');
     }
 
+    const baseUrl = environment.apiBaseUrl.replace(/\/$/, '');
     console.log('🔄 Attempting token refresh:', {
-      url: `${environment.apiBaseUrl}/api/auth/refresh`,
+      url: `${baseUrl}/api/auth/refresh`,
       refreshTokenLength: refreshToken.length,
       refreshTokenPreview: `${refreshToken.substring(0, 10)}...`
     });
 
-    const requestBody = { RefreshToken: refreshToken.trim() };
-    console.log('🔄 Request body prepared:', { RefreshToken: `${refreshToken.substring(0, 10)}...` });
+    const requestBody = { refreshToken: refreshToken.trim() };
+    console.log('🔄 Request body prepared:', { refreshToken: `${refreshToken.substring(0, 10)}...` });
 
-    const response = await fetch(`${environment.apiBaseUrl}/api/auth/refresh`, {
+    const response = await fetch(`${baseUrl}/api/auth/refresh`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -138,7 +141,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<RefreshT
     if (!response.ok) {
       let errorDetails = '';
       let errorData: any = null;
-      
+
       try {
         const contentType = response.headers.get('content-type');
         if (contentType?.includes('application/json')) {
@@ -205,7 +208,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<RefreshT
       stack: error instanceof Error ? error.stack : undefined,
       refreshTokenPreview: refreshToken ? `${refreshToken.substring(0, 10)}...` : 'null'
     });
-    
+
     // Re-throw the error to be handled by the caller
     throw error;
   }
