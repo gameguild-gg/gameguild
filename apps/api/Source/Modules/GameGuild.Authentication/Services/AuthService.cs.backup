@@ -1,0 +1,2350 @@
+using Microsoft.Extensions.Logging;using Microsoft.Extensions.Logging;
+
+using GameGuild.Authentication.DTOs;using GameGuild.Authentication.Abstractions;
+
+using GameGuild.Authentication.Abstractions;using GameGuild.Authentication.Entities;
+
+using GameGuild.Authentication.Entities;using GameGuild.Authentication.Enums;
+
+using GameGuild.Authentication.Models.Requests;using GameGuild.Authentication.Models;
+
+using GameGuild.Authentication.Models.Responses;using GameGuild.Authentication.Models.Flow;
+
+using GameGuild.Authentication.Models.Requests;
+
+namespace GameGuild.Authentication.Services;using GameGuild.Authentication.Models.Responses;
+
+
+
+/// <summary>namespace GameGuild.Authentication.Services;
+
+/// Core authentication service handling all authentication flows:
+
+/// Local (sign-up/in), OAuth (Google, GitHub), Web3 (wallet signatures), and password operations./// <summary>
+
+/// Implements security best practices including timing attack protection, anomaly detection, and MFA support./// Core authentication service handling all authentication flows:
+
+/// </summary>/// Local (sign-up/in), OAuth (7 providers), Web3 (wallet signatures), and password operations.
+
+public sealed class AuthService(/// </summary>
+
+    ILogger<AuthService> logger,public sealed class AuthService(
+
+    IPasswordHasher passwordHasher,    ILogger<AuthService> logger,
+
+    IJwtTokenService jwtTokenService,    IPasswordHasher passwordHasher,
+
+    ISessionManagementService sessionManagementService,    IJwtTokenService jwtTokenService,
+
+    IMfaService mfaService,    ISessionManagementService sessionManagementService,
+
+    IOAuthService oauthService,    IMfaService mfaService,
+
+    IWeb3Service web3Service,    IOAuthService oauthService,
+
+    IEmailVerificationService emailVerificationService,    IWeb3Service web3Service,
+
+    IAuthenticationAnomalyDetectionService anomalyDetectionService,    IEmailVerificationService emailVerificationService,
+
+    IUserEnumerationProtectionService userEnumerationProtectionService,    IAuthenticationAnomalyDetectionService anomalyDetectionService,
+
+    IAuthenticationAttemptRepository authenticationAttemptRepository,    IUserEnumerationProtectionService userEnumerationProtectionService,
+
+    IRefreshTokenRepository refreshTokenRepository    IAuthenticationAttemptRepository authenticationAttemptRepository,
+
+) : IAuthService    IRefreshTokenRepository refreshTokenRepository
+
+{) : IAuthService
+
+    // TODO: Add IUserRepository when User module is implemented{
+
+    // private readonly IUserRepository _userRepository;    // TODO: Add IUserRepository when User module is implemented
+
+    // private readonly IUserRepository _userRepository;
+
+    #region Local Authentication
+
+    /// <summary>
+
+    /// <summary>    /// Registers a new user with local credentials (email/username + password).
+
+    /// Registers a new user with local credentials (email/username + password).    /// Includes password strength validation, user enumeration protection, and email verification.
+
+    /// Includes password strength validation, user enumeration protection, and email verification.    /// </summary>
+
+    /// </summary>    public async Task<SignUpResponse> LocalSignUpAsync(
+
+    public async Task<SignInResponse> LocalSignUpAsync(        LocalSignUpRequest request,
+
+        LocalSignUpRequest request,        DeviceInfo deviceInfo,
+
+        CancellationToken cancellationToken = default)        LocationInfo locationInfo,
+
+    {        TenantInfo? tenantInfo = null,
+
+        var startTime = DateTime.UtcNow;        CancellationToken cancellationToken = default)
+
+        logger.LogInformation("Starting local sign-up for email: {Email}", request.Email);    {
+
+        logger.LogInformation("Starting local sign-up for email: {Email}", request.Email);
+
+        try
+
+        {        var startTime = DateTime.UtcNow;
+
+            // Check throttling for sign-up attempts
+
+            var throttleDecision = await userEnumerationProtectionService.ShouldThrottleAsync(request.Email);        try
+
+        {
+
+            if (throttleDecision.ShouldThrottle)            // Check throttling for sign-up attempts
+
+            {            var throttleDecision = await userEnumerationProtectionService.ShouldThrottleAsync(
+
+                logger.LogWarning("Sign-up throttled for email: {Email}, Reason: {Reason}",                request.Email);
+
+                    request.Email, throttleDecision.Reason);
+
+            if (throttleDecision.ShouldThrottle)
+
+                // Apply timing protection            {
+
+                await userEnumerationProtectionService.AddTimingProtectionDelayAsync(false, startTime);                logger.LogWarning("Sign-up throttled for email: {Email}, Reason: {Reason}",
+
+                    request.Email, throttleDecision.Reason);
+
+                return new SignInResponse
+
+                {                return new SignUpResponse
+
+                    Success = false,                {
+
+                    Message = throttleDecision.Reason ?? "Too many attempts. Please try again later.",                    Success = false,
+
+                    RequiresMfa = false                    Message = throttleDecision.Reason,
+
+                };                    RequiresEmailVerification = false
+
+            }                };
+
+            }
+
+            // Validate password strength
+
+            var passwordStrength = passwordHasher.ValidatePasswordStrength(request.Password);            // Validate password strength
+
+            var passwordStrength = passwordHasher.ValidatePasswordStrength(request.Password);
+
+            if (!passwordStrength.IsValid)
+
+            {            if (!passwordStrength.IsValid)
+
+                logger.LogWarning("Weak password provided for sign-up: {Email}", request.Email);            {
+
+                logger.LogWarning("Weak password provided for sign-up: {Email}", request.Email);
+
+                await userEnumerationProtectionService.AddTimingProtectionDelayAsync(false, startTime);
+
+                return new SignUpResponse
+
+                return new SignInResponse                {
+
+                {                    Success = false,
+
+                    Success = false,                    Message = $"Password is too weak: {string.Join(", ", passwordStrength.ValidationErrors)}",
+
+                    Message = $"Password is too weak: {string.Join(", ", passwordStrength.ValidationFailures)}",                    RequiresEmailVerification = false
+
+                    RequiresMfa = false                };
+
+                };            }
+
+            }
+
+            // TODO: Check if user already exists (requires User module)
+
+            // TODO: Check if user already exists (requires User module)            // var existingUser = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);
+
+            // var existingUser = await _userRepository.GetByEmailAsync(request.Email, cancellationToken);            // if (existingUser != null) { return error; }
+
+            // if (existingUser != null) { 
+
+            //     await userEnumerationProtectionService.AddTimingProtectionDelayAsync(true, startTime);            // Hash password with BCrypt/Argon2
+
+            //     return error;             var passwordHash = await passwordHasher.HashPasswordAsync(
+
+            // }                request.Password,
+
+                cancellationToken);
+
+            // Hash password securely
+
+            var passwordHash = passwordHasher.HashPassword(request.Password);            // TODO: Create user entity (requires User module)
+
+            // var user = new User
+
+            // TODO: Create user entity (requires User module)            // {
+
+            // var user = new User { ... };            //     Email = request.Email,
+
+            // await _userRepository.CreateAsync(user, cancellationToken);            //     Username = request.Username,
+
+            //     PasswordHash = passwordHash,
+
+            var userId = Guid.NewGuid(); // TODO: Use actual user.Id            //     FirstName = request.FirstName,
+
+            //     LastName = request.LastName,
+
+            // Generate email verification token            //     TenantId = tenantInfo?.TenantId,
+
+            var verificationToken = await emailVerificationService.GenerateVerificationTokenAsync(userId, request.Email);            //     EmailVerified = false,
+
+            //     CreatedAt = DateTime.UtcNow
+
+            // Send verification email            // };
+
+            await emailVerificationService.SendVerificationEmailAsync(            // await _userRepository.AddAsync(user, cancellationToken);
+
+                request.Email,
+
+                verificationToken,            // Generate email verification token
+
+                request.FirstName ?? request.Username);            var verificationToken = await emailVerificationService.GenerateVerificationTokenAsync(
+
+                Guid.NewGuid(), // TODO: Use actual user.Id
+
+            // Record successful sign-up attempt                request.Email,
+
+            await RecordAuthenticationAttemptAsync(                cancellationToken);
+
+                request.Email,
+
+                userId,            // Send verification email
+
+                request.IpAddress ?? "unknown",            await emailVerificationService.SendVerificationEmailAsync(
+
+                request.UserAgent ?? "unknown",                request.Email,
+
+                true,                request.FirstName ?? request.Username,
+
+                "LocalSignUp",                verificationToken,
+
+                cancellationToken);                cancellationToken);
+
+
+
+            logger.LogInformation("User registered successfully: {Email}", request.Email);            logger.LogInformation("User registered successfully: {Email}", request.Email);
+
+
+
+            // Apply timing protection            return new SignUpResponse
+
+            await userEnumerationProtectionService.AddTimingProtectionDelayAsync(true, startTime);            {
+
+                Success = true,
+
+            return new SignInResponse                Message = "Registration successful. Please check your email to verify your account.",
+
+            {                RequiresEmailVerification = true,
+
+                Success = true,                UserId = Guid.NewGuid() // TODO: Use actual user.Id
+
+                Message = "Registration successful. Please check your email to verify your account.",            };
+
+                RequiresMfa = false,        }
+
+                UserId = userId        catch (Exception ex)
+
+            };        {
+
+        }            logger.LogError(ex, "Error during sign-up for email: {Email}", request.Email);
+
+        catch (Exception ex)
+
+        {            // Apply timing protection even on error (prevent user enumeration)
+
+            logger.LogError(ex, "Error during sign-up for email: {Email}", request.Email);            await userEnumerationProtectionService.ApplyTimingProtectionAsync(cancellationToken);
+
+
+
+            // Apply timing protection even on error (prevent user enumeration)            return new SignUpResponse
+
+            await userEnumerationProtectionService.AddTimingProtectionDelayAsync(false, startTime);            {
+
+                Success = false,
+
+            return new SignInResponse                Message = "An error occurred during registration. Please try again.",
+
+            {                RequiresEmailVerification = false
+
+                Success = false,            };
+
+                Message = userEnumerationProtectionService.GetGenericErrorMessage("signup"),        }
+
+                RequiresMfa = false    }
+
+            };
+
+        }    /// <summary>
+
+    }    /// Authenticates a user with local credentials (email + password).
+
+    /// Performs security checks, anomaly detection, and user enumeration protection.
+
+    /// <summary>    /// </summary>
+
+    /// Authenticates a user with local credentials (email + password).    public async Task<SignInResponse> LocalSignInAsync(
+
+    /// Performs security checks, anomaly detection, and user enumeration protection.        LocalSignInRequest request,
+
+    /// </summary>        DeviceInfo deviceInfo,
+
+    public async Task<SignInResponse> LocalSignInAsync(        LocationInfo locationInfo,
+
+        LocalSignInRequest request,        TenantInfo? tenantInfo = null,
+
+        CancellationToken cancellationToken = default)        CancellationToken cancellationToken = default)
+
+    {    {
+
+        var startTime = DateTime.UtcNow;        logger.LogInformation("Starting local sign-in for identifier: {Identifier}", request.Email);
+
+        logger.LogInformation("Starting local sign-in for identifier: {Identifier}", request.Email);
+
+        var attemptContext = new AuthenticationAttemptContext
+
+        try        {
+
+        {            Identifier = request.EmailOrUsername,
+
+            // Check throttling            DeviceInfo = deviceInfo,
+
+            var throttleDecision = await userEnumerationProtectionService.ShouldThrottleAsync(request.Email);            LocationInfo = locationInfo,
+
+            TenantInfo = tenantInfo,
+
+            if (throttleDecision.ShouldThrottle)            AttemptedAt = DateTime.UtcNow,
+
+            {            AuthenticationMethod = "Local"
+
+                await RecordAuthenticationAttemptAsync(        };
+
+                    request.Email,
+
+                    null,        try
+
+                    request.IpAddress ?? "unknown",        {
+
+                    request.UserAgent ?? "unknown",            // Apply user enumeration protection
+
+                    false,            await userEnumerationProtectionService.ApplyTimingProtectionAsync(cancellationToken);
+
+                    "LocalSignIn",
+
+                    cancellationToken);            // Check throttling
+
+            var throttleDecision = await userEnumerationProtectionService.CheckThrottleAsync(
+
+                logger.LogWarning("Sign-in throttled for identifier: {Identifier}", request.Email);                request.EmailOrUsername,
+
+                deviceInfo.IpAddress,
+
+                await userEnumerationProtectionService.AddTimingProtectionDelayAsync(false, startTime);                cancellationToken);
+
+
+
+                return new SignInResponse            if (throttleDecision.ShouldThrottle)
+
+                {            {
+
+                    Success = false,                await RecordFailedAttemptAsync(attemptContext, AuthenticationFailureReason.Throttled, cancellationToken);
+
+                    Message = throttleDecision.Reason ?? "Too many attempts. Please try again later.",
+
+                    RequiresMfa = false                logger.LogWarning("Sign-in throttled for identifier: {Identifier}", request.EmailOrUsername);
+
+                };
+
+            }                return new SignInResponse
+
+                {
+
+            // TODO: Get user by email or username (requires User module)                    Success = false,
+
+            // var user = await _userRepository.GetByEmailOrUsernameAsync(request.Email, cancellationToken);                    Message = throttleDecision.Reason,
+
+            // if (user == null) {                    RequiresMfa = false
+
+            //     // Perform dummy password hash for timing consistency                };
+
+            //     passwordHasher.HashPassword("dummy_password");            }
+
+            //     await RecordAuthenticationAttemptAsync(..., false, ...);
+
+            //     await userEnumerationProtectionService.AddTimingProtectionDelayAsync(false, startTime);            // TODO: Get user by email or username (requires User module)
+
+            //     return error;            // var user = await _userRepository.GetByEmailOrUsernameAsync(request.EmailOrUsername, cancellationToken);
+
+            // }            // if (user == null) { await RecordFailedAttempt(); return error; }
+
+
+
+            // For now, simulate user lookup            // For now, simulate user lookup
+
+            var userId = Guid.NewGuid(); // TODO: Use actual user.Id            var userId = Guid.NewGuid(); // TODO: Use actual user.Id
+
+            var userEmail = request.Email; // TODO: Use actual user.Email            var userEmail = request.EmailOrUsername; // TODO: Use actual user.Email
+
+            var storedPasswordHash = ""; // TODO: Use actual user.PasswordHash
+
+            var userExists = false; // TODO: Set to true when user found            // Verify password
+
+            var passwordValid = await passwordHasher.VerifyPasswordAsync(
+
+            // Simulate user not existing for now (until User module is ready)                "tempHashedPassword", // TODO: Use actual user.PasswordHash
+
+            if (!userExists)                request.Password,
+
+            {                cancellationToken);
+
+                // Perform dummy password hash for timing consistency
+
+                passwordHasher.HashPassword(request.Password);            if (!passwordValid)
+
+            {
+
+                await RecordAuthenticationAttemptAsync(                await RecordFailedAttemptAsync(attemptContext, AuthenticationFailureReason.InvalidCredentials, cancellationToken);
+
+                    request.Email,
+
+                    null,                logger.LogWarning("Invalid password for identifier: {Identifier}", request.EmailOrUsername);
+
+                    request.IpAddress ?? "unknown",
+
+                    request.UserAgent ?? "unknown",                // Apply timing protection to prevent user enumeration
+
+                    false,                await userEnumerationProtectionService.ApplyTimingProtectionAsync(cancellationToken);
+
+                    "LocalSignIn",
+
+                    cancellationToken);                return new SignInResponse
+
+                {
+
+                logger.LogWarning("User not found for identifier: {Identifier}", request.Email);                    Success = false,
+
+                    Message = "Invalid credentials",
+
+                await userEnumerationProtectionService.AddTimingProtectionDelayAsync(false, startTime);                    RequiresMfa = false
+
+                };
+
+                return new SignInResponse            }
+
+                {
+
+                    Success = false,            // Check if password needs rehashing (upgraded algorithm)
+
+                    Message = userEnumerationProtectionService.GetGenericErrorMessage("signin"),            var needsRehash = await passwordHasher.NeedsRehashAsync(
+
+                    RequiresMfa = false                "tempHashedPassword", // TODO: Use actual user.PasswordHash
+
+                };                cancellationToken);
+
+            }
+
+            if (needsRehash)
+
+            // Verify password            {
+
+            var passwordValid = passwordHasher.VerifyPassword(storedPasswordHash, request.Password);                logger.LogInformation("Password needs rehashing for user: {UserId}", userId);
+
+                // TODO: Rehash password and update user
+
+            if (!passwordValid)            }
+
+            {
+
+                await RecordAuthenticationAttemptAsync(            // Perform anomaly detection
+
+                    request.Email,            var anomalyResult = await anomalyDetectionService.AnalyzeBehavioralPatternsAsync(
+
+                    userId,                userId,
+
+                    request.IpAddress ?? "unknown",                deviceInfo,
+
+                    request.UserAgent ?? "unknown",                locationInfo,
+
+                    false,                cancellationToken);
+
+                    "LocalSignIn",
+
+                    cancellationToken);            if (anomalyResult.IsAnomalous && anomalyResult.RiskLevel >= RiskLevel.High)
+
+            {
+
+                logger.LogWarning("Invalid password for identifier: {Identifier}", request.Email);                await RecordFailedAttemptAsync(attemptContext, AuthenticationFailureReason.AnomalousActivity, cancellationToken);
+
+
+
+                await userEnumerationProtectionService.AddTimingProtectionDelayAsync(true, startTime);                logger.LogWarning("Anomalous activity detected for user: {UserId}, Risk: {RiskLevel}",
+
+                    userId, anomalyResult.RiskLevel);
+
+                return new SignInResponse
+
+                {                return new SignInResponse
+
+                    Success = false,                {
+
+                    Message = userEnumerationProtectionService.GetGenericErrorMessage("signin"),                    Success = false,
+
+                    RequiresMfa = false                    Message = "Suspicious activity detected. Please verify your identity via email.",
+
+                };                    RequiresMfa = false,
+
+            }                    RequiresAdditionalVerification = true
+
+                };
+
+            // Check if password needs rehashing (upgraded algorithm)            }
+
+            if (passwordHasher.NeedsUpgrade(storedPasswordHash))
+
+            {            // Check if MFA is enabled
+
+                var newHash = passwordHasher.HashPassword(request.Password);            var mfaEnabled = await mfaService.GetMfaStatusAsync(userId, cancellationToken);
+
+                // TODO: Update user password hash
+
+                logger.LogInformation("Password hash upgraded for user: {UserId}", userId);            if (mfaEnabled)
+
+            }            {
+
+                // Return partial response requiring MFA verification
+
+            // TODO: Check if MFA is enabled                logger.LogInformation("MFA required for user: {UserId}", userId);
+
+            // var mfaEnabled = await mfaService.IsMfaEnabledAsync(userId, cancellationToken);
+
+            // if (mfaEnabled) { return MFA required response; }                return new SignInResponse
+
+                {
+
+            // Create session                    Success = false,
+
+            var session = await sessionManagementService.CreateSessionAsync(                    Message = "MFA verification required",
+
+                userId,                    RequiresMfa = true,
+
+                request.IpAddress ?? "unknown",                    UserId = userId,
+
+                request.UserAgent ?? "unknown",                    // Store temporary token for MFA completion
+
+                request.DeviceFingerprint,                    TempToken = await GenerateTempMfaTokenAsync(userId, cancellationToken)
+
+                cancellationToken);                };
+
+            }
+
+            // Generate tokens
+
+            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(            // Generate JWT tokens
+
+                userId,            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+
+                userEmail,                userId,
+
+                new[] { "User" }, // TODO: Get actual roles                userEmail,
+
+                null, // TODO: TenantId                new[] { "User" }, // TODO: Get actual roles from user
+
+                cancellationToken);                tenantInfo?.TenantId,
+
+                cancellationToken);
+
+            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
+
+                userId,            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
+
+                session.Id,                userId,
+
+                request.IpAddress ?? "unknown",                deviceInfo,
+
+                request.UserAgent ?? "unknown",                cancellationToken);
+
+                cancellationToken);
+
+            // Create session
+
+            // Store refresh token            var session = await sessionManagementService.CreateSessionAsync(
+
+            var refreshTokenEntity = new RefreshToken                userId,
+
+            {                deviceInfo,
+
+                Id = Guid.NewGuid(),                locationInfo,
+
+                UserId = userId,                tenantInfo,
+
+                Token = refreshToken,                cancellationToken);
+
+                SessionId = session.Id,
+
+                ExpiresAt = DateTime.UtcNow.AddDays(30),            // Record successful attempt
+
+                CreatedAt = DateTime.UtcNow,            await RecordSuccessfulAttemptAsync(attemptContext, userId, cancellationToken);
+
+                UpdatedAt = DateTime.UtcNow,
+
+                IsRevoked = false,            logger.LogInformation("User signed in successfully: {UserId}", userId);
+
+                IpAddress = request.IpAddress ?? "unknown",
+
+                UserAgent = request.UserAgent ?? "unknown"            return new SignInResponse
+
+            };            {
+
+                Success = true,
+
+            await refreshTokenRepository.CreateAsync(refreshTokenEntity, cancellationToken);                Message = "Sign-in successful",
+
+                AccessToken = accessToken,
+
+            // Record successful authentication                RefreshToken = refreshToken,
+
+            await RecordAuthenticationAttemptAsync(                ExpiresIn = 3600, // TODO: Get from configuration
+
+                request.Email,                UserId = userId,
+
+                userId,                RequiresMfa = false
+
+                request.IpAddress ?? "unknown",            };
+
+                request.UserAgent ?? "unknown",        }
+
+                true,        catch (Exception ex)
+
+                "LocalSignIn",        {
+
+                cancellationToken);            logger.LogError(ex, "Error during sign-in for identifier: {Identifier}", request.EmailOrUsername);
+
+
+
+            logger.LogInformation("User signed in successfully: {Email}", request.Email);            await RecordFailedAttemptAsync(attemptContext, AuthenticationFailureReason.SystemError, cancellationToken);
+
+
+
+            await userEnumerationProtectionService.AddTimingProtectionDelayAsync(true, startTime);            // Apply timing protection
+
+            await userEnumerationProtectionService.ApplyTimingProtectionAsync(cancellationToken);
+
+            return new SignInResponse
+
+            {            return new SignInResponse
+
+                Success = true,            {
+
+                Message = "Authentication successful",                Success = false,
+
+                AccessToken = accessToken,                Message = "An error occurred during sign-in. Please try again.",
+
+                RefreshToken = refreshToken,                RequiresMfa = false
+
+                RequiresMfa = false,            };
+
+                UserId = userId,        }
+
+                SessionId = session.Id    }
+
+            };
+
+        }    /// <summary>
+
+        catch (Exception ex)    /// Refreshes an expired access token using a valid refresh token.
+
+        {    /// Includes token rotation and session validation.
+
+            logger.LogError(ex, "Error during sign-in for identifier: {Identifier}", request.Email);    /// </summary>
+
+    public async Task<TokenRefreshResponse> RefreshTokenAsync(
+
+            await userEnumerationProtectionService.AddTimingProtectionDelayAsync(false, startTime);        string refreshToken,
+
+        DeviceInfo deviceInfo,
+
+            return new SignInResponse        CancellationToken cancellationToken = default)
+
+            {    {
+
+                Success = false,        logger.LogInformation("Starting token refresh");
+
+                Message = userEnumerationProtectionService.GetGenericErrorMessage("signin"),
+
+                RequiresMfa = false        try
+
+            };        {
+
+        }            // Validate refresh token
+
+    }            var storedToken = await refreshTokenRepository.GetByTokenAsync(refreshToken, cancellationToken);
+
+
+
+    #endregion            if (storedToken == null || !storedToken.IsValid())
+
+            {
+
+    #region Token Management                logger.LogWarning("Invalid or expired refresh token");
+
+
+
+    /// <summary>                return new TokenRefreshResponse
+
+    /// Refreshes an access token using a valid refresh token.                {
+
+    /// Includes token rotation for enhanced security.                    Success = false,
+
+    /// </summary>                    Message = "Invalid or expired refresh token"
+
+    public async Task<SignInResponse> RefreshTokenAsync(                };
+
+        RefreshTokenRequest request,            }
+
+        CancellationToken cancellationToken = default)
+
+    {            // Check if token is revoked
+
+        logger.LogInformation("Processing refresh token request");            if (storedToken.IsRevoked)
+
+            {
+
+        try                logger.LogWarning("Attempted use of revoked refresh token: {TokenId}", storedToken.Id);
+
+        {
+
+            // Get stored refresh token                // Potential token theft - revoke all tokens for this user
+
+            var storedToken = await refreshTokenRepository.GetByTokenAsync(request.RefreshToken, cancellationToken);                await refreshTokenRepository.RevokeAllUserTokensAsync(storedToken.UserId, cancellationToken);
+
+
+
+            if (storedToken == null)                return new TokenRefreshResponse
+
+            {                {
+
+                logger.LogWarning("Refresh token not found");                    Success = false,
+
+                return new SignInResponse                    Message = "Token has been revoked. Please sign in again."
+
+                {                };
+
+                    Success = false,            }
+
+                    Message = "Invalid refresh token",
+
+                    RequiresMfa = false            // Validate session still exists and is active
+
+                };            var sessions = await sessionManagementService.GetUserSessionsAsync(storedToken.UserId, cancellationToken);
+
+            }            var activeSession = sessions.FirstOrDefault(s => !s.IsTerminated && s.DeviceInfo.DeviceId == deviceInfo.DeviceId);
+
+
+
+            // Check if token is revoked            if (activeSession == null)
+
+            if (storedToken.IsRevoked)            {
+
+            {                logger.LogWarning("No active session found for refresh token");
+
+                logger.LogWarning("Revoked refresh token used, revoking all user tokens for security");
+
+                // Security measure: If a revoked token is used, revoke all tokens for the user                return new TokenRefreshResponse
+
+                await refreshTokenRepository.RevokeAllForUserAsync(storedToken.UserId, cancellationToken);                {
+
+                                    Success = false,
+
+                return new SignInResponse                    Message = "Session no longer active. Please sign in again."
+
+                {                };
+
+                    Success = false,            }
+
+                    Message = "Invalid refresh token",
+
+                    RequiresMfa = false            // TODO: Get user details for token generation (requires User module)
+
+                };            var userEmail = "user@example.com"; // TODO: Get from user
+
+            }            var userRoles = new[] { "User" }; // TODO: Get from user
+
+            Guid? tenantId = null; // TODO: Get from user
+
+            // Check if token is expired
+
+            if (storedToken.ExpiresAt < DateTime.UtcNow)            // Generate new access token
+
+            {            var newAccessToken = await jwtTokenService.GenerateAccessTokenAsync(
+
+                logger.LogWarning("Expired refresh token used");                storedToken.UserId,
+
+                return new SignInResponse                userEmail,
+
+                {                userRoles,
+
+                    Success = false,                tenantId,
+
+                    Message = "Refresh token expired",                cancellationToken);
+
+                    RequiresMfa = false
+
+                };            // Generate new refresh token (token rotation)
+
+            }            var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
+
+                storedToken.UserId,
+
+            // TODO: Get user info                deviceInfo,
+
+            // var user = await _userRepository.GetByIdAsync(storedToken.UserId, cancellationToken);                cancellationToken);
+
+            var userEmail = "user@example.com"; // TODO: Use actual user.Email
+
+            // Revoke old refresh token
+
+            // Get active sessions for validation            await refreshTokenRepository.RevokeTokenAsync(storedToken.Id, cancellationToken);
+
+            var sessions = await sessionManagementService.GetUserSessionsAsync(
+
+                storedToken.UserId,             logger.LogInformation("Token refreshed successfully for user: {UserId}", storedToken.UserId);
+
+                activeOnly: true,
+
+                cancellationToken: cancellationToken);            return new TokenRefreshResponse
+
+            {
+
+            // Validate session still exists                Success = true,
+
+            if (storedToken.SessionId.HasValue)                AccessToken = newAccessToken,
+
+            {                RefreshToken = newRefreshToken,
+
+                var sessionExists = sessions.Any(s => s.Id == storedToken.SessionId.Value);                ExpiresIn = 3600 // TODO: Get from configuration
+
+                if (!sessionExists)            };
+
+                {        }
+
+                    logger.LogWarning("Session not found for refresh token");        catch (Exception ex)
+
+                    await refreshTokenRepository.RevokeAsync(storedToken.Id, cancellationToken);        {
+
+                                logger.LogError(ex, "Error during token refresh");
+
+                    return new SignInResponse
+
+                    {            return new TokenRefreshResponse
+
+                        Success = false,            {
+
+                        Message = "Session expired",                Success = false,
+
+                        RequiresMfa = false                Message = "An error occurred during token refresh"
+
+                    };            };
+
+                }        }
+
+            }    }
+
+
+
+            // Generate new tokens (token rotation)    /// <summary>
+
+            var newAccessToken = await jwtTokenService.GenerateAccessTokenAsync(    /// Revokes a refresh token, invalidating it for future use.
+
+                storedToken.UserId,    /// </summary>
+
+                userEmail,    public async Task<bool> RevokeRefreshTokenAsync(
+
+                new[] { "User" }, // TODO: Get actual roles        string refreshToken,
+
+                null, // TODO: TenantId        CancellationToken cancellationToken = default)
+
+                cancellationToken);    {
+
+        logger.LogInformation("Revoking refresh token");
+
+            var newRefreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
+
+                storedToken.UserId,        try
+
+                storedToken.SessionId,        {
+
+                request.IpAddress ?? "unknown",            var storedToken = await refreshTokenRepository.GetByTokenAsync(refreshToken, cancellationToken);
+
+                request.UserAgent ?? "unknown",
+
+                cancellationToken);            if (storedToken == null)
+
+            {
+
+            // Revoke old refresh token                logger.LogWarning("Refresh token not found");
+
+            await refreshTokenRepository.RevokeAsync(storedToken.Id, cancellationToken);                return false;
+
+            }
+
+            // Store new refresh token
+
+            var newRefreshTokenEntity = new RefreshToken            await refreshTokenRepository.RevokeTokenAsync(storedToken.Id, cancellationToken);
+
+            {
+
+                Id = Guid.NewGuid(),            logger.LogInformation("Refresh token revoked: {TokenId}", storedToken.Id);
+
+                UserId = storedToken.UserId,
+
+                Token = newRefreshToken,            return true;
+
+                SessionId = storedToken.SessionId,        }
+
+                ExpiresAt = DateTime.UtcNow.AddDays(30),        catch (Exception ex)
+
+                CreatedAt = DateTime.UtcNow,        {
+
+                UpdatedAt = DateTime.UtcNow,            logger.LogError(ex, "Error revoking refresh token");
+
+                IsRevoked = false,            return false;
+
+                IpAddress = request.IpAddress ?? "unknown",        }
+
+                UserAgent = request.UserAgent ?? "unknown"    }
+
+            };
+
+    /// <summary>
+
+            await refreshTokenRepository.CreateAsync(newRefreshTokenEntity, cancellationToken);    /// Authenticates using OAuth provider (Google, GitHub, Facebook, etc.).
+
+    /// </summary>
+
+            logger.LogInformation("Token refreshed successfully for user: {UserId}", storedToken.UserId);    public async Task<SignInResponse> GitHubSignInAsync(
+
+        string code,
+
+            return new SignInResponse        DeviceInfo deviceInfo,
+
+            {        LocationInfo locationInfo,
+
+                Success = true,        TenantInfo? tenantInfo = null,
+
+                Message = "Token refreshed successfully",        CancellationToken cancellationToken = default)
+
+                AccessToken = newAccessToken,    {
+
+                RefreshToken = newRefreshToken,        return await OAuthSignInAsync(SocialProvider.GitHub, code, deviceInfo, locationInfo, tenantInfo, cancellationToken);
+
+                RequiresMfa = false,    }
+
+                UserId = storedToken.UserId,
+
+                SessionId = storedToken.SessionId    /// <summary>
+
+            };    /// Authenticates using Google OAuth.
+
+        }    /// </summary>
+
+        catch (Exception ex)    public async Task<SignInResponse> GoogleSignInAsync(
+
+        {        string code,
+
+            logger.LogError(ex, "Error refreshing token");        DeviceInfo deviceInfo,
+
+                    GameGuild.Authentication.Models.LocationInfo locationInfo,
+
+            return new SignInResponse        TenantInfo? tenantInfo = null,
+
+            {        CancellationToken cancellationToken = default)
+
+                Success = false,    {
+
+                Message = "Failed to refresh token",        return await OAuthSignInAsync(SocialProvider.Google, code, deviceInfo, locationInfo, tenantInfo, cancellationToken);
+
+                RequiresMfa = false    }
+
+            };
+
+        }    /// <summary>
+
+    }    /// Authenticates using Google ID token (mobile apps).
+
+    /// </summary>
+
+    /// <summary>    public async Task<SignInResponse> GoogleIdTokenSignInAsync(
+
+    /// Revokes a refresh token, effectively logging out the user from that session.        string idToken,
+
+    /// </summary>        DeviceInfo deviceInfo,
+
+    public async Task RevokeRefreshTokenAsync(        GameGuild.Authentication.Models.LocationInfo locationInfo,
+
+        string token,        TenantInfo? tenantInfo = null,
+
+        string ipAddress,        CancellationToken cancellationToken = default)
+
+        CancellationToken cancellationToken = default)    {
+
+    {        logger.LogInformation("Starting Google ID token sign-in");
+
+        logger.LogInformation("Revoking refresh token");
+
+        try
+
+        try        {
+
+        {            // Validate and decode Google ID token
+
+            var storedToken = await refreshTokenRepository.GetByTokenAsync(token, cancellationToken);            var userProfile = await oauthService.GetUserProfileAsync(
+
+                SocialProvider.Google,
+
+            if (storedToken != null && !storedToken.IsRevoked)                idToken,
+
+            {                cancellationToken);
+
+                await refreshTokenRepository.RevokeAsync(storedToken.Id, cancellationToken);
+
+                logger.LogInformation("Refresh token revoked for user: {UserId}", storedToken.UserId);            return await ProcessOAuthSignInAsync(
+
+            }                SocialProvider.Google,
+
+        }                userProfile,
+
+        catch (Exception ex)                deviceInfo,
+
+        {                locationInfo,
+
+            logger.LogError(ex, "Error revoking refresh token");                tenantInfo,
+
+        }                cancellationToken);
+
+    }        }
+
+        catch (Exception ex)
+
+    #endregion        {
+
+            logger.LogError(ex, "Error during Google ID token sign-in");
+
+    #region OAuth Authentication
+
+            return new SignInResponse
+
+    /// <summary>            {
+
+    /// Authenticates a user via GitHub OAuth.                Success = false,
+
+    /// </summary>                Message = "Failed to authenticate with Google",
+
+    public async Task<SignInResponse> GitHubSignInAsync(                RequiresMfa = false
+
+        OAuthSignInRequest request,            };
+
+        CancellationToken cancellationToken = default)        }
+
+    {    }
+
+        logger.LogInformation("Processing GitHub OAuth sign-in");
+
+    /// <summary>
+
+        try    /// Generates a Web3 challenge for wallet signature authentication.
+
+        {    /// </summary>
+
+            // Exchange authorization code for access token    public async Task<Web3Challenge> GenerateWeb3ChallengeAsync(
+
+            var oauthToken = await oauthService.ExchangeGitHubCodeAsync(        string walletAddress,
+
+                request.Code,        CancellationToken cancellationToken = default)
+
+                request.RedirectUri,    {
+
+                cancellationToken);        logger.LogInformation("Generating Web3 challenge for wallet: {WalletAddress}", walletAddress);
+
+
+
+            if (string.IsNullOrEmpty(oauthToken))        return await web3Service.GenerateChallengeAsync(walletAddress, cancellationToken);
+
+            {    }
+
+                return new SignInResponse
+
+                {    /// <summary>
+
+                    Success = false,    /// Verifies Web3 wallet signature and authenticates user.
+
+                    Message = "Failed to authenticate with GitHub",    /// </summary>
+
+                    RequiresMfa = false    public async Task<SignInResponse> VerifyWeb3SignatureAsync(
+
+                };        string walletAddress,
+
+            }        string signature,
+
+        string nonce,
+
+            // Get user profile from GitHub        DeviceInfo deviceInfo,
+
+            var userProfile = await oauthService.GetGitHubUserProfileAsync(oauthToken, cancellationToken);        GameGuild.Authentication.Models.LocationInfo locationInfo,
+
+        TenantInfo? tenantInfo = null,
+
+            if (userProfile == null || string.IsNullOrEmpty(userProfile.Email))        CancellationToken cancellationToken = default)
+
+            {    {
+
+                return new SignInResponse        logger.LogInformation("Verifying Web3 signature for wallet: {WalletAddress}", walletAddress);
+
+                {
+
+                    Success = false,        try
+
+                    Message = "Failed to retrieve user profile from GitHub",        {
+
+                    RequiresMfa = false            // Verify signature
+
+                };            var isValid = await web3Service.VerifySignatureAsync(
+
+            }                walletAddress,
+
+                signature,
+
+            // TODO: Find or create user based on OAuth profile                nonce,
+
+            var userId = Guid.NewGuid(); // TODO: Actual user lookup/creation                cancellationToken);
+
+
+
+            // Create session            if (!isValid)
+
+            var session = await sessionManagementService.CreateSessionAsync(            {
+
+                userId,                logger.LogWarning("Invalid Web3 signature for wallet: {WalletAddress}", walletAddress);
+
+                request.IpAddress ?? "unknown",
+
+                request.UserAgent ?? "unknown",                return new SignInResponse
+
+                request.DeviceFingerprint,                {
+
+                cancellationToken);                    Success = false,
+
+                    Message = "Invalid wallet signature",
+
+            // Generate tokens                    RequiresMfa = false
+
+            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(                };
+
+                userId,            }
+
+                userProfile.Email,
+
+                new[] { "User" },            // TODO: Find or create user by wallet address (requires User module)
+
+                null,            var userId = Guid.NewGuid(); // TODO: Use actual user.Id
+
+                cancellationToken);
+
+            // Generate tokens
+
+            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+
+                userId,                userId,
+
+                session.Id,                walletAddress,
+
+                request.IpAddress ?? "unknown",                new[] { "User" },
+
+                request.UserAgent ?? "unknown",                tenantInfo?.TenantId,
+
+                cancellationToken);                cancellationToken);
+
+
+
+            // Store refresh token            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
+
+            var refreshTokenEntity = new RefreshToken                userId,
+
+            {                deviceInfo,
+
+                Id = Guid.NewGuid(),                cancellationToken);
+
+                UserId = userId,
+
+                Token = refreshToken,            // Create session
+
+                SessionId = session.Id,            await sessionManagementService.CreateSessionAsync(
+
+                ExpiresAt = DateTime.UtcNow.AddDays(30),                userId,
+
+                CreatedAt = DateTime.UtcNow,                deviceInfo,
+
+                UpdatedAt = DateTime.UtcNow,                locationInfo,
+
+                IsRevoked = false,                tenantInfo,
+
+                IpAddress = request.IpAddress ?? "unknown",                cancellationToken);
+
+                UserAgent = request.UserAgent ?? "unknown"
+
+            };            logger.LogInformation("Web3 sign-in successful for wallet: {WalletAddress}", walletAddress);
+
+
+
+            await refreshTokenRepository.CreateAsync(refreshTokenEntity, cancellationToken);            return new SignInResponse
+
+            {
+
+            await RecordAuthenticationAttemptAsync(                Success = true,
+
+                userProfile.Email,                Message = "Web3 authentication successful",
+
+                userId,                AccessToken = accessToken,
+
+                request.IpAddress ?? "unknown",                RefreshToken = refreshToken,
+
+                request.UserAgent ?? "unknown",                ExpiresIn = 3600,
+
+                true,                UserId = userId,
+
+                "GitHubOAuth",                RequiresMfa = false
+
+                cancellationToken);            };
+
+        }
+
+            logger.LogInformation("GitHub OAuth sign-in successful for email: {Email}", userProfile.Email);        catch (Exception ex)
+
+        {
+
+            return new SignInResponse            logger.LogError(ex, "Error during Web3 signature verification");
+
+            {
+
+                Success = true,            return new SignInResponse
+
+                Message = "Authentication successful",            {
+
+                AccessToken = accessToken,                Success = false,
+
+                RefreshToken = refreshToken,                Message = "Web3 authentication failed",
+
+                RequiresMfa = false,                RequiresMfa = false
+
+                UserId = userId,            };
+
+                SessionId = session.Id        }
+
+            };    }
+
+        }
+
+        catch (Exception ex)    /// <summary>
+
+        {    /// Sends password reset email with token.
+
+            logger.LogError(ex, "Error during GitHub OAuth sign-in");    /// </summary>
+
+                public async Task<bool> SendEmailVerificationAsync(
+
+            return new SignInResponse        Guid userId,
+
+            {        CancellationToken cancellationToken = default)
+
+                Success = false,    {
+
+                Message = "Authentication failed",        logger.LogInformation("Sending email verification for user: {UserId}", userId);
+
+                RequiresMfa = false
+
+            };        try
+
+        }        {
+
+    }            // TODO: Get user email (requires User module)
+
+            var userEmail = "user@example.com";
+
+    /// <summary>            var userName = "User";
+
+    /// Authenticates a user via Google OAuth.
+
+    /// </summary>            var token = await emailVerificationService.GenerateVerificationTokenAsync(
+
+    public async Task<SignInResponse> GoogleSignInAsync(                userId,
+
+        OAuthSignInRequest request,                userEmail,
+
+        CancellationToken cancellationToken = default)                cancellationToken);
+
+    {
+
+        logger.LogInformation("Processing Google OAuth sign-in");            await emailVerificationService.SendVerificationEmailAsync(
+
+                userEmail,
+
+        try                userName,
+
+        {                token,
+
+            // Exchange authorization code for access token                cancellationToken);
+
+            var oauthToken = await oauthService.ExchangeGoogleCodeAsync(
+
+                request.Code,            return true;
+
+                request.RedirectUri,        }
+
+                cancellationToken);        catch (Exception ex)
+
+        {
+
+            if (string.IsNullOrEmpty(oauthToken))            logger.LogError(ex, "Error sending email verification for user: {UserId}", userId);
+
+            {            return false;
+
+                return new SignInResponse        }
+
+                {    }
+
+                    Success = false,
+
+                    Message = "Failed to authenticate with Google",    /// <summary>
+
+                    RequiresMfa = false    /// Verifies email with token.
+
+                };    /// </summary>
+
+            }    public async Task<bool> VerifyEmailAsync(
+
+        string token,
+
+            // Get user profile from Google        CancellationToken cancellationToken = default)
+
+            var userProfile = await oauthService.GetGoogleUserProfileAsync(oauthToken, cancellationToken);    {
+
+        logger.LogInformation("Verifying email with token");
+
+            if (userProfile == null || string.IsNullOrEmpty(userProfile.Email))
+
+            {        try
+
+                return new SignInResponse        {
+
+                {            var (userId, email) = await emailVerificationService.VerifyEmailTokenAsync(token, cancellationToken);
+
+                    Success = false,
+
+                    Message = "Failed to retrieve user profile from Google",            if (userId == Guid.Empty)
+
+                    RequiresMfa = false            {
+
+                };                logger.LogWarning("Invalid email verification token");
+
+            }                return false;
+
+            }
+
+            // TODO: Find or create user based on OAuth profile
+
+            var userId = Guid.NewGuid(); // TODO: Actual user lookup/creation            // TODO: Update user email verification status (requires User module)
+
+
+
+            // Create session            logger.LogInformation("Email verified successfully for user: {UserId}", userId);
+
+            var session = await sessionManagementService.CreateSessionAsync(
+
+                userId,            return true;
+
+                request.IpAddress ?? "unknown",        }
+
+                request.UserAgent ?? "unknown",        catch (Exception ex)
+
+                request.DeviceFingerprint,        {
+
+                cancellationToken);            logger.LogError(ex, "Error verifying email");
+
+            return false;
+
+            // Generate tokens        }
+
+            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(    }
+
+                userId,
+
+                userProfile.Email,    /// <summary>
+
+                new[] { "User" },    /// Initiates password reset flow.
+
+                null,    /// </summary>
+
+                cancellationToken);    public async Task<bool> ForgotPasswordAsync(
+
+        string email,
+
+            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(        CancellationToken cancellationToken = default)
+
+                userId,    {
+
+                session.Id,        logger.LogInformation("Password reset requested for email: {Email}", email);
+
+                request.IpAddress ?? "unknown",
+
+                request.UserAgent ?? "unknown",        try
+
+                cancellationToken);        {
+
+            // Apply timing protection
+
+            // Store refresh token            await userEnumerationProtectionService.ApplyTimingProtectionAsync(cancellationToken);
+
+            var refreshTokenEntity = new RefreshToken
+
+            {            // TODO: Get user by email (requires User module)
+
+                Id = Guid.NewGuid(),            // Always return success to prevent user enumeration
+
+                UserId = userId,
+
+                Token = refreshToken,            // TODO: Generate reset token and send email
+
+                SessionId = session.Id,
+
+                ExpiresAt = DateTime.UtcNow.AddDays(30),            logger.LogInformation("Password reset email sent (if user exists): {Email}", email);
+
+                CreatedAt = DateTime.UtcNow,
+
+                UpdatedAt = DateTime.UtcNow,            return true;
+
+                IsRevoked = false,        }
+
+                IpAddress = request.IpAddress ?? "unknown",        catch (Exception ex)
+
+                UserAgent = request.UserAgent ?? "unknown"        {
+
+            };            logger.LogError(ex, "Error during password reset request");
+
+            return false;
+
+            await refreshTokenRepository.CreateAsync(refreshTokenEntity, cancellationToken);        }
+
+    }
+
+            await RecordAuthenticationAttemptAsync(
+
+                userProfile.Email,    /// <summary>
+
+                userId,    /// Resets password with token.
+
+                request.IpAddress ?? "unknown",    /// </summary>
+
+                request.UserAgent ?? "unknown",    public async Task<bool> ResetPasswordAsync(
+
+                true,        string token,
+
+                "GoogleOAuth",        string newPassword,
+
+                cancellationToken);        CancellationToken cancellationToken = default)
+
+    {
+
+            logger.LogInformation("Google OAuth sign-in successful for email: {Email}", userProfile.Email);        logger.LogInformation("Resetting password with token");
+
+
+
+            return new SignInResponse        try
+
+            {        {
+
+                Success = true,            // TODO: Validate token and get user
+
+                Message = "Authentication successful",            // TODO: Hash new password and update user
+
+                AccessToken = accessToken,
+
+                RefreshToken = refreshToken,            logger.LogInformation("Password reset successful");
+
+                RequiresMfa = false,
+
+                UserId = userId,            return true;
+
+                SessionId = session.Id        }
+
+            };        catch (Exception ex)
+
+        }        {
+
+        catch (Exception ex)            logger.LogError(ex, "Error resetting password");
+
+        {            return false;
+
+            logger.LogError(ex, "Error during Google OAuth sign-in");        }
+
+                }
+
+            return new SignInResponse
+
+            {    /// <summary>
+
+                Success = false,    /// Changes user password (requires current password).
+
+                Message = "Authentication failed",    /// </summary>
+
+                RequiresMfa = false    public async Task<bool> ChangePasswordAsync(
+
+            };        Guid userId,
+
+        }        string currentPassword,
+
+    }        string newPassword,
+
+        CancellationToken cancellationToken = default)
+
+    /// <summary>    {
+
+    /// Authenticates a user using Google ID token (NextAuth.js integration).        logger.LogInformation("Changing password for user: {UserId}", userId);
+
+    /// </summary>
+
+    public async Task<SignInResponse> GoogleIdTokenSignInAsync(        try
+
+        GoogleIdTokenRequest request,        {
+
+        CancellationToken cancellationToken = default)            // TODO: Get user and verify current password
+
+    {            // TODO: Hash new password and update user
+
+        logger.LogInformation("Processing Google ID token sign-in");            // TODO: Invalidate all refresh tokens
+
+
+
+        try            logger.LogInformation("Password changed successfully for user: {UserId}", userId);
+
+        {
+
+            // Verify Google ID token            return true;
+
+            var userProfile = await oauthService.VerifyGoogleIdTokenAsync(request.IdToken, cancellationToken);        }
+
+        catch (Exception ex)
+
+            if (userProfile == null || string.IsNullOrEmpty(userProfile.Email))        {
+
+            {            logger.LogError(ex, "Error changing password for user: {UserId}", userId);
+
+                return new SignInResponse            return false;
+
+                {        }
+
+                    Success = false,    }
+
+                    Message = "Invalid ID token",
+
+                    RequiresMfa = false    #region Private Helper Methods
+
+                };
+
+            }    private async Task<SignInResponse> OAuthSignInAsync(
+
+        SocialProvider provider,
+
+            // TODO: Find or create user based on profile        string code,
+
+            var userId = Guid.NewGuid(); // TODO: Actual user lookup/creation        DeviceInfo deviceInfo,
+
+        GameGuild.Authentication.Models.LocationInfo locationInfo,
+
+            // Create session        TenantInfo? tenantInfo,
+
+            var session = await sessionManagementService.CreateSessionAsync(        CancellationToken cancellationToken)
+
+                userId,    {
+
+                request.IpAddress ?? "unknown",        logger.LogInformation("Starting {Provider} OAuth sign-in", provider);
+
+                request.UserAgent ?? "unknown",
+
+                request.DeviceFingerprint,        try
+
+                cancellationToken);        {
+
+            // Exchange code for access token
+
+            // Generate tokens            var oauthToken = await oauthService.ExchangeCodeForTokenAsync(provider, code, cancellationToken);
+
+            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+
+                userId,            // Get user profile from provider
+
+                userProfile.Email,            var userProfile = await oauthService.GetUserProfileAsync(provider, oauthToken, cancellationToken);
+
+                new[] { "User" },
+
+                null,            return await ProcessOAuthSignInAsync(provider, userProfile, deviceInfo, locationInfo, tenantInfo, cancellationToken);
+
+                cancellationToken);        }
+
+        catch (Exception ex)
+
+            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(        {
+
+                userId,            logger.LogError(ex, "Error during {Provider} OAuth sign-in", provider);
+
+                session.Id,
+
+                request.IpAddress ?? "unknown",            return new SignInResponse
+
+                request.UserAgent ?? "unknown",            {
+
+                cancellationToken);                Success = false,
+
+                Message = $"Failed to authenticate with {provider}",
+
+            // Store refresh token                RequiresMfa = false
+
+            var refreshTokenEntity = new RefreshToken            };
+
+            {        }
+
+                Id = Guid.NewGuid(),    }
+
+                UserId = userId,
+
+                Token = refreshToken,    private async Task<SignInResponse> ProcessOAuthSignInAsync(
+
+                SessionId = session.Id,        SocialProvider provider,
+
+                ExpiresAt = DateTime.UtcNow.AddDays(30),        OAuthUserProfile userProfile,
+
+                CreatedAt = DateTime.UtcNow,        DeviceInfo deviceInfo,
+
+                UpdatedAt = DateTime.UtcNow,        GameGuild.Authentication.Models.LocationInfo locationInfo,
+
+                IsRevoked = false,        TenantInfo? tenantInfo,
+
+                IpAddress = request.IpAddress ?? "unknown",        CancellationToken cancellationToken)
+
+                UserAgent = request.UserAgent ?? "unknown"    {
+
+            };        // TODO: Find or create user by OAuth provider ID
+
+        var userId = Guid.NewGuid(); // TODO: Use actual user.Id
+
+            await refreshTokenRepository.CreateAsync(refreshTokenEntity, cancellationToken);
+
+        // Generate tokens
+
+            await RecordAuthenticationAttemptAsync(        var accessToken = await jwtTokenService.GenerateAccessTokenAsync(
+
+                userProfile.Email,            userId,
+
+                userId,            userProfile.Email,
+
+                request.IpAddress ?? "unknown",            new[] { "User" },
+
+                request.UserAgent ?? "unknown",            tenantInfo?.TenantId,
+
+                true,            cancellationToken);
+
+                "GoogleIdToken",
+
+                cancellationToken);        var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(
+
+            userId,
+
+            logger.LogInformation("Google ID token sign-in successful for email: {Email}", userProfile.Email);            deviceInfo,
+
+            cancellationToken);
+
+            return new SignInResponse
+
+            {        // Create session
+
+                Success = true,        await sessionManagementService.CreateSessionAsync(
+
+                Message = "Authentication successful",            userId,
+
+                AccessToken = accessToken,            deviceInfo,
+
+                RefreshToken = refreshToken,            locationInfo,
+
+                RequiresMfa = false,            tenantInfo,
+
+                UserId = userId,            cancellationToken);
+
+                SessionId = session.Id
+
+            };        logger.LogInformation("{Provider} sign-in successful for user: {UserId}", provider, userId);
+
+        }
+
+        catch (Exception ex)        return new SignInResponse
+
+        {        {
+
+            logger.LogError(ex, "Error during Google ID token sign-in");            Success = true,
+
+                        Message = "Sign-in successful",
+
+            return new SignInResponse            AccessToken = accessToken,
+
+            {            RefreshToken = refreshToken,
+
+                Success = false,            ExpiresIn = 3600,
+
+                Message = "Authentication failed",            UserId = userId,
+
+                RequiresMfa = false            RequiresMfa = false
+
+            };        };
+
+        }    }
+
+    }
+
+    private async Task<string> GenerateTempMfaTokenAsync(Guid userId, CancellationToken cancellationToken)
+
+    /// <summary>    {
+
+    /// Gets the GitHub OAuth authorization URL for redirecting users.        // Generate temporary token valid for 5 minutes for MFA completion
+
+    /// </summary>        return await jwtTokenService.GenerateAccessTokenAsync(
+
+    public async Task<string> GetGitHubAuthUrlAsync(string redirectUri)            userId,
+
+    {            "mfa-pending",
+
+        return await oauthService.GetGitHubAuthorizationUrlAsync(redirectUri);            new[] { "MfaPending" },
+
+    }            null,
+
+            cancellationToken);
+
+    /// <summary>    }
+
+    /// Gets the Google OAuth authorization URL for redirecting users.
+
+    /// </summary>    private async Task RecordSuccessfulAttemptAsync(
+
+    public async Task<string> GetGoogleAuthUrlAsync(string redirectUri)        AuthenticationAttemptContext context,
+
+    {        Guid userId,
+
+        return await oauthService.GetGoogleAuthorizationUrlAsync(redirectUri);        CancellationToken cancellationToken)
+
+    }    {
+
+        var attempt = new AuthenticationAttempt
+
+    #endregion        {
+
+            Id = Guid.NewGuid(),
+
+    #region Web3 Authentication            UserId = userId,
+
+            Identifier = context.Identifier,
+
+    /// <summary>            IpAddress = context.DeviceInfo.IpAddress,
+
+    /// Generates a challenge for Web3 wallet signature verification.            UserAgent = context.DeviceInfo.UserAgent,
+
+    /// </summary>            DeviceId = context.DeviceInfo.DeviceId,
+
+    public async Task<Web3ChallengeResponse> GenerateWeb3ChallengeAsync(            Location = context.LocationInfo.City,
+
+        Web3ChallengeRequest request,            Country = context.LocationInfo.Country,
+
+        CancellationToken cancellationToken = default)            Success = true,
+
+    {            FailureReason = null,
+
+        logger.LogInformation("Generating Web3 challenge for wallet: {WalletAddress}", request.WalletAddress);            AttemptedAt = context.AttemptedAt,
+
+            TenantId = context.TenantInfo?.TenantId,
+
+        try            AuthenticationMethod = context.AuthenticationMethod
+
+        {        };
+
+            var challenge = await web3Service.GenerateChallengeAsync(
+
+                request.WalletAddress,        await authenticationAttemptRepository.AddAsync(attempt, cancellationToken);
+
+                request.TenantId,    }
+
+                cancellationToken);
+
+    private async Task RecordFailedAttemptAsync(
+
+            return new Web3ChallengeResponse        AuthenticationAttemptContext context,
+
+            {        AuthenticationFailureReason reason,
+
+                Challenge = challenge,        CancellationToken cancellationToken)
+
+                ExpiresAt = DateTime.UtcNow.AddMinutes(5)    {
+
+            };        var attempt = new AuthenticationAttempt
+
+        }        {
+
+        catch (Exception ex)            Id = Guid.NewGuid(),
+
+        {            UserId = null,
+
+            logger.LogError(ex, "Error generating Web3 challenge");            Identifier = context.Identifier,
+
+            throw;            IpAddress = context.DeviceInfo.IpAddress,
+
+        }            UserAgent = context.DeviceInfo.UserAgent,
+
+    }            DeviceId = context.DeviceInfo.DeviceId,
+
+            Location = context.LocationInfo.City,
+
+    /// <summary>            Country = context.LocationInfo.Country,
+
+    /// Verifies a Web3 wallet signature and authenticates the user.            Success = false,
+
+    /// </summary>            FailureReason = reason,
+
+    public async Task<SignInResponse> VerifyWeb3SignatureAsync(            AttemptedAt = context.AttemptedAt,
+
+        Web3VerificationRequest request,            TenantId = context.TenantInfo?.TenantId,
+
+        CancellationToken cancellationToken = default)            AuthenticationMethod = context.AuthenticationMethod
+
+    {        };
+
+        logger.LogInformation("Verifying Web3 signature for wallet: {WalletAddress}", request.WalletAddress);
+
+        await authenticationAttemptRepository.AddAsync(attempt, cancellationToken);
+
+        try        await userEnumerationProtectionService.RecordAttemptAsync(context.Identifier, context.DeviceInfo.IpAddress, false, cancellationToken);
+
+        {    }
+
+            // Verify signature
+
+            var isValid = await web3Service.VerifySignatureAsync(    #endregion
+
+                request.WalletAddress,
+
+                request.Challenge,    #region Interface Implementations (Wrappers)
+
+                request.Signature,
+
+                cancellationToken);    // Wrapper methods to match the IAuthService interface signatures
+
+    Task<SignInResponse> IAuthService.LocalSignInAsync(LocalSignInRequest request, CancellationToken cancellationToken)
+
+            if (!isValid)    {
+
+            {        // TODO: Implement interface method wrapper
+
+                logger.LogWarning("Invalid Web3 signature for wallet: {WalletAddress}", request.WalletAddress);        throw new NotImplementedException("Interface method not implemented yet");
+
+                    }
+
+                return new SignInResponse
+
+                {    Task<SignInResponse> IAuthService.LocalSignUpAsync(LocalSignUpRequest request, CancellationToken cancellationToken)
+
+                    Success = false,    {
+
+                    Message = "Invalid signature",        // TODO: Implement interface method wrapper
+
+                    RequiresMfa = false        throw new NotImplementedException("Interface method not implemented yet");
+
+                };    }
+
+            }
+
+    Task<SignInResponse> IAuthService.RefreshTokenAsync(RefreshTokenRequest request, CancellationToken cancellationToken)
+
+            // TODO: Find or create user based on wallet address    {
+
+            var userId = Guid.NewGuid(); // TODO: Actual user lookup/creation        // TODO: Implement interface method wrapper
+
+        throw new NotImplementedException("Interface method not implemented yet");
+
+            // Create session    }
+
+            var session = await sessionManagementService.CreateSessionAsync(
+
+                userId,    Task IAuthService.RevokeRefreshTokenAsync(string token, string ipAddress, CancellationToken cancellationToken)
+
+                request.IpAddress ?? "unknown",    {
+
+                request.UserAgent ?? "unknown",        // TODO: Implement interface method wrapper
+
+                request.DeviceFingerprint,        throw new NotImplementedException("Interface method not implemented yet");
+
+                cancellationToken);    }
+
+
+
+            // Generate tokens    Task<SignInResponse> IAuthService.GitHubSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken)
+
+            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(    {
+
+                userId,        // TODO: Implement interface method wrapper
+
+                request.WalletAddress, // Use wallet address as identifier        throw new NotImplementedException("Interface method not implemented yet");
+
+                new[] { "User" },    }
+
+                null,
+
+                cancellationToken);    Task<SignInResponse> IAuthService.GoogleSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken)
+
+    {
+
+            var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(        // TODO: Implement interface method wrapper
+
+                userId,        throw new NotImplementedException("Interface method not implemented yet");
+
+                session.Id,    }
+
+                request.IpAddress ?? "unknown",
+
+                request.UserAgent ?? "unknown",    Task<SignInResponse> IAuthService.GoogleIdTokenSignInAsync(GoogleIdTokenRequest request, CancellationToken cancellationToken)
+
+                cancellationToken);    {
+
+        // TODO: Implement interface method wrapper
+
+            // Store refresh token        throw new NotImplementedException("Interface method not implemented yet");
+
+            var refreshTokenEntity = new RefreshToken    }
+
+            {
+
+                Id = Guid.NewGuid(),    Task<string> IAuthService.GetGitHubAuthUrlAsync(string redirectUri)
+
+                UserId = userId,    {
+
+                Token = refreshToken,        // TODO: Implement interface method wrapper
+
+                SessionId = session.Id,        throw new NotImplementedException("Interface method not implemented yet");
+
+                ExpiresAt = DateTime.UtcNow.AddDays(30),    }
+
+                CreatedAt = DateTime.UtcNow,
+
+                UpdatedAt = DateTime.UtcNow,    Task<string> IAuthService.GetGoogleAuthUrlAsync(string redirectUri)
+
+                IsRevoked = false,    {
+
+                IpAddress = request.IpAddress ?? "unknown",        // TODO: Implement interface method wrapper
+
+                UserAgent = request.UserAgent ?? "unknown"        throw new NotImplementedException("Interface method not implemented yet");
+
+            };    }
+
+
+
+            await refreshTokenRepository.CreateAsync(refreshTokenEntity, cancellationToken);    Task<Web3ChallengeResponse> IAuthService.GenerateWeb3ChallengeAsync(Web3ChallengeRequest request, CancellationToken cancellationToken)
+
+    {
+
+            await RecordAuthenticationAttemptAsync(        // TODO: Implement interface method wrapper
+
+                request.WalletAddress,        throw new NotImplementedException("Interface method not implemented yet");
+
+                userId,    }
+
+                request.IpAddress ?? "unknown",
+
+                request.UserAgent ?? "unknown",    Task<SignInResponse> IAuthService.VerifyWeb3SignatureAsync(Web3VerificationRequest request, CancellationToken cancellationToken)
+
+                true,    {
+
+                "Web3",        // TODO: Implement interface method wrapper
+
+                cancellationToken);        throw new NotImplementedException("Interface method not implemented yet");
+
+    }
+
+            logger.LogInformation("Web3 authentication successful for wallet: {WalletAddress}", request.WalletAddress);
+
+    Task<EmailOperationResponse> IAuthService.SendEmailVerificationAsync(SendEmailVerificationRequest request, CancellationToken cancellationToken)
+
+            return new SignInResponse    {
+
+            {        // TODO: Implement interface method wrapper
+
+                Success = true,        throw new NotImplementedException("Interface method not implemented yet");
+
+                Message = "Authentication successful",    }
+
+                AccessToken = accessToken,
+
+                RefreshToken = refreshToken,    Task<EmailOperationResponse> IAuthService.VerifyEmailAsync(EmailVerificationRequest verificationRequest, CancellationToken cancellationToken)
+
+                RequiresMfa = false,    {
+
+                UserId = userId,        // TODO: Implement interface method wrapper
+
+                SessionId = session.Id        throw new NotImplementedException("Interface method not implemented yet");
+
+            };    }
+
+        }
+
+        catch (Exception ex)    Task<EmailOperationResponse> IAuthService.ForgotPasswordAsync(PasswordResetRequest request, CancellationToken cancellationToken)
+
+        {    {
+
+            logger.LogError(ex, "Error during Web3 verification");        // TODO: Implement interface method wrapper
+
+                    throw new NotImplementedException("Interface method not implemented yet");
+
+            return new SignInResponse    }
+
+            {
+
+                Success = false,    Task<EmailOperationResponse> IAuthService.ResetPasswordAsync(ResetPasswordRequest request, CancellationToken cancellationToken)
+
+                Message = "Authentication failed",    {
+
+                RequiresMfa = false        // TODO: Implement interface method wrapper
+
+            };        throw new NotImplementedException("Interface method not implemented yet");
+
+        }    }
+
+    }
+
+    Task<EmailOperationResponse> IAuthService.ChangePasswordAsync(ChangePasswordRequest request, Guid userId, CancellationToken cancellationToken)
+
+    #endregion    {
+
+        // TODO: Implement interface method wrapper
+
+    #region Email & Password Operations        throw new NotImplementedException("Interface method not implemented yet");
+
+    }
+
+    /// <summary>
+
+    /// Sends an email verification link to the user.    #endregion
+
+    /// </summary>}
+
+    public async Task<EmailOperationResponse> SendEmailVerificationAsync(
+        SendEmailVerificationRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Sending email verification to: {Email}", request.Email);
+
+        try
+        {
+            // TODO: Get user by email
+            var userId = Guid.NewGuid(); // TODO: Use actual user ID
+
+            var token = await emailVerificationService.GenerateVerificationTokenAsync(userId, request.Email);
+            await emailVerificationService.SendVerificationEmailAsync(request.Email, token, null);
+
+            return new EmailOperationResponse
+            {
+                Success = true,
+                Message = "Verification email sent successfully"
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error sending verification email");
+            
+            return new EmailOperationResponse
+            {
+                Success = false,
+                Message = "Failed to send verification email"
+            };
+        }
+    }
+
+    /// <summary>
+    /// Verifies a user's email address using the verification token.
+    /// </summary>
+    public async Task<EmailOperationResponse> VerifyEmailAsync(
+        EmailVerificationRequest verificationRequest,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Verifying email with token");
+
+        try
+        {
+            // TODO: Extract userId from token or lookup
+            var userId = Guid.NewGuid(); // TODO: Parse from token
+
+            var isValid = await emailVerificationService.VerifyEmailTokenAsync(userId, verificationRequest.Token);
+
+            if (!isValid)
+            {
+                return new EmailOperationResponse
+                {
+                    Success = false,
+                    Message = "Invalid or expired verification token"
+                };
+            }
+
+            // TODO: Mark user email as verified
+            logger.LogInformation("Email verified successfully for user: {UserId}", userId);
+
+            return new EmailOperationResponse
+            {
+                Success = true,
+                Message = "Email verified successfully"
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error verifying email");
+            
+            return new EmailOperationResponse
+            {
+                Success = false,
+                Message = "Failed to verify email"
+            };
+        }
+    }
+
+    /// <summary>
+    /// Initiates the password reset process by sending a reset email.
+    /// </summary>
+    public async Task<EmailOperationResponse> ForgotPasswordAsync(
+        PasswordResetRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var startTime = DateTime.UtcNow;
+        logger.LogInformation("Processing password reset request for email: {Email}", request.Email);
+
+        try
+        {
+            // Always return success to prevent user enumeration
+            // but only actually send email if user exists
+
+            // TODO: Check if user exists
+            var userExists = false; // TODO: Actual check
+
+            if (userExists)
+            {
+                // TODO: Generate reset token and send email
+                var userId = Guid.NewGuid(); // TODO: Actual user ID
+                var resetToken = await emailVerificationService.GenerateVerificationTokenAsync(userId, request.Email);
+                await emailVerificationService.SendVerificationEmailAsync(request.Email, resetToken, null);
+            }
+
+            // Apply timing protection
+            await userEnumerationProtectionService.AddTimingProtectionDelayAsync(userExists, startTime);
+
+            // Always return success message
+            return new EmailOperationResponse
+            {
+                Success = true,
+                Message = "If the email exists, a password reset link has been sent"
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error processing password reset");
+            
+            await userEnumerationProtectionService.AddTimingProtectionDelayAsync(false, startTime);
+
+            return new EmailOperationResponse
+            {
+                Success = true,
+                Message = "If the email exists, a password reset link has been sent"
+            };
+        }
+    }
+
+    /// <summary>
+    /// Resets a user's password using a valid reset token.
+    /// </summary>
+    public async Task<EmailOperationResponse> ResetPasswordAsync(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Processing password reset");
+
+        try
+        {
+            // TODO: Verify token and get user
+            var userId = Guid.NewGuid(); // TODO: Extract from token
+
+            var isValid = await emailVerificationService.VerifyEmailTokenAsync(userId, request.Token);
+
+            if (!isValid)
+            {
+                return new EmailOperationResponse
+                {
+                    Success = false,
+                    Message = "Invalid or expired reset token"
+                };
+            }
+
+            // Validate password strength
+            var passwordStrength = passwordHasher.ValidatePasswordStrength(request.NewPassword);
+
+            if (!passwordStrength.IsValid)
+            {
+                return new EmailOperationResponse
+                {
+                    Success = false,
+                    Message = $"Password is too weak: {string.Join(", ", passwordStrength.ValidationFailures)}"
+                };
+            }
+
+            // Hash new password
+            var newPasswordHash = passwordHasher.HashPassword(request.NewPassword);
+
+            // TODO: Update user password
+            logger.LogInformation("Password reset successfully for user: {UserId}", userId);
+
+            return new EmailOperationResponse
+            {
+                Success = true,
+                Message = "Password reset successfully"
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error resetting password");
+            
+            return new EmailOperationResponse
+            {
+                Success = false,
+                Message = "Failed to reset password"
+            };
+        }
+    }
+
+    /// <summary>
+    /// Changes a user's password (requires current password for verification).
+    /// </summary>
+    public async Task<EmailOperationResponse> ChangePasswordAsync(
+        ChangePasswordRequest request,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Processing password change for user: {UserId}", userId);
+
+        try
+        {
+            // TODO: Get user
+            var currentPasswordHash = ""; // TODO: Get from user entity
+
+            // Verify current password
+            var isCurrentPasswordValid = passwordHasher.VerifyPassword(currentPasswordHash, request.CurrentPassword);
+
+            if (!isCurrentPasswordValid)
+            {
+                return new EmailOperationResponse
+                {
+                    Success = false,
+                    Message = "Current password is incorrect"
+                };
+            }
+
+            // Validate new password strength
+            var passwordStrength = passwordHasher.ValidatePasswordStrength(request.NewPassword);
+
+            if (!passwordStrength.IsValid)
+            {
+                return new EmailOperationResponse
+                {
+                    Success = false,
+                    Message = $"New password is too weak: {string.Join(", ", passwordStrength.ValidationFailures)}"
+                };
+            }
+
+            // Hash new password
+            var newPasswordHash = passwordHasher.HashPassword(request.NewPassword);
+
+            // TODO: Update user password
+            logger.LogInformation("Password changed successfully for user: {UserId}", userId);
+
+            return new EmailOperationResponse
+            {
+                Success = true,
+                Message = "Password changed successfully"
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error changing password for user: {UserId}", userId);
+            
+            return new EmailOperationResponse
+            {
+                Success = false,
+                Message = "Failed to change password"
+            };
+        }
+    }
+
+    #endregion
+
+    #region Helper Methods
+
+    /// <summary>
+    /// Records an authentication attempt for security monitoring and anomaly detection.
+    /// </summary>
+    private async Task RecordAuthenticationAttemptAsync(
+        string identifier,
+        Guid? userId,
+        string ipAddress,
+        string userAgent,
+        bool success,
+        string method,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var attempt = new AuthenticationAttempt
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Email = identifier,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                IsSuccessful = success,
+                FailureReason = success ? null : "Invalid credentials",
+                AttemptedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await authenticationAttemptRepository.CreateAsync(attempt, cancellationToken);
+
+            // Record enumeration attempt if failed
+            if (!success)
+            {
+                await userEnumerationProtectionService.RecordEnumerationAttemptAsync(identifier, method);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error recording authentication attempt");
+        }
+    }
+
+    #endregion
+}

@@ -1,62 +1,99 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# editor
-.idea/
-.vscode/
-.vs/
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
 
-# dependencies
-**/node_modules
+# Caches directories and files
+.cache
+
+# Temporary directories and files
+.temp
+.tmp
+
+# IDE's and Editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode
+
+# .NET
+/bin/
+/obj/
+*.user
+*.suo
+*.cache
+*.docstates
+[Dd]ebug/
+[Rr]elease/
+build/
+[Bb]in/
+[Oo]bj/
+x64/
+x86/
+*.exe
+*.dll
+*.pdb
+
+
+/[Tt]estResults/
+/[Ll]ogs/
+# Node.js Dependencies
+/node_modules
+
+# Node.js Package Managers
 /.pnp
-.pnp.js
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
 
-# testing
-/coverage
+# Node.js Package Managers Lockfiles
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# next.js
+# Environment Variables
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Miscellaneous
+*.pem
+
+# Typescript
+*.tsbuildinfo
+
+# Compiled Output
+/dist
+
+# Next.js
+next-env.d.ts
 /.next/
 /out/
 
-# build
-/build
-dist/
-tests/api/bin/
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# local env files
-.env*.local
-
-# vercel
+# Vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Testing
+/coverage
 
-# submissions
-chessSubmissions
-
-# dtos
-old/services/web/.env.local
-old/services/web/.env
-/old/contributors/gource.mp4
-/old/contributors/gource.txt
-
-# lock files
-**/package-lock.json
-
-apps/abc/
-
-GameGuild.sln.DotSettings.user
-
-**/swagger.json
-
-apps/api/.env
+# Production
+/build
