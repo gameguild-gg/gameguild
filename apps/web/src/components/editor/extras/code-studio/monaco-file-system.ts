@@ -345,11 +345,65 @@ export function registerPathCompletionProvider(monaco: Monaco) {
     },
   })
 
-  // Registrar para TypeScript, JavaScript e Python
+  // Provider para Lua
+  const createLuaProvider = () => ({
+    triggerCharacters: ['"', "'", '/', '.', '('],
+    provideCompletionItems: (model: any, position: any) => {
+      const lineContent = model.getLineContent(position.lineNumber)
+      const textBeforeCursor = lineContent.substring(0, position.column - 1)
+      
+      // Detectar require Lua: require("X") ou require 'X'
+      const requireMatch = textBeforeCursor.match(/require\s*\(?['"]([^'"]*?)$/)
+      if (!requireMatch || !requireMatch[1]) return { suggestions: [] }
+      
+      const currentPath = requireMatch[1] || ''
+      const modelPath = model.uri.path || ''
+      const currentDir = modelPath.split('/').slice(0, -1).join('/')
+      
+      const suggestions: any[] = []
+      
+      // Sugerir arquivos Lua disponíveis
+      currentFiles.forEach(file => {
+        if (file.language !== 'lua') return
+        
+        const filePath = `/${file.path}`
+        const fileName = file.path.split('/').pop() || ''
+        const moduleName = fileName.replace(/\.lua$/, '')
+        
+        // Não sugerir o próprio arquivo
+        if (filePath === modelPath) return
+        
+        const fileDir = filePath.split('/').slice(0, -1).join('/')
+        
+        // Se está no mesmo diretório, sugerir como módulo direto
+        if (fileDir === currentDir) {
+          suggestions.push({
+            label: moduleName,
+            kind: monaco.languages.CompletionItemKind.Module,
+            insertText: moduleName,
+            range: {
+              startLineNumber: position.lineNumber,
+              startColumn: position.column - currentPath.length,
+              endLineNumber: position.lineNumber,
+              endColumn: position.column,
+            },
+            detail: 'Lua module',
+            documentation: `Require from ${file.path}`,
+            sortText: `0_${moduleName}`,
+          })
+        }
+      })
+      
+      return { suggestions }
+    },
+  })
+
+  // Registrar para TypeScript, JavaScript, Python e Lua
   const tsProvider = monaco.languages.registerCompletionItemProvider('typescript', createProvider())
   const jsProvider = monaco.languages.registerCompletionItemProvider('javascript', createProvider())
   const pyProvider = monaco.languages.registerCompletionItemProvider('python', createPythonProvider())
+  const luaProvider = monaco.languages.registerCompletionItemProvider('lua', createLuaProvider())
 
-  completionDisposables.push(tsProvider, jsProvider, pyProvider)
+  completionDisposables.push(tsProvider, jsProvider, pyProvider, luaProvider)
   console.log('[Monaco FS] Path completion providers registered')
 }

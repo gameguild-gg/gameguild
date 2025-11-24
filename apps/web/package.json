@@ -134,6 +134,7 @@
     "vega-lite": "^6.4.1",
     "vega-schema": "^6.2.0",
     "vega-themes": "^3.0.0",
+    "wasmoon": "^1.16.0",
     "zod": "^4.0.5"
   },
   "devDependencies": {
