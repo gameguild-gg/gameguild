@@ -1,8 +1,8 @@
 'use server';
 
-import { httpClientFactory } from '@/lib/core/http';
 import { SignUpFormState } from '@/lib/auth/sign-up-form-state';
 import { SignUpWithEmailAndPasswordGateway } from '@/lib/auth/sign-up-with-email-and-password.gateway';
+import { httpClientFactory } from '@/lib/core/http';
 
 export type SignUpWithEmailAndPassword = {
   signUpWithEmailAndPassword: (email: Readonly<string>, password: Readonly<string>) => Promise<any>;
