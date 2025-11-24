@@ -1,0 +1,20 @@
+using GameGuild.Authentication.Abstractions;
+using GameGuild.Authentication.Commands;
+using GameGuild.Authentication.Models.Requests;
+using GameGuild.Authentication.Models.Responses;
+using GameGuild.CQRS;
+
+namespace GameGuild.Authentication.Handlers;
+
+/// <summary>
+///     Handler for verifying Web3 wallet signatures
+/// </summary>
+public class VerifyWeb3SignatureHandler(IAuthService authService) : IRequestHandler<VerifyWeb3SignatureCommand, SignInResponse>
+{
+    public async Task<SignInResponse> Handle(VerifyWeb3SignatureCommand command, CancellationToken cancellationToken)
+    {
+        var verifyRequest = new Web3VerificationRequest { WalletAddress = command.WalletAddress, Signature = command.Signature, Challenge = command.Nonce };
+
+        return await authService.VerifyWeb3SignatureAsync(verifyRequest, cancellationToken).ConfigureAwait(false);
+    }
+}

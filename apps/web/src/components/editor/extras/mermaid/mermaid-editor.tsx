@@ -170,7 +170,7 @@ export function MermaidEditor({ initialData, onSave, onCancel }: MermaidEditorPr
       }}
     >
       <div 
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
         style={{ pointerEvents: 'auto' }}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}

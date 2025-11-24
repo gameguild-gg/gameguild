@@ -1,10 +1,11 @@
-import {getAvailableTestSessions, SESSION_STATUS} from '@/lib/admin';
-import {FloatingIcons} from "@/components/testing-lab/common/ui/floating-icons";
-import {TestingLabHero, TestingLabHowItWorks, TestingLabStats} from "@/components/testing-lab";
-import {TestingLabLearnMore} from "@/components/testing-lab/landing/testing-lab-learn-more";
+import { TestingLabHero, TestingLabHowItWorks, TestingLabStats } from "@/components/testing-lab";
+import { FloatingIcons } from "@/components/testing-lab/common/ui/floating-icons";
+import { TestingLabLearnMore } from "@/components/testing-lab/landing/testing-lab-learn-more";
+import { getAvailableTestSessions, SESSION_STATUS } from '@/lib/admin';
 
 export default async function Page() {
   // Fetch available test sessions server-side
+  // todo: if not logged, redirect to the login page
   const testSessions = await getAvailableTestSessions();
 
   // Filter sessions by status using constants
@@ -13,20 +14,20 @@ export default async function Page() {
 
   return (
     <div className="flex flex-col flex-1 relative">
-      <FloatingIcons/>
+      <FloatingIcons />
       <div className="flex flex-col flex-1 items-center justify-center relative">
         <main className="flex flex-col flex-1 items-center justify-center container">
           {/* Hero Section */}
-          <TestingLabHero/>
+          <TestingLabHero />
           {/* Statistics Section */}
           <TestingLabStats totalSessions={testSessions.length} openSessions={openSessions.length}
-                           upcomingSessions={upcomingSessions.length}/>
+            upcomingSessions={upcomingSessions.length} />
           {/* Learn More Section */}
-          <TestingLabLearnMore/>
+          <TestingLabLearnMore />
         </main>
         <aside id="learn-more" className="flex flex-col flex-1 items-center justify-center container">
           {/* How It Works Section */}
-          <TestingLabHowItWorks/>
+          <TestingLabHowItWorks />
         </aside>
       </div>
     </div>

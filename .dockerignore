@@ -1,0 +1,30 @@
+# Deny-all, allow-only-what's-needed .dockerignore for building services/web
+**/*
+
+# Allow academy app and its contents
+apps/academy/node_modules/
+apps/academy/.next/
+!apps/academy/**
+
+# Allow blog app and its contents
+apps/blog/node_modules/
+apps/blog/.next/
+!apps/blog/**
+
+# Allow console app and its contents
+apps/console/node_modules/
+apps/console/.next/
+!apps/console/**
+
+# Allow website app and its contents
+apps/website/node_modules/
+apps/website/.next/
+!apps/website/**
+
+# Allow root package files if needed for dependency install/caching
+package-lock.json
+!package.json
+
+# Allow the packages directory and its contents, but exclude node_modules inside it
+packages/**/node_modules/
+!packages/**

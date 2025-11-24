@@ -1,0 +1,16 @@
+﻿using GameGuild.CQRS;
+using GameGuild.Features.DTOs;
+
+namespace GameGuild.Features.Queries;
+
+/// <summary>
+///     Query to get feature flag statistics
+/// </summary>
+public record GetFeatureFlagStatisticsQuery : IQuery<FeatureFlagStatistics>
+{
+    public string? Environment { get; init; }
+
+    public DateTime? StartDate { get; init; }
+
+    public DateTime? EndDate { get; init; }
+}

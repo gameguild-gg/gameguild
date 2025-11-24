@@ -1,0 +1,39 @@
+{
+  "name": "@game-guild/common",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Common utilities and types for Matheus Martins projects",
+  "author": "Matheus Martins <contact@matheusmartins.com>",
+  "homepage": "https://matheusmartins.com",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "check:types": "tsc --noEmit",
+    "clean": "rm -rf dist",
+    "dev": "tsc --watch",
+    "format": "prettier --write src",
+    "lint": "eslint src --ext .ts,.tsx"
+  },
+  "dependencies": {
+    "@game-guild/ui": "0.1.0",
+    "ethers": "^6.15.0"
+  },
+  "devDependencies": {
+    "@game-guild/eslint-config": "0.1.0",
+    "@game-guild/prettier-config": "0.1.0",
+    "@game-guild/tailwind-config": "0.1.0",
+    "@game-guild/typescript-config": "0.1.0",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.5.0",
+    "rimraf": "^6.0.0",
+    "typescript": "^5.5.0"
+  }
+}
