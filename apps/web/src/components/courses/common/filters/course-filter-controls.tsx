@@ -1,17 +1,17 @@
 'use client';
 
-import { CourseSearchBar } from './course-search-bar';
-import { CourseStatusFilter } from './course-status-filter';
+import { PeriodSelector } from '@/components/common/filters/period-selector';
+import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
+import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/types.gen';
 import { CourseAreaFilter } from './course-area-filter';
 import { CourseLevelFilter } from './course-level-filter';
-import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
-import { PeriodSelector } from '@/components/common/filters/period-selector';
-import { ContentStatus, ProgramCategory, ProgramDifficulty } from '@/lib/api/generated/types.gen';
+import { CourseSearchBar } from './course-search-bar';
+import { CourseStatusFilter } from './course-status-filter';
 
 // Type aliases to maintain existing naming
-type CourseStatus = ContentStatus;
+type CourseStatus = ModulesContentsContentStatus;
 type CourseArea = ProgramCategory;
-type CourseLevel = ProgramDifficulty;
+type CourseLevel = ModulesProgramsProgramDifficulty;
 
 interface CourseFilterControlsProps {
   searchTerm: string;

@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
 import { CourseFilterControls } from '@/components/courses/common';
-import { CourseCard } from './course-card';
 import { Button } from '@/components/ui/button';
+import { ModulesContentsContentStatus, ModulesProgramsProgram, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/types.gen';
 import { Plus } from 'lucide-react';
-import { Program, ContentStatus, ProgramCategory, ProgramDifficulty } from '@/lib/api/generated/types.gen';
+import React, { useMemo, useState } from 'react';
+import { CourseCard } from './course-card';
 
 // Type aliases to maintain existing naming
-type Course = Program;
-type CourseStatus = ContentStatus;
+type Course = ModulesProgramsProgram;
+type CourseStatus = ModulesContentsContentStatus;
 type CourseArea = ProgramCategory;
-type CourseLevel = ProgramDifficulty;
+type CourseLevel = ModulesProgramsProgramDifficulty;
 
 interface CourseListProps {
   courses: Course[];
@@ -57,7 +57,7 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
       }
 
       // Status filter
-      if (selectedStatuses.length > 0 && !selectedStatuses.includes(course.status || 0)) {
+      if (selectedStatuses.length > 0 && course.status && !selectedStatuses.includes(course.status)) {
         return false;
       }
 

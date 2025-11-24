@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { FileText, Calendar, ChevronDown, Search, Filter } from "lucide-react"
+import { Calendar, ChevronDown, FileText, Filter, Search } from "lucide-react"
+import { useEffect, useState } from "react"
 
 interface ProjectData {
   id: string
@@ -208,11 +208,10 @@ export function ProjectSidebarList({
                       >
                         <div className="flex items-center gap-2">
                           <div
-                            className={`w-3 h-3 border rounded flex items-center justify-center ${
-                              selectedTags.includes(tag.name)
+                            className={`w-3 h-3 border rounded flex items-center justify-center ${selectedTags.includes(tag.name)
                                 ? "bg-blue-500 border-blue-500"
                                 : "border-gray-300"
-                            }`}
+                              }`}
                           >
                             {selectedTags.includes(tag.name) && (
                               <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -276,11 +275,10 @@ export function ProjectSidebarList({
               <div
                 key={project.id}
                 onClick={() => onProjectSelect(project)}
-                className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                  currentProject?.id === project.id
+                className={`p-3 rounded-lg border cursor-pointer transition-colors ${currentProject?.id === project.id
                     ? "bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700"
                     : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-2">
                   <FileText className="w-4 h-4 text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" />
@@ -288,7 +286,7 @@ export function ProjectSidebarList({
                     <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                       {project.name}
                     </h4>
-                    
+
                     {project.tags && project.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {project.tags.slice(0, 2).map((tag) => (
