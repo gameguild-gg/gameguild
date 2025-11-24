@@ -15,6 +15,7 @@ import {
   Music,
   Music2,
   Music3,
+  FileText,
   Plus,
   SeparatorHorizontal,
   Twitter,
@@ -54,6 +55,8 @@ import { extractSpotifyInfo } from "../nodes/spotify-node"
 import type { MermaidData } from "../nodes/mermaid-node"
 import type { VegaLiteData } from "../nodes/vega-lite-node"
 import type { TableData } from "../nodes/table-node"
+import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
+import type { CodeStudioMode } from "../extras/code-studio/types"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
 const IMAGE_INSERTION_MODE = 0
@@ -90,6 +93,7 @@ export const INSERT_SOURCE_COMMAND = createCommand("INSERT_SOURCE_COMMAND")
 export const INSERT_YOUTUBE_COMMAND = createCommand<YouTubeData>("INSERT_YOUTUBE_COMMAND")
 export const INSERT_SPOTIFY_COMMAND = createCommand<SpotifyData>("INSERT_SPOTIFY_COMMAND")
 export const INSERT_SOURCE_CODE_COMMAND = createCommand("INSERT_SOURCE_CODE_COMMAND")
+export const INSERT_CODE_STUDIO_COMMAND = createCommand<CodeStudioMode>("INSERT_CODE_STUDIO_COMMAND")
 export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID_COMMAND")
 export const INSERT_VEGA_LITE_COMMAND = createCommand<VegaLiteData>("INSERT_VEGA_LITE_COMMAND")
 export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TABLE_COMMAND")
@@ -113,9 +117,11 @@ export function FloatingContentInsertPlugin() {
   const [spotifyUrl, setSpotifyUrl] = useState("")
   const [spotifyShowTheme, setSpotifyShowTheme] = useState(true)
   const [spotifyError, setSpotifyError] = useState("")
+  const [showModeSelectionDialog, setShowModeSelectionDialog] = useState(false)
 
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const popoverContentRef = useRef<HTMLDivElement>(null)
 
   const updateMenuPosition = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -183,19 +189,41 @@ export function FloatingContentInsertPlugin() {
     )
   }, [editor, checkEmpty])
 
+  // Block body scroll when popover menu is open
   useEffect(() => {
-    const handleScroll = () => {
-      if (show) {
-        setShow(false)
-        setShowMenu(false)
+    if (showMenu) {
+      // Store original overflow value
+      const originalOverflow = document.body.style.overflow
+      
+      // Disable scroll on body
+      document.body.style.overflow = 'hidden'
+      
+      // Cleanup on unmount or when menu closes
+      return () => {
+        document.body.style.overflow = originalOverflow
       }
     }
+  }, [showMenu])
 
-    window.addEventListener("scroll", handleScroll, true)
-    return () => {
-      window.removeEventListener("scroll", handleScroll, true)
+  // Prevent scroll events inside popover from propagating
+  useEffect(() => {
+    const popoverElement = popoverContentRef.current
+    if (!popoverElement) return
+
+    const handlePopoverScroll = (event: Event) => {
+      event.stopPropagation()
     }
-  }, [show])
+
+    popoverElement.addEventListener("scroll", handlePopoverScroll, true)
+    popoverElement.addEventListener("wheel", handlePopoverScroll, { passive: false, capture: true })
+    popoverElement.addEventListener("touchmove", handlePopoverScroll, { passive: false, capture: true })
+    
+    return () => {
+      popoverElement.removeEventListener("scroll", handlePopoverScroll, true)
+      popoverElement.removeEventListener("wheel", handlePopoverScroll, { capture: true } as any)
+      popoverElement.removeEventListener("touchmove", handlePopoverScroll, { capture: true } as any)
+    }
+  }, [showMenu])
 
   const handleImageSelected = (result: MediaUploadResult | MediaUploadResult[]) => {
     const results = Array.isArray(result) ? result : [result]
@@ -228,8 +256,7 @@ export function FloatingContentInsertPlugin() {
     results.forEach((item) => {
       editor.dispatchCommand(INSERT_AUDIO_COMMAND, {
         src: item.data,
-        title: item.name || "Audio",
-        caption: "",
+        caption: item.name || "Audio",
         size: 100,
       })
     })
@@ -393,15 +420,15 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
-    /*
     {
-      icon: MarkdownIcon,
+      icon: FileText,
       label: "Markdown",
       action: () => {
-        editor.dispatchCommand(INSERT_MARKDOWN_COMMAND, undefined)
+        editor.dispatchCommand(INSERT_MARKDOWN_COMMAND, { content: "" })
         setShowMenu(false)
       },
     },
+    /*
     {
       icon: Code2,
       label: "HTML",
@@ -476,6 +503,14 @@ export function FloatingContentInsertPlugin() {
           caption: "",
           size: 100,
         })
+        setShowMenu(false)
+      },
+    },
+    {
+      icon: CodepenIcon,
+      label: "Code Studio",
+      action: () => {
+        setShowModeSelectionDialog(true)
         setShowMenu(false)
       },
     },
@@ -557,13 +592,28 @@ export function FloatingContentInsertPlugin() {
       >
         <Popover open={showMenu} onOpenChange={setShowMenu}>
           <PopoverTrigger asChild>
-            <Button ref={buttonRef} variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted">
-              <Plus className="h-6 w-6" />
+            <Button 
+              ref={buttonRef} 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 shadow-sm"
+            >
+              <Plus className="h-6 w-6 text-gray-700 dark:text-gray-300" />
             </Button>
           </PopoverTrigger>
           <PopoverContent
+            ref={popoverContentRef}
             side="left"
-            className="w-80 p-0 max-h-[500px] overflow-y-auto shadow-lg border-0 bg-background/95 backdrop-blur-sm"
+            className="w-80 p-0 max-h-[440px] overflow-y-auto shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+            onWheel={(e) => {
+              e.stopPropagation()
+            }}
+            onTouchMove={(e) => {
+              e.stopPropagation()
+            }}
+            onScroll={(e) => {
+              e.stopPropagation()
+            }}
           >
             {/*
             <div className="px-2 py-1.5">
@@ -592,7 +642,7 @@ export function FloatingContentInsertPlugin() {
                 <>
                   {/*<Separator className="my-2" />*/}
                   <div className="px-2 py-1">
-                    <h4 className="text-xs font-medium text-muted-foreground">PLUGINS</h4>
+                    <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">PLUGINS</h4>
                   </div>
                   <div className="grid grid-cols-2 gap-1">
                     {primaryOptions.slice(0).map((option) => (
@@ -601,12 +651,12 @@ export function FloatingContentInsertPlugin() {
                         onClick={() => {
                           option.action()
                         }}
-                        className="flex flex-col items-center gap-2 rounded-md px-2 py-3 text-xs hover:bg-accent hover:text-accent-foreground transition-colors duration-150 group"
+                        className="flex flex-col items-center gap-2 px-2 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 group border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                       >
-                        <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-muted group-hover:bg-background transition-colors duration-150">
-                          <option.icon className="h-3 w-3" />
+                        <div className="flex h-6 w-6 items-center justify-center bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors duration-150">
+                          <option.icon className="h-3 w-3 text-gray-700 dark:text-gray-300" />
                         </div>
-                        <span className="text-center leading-tight">{option.label}</span>
+                        <span className="text-center leading-tight text-gray-700 dark:text-gray-300">{option.label}</span>
                       </button>
                     ))}
                   </div>
@@ -803,7 +853,7 @@ export function FloatingContentInsertPlugin() {
             {youtubeError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-red-800">Invalid URL</p>
                     <p className="text-sm text-red-700 mt-1">{youtubeError}</p>
@@ -924,7 +974,7 @@ export function FloatingContentInsertPlugin() {
             {spotifyError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-red-800">Invalid URL</p>
                     <p className="text-sm text-red-700 mt-1">{spotifyError}</p>
@@ -972,6 +1022,17 @@ export function FloatingContentInsertPlugin() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Mode Selection Dialog for Code Studio */}
+      {showModeSelectionDialog && (
+        <ModeSelectionDialog
+          onSelect={(mode) => {
+            editor.dispatchCommand(INSERT_CODE_STUDIO_COMMAND, mode)
+            setShowModeSelectionDialog(false)
+          }}
+          onCancel={() => setShowModeSelectionDialog(false)}
+        />
+      )}
     </>
   )
 }

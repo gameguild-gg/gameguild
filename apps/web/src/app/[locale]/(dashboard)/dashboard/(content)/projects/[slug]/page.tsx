@@ -1,33 +1,32 @@
 "use client"
 
-import type React from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { ChecklistItem } from "@/components/projects/checklist-item"
 import { useProject } from "@/components/projects/project-context"
+import { StatCard } from "@/components/projects/stat-card"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { cn } from "@/lib/utils"
 import {
+  Activity,
   BookText,
   CheckCircle2,
+  DollarSign,
   Download,
   Eye,
   MessageSquare,
-  DollarSign,
   TrendingUp,
-  Activity,
 } from "lucide-react"
-import { Progress } from "@/components/ui/progress"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { StatCard } from "@/components/dashboard/common/ui/stat-card"
-import { ChecklistItem } from "@/components/dashboard/common/ui/checklist-item"
 
-export default function ProjectOverviewPage() {
+export default function ProjectOverviewPage(): React.JSX.Element {
   const project = useProject()
 
   const readiness = {
     hasTitle: !!project.title?.trim(),
-    hasCover: !!project.imageUrl,
-    hasDescription: !!project.shortDescription && project.shortDescription.trim().length > 30,
-    hasPlatforms: false, // We don't have platforms field in our Project type yet
-    hasBuild: false, // We don't have versions field in our Project type yet
+    hasCover: !!project.coverUrl,
+    hasDescription: !!project.description && project.description.trim().length > 30,
+    hasPlatforms: !!(project.platforms && project.platforms.length > 0),
+    hasBuild: !!(project.versions && project.versions.length > 0),
   }
   const readyCount = Object.values(readiness).filter(Boolean).length
   const readyPct = Math.round((readyCount / Object.keys(readiness).length) * 100)
@@ -43,16 +42,17 @@ export default function ProjectOverviewPage() {
     createdAt: number;
   }> = []
 
-  const getStatusDisplay = (status: any): { label: string; color: string } => {
+  const getStatusDisplay = (visibility: string): { label: string; color: string } => {
     const statusMap: Record<string, { label: string; color: string }> = {
-      '0': { label: 'draft', color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
-      '1': { label: 'public', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-      '2': { label: 'unlisted', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' }
+      'draft': { label: 'draft', color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
+      'public': { label: 'public', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+      'unlisted': { label: 'unlisted', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+      'private': { label: 'private', color: 'bg-red-500/10 text-red-400 border-red-500/20' }
     }
-    return statusMap[status?.toString()] || statusMap['0']
+    return statusMap[visibility] || { label: 'draft', color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' }
   }
 
-  const statusInfo = getStatusDisplay(project.visibility || project.status)
+  const statusInfo = getStatusDisplay(project.visibility)
 
   return (
     <div className="grid gap-8">
