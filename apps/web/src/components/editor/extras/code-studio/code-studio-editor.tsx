@@ -73,9 +73,9 @@ export function CodeStudioEditor({
     
     // Inicializar sistema de arquivos virtual do Monaco
     initializeMonacoFileSystem().then(() => {
-      // Sincronizar arquivos iniciais
+      // Sincronizar arquivos iniciais com instanceId único
       if (localData.files.length > 0) {
-        syncFilesToMonacoFS(localData.files)
+        syncFilesToMonacoFS(localData.files, localData.id)
       }
     })
     
@@ -89,9 +89,9 @@ export function CodeStudioEditor({
   // Sincronizar arquivos quando mudarem
   useEffect(() => {
     if (localData.files.length > 0) {
-      syncFilesToMonacoFS(localData.files)
+      syncFilesToMonacoFS(localData.files, localData.id)
     }
-  }, [localData.files])
+  }, [localData.files, localData.id])
 
   // Sincronizar com mudanças externas apenas na primeira montagem
   useEffect(() => {
@@ -151,8 +151,8 @@ export function CodeStudioEditor({
       const file = draft.files.find(f => f.id === fileId)
       if (file) {
         file.content = content
-        // Atualizar também no sistema de arquivos virtual do Monaco
-        updateMonacoFile(file.path, content)
+        // Atualizar também no sistema de arquivos virtual do Monaco com instanceId
+        updateMonacoFile(file.path, content, draft.id)
       }
     })
   }
@@ -162,22 +162,25 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    const updates = TabOps.selectFile(localData, fileId, panelId, activeDisplay)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      TabOps.selectFile(draft, fileId, panelId, activeDisplay)
+    })
   }
 
   const handleCloseTab = (fileId: string, panelId?: string) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    const updates = TabOps.closeTab(localData, fileId, panelId, activeDisplay)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      TabOps.closeTab(draft, fileId, panelId, activeDisplay)
+    })
   }
 
   const handleReorderTabs = (newOrder: string[], panelId?: string) => {
     const activeDisplay = getActiveDisplay()
-    const updates = TabOps.reorderTabs(localData, newOrder, panelId, activeDisplay)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      TabOps.reorderTabs(draft, newOrder, panelId, activeDisplay)
+    })
   }
 
   const handleCreateFile = (path: string, name: string) => {
@@ -185,48 +188,57 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    const updates = FileOps.createFile(localData, path, name, activeDisplay.id)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      FileOps.createFile(draft, path, name, activeDisplay.id)
+    })
   }
 
   const handleCreateFolder = (path: string, name: string) => {
-    const updates = FileOps.createFolder(localData, path, name)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      FileOps.createFolder(draft, path, name)
+    })
   }
 
   const handleDeleteFile = (fileId: string) => {
-    const updates = FileOps.deleteFile(localData, fileId)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      FileOps.deleteFile(draft, fileId)
+    })
   }
 
   const handleDeleteFolder = (folderId: string) => {
-    const updates = FileOps.deleteFolder(localData, folderId)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      FileOps.deleteFolder(draft, folderId)
+    })
   }
 
   const handleRenameFile = (fileId: string, newName: string) => {
-    const updates = FileOps.renameFile(localData, fileId, newName)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      FileOps.renameFile(draft, fileId, newName)
+    })
   }
 
   const handleRenameFolder = (folderId: string, newName: string) => {
-    const updates = FileOps.renameFolder(localData, folderId, newName)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      FileOps.renameFolder(draft, folderId, newName)
+    })
   }
 
   const handleToggleFolder = (folderId: string) => {
-    const updates = FileOps.toggleFolder(localData, folderId)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      FileOps.toggleFolder(draft, folderId)
+    })
   }
 
   const handleMoveFile = (fileId: string, newPath: string) => {
-    const updates = FileOps.moveFile(localData, fileId, newPath)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      FileOps.moveFile(draft, fileId, newPath)
+    })
   }
 
   const handleMoveFolder = (folderId: string, newPath: string) => {
-    const updates = FileOps.moveFolder(localData, folderId, newPath)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      FileOps.moveFolder(draft, folderId, newPath)
+    })
   }
 
   // Layout handlers
@@ -236,74 +248,73 @@ export function CodeStudioEditor({
   }
 
   const handleToggleLayoutEdit = () => {
-    const updates = LayoutOps.toggleLayoutEdit(localData)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      LayoutOps.toggleLayoutEdit(draft)
+    })
   }
 
   const handleSelectDisplay = (displayId: string) => {
-    const updates = LayoutOps.selectDisplay(localData, displayId)
-    
-    // Ao trocar de display, atualizar activeFileId para refletir o estado do novo display
-    const newDisplay = localData.layout?.displays.find(d => d.id === displayId)
-    if (newDisplay) {
-      const editorPanel = newDisplay.panels.find(p => p.type === 'editor')
-      if (editorPanel?.editorInstance === 'unique') {
-        // Display com editor único: usar uniqueActiveFileId
-        handleDataChange({
-          ...updates,
-          activeFileId: newDisplay.uniqueActiveFileId
-        })
-      } else {
-        // Display com editor múltiplo: manter activeFileId global se estiver nas tabs abertas
-        let newActiveFileId = localData.activeFileId
-        if (localData.openTabs && localData.openTabs.length > 0) {
-          if (!localData.activeFileId || !localData.openTabs.includes(localData.activeFileId)) {
-            newActiveFileId = localData.openTabs[localData.openTabs.length - 1]
-          }
+    setLocalData(draft => {
+      LayoutOps.selectDisplay(draft, displayId)
+      
+      // Ao trocar de display, atualizar activeFileId para refletir o estado do novo display
+      const newDisplay = draft.layout?.displays.find(d => d.id === displayId)
+      if (newDisplay) {
+        const editorPanel = newDisplay.panels.find(p => p.type === 'editor')
+        if (editorPanel?.editorInstance === 'unique') {
+          // Display com editor único: usar uniqueActiveFileId
+          draft.activeFileId = newDisplay.uniqueActiveFileId
         } else {
-          newActiveFileId = undefined
+          // Display com editor múltiplo: manter activeFileId global se estiver nas tabs abertas
+          if (draft.openTabs && draft.openTabs.length > 0) {
+            if (!draft.activeFileId || !draft.openTabs.includes(draft.activeFileId)) {
+              draft.activeFileId = draft.openTabs[draft.openTabs.length - 1]
+            }
+          } else {
+            draft.activeFileId = undefined
+          }
         }
-        handleDataChange({
-          ...updates,
-          activeFileId: newActiveFileId
-        })
       }
-    } else {
-      handleDataChange(updates)
-    }
+    })
   }
 
   const handleCreateDisplay = (name: string, aspectRatio: AspectRatio) => {
-    const updates = LayoutOps.createDisplay(localData, name, aspectRatio)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      LayoutOps.createDisplay(draft, name, aspectRatio)
+    })
   }
 
   const handleDeleteDisplay = (displayId: string) => {
-    const updates = LayoutOps.deleteDisplay(localData, displayId)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      LayoutOps.deleteDisplay(draft, displayId)
+    })
   }
 
   const handleRenameDisplay = (displayId: string, newName: string) => {
-    const updates = LayoutOps.renameDisplay(localData, displayId, newName)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      LayoutOps.renameDisplay(draft, displayId, newName)
+    })
   }
 
   const handleChangeAspectRatio = (displayId: string, newAspectRatio: AspectRatio) => {
-    const updates = LayoutOps.changeAspectRatio(localData, displayId, newAspectRatio)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      LayoutOps.changeAspectRatio(draft, displayId, newAspectRatio)
+    })
   }
 
   const handleUpdateCurrentDisplay = (updatedDisplay: DisplayConfig) => {
-    const updates = LayoutOps.updateCurrentDisplay(localData, updatedDisplay)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      LayoutOps.updateCurrentDisplay(draft, updatedDisplay)
+    })
   }
 
   const handleAddPanel = (type: PanelType, row?: number, col?: number) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
     
-    const updates = PanelOps.addPanel(localData, activeDisplay, type, row, col)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      PanelOps.addPanel(draft, activeDisplay, type, row, col)
+    })
   }
 
   const handleGridDrop = (row: number, col: number, type: PanelType) => {
@@ -314,32 +325,36 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
     
-    const updates = PanelOps.resizePanel(localData, activeDisplay, panelId, row, col, rowSpan, colSpan)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      PanelOps.resizePanel(draft, activeDisplay, panelId, row, col, rowSpan, colSpan)
+    })
   }
 
   const handlePanelMove = (panelId: string, row: number, col: number) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
     
-    const updates = PanelOps.movePanel(localData, activeDisplay, panelId, row, col)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      PanelOps.movePanel(draft, activeDisplay, panelId, row, col)
+    })
   }
 
   const handleRemovePanel = (panelId: string) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
     
-    const updates = PanelOps.removePanel(localData, activeDisplay, panelId)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      PanelOps.removePanel(draft, activeDisplay, panelId)
+    })
   }
 
   const handleToggleEditorInstance = (panelId: string) => {
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
-    const updates = PanelOps.toggleEditorInstance(localData, activeDisplay, panelId)
-    handleDataChange(updates)
+    setLocalData(draft => {
+      PanelOps.toggleEditorInstance(draft, activeDisplay, panelId)
+    })
   }
 
   const handlePanelDragStart = (panelId: string) => {
@@ -429,6 +444,7 @@ export function CodeStudioEditor({
                         <MonacoCodeEditor
                           fileId={file.id}
                           filePath={file.path}
+                          instanceId={localData.id} // ID único da instância para isolamento completo
                           value={file.content}
                           onChange={(content) => handleCodeChange(content, file.id)}
                           language={file.language}
