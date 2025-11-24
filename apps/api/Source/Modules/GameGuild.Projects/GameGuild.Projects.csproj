@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" />
+        <PackageReference Include="FluentValidation" />
+        <PackageReference Include="HotChocolate.AspNetCore" />
+        <PackageReference Include="HotChocolate.AspNetCore.Authorization" />
+        <PackageReference Include="HotChocolate.Data.EntityFramework" />
+        <PackageReference Include="HotChocolate.Types.Analyzers" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\GameGuild.Users\GameGuild.Users.csproj" />
+        <ProjectReference Include="..\GameGuild.Permissions\GameGuild.Permissions.csproj" />
+        <ProjectReference Include="..\GameGuild.Authentication\GameGuild.Authentication.csproj" />
+    </ItemGroup>
+
+</Project>

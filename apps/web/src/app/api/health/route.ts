@@ -1,5 +1,4 @@
-import { NextResponse } from 'next/server';
-
+import {NextResponse} from 'next/server';
 
 export const GET = async (): Promise<NextResponse> => {
   try {
@@ -10,7 +9,7 @@ export const GET = async (): Promise<NextResponse> => {
         service: 'web',
         version: process.env.npm_package_version || 'unknown',
       },
-      { status: 200 },
+      {status: 200},
     );
   } catch (error) {
     return NextResponse.json(
@@ -20,7 +19,7 @@ export const GET = async (): Promise<NextResponse> => {
         service: 'web',
         error: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 503 },
+      {status: 503},
     );
   }
 };

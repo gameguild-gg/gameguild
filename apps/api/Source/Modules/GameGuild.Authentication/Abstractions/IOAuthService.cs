@@ -1,0 +1,54 @@
+using GameGuild.Authentication.Models;
+
+namespace GameGuild.Authentication.Abstractions;
+
+/// <summary>
+///     Service for handling OAuth authentication flows with external providers.
+///     Manages authorization URLs, callback handling, and token exchange.
+/// </summary>
+public interface IOAuthService
+{
+    /// <summary>
+    ///     Generates the authorization URL for a specific OAuth provider.
+    /// </summary>
+    /// <param name="provider">The OAuth provider (Google, GitHub, etc.)</param>
+    /// <param name="redirectUri">The callback URL after authentication</param>
+    /// <param name="state">CSRF protection state parameter</param>
+    /// <param name="scopes">Optional custom scopes to request</param>
+    /// <returns>The complete authorization URL to redirect the user to</returns>
+    Task<string> GetAuthorizationUrlAsync(string provider, string redirectUri, string state, string[ ]? scopes = null);
+
+    /// <summary>
+    ///     Handles the OAuth callback and exchanges authorization code for access token.
+    /// </summary>
+    /// <param name="provider">The OAuth provider</param>
+    /// <param name="code">Authorization code from provider</param>
+    /// <param name="state">State parameter for CSRF validation</param>
+    /// <param name="redirectUri">The same redirect URI used in authorization request</param>
+    /// <returns>OAuth user profile information</returns>
+    Task<OAuthUserProfile> HandleCallbackAsync(string provider, string code, string state, string redirectUri);
+
+    /// <summary>
+    ///     Validates an OAuth ID token (e.g., Google ID Token).
+    /// </summary>
+    /// <param name="provider">The OAuth provider</param>
+    /// <param name="idToken">The ID token to validate</param>
+    /// <returns>Validated user profile information</returns>
+    Task<OAuthUserProfile> ValidateIdTokenAsync(string provider, string idToken);
+
+    /// <summary>
+    ///     Gets user profile information using an access token.
+    /// </summary>
+    /// <param name="provider">The OAuth provider</param>
+    /// <param name="accessToken">The access token</param>
+    /// <returns>User profile information</returns>
+    Task<OAuthUserProfile> GetUserProfileAsync(string provider, string accessToken);
+
+    /// <summary>
+    ///     Revokes an OAuth token with the provider.
+    /// </summary>
+    /// <param name="provider">The OAuth provider</param>
+    /// <param name="token">The token to revoke</param>
+    /// <returns>True if revocation was successful</returns>
+    Task<bool> RevokeTokenAsync(string provider, string token);
+}

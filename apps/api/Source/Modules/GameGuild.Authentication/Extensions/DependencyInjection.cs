@@ -1,0 +1,34 @@
+using GameGuild.Authentication.Commands;
+using GameGuild.Authentication.DTOs;
+using GameGuild.Authentication.Handlers;
+using GameGuild.Authentication.Validators;
+using GameGuild.CQRS;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace GameGuild.Authentication.Extensions;
+
+/// <summary>
+///     Dependency injection configuration for Authentication Application layer
+/// </summary>
+public static class DependencyInjection
+{
+    /// <summary>
+    ///     Registers all Authentication application services including command handlers and validation
+    /// </summary>
+    public static IServiceCollection AddAuthenticationApplication(this IServiceCollection services)
+    {
+        // Register Command Handlers
+        services.AddScoped<IRequestHandler<LocalSignUpCommand, SignInResponse>, LocalSignUpHandler>();
+        services.AddScoped<IRequestHandler<LocalSignInCommand, SignInResponse>, LocalSignInHandler>();
+        services.AddScoped<IRequestHandler<RefreshTokenCommand, SignInResponse>, RefreshTokenHandler>();
+        services.AddScoped<IRequestHandler<GoogleIdTokenSignInCommand, SignInResponse>, GoogleIdTokenSignInHandler>();
+
+        // Register validators
+        services.AddScoped<FluentValidation.IValidator<LocalSignUpCommand>, LocalSignUpCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<LocalSignInCommand>, LocalSignInCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<RefreshTokenCommand>, RefreshTokenCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<GoogleIdTokenSignInCommand>, GoogleIdTokenSignInCommandValidator>();
+
+        return services;
+    }
+}

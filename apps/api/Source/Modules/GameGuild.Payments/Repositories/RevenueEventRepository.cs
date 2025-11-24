@@ -1,0 +1,36 @@
+using GameGuild.Abstractions;
+using GameGuild.Payments.Abstractions;
+using GameGuild.Payments.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace GameGuild.Payments.Repositories;
+
+/// <summary>
+///     Repository for revenue events
+/// </summary>
+public class RevenueEventRepository(IApplicationDbContext context) : IRevenueEventRepository
+{
+    private DbSet<RevenueEvent> RevenueEvents { get => RevenueEvents; }
+
+    public async Task<RevenueEvent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) { return await RevenueEvents.FirstOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false); }
+
+    public async Task<List<RevenueEvent>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, int skip, int take, CancellationToken cancellationToken = default)
+    {
+        return await RevenueEvents.Where(e => e.Timestamp >= startDate && e.Timestamp <= endDate).OrderByDescending(e => e.Timestamp).Skip(skip).Take(take).ToListAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<List<RevenueEvent>> GetByReferenceIdAsync(string referenceId, CancellationToken cancellationToken = default)
+    {
+        return await RevenueEvents.Where(e => e.ReferenceId == referenceId).OrderByDescending(e => e.Timestamp).ToListAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task AddAsync(RevenueEvent revenueEvent, CancellationToken cancellationToken = default) { await RevenueEvents.AddAsync(revenueEvent, cancellationToken).ConfigureAwait(false); }
+
+    public async Task UpdateAsync(RevenueEvent revenueEvent, CancellationToken cancellationToken = default)
+    {
+        RevenueEvents.Update(revenueEvent);
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
+
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default) { await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false); }
+}
