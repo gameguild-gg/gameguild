@@ -1,7 +1,7 @@
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 import { getQueryClient } from '@/components/get-query-client';
-import { FeatureFlagsManagementContent } from '@/components/features/feature-flags-management-content';
-import { featureFlagQueries } from '@/lib/queries/feature-flags.query';
+// import { FeatureFlagsManagementContent } from '@/components/features/feature-flags-management-content';
+// import { featureFlagQueries } from '@/lib/queries/feature-flags.query';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { Suspense } from 'react';
@@ -10,7 +10,7 @@ export default async function FeatureFlagsPage(): Promise<React.JSX.Element> {
   const queryClient = getQueryClient();
 
   // Prefetch feature flags data on the server
-  await queryClient.prefetchQuery(featureFlagQueries.list());
+  // await queryClient.prefetchQuery(featureFlagQueries.list());
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
@@ -30,7 +30,8 @@ export default async function FeatureFlagsPage(): Promise<React.JSX.Element> {
               </div>
             }
           >
-            <FeatureFlagsManagementContent />
+            {/* TODO: FeatureFlagsManagementContent component not found */}
+            <div className="p-4 text-muted-foreground">Feature flags management coming soon...</div>
           </Suspense>
         </DashboardPageContent>
       </DashboardPage>

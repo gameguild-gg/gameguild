@@ -3,11 +3,39 @@
 import { environment } from '@/configs/environment';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import { client } from '@/lib/api/generated/client.gen';
-import { getTestingPublicSessions, postTestingSessions, getTestingSessions as sdkGetTestingSessions } from '@/lib/api/generated/sdk.gen';
-import type { CreateTestingLocationDto, TestingLocation, TestingSession, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
+// TODO: Testing Lab SDK functions not found in generated API - API generation may not have included TestingLab module
+// import { getTestingPublicSessions, postTestingSessions, getTestingSessions as sdkGetTestingSessions } from '@/lib/api/generated/sdk.gen';
+// TODO: Testing Lab types not found in generated API types - API generation may not have included TestingLab module
+// import type { CreateTestingLocationDto, TestingLocation, TestingSession, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
 
-// Re-export the generated types for convenience
-export type { CreateTestingLocationDto as CreateTestingLocationRequest, UpdateTestingLocationDto as UpdateTestingLocationRequest } from '@/lib/api/generated/types.gen';
+// Re-export the generated types for convenience (commented out until types are available)
+// export type { CreateTestingLocationDto as CreateTestingLocationRequest, UpdateTestingLocationDto as UpdateTestingLocationRequest } from '@/lib/api/generated/types.gen';
+
+// Temporary type definitions until API generation includes TestingLab module
+export interface CreateTestingLocationRequest {
+  name: string;
+  address?: string;
+  capacity?: number;
+}
+
+export interface UpdateTestingLocationRequest extends Partial<CreateTestingLocationRequest> {}
+
+export interface TestingLocation extends CreateTestingLocationRequest {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TestingSession {
+  id: string;
+  sessionName: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  locationId: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface TestingLabManager {
   id: string;
