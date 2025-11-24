@@ -30,7 +30,7 @@ COPY --from=build --chown=appuser:appuser /app/publish .
 USER appuser
 
 # Expose port
-EXPOSE 5000
+EXPOSE 5295
 
 # Set environment variables
 ENV ASPNETCORE_URLS=http://+:5295 \
