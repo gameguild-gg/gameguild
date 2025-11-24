@@ -34,6 +34,7 @@ export class CodeStudioNode extends DecoratorNode<JSX.Element> {
   constructor(data: CodeStudioData, key?: string) {
     super(key)
     this.__data = {
+      id: data.id || `code-studio-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Gerar ID único se não existir
       files: data.files || [],
       folders: data.folders || [],
       openTabs: data.openTabs || [],
@@ -226,6 +227,7 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
 
 export function $createCodeStudioNode(mode: CodeStudioMode = "execution"): CodeStudioNode {
   return new CodeStudioNode({
+    id: `code-studio-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // Gerar ID único
     files: [],
     folders: [],
     openTabs: [],
