@@ -23,6 +23,7 @@ export class LuaRunner implements CodeRunner {
     this.options = {
       timeout: options.timeout || 30000,
       memoryLimit: options.memoryLimit || 64 * 1024 * 1024,
+      onRequestInput: options.onRequestInput,
     }
   }
 
@@ -61,8 +62,9 @@ export class LuaRunner implements CodeRunner {
         end
       `)
 
-      // Setup stdin if provided (stored in a global variable)
+      // Setup stdin - either from pre-provided string or interactive callback
       if (stdin !== undefined) {
+        // Pre-provided stdin (static)
         const stdinLines = stdin.split('\n')
         await lua.doString(`
           _stdin_lines = {}
@@ -84,6 +86,25 @@ export class LuaRunner implements CodeRunner {
               return line
             end
             return nil
+          end
+        `)
+      } else if (this.options.onRequestInput) {
+        // Interactive input via callback
+        const requestInput = this.options.onRequestInput
+        
+        lua.global.set('_request_input_js', (prompt?: string) => {
+          // Get current output before requesting input
+          if (!lua) return Promise.reject(new Error('Lua engine not initialized'))
+          return lua.doString('return get_output()').then((currentOutput) => {
+            const outputStr = String(currentOutput || '')
+            return requestInput(prompt, outputStr)
+          })
+        })
+        
+        await lua.doString(`
+          io.read = function(prompt)
+            local promise = _request_input_js(prompt)
+            return promise:await()
           end
         `)
       }
@@ -250,8 +271,9 @@ export class LuaRunner implements CodeRunner {
         }
       }
 
-      // Setup stdin if provided
+      // Setup stdin - either from pre-provided string or interactive callback
       if (stdin !== undefined) {
+        // Pre-provided stdin (static)
         const stdinLines = stdin.split('\n')
         await lua.doString(`
           _stdin_lines = {}
@@ -271,6 +293,25 @@ export class LuaRunner implements CodeRunner {
               return line
             end
             return nil
+          end
+        `)
+      } else if (this.options.onRequestInput) {
+        // Interactive input via callback
+        const requestInput = this.options.onRequestInput
+        
+        lua.global.set('_request_input_js', (prompt?: string) => {
+          // Get current output before requesting input
+          if (!lua) return Promise.reject(new Error('Lua engine not initialized'))
+          return lua.doString('return get_output()').then((currentOutput) => {
+            const outputStr = String(currentOutput || '')
+            return requestInput(prompt, outputStr)
+          })
+        })
+        
+        await lua.doString(`
+          io.read = function(prompt)
+            local promise = _request_input_js(prompt)
+            return promise:await()
           end
         `)
       }
