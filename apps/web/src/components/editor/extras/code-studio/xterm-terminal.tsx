@@ -11,6 +11,7 @@ import { Unicode11Addon } from "@xterm/addon-unicode11"
 import "@xterm/xterm/css/xterm.css"
 import { useTheme } from "next-themes"
 import { X, ChevronUp, ChevronDown } from "lucide-react"
+import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
 
 interface XTermTerminalProps {
   output: string
@@ -81,6 +82,10 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
     const inputResolverRef = useRef<((value: string) => void) | null>(null)
     const [showSearch, setShowSearch] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
+    const [linkConfirmDialog, setLinkConfirmDialog] = useState<{ open: boolean; url: string }>({
+      open: false,
+      url: "",
+    })
     const { resolvedTheme } = useTheme()
     const isDarkMode = resolvedTheme === "dark"
 
@@ -156,8 +161,11 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
     searchAddonRef.current = searchAddon
     terminal.loadAddon(searchAddon)
 
-    // Load web links addon for clickable URLs
-    const webLinksAddon = new WebLinksAddon()
+    // Load web links addon for clickable URLs with confirmation
+    const webLinksAddon = new WebLinksAddon((event, uri) => {
+      event.preventDefault()
+      setLinkConfirmDialog({ open: true, url: uri })
+    })
     terminal.loadAddon(webLinksAddon)
 
     // Load clipboard addon for better copy/paste support
@@ -289,6 +297,17 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
 
   return (
     <div className="h-full w-full overflow-hidden p-2 relative">
+      {/* Link Confirmation Dialog */}
+      <LinkConfirmDialog
+        open={linkConfirmDialog.open}
+        onOpenChange={(open) => setLinkConfirmDialog({ open, url: "" })}
+        url={linkConfirmDialog.url}
+        onConfirm={() => {
+          window.open(linkConfirmDialog.url, '_blank', 'noopener,noreferrer')
+          setLinkConfirmDialog({ open: false, url: "" })
+        }}
+      />
+
       {/* Search Bar */}
       {showSearch && (
         <div className="absolute top-2 right-2 z-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg p-2 flex items-center gap-2">
