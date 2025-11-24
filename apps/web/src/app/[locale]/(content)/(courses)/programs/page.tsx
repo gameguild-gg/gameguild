@@ -1,6 +1,6 @@
 'use client';
 
-import React, { Suspense } from 'react';
+import React from 'react';
 import { CourseProvider } from '@/lib/courses';
 import { getCourseData } from '@/lib/courses/actions/index';
 import { CourseErrorBoundary } from '@/components/courses/course-error-boundary';

@@ -19,8 +19,9 @@ export function SidebarToggle({ className }: SidebarToggleProps) {
       onClick={toggleSidebar}
       className={cn(
         "fixed top-4 z-50 size-8 transition-all duration-300 ease-in-out",
-        "bg-background/80 backdrop-blur-sm border border-border shadow-sm",
-        "hover:bg-accent hover:text-accent-foreground",
+        "bg-background/20 backdrop-blur-md border border-white/10 shadow-lg",
+        "hover:bg-background/30 hover:border-white/20 hover:shadow-xl",
+        "active:bg-background/40 active:scale-95",
         // Position based on sidebar state - only after hydration
         mounted && isSidebarOpen ? "left-[21rem] lg:left-[21rem]" : "left-4",
         className

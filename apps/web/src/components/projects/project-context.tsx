@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import type { Project } from "@/lib/api/generated/types.gen";
 import type { GameProject } from "@/lib/types";
 
 const ProjectContext = createContext<GameProject | null>(null);

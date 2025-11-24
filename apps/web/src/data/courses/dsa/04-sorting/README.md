@@ -1,0 +1,122 @@
+# Sorting algorithms
+
+Sorting argorthims are a sequence of steps that are used to sort a list of elements in a particular order.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/kPRA0W1kECg?si=m80vTaP3rxdJxvQ0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+## Swap function
+
+It is vital to the sorting algorithms that you have a swap function. It is used to swap two elements in the array.
+
+``` c++
+void swap(int &a, int &b) {
+  int temp = a;
+  a = b;
+  b = temp;
+}
+```
+
+::: note
+
+Pay attention that in the swap, you need to use a third variable to swap them! If you don't, you will lose the value of the first variable.
+
+:::
+
+## Bubble sort
+
+``` c++
+void bubble_sort(int arr[], int n) {
+  for (int i = 0; i < n; i++) { // n passes
+    for (int j = 0; j < n - 1; j++) { // linear pass
+      if (arr[j] > arr[j + 1]) { // swap if the element is greater than the next
+        swap(arr[j], arr[j + 1]);
+      }
+    }
+  }
+}
+```
+
+Is it possible to optimize the bubble sort algorithm? 
+- The example above always pass from the beginning to the end of the array, but it is possible to stop the inner loop earlier if the right side of the array is already sorted.
+- You can count how many swaps you did in the inner loop, and if you did 0 swaps, you can stop the outer loop.
+
+### Questions:
+
+- What is the best case scenario for the bubble sort?
+- What is the worst case scenario for the bubble sort?
+- How many writes does the bubble sort do?
+- How many reads does the bubble sort do?
+- What is the time complexity of the bubble sort?
+- What is the space complexity of the bubble sort?
+
+## Selection sort
+
+``` c++
+void selection_sort(int arr[], int n) {
+  for (int i = 0; i < n - 1; i++) { // n - 1 passes
+    int min_index = i; // the minimum element in the unsorted part of the array
+    for (int j = i + 1; j < n; j++) { // linear search
+      if (arr[j] < arr[min_index]) { // find the minimum element
+        min_index = j;
+      }
+    }
+    swap(arr[i], arr[min_index]); // swap the minimum element with the first element of the unsorted part
+  }
+}
+```
+
+### Questions:
+
+- What is the best case scenario for the selection sort?
+- What is the worst case scenario for the selection sort?
+- How many writes does the selection sort do?
+- How many reads does the selection sort do?
+- What is the time complexity of the selection sort?
+- What is the space complexity of the selection sort?
+- What is the difference between the bubble sort and the selection sort?
+
+## Insertion sort
+
+```c++
+void insertion_sort(int arr[], int n) {
+    // nothing to do here
+    if (n <=1)
+      return;
+    // outer loop goes from the left to the right. it marks the end of the sorted subarray
+    for (size_t lastSortedIdx = 1; lastSortedIdx<n; lastSortedIdx++) {
+      // inner loop starts from the last sorted index to 0, swapping to find the best place to stay
+      for (size_t i = lastSortedIdx; i>0; i--) {
+        if (arr[i-1] > arr[i])
+          swap(arr[i-1], arr[i]); // we swap until we find the best spot
+        else
+          break; // that's why it is faster! we break early
+      }
+    }
+  }
+}
+```
+
+### Questions:
+
+- What is the best case scenario for the insertion sort?
+- What is the worst case scenario for the insertion sort?
+- How many writes does the insertion sort do?
+- How many reads does the insertion sort do?
+- What is the time complexity of the insertion sort?
+- What is the space complexity of the insertion sort?
+- What is the difference between the bubble sort, the selection sort, and the insertion sort?
+
+## Discussion
+
+- Why is sorting typically taught towards the beginning of an algorithms course?
+- Why do we study algorithms like bubble sort that are almost never used in practice?
+- Can you describe a non-comparative sorting algorithm?
+- Which of these sorting algorithms is the best: bubble sort, selection sort, or insertion sort?
+
+Table of differences between the sorting algorithms:
+
+| Algorithm | Best case | Worst case | Time complexity | Space complexity | Swaps |
+|-----------|-----------|------------|-----------------|------------------|-------|
+| Bubble    | O(n)      | O(n^2)     | O(n^2)          | O(1)             | O(n^2)|
+| Selection | O(n^2)    | O(n^2)     | O(n^2)          | O(1)             | O(n)  |
+| Insertion | O(n)      | O(n^2)     | O(n^2)          | O(1)             | O(n^2)|

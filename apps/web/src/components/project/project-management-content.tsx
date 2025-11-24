@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, RefreshCw, Search, Filter, Eye, Edit, Trash2, Archive, Upload } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, RefreshCw, Search, Edit, Trash2, Archive, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { getProjectsData, createProject, updateProject, deleteProject, publishProject, unpublishProject, archiveProject } from '@/lib/projects/projects.actions';
 import type { Project } from '@/lib/api/generated/types.gen';

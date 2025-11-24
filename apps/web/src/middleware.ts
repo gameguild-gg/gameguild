@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const locale = request.cookies.get('NEXT_LOCALE')?.value || 'en';
+  const pathname = request.nextUrl.pathname;
 
   // Debug logging
   console.log('Middleware processing:', {
@@ -37,7 +38,6 @@ export function middleware(request: NextRequest) {
 
   // Custom rewrites: support legacy paths like /projects and /projects/:slug
   // Map them to the dashboard route while preserving locale prefix semantics
-  const pathname = request.nextUrl.pathname;
   const localePattern = '(?:en|pt-BR)';
   // Match: /projects or /:locale/projects
   const projectsIndexRegex = new RegExp(`^\/(?:${localePattern}\/)?projects\/?$`);

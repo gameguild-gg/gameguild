@@ -1,4 +1,31 @@
-# Flocking agents behavior formal assignment
+# Flocking agents behavior assignments
+
+<details>
+<summary> Teacher Notes </summary>
+
+Day 1:
+
+- Flocking Presentation
+- Talk about the formal vs interactive(freedom)
+- Ensure EVERYONE have the codebase ready
+- Explain where they should code in the formal and in the mobagen boilerplate;
+- For the interactive assignments: 
+    - Always record videos (optionally upload to youtube as unlisted) and submit the link on the assignment.
+    - If you are pursuing bonus extra points, state them as comment on the submission
+    - If you want to do things by yourself or in a game engine, remember always create debug interfaces.
+- For the formal assignment:
+    - There is no need to nail all of the tests, but at least the basic ones should pass.
+
+Day 2:
+
+- Explain in depth common problems the students may have, such as:
+    - Forgetting to normalize the force,
+    - The separation force should be inverse proportional to the distance,
+    - The alignment force should be proportional to the velocity,
+    - When a force should include itself or not.
+- Track the progress
+
+</details>
 
 You are in charge of implementing some functions to make some AI agents flock together in a game. After finishing it, you will be one step further to render it in a game engine, and start making reactive NPCs and enemies. You will learn the basic concepts needed to code and customize your own AI behaviors.
 
@@ -42,7 +69,7 @@ Apply a force towards the center of mass of the group.
 2. Compute the location of the center of mass of the group ($ P_{CM} $);
 3. Compute the force that will move the agent towards the center of mass($ \overrightarrow{F_c} $); The farther the agent is from the center of mass, the force increases linearly up to the limit of the cohesion radius $ r_c $.
 
-![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.png)
+![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fcohesion.png)
 
 $$
 P_{CM} = \frac{\sum_{i=0}^{n-1} P_i}{n}
@@ -55,11 +82,49 @@ $$
 \end{cases}
 $$
 
-![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
-
 ::: tip
 
 Note that the maximum magnitude of $ \overrightarrow{F_c} $ is 1. Inclusive. This value can be multiplied by a constant $ K_c $ to increase or decrease the cohesion force to looks more appealing.
+
+:::
+
+In order for you to pass the formal assignment tests, normalize the force, then multiply by the cohesion constant $ K_c $. No need to divide by the radius here.
+
+[![cohesionflow](https://app.code2flow.com/LjRYWNnhilPO.code.png)](https://app.code2flow.com/LjRYWNnhilPO)
+
+::: example "Cohesion Example"
+
+![cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fcohesion.gif)
+
+:::
+
+### Alignment
+
+It is the force that will align the velocity of the agent with the average velocity of the group.
+
+1. The $ n $ neighbors of an agent are all the agents that are within the alignment radius $ r_a $ of the agent, including itself;
+2. Compute the average velocity of the group ($ \overrightarrow{V_{avg}} $);
+3. Compute the force that will move the agent towards the average velocity ($ \overrightarrow{F_{a}} $);
+
+![alignment](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.png)
+
+$$
+\overrightarrow{V_{avg}} = \frac{\sum_{i=0}^{n-1} \vec{V_i}}{n}
+$$
+
+In order for you to pass the formal assignment tests, get the average velocity and multiply it by $ k $
+
+[![alignmentflow](https://app.code2flow.com/PyWDVmTaLS9W.code.png)](https://app.code2flow.com/PyWDVmTaLS9W)
+
+::: danger
+
+The alignment "force" is an weighted velocity normalization process, it is not a force. So the process to combining the velocities is not that precise here. In a real case, you should apply another process to improve look and feel. What we are doing here is a simplification acting as a force.
+
+:::
+
+::: example "Alignment Example"
+
+![alignment](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
 
 :::
 
@@ -102,29 +167,13 @@ $$
 
 :::
 
+In order for the formal tests to pass, you have to accumulate forces $ k * hat / dist $ for each neighbor and then check for the max force.
+
+[![separationFlow](https://app.code2flow.com/EkvGThGW36SH.code.png)](https://app.code2flow.com/EkvGThGW36SH)
+
 ::: example "Separation Example"
 
 ![separation](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fseparation.gif)
-
-:::
-
-### Alignment
-
-It is the force that will align the velocity of the agent with the average velocity of the group.
-
-1. The $ n $ neighbors of an agent are all the agents that are within the alignment radius $ r_a $ of the agent, including itself;
-2. Compute the average velocity of the group ($ \overrightarrow{V_{avg}} $);
-3. Compute the force that will move the agent towards the average velocity ($ \overrightarrow{F_{a}} $);
-
-![alignment](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.png)
-
-$$
-\overrightarrow{V_{avg}} = \frac{\sum_{i=0}^{n-1} \vec{V_i}}{n}
-$$
-
-::: example "Alignment Example"
-
-![alignment](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment.gif)
 
 :::
 
@@ -157,6 +206,8 @@ The $ \overrightarrow{V_{new}} $ and $ P_{new} $ are the ones that will be used 
 
 :::
 
+[![combinedFlow](https://app.code2flow.com/hBCfg7YGeA4P.code.png)](https://app.code2flow.com/hBCfg7YGeA4P)
+
 ::: note
 
 - For simplicity, we are going to assume that the mass of all agents is 1.
@@ -170,7 +221,7 @@ Alignment + Cohesion:
 
 ![alignment+cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Falignment_cohesion.gif)
 
-Cohesion:
+Cohesion + Separation:
 
 ![separation+cohesion](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?prefix=ai4games%2Fseparation_cohesion.gif)
 

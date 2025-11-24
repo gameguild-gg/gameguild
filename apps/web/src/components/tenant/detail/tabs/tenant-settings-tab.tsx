@@ -1,6 +1,24 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  Settings, 
+  Save, 
+  Globe, 
+  Shield, 
+  Bell,
+  Database,
+  AlertTriangle,
+  CheckCircle,
+  Loader2
+} from 'lucide-react';
 import type { Tenant } from '@/lib/api/generated/types.gen';
 import { Settings } from 'lucide-react';
 

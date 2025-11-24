@@ -193,7 +193,14 @@ export class GoogleDriveService {
             const metadata = await this.downloadJsonFile(indexFile.id!)
             if (metadata && this.isValidProjectMetadata(metadata)) {
               projects.push({
-                ...metadata as any,
+                id: (metadata as any).id,
+                name: (metadata as any).name,
+                data: "", // Placeholder - actual data loaded when opening project
+                tags: (metadata as any).tags || [],
+                size: (metadata as any).size || 0,
+                createdAt: (metadata as any).createdAt,
+                updatedAt: (metadata as any).updatedAt,
+                hash: (metadata as any).hash || "",
                 driveFileId: folder.id!, // Use folder ID for reference
                 storageType: "google-drive"
               })
@@ -430,7 +437,10 @@ export class GoogleDriveService {
 
   // Get project by ID with full data
   async getProject(projectId: string): Promise<GoogleDriveProjectData | null> {
+    console.log(`GoogleDriveService.getProject called with ID: ${projectId}`)
+    
     if (!this.isReady()) {
+      console.error("GoogleDriveService not ready in getProject")
       return null
     }
 
@@ -439,11 +449,15 @@ export class GoogleDriveService {
       
       // Find project folder
       const projectFolderName = `projeto-${projectId}`
+      console.log(`Looking for project folder: ${projectFolderName}`)
       const projectFolderId = await this.findProjectFolder(projectFolderName)
       
       if (!projectFolderId) {
+        console.error(`Project folder not found: ${projectFolderName}`)
         return null
       }
+      
+      console.log(`Found project folder with ID: ${projectFolderId}`)
       
       // Get metadata from index.json
       const indexFileResponse = await window.gapi.client.drive.files.list({
@@ -453,13 +467,18 @@ export class GoogleDriveService {
       
       const indexFile = indexFileResponse.result.files?.[0]
       if (!indexFile) {
+        console.error("index.json file not found in project folder")
         return null
       }
       
+      console.log(`Found index.json with ID: ${indexFile.id}`)
       const indexData = await this.downloadJsonFile(indexFile.id!)
       if (!indexData) {
+        console.error("Failed to download or parse index.json")
         return null
       }
+      
+      console.log("Downloaded index.json:", indexData)
       
       // Get data from data.gglexical file (updated to use new filename)
       const dataFileResponse = await window.gapi.client.drive.files.list({
@@ -469,13 +488,17 @@ export class GoogleDriveService {
       
       const dataFile = dataFileResponse.result.files?.[0]
       if (!dataFile) {
+        console.error("data.gglexical file not found in project folder")
         return null
       }
       
+      console.log(`Found data.gglexical with ID: ${dataFile.id}`)
       const dataResponse = await window.gapi.client.drive.files.get({
         fileId: dataFile.id!,
         alt: 'media',
       })
+      
+      console.log("Downloaded data.gglexical content length:", dataResponse.body?.length)
       
       // Use ProjectImporter to process the folder structure
       const folderData: FolderStructureData = {
@@ -484,10 +507,38 @@ export class GoogleDriveService {
         folderName: projectFolderName
       }
       
+      console.log("Calling ProjectImporter.importFromFolderStructure with:", {
+        indexContentLength: folderData.indexContent.length,
+        dataContentLength: folderData.dataContent.length,
+        folderName: folderData.folderName
+      })
+      
       const importedProject = await ProjectImporter.importFromFolderStructure(folderData)
       
+      console.log("ProjectImporter returned:", {
+        id: importedProject?.id,
+        name: importedProject?.name,
+        dataLength: importedProject?.data?.length,
+        tagsCount: importedProject?.tags?.length
+      })
+      
+      // Validate that the imported project has the required data
+      if (!importedProject || !importedProject.data) {
+        console.error('ProjectImporter returned invalid data:', importedProject)
+        return null
+      }
+
+      // Validate that the data is valid JSON
+      try {
+        JSON.parse(importedProject.data)
+        console.log("Project data is valid JSON")
+      } catch (parseError) {
+        console.error('Project data is not valid JSON:', parseError, importedProject.data)
+        return null
+      }
+
       // Convert to GoogleDriveProjectData format
-      return {
+      const projectData = {
         id: importedProject.id,
         name: importedProject.name,
         data: importedProject.data,
@@ -497,8 +548,23 @@ export class GoogleDriveService {
         updatedAt: importedProject.metadata?.updatedAt || new Date().toISOString(),
         hash: importedProject.metadata?.hash || '',
         driveFileId: projectFolderId,
-        storageType: "google-drive"
+        storageType: "google-drive" as const
       }
+
+      // Final validation
+      if (!this.isValidProjectData(projectData)) {
+        console.error('Generated project data is invalid:', projectData)
+        return null
+      }
+
+      console.log("Returning valid project data:", {
+        id: projectData.id,
+        name: projectData.name,
+        dataLength: projectData.data.length,
+        storageType: projectData.storageType
+      })
+
+      return projectData
       
     } catch (error) {
       console.error(`Failed to get project ${projectId}:`, error)

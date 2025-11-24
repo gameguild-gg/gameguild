@@ -3,10 +3,10 @@
 import type React from "react"
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
-import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database, Wifi, WifiOff } from "lucide-react"
+import { FolderOpen } from "lucide-react"
 import { DownloadConfirmDialog } from "@/components/editor/extras/dialogs/download-confirm-dialog"
-import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
+import { ProjectGridView } from "./project-grid-view"
+import { ProjectListView } from "./project-list-view"
 
 interface ProjectData {
   id: string
@@ -26,9 +26,11 @@ interface ProjectListProps {
   itemsPerPage: number
   searchTerm: string
   selectedTags: string[]
-  onOpen: (projectId: string) => void
+  viewMode?: 'grid' | 'list'
+  onOpen: (projectId: string, event?: React.MouseEvent) => void
+  onView?: (projectId: string, event?: React.MouseEvent) => void
   onDelete?: (projectId: string, projectName: string) => void
-  onInfo?: (project: ProjectData) => void;
+  onInfo?: (project: ProjectData) => void
   onDownload?: (
     projectId: string,
     projectName: string,
@@ -38,6 +40,7 @@ interface ProjectListProps {
     updatedAt: string,
   ) => void
   showDeleteButton?: boolean
+  showStudioViewerButtons?: boolean
   openButtonText?: string
   openButtonIcon?: React.ReactNode
 }
@@ -48,11 +51,14 @@ export function ProjectList({
   itemsPerPage,
   searchTerm,
   selectedTags,
+  viewMode = 'grid',
   onOpen,
+  onView,
   onDelete,
   onInfo,
   onDownload,
   showDeleteButton = true,
+  showStudioViewerButtons = false,
   openButtonText = "Open",
   openButtonIcon,
 }: ProjectListProps) {
@@ -60,9 +66,6 @@ export function ProjectList({
     open: boolean
     project: ProjectData | null
   }>({ open: false, project: null })
-
-  // Google Drive authentication hook to check connection status
-  const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
 
   // Format file size
   const formatSize = (sizeInKB: number): string => {
@@ -77,74 +80,63 @@ export function ProjectList({
     setDownloadDialog({ open: true, project })
   }
 
-  const handleDownloadConfirm = () => {
-    if (downloadDialog.project && onDownload) {
-      onDownload(
-        downloadDialog.project.id,
-        downloadDialog.project.name,
-        downloadDialog.project.data,
-        downloadDialog.project.tags,
-        downloadDialog.project.createdAt,
-        downloadDialog.project.updatedAt,
-      )
+  const handleDownloadConfirm = async () => {
+    if (downloadDialog.project) {
+      if (onDownload) {
+        // Call the provided onDownload function
+        onDownload(
+          downloadDialog.project.id,
+          downloadDialog.project.name,
+          downloadDialog.project.data,
+          downloadDialog.project.tags,
+          downloadDialog.project.createdAt,
+          downloadDialog.project.updatedAt,
+        )
+      } else {
+        // If no onDownload provided, implement download locally
+        try {
+          // Dynamic imports to avoid issues if these aren't available
+          const [{ HashManager }, { ProjectExporter }] = await Promise.all([
+            import("@/lib/sync/editor/hash-manager"),
+            import("@/lib/interopAdapter/project-exporter")
+          ])
+
+          // Generate hash for the project
+          const hash = await HashManager.generateHash(downloadDialog.project.data)
+
+          // Prepare project data for export using ProjectExporter
+          const exportProjectData = {
+            id: downloadDialog.project.id,
+            name: downloadDialog.project.name,
+            data: downloadDialog.project.data,
+            tags: downloadDialog.project.tags,
+            size: new Blob([downloadDialog.project.data]).size,
+            createdAt: downloadDialog.project.createdAt,
+            updatedAt: downloadDialog.project.updatedAt,
+            hash: hash,
+            storageType: "local" as const
+          }
+
+          // Use ProjectExporter to create the ZIP file
+          const zipBlob = await ProjectExporter.createZipFile(exportProjectData, hash)
+
+          // Create download link
+          const url = URL.createObjectURL(zipBlob)
+          const link = document.createElement("a")
+          link.href = url
+          link.download = ProjectExporter.getDownloadFilename(exportProjectData)
+          document.body.appendChild(link)
+          link.click()
+
+          // Cleanup
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        } catch (error) {
+          console.error("Download error:", error)
+        }
+      }
     }
     setDownloadDialog({ open: false, project: null })
-  }
-
-    // Render storage type indicator
-  const renderStorageIndicator = (
-    storageType: "local" | "gameguild-cloud" | "google-drive" | undefined,
-    isLocallyAvailable?: boolean
-  ) => {
-    if (!storageType || storageType === "local") {
-      return (
-        <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400" title="Stored locally on this device">
-          <HardDrive className="h-3 w-3" />
-          <span>Local</span>
-        </div>
-      )
-    }
-
-    if (storageType === "gameguild-cloud") {
-      return (
-        <div className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400" title="Stored on GameGuild Cloud - Always accessible">
-          <Database className="h-3 w-3" />
-          <span>GameGuild</span>
-          <Wifi className="h-2 w-2" />
-        </div>
-      )
-    }
-
-    if (storageType === "google-drive") {
-      const isConnected = isGoogleDriveAuthenticated
-      const isAvailableLocally = isLocallyAvailable === true
-      
-      return (
-        <div className={`flex items-center gap-1 text-xs ${
-          isConnected 
-            ? (isAvailableLocally ? "text-green-600 dark:text-green-400" : "text-blue-600 dark:text-blue-400")
-            : "text-orange-600 dark:text-orange-400"
-        }`} title={
-          !isConnected 
-            ? "Stored on Google Drive - Connect to access"
-            : isAvailableLocally
-              ? "Stored on Google Drive - Downloaded and ready"
-              : "Stored on Google Drive - Click to download"
-        }>
-          <Cloud className="h-3 w-3" />
-          <span>Google Drive</span>
-          {!isConnected ? (
-            <WifiOff className="h-2 w-2" />
-          ) : isAvailableLocally ? (
-            <Wifi className="h-2 w-2" />
-          ) : (
-            <Download className="h-2 w-2" />
-          )}
-        </div>
-      )
-    }
-
-    return null
   }
 
   const paginatedProjects = projects.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
@@ -171,97 +163,41 @@ export function ProjectList({
     )
   }
 
+  const handleProjectDownload = (project: ProjectData) => {
+    // Always show confirmation dialog first
+    handleDownloadClick(project)
+  }
+
   return (
     <>
       <div className="flex-1 min-h-0 overflow-y-auto p-1">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          {paginatedProjects.map((project) => (
-            <div
-              key={project.id}
-              className="group relative flex h-40 cursor-pointer flex-col justify-between overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all duration-200 ease-in-out hover:shadow-md dark:border-gray-800 dark:hover:border-gray-700"
-              onClick={() => onOpen(project.id)}
-            >
-              <div className="flex flex-col p-4">
-                <div className="mb-2 flex items-start justify-between">
-                  <span
-                    className="block truncate font-semibold text-gray-900 dark:text-gray-100"
-                    title={project.name}
-                  >
-                    {project.name}
-                  </span>
-                  {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
-                </div>
-                {project.tags && project.tags.length > 0 && (
-                  <div className="mb-3 flex flex-wrap gap-1" title={project.tags.join(", ")}>
-                    {project.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 dark:bg-blue-900/50 dark:text-blue-300 dark:ring-blue-700/30"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                    {project.tags.length > 3 && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">+{project.tags.length - 3}</span>
-                    )}
-                  </div>
-                )}
-                <div className="mt-auto text-xs text-gray-500 dark:text-gray-400">
-                  <span>{formatSize(project.size)}</span>
-                  <span className="mx-1.5">•</span>
-                  <span>Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
-                </div>
-              </div>
-              <div className="absolute bottom-2 right-2 flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                {onInfo && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onInfo(project)
-                    }}
-                    className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-blue-600 dark:hover:bg-gray-800"
-                    title="Edit project info"
-                  >
-                    <Info className="h-4 w-4" />
-                  </Button>
-                )}
-                {onDownload && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDownloadClick(project)
-                    }}
-                    className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-green-600 dark:hover:bg-gray-800"
-                    title="Download project"
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                )}
-                {showDeleteButton && onDelete && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      onDelete(project.id, project.name)
-                    }}
-                    className="h-7 w-7 text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:hover:bg-gray-800"
-                    title="Delete project"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="absolute top-2 right-2 text-xs font-mono text-gray-400/50 dark:text-gray-500/50">
-                {project.id.slice(0, 8)}
-              </div>
-            </div>
-          ))}
-        </div>
+        {viewMode === 'grid' ? (
+          <ProjectGridView
+            projects={paginatedProjects}
+            onOpen={onOpen}
+            onView={onView}
+            onDelete={onDelete}
+            onInfo={onInfo}
+            onDownload={handleProjectDownload}
+            showDeleteButton={showDeleteButton}
+            showStudioViewerButtons={showStudioViewerButtons}
+            openButtonText={openButtonText}
+            openButtonIcon={openButtonIcon}
+          />
+        ) : (
+          <ProjectListView
+            projects={paginatedProjects}
+            onOpen={onOpen}
+            onView={onView}
+            onDelete={onDelete}
+            onInfo={onInfo}
+            onDownload={handleProjectDownload}
+            showDeleteButton={showDeleteButton}
+            showStudioViewerButtons={showStudioViewerButtons}
+            openButtonText={openButtonText}
+            openButtonIcon={openButtonIcon}
+          />
+        )}
       </div>
 
       <DownloadConfirmDialog

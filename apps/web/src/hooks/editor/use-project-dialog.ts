@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import { ProjectExporter, type ProjectData as ExportProjectData } from "@/lib/interopAdapter/project-exporter"
 import { HashManager } from "@/lib/sync/editor/hash-manager"
@@ -39,6 +39,26 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
   const [totalProjects, setTotalProjects] = useState(0)
   const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
 
+  // Function to refresh projects list
+  const refreshProjects = useCallback(async () => {
+    if (!isDbInitialized) return
+
+    try {
+      let projects: ProjectData[]
+
+      if (searchTerm || selectedTags.length > 0 || storageTypeFilter) {
+        projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode, storageTypeFilter)
+      } else {
+        projects = await storageAdapter.list()
+      }
+
+      setTotalProjects(projects.length)
+      setFilteredProjects(projects)
+    } catch (error) {
+      console.error("Failed to refresh projects:", error)
+    }
+  }, [isDbInitialized, searchTerm, selectedTags, storageTypeFilter, tagFilterMode, storageAdapter])
+
   // Reset pagination only when filter criteria actually change
   useEffect(() => {
     setCurrentPage(1)
@@ -50,27 +70,8 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
 
   // Filter projects based on search and tags
   useEffect(() => {
-    const filterProjects = async () => {
-      if (!isDbInitialized) return
-
-      try {
-        let projects: ProjectData[]
-
-        if (searchTerm || selectedTags.length > 0 || storageTypeFilter) {
-          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode, storageTypeFilter)
-        } else {
-          projects = await storageAdapter.list()
-        }
-
-        setTotalProjects(projects.length)
-        setFilteredProjects(projects)
-      } catch (error) {
-        console.error("Failed to filter projects:", error)
-      }
-    }
-
-    filterProjects()
-  }, [searchTerm, selectedTags, isDbInitialized, tagFilterMode, storageTypeFilter, storageAdapter])
+    refreshProjects()
+  }, [refreshProjects])
 
   const handleDownload = async (
     projectId: string,
@@ -138,6 +139,29 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
         })
         return null
       }
+
+      // Additional validation for project data structure
+      if (!projectData.data) {
+        console.error("Project data missing 'data' field:", projectData)
+        toast.error("Project data incomplete", {
+          description: "The project file appears to be missing content data",
+          duration: 4000,
+          icon: "⚠️",
+        })
+        return null
+      }
+
+      // Validate that data is a non-empty string
+      if (typeof projectData.data !== 'string' || projectData.data.trim() === '') {
+        console.error("Project data is not a valid string:", typeof projectData.data, projectData.data?.length)
+        toast.error("Project data invalid", {
+          description: "The project content is not in the expected format",
+          duration: 4000,
+          icon: "⚠️",
+        })
+        return null
+      }
+
       return projectData
     } catch (error) {
       console.error("Load error:", error)
@@ -170,5 +194,6 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     // Functions
     handleDownload,
     loadProject,
+    refreshProjects,
   }
 }

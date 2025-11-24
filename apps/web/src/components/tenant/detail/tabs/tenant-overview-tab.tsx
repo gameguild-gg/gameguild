@@ -1,9 +1,23 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Users, 
+  Activity, 
+  BarChart3, 
+  TrendingUp, 
+  TrendingDown,
+  FileText,
+  Clock,
+  Zap,
+  Building,
+  Calendar,
+  Globe
+} from 'lucide-react';
 import type { Tenant } from '@/lib/api/generated/types.gen';
-import { Building, Calendar, Globe } from 'lucide-react';
 
 interface TenantOverviewTabProps {
     tenant: Tenant;
