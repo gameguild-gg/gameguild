@@ -55,6 +55,7 @@ interface MonacoCodeEditorProps {
   height?: string
   fileId?: string // ID único do arquivo para garantir instâncias separadas
   filePath?: string // Caminho do arquivo para o sistema de arquivos virtual
+  instanceId?: string // ID da instância do Code Studio para isolamento completo
 }
 
 export function MonacoCodeEditor({
@@ -69,6 +70,7 @@ export function MonacoCodeEditor({
   height = "100%",
   fileId,
   filePath,
+  instanceId,
 }: MonacoCodeEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
@@ -216,7 +218,7 @@ export function MonacoCodeEditor({
       height={height}
       language={language}
       value={value}
-      path={filePath ? `file:///${filePath}` : undefined} // URI do arquivo no sistema virtual
+      path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
       onChange={handleChange}
       beforeMount={handleEditorWillMount}
       onMount={handleEditorDidMount}

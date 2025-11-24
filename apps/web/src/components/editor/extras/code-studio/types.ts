@@ -99,6 +99,7 @@ export interface TestResult {
 export type CodeStudioMode = "execution" | "test"
 
 export interface CodeStudioData {
+  id: string // ID único do node code-studio
   files: CodeFile[]
   folders: FileTreeFolder[]
   openTabs: string[] // IDs dos arquivos abertos em abas
