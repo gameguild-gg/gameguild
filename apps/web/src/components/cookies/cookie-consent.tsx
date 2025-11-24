@@ -135,7 +135,10 @@ export const CookieConsent = ({ className = '', showPreferencesButton = false, c
         <div className="flex items-start gap-3 p-6 pt-10">
           <div className="flex-1">
             <div className="h-32 overflow-y-auto scrollbar-thin scrollbar-track-emerald-900 scrollbar-thumb-emerald-600">
-              <pre className="whitespace-pre-wrap break-all text-sm leading-relaxed min-h-full">{typedText}<span className="inline-block w-2 align-baseline" style={{ backgroundColor: 'rgb(110 231 183)', animation: 'blink 1s step-start infinite' }}></span></pre>
+              <pre className="whitespace-pre-wrap break-all text-sm leading-relaxed min-h-full">
+                {typedText}
+                <span className="inline-block w-2 align-baseline bg-[rgb(110,231,183)] animate-[blink_1s_step-start_infinite]"></span>
+              </pre>
             </div>
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
               <Button onClick={handleAcceptAll} className="bg-emerald-400 text-emerald-950 hover:bg-emerald-300 font-bold">Accept ALL [ENTER]</Button>
@@ -144,10 +147,6 @@ export const CookieConsent = ({ className = '', showPreferencesButton = false, c
             </div>
           </div>
         </div>
-        {/* Blinking cursor keyframes */}
-        <style jsx>{`
-          @keyframes blink { from { opacity: 1; } 50% { opacity: 0; } to { opacity: 1; } }
-        `}</style>
       </div>
     </div>
   );
