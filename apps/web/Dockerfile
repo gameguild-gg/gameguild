@@ -26,11 +26,14 @@ ENV NODE_ENV=production
 # Copy package files first for better layer caching
 COPY package*.json ./
 
+# Copy scripts directory needed for postinstall
+COPY scripts/ ./scripts/
+
 # Install ALL dependencies including dev dependencies needed for build
 RUN npm install --include=dev && \
     npm cache clean --force
 
-# Copy source code
+# Copy remaining source code
 COPY . .
 
 # Build the application
