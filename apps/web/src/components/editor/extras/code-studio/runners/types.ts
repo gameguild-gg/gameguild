@@ -19,4 +19,5 @@ export interface CodeRunner {
 export interface RunnerOptions {
   timeout?: number // ms
   memoryLimit?: number // bytes
+  onRequestInput?: (prompt?: string, currentOutput?: string) => Promise<string> // Callback for interactive input
 }
