@@ -12,6 +12,7 @@ interface DeleteConfirmDialogProps {
   onConfirm: () => void
   confirmText?: string
   cancelText?: string
+  description?: string
 }
 
 export function DeleteConfirmDialog({
@@ -23,13 +24,16 @@ export function DeleteConfirmDialog({
   onConfirm,
   confirmText = "Delete",
   cancelText = "Cancel",
+  description,
 }: DeleteConfirmDialogProps) {
+  const defaultDescription = `Are you sure you want to delete "${itemName}"? \t This ${itemType} will be permanently removed and cannot be recovered.`
+  
   return (
     <BaseConfirmDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Delete File"
-      description={`Are you sure you want to delete "${itemName}"? \t This ${itemType} will be permanently removed and cannot be recovered.`}
+      title={title}
+      description={description || defaultDescription}
       onConfirm={onConfirm}
       confirmText={confirmText}
       cancelText={cancelText}

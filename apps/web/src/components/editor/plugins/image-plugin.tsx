@@ -17,7 +17,10 @@ export function ImagePlugin() {
       INSERT_IMAGE_COMMAND,
       (payload: ImageData) => {
         editor.update(() => {
-          const imageNode = $createImageNode(payload)
+          const imageNode = $createImageNode({
+            ...payload,
+            isNew: true, // Flag to show editor automatically on new images
+          })
           $insertNodes([imageNode])
         })
         return true
