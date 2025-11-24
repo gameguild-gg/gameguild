@@ -153,6 +153,14 @@ const nextConfig: NextConfig = {
       '.jsx': ['.jsx', '.tsx'],
     };
 
+    // Add fallbacks for Node.js modules used by wasmoon
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      module: false,
+      fs: false,
+      path: false,
+    };
+
     // Add rule to handle markdown files as raw text
     config.module.rules.push({
       test: /\.md$/,
