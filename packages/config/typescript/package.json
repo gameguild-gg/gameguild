@@ -5,5 +5,9 @@
   "license": "UNLICENSED",
   "author": "Matheus Martins <contact@matheusmartins.com>",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "exports": {
+    "./tsconfig.json": "./tsconfig.json",
+    "./tsconfig.react.json": "./tsconfig.react.json"
+  }
 }

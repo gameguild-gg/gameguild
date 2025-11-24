@@ -1,7 +1,8 @@
 import React, { PropsWithChildren } from 'react';
+import type { Metadata } from 'next';
 import '@/styles/globals.css';
-import { CookieConsent } from '@gameguild/common/cookies';
-import { WebVitals } from '@gameguild/common/analytics';
+import { CookieConsent } from '@game-guild/common/cookies';
+import { WebVitals } from '@game-guild/common/analytics';
 import { ContentFilter } from '@/components/content/content-filter';
 import { getInitialContentFilterState } from '@/lib/content/content-filter.actions';
 import { ContentFilterProvider } from '@/lib/content/content-filter.context';
