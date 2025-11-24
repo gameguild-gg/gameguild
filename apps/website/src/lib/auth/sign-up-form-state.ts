@@ -1,5 +1,5 @@
 export interface SignUpFormState {
-  message?: string;
-  error?: string;
-  success?: boolean;
+    message?: string;
+    error?: string;
+    success?: boolean;
 }
