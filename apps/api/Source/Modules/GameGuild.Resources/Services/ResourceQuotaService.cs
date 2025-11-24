@@ -1,0 +1,310 @@
+using System.Text.Json;
+using GameGuild.Resources.Abstractions;
+using GameGuild.Resources.Entities;
+using GameGuild.Resources.Models;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Resources.Services;
+
+/// <summary>
+///     Implementation of resource quota management service
+/// </summary>
+public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsageRecordRepository usageRepository, ILogger<ResourceQuotaService> logger) : IResourceQuotaService
+{
+    public async Task<ResourceQuota> SetQuotaAsync(
+        Guid tenantId,
+        ResourceUsageType type,
+        long? softLimit,
+        long? hardLimit,
+        ResourceQuotaPeriod period = ResourceQuotaPeriod.Monthly,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var existingQuota = await quotaRepository.GetByTenantAndTypeAsync(tenantId, type, cancellationToken);
+
+        if (existingQuota != null)
+        {
+            existingQuota.SoftLimit = softLimit;
+            existingQuota.HardLimit = hardLimit;
+            existingQuota.Period = period;
+            existingQuota.UpdatedAt = DateTime.UtcNow;
+            existingQuota = await quotaRepository.UpdateAsync(existingQuota, cancellationToken);
+        }
+        else
+        {
+            existingQuota = new ResourceQuota { Type = type, SoftLimit = softLimit, HardLimit = hardLimit, Period = period, CurrentUsage = 0, LastReset = DateTime.UtcNow, IsActive = true };
+            existingQuota.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
+            existingQuota = await quotaRepository.CreateAsync(existingQuota, cancellationToken);
+        }
+
+        logger.LogInformation("Set quota for tenant {TenantId}, type {Type}: Soft={SoftLimit}, Hard={HardLimit}", tenantId, type, softLimit, hardLimit);
+
+        return existingQuota;
+    }
+
+    public async Task<ResourceQuota?> GetQuotaAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default)
+    {
+        return await quotaRepository.GetByTenantAndTypeAsync(tenantId, type, cancellationToken);
+    }
+
+    public async Task<IEnumerable<ResourceQuota>> GetTenantQuotasAsync(Guid tenantId, CancellationToken cancellationToken = default) { return await quotaRepository.GetByTenantAsync(tenantId, cancellationToken); }
+
+    public async Task<bool> DeleteQuotaAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default)
+    {
+        var quota = await quotaRepository.GetByTenantAndTypeAsync(tenantId, type, cancellationToken);
+
+        if (quota == null) return false;
+
+        var deleted = await quotaRepository.DeleteAsync(quota.Id, cancellationToken);
+
+        if (deleted) { logger.LogInformation("Deleted quota for tenant {TenantId}, type {Type}", tenantId, type); }
+
+        return deleted;
+    }
+
+    public async Task<bool> RecordUsageAsync(
+        Guid tenantId,
+        ResourceUsageType type,
+        long amount = 1,
+        Guid? userId = null,
+        string? source = null,
+        Dictionary<string, string>? metadata = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            // Update quota usage
+            var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
+
+            if (quota != null)
+            {
+                // Check if quota needs reset
+                if (quota.ShouldReset()) { quota.ResetUsage(); }
+
+                quota.CurrentUsage += amount;
+                quota.UpdatedAt = DateTime.UtcNow;
+                await quotaRepository.UpdateAsync(quota, cancellationToken);
+            }
+
+            // Record usage history
+            var today = DateTime.UtcNow.Date;
+            var usageRecords = await usageRepository.GetByDateRangeAsync(tenantId, type, today, today.AddDays(1), cancellationToken);
+
+            var usageRecord = usageRecords.FirstOrDefault();
+
+            if (usageRecord != null)
+            {
+                usageRecord.UsageAmount += amount;
+                usageRecord.UpdatedAt = DateTime.UtcNow;
+
+                // Update peak usage if this is higher
+                if (usageRecord.PeakUsage == null || usageRecord.UsageAmount > usageRecord.PeakUsage)
+                {
+                    usageRecord.PeakUsage = usageRecord.UsageAmount;
+                    usageRecord.PeakUsageDate = DateTime.UtcNow;
+                }
+
+                // No update method in repository, but we can work around this
+                // TODO: Add UpdateAsync method to IUsageRecordRepository
+            }
+            else
+            {
+                usageRecord = UsageRecord.CreateDaily(type, tenantId, amount, today, userId, source);
+
+                usageRecord.PeakUsage = amount;
+                usageRecord.PeakUsageDate = DateTime.UtcNow;
+
+                if (metadata != null) { usageRecord.Metadata = JsonSerializer.Serialize(metadata); }
+
+                if (quota != null) { usageRecord.ResourceQuotaId = quota.Id; }
+
+                await usageRepository.AddAsync(usageRecord, cancellationToken);
+            }
+
+            logger.LogDebug("Recorded usage for tenant {TenantId}, type {Type}: amount={Amount}", tenantId, type, amount);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error recording usage for tenant {TenantId}, type {Type}", tenantId, type);
+
+            return false;
+        }
+    }
+
+    public async Task<long> GetCurrentUsageAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default)
+    {
+        var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
+
+        if (quota == null) return 0;
+
+        if (quota.ShouldReset())
+        {
+            quota.ResetUsage();
+            await quotaRepository.UpdateAsync(quota, cancellationToken);
+
+            return 0;
+        }
+
+        return quota.CurrentUsage;
+    }
+
+    public async Task<IEnumerable<UsageRecord>> GetUsageHistoryAsync(Guid tenantId, ResourceUsageType type, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default)
+    {
+        return await usageRepository.GetByTenantAsync(tenantId, type, fromDate, toDate, cancellationToken);
+    }
+
+    public async Task<ResourceLimitCheckResponse> CheckLimitsAsync(Guid tenantId, ResourceUsageType type, long requestedAmount = 1, CancellationToken cancellationToken = default)
+    {
+        var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
+
+        if (quota == null)
+        {
+            // No quota means unlimited
+            return new ResourceLimitCheckResponse { Type = type, CanProceed = true, CurrentUsage = 0, SoftLimit = null, HardLimit = null };
+        }
+
+        // Check if quota needs reset
+        if (quota.ShouldReset())
+        {
+            quota.ResetUsage();
+            await quotaRepository.UpdateAsync(quota, cancellationToken);
+        }
+
+        var currentUsage = quota.CurrentUsage;
+        var projectedUsage = currentUsage + requestedAmount;
+
+        // Check hard limit
+        if (quota.HardLimit.HasValue && projectedUsage > quota.HardLimit.Value)
+        {
+            return new ResourceLimitCheckResponse { Type = type, CanProceed = false, CurrentUsage = currentUsage, SoftLimit = quota.SoftLimit, HardLimit = quota.HardLimit };
+        }
+
+        // Check soft limit
+        var softLimitExceeded = quota.SoftLimit.HasValue && projectedUsage > quota.SoftLimit.Value;
+
+        return new ResourceLimitCheckResponse { Type = type, CanProceed = true, CurrentUsage = currentUsage, SoftLimit = quota.SoftLimit, HardLimit = quota.HardLimit };
+    }
+
+    public async Task<Dictionary<ResourceUsageType, ResourceLimitCheckResponse>> CheckMultipleLimitsAsync(
+        Guid tenantId,
+        Dictionary<ResourceUsageType, long> requestedAmounts,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var results = new Dictionary<ResourceUsageType, ResourceLimitCheckResponse>();
+
+        foreach (var kvp in requestedAmounts) { results[kvp.Key] = await CheckLimitsAsync(tenantId, kvp.Key, kvp.Value, cancellationToken); }
+
+        return results;
+    }
+
+    public async Task<ResourceLimitCheckResponse> TryConsumeResourceAsync(Guid tenantId, ResourceUsageType type, long amount = 1, Guid? userId = null, string? source = null, CancellationToken cancellationToken = default)
+    {
+        var limitCheck = await CheckLimitsAsync(tenantId, type, amount, cancellationToken);
+
+        if (limitCheck.CanProceed)
+        {
+            await RecordUsageAsync(tenantId, type, amount, userId, source, cancellationToken : cancellationToken);
+
+            logger.LogDebug("Successfully consumed {Amount} units of {Type} for tenant {TenantId}", amount, type, tenantId);
+        }
+        else { logger.LogWarning("Failed to consume {Amount} units of {Type} for tenant {TenantId}", amount, type, tenantId); }
+
+        return limitCheck;
+    }
+
+    public async Task<ResourceUsageResponse> GetResourceUsageDetailsAsync(Guid tenantId, ResourceUsageType type, int historyDays = 30, CancellationToken cancellationToken = default)
+    {
+        var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
+        var fromDate = DateTime.UtcNow.AddDays(-historyDays);
+        var history = await GetUsageHistoryAsync(tenantId, type, fromDate, null, cancellationToken);
+
+        var response = new ResourceUsageResponse
+        {
+            TenantId = tenantId,
+            CurrentUsage = quota?.CurrentUsage ?? 0,
+            PeriodStart = quota?.LastReset ?? DateTime.UtcNow.AddMonths(-1),
+            PeriodEnd = DateTime.UtcNow,
+            RemainingQuota = Math.Max(0, (quota?.HardLimit ?? 0) - (quota?.CurrentUsage ?? 0)),
+            History = history.Select(h => new ResourceUsageHistoryItem { Timestamp = h.PeriodStart, Amount = h.UsageAmount, PeakUsage = h.PeakUsage }).ToList()
+        };
+
+        if (quota?.HardLimit > 0)
+        {
+            var hardLimitValue = quota.HardLimit.Value;
+            response.UsagePercentage = (double) response.CurrentUsage / hardLimitValue * 100;
+            response.RemainingQuota = Math.Max(0, hardLimitValue - response.CurrentUsage);
+        }
+
+        return response;
+    }
+
+    public async Task<IEnumerable<Guid>> GetTenantsExceedingLimitsAsync(ResourceUsageType? type = null, bool hardLimitOnly = false, CancellationToken cancellationToken = default)
+    {
+        var exceedingQuotas = await quotaRepository.GetQuotasExceedingLimitsAsync(type, !hardLimitOnly, cancellationToken);
+
+        // Results are already filtered by the repository method
+
+        return exceedingQuotas.Select(q => q.TenantId!.Value).Distinct();
+    }
+
+    public async Task<int> ResetExpiredQuotasAsync(CancellationToken cancellationToken = default)
+    {
+        var quotasDueForReset = await quotaRepository.GetQuotasDueForResetAsync(cancellationToken);
+
+        var resetCount = 0;
+
+        foreach (var quota in quotasDueForReset.Where(q => q.ShouldReset()))
+        {
+            quota.ResetUsage();
+            await quotaRepository.UpdateAsync(quota, cancellationToken);
+            resetCount++;
+        }
+
+        if (resetCount > 0) { logger.LogInformation("Reset {Count} expired quotas", resetCount); }
+
+        return resetCount;
+    }
+
+    public async Task<int> CleanupOldUsageRecordsAsync(DateTime olderThan, CancellationToken cancellationToken = default)
+    {
+        var deleted = await usageRepository.DeleteOlderThanAsync(olderThan, cancellationToken);
+
+        if (deleted) { logger.LogInformation("Cleaned up old usage records older than {Date}", olderThan); }
+
+        return deleted ? 1 : 0;
+    }
+
+    public async Task<bool> RecalculateUsageAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
+
+            if (quota == null) return false;
+
+            // Get current period start based on quota period and last reset
+            var periodStart = quota.LastReset ?? DateTime.UtcNow.Date;
+
+            var usageRecords = await usageRepository.GetByDateRangeAsync(tenantId, type, periodStart, DateTime.UtcNow, cancellationToken);
+
+            quota.CurrentUsage = usageRecords.Sum(u => u.UsageAmount);
+            quota.UpdatedAt = DateTime.UtcNow;
+
+            await quotaRepository.UpdateAsync(quota, cancellationToken);
+
+            logger.LogInformation("Recalculated usage for tenant {TenantId}, type {Type}: {Usage}", tenantId, type, quota.CurrentUsage);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error recalculating usage for tenant {TenantId}, type {Type}", tenantId, type);
+
+            return false;
+        }
+    }
+}

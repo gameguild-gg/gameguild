@@ -1,0 +1,129 @@
+using GameGuild.Authentication.Abstractions;
+using GameGuild.Authentication.Commands;
+using GameGuild.Authentication.DTOs;
+using GameGuild.Authentication.Handlers;
+using GameGuild.Authentication.Repositories;
+using GameGuild.Authentication.Services;
+using GameGuild.Authentication.Validators;
+using GameGuild.Configuration;
+using GameGuild.CQRS;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace GameGuild.Authentication.Extensions;
+
+/// <summary>
+///     Dependency injection configuration for Authentication Data layer
+///     Registers all services, validators, and business logic components WITHOUT MediatR
+/// </summary>
+public static class DataDependencyInjection
+{
+    /// <summary>
+    ///     Register all Application layer services
+    /// </summary>
+    /// <param name="services">Service collection</param>
+    /// <param name="configuration">Application configuration</param>
+    /// <returns>Service collection for chaining</returns>
+    public static IServiceCollection AddAuthenticationData(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Register core authentication services
+        RegisterAuthenticationServices(services, configuration);
+
+        // Register security services
+        RegisterSecurityServices(services);
+
+        // Register utility services
+        RegisterUtilityServices(services);
+
+        // Register validators (FluentValidation)
+        RegisterValidators(services);
+
+        // Register CQRS command handlers
+        RegisterCommandHandlers(services);
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Register core authentication services
+    /// </summary>
+    private static void RegisterAuthenticationServices(IServiceCollection services, IConfiguration configuration)
+    {
+        // Configure JWT options from configuration
+        services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
+
+        // Register repositories
+        services.AddScoped<IAuthUserRepository, AuthUserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IUserSessionRepository, UserSessionRepository>();
+        services.AddScoped<IUserMfaConfigurationRepository, UserMfaConfigurationRepository>();
+        services.AddScoped<IAuthenticationAttemptRepository, AuthenticationAttemptRepository>();
+        services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
+        services.AddScoped<IMfaAttemptRepository, MfaAttemptRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
+
+        // Core authentication services
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IOAuthService, OAuthService>();
+        services.AddScoped<IWeb3Service, Web3Service>();
+
+        // MFA services
+        services.AddScoped<IMfaService, MfaService>();
+
+        // Session management
+        services.AddScoped<ISessionManagementService, SessionManagementService>();
+    }
+
+    /// <summary>
+    ///     Register security-focused services
+    /// </summary>
+    private static void RegisterSecurityServices(IServiceCollection services)
+    {
+        // Security services - registered as concrete classes until interfaces are aligned
+        services.AddScoped<AuthenticationAnomalyDetectionService>();
+        services.AddScoped<IEmailVerificationService, EmailVerificationService>();
+        services.AddScoped<IAuthenticationAnomalyDetectionService, AuthenticationAnomalyDetectionService>();
+        services.AddScoped<IUserEnumerationProtectionService, UserEnumerationProtectionService>();
+        services.AddScoped<IEncryptionService, EncryptionService>();
+        services.AddScoped<ISiemIntegrationService, SiemIntegrationService>();
+
+        // Note: These services have interface mismatches and need interface updates
+        // to match GameGuild implementation signatures before registering with interfaces
+    }
+
+    /// <summary>
+    ///     Register utility services
+    /// </summary>
+    private static void RegisterUtilityServices(IServiceCollection services)
+    {
+        // Register HttpClient for OAuth services
+        services.AddHttpClient();
+    }
+
+    /// <summary>
+    ///     Register FluentValidation validators
+    /// </summary>
+    private static void RegisterValidators(IServiceCollection services)
+    {
+        // Register validators explicitly using FluentValidation
+        services.AddScoped<FluentValidation.IValidator<LocalSignInCommand>, LocalSignInCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<LocalSignUpCommand>, LocalSignUpCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<RefreshTokenCommand>, RefreshTokenCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<RevokeTokenCommand>, RevokeTokenCommandValidator>();
+        services.AddScoped<FluentValidation.IValidator<GoogleIdTokenSignInCommand>, GoogleIdTokenSignInCommandValidator>();
+    }
+
+    /// <summary>
+    ///     Register CQRS command handlers
+    /// </summary>
+    private static void RegisterCommandHandlers(IServiceCollection services)
+    {
+        // Register command handlers for local authentication
+        services.AddScoped<IRequestHandler<LocalSignUpCommand, SignInResponse>, LocalSignUpHandler>();
+        services.AddScoped<IRequestHandler<LocalSignInCommand, SignInResponse>, LocalSignInHandler>();
+        services.AddScoped<IRequestHandler<RefreshTokenCommand, SignInResponse>, RefreshTokenHandler>();
+        services.AddScoped<IRequestHandler<GoogleIdTokenSignInCommand, SignInResponse>, GoogleIdTokenSignInHandler>();
+    }
+}

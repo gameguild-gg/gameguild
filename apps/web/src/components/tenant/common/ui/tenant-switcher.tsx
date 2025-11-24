@@ -12,7 +12,7 @@ export const TenantSwitcher = (): React.JSX.Element => {
 
   // Create default "Game Guild" tenant if no tenants available
   const defaultTenant: Tenant = {
-    id: 'game-guild',
+    id: 'gameguild',
     name: 'Game Guild',
     description: 'Default',
     isActive: true,

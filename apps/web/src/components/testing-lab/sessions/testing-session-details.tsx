@@ -1,16 +1,16 @@
 'use client';
 
-import { useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { toast } from 'sonner';
-import { Calendar, Clock, MapPin, TestTube, User, Users } from 'lucide-react';
-import Link from 'next/link';
+import { Separator } from '@/components/ui/separator';
 import type { TestingSession } from '@/lib/api/generated/types.gen';
+import { Calendar, Clock, MapPin, TestTube, User, Users } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface TestingSessionDetailsProps {
   data: TestingSession;
@@ -129,24 +129,21 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
           </Card>
 
           {/* Testing Request Information */}
-          {session.testingRequestId && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Related Testing Request</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Request ID: {session.testingRequestId}</p>
-                    <p className="text-sm text-muted-foreground">View the testing request for more details about what needs to be tested.</p>
-                  </div>
-                  <Link href={`/dashboard/testing-lab/requests/${session.testingRequestId}`}>
-                    <Button variant="outline">View Request</Button>
-                  </Link>
+          <Card>
+            <CardHeader>
+              <CardTitle>Enrollment Requests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No enrollment requests yet.</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Developers can request to enroll their testing projects in this session.
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Manager Information */}
           {session.managerId && (
@@ -177,17 +174,21 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
           {/* Quick Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Actions</CardTitle>
+              <CardTitle>Admin Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {session.status === 0 && (
-                <Button onClick={handleJoinSession} disabled={loading} className="w-full">
-                  {loading ? 'Joining...' : 'Join Session'}
-                </Button>
-              )}
+              <Button variant="outline" className="w-full" disabled>
+                Edit Session
+              </Button>
 
               <Button variant="outline" className="w-full" asChild>
                 <Link href="/dashboard/testing-lab/sessions">Back to Sessions</Link>
+              </Button>
+
+              <Button variant="outline" className="w-full" asChild>
+                <Link href={`/dashboard/testing-lab/sessions/${session.id}/requests`}>
+                  Manage Requests
+                </Link>
               </Button>
             </CardContent>
           </Card>
@@ -195,15 +196,29 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
           {/* Session Progress */}
           <Card>
             <CardHeader>
-              <CardTitle>Session Progress</CardTitle>
+              <CardTitle>Session Statistics</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Participants</span>
-                  <span>0/{session.maxTesters}</span>
+                  <span>Enrollment Capacity</span>
+                  <span>0/{session.maxProjects} projects</span>
                 </div>
                 <Progress value={0} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Project enrollment slots used
+                </p>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-2">
+                  <span>Tester Capacity</span>
+                  <span>0/{session.maxTesters} testers</span>
+                </div>
+                <Progress value={0} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Expected testers from approved enrollments
+                </p>
               </div>
 
               <Separator />

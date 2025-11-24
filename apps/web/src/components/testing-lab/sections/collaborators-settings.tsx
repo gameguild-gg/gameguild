@@ -1,14 +1,20 @@
 "use client";
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit, UserCheck, UserMinus, UserPlus, Users, Trash2 } from 'lucide-react';
-import { DualColorChip } from '../testing-lab-settings';
-import type { RoleTemplate } from '@/actions/testing-lab-roles';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { RoleTemplate } from '@/lib/actions/testing-lab-roles';
+import { assignUserRoleAction } from '@/lib/actions/testing-lab-user-roles';
+import { searchTestingLabUsersAction, type SearchUserResult } from '@/lib/actions/testing-lab-user-search';
 import type { TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment } from '@/lib/api/generated/types.gen';
+import { ModuleType } from '@/lib/api/generated/types.gen';
+import { Edit, Search, Trash2, UserCheck, UserMinus, UserPlus, Users } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { toast } from 'sonner';
+import { DualColorChip } from '../testing-lab-settings';
 
 export interface TestingLabManager {
   id: string;
@@ -49,9 +55,10 @@ export interface CollaboratorsSettingsProps {
   onCreateManager: () => void;
   onEditManager: (manager: TestingLabManager) => void;
   onDeleteManager: (managerId: string) => void;
-  onEditRole: (role: RoleTemplate) => void;
-  onAssignRole: () => void;
+  onEditRole: (role: RoleTemplate) => void; // kept for future edit dialog usage
+  onAssignRole: () => void; // legacy open assign dialog
   onRemoveRole: (userId: string, roleName: string) => void;
+  onRoleAssigned?: (assignment: UserRoleAssignment) => void; // new direct assign callback
 }
 
 interface CollaboratorWithLocationRoles {
@@ -79,12 +86,72 @@ export function CollaboratorsSettings({
   onCreateManager,
   onEditManager,
   onDeleteManager,
-  onEditRole,
-  onAssignRole,
+  onEditRole, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onAssignRole, // legacy dialog trigger (still shown in table header)
   onRemoveRole,
+  onRoleAssigned,
 }: CollaboratorsSettingsProps) {
+  // Quick assign state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchUserResult[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedRoleId, setSelectedRoleId] = useState('');
+  const [assigning, setAssigning] = useState(false);
+
+  const runSearch = useCallback(async (q: string) => {
+    setIsSearching(true);
+    try {
+      const results = await searchTestingLabUsersAction(q);
+      setSearchResults(results);
+    } catch (err) {
+      console.error(err);
+      toast.error('Search failed');
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const handleAssign = useCallback(async () => {
+    const role = roles.find(r => r.id === selectedRoleId);
+    const user = searchResults.find(u => u.id === selectedUserId);
+    if (!role || !user) {
+      toast.error('Select user and role');
+      return;
+    }
+    setAssigning(true);
+    try {
+      const created = await assignUserRoleAction({
+        userId: user.id,
+        roleName: role.name,
+        userEmail: user.email,
+      });
+      const assignment: UserRoleAssignment = {
+        id: created.id || `${user.id}-${role.id}`,
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
+        roleTemplateId: role.id,
+        roleName: role.name,
+        assignedAt: created.assignedAt || new Date().toISOString(),
+        isActive: true,
+        module: ModuleType.TESTING_LAB,
+      };
+      onRoleAssigned?.(assignment);
+      toast.success('Role assigned');
+      setSelectedUserId('');
+      setSelectedRoleId('');
+    } catch (err) {
+      console.error('Assignment failed', err);
+      toast.error(err instanceof Error ? err.message : 'Assignment failed');
+    } finally {
+      setAssigning(false);
+    }
+  }, [roles, searchResults, selectedRoleId, selectedUserId, onRoleAssigned]);
+
   const getCollaborators = (): CollaboratorWithLocationRoles[] => {
     const collaboratorMap = new Map<string, CollaboratorWithLocationRoles>();
+    // Seed with managers
     managers.forEach(manager => {
       collaboratorMap.set(manager.userId, {
         id: manager.id,
@@ -109,21 +176,25 @@ export function CollaboratorsSettings({
         }
       });
     });
+
+    // Add role assignments (global across locations until backend provides specific location binding)
     userRoles.forEach(userRole => {
-      if (!collaboratorMap.has(userRole.userId || '')) {
-        collaboratorMap.set(userRole.userId || '', {
-          id: userRole.id || '',
-          userId: userRole.userId || '',
+      if (!userRole.userId) return;
+      if (!collaboratorMap.has(userRole.userId)) {
+        collaboratorMap.set(userRole.userId, {
+          id: userRole.id || userRole.userId,
+          userId: userRole.userId,
           email: userRole.userEmail || `user-${userRole.userId}@example.com`,
           firstName: userRole.userName?.split(' ')[0] || 'Unknown',
           lastName: userRole.userName?.split(' ').slice(1).join(' ') || 'User',
           locationRoles: [],
           status: userRole.isActive ? 'Active' : 'Inactive',
-          createdAt: userRole.createdAt,
+          createdAt: userRole.assignedAt,
         });
       }
-      const collaborator = collaboratorMap.get(userRole.userId || '');
+      const collaborator = collaboratorMap.get(userRole.userId);
       if (collaborator && userRole.roleName) {
+        // Represent role across all locations for now
         if (locations.length > 0) {
           locations.forEach(location => {
             collaborator.locationRoles.push({
@@ -131,15 +202,25 @@ export function CollaboratorsSettings({
               locationName: location.name || 'Unknown Location',
               roleName: userRole.roleName || '',
               isActive: userRole.isActive,
-              assignedAt: userRole.createdAt,
+              assignedAt: userRole.assignedAt,
             });
+          });
+        } else {
+          collaborator.locationRoles.push({
+            locationId: 'global',
+            locationName: 'All Locations',
+            roleName: userRole.roleName,
+            isActive: userRole.isActive,
+            assignedAt: userRole.assignedAt,
           });
         }
       }
     });
     return Array.from(collaboratorMap.values());
   };
+
   const collaborators = getCollaborators();
+
   return (
     <div className="space-y-6">
       <div>
@@ -148,6 +229,87 @@ export function CollaboratorsSettings({
       </div>
       <Separator />
       <div className="space-y-6">
+        {/* Quick Assign Panel */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-sm font-medium">
+              <Search className="h-4 w-4" /> Quick Assign
+            </CardTitle>
+            <CardDescription>Search a user and directly assign a role.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-1 col-span-1">
+                <div className="text-xs font-medium">Search User</div>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="email or name"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setSearchTerm(v);
+                      if (v.length >= 2) {
+                        runSearch(v);
+                      } else {
+                        setSearchResults([]);
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={!searchTerm.trim() || isSearching}
+                    onClick={() => runSearch(searchTerm)}
+                  >
+                    {isSearching ? '...' : 'Go'}
+                  </Button>
+                </div>
+                {searchResults.length > 0 && (
+                  <div className="border rounded-md max-h-40 overflow-y-auto text-sm divide-y">
+                    {searchResults.map(u => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => setSelectedUserId(u.id)}
+                        className={`w-full text-left px-2 py-1 hover:bg-muted ${selectedUserId === u.id ? 'bg-muted' : ''}`}
+                      >
+                        <div className="font-medium truncate">{u.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">{u.email}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1 col-span-1">
+                <div className="text-xs font-medium">Role</div>
+                <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {roles.map(r => (
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end col-span-1">
+                <Button
+                  type="button"
+                  className="w-full"
+                  disabled={!selectedUserId || !selectedRoleId || assigning}
+                  onClick={handleAssign}
+                >
+                  {assigning ? 'Assigning...' : 'Assign'}
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">Direct server assignment. Results limited to first 10 matches.</p>
+          </CardContent>
+        </Card>
+
+        {/* Collaborators Table */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
@@ -239,7 +401,7 @@ export function CollaboratorsSettings({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => onDeleteManager(collaborator.id)}
+                            onClick={() => onDeleteManager(collaborator.userId || collaborator.id)}
                             title="Remove collaborator"
                           >
                             <Trash2 className="h-4 w-4" />

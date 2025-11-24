@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, BookOpen, Save, RotateCcw, Plus, Trash2 } from "lucide-react"
+import { X, BookOpen, Save, RotateCcw, Plus, Trash2, FileText, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -221,11 +221,11 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       onKeyPress={(e) => e.stopPropagation()}
     >
       <div 
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 rounded-lg shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Quiz Builder</h2>
@@ -243,7 +243,7 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
         {!showTypeSelector && (
           <>
             {/* Settings Bar */}
-            <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+            <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
                   Type: <span className="font-medium text-gray-800 dark:text-gray-200">{questionType}</span>
@@ -262,27 +262,30 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
             {/* Two Column Layout */}
             <div className="flex-1 flex min-h-0">
               {/* Left Panel - Configuration */}
-              <div className="w-1/2 border-r border-gray-200 dark:border-gray-700 flex flex-col bg-white dark:bg-gray-900">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
-                  <h3 className="font-medium text-gray-800 dark:text-gray-200">Configuration</h3>
+              <div className="w-1/2 border-r border-gray-200 dark:border-gray-800 flex flex-col bg-white dark:bg-gray-900">
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                  <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                    <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    Configuration
+                  </h3>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white dark:bg-gray-950">
                   {/* Question Input */}
                   <div className="space-y-2">
-                    <Label className="text-base font-medium">Question</Label>
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Question</Label>
                     <Textarea
                       placeholder="Enter your question here... Use ___ to create blanks"
                       value={question}
                       onChange={(e) => setQuestion(e.target.value)}
                       rows={3}
-                      className="resize-none"
+                      className="resize-none bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                     />
                     {questionType === "fill-blank" && (
-                      <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                      <div className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
                         <p className="font-medium mb-2">💡 Dica para Fill-in-the-Blank:</p>
                         <p>
-                          Use <code className="bg-gray-200 px-1 rounded">___</code> para criar espaços em branco.
+                          Use <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">___</code> para criar espaços em branco.
                         </p>
                         <p>Exemplo: "A capital do Brasil é ___ e fica no estado de ___."</p>
                       </div>
@@ -292,32 +295,39 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                   {/* Question Type Specific Configuration */}
                   {questionType === "multiple-choice" && (
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Answer Options</Label>
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Answer Options</Label>
                       {answers.map((answer) => (
                         <div key={answer.id} className="flex items-center gap-2">
                           <input
                             type="checkbox"
                             checked={answer.isCorrect}
                             onChange={() => toggleCorrect(answer.id)}
-                            className="w-4 h-4 rounded"
+                            className="w-4 h-4 rounded accent-blue-600 dark:accent-blue-400"
                           />
                           <Input
                             placeholder="Enter answer"
                             value={answer.text}
                             onChange={(e) => updateAnswer(answer.id, e.target.value)}
-                            className="flex-1"
+                            className="flex-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                           />
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => removeAnswer(answer.id)}
                             disabled={answers.length <= 2}
+                            className="hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600 dark:hover:text-red-400"
                           >
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
                       ))}
-                      <Button variant="outline" size="sm" onClick={addAnswer}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={addAnswer}
+                        className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
                         Add Answer
                       </Button>
                     </div>
@@ -325,14 +335,14 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
 
                   {questionType === "true-false" && (
                     <div className="space-y-3">
-                      <Label className="text-sm font-medium">Correct Answer</Label>
+                      <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Correct Answer</Label>
                       <Select
                         value={answers.find((a) => a.isCorrect)?.id || ""}
-                        onValueChange={(value) => {
+                        onValueChange={(value: string) => {
                           setAnswers(answers.map((a) => ({ ...a, isCorrect: a.id === value })))
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
                           <SelectValue placeholder="Select correct answer" />
                         </SelectTrigger>
                         <SelectContent>
@@ -347,39 +357,44 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                   {questionType === "fill-blank" && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Label className="text-base font-medium">Blank Fields Configuration</Label>
-                        <Button variant="outline" size="sm" onClick={addFillBlankField}>
+                        <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Blank Fields Configuration</Label>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={addFillBlankField}
+                          className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+                        >
                           <Plus className="h-4 w-4 mr-2" />
                           Add Blank
                         </Button>
                       </div>
 
                       {fillBlankFields.length === 0 && (
-                        <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+                        <div className="text-center py-8 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
                           <p>No blanks detected in the question.</p>
                           <p className="text-sm">
-                            Add <code className="bg-gray-200 px-1 rounded">___</code> to your question to create blanks.
+                            Add <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">___</code> to your question to create blanks.
                           </p>
                         </div>
                       )}
 
                       {fillBlankFields.map((field, index) => (
-                        <div key={field.id} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                        <div key={field.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3 bg-gray-50 dark:bg-gray-800/30">
                           <div className="flex items-center justify-between">
-                            <Label className="text-sm font-medium">Blank #{index + 1}</Label>
+                            <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Blank #{index + 1}</Label>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => removeFillBlankField(field.id)}
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
 
                           <div className="space-y-2">
-                            <Label className="text-xs text-gray-600">Expected Words</Label>
-                            <div className="text-xs text-gray-500 mb-2">
+                            <Label className="text-xs text-gray-600 dark:text-gray-400">Expected Words</Label>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 bg-blue-50 dark:bg-blue-950/30 p-2 rounded border border-blue-200 dark:border-blue-800">
                               Enter acceptable answers separated by double commas (,,). Spaces and punctuation are
                               allowed.
                               <br />
@@ -390,7 +405,7 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                               placeholder="e.g., word1,, word2,, phrase with spaces,, another answer"
                               value={fillBlankInputValues[field.id] || ""}
                               onChange={(e) => handleFillBlankInputChange(field.id, e.target.value)}
-                              className="w-full"
+                              className="w-full bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                             />
                           </div>
                         </div>
@@ -400,22 +415,24 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
 
                   {/* Feedback Settings */}
                   <div className="space-y-4">
-                    <Label className="text-base font-medium">Feedback Messages</Label>
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Feedback Messages</Label>
                     <div className="space-y-3">
                       <div>
-                        <Label className="text-sm">Correct Answer Feedback</Label>
+                        <Label className="text-xs text-gray-600 dark:text-gray-400">Correct Answer Feedback</Label>
                         <Input
                           placeholder="Great job! That's correct!"
                           value={correctFeedback}
                           onChange={(e) => setCorrectFeedback(e.target.value)}
+                          className="mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                         />
                       </div>
                       <div>
-                        <Label className="text-sm">Incorrect Answer Feedback</Label>
+                        <Label className="text-xs text-gray-600 dark:text-gray-400">Incorrect Answer Feedback</Label>
                         <Input
                           placeholder="Not quite right. Try again!"
                           value={incorrectFeedback}
                           onChange={(e) => setIncorrectFeedback(e.target.value)}
+                          className="mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                         />
                       </div>
                     </div>
@@ -423,16 +440,16 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
 
                   {/* Settings */}
                   <div className="space-y-4">
-                    <Label className="text-base font-medium">Settings</Label>
+                    <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">Settings</Label>
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm">Allow Retry</Label>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <Label className="text-sm text-gray-700 dark:text-gray-300">Allow Retry</Label>
                         <Switch checked={allowRetry} onCheckedChange={setAllowRetry} />
                       </div>
                       <div>
-                        <Label className="text-sm">Background Color</Label>
+                        <Label className="text-xs text-gray-600 dark:text-gray-400">Background Color</Label>
                         <Select value={backgroundColor} onValueChange={setBackgroundColor}>
-                          <SelectTrigger>
+                          <SelectTrigger className="mt-1 bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -452,8 +469,11 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
 
               {/* Right Panel - Live Preview */}
               <div className="w-1/2 flex flex-col bg-white dark:bg-gray-900">
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850 flex items-center justify-between">
-                  <h3 className="font-medium text-gray-800 dark:text-gray-200">Live Preview</h3>
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 flex items-center justify-between">
+                  <h3 className="font-medium flex items-center gap-2 text-gray-800 dark:text-gray-200">
+                    <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    Live Preview
+                  </h3>
                   <Button
                     variant="outline"
                     size="sm"
@@ -462,13 +482,13 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                       setPreviewShowFeedback(false)
                       setPreviewIsCorrect(false)
                     }}
-                    className="flex items-center gap-1 text-xs"
+                    className="flex items-center gap-1 text-xs border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
                   >
                     <RotateCcw className="h-3 w-3" />
                     Reset
                   </Button>
                 </div>
-                <div className="flex-1 p-4 overflow-auto bg-gray-50 dark:bg-gray-900">
+                <div className="flex-1 p-4 overflow-auto bg-white dark:bg-gray-950">
                   <QuizWrapper backgroundColor={backgroundColor}>
                     <QuizDisplay
                       question={question || "Your question will appear here..."}
@@ -525,7 +545,7 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-850">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
               <div className="flex gap-2 justify-end">
                 <Button
                   variant="outline"
