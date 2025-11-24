@@ -1,0 +1,287 @@
+using System.Text.RegularExpressions;
+using GameGuild.Authentication.Abstractions;
+using GameGuild.Authentication.Models.Configuration;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Authentication.Services;
+
+/// <summary>
+///     Password hashing service using BCrypt or Argon2.
+///     Provides password hashing, verification, strength validation, and rehashing detection.
+/// </summary>
+public sealed class PasswordHasher(ILogger<PasswordHasher> logger) : IPasswordHasher
+{
+    // BCrypt work factor (cost parameter) - higher is more secure but slower
+    // Recommended: 12-14 for production (2^12 to 2^14 iterations)
+    private const int BCryptWorkFactor = 12;
+
+    // Password policy defaults (TODO: Move to configuration)
+    private const int MinPasswordLength = 8;
+
+    private const int MaxPasswordLength = 128;
+
+    private const bool RequireUppercase = true;
+
+    private const bool RequireLowercase = true;
+
+    private const bool RequireDigit = true;
+
+    private const bool RequireSpecialChar = true;
+
+    /// <summary>
+    ///     Hashes a password using BCrypt algorithm.
+    /// </summary>
+    public async Task<string> HashPasswordAsync(string password, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(password)) { throw new ArgumentException("Password cannot be empty", nameof(password)); }
+
+        try
+        {
+            logger.LogDebug("Hashing password with BCrypt (work factor: {WorkFactor})", BCryptWorkFactor);
+
+            // Use BCrypt for password hashing
+            var passwordHash = BCrypt.Net.BCrypt.HashPassword(password, BCryptWorkFactor);
+
+            logger.LogDebug("Password hashed successfully");
+
+            return await Task.FromResult(passwordHash);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error hashing password");
+
+            throw;
+        }
+    }
+
+    /// <summary>
+    ///     Verifies a password against its hash.
+    /// </summary>
+    public async Task<bool> VerifyPasswordAsync(string passwordHash, string providedPassword, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash) || string.IsNullOrWhiteSpace(providedPassword)) { return false; }
+
+        try
+        {
+            logger.LogDebug("Verifying password");
+
+            // Use BCrypt to verify password
+            var isValid = BCrypt.Net.BCrypt.Verify(providedPassword, passwordHash);
+
+            logger.LogDebug("Password verification result: {IsValid}", isValid);
+
+            return await Task.FromResult(isValid);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error verifying password");
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    ///     Validates password strength against policy requirements.
+    /// </summary>
+    public async Task<PasswordStrengthResult> ValidatePasswordStrengthAsync(string password, CancellationToken cancellationToken = default)
+    {
+        var result = new PasswordStrengthResult { IsValid = true, ValidationFailures = new List<string>() };
+
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            result.IsValid = false;
+            result.ValidationFailures.Add("Password is required");
+
+            return result;
+        }
+
+        // Check length
+        if (password.Length < MinPasswordLength)
+        {
+            result.IsValid = false;
+            result.ValidationFailures.Add($"Password must be at least {MinPasswordLength} characters long");
+        }
+
+        if (password.Length > MaxPasswordLength)
+        {
+            result.IsValid = false;
+            result.ValidationFailures.Add($"Password must not exceed {MaxPasswordLength} characters");
+        }
+
+        // Check uppercase requirement
+        if (RequireUppercase && !Regex.IsMatch(password, @"[A-Z]"))
+        {
+            result.IsValid = false;
+            result.ValidationFailures.Add("Password must contain at least one uppercase letter");
+        }
+
+        // Check lowercase requirement
+        if (RequireLowercase && !Regex.IsMatch(password, @"[a-z]"))
+        {
+            result.IsValid = false;
+            result.ValidationFailures.Add("Password must contain at least one lowercase letter");
+        }
+
+        // Check digit requirement
+        if (RequireDigit && !Regex.IsMatch(password, @"[0-9]"))
+        {
+            result.IsValid = false;
+            result.ValidationFailures.Add("Password must contain at least one digit");
+        }
+
+        // Check special character requirement
+        if (RequireSpecialChar && !Regex.IsMatch(password, @"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>/?]"))
+        {
+            result.IsValid = false;
+            result.ValidationFailures.Add("Password must contain at least one special character");
+        }
+
+        // Check for common weak passwords
+        var commonPasswords = new[ ] { "password", "12345678", "qwerty", "abc123", "password1", "Password1", "Password123", "Welcome1", "Admin123" };
+
+        if (commonPasswords.Contains(password, StringComparer.OrdinalIgnoreCase))
+        {
+            result.IsValid = false;
+            result.ValidationFailures.Add("Password is too common and easily guessable");
+        }
+
+        // Calculate strength score (0-100)
+        result.StrengthScore = CalculatePasswordStrength(password);
+
+        // Determine strength level
+        result.StrengthLevel = result.StrengthScore switch
+        {
+            >= 80 => "Strong",
+            >= 60 => "Good",
+            >= 40 => "Fair",
+            >= 20 => "Weak",
+            _ => "Very Weak"
+        };
+
+        logger.LogDebug("Password strength validation: {IsValid}, Score: {Score}, Level: {Level}", result.IsValid, result.StrengthScore, result.StrengthLevel);
+
+        return await Task.FromResult(result);
+    }
+
+    /// <summary>
+    ///     Checks if a password hash needs to be rehashed (e.g., due to increased work factor).
+    /// </summary>
+    public async Task<bool> NeedsRehashAsync(string passwordHash, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash)) { return false; }
+
+        try
+        {
+            // Check if hash uses current work factor
+            // BCrypt hash format: $2a$[work factor]$[salt + hash]
+            var parts = passwordHash.Split('$');
+
+            if (parts.Length < 3)
+            {
+                logger.LogWarning("Invalid BCrypt hash format");
+
+                return true; // Rehash invalid format
+            }
+
+            if (!int.TryParse(parts[2], out var currentWorkFactor))
+            {
+                logger.LogWarning("Cannot parse BCrypt work factor");
+
+                return true;
+            }
+
+            var needsRehash = currentWorkFactor < BCryptWorkFactor;
+
+            if (needsRehash) { logger.LogInformation("Password hash needs rehashing: Current work factor {Current}, Required {Required}", currentWorkFactor, BCryptWorkFactor); }
+
+            return await Task.FromResult(needsRehash);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error checking if password needs rehash");
+
+            return false;
+        }
+    }
+
+    #region Private Helper Methods
+
+    /// <summary>
+    ///     Calculates password strength score (0-100).
+    /// </summary>
+    private int CalculatePasswordStrength(string password)
+    {
+        var score = 0;
+
+        // Length score (max 25 points)
+        score += Math.Min(password.Length * 2, 25);
+
+        // Character variety score (max 40 points)
+        if (Regex.IsMatch(password, @"[a-z]")) score += 10;
+        if (Regex.IsMatch(password, @"[A-Z]")) score += 10;
+        if (Regex.IsMatch(password, @"[0-9]")) score += 10;
+        if (Regex.IsMatch(password, @"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>/?]")) score += 10;
+
+        // Complexity bonus (max 35 points)
+        var uniqueChars = password.Distinct().Count();
+        score += Math.Min(uniqueChars * 2, 20);
+
+        // Entropy bonus
+        if (password.Length >= 12 && uniqueChars >= 10) { score += 15; }
+
+        // Penalty for repeated characters
+        if (Regex.IsMatch(password, @"(.)\1{2,}")) { score -= 10; }
+
+        // Penalty for sequential characters
+        if (ContainsSequentialCharacters(password)) { score -= 10; }
+
+        return Math.Max(0, Math.Min(100, score));
+    }
+
+    /// <summary>
+    ///     Checks if password contains sequential characters (abc, 123, etc.).
+    /// </summary>
+    private bool ContainsSequentialCharacters(string password)
+    {
+        for (var i = 0; i < password.Length - 2; i++)
+        {
+            var char1 = password[i];
+            var char2 = password[i + 1];
+            var char3 = password[i + 2];
+
+            // Check ascending sequence
+            if (char2 == char1 + 1 && char3 == char2 + 1) { return true; }
+
+            // Check descending sequence
+            if (char2 == char1 - 1 && char3 == char2 - 1) { return true; }
+        }
+
+        return false;
+    }
+
+    #endregion
+
+    #region Interface Implementation (Synchronous Wrappers)
+
+    /// <summary>
+    ///     Synchronous wrapper for HashPasswordAsync.
+    /// </summary>
+    public string HashPassword(string password) { return HashPasswordAsync(password, CancellationToken.None).GetAwaiter().GetResult(); }
+
+    /// <summary>
+    ///     Synchronous wrapper for VerifyPasswordAsync.
+    /// </summary>
+    public bool VerifyPassword(string hashedPassword, string providedPassword) { return VerifyPasswordAsync(hashedPassword, providedPassword, CancellationToken.None).GetAwaiter().GetResult(); }
+
+    /// <summary>
+    ///     Synchronous wrapper for NeedsRehashAsync.
+    /// </summary>
+    public bool NeedsUpgrade(string hashedPassword) { return NeedsRehashAsync(hashedPassword, CancellationToken.None).GetAwaiter().GetResult(); }
+
+    /// <summary>
+    ///     Synchronous wrapper for ValidatePasswordStrengthAsync.
+    /// </summary>
+    public PasswordStrengthResult ValidatePasswordStrength(string password) { return ValidatePasswordStrengthAsync(password, CancellationToken.None).GetAwaiter().GetResult(); }
+
+    #endregion
+}
