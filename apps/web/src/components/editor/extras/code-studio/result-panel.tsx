@@ -3,7 +3,8 @@
 import { Play, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { EditorMode, TestCase, CodeFile } from "./types"
-import { XTermTerminal } from "./xterm-terminal"
+import { XTermTerminal, type XTermTerminalHandle } from "./xterm-terminal"
+import { forwardRef } from "react"
 
 interface ResultPanelProps {
   mode: EditorMode
@@ -15,15 +16,16 @@ interface ResultPanelProps {
   activeFile?: CodeFile
 }
 
-export function ResultPanel({
-  mode,
-  output,
-  isExecuting,
-  onExecute,
-  onStop,
-  testCases,
-  activeFile,
-}: ResultPanelProps) {
+export const ResultPanel = forwardRef<XTermTerminalHandle, ResultPanelProps>(
+  function ResultPanel({
+    mode,
+    output,
+    isExecuting,
+    onExecute,
+    onStop,
+    testCases,
+    activeFile,
+  }, ref) {
   // EXECUTION MODE: Console com output
   if (mode === "execution") {
     return (
@@ -49,6 +51,7 @@ export function ResultPanel({
         {/* Console Content - XTerm Terminal */}
         <div className="flex-1 overflow-hidden">
           <XTermTerminal 
+            ref={ref}
             output={output} 
             isExecuting={isExecuting}
           />
@@ -100,4 +103,4 @@ export function ResultPanel({
 
   // VIEW MODE: Não mostra nada (modo apenas visualização)
   return null
-}
+})
