@@ -19,12 +19,22 @@ export function createFile(
     return
   }
   
+  // Determinar conteúdo inicial baseado no nome do arquivo
+  const fileNameWithoutExt = (name.split('.')[0] || '').toLowerCase()
+  const isHelloFile = fileNameWithoutExt === 'hello' || 
+                      fileNameWithoutExt === 'main' || 
+                      draft.files.length === 0 // Primeiro arquivo sempre recebe template
+  
+  const content = isHelloFile 
+    ? LANGUAGE_CONFIGS[language].defaultTemplate 
+    : '' // Arquivo vazio para outros nomes
+  
   // Criar novo arquivo
   const newFileId = Date.now().toString()
   const newFile: CodeFile = {
     id: newFileId,
     name,
-    content: LANGUAGE_CONFIGS[language].defaultTemplate,
+    content,
     language,
     isMain: draft.files.length === 0,
     isVisible: true,
