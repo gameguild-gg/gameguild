@@ -1,17 +1,16 @@
 import { auth } from '@/auth';
 import { WebVitals } from '@/components/analytics';
+import { ConditionalAnalytics, RouteAnalyticsTracker } from '@/components/analytics/conditional-analytics';
 import { ErrorBoundaryProvider } from '@/components/common/errors/error-boundary-provider';
-import { Providers } from '@/components/providers';
+import { CookieConsent } from '@/components/cookies/cookie-consent';
 import { ApolloClientProvider } from '@/components/providers/apollo-provider';
 import { GitHubIssueProvider } from '@/components/providers/github-issue-provider';
 import { TenantProvider } from '@/components/tenant';
 import { ThemeProvider } from '@/components/theme';
 import { Toaster } from '@/components/ui/sonner';
 import { Web3Provider } from '@/components/web3';
-import { environment } from '@/configs/environment';
 import { routing } from '@/i18n';
 import { PropsWithLocaleParams } from '@/types';
-import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
 import { Metadata } from 'next';
 import { SessionProvider } from 'next-auth/react';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
@@ -58,31 +57,28 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
         {/* Initialize Google Consent Mode early */}
         {/*<InitializeGoogleConsent />*/}
 
+        {/* Track page views on route changes */}
+        <RouteAnalyticsTracker />
+
         <NextIntlClientProvider locale={locale} messages={messages}>
           {/* Conditional Analytics - only loads when the user consents */}
-          {/*<ConditionalAnalytics />*/}
-          <GoogleAnalytics gaId={environment.googleAnalyticsMeasurementId} />
-          <GoogleTagManager gtmId={environment.googleTagManagerId} />
+          <ConditionalAnalytics />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false }}>
-              {/* TODO: If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */}
-              <Providers>
+              {/* If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */}
+              <ApolloClientProvider>
                 <Web3Provider>
                   <SessionProvider session={session}>
-                    <ApolloClientProvider>
-                      <TenantProvider initialState={{ currentTenant: session?.currentTenant, availableTenants: session?.availableTenants }}>
-                        {/*TODO: Move this to a better place*/}
-                        {/*<ThemeToggle />*/}
-                        <GitHubIssueProvider />
-                        {children}
-                        {/*TODO: Move this to a better place*/}
-                        {/*<FeedbackFloatingButton />*/}
-                        <Toaster />
-                      </TenantProvider>
-                    </ApolloClientProvider>
+                    <TenantProvider initialState={{ currentTenant: session?.currentTenant, availableTenants: session?.availableTenants }}>
+                      <GitHubIssueProvider />
+                      {children}
+                      {/* Consent modal should be available on all pages */}
+                      <CookieConsent />
+                      <Toaster />
+                    </TenantProvider>
                   </SessionProvider>
                 </Web3Provider>
-              </Providers>
+              </ApolloClientProvider>
             </ErrorBoundaryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
