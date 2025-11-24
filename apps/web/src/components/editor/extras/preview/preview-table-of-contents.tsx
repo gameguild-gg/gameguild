@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { List, ChevronRight, ChevronDown, Settings } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ChevronDown, ChevronRight, List, Settings } from "lucide-react"
+import { useEffect, useState } from "react"
 
 interface HeadingItem {
   id: string
@@ -203,11 +203,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                       setShowModeSelector(false)
                       setExpandedHeadings(new Set())
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                      displayMode === "h1h2"
+                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${displayMode === "h1h2"
                         ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                         : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    }`}
+                      }`}
                   >
                     H1 & H2 only
                   </button>
@@ -217,11 +216,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                       setShowModeSelector(false)
                       setExpandedHeadings(new Set())
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                      displayMode === "h1h2h3"
+                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${displayMode === "h1h2h3"
                         ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                         : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    }`}
+                      }`}
                   >
                     H1, H2 & H3
                   </button>
@@ -231,11 +229,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                       setShowModeSelector(false)
                       setExpandedHeadings(new Set())
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${
-                      displayMode === "all"
+                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${displayMode === "all"
                         ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                         : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    }`}
+                      }`}
                   >
                     Show all
                   </button>
@@ -262,10 +259,9 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                   className={`
                     w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
                     hover:bg-gray-100 dark:hover:bg-gray-800
-                    ${
-                      activeHeading === heading.id
-                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-2 border-blue-500"
-                        : "text-gray-700 dark:text-gray-300"
+                    ${activeHeading === heading.id
+                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-2 border-blue-500"
+                      : "text-gray-700 dark:text-gray-300"
                     }
                   `}
                   style={{
@@ -282,20 +278,20 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                         {isExpanded ? (
                           <ChevronDown className="w-3 h-3 text-gray-400 dark:text-gray-500" />
                         ) : (
-                        <ChevronRight className="w-3 h-3 text-gray-400 dark:text-gray-500" />
-                      )}
-                    </div>
-                  ) : heading.level > 1 ? (
-                    <ChevronRight className="w-3 h-3 text-gray-400 dark:text-gray-500 shrink-0" />
-                  ) : null}
-                  <span className="truncate">{heading.text}</span>
-                </div>
-              </button>
-            </div>
-          )
-        })}
-      </nav>
-    </ScrollArea>
-  </div>
-)
+                          <ChevronRight className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                        )}
+                      </div>
+                    ) : heading.level > 1 ? (
+                      <ChevronRight className="w-3 h-3 text-gray-400 dark:text-gray-500 shrink-0" />
+                    ) : null}
+                    <span className="truncate">{heading.text}</span>
+                  </div>
+                </button>
+              </div>
+            )
+          })}
+        </nav>
+      </ScrollArea>
+    </div>
+  )
 }
