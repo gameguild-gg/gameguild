@@ -1,0 +1,11 @@
+global using Xunit;
+global using FluentAssertions;
+global using Moq;
+global using AutoFixture;
+global using AutoFixture.Xunit2;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.EntityFrameworkCore;
+global using GameGuild.Projects.Entities;
+global using GameGuild.SharedKernel.Enums;
+global using GameGuild.Users.Entities;
+global using GameGuild.API.Data;
