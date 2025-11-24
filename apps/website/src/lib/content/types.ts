@@ -1,11 +1,11 @@
 export type ContentFilterAction =
   | { type: 'FETCH_INITIAL' }
   | {
-      type: 'FETCH_SUCCESS';
-      payload: {
-        // TODO: Add the fetched data type here.
-      };
-    }
+    type: 'FETCH_SUCCESS';
+    payload: {
+      // TODO: Add the fetched data type here.
+    };
+  }
   | { type: 'FETCH_FAILURE'; payload: { error: string } }
   | { type: 'SET_MATURE_CONTENT_VISIBILITY'; payload: { mode: MatureContentVisibilityOptions } };
 

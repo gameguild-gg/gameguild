@@ -1,8 +1,8 @@
 'use client';
 
-import React, { PropsWithChildren } from 'react';
-import { ContentFilterDispatch, ContentFilterState, defaultContentFilterState } from '@/lib/content/types';
 import { useContentFilterReducer } from '@/lib/content/hooks/use-content-filter-reducer.hook';
+import { ContentFilterDispatch, ContentFilterState, defaultContentFilterState } from '@/lib/content/types';
+import React, { PropsWithChildren } from 'react';
 
 type ContentFilterContextType = { state: ContentFilterState; dispatch: ContentFilterDispatch } | undefined;
 
