@@ -21,9 +21,7 @@ export function createFile(
   
   // Determinar conteúdo inicial baseado no nome do arquivo
   const fileNameWithoutExt = (name.split('.')[0] || '').toLowerCase()
-  const isHelloFile = fileNameWithoutExt === 'hello' || 
-                      fileNameWithoutExt === 'main' || 
-                      draft.files.length === 0 // Primeiro arquivo sempre recebe template
+  const isHelloFile = fileNameWithoutExt === 'hello'
   
   const content = isHelloFile 
     ? LANGUAGE_CONFIGS[language].defaultTemplate 
