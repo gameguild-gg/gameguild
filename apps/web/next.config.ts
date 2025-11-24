@@ -172,4 +172,4 @@ const nextConfig: NextConfig = {
 };
 
 // Export config with next-intl plugin
-export default withNextIntl(nextConfig);
+export default withNextIntl(nextConfig as any);
