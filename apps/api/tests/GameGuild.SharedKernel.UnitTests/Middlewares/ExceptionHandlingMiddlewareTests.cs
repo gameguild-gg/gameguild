@@ -182,7 +182,7 @@ public class ExceptionHandlingMiddlewareTests
         // Parse and verify timestamp is reasonable
         var jsonDoc = JsonDocument.Parse(responseBody);
         var timestampString = jsonDoc.RootElement.GetProperty("timestamp").GetString();
-        var timestamp = DateTime.Parse(timestampString!);
+        var timestamp = DateTime.Parse(timestampString!, null, System.Globalization.DateTimeStyles.AdjustToUniversal);
         timestamp.Should().BeOnOrAfter(beforeTimestamp.AddSeconds(-1));
         timestamp.Should().BeOnOrBefore(afterTimestamp.AddSeconds(1));
     }
