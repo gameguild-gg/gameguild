@@ -187,8 +187,10 @@ export function MonacoCodeEditor({
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     editorRef.current = editor
 
-    // Interceptar cliques em links para mostrar dialog de confirmação
+    // Interceptar cliques em links para mostrar dialog de confirmação (apenas com Ctrl pressionado)
     editor.onMouseDown((e) => {
+      // Só processa se Ctrl/Cmd estiver pressionado
+      if (!e.event.ctrlKey && !e.event.metaKey) return
       if (!e.target.position) return
 
       const model = editor.getModel()
@@ -215,6 +217,8 @@ export function MonacoCodeEditor({
     })
 
     // Adicionar decorações para destacar links
+    let decorationIds: string[] = []
+    
     const updateLinkDecorations = () => {
       const model = editor.getModel()
       if (!model) return
@@ -236,13 +240,13 @@ export function MonacoCodeEditor({
             },
             options: {
               inlineClassName: 'monaco-link-decoration',
-              hoverMessage: { value: `Clique para abrir: ${match[0]}` },
+              hoverMessage: { value: `Ctrl+Clique para abrir: ${match[0]}` },
             },
           })
         }
       }
 
-      editor.deltaDecorations([], decorations)
+      decorationIds = editor.deltaDecorations(decorationIds, decorations)
     }
 
     // Atualizar decorações quando o conteúdo mudar
