@@ -1,3 +1,3 @@
-import { NotFound } from '@gameguild/common/errors';
+import { NotFound } from '@game-guild/common/errors';
 
 export default NotFound;
