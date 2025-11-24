@@ -14,7 +14,7 @@ RUN dotnet build "GameGuild.Production.sln" -c Release -o /app/build
 RUN dotnet publish "Source/GameGuild.API/GameGuild.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 2: Runtime stage
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
 
 # Install curl for health checks and create non-root user
 RUN apk add --no-cache curl \
