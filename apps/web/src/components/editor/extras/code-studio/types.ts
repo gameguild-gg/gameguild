@@ -8,6 +8,23 @@ export type SupportedLanguage =
   | "html"
   | "css"
   | "markdown"
+  | "java"
+  | "go"
+  | "rust"
+  | "php"
+  | "ruby"
+  | "swift"
+  | "kotlin"
+  | "csharp"
+  | "sql"
+  | "bash"
+  | "powershell"
+  | "r"
+  | "scala"
+  | "dart"
+  | "json"
+  | "yaml"
+  | "xml"
 
 export type EditorMode = 
   | "execution"  // Executa código com console na direita
@@ -227,17 +244,172 @@ export const LANGUAGE_CONFIGS: Record<
     supportsExecution: false,
     defaultTemplate: '# Hello, World!\n\nThis is a **markdown** document.\n\n- Item 1\n- Item 2\n- Item 3',
   },
+  java: {
+    label: "Java",
+    monacoLanguage: "java",
+    defaultExtension: ".java",
+    supportsExecution: false,
+    defaultTemplate: 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
+  },
+  go: {
+    label: "Go",
+    monacoLanguage: "go",
+    defaultExtension: ".go",
+    supportsExecution: false,
+    defaultTemplate: 'package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, World!")\n}',
+  },
+  rust: {
+    label: "Rust",
+    monacoLanguage: "rust",
+    defaultExtension: ".rs",
+    supportsExecution: false,
+    defaultTemplate: 'fn main() {\n    println!("Hello, World!");\n}',
+  },
+  php: {
+    label: "PHP",
+    monacoLanguage: "php",
+    defaultExtension: ".php",
+    supportsExecution: false,
+    defaultTemplate: '<?php\necho "Hello, World!";\n?>',
+  },
+  ruby: {
+    label: "Ruby",
+    monacoLanguage: "ruby",
+    defaultExtension: ".rb",
+    supportsExecution: false,
+    defaultTemplate: '# Write your Ruby code here\nputs "Hello, World!"',
+  },
+  swift: {
+    label: "Swift",
+    monacoLanguage: "swift",
+    defaultExtension: ".swift",
+    supportsExecution: false,
+    defaultTemplate: 'import Foundation\n\nprint("Hello, World!")',
+  },
+  kotlin: {
+    label: "Kotlin",
+    monacoLanguage: "kotlin",
+    defaultExtension: ".kt",
+    supportsExecution: false,
+    defaultTemplate: 'fun main() {\n    println("Hello, World!")\n}',
+  },
+  csharp: {
+    label: "C#",
+    monacoLanguage: "csharp",
+    defaultExtension: ".cs",
+    supportsExecution: false,
+    defaultTemplate: 'using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}',
+  },
+  sql: {
+    label: "SQL",
+    monacoLanguage: "sql",
+    defaultExtension: ".sql",
+    supportsExecution: false,
+    defaultTemplate: '-- Write your SQL code here\nSELECT \'Hello, World!\' AS greeting;',
+  },
+  bash: {
+    label: "Bash",
+    monacoLanguage: "shell",
+    defaultExtension: ".sh",
+    supportsExecution: false,
+    defaultTemplate: '#!/bin/bash\necho "Hello, World!"',
+  },
+  powershell: {
+    label: "PowerShell",
+    monacoLanguage: "powershell",
+    defaultExtension: ".ps1",
+    supportsExecution: false,
+    defaultTemplate: '# Write your PowerShell code here\nWrite-Host "Hello, World!"',
+  },
+  r: {
+    label: "R",
+    monacoLanguage: "r",
+    defaultExtension: ".r",
+    supportsExecution: false,
+    defaultTemplate: '# Write your R code here\nprint("Hello, World!")',
+  },
+  scala: {
+    label: "Scala",
+    monacoLanguage: "scala",
+    defaultExtension: ".scala",
+    supportsExecution: false,
+    defaultTemplate: 'object Main extends App {\n  println("Hello, World!")\n}',
+  },
+  dart: {
+    label: "Dart",
+    monacoLanguage: "dart",
+    defaultExtension: ".dart",
+    supportsExecution: false,
+    defaultTemplate: 'void main() {\n  print(\'Hello, World!\');\n}',
+  },
+  json: {
+    label: "JSON",
+    monacoLanguage: "json",
+    defaultExtension: ".json",
+    supportsExecution: false,
+    defaultTemplate: '{\n  "message": "Hello, World!",\n  "version": "1.0.0"\n}',
+  },
+  yaml: {
+    label: "YAML",
+    monacoLanguage: "yaml",
+    defaultExtension: ".yaml",
+    supportsExecution: false,
+    defaultTemplate: 'message: Hello, World!\nversion: 1.0.0\nitems:\n  - first\n  - second\n  - third',
+  },
+  xml: {
+    label: "XML",
+    monacoLanguage: "xml",
+    defaultExtension: ".xml",
+    supportsExecution: false,
+    defaultTemplate: '<?xml version="1.0" encoding="UTF-8"?>\n<root>\n  <message>Hello, World!</message>\n</root>',
+  },
 }
 
 // Helper function to detect language from file extension
 export function getLanguageFromExtension(filename: string): SupportedLanguage {
   const ext = filename.split('.').pop()?.toLowerCase()
   
-  const languageEntry = Object.entries(LANGUAGE_CONFIGS).find(
-    ([_, config]) => config.defaultExtension === `.${ext}`
-  )
-  
-  return languageEntry ? (languageEntry[0] as SupportedLanguage) : 'javascript'
+  // Casos especiais com múltiplas extensões
+  switch (ext) {
+    case 'js': return 'javascript'
+    case 'ts':
+    case 'tsx': return 'typescript'
+    case 'py': return 'python'
+    case 'lua': return 'lua'
+    case 'c':
+    case 'h': return 'c'
+    case 'cpp':
+    case 'cc':
+    case 'cxx':
+    case 'hpp': return 'cpp'
+    case 'html':
+    case 'htm': return 'html'
+    case 'css': return 'css'
+    case 'md':
+    case 'markdown': return 'markdown'
+    case 'java': return 'java'
+    case 'go': return 'go'
+    case 'rs': return 'rust'
+    case 'php': return 'php'
+    case 'rb': return 'ruby'
+    case 'swift': return 'swift'
+    case 'kt':
+    case 'kts': return 'kotlin'
+    case 'cs': return 'csharp'
+    case 'sql': return 'sql'
+    case 'sh':
+    case 'bash': return 'bash'
+    case 'ps1': return 'powershell'
+    case 'r': return 'r'
+    case 'scala':
+    case 'sc': return 'scala'
+    case 'dart': return 'dart'
+    case 'json': return 'json'
+    case 'yaml':
+    case 'yml': return 'yaml'
+    case 'xml': return 'xml'
+    default: return 'javascript'
+  }
 }
 
 // Helper function to get Monaco language from our language type
