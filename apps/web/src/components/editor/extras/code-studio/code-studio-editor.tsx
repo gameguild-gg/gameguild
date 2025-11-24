@@ -9,6 +9,7 @@ import { X, Save, Code2, Play, Terminal, Menu, ArrowLeft, Lock, Layout } from "l
 import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, LayoutConfig, PanelConfig, DisplayConfig, PanelType, EditorInstance, AspectRatio } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
+import type { XTermTerminalHandle } from "./xterm-terminal"
 import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
 import { useTheme } from "next-themes"
 import { FileExplorer } from "./file-system/file-explorer"
@@ -65,11 +66,28 @@ export function CodeStudioEditor({
   const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
   const gridContainerRef = useRef<HTMLDivElement | null>(null)
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
+  const terminalRef = useRef<XTermTerminalHandle | null>(null)
   const initializedRef = useRef(false)
 
   // Initialize runner and Monaco file system
   useEffect(() => {
-    codeRunnerRef.current = new UnifiedCodeRunner({ timeout: 30000 })
+    codeRunnerRef.current = new UnifiedCodeRunner({ 
+      timeout: 30000,
+      onRequestInput: async (prompt?: string, currentOutput?: string) => {
+        if (terminalRef.current) {
+          // Write current output to terminal before requesting input
+          if (currentOutput) {
+            terminalRef.current.write(currentOutput.replace(/\n/g, '\r\n') + '\r\n')
+          }
+          // Write prompt if provided
+          if (prompt) {
+            terminalRef.current.write(prompt)
+          }
+          return await terminalRef.current.requestInput()
+        }
+        return ""
+      }
+    })
     
     // Inicializar sistema de arquivos virtual do Monaco
     initializeMonacoFileSystem().then(() => {
@@ -465,6 +483,7 @@ export function CodeStudioEditor({
       case "output":
         return (
           <ResultPanel
+            ref={terminalRef}
             output={output}
             isExecuting={isExecuting}
             mode={localData.mode!}
