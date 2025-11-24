@@ -18,7 +18,7 @@ export interface CreateTestingLocationRequest {
   capacity?: number;
 }
 
-export interface UpdateTestingLocationRequest extends Partial<CreateTestingLocationRequest> {}
+export interface UpdateTestingLocationRequest extends Partial<CreateTestingLocationRequest> { }
 
 export interface TestingLocation extends CreateTestingLocationRequest {
   id: string;
