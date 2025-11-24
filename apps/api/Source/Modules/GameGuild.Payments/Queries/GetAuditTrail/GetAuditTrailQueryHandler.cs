@@ -1,0 +1,16 @@
+﻿using GameGuild.CQRS;
+using GameGuild.Payments.Abstractions;
+using GameGuild.Payments.Entities;
+
+namespace GameGuild.Payments.Queries;
+
+/// <summary>
+///     Handler for GetAuditTrailQuery
+/// </summary>
+public sealed class GetAuditTrailQueryHandler(IRevenueAuditService revenueAuditService) : IQueryHandler<GetAuditTrailQuery, List<AuditTrail>>
+{
+    public async Task<List<AuditTrail>> Handle(GetAuditTrailQuery request, CancellationToken cancellationToken)
+    {
+        return await revenueAuditService.GetAuditTrailByEntityAsync(request.EntityType, request.EntityId, request.Skip, request.Take, cancellationToken);
+    }
+}

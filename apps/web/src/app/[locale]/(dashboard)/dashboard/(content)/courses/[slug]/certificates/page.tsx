@@ -1,9 +1,9 @@
-import React from 'react';
-import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
-import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/dashboard-page';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
 import { Award } from 'lucide-react';
+import React from 'react';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;

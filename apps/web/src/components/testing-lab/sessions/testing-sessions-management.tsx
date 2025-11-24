@@ -1,256 +1,281 @@
 'use client';
 
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Filter, Gamepad2, RefreshCw, Search, TrendingUp, Users } from 'lucide-react';
-import { EnhancedTestingSessionsList } from './enhanced-testing-sessions-list';
-
-interface TestingSession {
-  id: string;
-  sessionName: string;
-  sessionDate: string;
-  startTime: string;
-  endTime: string;
-  location?: {
-    id: string;
-    name: string;
-    capacity: number;
-  };
-  maxTesters: number;
-  registeredTesterCount: number;
-  registeredProjectMemberCount: number;
-  registeredProjectCount: number;
-  status?: 'scheduled' | 'active' | 'completed' | 'cancelled';
-  manager?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  testingRequests?: {
-    id: string;
-    title: string;
-    projectVersion: {
-      versionNumber: string;
-      project: {
-        title: string;
-      };
-    };
-  }[];
-  description?: string;
-  notes?: string;
-  attendanceRate?: number;
-  averageRating?: number;
-  feedbackCount?: number;
-}
+import { createTestingSessionAction, deleteTestingSessionAction } from '@/lib/admin/testing-lab/sessions/sessions.actions';
+import { TestingLocation, TestingSession } from '@/lib/api/generated/types.gen';
+import { TestingSessionCreateData, testingSessionCreateSchema } from '@/lib/schemas/testing-sessions.schema';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { TestingSessionsList } from './testing-sessions-list';
 
 interface TestingSessionsManagementProps {
-  initialSessions?: TestingSession[];
+    initialSessions: TestingSession[];
+    availableLocations: TestingLocation[];
 }
 
-export function TestingSessionsManagement({ initialSessions = [] }: TestingSessionsManagementProps) {
-  const [sessions] = useState<TestingSession[]>(Array.isArray(initialSessions) ? initialSessions : []);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'table'>('grid');
-  const [loading, setLoading] = useState(false);
+function CreateSessionDialog({
+    availableLocations,
+    onSessionCreated
+}: {
+    availableLocations: TestingLocation[];
+    onSessionCreated: (session: TestingSession) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
+    const [selectedLocation, setSelectedLocation] = useState<TestingLocation | null>(null);
 
-  // Filter sessions based on search and status
-  const filteredSessions = sessions.filter((session) => {
-    const matchesSearch =
-      searchTerm === '' ||
-      session.sessionName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.location?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.manager?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const form = useForm<TestingSessionCreateData>({
+        resolver: zodResolver(testingSessionCreateSchema),
+        defaultValues: {
+            sessionName: '',
+            sessionDate: '',
+            startTime: '09:00',
+            endTime: '17:00',
+            maxTesters: 15,
+            maxProjects: 4,
+            locationId: '',
+            managerUserId: '',
+            status: 0, // Scheduled
+        },
+    });
 
-    const matchesStatus = statusFilter === 'all' || session.status === statusFilter;
+    const handleLocationChange = (locationId: string) => {
+        const location = availableLocations.find(l => l.id === locationId);
+        setSelectedLocation(location || null);
+        form.setValue('locationId', locationId);
 
-    return matchesSearch && matchesStatus;
-  });
+        // Update max capacities based on location
+        if (location) {
+            form.setValue('maxTesters', Math.min(form.getValues('maxTesters'), location.maxTestersCapacity));
+            form.setValue('maxProjects', Math.min(form.getValues('maxProjects'), location.maxProjectsCapacity));
+        }
+    };
 
-  // Utility functions (currently unused, keeping for future use)
-  // const formatDate = (dateString: string) => {
-  //   const date = new Date(dateString);
-  //   return date.toLocaleDateString('en-US', {
-  //     weekday: 'short',
-  //     month: 'short',
-  //     day: 'numeric',
-  //     year: 'numeric',
-  //   });
-  // };
+    const onSubmit = async (data: TestingSessionCreateData) => {
+        setIsCreating(true);
 
-  // const formatTime = (timeString: string) => {
-  //   const [hours, minutes] = timeString.split(':');
-  //   const date = new Date();
-  //   date.setHours(parseInt(hours), parseInt(minutes));
-  //   return date.toLocaleTimeString('en-US', {
-  //     hour: 'numeric',
-  //     minute: '2-digit',
-  //     hour12: true,
-  //   });
-  // };
+        try {
+            const result = await createTestingSessionAction(data);
 
-  // const getStatusColor = (status: string | null | undefined) => {
-  //   switch (status) {
-  //     case 'scheduled':
-  //       return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-500/30';
-  //     case 'active':
-  //       return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-500/30';
-  //     case 'completed':
-  //       return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-500/30';
-  //     case 'cancelled':
-  //       return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-500/30';
-  //     default:
-  //       return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-900/30 dark:text-gray-300 dark:border-gray-500/30';
-  //   }
-  // };
+            if (result.success && result.data) {
+                toast.success('Testing session created successfully');
+                onSessionCreated(result.data);
+                setOpen(false);
+                form.reset();
+                setSelectedLocation(null);
+            } else {
+                toast.error(result.error || 'Failed to create session');
+            }
+        } catch (error) {
+            console.error('Error creating session:', error);
+            toast.error('Failed to create session');
+        } finally {
+            setIsCreating(false);
+        }
+    };
 
-  const refreshSessions = async () => {
-    setLoading(true);
-    // TODO: Implement refresh logic
-    setLoading(false);
-  };
-
-  if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading testing sessions...</p>
-        </div>
-      </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Session
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Create New Testing Session</DialogTitle>
+                    <DialogDescription>
+                        Create a new testing session that groups multiple testing requests together.
+                        Sessions have shared capacity limits based on the selected location.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="sessionName">Session Name</Label>
+                            <Input
+                                id="sessionName"
+                                {...form.register('sessionName')}
+                                placeholder="e.g., VR Gaming Session - Week 1"
+                            />
+                            {form.formState.errors.sessionName && (
+                                <p className="text-sm text-destructive">{form.formState.errors.sessionName.message}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="sessionDate">Session Date</Label>
+                            <Input
+                                id="sessionDate"
+                                type="date"
+                                {...form.register('sessionDate')}
+                            />
+                            {form.formState.errors.sessionDate && (
+                                <p className="text-sm text-destructive">{form.formState.errors.sessionDate.message}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="startTime">Start Time</Label>
+                            <Input
+                                id="startTime"
+                                type="time"
+                                {...form.register('startTime')}
+                            />
+                            {form.formState.errors.startTime && (
+                                <p className="text-sm text-destructive">{form.formState.errors.startTime.message}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="endTime">End Time</Label>
+                            <Input
+                                id="endTime"
+                                type="time"
+                                {...form.register('endTime')}
+                            />
+                            {form.formState.errors.endTime && (
+                                <p className="text-sm text-destructive">{form.formState.errors.endTime.message}</p>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="location">Testing Location</Label>
+                        <Select onValueChange={handleLocationChange}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a testing location" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {availableLocations.map((location) => (
+                                    <SelectItem key={location.id} value={location.id || ''}>
+                                        {location.name} (Max: {location.maxTestersCapacity} testers, {location.maxProjectsCapacity} projects)
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {form.formState.errors.locationId && (
+                            <p className="text-sm text-destructive">{form.formState.errors.locationId.message}</p>
+                        )}
+                    </div>
+
+                    {selectedLocation && (
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="maxTesters">Max Testers</Label>
+                                <Input
+                                    id="maxTesters"
+                                    type="number"
+                                    min="1"
+                                    max={selectedLocation.maxTestersCapacity}
+                                    {...form.register('maxTesters', { valueAsNumber: true })}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Location capacity: {selectedLocation.maxTestersCapacity} testers
+                                </p>
+                                {form.formState.errors.maxTesters && (
+                                    <p className="text-sm text-destructive">{form.formState.errors.maxTesters.message}</p>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="maxProjects">Max Projects</Label>
+                                <Input
+                                    id="maxProjects"
+                                    type="number"
+                                    min="1"
+                                    max={selectedLocation.maxProjectsCapacity}
+                                    {...form.register('maxProjects', { valueAsNumber: true })}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Location capacity: {selectedLocation.maxProjectsCapacity} projects
+                                </p>
+                                {form.formState.errors.maxProjects && (
+                                    <p className="text-sm text-destructive">{form.formState.errors.maxProjects.message}</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            disabled={isCreating}
+                        >
+                            {isCreating ? 'Creating...' : 'Create Session'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
-  }
+}
 
-  return (
-    <div className="space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/10 border-blue-200 dark:border-blue-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-600 dark:text-blue-300 text-sm font-medium">Total Sessions</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{sessions.length}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-blue-500 dark:text-blue-400" />
+export function TestingSessionsManagement({
+    initialSessions,
+    availableLocations,
+}: TestingSessionsManagementProps) {
+    const [sessions, setSessions] = useState<TestingSession[]>(initialSessions);
+    const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+    const handleSessionCreated = (newSession: TestingSession) => {
+        setSessions(prev => [newSession, ...prev]);
+    };
+
+    const handleDeleteSession = async (sessionId: string) => {
+        if (!confirm('Are you sure you want to delete this testing session?')) {
+            return;
+        }
+
+        setIsDeleting(sessionId);
+
+        try {
+            const result = await deleteTestingSessionAction(sessionId);
+
+            if (result.success) {
+                toast.success('Session deleted successfully');
+                setSessions(prev => prev.filter(s => s.id !== sessionId));
+            } else {
+                toast.error(result.error || 'Failed to delete session');
+            }
+        } catch (error) {
+            console.error('Error deleting session:', error);
+            toast.error('Failed to delete session');
+        } finally {
+            setIsDeleting(null);
+        }
+    };
+
+    return (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <div>
+                    <p className="text-muted-foreground">
+                        {sessions.length} session{sessions.length !== 1 ? 's' : ''} total
+                    </p>
+                </div>
+                <CreateSessionDialog
+                    availableLocations={availableLocations}
+                    onSessionCreated={handleSessionCreated}
+                />
             </div>
-            <p className="text-blue-600/60 dark:text-blue-300/60 text-xs mt-2">Scheduled sessions</p>
-          </CardContent>
-        </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/10 border-green-200 dark:border-green-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-600 dark:text-green-300 text-sm font-medium">Active Testers</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{sessions.reduce((acc, s) => acc + s.registeredTesterCount, 0)}</p>
-              </div>
-              <Users className="h-8 w-8 text-green-500 dark:text-green-400" />
-            </div>
-            <p className="text-green-600/60 dark:text-green-300/60 text-xs mt-2">Registered participants</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/10 border-purple-200 dark:border-purple-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-600 dark:text-purple-300 text-sm font-medium">Projects</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{sessions.reduce((acc, s) => acc + (s.registeredProjectCount || 0), 0)}</p>
-              </div>
-              <Gamepad2 className="h-8 w-8 text-purple-500 dark:text-purple-400" />
-            </div>
-            <p className="text-purple-600/60 dark:text-purple-300/60 text-xs mt-2">Games being tested</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/10 border-orange-200 dark:border-orange-500/20">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-600 dark:text-orange-300 text-sm font-medium">Avg Attendance</p>
-                <p className="text-3xl font-bold text-gray-900 dark:text-white">{sessions.length > 0 ? Math.round(sessions.reduce((acc, s) => acc + (s.attendanceRate || 0), 0) / sessions.length) : 0}%</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-orange-500 dark:text-orange-400" />
-            </div>
-            <p className="text-orange-600/60 dark:text-orange-300/60 text-xs mt-2">Session participation</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Header with action buttons */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-        <div className="flex items-center gap-2">
-          <Calendar className="h-6 w-6 text-blue-600" />
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Testing Sessions ({filteredSessions.length})</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Manage testing sessions and track participation</p>
-          </div>
+            {/* Sessions List */}
+            <TestingSessionsList sessions={sessions} />
         </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={refreshSessions}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </div>
-      </div>
-
-      {/* Enhanced Filters and Search */}
-      <Card className="bg-white dark:bg-slate-800/50 border-gray-200 dark:border-slate-600/70">
-        <CardContent className="p-6">
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-slate-400 h-4 w-4" />
-                <Input placeholder="Search sessions, locations, or managers..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
-              </div>
-
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="scheduled">Scheduled</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex gap-2">
-              <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('grid')}>
-                Grid
-              </Button>
-              <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('list')}>
-                List
-              </Button>
-              <Button variant={viewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setViewMode('table')}>
-                Table
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Sessions Display */}
-      {filteredSessions.length === 0 ? (
-        <Card className="bg-white dark:bg-slate-800/50 border-gray-200 dark:border-slate-600/70">
-          <CardContent className="p-12 text-center">
-            <Calendar className="h-12 w-12 text-gray-400 dark:text-slate-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 dark:text-slate-300 mb-2">No sessions found</h3>
-            <p className="text-gray-500 dark:text-slate-500">{searchTerm || statusFilter !== 'all' ? 'Try adjusting your search or filters' : 'No testing sessions have been scheduled yet'}</p>
-          </CardContent>
-        </Card>
-      ) : (
-        <EnhancedTestingSessionsList initialSessions={filteredSessions} />
-      )}
-    </div>
-  );
+    );
 }

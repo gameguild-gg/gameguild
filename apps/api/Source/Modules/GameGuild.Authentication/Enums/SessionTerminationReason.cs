@@ -1,0 +1,21 @@
+namespace GameGuild.Authentication.Enums;
+
+/// <summary>
+///     Session termination reasons
+/// </summary>
+public enum SessionTerminationReason
+{
+    UserLogout,
+
+    AdministrativeTermination,
+
+    Expired,
+
+    SecurityViolation,
+
+    DeviceChanged,
+
+    LocationChanged,
+
+    MaxSessionsExceeded
+}
