@@ -1,0 +1,237 @@
+import type { CodeStudioData, CodeFile, FileTreeFolder } from "./types"
+import { LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
+import { openFile, closeFile } from "./editor-state-utils"
+
+export function createFile(
+  draft: CodeStudioData,
+  path: string,
+  name: string,
+  activeDisplayId: string = 'display-1'
+): void {
+  const language = getLanguageFromExtension(name)
+  const fullPath = path ? `${path}/${name}` : name
+  
+  // Verificar se arquivo já existe
+  const existingFile = draft.files.find(f => f.path === fullPath)
+  if (existingFile) {
+    // Arquivo já existe, apenas abrir ele usando utilitário centralizado
+    openFile(draft, activeDisplayId, existingFile.id)
+    return
+  }
+  
+  // Determinar conteúdo inicial baseado no nome do arquivo
+  const fileNameWithoutExt = (name.split('.')[0] || '').toLowerCase()
+  const isHelloFile = fileNameWithoutExt === 'hello'
+  
+  const content = isHelloFile 
+    ? LANGUAGE_CONFIGS[language].defaultTemplate 
+    : '' // Arquivo vazio para outros nomes
+  
+  // Criar novo arquivo
+  const newFileId = Date.now().toString()
+  const newFile: CodeFile = {
+    id: newFileId,
+    name,
+    content,
+    language,
+    isMain: draft.files.length === 0,
+    isVisible: true,
+    path: fullPath,
+  }
+
+  draft.files.push(newFile)
+  
+  // Abrir o novo arquivo usando utilitário centralizado
+  openFile(draft, activeDisplayId, newFileId)
+}
+
+export function createFolder(
+  draft: CodeStudioData,
+  path: string,
+  name: string
+): void {
+  const fullPath = path ? `${path}/${name}` : name
+  const newFolder: FileTreeFolder = {
+    id: Date.now().toString(),
+    name,
+    path: fullPath,
+    isExpanded: true,
+    children: [],
+    type: "folder",
+  }
+  
+  if (!draft.folders) {
+    draft.folders = []
+  }
+  draft.folders.push(newFolder)
+}
+
+export function deleteFile(
+  draft: CodeStudioData,
+  fileId: string
+): void {
+  // Remover arquivo da lista
+  draft.files = draft.files.filter(f => f.id !== fileId)
+  
+  // Remover de todas as abas abertas (global e displays)
+  if (draft.openTabs) {
+    draft.openTabs = draft.openTabs.filter(id => id !== fileId)
+  }
+  
+  // Remover das abas de cada display
+  draft.layout?.displays.forEach(display => {
+    if (display.uniqueOpenTabs) {
+      display.uniqueOpenTabs = display.uniqueOpenTabs.filter(id => id !== fileId)
+      
+      // Se era o arquivo ativo, selecionar outro
+      if (display.uniqueActiveFileId === fileId) {
+        display.uniqueActiveFileId = display.uniqueOpenTabs.length > 0
+          ? display.uniqueOpenTabs[display.uniqueOpenTabs.length - 1]
+          : undefined
+      }
+    }
+  })
+  
+  // Atualizar activeFileId global
+  if (draft.activeFileId === fileId) {
+    if (draft.openTabs && draft.openTabs.length > 0) {
+      draft.activeFileId = draft.openTabs[0]
+    } else if (draft.files.length > 0) {
+      draft.activeFileId = draft.files[0]?.id
+    } else {
+      draft.activeFileId = undefined
+    }
+  }
+}
+
+export function deleteFolder(
+  draft: CodeStudioData,
+  folderId: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (!folder) return
+  
+  // Remover pasta e arquivos dentro dela
+  draft.files = draft.files.filter(f => !f.path.startsWith(folder.path))
+  if (draft.folders) {
+    draft.folders = draft.folders.filter(f => f.id !== folderId)
+  }
+}
+
+export function renameFile(
+  draft: CodeStudioData,
+  fileId: string,
+  newName: string
+): void {
+  const file = draft.files.find(f => f.id === fileId)
+  if (file) {
+    const pathParts = file.path.split('/')
+    pathParts[pathParts.length - 1] = newName
+    file.name = newName
+    file.path = pathParts.join('/')
+  }
+}
+
+export function renameFolder(
+  draft: CodeStudioData,
+  folderId: string,
+  newName: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (!folder) return
+  
+  const oldPath = folder.path
+  const pathParts = oldPath.split('/')
+  pathParts[pathParts.length - 1] = newName
+  const newPath = pathParts.join('/')
+  
+  // Atualizar pasta
+  folder.name = newName
+  folder.path = newPath
+  
+  // Atualizar subpastas
+  if (draft.folders) {
+    draft.folders.forEach(f => {
+      if (f.id !== folderId && f.path.startsWith(oldPath + '/')) {
+        const relativePath = f.path.substring(oldPath.length + 1)
+        f.path = `${newPath}/${relativePath}`
+      }
+    })
+  }
+  
+  // Atualizar caminhos dos arquivos dentro da pasta
+  draft.files.forEach(f => {
+    if (f.path.startsWith(oldPath)) {
+      f.path = f.path.replace(oldPath, newPath)
+    }
+  })
+}
+
+export function toggleFolder(
+  draft: CodeStudioData,
+  folderId: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (folder) {
+    folder.isExpanded = !folder.isExpanded
+  }
+}
+
+export function moveFile(
+  draft: CodeStudioData,
+  fileId: string,
+  newPath: string
+): void {
+  const file = draft.files.find(f => f.id === fileId)
+  if (!file) return
+
+  const fileName = file.path.split("/").pop() || file.name
+  const newFilePath = newPath ? `${newPath}/${fileName}` : fileName
+
+  // Verificar se já existe arquivo com mesmo nome no destino
+  const fileExists = draft.files.some(f => f.path === newFilePath && f.id !== fileId)
+  if (fileExists) return
+
+  file.path = newFilePath
+  file.name = fileName
+}
+
+export function moveFolder(
+  draft: CodeStudioData,
+  folderId: string,
+  newPath: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (!folder) return
+
+  const folderName = folder.path.split("/").pop() || folder.name
+  const newFolderPath = newPath ? `${newPath}/${folderName}` : folderName
+
+  // Verificar se já existe pasta com mesmo nome no destino
+  const folderExists = draft.folders?.some(f => f.path === newFolderPath && f.id !== folderId)
+  if (folderExists) return
+
+  const oldPath = folder.path
+  
+  // Atualizar pasta principal
+  folder.path = newFolderPath
+  folder.name = folderName
+  
+  // Atualizar subpastas
+  if (draft.folders) {
+    draft.folders.forEach(f => {
+      if (f.id !== folderId && f.path.startsWith(oldPath + "/")) {
+        const relativePath = f.path.substring(oldPath.length + 1)
+        f.path = `${newFolderPath}/${relativePath}`
+      }
+    })
+  }
+
+  // Atualizar arquivos dentro da pasta
+  draft.files.forEach(f => {
+    if (f.path.startsWith(oldPath + "/")) {
+      const relativePath = f.path.substring(oldPath.length + 1)
+      f.path = `${newFolderPath}/${relativePath}`
+    }
+  })
+}

@@ -39,10 +39,10 @@ jobs:
       - run: cd apps/web ; npm run build
         name: Build
 
-      - run: cd apps/api ; dotnet build "GameGuild.csproj" -c Release
+      - run: cd apps/api ; dotnet build "GameGuild.Production.sln" -c Release
         name: Build API
 
-      - run: cd apps/api ; dotnet publish "GameGuild.csproj" -c Release
+      - run: cd apps/api/Source/GameGuild.API ; dotnet publish "GameGuild.API.csproj" -c Release
         name: Publish API
 
       - run: |

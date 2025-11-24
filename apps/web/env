@@ -1,0 +1,88 @@
+# GameGuild Web Environment Variables
+# Copy this file to .env.local and modify as needed for local development
+
+# =============================================================================
+# NextAuth Configuration
+# =============================================================================
+
+# NextAuth Secret (generate a random string for production)
+NEXTAUTH_SECRET=your-nextauth-secret-key-here-minimum-32-characters
+
+# NextAuth URL (the canonical URL of your site)
+NEXTAUTH_URL=http://localhost:3000
+
+# =============================================================================
+# Application URLs
+# =============================================================================
+
+# Public Web URL
+NEXT_PUBLIC_WEB_URL=http://localhost:3000
+
+# API Base URL
+NEXT_PUBLIC_API_URL=http://localhost:5000
+
+# GraphQL URL
+NEXT_PUBLIC_GRAPHQL_URL=http://localhost:5000/graphql
+
+# =============================================================================
+# Google OAuth Configuration
+# =============================================================================
+
+# Google OAuth Client ID
+GOOGLE_CLIENT_ID=your-google-client-id-here
+
+# Google OAuth Client Secret
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+
+# Google Project ID
+GOOGLE_PROJECT_ID=your-google-project-id-here
+
+# =============================================================================
+# Analytics Configuration
+# =============================================================================
+
+# Google Analytics Measurement ID
+GOOGLE_ANALYTICS_MEASUREMENT_ID=
+
+# Google Tag Manager ID
+GOOGLE_TAG_MANAGER_ID=
+
+# =============================================================================
+# GitHub Integration
+# =============================================================================
+
+# GitHub Token for issue reporting
+GITHUB_TOKEN=
+
+# =============================================================================
+# Error Reporting
+# =============================================================================
+
+# Error Reporting Endpoint
+NEXT_PUBLIC_ERROR_REPORTING_ENDPOINT=
+
+# =============================================================================
+# New Relic Configuration
+# =============================================================================
+
+# New Relic License Key
+NEW_RELIC_LICENSE_KEY=
+
+# New Relic App Name
+NEW_RELIC_APP_NAME=Game Guild Web
+
+# New Relic Account ID
+NEXT_PUBLIC_NEW_RELIC_ACCOUNT_ID=
+
+# New Relic Log Level
+NEW_RELIC_LOG_LEVEL=info
+
+# New Relic Distributed Tracing
+NEW_RELIC_DISTRIBUTED_TRACING_ENABLED=false
+
+# =============================================================================
+# Application Version
+# =============================================================================
+
+# Application Version
+NEXT_PUBLIC_APP_VERSION=1.0.0

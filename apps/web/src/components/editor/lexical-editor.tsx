@@ -2,7 +2,6 @@
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer"
 import { ContentEditable } from "@lexical/react/LexicalContentEditable"
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
 import { ListPlugin } from "@lexical/react/LexicalListPlugin"
@@ -78,6 +77,10 @@ import { SpotifyPlugin } from "./plugins/spotify-plugin"
 import { SourceCodeNode } from "./nodes/source-code-node"
 import { SourceCodePlugin } from "./plugins/source-code-plugin"
 
+// Add the import for the CodeStudioNode and CodeStudioPlugin:
+import { CodeStudioNode } from "./nodes/code-studio-node"
+import { CodeStudioPlugin } from "./plugins/code-studio-plugin"
+
 import { MermaidNode } from "./nodes/mermaid-node"
 import { MermaidPlugin } from "./plugins/mermaid-plugin"
 import { VegaLiteNode } from "./nodes/vega-lite-node"
@@ -141,6 +144,7 @@ function StructureDeleteConfirmPlugin() {
           node.getType() === "youtube" ||
           node.getType() === "spotify" ||
           node.getType() === "source-code" ||
+          node.getType() === "code-studio" ||
           node.getType() === "button" ||
           node.getType() === "admonition" ||
           node.getType() === "divider" ||
@@ -166,6 +170,7 @@ function StructureDeleteConfirmPlugin() {
                 node.getType() === "youtube" ||
                 node.getType() === "spotify" ||
                 node.getType() === "source-code" ||
+                node.getType() === "code-studio" ||
                 node.getType() === "button" ||
                 node.getType() === "admonition" ||
                 node.getType() === "divider" ||
@@ -207,6 +212,7 @@ function StructureDeleteConfirmPlugin() {
             node.getType() === "youtube" ||
             node.getType() === "spotify" ||
             node.getType() === "source-code" ||
+            node.getType() === "code-studio" ||
             node.getType() === "button" ||
             node.getType() === "admonition" ||
             node.getType() === "divider" ||
@@ -231,6 +237,7 @@ function StructureDeleteConfirmPlugin() {
                   node.getType() === "youtube" ||
                   node.getType() === "spotify" ||
                   node.getType() === "source-code" ||
+                  node.getType() === "code-studio" ||
                   node.getType() === "button" ||
                   node.getType() === "admonition" ||
                   node.getType() === "divider" ||
@@ -312,6 +319,7 @@ const initialConfig = {
     YouTubeNode,
     SpotifyNode,
     SourceCodeNode,
+    CodeStudioNode,
     MermaidNode,
     VegaLiteNode,
     CustomTableNode,
@@ -426,14 +434,14 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
       }}
     >
       <EditorLoadingProvider value={isLoadingProject}>
-        <div className={cn("rounded-lg border", className)}>
+        <div className={cn("rounded-lg border-2 border-gray-300 dark:border-gray-700", className)}>
           <YouTubeAudioStyle />
           <EditorToolbar />
           <div className="relative">
             <RichTextPlugin
-              contentEditable={<ContentEditable className="min-h-[150px] p-3 outline-none" />}
+              contentEditable={<ContentEditable className="min-h-[450px] p-3 outline-none text-gray-900 dark:text-gray-100" />}
               placeholder={
-                <div className="pointer-events-none absolute left-[13px] top-[13px] select-none text-muted-foreground">
+                <div className="pointer-events-none absolute left-[13px] top-[13px] select-none text-gray-400 dark:text-gray-500">
                   Start typing...
                 </div>
               }
@@ -460,6 +468,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <SpotifyPlugin />
             <CodePlugin />
             <SourceCodePlugin />
+            <CodeStudioPlugin />
             <MermaidPlugin />
             <VegaLitePlugin />
             <TablePlugin />
@@ -472,7 +481,6 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             />
             <EditorRefPlugin editorRef={editorRef} />
             <StructureDeleteConfirmPlugin />
-            <HistoryPlugin />
             <ListPlugin />
             <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
           </div>

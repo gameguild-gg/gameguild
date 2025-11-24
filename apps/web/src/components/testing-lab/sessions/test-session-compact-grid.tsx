@@ -1,11 +1,24 @@
 'use client';
 
-import { TestSession } from '@/lib/api/testing-lab/test-sessions';
+// Local lightweight session type for compact grid (avoids invalid import path)
+interface TestSession {
+  id: string;
+  slug: string;
+  title: string;
+  gameTitle: string;
+  gameDeveloper: string;
+  sessionDate: string;
+  maxTesters: number;
+  currentTesters: number;
+  sessionType: string;
+  status: 'open' | 'full' | string;
+  platform: string[];
+}
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Monitor, Star, Trophy, Users } from 'lucide-react';
-import { format } from 'date-fns';
 import { Link, useRouter } from '@/i18n/navigation';
+import { format } from 'date-fns';
+import { Calendar, Clock, Monitor, Star, Trophy, Users } from 'lucide-react';
 
 interface TestSessionCompactGridProps {
   sessions: TestSession[];
@@ -96,7 +109,7 @@ export function TestSessionCompactGrid({ sessions }: TestSessionCompactGridProps
 
             {/* Platform Tags */}
             <div className="flex flex-wrap gap-1 mb-3">
-              {session.platform.slice(0, 2).map((platform) => (
+              {session.platform.slice(0, 2).map((platform: string) => (
                 <Badge key={platform} variant="secondary" className="bg-slate-800/50 text-slate-300 border-slate-600 text-xs px-1 py-0 h-5">
                   {platform}
                 </Badge>
@@ -116,7 +129,7 @@ export function TestSessionCompactGrid({ sessions }: TestSessionCompactGridProps
                   size="sm"
                   className="w-full h-7 bg-gradient-to-r from-blue-600/30 to-blue-500/30 backdrop-blur-md border border-blue-400/40 text-white hover:from-blue-600/90 hover:to-blue-500/90 hover:border-blue-300/90 font-semibold transition-all duration-200 text-xs"
                 >
-                  <Link href={`/testing-lab/sessions/${session.slug}/join`}>Join</Link>
+                  <Link href={`/testing-lab/sessions/${session.slug}`}>View</Link>
                 </Button>
               ) : (
                 <Button disabled size="sm" variant="outline" className="w-full h-7 text-xs">
