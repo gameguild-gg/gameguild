@@ -22,8 +22,6 @@ public class UsageEnforcementMiddlewareTests
     private readonly Mock<ITenantContext> _mockTenantContext;
     private readonly Mock<ISubscriptionService> _mockSubscriptionService;
     private readonly Mock<ISubscriptionPlanService> _mockSubscriptionPlanService;
-    private readonly Mock<ISubscription> _mockSubscription;
-    private readonly Mock<ISubscriptionPlan> _mockSubscriptionPlan;
     private readonly IMemoryCache _memoryCache;
     private readonly UsageEnforcementMiddleware _middleware;
     private readonly DefaultHttpContext _httpContext;
@@ -35,8 +33,6 @@ public class UsageEnforcementMiddlewareTests
         _mockTenantContext = new Mock<ITenantContext>();
         _mockSubscriptionService = new Mock<ISubscriptionService>();
         _mockSubscriptionPlanService = new Mock<ISubscriptionPlanService>();
-        _mockSubscription = new Mock<ISubscription>();
-        _mockSubscriptionPlan = new Mock<ISubscriptionPlan>();
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
         _middleware = new UsageEnforcementMiddleware(_mockNext.Object, _mockLogger.Object, _memoryCache);
         _httpContext = new DefaultHttpContext();
@@ -45,14 +41,26 @@ public class UsageEnforcementMiddlewareTests
 
     private void SetupSubscriptionWithPlan(Guid tenantId, Guid planId, long? maxApiCalls = null, string planName = "Test Plan")
     {
-        _mockSubscription.Setup(x => x.PlanId).Returns(planId);
-        _mockSubscriptionService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_mockSubscription.Object);
+        // Create real subscription plan instance (EF Core entity)
+        var plan = Activator.CreateInstance(typeof(GameGuild.Subscriptions.SubscriptionPlans.Entities.SubscriptionPlan), true) as GameGuild.Subscriptions.SubscriptionPlans.Entities.SubscriptionPlan;
+        var planType = typeof(GameGuild.Subscriptions.SubscriptionPlans.Entities.SubscriptionPlan);
+        planType.GetProperty("Id")?.SetValue(plan, planId);
+        planType.GetProperty("Name")?.SetValue(plan, planName);
+        planType.GetProperty("MaxApiCallsPerMonth")?.SetValue(plan, maxApiCalls);
         
-        _mockSubscriptionPlan.Setup(x => x.MaxApiCallsPerMonth).Returns(maxApiCalls);
-        _mockSubscriptionPlan.Setup(x => x.Name).Returns(planName);
+        // Create real subscription instance (EF Core entity)
+        var subscription = Activator.CreateInstance(typeof(GameGuild.Subscriptions.Entities.Subscription), true) as GameGuild.Subscriptions.Entities.Subscription;
+        var subType = typeof(GameGuild.Subscriptions.Entities.Subscription);
+        subType.GetProperty("Id")?.SetValue(subscription, Guid.NewGuid());
+        subType.GetProperty("TenantId")?.SetValue(subscription, tenantId);
+        subType.GetProperty("PlanId")?.SetValue(subscription, planId);
+        subType.GetProperty("Plan")?.SetValue(subscription, plan);
+        
+        _mockSubscriptionService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+        
         _mockSubscriptionPlanService.Setup(x => x.GetByIdAsync(planId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(_mockSubscriptionPlan.Object);
+            .ReturnsAsync(plan);
     }
 
     [Fact]
@@ -83,7 +91,7 @@ public class UsageEnforcementMiddlewareTests
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
-        _mockSubscriptionPlanService.Verify(x => x.GetCurrentPlanForTenantAsync(It.IsAny<Guid>()), Times.Never);
+        _mockSubscriptionService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -99,7 +107,7 @@ public class UsageEnforcementMiddlewareTests
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
-        _mockSubscriptionPlanService.Verify(x => x.GetCurrentPlanForTenantAsync(It.IsAny<Guid>()), Times.Never);
+        _mockSubscriptionService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -115,7 +123,7 @@ public class UsageEnforcementMiddlewareTests
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
-        _mockSubscriptionPlanService.Verify(x => x.GetCurrentPlanForTenantAsync(It.IsAny<Guid>()), Times.Never);
+        _mockSubscriptionService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -142,12 +150,10 @@ public class UsageEnforcementMiddlewareTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
-        _mockSubscriptionPlan.Setup(x => x.MaxApiCallsPerMonth).Returns(1000L);
-        _mockSubscriptionPlan.Setup(x => x.Name).Returns("Pro Plan");
-        _mockSubscriptionPlanService.Setup(x => x.GetCurrentPlanForTenantAsync(tenantId))
-            .ReturnsAsync(_mockSubscriptionPlan.Object);
+        SetupSubscriptionWithPlan(tenantId, planId, 1000L, "Pro Plan");
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
@@ -165,12 +171,10 @@ public class UsageEnforcementMiddlewareTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
-        _mockSubscriptionPlan.Setup(x => x.MaxApiCallsPerMonth).Returns(5L);
-        _mockSubscriptionPlan.Setup(x => x.Name).Returns("Basic Plan");
-        _mockSubscriptionPlanService.Setup(x => x.GetCurrentPlanForTenantAsync(tenantId))
-            .ReturnsAsync(_mockSubscriptionPlan.Object);
+        SetupSubscriptionWithPlan(tenantId, planId, 5L, "Basic Plan");
 
         // Pre-populate cache with 5 calls (at limit)
         var cacheKey = $"api_calls_{tenantId}_{DateTime.UtcNow:yyyyMM}";
@@ -189,11 +193,10 @@ public class UsageEnforcementMiddlewareTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
-        _mockSubscriptionPlan.Setup(x => x.MaxApiCallsPerMonth).Returns(100L);
-        _mockSubscriptionPlanService.Setup(x => x.GetCurrentPlanForTenantAsync(tenantId))
-            .ReturnsAsync(_mockSubscriptionPlan.Object);
+        SetupSubscriptionWithPlan(tenantId, planId, 100L);
 
         var cacheKey = $"api_calls_{tenantId}_{DateTime.UtcNow:yyyyMM}";
         _memoryCache.Set(cacheKey, 100L, TimeSpan.FromMinutes(5));
@@ -221,12 +224,10 @@ public class UsageEnforcementMiddlewareTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
-        _mockSubscriptionPlan.Setup(x => x.MaxApiCallsPerMonth).Returns(1000L);
-        _mockSubscriptionPlan.Setup(x => x.Name).Returns("Pro Plan");
-        _mockSubscriptionPlanService.Setup(x => x.GetCurrentPlanForTenantAsync(tenantId))
-            .ReturnsAsync(_mockSubscriptionPlan.Object);
+        SetupSubscriptionWithPlan(tenantId, planId, 1000L, "Pro Plan");
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         var cacheKey = $"api_calls_{tenantId}_{DateTime.UtcNow:yyyyMM}";
@@ -254,7 +255,7 @@ public class UsageEnforcementMiddlewareTests
         var tenantId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
-        _mockSubscriptionPlanService.Setup(x => x.GetCurrentPlanForTenantAsync(tenantId))
+        _mockSubscriptionService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Database error"));
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
@@ -271,12 +272,10 @@ public class UsageEnforcementMiddlewareTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
-        _mockSubscriptionPlan.Setup(x => x.MaxApiCallsPerMonth).Returns((long?)null);
-        _mockSubscriptionPlan.Setup(x => x.Name).Returns("Enterprise Plan");
-        _mockSubscriptionPlanService.Setup(x => x.GetCurrentPlanForTenantAsync(tenantId))
-            .ReturnsAsync(_mockSubscriptionPlan.Object);
+        SetupSubscriptionWithPlan(tenantId, planId, null, "Enterprise Plan");
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
@@ -295,8 +294,8 @@ public class UsageEnforcementMiddlewareTests
         var tenantId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
-        _mockSubscriptionPlanService.Setup(x => x.GetCurrentPlanForTenantAsync(tenantId))
-            .ReturnsAsync((ISubscriptionPlan?)null);
+        _mockSubscriptionService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((GameGuild.Subscriptions.Entities.Subscription?)null);
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
@@ -311,11 +310,10 @@ public class UsageEnforcementMiddlewareTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
-        _mockSubscriptionPlan.Setup(x => x.MaxApiCallsPerMonth).Returns(10L);
-        _mockSubscriptionPlanService.Setup(x => x.GetCurrentPlanForTenantAsync(tenantId))
-            .ReturnsAsync(_mockSubscriptionPlan.Object);
+        SetupSubscriptionWithPlan(tenantId, planId, 10L);
 
         var cacheKey = $"api_calls_{tenantId}_{DateTime.UtcNow:yyyyMM}";
         _memoryCache.Set(cacheKey, 10L, TimeSpan.FromMinutes(5));
@@ -349,11 +347,10 @@ public class UsageEnforcementMiddlewareTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
+        var planId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
-        _mockSubscriptionPlan.Setup(x => x.MaxApiCallsPerMonth).Returns(50L);
-        _mockSubscriptionPlanService.Setup(x => x.GetCurrentPlanForTenantAsync(tenantId))
-            .ReturnsAsync(_mockSubscriptionPlan.Object);
+        SetupSubscriptionWithPlan(tenantId, planId, 50L);
 
         var cacheKey = $"api_calls_{tenantId}_{DateTime.UtcNow:yyyyMM}";
         _memoryCache.Set(cacheKey, 50L, TimeSpan.FromMinutes(5));

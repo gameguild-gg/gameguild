@@ -2,6 +2,7 @@ using GameGuild.CQRS;
 using GameGuild.Permissions.Application.Services;
 using GameGuild.Permissions.Domain.Abstractions;
 using GameGuild.Permissions.Infrastructure.Behaviors;
+using GameGuild.Permissions.Identity;
 using GameGuild.Permissions.Infrastructure.Identity;
 using GameGuild.Permissions.Repositories;
 using Microsoft.Extensions.DependencyInjection;

@@ -2,63 +2,140 @@ using System.Security.Claims;
 using GameGuild.Permissions.Domain.Abstractions;
 using Microsoft.AspNetCore.Http;
 
-namespace GameGuild.Permissions.Infrastructure.Identity;
+namespace GameGuild.Permissions.Identity;
 
 /// <summary>
-///     Extracts user context from HttpContext claims
+/// Implementation of IUserContext that extracts user information from HttpContext claims
 /// </summary>
-public class UserContext(IHttpContextAccessor httpContextAccessor) : IUserContext
+public class UserContext : IUserContext
 {
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private Guid? _userId;
+    private string? _email;
+    private string? _name;
+    private bool? _isAuthenticated;
+    private IDictionary<string, object>? _claims;
+    private IEnumerable<string>? _roles;
+
+    public UserContext(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+    }
+
+    /// <inheritdoc />
     public Guid? UserId
     {
         get
         {
-            var userIdClaim = httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ??
-                              httpContextAccessor.HttpContext?.User?.FindFirst("sub")?.Value ?? httpContextAccessor.HttpContext?.User?.FindFirst("user_id")?.Value;
+            if (_userId.HasValue)
+                return _userId;
 
-            return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+            var userIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                ?? User?.FindFirst("sub")?.Value
+                ?? User?.FindFirst("userId")?.Value;
+
+            if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+            {
+                _userId = userId;
+            }
+
+            return _userId;
         }
     }
 
-    public string? Email { get => httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value ?? httpContextAccessor.HttpContext?.User?.FindFirst("email")?.Value; }
-
-    public string? Name
+    /// <inheritdoc />
+    public string? Email
     {
-        get => httpContextAccessor.HttpContext?.User?.Identity?.Name ?? httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Name)?.Value ?? httpContextAccessor.HttpContext?.User?.FindFirst("name")?.Value;
+        get
+        {
+            if (_email != null)
+                return _email;
+
+            _email = User?.FindFirst(ClaimTypes.Email)?.Value
+                ?? User?.FindFirst("email")?.Value;
+
+            return _email;
+        }
     }
 
-    public bool IsAuthenticated { get => httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false; }
+    /// <inheritdoc />
+    public string? Name
+    {
+        get
+        {
+            if (_name != null)
+                return _name;
 
+            _name = User?.FindFirst(ClaimTypes.Name)?.Value
+                ?? User?.FindFirst("name")?.Value
+                ?? User?.FindFirst("preferred_username")?.Value;
+
+            return _name;
+        }
+    }
+
+    /// <inheritdoc />
+    public bool IsAuthenticated
+    {
+        get
+        {
+            if (_isAuthenticated.HasValue)
+                return _isAuthenticated.Value;
+
+            _isAuthenticated = User?.Identity?.IsAuthenticated ?? false;
+            return _isAuthenticated.Value;
+        }
+    }
+
+    /// <inheritdoc />
     public IDictionary<string, object> Claims
     {
         get
         {
-            var claims = new Dictionary<string, object>();
-            var user = httpContextAccessor.HttpContext?.User;
+            if (_claims != null)
+                return _claims;
 
-            if (user != null)
+            _claims = new Dictionary<string, object>();
+            
+            if (User?.Claims != null)
             {
-                foreach (var claim in user.Claims)
+                foreach (var claim in User.Claims)
                 {
-                    if (!claims.ContainsKey(claim.Type)) { claims[claim.Type] = claim.Value; }
+                    if (!_claims.ContainsKey(claim.Type))
+                    {
+                        _claims[claim.Type] = claim.Value;
+                    }
                 }
             }
 
-            return claims;
+            return _claims;
         }
     }
 
+    /// <inheritdoc />
     public IEnumerable<string> Roles
     {
         get
         {
-            var user = httpContextAccessor.HttpContext?.User;
+            if (_roles != null)
+                return _roles;
 
-            if (user == null) return Enumerable.Empty<string>();
+            _roles = User?.FindAll(ClaimTypes.Role)
+                .Select(c => c.Value)
+                .ToList() ?? Enumerable.Empty<string>();
 
-            return user.Claims.Where(c => c.Type == ClaimTypes.Role || c.Type == "role").Select(c => c.Value).Distinct();
+            return _roles;
         }
     }
 
-    public bool IsInRole(string role) { return Roles.Any(r => r.Equals(role, StringComparison.OrdinalIgnoreCase)); }
+    /// <inheritdoc />
+    public bool IsInRole(string role)
+    {
+        if (string.IsNullOrWhiteSpace(role))
+            return false;
+
+        return Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private ClaimsPrincipal? User => _httpContextAccessor.HttpContext?.User;
 }

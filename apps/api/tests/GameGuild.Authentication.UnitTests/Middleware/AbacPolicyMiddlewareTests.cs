@@ -114,7 +114,7 @@ public class AbacPolicyMiddlewareTests
         await _middleware.InvokeAsync(_httpContext);
 
         // Assert
-        _httpContext.Response.Headers["X-ABAC-Policies"].Should().Be("enabled");
+        _httpContext.Response.Headers["X-ABAC-Policies"].ToString().Should().Be("enabled");
         _mockNext.Verify(x => x(_httpContext), Times.Once);
     }
 
@@ -131,8 +131,8 @@ public class AbacPolicyMiddlewareTests
         await _middleware.InvokeAsync(context2);
 
         // Assert
-        context1.Response.Headers["X-ABAC-Policies"].Should().Be("enabled");
-        context2.Response.Headers["X-ABAC-Policies"].Should().Be("enabled");
+        context1.Response.Headers["X-ABAC-Policies"].ToString().Should().Be("enabled");
+        context2.Response.Headers["X-ABAC-Policies"].ToString().Should().Be("enabled");
     }
 
     [Fact]
