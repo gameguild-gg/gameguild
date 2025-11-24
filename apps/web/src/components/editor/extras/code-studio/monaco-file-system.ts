@@ -36,7 +36,7 @@ export async function initializeMonacoFileSystem() {
   }
 }
 
-export async function syncFilesToMonacoFS(files: CodeFile[]) {
+export async function syncFilesToMonacoFS(files: CodeFile[], instanceId?: string) {
   if (!fileSystemProvider) {
     await initializeMonacoFileSystem()
   }
@@ -67,7 +67,8 @@ export async function syncFilesToMonacoFS(files: CodeFile[]) {
     // Criar diretórios
     for (const dir of Array.from(directories).sort()) {
       try {
-        const dirUri = URI.file(`/${dir}`)
+        const fullPath = instanceId ? `/${instanceId}/${dir}` : `/${dir}`
+        const dirUri = URI.file(fullPath)
         fileSystemProvider.mkdirSync(dirUri)
       } catch {
         // Diretório já existe
@@ -77,7 +78,8 @@ export async function syncFilesToMonacoFS(files: CodeFile[]) {
     // Criar/atualizar cada arquivo no sistema virtual
     for (const file of files) {
       try {
-        const uri = URI.file(`/${file.path}`)
+        const fullPath = instanceId ? `/${instanceId}/${file.path}` : `/${file.path}`
+        const uri = URI.file(fullPath)
         
         await fileSystemProvider.writeFile(
           uri,
@@ -93,16 +95,16 @@ export async function syncFilesToMonacoFS(files: CodeFile[]) {
     if (monacoInstance) {
       files.forEach(file => {
         if (file.language === 'typescript' || file.language === 'javascript') {
-          const filePath = `file:///${file.path}`
+          const fullPath = instanceId ? `file:///${instanceId}/${file.path}` : `file:///${file.path}`
           
           // Adicionar como lib extra para o TypeScript worker reconhecer
           monacoInstance!.languages.typescript.typescriptDefaults.addExtraLib(
             file.content,
-            filePath
+            fullPath
           )
           monacoInstance!.languages.typescript.javascriptDefaults.addExtraLib(
             file.content,
-            filePath
+            fullPath
           )
         }
       })
@@ -112,13 +114,14 @@ export async function syncFilesToMonacoFS(files: CodeFile[]) {
   }
 }
 
-export async function updateMonacoFile(filePath: string, content: string) {
+export async function updateMonacoFile(filePath: string, content: string, instanceId?: string) {
   if (!fileSystemProvider) {
     return
   }
 
   try {
-    const uri = URI.file(`/${filePath}`)
+    const fullPath = instanceId ? `/${instanceId}/${filePath}` : `/${filePath}`
+    const uri = URI.file(fullPath)
     
     // Criar diretórios se necessário
     const parts = filePath.split('/')
@@ -128,7 +131,8 @@ export async function updateMonacoFile(filePath: string, content: string) {
         currentPath += (i > 0 ? '/' : '') + parts[i]
         if (currentPath) {
           try {
-            const dirUri = URI.file(`/${currentPath}`)
+            const dirFullPath = instanceId ? `/${instanceId}/${currentPath}` : `/${currentPath}`
+            const dirUri = URI.file(dirFullPath)
             fileSystemProvider.mkdirSync(dirUri)
           } catch {
             // Diretório já existe ou erro, continuar
@@ -147,7 +151,7 @@ export async function updateMonacoFile(filePath: string, content: string) {
     if (monacoInstance) {
       const fileExt = filePath.split('.').pop()
       if (fileExt === 'ts' || fileExt === 'tsx' || fileExt === 'js' || fileExt === 'jsx') {
-        const libPath = `file:///${filePath}`
+        const libPath = instanceId ? `file:///${instanceId}/${filePath}` : `file:///${filePath}`
         monacoInstance.languages.typescript.typescriptDefaults.addExtraLib(content, libPath)
         monacoInstance.languages.typescript.javascriptDefaults.addExtraLib(content, libPath)
       }
