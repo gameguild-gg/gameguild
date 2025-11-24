@@ -1,8 +1,6 @@
 'use server';
 
 import { getProgramById, getProgramBySlug, getProgramWithContent, getPrograms, getPublishedPrograms } from './programs.actions';
-import { getProgramBySlug as getMockProgramBySlug } from '@/data/courses/mock-data';
-import { Program } from '@/lib/api/generated/types.gen';
 
 /**
  * Get a program by slug
