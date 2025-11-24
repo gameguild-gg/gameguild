@@ -3,6 +3,7 @@ import type { CodeRunner, RunnerResult, RunnerOptions } from './types'
 import { JavaScriptRunner } from './javascript-runner'
 import { TypeScriptRunner } from './typescript-runner'
 import { PythonRunner } from './python-runner'
+import { LuaRunner } from './lua-runner'
 
 export class UnifiedCodeRunner {
   private runners: Map<SupportedLanguage, CodeRunner> = new Map()
@@ -92,11 +93,12 @@ export class UnifiedCodeRunner {
         return new PythonRunner(this.options)
       
       case 'lua':
+        return new LuaRunner(this.options)
+      
       case 'c':
       case 'cpp':
-      case 'html':
-      case 'css':
-      case 'markdown':
+      case 'rust':
+      case 'csharp':
         throw new Error(`Runner for ${language} not implemented yet`)
       
       default:
@@ -109,3 +111,4 @@ export * from './types'
 export { JavaScriptRunner } from './javascript-runner'
 export { TypeScriptRunner } from './typescript-runner'
 export { PythonRunner } from './python-runner'
+export { LuaRunner } from './lua-runner'
