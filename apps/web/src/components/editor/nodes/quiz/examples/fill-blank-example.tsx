@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { FillBlankField } from "../quiz-node"
 
 // Exemplo de dados de quiz fill-blank
 const exampleQuizData = {

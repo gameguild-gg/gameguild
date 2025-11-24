@@ -1,11 +1,5 @@
 'use server';
 
-<<<<<<< Updated upstream
-import { SignInFormState } from '@/lib/auth/sign-in-form-state';
-
-export async function signInWithEmailAndPassword(previousState: SignInFormState, formData: FormData): Promise<SignInFormState> {
-  // TODO: Implement sign-up with email and password.
-=======
 import { httpClientFactory } from '@/lib/core/http';
 import { SignInFormState } from '@/lib/auth/sign-in-form-state';
 import { SignInWithEmailAndPasswordGateway } from '@/lib/auth/sign-in-with-email-and-password.gateway';
@@ -22,7 +16,5 @@ export async function signInWithEmailAndPassword(previousState: SignInFormState,
   const password = formData.get('password') as string;
 
   const response = await gateway.signInWithEmailAndPassword(email, password);
-
->>>>>>> Stashed changes
   return Promise.resolve({});
 }

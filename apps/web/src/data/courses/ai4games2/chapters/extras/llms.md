@@ -3,6 +3,7 @@
 ```mermaid
 graph TD
     subgraph Foundation["🧠 Foundation Era (1940s-1950s)"]
+        direction LR
         A["1943: McCulloch-Pitts Neuron<br/>First mathematical model of artificial neuron<br/>Binary threshold activation, boolean logic operations"]
         B["1949: Hebb's Learning Rule<br/>'Neurons that fire together, wire together'<br/>Foundation for synaptic plasticity"]
         C["1958: Rosenblatt's Perceptron<br/>First trainable neural network<br/>Pattern recognition with supervised learning"]
@@ -10,6 +11,7 @@ graph TD
     end
 
     subgraph Winter["❄️ AI Winter & Revival (1960s-1980s)"]
+        direction LR
         D["1969: Minsky & Papert's Critique<br/>Perceptron limitations exposed<br/>XOR problem, linear separability"]
         E["1975: Backpropagation Algorithm<br/>Gradient-based learning for MLPs<br/>Enabled training of multi-layer networks"]
         F["1979: Fukushima's Neocognitron<br/>First CNN-like architecture<br/>Hierarchical feature detection"]
@@ -18,6 +20,7 @@ graph TD
     end
 
     subgraph Specialized["🔗 Specialized Networks (1990s)"]
+        direction LR
         H["1990: Elman Networks<br/>First practical RNNs<br/>Sequential processing with memory"]
         I["1991: Hochreiter's Thesis<br/>Identified vanishing gradient problem<br/>Laid groundwork for LSTM development"]
         J["1995: LSTM Networks<br/>Long Short-Term Memory<br/>Gated architecture solves vanishing gradients"]
@@ -26,6 +29,7 @@ graph TD
     end
 
     subgraph Renaissance["🚀 Deep Learning Renaissance (2000s-2010s)"]
+        direction LR
         L["1999: LSTM Forget Gate<br/>Modern LSTM architecture<br/>Standard RNN for sequence modeling"]
         M["2006: Deep Belief Networks<br/>Hinton's deep learning revival<br/>Layer-wise pre-training"]
         N["2012: AlexNet<br/>CNN breakthrough on ImageNet<br/>Launched modern deep learning era<br/>ReLU activation, dropout, GPU training"]
@@ -50,6 +54,7 @@ graph TD
     end
 
     subgraph LLM["🤖 Large Language Models (2020-2023)"]
+        direction LR
         X["2021: T5, Switch Transformer<br/>Text-to-text transfer<br/>First large-scale MoE"]
         Y["2022: ChatGPT/InstructGPT<br/>RLHF for alignment<br/>Conversational AI breakthrough"]
         Z["2022: PaLM, Chinchilla<br/>Scaling laws refinement<br/>Compute-optimal training"]
@@ -59,6 +64,7 @@ graph TD
     end
 
     subgraph Alternatives["🐍 Transformer Alternatives (2023-2024)"]
+        direction LR
         CC["2023: Mamba<br/>Selective state space models<br/>Linear complexity, O(n) memory"]
         DD["2023: RWKV<br/>'Reinventing RNNs for Transformer Era'<br/>Linear attention approximation"]
         EE["2024: Mixture of Experts (MoE)<br/>Sparse activation patterns<br/>Scale parameters without compute cost"]
@@ -81,6 +87,7 @@ graph TD
     end
 
     subgraph Current["🚀 Current State-of-the-Art"]
+        direction LR
         MM["2025: Hybrid Architectures<br/>Transformer + Mamba combinations<br/>Best of both paradigms"]
         NN["2025: Inference-Time Scaling<br/>Adaptive computation<br/>Quality scales with compute budget"]
         OO["2025: Autonomous Agents<br/>Tool use and planning<br/>Beyond text generation to action"]

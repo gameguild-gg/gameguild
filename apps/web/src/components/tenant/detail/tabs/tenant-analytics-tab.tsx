@@ -1,8 +1,21 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  BarChart3,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Activity,
+  Clock,
+  Download,
+  RefreshCw,
+  Loader2
+} from 'lucide-react';
 import type { Tenant } from '@/lib/api/generated/types.gen';
-import { BarChart3 } from 'lucide-react';
 
 interface TenantAnalyticsTabProps {
     tenant: Tenant;

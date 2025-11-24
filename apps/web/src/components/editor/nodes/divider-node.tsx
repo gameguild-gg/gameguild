@@ -4,17 +4,31 @@ import { useState, useEffect, useContext } from "react"
 import { DecoratorNode, type SerializedLexicalNode } from "lexical"
 import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { ChevronDown, Pencil, Check } from "lucide-react"
-import type { JSX } from "react/jsx-runtime" // Import JSX to fix the undeclared variable error
+import { Pencil } from "lucide-react"
+import type { JSX } from "react/jsx-runtime"
 
-import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { EditorLoadingContext } from "../lexical-editor"
+import { DividerEditor } from "@/components/editor/extras/divider"
+import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
+import {
+  getThicknessStyles,
+  getSpacingStyles,
+  getColorStyles,
+  getStyleClasses,
+  getPaletteColor,
+} from "@/components/editor/extras/divider/divider-styles"
 
-export type DividerStyle = "simple" | "double" | "dashed" | "dotted" | "gradient" | "icon"
+export type DividerStyle = "simple" | "double" | "dashed" | "dotted" | "gradient"
+export type DividerThickness = "thin" | "medium" | "thick"
+export type DividerSpacing = "xs" | "sm" | "md" | "lg" | "xl"
+export type ColorPalette = "blue" | "green" | "orange" | "red" | "purple" | "custom"
 
 export interface DividerData {
   style: DividerStyle
+  thickness: DividerThickness
+  spacing: DividerSpacing
+  colorPalette: ColorPalette
+  customColor?: string
   isNew?: boolean // Flag to indicate if this is a newly created divider
 }
 
@@ -39,6 +53,10 @@ export class DividerNode extends DecoratorNode<JSX.Element> {
     super(key)
     this.__data = {
       style: data.style || "simple",
+      thickness: data.thickness || "thin",
+      spacing: data.spacing || "md",
+      colorPalette: data.colorPalette || "blue",
+      customColor: data.customColor,
       isNew: data.isNew,
     }
   }
@@ -81,7 +99,6 @@ interface DividerComponentProps {
 function DividerComponent({ data, nodeKey }: DividerComponentProps) {
   const [editor] = useLexicalComposerContext()
   const isLoading = useContext(EditorLoadingContext)
-  const [style, setStyle] = useState<DividerStyle>(data.style || "simple")
   const [isEditing, setIsEditing] = useState((data.isNew || false) && !isLoading)
 
   useEffect(() => {
@@ -102,120 +119,99 @@ function DividerComponent({ data, nodeKey }: DividerComponentProps) {
     }
   }, [isLoading])
 
-  const updateDivider = (newData: Partial<DividerData>) => {
+  const handleSave = (newData: DividerData) => {
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
       if (node instanceof DividerNode) {
-        node.setData({ ...data, ...newData })
+        node.setData(newData)
       }
     })
+    setIsEditing(false)
   }
 
-  const handleStyleChange = (newStyle: DividerStyle) => {
-    setStyle(newStyle)
-    updateDivider({ style: newStyle })
+  const handleCancel = () => {
+    setIsEditing(false)
   }
 
   const renderDivider = () => {
-    switch (style) {
-      case "simple":
-        return <hr className="my-6 border-t border-gray-300 dark:border-gray-700" />
-      case "double":
-        return <hr className="my-6 border-t-2 border-double border-gray-300 dark:border-gray-700" />
-      case "dashed":
-        return <hr className="my-6 border-t-2 border-dashed border-gray-300 dark:border-gray-700" />
-      case "dotted":
-        return <hr className="my-6 border-t-2 border-dotted border-gray-300 dark:border-gray-700" />
+    const spacingClass = getSpacingStyles(data.spacing)
+    const thicknessClass = getThicknessStyles(data.thickness, data.style)
+    const colorClass = getColorStyles(data.colorPalette, data.style)
+    const styleClass = getStyleClasses(data.style)
+    const paletteColor = getPaletteColor(data.colorPalette, data.customColor)
+
+    const customStyle = data.colorPalette === "custom" && data.customColor ? {
+      borderColor: data.customColor,
+      backgroundColor: data.customColor,
+    } : {}
+
+    switch (data.style) {
       case "gradient":
         return (
-          <div className="my-6 h-px bg-gradient-to-r from-transparent via-primary to-transparent" aria-hidden="true" />
+          <div className={`${spacingClass} ${thicknessClass} ${colorClass}`} style={customStyle} aria-hidden="true" />
         )
-      case "icon":
+      case "double":
+        // Duas linhas perpendiculares (paralelas horizontais)
+        const doubleThickness = data.thickness === "thin" ? "1px" : data.thickness === "medium" ? "2px" : "3px"
+        const doubleGap = data.thickness === "thin" ? "2px" : data.thickness === "medium" ? "3px" : "4px"
         return (
-          <div className="my-6 flex items-center justify-center">
-            <div className="flex-1 border-t border-gray-300 dark:border-gray-700" />
-            <div className="mx-4 text-gray-500 dark:text-gray-400">●</div>
-            <div className="flex-1 border-t border-gray-300 dark:border-gray-700" />
+          <div className={spacingClass}>
+            <div 
+              className="relative"
+              style={{ 
+                height: `calc(${doubleThickness} * 2 + ${doubleGap})`,
+              }}
+            >
+              <div 
+                className="absolute top-0 left-0 right-0"
+                style={{ 
+                  height: doubleThickness,
+                  backgroundColor: paletteColor
+                }}
+              />
+              <div 
+                className="absolute bottom-0 left-0 right-0"
+                style={{ 
+                  height: doubleThickness,
+                  backgroundColor: paletteColor
+                }}
+              />
+            </div>
           </div>
         )
       default:
-        return <hr className="my-6 border-t border-gray-300 dark:border-gray-700" />
-    }
-  }
-
-  const getStyleName = (style: DividerStyle): string => {
-    switch (style) {
-      case "simple":
-        return "Simple"
-      case "double":
-        return "Double"
-      case "dashed":
-        return "Dashed"
-      case "dotted":
-        return "Dotted"
-      case "gradient":
-        return "Gradient"
-      case "icon":
-        return "With icon"
-      default:
-        return "Simple"
+        return <hr className={`${spacingClass} ${thicknessClass} ${colorClass} ${styleClass}`} style={customStyle} />
     }
   }
 
   if (!isEditing) {
     return (
-      <div className="relative group">
+      <div className="my-4 relative">
         {renderDivider()}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-1/2 right-2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={() => setIsEditing(true)}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
+        <ContentEditMenu
+          options={[
+            {
+              id: "edit",
+              icon: <Pencil className="h-4 w-4" />,
+              label: "Edit Divider",
+              action: () => setIsEditing(true),
+            },
+          ]}
+        />
       </div>
     )
   }
 
-  return (
-    <>
-      {renderDivider()}
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border p-4 max-w-md w-full mx-4">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center gap-2">
-                    {`Style: ${getStyleName(style)}`} <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem onClick={() => handleStyleChange("simple")}>Simple</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("double")}>Double</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("dashed")}>Dashed</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("dotted")}>Dotted</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("gradient")}>Gradient</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleStyleChange("icon")}>With icon</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
-              <Check className="h-4 w-4 mr-2" />
-              Done
-            </Button>
-          </div>
-          <div className="preview">{renderDivider()}</div>
-        </div>
-      </div>
-    </>
-  )
+  return <DividerEditor initialData={data} onSave={handleSave} onCancel={handleCancel} />
 }
 
 export function $createDividerNode(data: Partial<DividerData> = {}): DividerNode {
   return new DividerNode({
     style: data.style || "simple",
+    thickness: data.thickness || "thin",
+    spacing: data.spacing || "md",
+    colorPalette: data.colorPalette || "blue",
+    customColor: data.customColor,
     isNew: true,
   })
 }

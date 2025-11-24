@@ -1,8 +1,6 @@
 'use server';
 
 import { getProjects, getProjectById, getProjectBySlug } from './projects.actions';
-import type { GameProject } from '@/lib/types';
-import { Project } from '@/lib/api/generated/types.gen';
 
 /**
  * Get all projects

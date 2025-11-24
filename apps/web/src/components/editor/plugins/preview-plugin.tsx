@@ -23,7 +23,12 @@ export function PreviewPlugin() {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={onClick} className="flex items-center gap-2 bg-transparent">
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={onClick} 
+        className="flex items-center gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 bg-white dark:bg-gray-900"
+      >
         <Eye className="h-4 w-4" />
         Preview
       </Button>

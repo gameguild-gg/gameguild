@@ -1,12 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { FileText, Tag, Calendar, ChevronDown, Search, Filter, Pin, PinOff } from "lucide-react"
+import { FileText, Calendar, Filter, Pin, PinOff } from "lucide-react"
 import { ProjectSearchFilters } from "../../extras/project-dialog/project-search-filters"
 
 interface ProjectData {
@@ -135,9 +133,9 @@ export function ProjectSidebarList({
 
   return (
     <div className={`${(isPinned || isMobile) ? 'sticky top-24 max-h-[calc(100vh-7rem)]' : ''}`}>
-      <div className={`w-full md:w-96 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col ${(isPinned || isMobile) ? 'max-h-[calc(100vh-7rem)]' : 'h-full'} md:mr-8`}>
+      <div className={`w-full md:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col ${(isPinned || isMobile) ? 'max-h-[calc(100vh-7rem)]' : 'h-full'} md:mr-8`}>
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 shrink-0 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Documents</h3>
             <div className="flex items-center gap-1">
@@ -206,14 +204,14 @@ export function ProjectSidebarList({
                 <div
                   key={project.id}
                   onClick={() => onProjectSelect(project)}
-                  className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 hover:shadow-sm ${
+                  className={`p-4 border cursor-pointer transition-all duration-200 hover:shadow-sm ${
                     currentProject?.id === project.id
                       ? "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700/50 shadow-sm"
                       : "bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={`p-2 rounded-md ${
+                    <div className={`p-2 ${
                       currentProject?.id === project.id
                         ? "bg-blue-100 dark:bg-blue-900/40"
                         : "bg-gray-100 dark:bg-gray-700"
@@ -264,7 +262,7 @@ export function ProjectSidebarList({
         </ScrollArea>
 
         {/* Footer Stats */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 rounded-b-xl flex-shrink-0">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 shrink-0">
           <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
             <div className="font-medium">
               {filteredProjects.length} of {projects.length} documents

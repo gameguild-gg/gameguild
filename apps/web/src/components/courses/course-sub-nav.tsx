@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, FileText, Truck, DollarSign, Award, BookOpen, ImageIcon, Settings, Users } from "lucide-react"
+import { LayoutDashboard, FileText, Truck, DollarSign, Award, BookOpen, ImageIcon, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function CourseSubNav({ courseSlug }: { courseSlug: string }) {

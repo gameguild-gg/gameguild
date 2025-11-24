@@ -8,6 +8,7 @@ import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
+import { useProjectActions } from "@/hooks/editor/use-project-actions"
 import { FolderOpen, Upload, Info, Cloud } from "lucide-react"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -86,12 +87,15 @@ export function OpenProjectDialog({
     loadProject,
   } = useProjectDialog({ isDbInitialized, storageAdapter })
 
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [projectToDelete, setProjectToDelete] = useState<{ id: string; name: string } | null>(null)
   const [importDialogOpen, setImportDialogOpen] = useState(false)
-  const [infoDialogOpen, setInfoDialogOpen] = useState(false)
-  const [projectToEdit, setProjectToEdit] = useState<ProjectData | null>(null)
   const [googleDriveAuthDialogOpen, setGoogleDriveAuthDialogOpen] = useState(false)
+
+  // Project actions (info, download, delete)
+  const projectActions = useProjectActions({
+    storageAdapter,
+    onProjectsListUpdate,
+    onProjectUpdate: async () => { onProjectsListUpdate() }
+  })
 
   // Google Drive authentication hook
   const { isAuthenticated, isLoading, authenticate, signOut, refreshAuthState } = useGoogleDriveAuth()
@@ -104,7 +108,57 @@ export function OpenProjectDialog({
           setLoadingRef.current(true)
         }
 
-        const editorState = editorRef.current.parseEditorState(projectData.data)
+        // Validate project data structure
+        if (!projectData.data) {
+          throw new Error("Project data is missing")
+        }
+
+        // Validate that the data is valid JSON
+        let parsedData
+        try {
+          parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
+        } catch (parseError) {
+          throw new Error("Project data is not valid JSON")
+        }
+
+        // Validate that it has the expected Lexical structure
+        if (!parsedData || typeof parsedData !== 'object') {
+          throw new Error("Project data is not in expected format")
+        }
+
+        // Additional check for Lexical editor state structure
+        if (!parsedData.root || !parsedData.root.children) {
+          console.warn("Project data doesn't have expected Lexical structure, attempting to create minimal state")
+          // Create a minimal valid Lexical state if the structure is missing
+          parsedData = {
+            root: {
+              children: [{
+                children: [{
+                  detail: 0,
+                  format: 0,
+                  mode: "normal",
+                  style: "",
+                  text: projectData.data || "Empty project",
+                  type: "text",
+                  version: 1
+                }],
+                direction: "ltr",
+                format: "",
+                indent: 0,
+                type: "paragraph",
+                version: 1
+              }],
+              direction: "ltr",
+              format: "",
+              indent: 0,
+              type: "root",
+              version: 1
+            }
+          }
+        }
+
+        // Parse and set the editor state with the validated/corrected data
+        const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
         editorRef.current.setEditorState(editorState)
 
         await new Promise((resolve) => setTimeout(resolve, 100))
@@ -121,15 +175,19 @@ export function OpenProjectDialog({
           icon: "📂",
         })
       } catch (error) {
+        console.error("Failed to load project:", error, "Project data:", projectData)
         if (setLoadingRef.current) {
           setLoadingRef.current(false)
         }
+        const errorMessage = error instanceof Error ? error.message : "Unknown error"
         toast.error("Erro ao carregar projeto", {
-          description: "O arquivo do projeto está corrompido ou em formato inválido",
+          description: `O arquivo do projeto está corrompido ou em formato inválido: ${errorMessage}`,
           duration: 4000,
           icon: "❌",
         })
       }
+    } else {
+      console.error("Missing project data or editor ref:", { projectData, editorRef: editorRef.current })
     }
   }
 
@@ -141,59 +199,7 @@ export function OpenProjectDialog({
     return Date.now().toString() + Math.random().toString(36).substr(2, 9)
   }
 
-  const handleOpenInfo = (project: ProjectData) => {
-    setProjectToEdit(project)
-    setInfoDialogOpen(true)
-  }
 
-  const handleSaveInfo = async (projectId: string, newName: string, newTags: string[], storageType: StorageOption) => {
-    const projectToUpdate = await storageAdapter.load(projectId)
-    if (!projectToUpdate) {
-      toast.error("Error finding project to update.")
-      return
-    }
-
-    try {
-      await storageAdapter.save(projectId, newName, projectToUpdate.data, newTags, storageType)
-      toast.success("Project updated", {
-        description: `"${newName}" has been updated successfully.`,
-      })
-      onProjectsListUpdate() // Re-fetch projects
-    } catch (error) {
-      console.error("Failed to save info:", error)
-      toast.error("Failed to update project.")
-      throw error // re-throw to prevent dialog from closing
-    }
-  }
-
-  const handleConfirmDelete = (projectId: string, projectName: string) => {
-    setProjectToDelete({ id: projectId, name: projectName })
-    setDeleteDialogOpen(true)
-  }
-
-  const handleDelete = async () => {
-    if (!projectToDelete) return
-
-    try {
-      await storageAdapter.delete(projectToDelete.id)
-      await onProjectsListUpdate()
-
-      toast.success("Projeto excluído", {
-        description: `"${projectToDelete.name}" foi removido permanentemente`,
-        duration: 3000,
-        icon: "🗑️",
-      })
-    } catch (error) {
-      console.error("Delete error:", error)
-      toast.error("Erro ao excluir projeto", {
-        description: "Não foi possível excluir o projeto. Tente novamente.",
-        duration: 4000,
-        icon: "❌",
-      })
-    } finally {
-      setProjectToDelete(null)
-    }
-  }
 
   return (
     <>
@@ -286,10 +292,11 @@ export function OpenProjectDialog({
                 itemsPerPage={itemsPerPage}
                 searchTerm={searchTerm}
                 selectedTags={selectedTags}
+                viewMode="grid"
                 onOpen={handleOpen}
-                onDelete={handleConfirmDelete}
-                onDownload={handleDownload}
-                onInfo={handleOpenInfo}
+                onDelete={projectActions.handleConfirmDelete}
+                onDownload={projectActions.handleDownload}
+                onInfo={projectActions.handleOpenInfo}
                 showDeleteButton={true}
                 openButtonText="Open"
               />
@@ -347,11 +354,11 @@ export function OpenProjectDialog({
       </Dialog>
 
       <DeleteConfirmDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        itemName={projectToDelete?.name}
+        open={projectActions.deleteDialogOpen}
+        onOpenChange={projectActions.setDeleteDialogOpen}
+        itemName={projectActions.projectToDelete?.name}
         itemType="projeto"
-        onConfirm={handleDelete}
+        onConfirm={projectActions.handleDelete}
         title={""}
       />
 
@@ -387,10 +394,10 @@ export function OpenProjectDialog({
         />
       
       <InfoDialog
-        open={infoDialogOpen}
-        onOpenChange={setInfoDialogOpen}
-        project={projectToEdit}
-        onSave={handleSaveInfo}
+        open={projectActions.infoDialogOpen}
+        onOpenChange={projectActions.setInfoDialogOpen}
+        project={projectActions.projectToEdit}
+        onSave={projectActions.handleSaveInfo}
         availableTags={availableTags}
         storageAdapter={storageAdapter}
       />

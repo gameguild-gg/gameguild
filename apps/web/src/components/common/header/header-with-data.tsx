@@ -1,7 +1,6 @@
 import { auth } from '@/auth';
 import { getCurrentUserProfile } from '@/lib/user-profile/user-profile.actions';
 import Header from './default-header';
-import type { Session } from 'next-auth';
 import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 import React, { PropsWithChildren } from 'react';
 
