@@ -1,6 +1,7 @@
-import { Metadata }                 from 'next';
-import React, { PropsWithChildren } from 'react';
-import { TopMenu } from "@/components/editor/top-menu"
+import type { Metadata } from "next";
+import "./globals.css";
+import { TopMenu } from "@/components/editor/top-menu";
+import React from 'react';
 
 export const metadata: Metadata = {
   title: "GameGuild Editor",
@@ -31,7 +32,11 @@ export const metadata: Metadata = {
   ]
 }
 
-export default async function Layout({ children }: PropsWithChildren): Promise<React.JSX.Element> {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
     <div>
       <TopMenu />

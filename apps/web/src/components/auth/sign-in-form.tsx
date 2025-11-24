@@ -1,15 +1,15 @@
 'use client';
 
-import {Button} from '@/components/ui/button';
-import {Card, CardContent, CardDescription, CardHeader, CardTitle} from '@/components/ui/card';
-import {Input} from '@/components/ui/input';
-import {Label} from '@/components/ui/label';
-import {signInWithEmailAndPassword, signInWithGoogle} from '@/lib/auth/auth.actions';
-import {cn} from '@/lib/utils';
-import {useSearchParams} from 'next/navigation';
-import {Eye, EyeOff} from 'lucide-react';
-import React, {ComponentPropsWithoutRef, useState} from 'react';
-import {useSession} from 'next-auth/react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { signInWithEmailAndPassword, signInWithGoogle } from '@/lib/auth/auth.actions';
+import { cn } from '@/lib/utils';
+import { useSearchParams } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react';
+import React, { ComponentPropsWithoutRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 // import { useAuthError } from '@/lib/hooks/useAuthError';
 

@@ -61,6 +61,9 @@ export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
         }}
       >
         {images.map((image) => {
+          // Check if this is a placeholder (empty src means it's a placeholder)
+          const isPlaceholder = !image.src || image.src.trim() === ''
+          
           // Calculate grid area style
           const gridAreaStyle = {
             gridRow: image.span === "2x1" || image.span === "2x2" ? "span 2" : undefined,
@@ -70,16 +73,22 @@ export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
           return (
             <div key={image.id} className="space-y-1" style={gridAreaStyle}>
               <div
-                className="relative aspect-square overflow-hidden rounded-md"
-                style={{ aspectRatio: image.displayMode === "crop" ? "1/1" : "auto" }}
+                className="relative overflow-hidden rounded-md"
+                style={{ aspectRatio: image.displayMode === "crop" ? "1/1" : "16/9" }}
               >
-                <img
-                  src={image.src || "/placeholder.svg"}
-                  alt={image.alt}
-                  className={
-                    image.displayMode === "crop" ? "h-full w-full object-cover" : "h-auto w-full object-contain"
-                  }
-                />
+                {isPlaceholder || !image.src ? (
+                  // Render empty space for placeholders - maintains aspect ratio from parent
+                  <div className="h-full w-full" />
+                ) : (
+                  // Render actual image
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className={
+                      image.displayMode === "crop" ? "h-full w-full object-cover" : "h-auto w-full object-contain"
+                    }
+                  />
+                )}
               </div>
               {image.caption && <div className={getCaptionStyleClasses()}>{image.caption}</div>}
             </div>

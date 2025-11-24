@@ -2,7 +2,7 @@
 
 import { useRef, useCallback, useEffect } from "react"
 import dynamic from "next/dynamic"
-import type { editor } from "monaco-editor"
+import type { editor, IDisposable } from "monaco-editor"
 import type { OnMount } from "@monaco-editor/react"
 import { mermaidLanguageConfig, mermaidTokensProvider, mermaidTheme } from "./mermaid-language"
 import { MermaidValidator, type MermaidValidationResult } from "./mermaid-validator"
@@ -32,6 +32,7 @@ export function MonacoMermaidEditor({
 }: MonacoMermaidEditorProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const isLanguageRegistered = useRef(false)
+  const completionProviderDisposable = useRef<IDisposable | null>(null)
   const validationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   const validateCode = useCallback(
@@ -91,6 +92,21 @@ export function MonacoMermaidEditor({
     [onValidationChange],
   )
 
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      // Dispose completion provider on unmount
+      if (completionProviderDisposable.current) {
+        completionProviderDisposable.current.dispose()
+        completionProviderDisposable.current = null
+      }
+      // Clear validation timeout on unmount
+      if (validationTimeoutRef.current) {
+        clearTimeout(validationTimeoutRef.current)
+      }
+    }
+  }, [])
+
   useEffect(() => {
     if (value && onValidationChange) {
       validateCode(value)
@@ -147,7 +163,11 @@ export function MonacoMermaidEditor({
         },
       })
 
-      monaco.languages.registerCompletionItemProvider("mermaid", createMermaidCompletionProvider(monaco))
+      // Register completion provider and store disposable
+      completionProviderDisposable.current = monaco.languages.registerCompletionItemProvider(
+        "mermaid",
+        createMermaidCompletionProvider(monaco),
+      )
 
       isLanguageRegistered.current = true
     }
@@ -201,6 +221,7 @@ export function MonacoMermaidEditor({
         fontFamily: "Monaco, Menlo, 'Ubuntu Mono', monospace",
         suggestOnTriggerCharacters: true,
         quickSuggestions: true,
+        wordBasedSuggestions: "off",
         parameterHints: { enabled: true },
         autoIndent: "full",
         formatOnPaste: true,

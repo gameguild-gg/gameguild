@@ -1,6 +1,5 @@
 // import { getTrackBySlug } from '@/lib/tracks/actions';
 import { TRACK_LEVELS, TRACK_LEVEL_COLORS, Track } from '@/components/legacy/types/tracks';
-import { ProgramDifficulty } from '@/lib/api/generated';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
