@@ -1,8 +1,8 @@
 "use client"
 
-import { HashManager } from "../../lib/sync/editor/hash-manager"
 import { ProjectExporter, type ProjectData as ExportProjectData } from "../../lib/interopAdapter/project-exporter"
 import { ProjectImporter, type FolderStructureData } from "../../lib/interopAdapter/project-importer"
+import { HashManager } from "../../lib/sync/editor/hash-manager"
 
 interface GoogleDriveFile {
   id: string
@@ -58,19 +58,19 @@ export class GoogleDriveService {
   // Check if service is ready (with caching)
   isReady(): boolean {
     const now = Date.now()
-    
+
     // Return cached result if within cache period
     if (this.readyState !== null && (now - this.lastReadyCheck) < this.READY_CHECK_CACHE_MS) {
       return this.readyState
     }
-    
+
     const hasToken = !!this.accessToken
     const hasFolder = !!this.folderId
     const hasGapi = !!(window.gapi?.client?.drive)
-    
+
     this.readyState = hasToken && hasFolder && hasGapi
     this.lastReadyCheck = now
-    
+
     if (this.readyState) {
       console.log("GoogleDriveService ready:", {
         hasToken,
@@ -79,7 +79,7 @@ export class GoogleDriveService {
         folderId: this.folderId
       })
     }
-    
+
     return this.readyState
   }
 
@@ -92,8 +92,8 @@ export class GoogleDriveService {
 
   // Upload file content as JSON
   private async uploadJsonFile(
-    fileName: string, 
-    content: object, 
+    fileName: string,
+    content: object,
     fileId?: string
   ): Promise<string | null> {
     if (!this.isReady()) {
@@ -112,7 +112,7 @@ export class GoogleDriveService {
       form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }))
       form.append('file', new Blob([jsonContent], { type: 'application/json' }))
 
-      const url = fileId 
+      const url = fileId
         ? `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=multipart`
         : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart'
 
@@ -147,7 +147,7 @@ export class GoogleDriveService {
     try {
       // Set auth token before API call
       this.setAuthToken()
-      
+
       const response = await window.gapi.client.drive.files.get({
         fileId: fileId,
         alt: 'media',
@@ -169,7 +169,7 @@ export class GoogleDriveService {
     try {
       // Set auth token before API call
       this.setAuthToken()
-      
+
       // Find all project folders (projeto-*)
       const response = await window.gapi.client.drive.files.list({
         q: `'${this.folderId}' in parents and mimeType='application/vnd.google-apps.folder' and name contains 'projeto-' and trashed=false`,
@@ -187,7 +187,7 @@ export class GoogleDriveService {
             q: `'${folder.id}' in parents and name='index.json' and trashed=false`,
             fields: 'files(id)',
           })
-          
+
           const indexFile = indexFileResponse.result.files?.[0]
           if (indexFile) {
             const metadata = await this.downloadJsonFile(indexFile.id!)
@@ -220,9 +220,9 @@ export class GoogleDriveService {
 
   // Save project to Google Drive using new folder structure
   async saveProject(
-    id: string, 
-    name: string, 
-    data: string, 
+    id: string,
+    name: string,
+    data: string,
     tags: string[]
   ): Promise<void> {
     if (!this.isReady()) {
@@ -230,9 +230,9 @@ export class GoogleDriveService {
     }
 
     this.setAuthToken()
-    
+
     const hash = await HashManager.generateHash(data)
-    
+
     try {
       // 1. Prepare project data for export using ProjectExporter
       const projectData: ExportProjectData = {
@@ -246,16 +246,16 @@ export class GoogleDriveService {
         hash,
         storageType: "google-drive"
       }
-      
+
       const exportedProject = ProjectExporter.prepareForExport(projectData, hash)
-      
+
       // 2. Create or find project folder
       let projectFolderId = await this.findProjectFolder(exportedProject.folderName)
-      
+
       if (!projectFolderId) {
         projectFolderId = await this.createProjectFolder(exportedProject.folderName)
       }
-      
+
       // 3. Save index.json (metadata) using ProjectExporter format
       await this.saveFileToFolder(
         projectFolderId,
@@ -263,7 +263,7 @@ export class GoogleDriveService {
         JSON.stringify(exportedProject.metadata, null, 2),
         'application/json'
       )
-      
+
       // 4. Save data file using ProjectExporter format
       await this.saveFileToFolder(
         projectFolderId,
@@ -271,9 +271,9 @@ export class GoogleDriveService {
         exportedProject.data,
         'application/json'
       )
-      
+
       console.log(`Project ${id} saved successfully to Google Drive using ProjectExporter`)
-      
+
     } catch (error) {
       console.error('Save project failed:', error)
       throw error
@@ -287,7 +287,7 @@ export class GoogleDriveService {
         q: `name='${folderName}' and mimeType='application/vnd.google-apps.folder' and parents in '${this.folderId}' and trashed=false`,
         fields: 'files(id, name)',
       })
-      
+
       return response.result.files?.[0]?.id || null
     } catch (error) {
       console.error('Failed to find project folder:', error)
@@ -306,7 +306,7 @@ export class GoogleDriveService {
         },
         fields: 'id',
       })
-      
+
       return response.result.id!
     } catch (error) {
       console.error('Failed to create project folder:', error)
@@ -327,9 +327,9 @@ export class GoogleDriveService {
         q: `name='${fileName}' and parents in '${folderId}' and trashed=false`,
         fields: 'files(id)',
       })
-      
+
       const existingFileId = existingFileResponse.result.files?.[0]?.id
-      
+
       if (existingFileId) {
         // Update existing file
         const response = await window.gapi.client.request({
@@ -376,10 +376,10 @@ export class GoogleDriveService {
       name: fileName,
       parents: [parentId],
     }
-    
+
     const delimiter = 'foo_bar_baz'
     const close_delim = `\r\n--${delimiter}--`
-    
+
     let body = `--${delimiter}\r\n`
     body += 'Content-Type: application/json\r\n\r\n'
     body += JSON.stringify(metadata) + '\r\n'
@@ -387,7 +387,7 @@ export class GoogleDriveService {
     body += `Content-Type: ${mimeType}\r\n\r\n`
     body += content
     body += close_delim
-    
+
     return body
   }
 
@@ -400,7 +400,7 @@ export class GoogleDriveService {
   ): Promise<void> {
     const existingProjects = await this.listProjects()
     const project = existingProjects.find(p => p.id === projectId)
-    
+
     if (!project) {
       throw new Error('Project not found')
     }
@@ -417,7 +417,7 @@ export class GoogleDriveService {
 
     const existingProjects = await this.listProjects()
     const project = existingProjects.find(p => p.id === projectId)
-    
+
     if (!project) {
       throw new Error('Project not found')
     }
@@ -425,7 +425,7 @@ export class GoogleDriveService {
     try {
       // Set auth token before API call
       this.setAuthToken()
-      
+
       await window.gapi.client.drive.files.delete({
         fileId: project.driveFileId!,
       })
@@ -438,7 +438,7 @@ export class GoogleDriveService {
   // Get project by ID with full data
   async getProject(projectId: string): Promise<GoogleDriveProjectData | null> {
     console.log(`GoogleDriveService.getProject called with ID: ${projectId}`)
-    
+
     if (!this.isReady()) {
       console.error("GoogleDriveService not ready in getProject")
       return null
@@ -446,82 +446,82 @@ export class GoogleDriveService {
 
     try {
       this.setAuthToken()
-      
+
       // Find project folder
       const projectFolderName = `projeto-${projectId}`
       console.log(`Looking for project folder: ${projectFolderName}`)
       const projectFolderId = await this.findProjectFolder(projectFolderName)
-      
+
       if (!projectFolderId) {
         console.error(`Project folder not found: ${projectFolderName}`)
         return null
       }
-      
+
       console.log(`Found project folder with ID: ${projectFolderId}`)
-      
+
       // Get metadata from index.json
       const indexFileResponse = await window.gapi.client.drive.files.list({
         q: `'${projectFolderId}' in parents and name='index.json' and trashed=false`,
         fields: 'files(id)',
       })
-      
+
       const indexFile = indexFileResponse.result.files?.[0]
       if (!indexFile) {
         console.error("index.json file not found in project folder")
         return null
       }
-      
+
       console.log(`Found index.json with ID: ${indexFile.id}`)
       const indexData = await this.downloadJsonFile(indexFile.id!)
       if (!indexData) {
         console.error("Failed to download or parse index.json")
         return null
       }
-      
+
       console.log("Downloaded index.json:", indexData)
-      
+
       // Get data from data.gglexical file (updated to use new filename)
       const dataFileResponse = await window.gapi.client.drive.files.list({
         q: `'${projectFolderId}' in parents and name='data.gglexical' and trashed=false`,
         fields: 'files(id)',
       })
-      
+
       const dataFile = dataFileResponse.result.files?.[0]
       if (!dataFile) {
         console.error("data.gglexical file not found in project folder")
         return null
       }
-      
+
       console.log(`Found data.gglexical with ID: ${dataFile.id}`)
       const dataResponse = await window.gapi.client.drive.files.get({
         fileId: dataFile.id!,
         alt: 'media',
       })
-      
+
       console.log("Downloaded data.gglexical content length:", dataResponse.body?.length)
-      
+
       // Use ProjectImporter to process the folder structure
       const folderData: FolderStructureData = {
         indexContent: JSON.stringify(indexData),
         dataContent: dataResponse.body,
         folderName: projectFolderName
       }
-      
+
       console.log("Calling ProjectImporter.importFromFolderStructure with:", {
         indexContentLength: folderData.indexContent.length,
         dataContentLength: folderData.dataContent.length,
         folderName: folderData.folderName
       })
-      
+
       const importedProject = await ProjectImporter.importFromFolderStructure(folderData)
-      
+
       console.log("ProjectImporter returned:", {
         id: importedProject?.id,
         name: importedProject?.name,
         dataLength: importedProject?.data?.length,
         tagsCount: importedProject?.tags?.length
       })
-      
+
       // Validate that the imported project has the required data
       if (!importedProject || !importedProject.data) {
         console.error('ProjectImporter returned invalid data:', importedProject)
@@ -565,7 +565,7 @@ export class GoogleDriveService {
       })
 
       return projectData
-      
+
     } catch (error) {
       console.error(`Failed to get project ${projectId}:`, error)
       return null
@@ -602,14 +602,14 @@ export class GoogleDriveService {
   // Search projects by name or tags
   async searchProjects(query: string): Promise<GoogleDriveProjectData[]> {
     const allProjects = await this.listProjects()
-    
+
     if (!query.trim()) {
       return allProjects
     }
 
     const searchTerm = query.toLowerCase()
-    
-    return allProjects.filter(project => 
+
+    return allProjects.filter(project =>
       project.name.toLowerCase().includes(searchTerm) ||
       project.tags.some(tag => tag.toLowerCase().includes(searchTerm))
     )
@@ -618,7 +618,7 @@ export class GoogleDriveService {
   // Get storage statistics
   async getStorageStats(): Promise<{ totalSize: number; projectCount: number }> {
     const projects = await this.listProjects()
-    
+
     return {
       totalSize: projects.reduce((total, project) => total + (project.size || 0), 0),
       projectCount: projects.length,
