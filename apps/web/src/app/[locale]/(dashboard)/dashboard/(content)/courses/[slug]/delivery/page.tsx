@@ -1,13 +1,12 @@
 // Server Component
 
-import React from 'react';
-import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/common/ui/dashboard-page';
-import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
-import { scheduleProgram } from '@/lib/content-management/programs/programs.actions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/dashboard-page';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { scheduleProgram } from '@/lib/content-management/programs/programs.actions';
+import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
 
 interface PageProps {
   params: Promise<{ slug: string; locale: string }>;

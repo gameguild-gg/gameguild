@@ -1,0 +1,20 @@
+using GameGuild.Authentication.Abstractions;
+using GameGuild.Authentication.Commands;
+using GameGuild.Authentication.Models;
+using GameGuild.Authentication.Models.Responses;
+using GameGuild.CQRS;
+
+namespace GameGuild.Authentication.Handlers;
+
+/// <summary>
+///     Handler for generating Web3 challenge
+/// </summary>
+public class GenerateWeb3ChallengeHandler(IWeb3Service web3Service) : IRequestHandler<GenerateWeb3ChallengeCommand, Web3ChallengeResponse>
+{
+    public async Task<Web3ChallengeResponse> Handle(GenerateWeb3ChallengeCommand request, CancellationToken cancellationToken)
+    {
+        var challenge = await web3Service.GenerateChallengeAsync(request.WalletAddress).ConfigureAwait(false);
+
+        return new Web3ChallengeResponse { Challenge = challenge.Message, ExpiresAt = challenge.ExpiresAt };
+    }
+}
