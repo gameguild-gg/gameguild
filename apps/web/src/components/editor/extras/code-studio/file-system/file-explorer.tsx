@@ -36,6 +36,7 @@ interface FileExplorerProps {
   onToggleFolder: (folderId: string) => void
   onMoveFile: (fileId: string, newPath: string) => void
   onMoveFolder: (folderId: string, newPath: string) => void
+  onReorderFiles?: (newOrder: CodeFile[]) => void
 }
 
 export function FileExplorer({
@@ -52,6 +53,7 @@ export function FileExplorer({
   onToggleFolder,
   onMoveFile,
   onMoveFolder,
+  onReorderFiles,
 }: FileExplorerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
@@ -275,7 +277,7 @@ export function FileExplorer({
     setDropTarget(null)
   }
 
-  const handleDrop = (e: React.DragEvent, targetId: string, targetType: "folder" | "root") => {
+  const handleDrop = (e: React.DragEvent, targetId: string, targetType: "folder" | "root" | "file") => {
     e.preventDefault()
     e.stopPropagation()
     if (!dragEnabled || !draggedItem) return
@@ -287,6 +289,54 @@ export function FileExplorer({
       setDraggedItem(null)
       setDropTarget(null)
       return
+    }
+
+    // Se dropou arquivo sobre arquivo, reordenar
+    if (targetType === "file" && draggedType === "file" && onReorderFiles) {
+      const draggedFile = files.find(f => f.id === draggedId)
+      const targetFile = files.find(f => f.id === targetId)
+      
+      if (draggedFile && targetFile) {
+        // Só reordenar se estão no mesmo nível (mesmo path pai)
+        const draggedPath = draggedFile.path.substring(0, draggedFile.path.lastIndexOf('/') + 1)
+        const targetPath = targetFile.path.substring(0, targetFile.path.lastIndexOf('/') + 1)
+        
+        if (draggedPath === targetPath) {
+          // Filtrar arquivos do mesmo nível
+          const sameLevelFiles = files.filter(f => {
+            const filePath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
+            return filePath === draggedPath
+          })
+          
+          // Criar nova ordem
+          const newOrder = [...sameLevelFiles]
+          const draggedIndex = newOrder.findIndex(f => f.id === draggedId)
+          const targetIndex = newOrder.findIndex(f => f.id === targetId)
+          
+          if (draggedIndex !== -1 && targetIndex !== -1) {
+            // Remover da posição atual
+            const [movedFile] = newOrder.splice(draggedIndex, 1)
+
+            // Verificar se o arquivo foi encontrado
+            if (!movedFile) return
+            
+            // Inserir na nova posição
+            newOrder.splice(targetIndex, 0, movedFile)
+            
+            // Combinar com arquivos de outros níveis mantendo ordem
+            const otherFiles = files.filter(f => {
+              const filePath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
+              return filePath !== draggedPath
+            })
+            
+            onReorderFiles([...otherFiles, ...newOrder])
+          }
+          
+          setDraggedItem(null)
+          setDropTarget(null)
+          return
+        }
+      }
     }
 
     // Determinar o novo path
@@ -560,6 +610,7 @@ export function FileExplorer({
   const renderFile = (file: CodeFile, level: number = 0) => {
     const isActive = file.id === activeFileId
     const isDragging = draggedItem?.id === file.id
+    const isDropTarget = dropTarget === file.id
     
     return (
       <div
@@ -569,12 +620,16 @@ export function FileExplorer({
           isActive 
             ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" 
             : "hover:bg-gray-100 dark:hover:bg-gray-800",
-          isDragging && "opacity-50"
+          isDragging && "opacity-50",
+          isDropTarget && "border-t-2 border-blue-500"
         )}
         style={{ paddingLeft: `${level * 12 + 24}px` }}
         onClick={() => onFileSelect(file.id)}
         draggable={dragEnabled && !editingId}
         onDragStart={(e) => handleDragStart(e, file.id, "file")}
+        onDragOver={(e) => handleDragOver(e, file.id)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, file.id, "file")}
         onDragEnd={handleDragEnd}
       >
         {dragEnabled && !editingId && (
