@@ -1,5 +1,12 @@
-using GameGuild.Modules.Certificates.Entities;
-using GameGuild.Modules.Feedbacks.Entities;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
+// using GameGuild.Modules.Certificates.Entities;
+// using GameGuild.Modules.Feedbacks.Entities;
 
 
 // using GameGuild.Modules.Contents.Models;
@@ -94,6 +101,18 @@ public class Program : EntityBase {
     /// </summary>
     public ProgramDifficulty Difficulty { get; set; } = ProgramDifficulty.Beginner;
 
+    /// <summary>
+    /// Skills required to take this program (comma-separated or JSON)
+    /// </summary>
+    [MaxLength(2000)]
+    public string? SkillsRequired { get; set; }
+
+    /// <summary>
+    /// Skills provided upon completing this program (comma-separated or JSON)
+    /// </summary>
+    [MaxLength(2000)]
+    public string? SkillsProvided { get; set; }
+
     // Navigation Properties
     /// <summary>
     /// Program content items
@@ -110,15 +129,17 @@ public class Program : EntityBase {
     /// </summary>
     // public virtual ICollection<ProductProgram> ProductPrograms { get; set; } = new List<ProductProgram>();
 
+    /*
     /// <summary>
-    /// Program certificates
+    /// Program certificates (TODO: Implement when Certificates module is available)
     /// </summary>
     public virtual ICollection<Certificate> Certificates { get; set; } = new List<Certificate>();
 
     /// <summary>
-    /// Feedback submissions for this program
+    /// Feedback submissions for this program (TODO: Implement when Feedbacks module is available)
     /// </summary>
     public virtual ICollection<ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<ProgramFeedbackSubmission>();
+    */
 
     /// <summary>
     /// Program ratings

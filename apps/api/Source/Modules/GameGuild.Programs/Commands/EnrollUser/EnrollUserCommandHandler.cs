@@ -23,13 +23,13 @@ public class EnrollUserCommandHandler(IApplicationDbContext context, ILogger<Enr
     if (!program.IsEnrollmentOpen) { throw new InvalidOperationException("Program enrollment is not open"); }
 
     // Check if already enrolled
-    var existingEnrollment = await context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId)).FirstOrDefaultAsync(cancellationToken);
+    var existingEnrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId)).FirstOrDefaultAsync(cancellationToken);
 
     if (existingEnrollment != null && existingEnrollment.IsActive) { throw new InvalidOperationException("User is already enrolled in this program"); }
 
     var enrollment = new ProgramUser { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), JoinedAt = request.EnrollmentDate ?? DateTime.UtcNow, IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
-    context.ProgramUsers.Add(enrollment);
+    context.Set<ProgramUser>().Add(enrollment);
     await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("Enrolled user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);

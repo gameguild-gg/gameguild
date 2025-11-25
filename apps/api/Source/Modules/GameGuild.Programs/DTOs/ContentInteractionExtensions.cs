@@ -1,3 +1,6 @@
+using GameGuild.SharedKernel.Enums;
+using GameGuild.Modules.Programs.Models;
+using System.ComponentModel.DataAnnotations;
 ﻿using GameGuild.Modules.Programs.Entities;
 
 namespace GameGuild.Modules.Programs;

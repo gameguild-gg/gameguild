@@ -1,7 +1,13 @@
+using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Database;
 using GameGuild.Modules.Programs.Commands;
-
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Extensions;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.SharedKernel.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Modules.Programs;
 
@@ -20,7 +26,7 @@ namespace GameGuild.Modules.Programs;
 /// for specific command operations while maintaining transaction integrity
 /// and consistent logging for audit and monitoring purposes.
 /// </remarks>
-public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<ProgramCommandHandlers> logger) : IRequestHandler<CreateProgramCommand, Program>,
+public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<ProgramCommandHandlers> logger) : IRequestHandler<CreateProgramCommand, Program>,
                                                                                                             IRequestHandler<UpdateProgramCommand, Program>,
                                                                                                             IRequestHandler<DeleteProgramCommand, bool>,
                                                                                                             IRequestHandler<PublishProgramCommand, Program>,
@@ -55,7 +61,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
       UpdatedAt = DateTime.UtcNow,
     };
 
-    context.ProgramContents.Add(programContent);
+    context.Set<ProgramContent>().Add(programContent);
     await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("Added content {ContentId} to program {ProgramId}", request.ContentId, request.ProgramId);
@@ -68,13 +74,13 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<ProgramWishlist> Handle(AddToWishlistCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Adding program {ProgramId} to wishlist for user {UserId}", request.ProgramId, request.UserId);
 
-    var existingWishlist = await context.ProgramWishlists.Where(pw => pw.ProgramId == request.ProgramId && pw.UserId == Guid.Parse(request.UserId)).FirstOrDefaultAsync(cancellationToken);
+    var existingWishlist = await context.Set<ProgramWishlist>().Where(pw => pw.ProgramId == request.ProgramId && pw.UserId == Guid.Parse(request.UserId)).FirstOrDefaultAsync(cancellationToken);
 
     if (existingWishlist != null) { throw new InvalidOperationException("Program is already in user's wishlist"); }
 
     var wishlist = new ProgramWishlist { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
-    context.ProgramWishlists.Add(wishlist);
+    context.Set<ProgramWishlist>().Add(wishlist);
     await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("Added program {ProgramId} to wishlist for user {UserId}", request.ProgramId, request.UserId);
@@ -85,7 +91,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<Program> Handle(ArchiveProgramCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Archiving program: {ProgramId}", request.Id);
 
-    var program = await context.Programs.Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+    var program = await context.Set<Program>().Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
@@ -102,7 +108,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<IEnumerable<Program>> Handle(BulkArchiveProgramsCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Bulk archiving {Count} programs", request.ProgramIds.Count());
 
-    var programs = await context.Programs.Where(p => request.ProgramIds.Contains(p.Id) && p.DeletedAt == null).ToListAsync(cancellationToken);
+    var programs = await context.Set<Program>().Where(p => request.ProgramIds.Contains(p.Id) && p.DeletedAt == null).ToListAsync(cancellationToken);
 
     foreach (var program in programs) {
       program.Status = ContentStatus.Archived;
@@ -121,7 +127,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<IEnumerable<Program>> Handle(BulkUpdateProgramVisibilityCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Bulk updating visibility for {Count} programs", request.ProgramIds.Count());
 
-    var programs = await context.Programs.Where(p => request.ProgramIds.Contains(p.Id) && p.DeletedAt == null).ToListAsync(cancellationToken);
+    var programs = await context.Set<Program>().Where(p => request.ProgramIds.Contains(p.Id) && p.DeletedAt == null).ToListAsync(cancellationToken);
 
     foreach (var program in programs) {
       program.Visibility = request.Visibility;
@@ -143,7 +149,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
     var slug = request.Title.ToSlugCase();
 
     // Ensure slug uniqueness
-    var existingSlug = await context.Programs.Where(p => p.Slug == slug && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+    var existingSlug = await context.Set<Program>().Where(p => p.Slug == slug && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
     if (existingSlug != null) { slug = $"{slug}-{Guid.NewGuid().ToString("N")[..8]}"; }
 
@@ -166,7 +172,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
       UpdatedAt = DateTime.UtcNow,
     };
 
-    context.Programs.Add(program);
+    context.Set<Program>().Add(program);
     await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("Created program with ID: {ProgramId}", program.Id);
@@ -177,7 +183,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<bool> Handle(DeleteProgramCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Deleting program: {ProgramId}", request.Id);
 
-    var program = await context.Programs.Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+    var program = await context.Set<Program>().Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
     if (program == null) { return false; }
 
@@ -195,11 +201,11 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<bool> Handle(DeleteProgramRatingCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Deleting rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
-    var rating = await context.ProgramRatings.Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId).FirstOrDefaultAsync(cancellationToken);
+    var rating = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId).FirstOrDefaultAsync(cancellationToken);
 
     if (rating == null) { return false; }
 
-    context.ProgramRatings.Remove(rating);
+    context.Set<ProgramRating>().Remove(rating);
     await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("Deleted rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
@@ -212,20 +218,20 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<ProgramUser> Handle(EnrollUserCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Enrolling user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
-    var program = await context.Programs.Where(p => p.Id == request.ProgramId && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+    var program = await context.Set<Program>().Where(p => p.Id == request.ProgramId && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.ProgramId} not found"); }
 
     if (!program.IsEnrollmentOpen) { throw new InvalidOperationException("Program enrollment is not open"); }
 
     // Check if already enrolled
-    var existingEnrollment = await context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId)).FirstOrDefaultAsync(cancellationToken);
+    var existingEnrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId)).FirstOrDefaultAsync(cancellationToken);
 
     if (existingEnrollment != null && existingEnrollment.IsActive) { throw new InvalidOperationException("User is already enrolled in this program"); }
 
     var enrollment = new ProgramUser { ProgramId = request.ProgramId, UserId = Guid.Parse(request.UserId), JoinedAt = request.EnrollmentDate ?? DateTime.UtcNow, IsActive = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
-    context.ProgramUsers.Add(enrollment);
+    context.Set<ProgramUser>().Add(enrollment);
     await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("Enrolled user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
@@ -238,7 +244,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<Program> Handle(PublishProgramCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Publishing program: {ProgramId}", request.Id);
 
-    var program = await context.Programs.Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+    var program = await context.Set<Program>().Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
@@ -258,13 +264,13 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<ProgramRating> Handle(RateProgramCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Adding rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
-    var existingRating = await context.ProgramRatings.Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId).FirstOrDefaultAsync(cancellationToken);
+    var existingRating = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId).FirstOrDefaultAsync(cancellationToken);
 
     if (existingRating != null) { throw new InvalidOperationException("User has already rated this program"); }
 
     var rating = new ProgramRating { ProgramId = request.ProgramId, UserId = request.UserId, Rating = request.Rating, Review = request.Review, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
 
-    context.ProgramRatings.Add(rating);
+    context.Set<ProgramRating>().Add(rating);
     await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("Added rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
@@ -275,11 +281,11 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<bool> Handle(RemoveFromWishlistCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Removing program {ProgramId} from wishlist for user {UserId}", request.ProgramId, request.UserId);
 
-    var wishlist = await context.ProgramWishlists.Where(pw => pw.ProgramId == request.ProgramId && pw.UserId == Guid.Parse(request.UserId)).FirstOrDefaultAsync(cancellationToken);
+    var wishlist = await context.Set<ProgramWishlist>().Where(pw => pw.ProgramId == request.ProgramId && pw.UserId == Guid.Parse(request.UserId)).FirstOrDefaultAsync(cancellationToken);
 
     if (wishlist == null) { return false; }
 
-    context.ProgramWishlists.Remove(wishlist);
+    context.Set<ProgramWishlist>().Remove(wishlist);
     await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("Removed program {ProgramId} from wishlist for user {UserId}", request.ProgramId, request.UserId);
@@ -290,11 +296,11 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<bool> Handle(RemoveProgramContentCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Removing content {ContentId} from program {ProgramId}", request.ContentId, request.ProgramId);
 
-    var programContent = await context.ProgramContents.Where(pc => pc.ProgramId == request.ProgramId && pc.Id == request.ContentId).FirstOrDefaultAsync(cancellationToken);
+    var programContent = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == request.ProgramId && pc.Id == request.ContentId).FirstOrDefaultAsync(cancellationToken);
 
     if (programContent == null) { return false; }
 
-    context.ProgramContents.Remove(programContent);
+    context.Set<ProgramContent>().Remove(programContent);
     await context.SaveChangesAsync(cancellationToken);
 
     logger.LogInformation("Removed content {ContentId} from program {ProgramId}", request.ContentId, request.ProgramId);
@@ -305,7 +311,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<IEnumerable<ProgramContent>> Handle(ReorderProgramContentCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Reordering content for program {ProgramId}", request.ProgramId);
 
-    var programContents = await context.ProgramContents.Where(pc => pc.ProgramId == request.ProgramId && request.ContentOrders.Keys.Contains(pc.Id)).ToListAsync(cancellationToken);
+    var programContents = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == request.ProgramId && request.ContentOrders.Keys.Contains(pc.Id)).ToListAsync(cancellationToken);
 
     foreach (var programContent in programContents) {
       if (request.ContentOrders.TryGetValue(programContent.Id, out var newOrder)) {
@@ -324,7 +330,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<Program> Handle(RestoreProgramCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Restoring program: {ProgramId}", request.Id);
 
-    var program = await context.Programs.Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+    var program = await context.Set<Program>().Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
@@ -341,7 +347,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<bool> Handle(UnenrollUserCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Unenrolling user {UserId} from program {ProgramId}", request.UserId, request.ProgramId);
 
-    var enrollment = await context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId) && pu.IsActive).FirstOrDefaultAsync(cancellationToken);
+    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId) && pu.IsActive).FirstOrDefaultAsync(cancellationToken);
 
     if (enrollment == null) { return false; }
 
@@ -358,7 +364,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<Program> Handle(UnpublishProgramCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Unpublishing program: {ProgramId}", request.Id);
 
-    var program = await context.Programs.Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+    var program = await context.Set<Program>().Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
@@ -376,7 +382,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<Program> Handle(UpdateEnrollmentStatusCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Updating enrollment status for program: {ProgramId}", request.ProgramId);
 
-    var program = await context.Programs.Where(p => p.Id == request.ProgramId && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+    var program = await context.Set<Program>().Where(p => p.Id == request.ProgramId && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.ProgramId} not found"); }
 
@@ -395,7 +401,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<Program> Handle(UpdateProgramCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Updating program: {ProgramId}", request.Id);
 
-    var program = await context.Programs.Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+    var program = await context.Set<Program>().Where(p => p.Id == request.Id && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
 
     if (program == null) { throw new InvalidOperationException($"Program with ID {request.Id} not found"); }
 
@@ -427,7 +433,7 @@ public class ProgramCommandHandlers(ApplicationDbContext context, ILogger<Progra
   public async Task<ProgramRating> Handle(UpdateProgramRatingCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Updating rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
-    var rating = await context.ProgramRatings.Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId).FirstOrDefaultAsync(cancellationToken);
+    var rating = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId).FirstOrDefaultAsync(cancellationToken);
 
     if (rating == null) { throw new InvalidOperationException("Rating not found"); }
 

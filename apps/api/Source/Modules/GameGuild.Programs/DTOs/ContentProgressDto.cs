@@ -1,3 +1,7 @@
+using GameGuild.SharedKernel.Enums;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Entities;
+using System.ComponentModel.DataAnnotations;
 ﻿namespace GameGuild.Modules.Programs;
 
 public record ContentProgressDto(Guid ContentId, string Title, ProgressStatus Status, decimal CompletionPercentage, DateTime? FirstAccessedAt, DateTime? LastAccessedAt, DateTime? CompletedAt) {

@@ -15,7 +15,7 @@
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\GameGuild.Authentication\GameGuild.Authentication.csproj" />
         <ProjectReference Include="..\GameGuild.Permissions\GameGuild.Permissions.csproj" />
-        <ProjectReference Include="..\..\GameGuild.API\GameGuild.API.csproj" />
+        <ProjectReference Include="..\GameGuild.Users\GameGuild.Users.csproj" />
     </ItemGroup>
 
 </Project>

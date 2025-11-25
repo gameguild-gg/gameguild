@@ -1,3 +1,8 @@
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
 ﻿using System.ComponentModel;
 
 
@@ -12,6 +17,8 @@ namespace GameGuild;
 /// field of study with specialized learning paths and career outcomes.
 /// </remarks>
 public enum ProgramCategory {
+  [Description("General purpose programs")] General,
+
   [Description("Programming and software development")] Programming,
 
   [Description("Data science and analytics")] DataScience,

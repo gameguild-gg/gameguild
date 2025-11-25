@@ -16,7 +16,7 @@ public class UnenrollUserCommandHandler(IApplicationDbContext context, ILogger<U
     public async Task<bool> Handle(UnenrollUserCommand request, CancellationToken cancellationToken) {
     logger.LogInformation("Unenrolling user {UserId} from program {ProgramId}", request.UserId, request.ProgramId);
 
-    var enrollment = await context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId) && pu.IsActive).FirstOrDefaultAsync(cancellationToken);
+    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == Guid.Parse(request.UserId) && pu.IsActive).FirstOrDefaultAsync(cancellationToken);
 
     if (enrollment == null) { return false; }
 

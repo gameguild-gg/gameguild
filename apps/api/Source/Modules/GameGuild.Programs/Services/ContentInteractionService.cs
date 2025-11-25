@@ -1,5 +1,7 @@
-using GameGuild.Database;
+using GameGuild.Abstractions;
 using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Models;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace GameGuild.Modules.Programs;
@@ -8,11 +10,11 @@ namespace GameGuild.Modules.Programs;
 ///   Service for managing content interactions following the permission inheritance pattern ContentInteraction inherits permissions from Program -> ProgramContent -> ContentInteraction Once submitted, interactions become immutable but
 ///   users can create new interactions
 /// </summary>
-public class ContentInteractionService(ApplicationDbContext context) : IContentInteractionService {
+public class ContentInteractionService(IApplicationDbContext context) : IContentInteractionService {
   /// <summary> Start a new content interaction (or resume existing one if not submitted) </summary>
   public async Task<ContentInteraction> StartContentAsync(Guid programUserId, Guid contentId) {
     // Check if there's already an interaction for this user/content
-    var existingInteraction = await context.ContentInteractions.FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+    var existingInteraction = await context.Set<ContentInteraction>().FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
 
     if (existingInteraction != null) {
       // If already submitted, create a new interaction based on the last one
@@ -31,7 +33,7 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
     // Create new interaction
     var newInteraction = new ContentInteraction { ProgramUserId = programUserId, ContentId = contentId, Status = ProgressStatus.InProgress, FirstAccessedAt = DateTime.UtcNow, LastAccessedAt = DateTime.UtcNow, CompletionPercentage = 0 };
 
-    context.ContentInteractions.Add(newInteraction);
+    context.Set<ContentInteraction>().Add(newInteraction);
     await context.SaveChangesAsync();
 
     return newInteraction;
@@ -93,12 +95,12 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
 
   /// <summary> Get interaction for a specific user and content </summary>
   public async Task<ContentInteraction?> GetInteractionAsync(Guid programUserId, Guid contentId) {
-    return await context.ContentInteractions.Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
+    return await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.ProgramUserId == programUserId && ci.ContentId == contentId);
   }
 
   /// <summary> Get all interactions for a user </summary>
   public async Task<IEnumerable<ContentInteraction>> GetUserInteractionsAsync(Guid programUserId) {
-    return await context.ContentInteractions.Include(ci => ci.Content).Include(ci => ci.ActivityGrades).Where(ci => ci.ProgramUserId == programUserId).OrderByDescending(ci => ci.LastAccessedAt).ToListAsync();
+    return await context.Set<ContentInteraction>().Include(ci => ci.Content).Include(ci => ci.ActivityGrades).Where(ci => ci.ProgramUserId == programUserId).OrderByDescending(ci => ci.LastAccessedAt).ToListAsync();
   }
 
   /// <summary> Update time spent on content </summary>
@@ -117,7 +119,7 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
 
   /// <summary> Get interaction by ID with proper error handling </summary>
   private async Task<ContentInteraction> GetInteractionByIdAsync(Guid interactionId) {
-    var interaction = await context.ContentInteractions.Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.Id == interactionId);
+    var interaction = await context.Set<ContentInteraction>().Include(ci => ci.ProgramUser).Include(ci => ci.Content).Include(ci => ci.ActivityGrades).FirstOrDefaultAsync(ci => ci.Id == interactionId);
 
     if (interaction == null) throw new InvalidOperationException($"Content interaction with ID {interactionId} not found.");
 
@@ -137,7 +139,7 @@ public class ContentInteractionService(ApplicationDbContext context) : IContentI
       SubmissionData = previousInteraction.SubmissionData,
     };
 
-    context.ContentInteractions.Add(newInteraction);
+    context.Set<ContentInteraction>().Add(newInteraction);
     await context.SaveChangesAsync();
 
     return newInteraction;

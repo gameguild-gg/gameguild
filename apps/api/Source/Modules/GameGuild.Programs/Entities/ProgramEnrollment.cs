@@ -1,3 +1,9 @@
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
 using GameGuild.Modules.Programs.Models;
 
 namespace GameGuild.Modules.Programs.Entities;
@@ -84,7 +90,11 @@ public class ProgramEnrollment : EntityBase
     /// </summary>
     public virtual Program? Program { get; set; }
 
-    // Note: User navigation property omitted - add reference to GameGuild.Users module if needed
+    /// <summary>
+    /// Navigation property to User
+    /// </summary>
+    [ForeignKey(nameof(UserId))]
+    public virtual User? User { get; set; }
 
     /// <summary>
     /// Mark enrollment as completed

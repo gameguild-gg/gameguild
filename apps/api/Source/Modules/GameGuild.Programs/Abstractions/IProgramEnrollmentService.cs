@@ -16,7 +16,7 @@ public interface IProgramEnrollmentService {
   Task<ProgramEnrollment?> GetEnrollmentAsync(Guid userId, Guid programId);
 
   /// <summary> Get all user's enrollments </summary>
-  Task<IEnumerable<ProgramEnrollment>> GetUserEnrollmentsAsync(Guid userId, GameGuild.Modules.Programs.Entities.EnrollmentStatus? status = null);
+  Task<IEnumerable<ProgramEnrollment>> GetUserEnrollmentsAsync(Guid userId, GameGuild.Modules.Programs.Models.EnrollmentStatus? status = null);
 
   /// <summary> Update enrollment progress </summary>
   Task<ProgramEnrollment> UpdateProgressAsync(Guid enrollmentId, decimal progressPercentage);
@@ -35,23 +35,4 @@ public interface IProgramEnrollmentService {
 
   /// <summary> Issue certificate for completed enrollment </summary>
   Task<bool> IssueCertificateAsync(Guid enrollmentId);
-}
-
-/// <summary> Enrollment statistics for a program </summary>
-public class ProgramEnrollmentStats {
-  public int TotalEnrollments { get; set; }
-
-  public int ActiveEnrollments { get; set; }
-
-  public int CompletedEnrollments { get; set; }
-
-  public int CancelledEnrollments { get; set; }
-
-  public decimal AverageProgressPercentage { get; set; }
-
-  public decimal CompletionRate { get; set; }
-
-  public decimal? AverageFinalGrade { get; set; }
-
-  public int CertificatesIssued { get; set; }
 }
