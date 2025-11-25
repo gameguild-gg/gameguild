@@ -13,7 +13,7 @@ public record GetAllProgramsQuery(
   ProgramDifficulty? Difficulty = null,
   ContentStatus? Status = null,
   AccessLevel? Visibility = null,
-  Entities.EnrollmentStatus? EnrollmentStatus = null,
+  Models.EnrollmentStatus? EnrollmentStatus = null,
   string? CreatorId = null,
   bool IncludeArchived = false,
   string? SortBy = "CreatedAt",
