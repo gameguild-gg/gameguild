@@ -319,7 +319,7 @@ export function FileExplorer({
 
             // Verificar se o arquivo foi encontrado
             if (!movedFile) return
-            
+
             // Inserir na nova posição
             newOrder.splice(targetIndex, 0, movedFile)
             
@@ -623,7 +623,7 @@ export function FileExplorer({
           isDragging && "opacity-50",
           isDropTarget && "border-t-2 border-blue-500"
         )}
-        style={{ paddingLeft: `${level * 12 + 24}px` }}
+        style={{ paddingLeft: `${level * 12 + 8}px` }}
         onClick={() => onFileSelect(file.id)}
         draggable={dragEnabled && !editingId}
         onDragStart={(e) => handleDragStart(e, file.id, "file")}
