@@ -445,13 +445,13 @@ export function CodeStudioEditor({
                 <EmptyEditorState />
               ) : (
                 <>
-                  {currentOpenTabs.map((fileId) => {
+                  {currentOpenTabs.map((fileId, index) => {
                     const file = localData.files.find(f => f.id === fileId)
                     if (!file) return null
                     const isActive = fileId === currentActiveFileId
                     return (
                       <div
-                        key={file.id}
+                        key={`${file.id}-${index}`}
                         className="absolute inset-0"
                         style={{ 
                           visibility: isActive ? 'visible' : 'hidden',
