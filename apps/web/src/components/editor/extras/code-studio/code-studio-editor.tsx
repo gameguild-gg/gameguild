@@ -259,6 +259,12 @@ export function CodeStudioEditor({
     })
   }
 
+  const handleReorderFiles = (newOrder: CodeFile[]) => {
+    setLocalData(draft => {
+      FileOps.reorderFiles(draft, newOrder)
+    })
+  }
+
   // Layout handlers
   const getActiveDisplay = (): DisplayConfig | undefined => {
     if (!localData.layout) return undefined
@@ -402,6 +408,7 @@ export function CodeStudioEditor({
             onToggleFolder={handleToggleFolder}
             onMoveFile={handleMoveFile}
             onMoveFolder={handleMoveFolder}
+            onReorderFiles={handleReorderFiles}
           />
         )
       
