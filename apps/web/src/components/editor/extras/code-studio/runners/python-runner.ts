@@ -41,7 +41,7 @@ async function loadPyodideRuntime(): Promise<void> {
   if (typeof window.loadPyodide !== 'undefined') return
 
   // Load compressed Pyodide runtime scripts using wasm-loader
-  await loadCompressedScript('/pyodide/pyodide.js.gz')
+  await loadCompressedScript('/wasm/pyodide.js.gz')
   
   // Wait a bit for the script to initialize
   await new Promise(resolve => setTimeout(resolve, 100))
@@ -98,6 +98,7 @@ export class PythonRunner implements CodeRunner {
     let exitCode = 0
 
     try {
+      // Notificar usuário sobre download se necessário
       const pyodide = await getPyodide()
       this.isInterrupted = false
 
