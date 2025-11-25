@@ -867,10 +867,18 @@ export function CodeStudioEditor({
             </div>
 
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleCancelClick}>
+              <Button 
+                variant="outline" 
+                onClick={handleCancelClick}
+                disabled={localData.layout?.editMode}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleSaveClick} className="flex items-center gap-2">
+              <Button 
+                onClick={handleSaveClick} 
+                className="flex items-center gap-2"
+                disabled={localData.layout?.editMode}
+              >
                 <Save className="h-4 w-4" />
                 Save
               </Button>
