@@ -9,9 +9,8 @@ import { Readable } from 'stream'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const rootDir = join(__dirname, '..')
+const rootDir = join(__dirname, '..', '..', '..') // Ajustado para apontar para o diretório raiz do projeto
 const publicWasmDir = join(rootDir, 'public', 'wasm')
-const publicPyodideDir = join(rootDir, 'public', 'pyodide')
 
 const WASM_FILES = [
   {
@@ -84,8 +83,8 @@ async function compressAndSave(buffer, outputPath) {
 async function downloadPyodide() {
   console.log(`\n🐍 Downloading Pyodide ${PYODIDE_VERSION}...\n`)
 
-  if (!existsSync(publicPyodideDir)) {
-    mkdirSync(publicPyodideDir, { recursive: true })
+  if (!existsSync(publicWasmDir)) {
+    mkdirSync(publicWasmDir, { recursive: true })
   }
 
   let totalOriginal = 0
@@ -105,7 +104,7 @@ async function downloadPyodide() {
       
       // Todos os arquivos do Pyodide vão para /wasm/ (exceto pyodide.js que fica em /pyodide/)
       const outputPath = (filename === 'pyodide.js')
-        ? join(publicPyodideDir, `${filename}.gz`)
+        ? join(publicWasmDir, `${filename}.gz`)
         : join(publicWasmDir, isAlreadyCompressed ? filename : `${filename}.gz`)
       
       if (isAlreadyCompressed) {
