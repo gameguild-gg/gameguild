@@ -27,7 +27,7 @@ import * as LayoutOps from "./layout-operations"
 import * as TabOps from "./tab-operations"
 import * as PanelOps from "./panel-operations"
 import { getGridDimensions, getContainerDimensions } from "./grid-utils"
-import { UnifiedCodeRunner } from "./runners"
+import { UnifiedCodeRunner, setDownloadNotificationCallback } from "./runners"
 import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, deleteMonacoFile, disposeMonacoFileSystem, registerPathCompletionProvider } from "./monaco-file-system"
 
 interface CodeStudioEditorProps {
@@ -71,6 +71,24 @@ export function CodeStudioEditor({
 
   // Initialize runner and Monaco file system
   useEffect(() => {
+    // Setup download notification callback
+    setDownloadNotificationCallback((message: string, isDownloading: boolean) => {
+      // Mostrar no terminal
+      if (terminalRef.current) {
+        if (isDownloading) {
+          terminalRef.current.write(`\r\n\x1b[33m📥 ${message}\x1b[0m\r\n`)
+        } else {
+          terminalRef.current.write(`\x1b[32m✓ ${message}\x1b[0m\r\n\r\n`)
+          // Limpar o terminal após 2 segundos
+          setTimeout(() => {
+            if (terminalRef.current) {
+              terminalRef.current.write('\x1b[2J\x1b[H') // Clear screen
+            }
+          }, 2000)
+        }
+      }
+    })
+
     codeRunnerRef.current = new UnifiedCodeRunner({ 
       timeout: 30000,
       onRequestInput: async (prompt?: string, currentOutput?: string) => {
