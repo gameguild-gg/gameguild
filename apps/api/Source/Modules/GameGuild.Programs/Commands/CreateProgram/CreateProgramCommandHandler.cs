@@ -1,0 +1,53 @@
+using GameGuild.Abstractions;
+using GameGuild.CQRS;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.SharedKernel.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Modules.Programs.Commands;
+
+/// <summary>
+/// Command handler for CreateProgramCommand
+/// </summary>
+public class CreateProgramCommandHandler(IApplicationDbContext context, ILogger<CreateProgramCommandHandler> logger)
+    : ICommandHandler<CreateProgramCommand, Program>
+{
+    public async Task<Program> Handle(CreateProgramCommand request, CancellationToken cancellationToken) {
+    logger.LogInformation("Creating new program: {Title}", request.Title);
+
+    // Generate slug from title
+    var slug = request.Title.ToSlugCase();
+
+    // Ensure slug uniqueness
+    var existingSlug = await context.Set<Program>().Where(p => p.Slug == slug && p.DeletedAt == null).FirstOrDefaultAsync(cancellationToken);
+
+    if (existingSlug != null) { slug = $"{slug}-{Guid.NewGuid().ToString("N")[..8]}"; }
+
+    var program = new Program {
+      Id = Guid.NewGuid(),
+      Title = request.Title,
+      Description = request.Description,
+      Slug = slug,
+      Thumbnail = request.Thumbnail,
+      VideoShowcaseUrl = request.VideoShowcaseUrl,
+      EstimatedHours = request.EstimatedHours,
+      Category = request.Category,
+      Difficulty = request.Difficulty,
+      EnrollmentStatus = (EnrollmentStatus)request.EnrollmentStatus,
+      MaxEnrollments = request.MaxEnrollments,
+      EnrollmentDeadline = request.EnrollmentDeadline,
+      Status = ContentStatus.Draft,
+      Visibility = AccessLevel.Private,
+      CreatedAt = DateTime.UtcNow,
+      UpdatedAt = DateTime.UtcNow,
+    };
+
+    context.Set<Program>().Add(program);
+    await context.SaveChangesAsync(cancellationToken);
+
+    logger.LogInformation("Created program with ID: {ProgramId}", program.Id);
+
+    return program;
+  }
+}

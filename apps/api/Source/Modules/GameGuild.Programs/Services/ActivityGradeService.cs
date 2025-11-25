@@ -1,4 +1,5 @@
 using GameGuild.Database;
+using GameGuild.Modules.Programs.Entities;
 
 
 namespace GameGuild.Modules.Programs;
