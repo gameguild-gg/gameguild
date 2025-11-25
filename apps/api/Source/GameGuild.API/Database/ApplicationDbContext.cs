@@ -169,4 +169,28 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<DisputeEvidence> DisputeEvidences { get => Set<DisputeEvidence>(); }
 
     #endregion
+
+    #region Programs Module
+
+    public DbSet<GameGuild.Modules.Programs.Entities.Program> Programs { get => Set<GameGuild.Modules.Programs.Entities.Program>(); }
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ProgramContent> ProgramContents { get => Set<GameGuild.Modules.Programs.Entities.ProgramContent>(); }
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ProgramUser> ProgramUsers { get => Set<GameGuild.Modules.Programs.Entities.ProgramUser>(); }
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ProgramEnrollment> ProgramEnrollments { get => Set<GameGuild.Modules.Programs.Entities.ProgramEnrollment>(); }
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ContentInteraction> ContentInteractions { get => Set<GameGuild.Modules.Programs.Entities.ContentInteraction>(); }
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ActivityGrade> ActivityGrades { get => Set<GameGuild.Modules.Programs.Entities.ActivityGrade>(); }
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ContentProgress> ContentProgress { get => Set<GameGuild.Modules.Programs.Entities.ContentProgress>(); }
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ProgramRating> ProgramRatings { get => Set<GameGuild.Modules.Programs.Entities.ProgramRating>(); }
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ProgramWishlist> ProgramWishlists { get => Set<GameGuild.Modules.Programs.Entities.ProgramWishlist>(); }
+
+    public DbSet<GameGuild.Modules.Programs.Entities.ProductProgram> ProductPrograms { get => Set<GameGuild.Modules.Programs.Entities.ProductProgram>(); }
+
+    #endregion
 }
