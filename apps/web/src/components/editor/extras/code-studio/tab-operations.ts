@@ -1,5 +1,5 @@
 import type { CodeStudioData, DisplayConfig } from "./types"
-import { openFile, closeFile, setEditorState, getEditorState } from "./editor-state-utils"
+import { openFile, closeFile, setActiveFile, getEditorState } from "./editor-state-utils"
 
 export function selectFile(
   draft: CodeStudioData,
@@ -45,6 +45,32 @@ export function reorderTabs(
   const displayId = activeDisplay?.id || 'display-1'
   const display = draft.layout?.displays.find(d => d.id === displayId)
   
-  // Usar utilitário centralizado para reordenar
-  setEditorState(display, draft, { openTabs: newOrder })
+  // Obter estado atual
+  const currentState = getEditorState(draft, displayId)
+  const currentActiveFile = currentState.activeFileId
+  
+  // Remover duplicatas da nova ordem, mantendo apenas a primeira ocorrência
+  const uniqueNewOrder = Array.from(new Set(newOrder))
+  
+  // Atualizar a ordem das abas
+  const hasUniqueEditor = display?.panels.some(
+    p => p.type === "editor" && p.editorInstance === "unique"
+  )
+
+  if (hasUniqueEditor && display) {
+    // Editor unique: atualizar estado do display
+    display.uniqueOpenTabs = uniqueNewOrder
+  } else {
+    // Editor multiple: atualizar estado global
+    draft.openTabs = uniqueNewOrder
+  }
+  
+  // Manter o arquivo ativo se ainda estiver na lista
+  if (currentActiveFile && uniqueNewOrder.includes(currentActiveFile)) {
+    setActiveFile(draft, displayId, currentActiveFile)
+  } else if (uniqueNewOrder.length > 0) {
+    setActiveFile(draft, displayId, uniqueNewOrder[0])
+  } else {
+    setActiveFile(draft, displayId, undefined)
+  }
 }
