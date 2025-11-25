@@ -1,6 +1,8 @@
 using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Extensions;
+using GameGuild.Modules.Programs.Models;
 using GameGuild.SharedKernel.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
