@@ -1,4 +1,6 @@
-﻿namespace GameGuild.Modules.Programs;
+﻿using GameGuild.Modules.Programs.Entities;
+
+namespace GameGuild.Modules.Programs;
 
 /// <summary> Extension methods to convert from entity to DTO </summary>
 public static class ContentInteractionExtensions {
