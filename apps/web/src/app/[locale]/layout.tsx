@@ -65,10 +65,10 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
           <ConditionalAnalytics />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false }}>
-              {/* If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */}
-              <ApolloClientProvider>
-                <Web3Provider>
-                  <SessionProvider session={session}>
+              {/* SessionProvider must wrap ApolloClientProvider since Apollo uses useSession */}
+              <SessionProvider session={session}>
+                <ApolloClientProvider>
+                  <Web3Provider>
                     <TenantProvider initialState={{ currentTenant: session?.currentTenant, availableTenants: session?.availableTenants }}>
                       <GitHubIssueProvider />
                       {children}
@@ -76,9 +76,9 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
                       <CookieConsent />
                       <Toaster />
                     </TenantProvider>
-                  </SessionProvider>
-                </Web3Provider>
-              </ApolloClientProvider>
+                  </Web3Provider>
+                </ApolloClientProvider>
+              </SessionProvider>
             </ErrorBoundaryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

@@ -21,6 +21,8 @@ Desktop.ini
 .settings/
 *.sublime-workspace
 .vscode
+public/pyodide/*
+public/wasm/*
 
 # .NET
 /bin/
