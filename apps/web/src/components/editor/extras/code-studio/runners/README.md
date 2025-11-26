@@ -102,6 +102,28 @@ interface RunnerOptions {
 - **Compilation**: 3-stage process (compile → link → execute)
 - **Size**: ~10MB clang + ~1.7MB stdlib (gzip compressed)
 - **Source**: `/langs/clang.wasm.gz`, `/langs/wasm-ld.wasm.gz`, `/langs/clang-fs.tar.gz`
+- **Progress Stages**:
+  1. Loading compiler...
+  2. Compiling C++ code...
+  3. Linking WebAssembly...
+  4. Running program...
+
+### ✅ PHP
+- **Interpreter**: PHP-CGI 8.2.0 (WASM)
+- **Execution**: WASI runtime in Web Worker
+- **Features**: Core PHP functionality, file system support
+- **Size**: ~3.95MB (gzip compressed)
+- **Source**: `/langs/php-cgi.wasm.gz`
+- **Progress Stages**:
+  1. Loading PHP interpreter...
+  2. Running PHP code...
+- **Notes**: 
+  - Runs as php-cgi with CGI environment
+  - HTTP headers are automatically stripped from output
+  - Supports multi-file projects with `require/include`
+- **Compilation**: 3-stage process (compile → link → execute)
+- **Size**: ~10MB clang + ~1.7MB stdlib (gzip compressed)
+- **Source**: `/langs/clang.wasm.gz`, `/langs/wasm-ld.wasm.gz`, `/langs/clang-fs.tar.gz`
 - **Supported Extensions**: `.cpp`, `.cxx`, `.cc`, `.hpp`
 - **Progress Stages**:
   1. Loading compiler...

@@ -43,6 +43,12 @@ const WASM_FILES = [
     output: 'clang-fs.tar.gz',
     compress: false, // Já está compactado
   },
+  {
+    name: 'php-cgi',
+    source: 'node_modules/@runno/sandbox/dist/langs/php-cgi-8.2.0.wasm',
+    output: 'php-cgi.wasm.gz',
+    compress: true,
+  },
 ]
 
 const PYODIDE_VERSION = '0.26.4'

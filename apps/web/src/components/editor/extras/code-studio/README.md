@@ -128,6 +128,7 @@ interface CodeRunner {
 - **TypeScript** (`typescript-runner.ts`): esbuild transpilation → execution
 - **Python** (`python-runner.ts`): Pyodide (Python in WASM)
 - **Lua** (`lua-runner.ts`): Fengari (Lua in WASM)
+- **PHP** (`php-runner.ts`): PHP-CGI 8.2.0 (WASI runtime)
 
 ##### Compiled Languages (3-stage pipeline)
 - **C** (`c-runner.ts`): clang → wasm-ld → WASI execution
@@ -220,13 +221,16 @@ interface CachedFileSystem {
 
 **WASM Assets:**
 - `clang.wasm.gz`: ~10.13 MB (LLVM C/C++ compiler)
-- `wasm-ld.wasm.gz`: ~2 MB (LLVM linker)
+- `wasm-ld.wasm.gz`: ~6.46 MB (LLVM linker)
 - `clang-fs.tar.gz`: ~1.71 MB (409 files: C/C++ headers + runtime libraries)
-- `python.wasm.gz`: ~4.5 MB (Python interpreter via Pyodide)
-- `quickjs.wasm.gz`: ~1.2 MB (JavaScript engine)
-- `lua.wasm.gz`: ~500 KB (Lua interpreter via Fengari)
+- `php-cgi.wasm.gz`: ~3.95 MB (PHP 8.2.0 interpreter)
+- `pyodide.asm.wasm.gz`: ~3.07 MB (Python interpreter via Pyodide)
+- `pyodide.asm.js.gz`: ~0.22 MB (Pyodide runtime)
+- `python_stdlib.zip`: ~2.23 MB (Python standard library)
+- `esbuild.wasm.gz`: ~3.46 MB (TypeScript/JavaScript bundler)
+- `quickjs-asyncify.wasm.gz`: ~0.37 MB (QuickJS engine)
 
-**Total compressed size:** ~19 MB
+**Total compressed size:** ~31.6 MB
 
 ### 6. Terminal Integration
 
@@ -254,7 +258,7 @@ interface CachedFileSystem {
 - Progressive compilation feedback
 
 **Supported Languages:**
-JavaScript, TypeScript, Python, Lua, C, C++
+JavaScript, TypeScript, Python, Lua, C, C++, PHP
 
 #### Test Mode (`test`)
 - Automated test case execution
@@ -266,7 +270,7 @@ JavaScript, TypeScript, Python, Lua, C, C++
 - Pass/fail indicators
 
 **Supported Languages:**
-JavaScript, TypeScript, Python, Lua, C, C++
+JavaScript, TypeScript, Python, Lua, C, C++, PHP
 
 ### 8. Settings & Configuration
 
@@ -510,7 +514,6 @@ Cross-Origin-Embedder-Policy: require-corp
 - **Rust**: rustc with wasm32-wasi target
 - **C#**: Blazor WASM runtime
 - **Ruby**: ruby.wasm
-- **PHP**: php-wasm
 - **Assembly variants**: x86, ARM, MIPS, RISC-V, PowerPC (display only)
 
 ### Planned Features
