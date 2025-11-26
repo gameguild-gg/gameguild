@@ -261,10 +261,14 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
   useEffect(() => {
     if (!xtermRef.current) return
 
-    xtermRef.current.clear()
+    // Não limpar durante execução - o handleExecute já faz isso
     if (isExecuting) {
-      xtermRef.current.writeln("\x1b[33m⟳ Executing...\x1b[0m")
-    } else if (output) {
+      return
+    }
+    
+    // Só limpar e mostrar output quando não está executando
+    if (output) {
+      xtermRef.current.clear()
       xtermRef.current.writeln(output.replace(/\n/g, "\r\n"))
       xtermRef.current.scrollToBottom()
     }
