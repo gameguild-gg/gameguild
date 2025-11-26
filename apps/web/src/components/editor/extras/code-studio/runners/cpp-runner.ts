@@ -61,6 +61,8 @@ export class CppRunner implements CodeRunner {
     this.options = {
       timeout: options.timeout || 30000,
       memoryLimit: options.memoryLimit || 64 * 1024 * 1024,
+      onRequestInput: options.onRequestInput,
+      onProgress: options.onProgress,
     }
   }
 
@@ -222,6 +224,7 @@ export class CppRunner implements CodeRunner {
       this.isInterrupted = false
 
       // Obter URLs e filesystem
+      this.options.onProgress?.('Loading compiler...')
       const [clangUrl, wasmLdUrl, baseFS] = await Promise.all([
         getClangBlobUrl(),
         getWasmLdBlobUrl(),
@@ -243,6 +246,7 @@ export class CppRunner implements CodeRunner {
       }
 
       // Etapa 1: Compilar
+      this.options.onProgress?.('Compiling C++ code...')
       const compileResult = await this.compileToObject(clangUrl, baseFS, '/program.cpp', sourceFS)
       
       if (compileResult.exitCode !== 0) {
@@ -256,6 +260,7 @@ export class CppRunner implements CodeRunner {
       }
 
       // Etapa 2: Linkar
+      this.options.onProgress?.('Linking WebAssembly...')
       const linkResult = await this.linkToWasm(wasmLdUrl, baseFS, compileResult.fs!)
 
       if (linkResult.exitCode !== 0) {
@@ -314,6 +319,7 @@ export class CppRunner implements CodeRunner {
       this.isInterrupted = false
 
       // Obter URLs e filesystem
+      this.options.onProgress?.('Loading compiler...')
       const [clangUrl, wasmLdUrl, baseFS] = await Promise.all([
         getClangBlobUrl(),
         getWasmLdBlobUrl(),
@@ -336,6 +342,7 @@ export class CppRunner implements CodeRunner {
       }
 
       // Etapa 1: Compilar
+      this.options.onProgress?.('Compiling C++ code...')
       const compileResult = await this.compileToObject(clangUrl, baseFS, entryPoint, userFS)
       
       if (compileResult.exitCode !== 0) {
@@ -349,6 +356,7 @@ export class CppRunner implements CodeRunner {
       }
 
       // Etapa 2: Linkar
+      this.options.onProgress?.('Linking WebAssembly...')
       const linkResult = await this.linkToWasm(wasmLdUrl, baseFS, compileResult.fs!)
 
       if (linkResult.exitCode !== 0) {
@@ -362,6 +370,7 @@ export class CppRunner implements CodeRunner {
       }
 
       // Etapa 3: Executar
+      this.options.onProgress?.('Running program...')
       const runResult = await this.runWasm(linkResult.fs!, stdin)
       
       const executionTime = performance.now() - startTime
