@@ -1941,6 +1941,684 @@ export type GameGuildFeaturesModelsUpdateFeatureRequest = {
   defaultValue?: string | null;
 };
 
+export type GameGuildModulesProgramsActivityGradeDto = {
+  id?: string;
+  contentInteractionId?: string;
+  graderProgramUserId?: string | null;
+  grade?: number;
+  feedback?: string | null;
+  gradingDetails?: string | null;
+  gradedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  contentInteraction?: GameGuildModulesProgramsContentInteractionSummaryDto;
+  grader?: GameGuildModulesProgramsGraderSummaryDto;
+  readonly isPassingGrade?: boolean;
+  readonly gradePercentage?: string | null;
+  readonly hasFeedback?: boolean;
+  readonly hasGradingDetails?: boolean;
+};
+
+export type GameGuildModulesProgramsCloneProgramDto = {
+  newTitle?: string | null;
+  newDescription?: string | null;
+};
+
+export type GameGuildModulesProgramsCompleteContentRequest = {
+  programUserId?: string;
+  contentId?: string;
+};
+
+export type GameGuildModulesProgramsCompletionRatesDto = {
+  programId?: string;
+  overallCompletionRate?: number;
+  contentCompletionRates?: {
+    [key: string]: number;
+  } | null;
+  completionTrends?: Array<GameGuildModulesProgramsCompletionTrendDto> | null;
+};
+
+export type GameGuildModulesProgramsCompletionTrendDto = {
+  date?: string;
+  completedCount?: number;
+  totalCount?: number;
+  rate?: number;
+};
+
+export type GameGuildModulesProgramsContentInteractionDto = {
+  id?: string;
+  programUserId?: string;
+  contentId?: string;
+  status?: GameGuildModulesProgramsModelsProgressStatus;
+  submissionData?: string | null;
+  completionPercentage?: number;
+  timeSpentMinutes?: number | null;
+  firstAccessedAt?: string | null;
+  lastAccessedAt?: string | null;
+  completedAt?: string | null;
+  submittedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  content?: GameGuildModulesProgramsContentSummaryDto;
+  programUser?: GameGuildModulesProgramsProgramUserSummaryDto;
+  readonly isSubmitted?: boolean;
+  readonly isCompleted?: boolean;
+  readonly canModify?: boolean;
+  readonly durationInMinutes?: number;
+};
+
+export type GameGuildModulesProgramsContentInteractionSummaryDto = {
+  id?: string;
+  programUserId?: string;
+  contentId?: string;
+  status?: string | null;
+  submittedAt?: string | null;
+  content?: GameGuildModulesProgramsContentSummaryDto;
+  student?: GameGuildModulesProgramsStudentSummaryDto;
+};
+
+export type GameGuildModulesProgramsContentProgressDto = {
+  contentId?: string;
+  title?: string | null;
+  status?: GameGuildModulesProgramsModelsProgressStatus;
+  completionPercentage?: number;
+  firstAccessedAt?: string | null;
+  lastAccessedAt?: string | null;
+  completedAt?: string | null;
+};
+
+export type GameGuildModulesProgramsContentStatsDto = {
+  programId?: string;
+  totalContent?: number;
+  requiredContent?: number;
+  optionalContent?: number;
+  contentByType?: {
+    Lesson?: number;
+    Page?: number;
+    Assignment?: number;
+    Questionnaire?: number;
+    Discussion?: number;
+    Code?: number;
+    Challenge?: number;
+    Reflection?: number;
+    Survey?: number;
+  } | null;
+  contentByVisibility?: {
+    Public?: number;
+    Internal?: number;
+    Private?: number;
+    Restricted?: number;
+  } | null;
+  topLevelContent?: number;
+  nestedContent?: number;
+};
+
+export type GameGuildModulesProgramsContentSummaryDto = {
+  id?: string;
+  title?: string | null;
+  contentType?: string | null;
+  estimatedMinutes?: number | null;
+};
+
+export type GameGuildModulesProgramsCreateActivityGradeDto = {
+  contentInteractionId?: string;
+  graderProgramUserId?: string;
+  grade?: number;
+  feedback?: string | null;
+  gradingDetails?: string | null;
+};
+
+export type GameGuildModulesProgramsCreateContentDto = {
+  title?: string | null;
+  description?: string | null;
+  type?: GameGuildModulesProgramsModelsProgramContentType;
+  body?: string | null;
+  sortOrder?: number | null;
+  isRequired?: boolean;
+  estimatedMinutes?: number | null;
+};
+
+export type GameGuildModulesProgramsCreateProductFromProgramDto = {
+  name?: string | null;
+  description?: string | null;
+  basePrice?: number;
+  currency?: string | null;
+};
+
+export type GameGuildModulesProgramsCreateProgramContentDto = {
+  programId: string;
+  parentId?: string | null;
+  title: string;
+  description?: string | null;
+  type: GameGuildModulesProgramsModelsProgramContentType;
+  body?: string | null;
+  sortOrder?: number;
+  isRequired?: boolean;
+  gradingMethod?: GameGuildModulesProgramsModelsGradingMethod;
+  maxPoints?: number | null;
+  estimatedMinutes?: number | null;
+  visibility?: GameGuildModulesProgramsModelsVisibility;
+};
+
+export type GameGuildModulesProgramsCreateProgramDto = {
+  title?: string | null;
+  description?: string | null;
+  slug?: string | null;
+  thumbnail?: string | null;
+};
+
+export type GameGuildModulesProgramsEngagementMetricsDto = {
+  programId?: string;
+  dailyActiveUsers?: number;
+  weeklyActiveUsers?: number;
+  monthlyActiveUsers?: number;
+  averageSessionDuration?: string;
+  totalSessions?: number;
+  retentionRate?: number;
+  contentEngagement?: {
+    [key: string]: number;
+  } | null;
+};
+
+export type GameGuildModulesProgramsEntitiesActivityGrade = {
+  readonly isNew?: boolean;
+  readonly isDeleted?: boolean;
+  readonly domainEvents?: Array<GameGuildCqrsIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  readonly tenantId?: string | null;
+  studentId: string;
+  graderId: string;
+  contentInteractionId: string;
+  programUserId: string;
+  points?: number | null;
+  grade?: number;
+  maxPoints?: number | null;
+  gradeLetter?: string | null;
+  feedback?: string | null;
+  gradedAt?: string;
+  isFinalized?: boolean;
+  rubricData?: string | null;
+  gradingTimeMinutes?: number | null;
+  gradeType?: GameGuildModulesProgramsEntitiesGradeType;
+  attemptNumber?: number;
+  student?: GameGuildUsersEntitiesUser;
+  grader?: GameGuildUsersEntitiesUser;
+  contentInteraction?: GameGuildModulesProgramsEntitiesContentInteraction;
+  programUser?: GameGuildModulesProgramsEntitiesProgramUser;
+  graderProgramUser?: GameGuildModulesProgramsEntitiesProgramUser;
+  graderProgramUserId?: string | null;
+  gradingDetails?: string | null;
+  readonly isGlobal?: boolean;
+  readonly percentageScore?: number | null;
+  readonly isPassing?: boolean | null;
+  readonly isAutomaticGrade?: boolean;
+  readonly isPeerReview?: boolean;
+  readonly daysSinceGrading?: number;
+};
+
+export type GameGuildModulesProgramsEntitiesContentInteraction = {
+  readonly isNew?: boolean;
+  readonly isDeleted?: boolean;
+  readonly domainEvents?: Array<GameGuildCqrsIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  readonly tenantId?: string | null;
+  userId: string;
+  contentId: string;
+  programUserId: string;
+  isCompleted?: boolean;
+  progressPercentage?: number | null;
+  timeSpentMinutes?: number | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  status?: GameGuildModulesProgramsModelsProgressStatus;
+  submittedAt?: string | null;
+  firstAccessedAt?: string | null;
+  lastAccessedAt?: string | null;
+  completionPercentage?: number;
+  submissionData?: string | null;
+  attemptCount?: number;
+  bestScore?: number | null;
+  notes?: string | null;
+  bookmarkPosition?: string | null;
+  user?: GameGuildUsersEntitiesUser;
+  content?: GameGuildModulesProgramsEntitiesProgramContent;
+  programUser?: GameGuildModulesProgramsEntitiesProgramUser;
+  activityGrades?: Array<GameGuildModulesProgramsEntitiesActivityGrade> | null;
+  readonly isGlobal?: boolean;
+  readonly isStarted?: boolean;
+  readonly isInProgress?: boolean;
+  readonly daysSinceLastAccess?: number | null;
+  readonly engagementDuration?: string | null;
+};
+
+export enum GameGuildModulesProgramsEntitiesGradeType {
+  _0 = 0,
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+  _4 = 4,
+  _5 = 5,
+}
+
+export type GameGuildModulesProgramsEntitiesProgram = {
+  readonly isNew?: boolean;
+  readonly isDeleted?: boolean;
+  readonly domainEvents?: Array<GameGuildCqrsIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  readonly tenantId?: string | null;
+  title: string;
+  description?: string | null;
+  visibility?: GameGuildSharedKernelEnumsAccessLevel;
+  metadata?: string | null;
+  slug?: string | null;
+  status?: GameGuildSharedKernelEnumsContentStatus;
+  thumbnail?: string | null;
+  videoShowcaseUrl?: string | null;
+  estimatedHours?: number | null;
+  enrollmentStatus?: GameGuildModulesProgramsModelsEnrollmentStatus;
+  maxEnrollments?: number | null;
+  enrollmentDeadline?: string | null;
+  category?: GameGuildProgramCategory;
+  difficulty?: GameGuildModulesProgramsProgramDifficulty;
+  skillsRequired?: string | null;
+  skillsProvided?: string | null;
+  programContents?: Array<GameGuildModulesProgramsEntitiesProgramContent> | null;
+  programUsers?: Array<GameGuildModulesProgramsEntitiesProgramUser> | null;
+  programRatings?: Array<GameGuildModulesProgramsProgramRating> | null;
+  programWishlists?: Array<GameGuildModulesProgramsEntitiesProgramWishlist> | null;
+  readonly isGlobal?: boolean;
+  readonly currentEnrollments?: number;
+  readonly averageRating?: number;
+  readonly totalRatings?: number;
+  readonly isEnrollmentOpen?: boolean;
+};
+
+export type GameGuildModulesProgramsEntitiesProgramContent = {
+  readonly isNew?: boolean;
+  readonly isDeleted?: boolean;
+  readonly domainEvents?: Array<GameGuildCqrsIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  readonly tenantId?: string | null;
+  programId: string;
+  parentId?: string | null;
+  title: string;
+  description?: string | null;
+  type?: GameGuildModulesProgramsModelsProgramContentType;
+  body?: string | null;
+  sortOrder?: number;
+  isRequired?: boolean;
+  gradingMethod?: GameGuildModulesProgramsModelsGradingMethod;
+  maxPoints?: number | null;
+  estimatedMinutes?: number | null;
+  visibility?: GameGuildModulesProgramsModelsVisibility;
+  program?: GameGuildModulesProgramsEntitiesProgram;
+  parent?: GameGuildModulesProgramsEntitiesProgramContent;
+  children?: Array<GameGuildModulesProgramsEntitiesProgramContent> | null;
+  contentInteractions?: Array<GameGuildModulesProgramsEntitiesContentInteraction> | null;
+  readonly isGlobal?: boolean;
+  readonly childCount?: number;
+  readonly hasChildren?: boolean;
+  readonly fullPath?: string | null;
+};
+
+export type GameGuildModulesProgramsEntitiesProgramUser = {
+  readonly isNew?: boolean;
+  readonly isDeleted?: boolean;
+  readonly domainEvents?: Array<GameGuildCqrsIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  readonly tenantId?: string | null;
+  userId: string;
+  programId: string;
+  isActive?: boolean;
+  joinedAt?: string;
+  completionPercentage?: number;
+  finalGrade?: number | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  lastAccessedAt?: string | null;
+  user?: GameGuildUsersEntitiesUser;
+  program?: GameGuildModulesProgramsEntitiesProgram;
+  contentInteractions?: Array<GameGuildModulesProgramsEntitiesContentInteraction> | null;
+  receivedGrades?: Array<GameGuildModulesProgramsEntitiesActivityGrade> | null;
+  givenGrades?: Array<GameGuildModulesProgramsEntitiesActivityGrade> | null;
+  programRatings?: Array<GameGuildModulesProgramsProgramRating> | null;
+  readonly isGlobal?: boolean;
+  readonly isCompleted?: boolean;
+  readonly isInProgress?: boolean;
+  readonly daysSinceEnrollment?: number;
+  readonly daysSinceLastAccess?: number | null;
+  readonly averageGrade?: number | null;
+};
+
+export type GameGuildModulesProgramsEntitiesProgramWishlist = {
+  readonly isNew?: boolean;
+  readonly isDeleted?: boolean;
+  readonly domainEvents?: Array<GameGuildCqrsIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  readonly tenantId?: string | null;
+  userId: string;
+  programId: string;
+  addedAt?: string;
+  priority?: number;
+  notifyWhenAvailable?: boolean;
+  notes?: string | null;
+  notificationSent?: boolean;
+  lastNotificationSentAt?: string | null;
+  interestedTags?: string | null;
+  user?: GameGuildUsersEntitiesUser;
+  program?: GameGuildModulesProgramsEntitiesProgram;
+  readonly isGlobal?: boolean;
+  readonly daysOnWishlist?: number;
+  readonly priorityDescription?: string | null;
+  readonly shouldNotify?: boolean;
+};
+
+export type GameGuildModulesProgramsGradeStatisticsDto = {
+  totalGrades?: number;
+  averageGrade?: number;
+  minGrade?: number;
+  maxGrade?: number;
+  passingRate?: number;
+  readonly averageGradeFormatted?: string | null;
+  readonly passingRateFormatted?: string | null;
+  readonly hasGrades?: boolean;
+};
+
+export type GameGuildModulesProgramsGraderSummaryDto = {
+  id?: string;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
+  role?: string | null;
+};
+
+export enum GameGuildModulesProgramsModelsEnrollmentStatus {
+  _0 = 0,
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+  _4 = 4,
+  _5 = 5,
+  _6 = 6,
+  _7 = 7,
+  _8 = 8,
+}
+
+export enum GameGuildModulesProgramsModelsGradingMethod {
+  _0 = 0,
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+  _4 = 4,
+}
+
+export enum GameGuildModulesProgramsModelsProgramContentType {
+  _0 = 0,
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+  _4 = 4,
+  _5 = 5,
+  _6 = 6,
+  _7 = 7,
+  _8 = 8,
+}
+
+export enum GameGuildModulesProgramsModelsProgressStatus {
+  _0 = 0,
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+}
+
+export enum GameGuildModulesProgramsModelsVisibility {
+  _0 = 0,
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+}
+
+export type GameGuildModulesProgramsMonetizationDto = {
+  price?: number;
+  currency?: string | null;
+  isSubscription?: boolean;
+  subscriptionDurationDays?: number | null;
+};
+
+export type GameGuildModulesProgramsMoveContentDto = {
+  contentId: string;
+  newParentId?: string | null;
+  newSortOrder: number;
+};
+
+export type GameGuildModulesProgramsPricingDto = {
+  price?: number;
+  currency?: string | null;
+  isSubscription?: boolean;
+  subscriptionDurationDays?: number | null;
+  isMonetizationEnabled?: boolean;
+};
+
+export type GameGuildModulesProgramsProgramAnalyticsDto = {
+  programId?: string;
+  title?: string | null;
+  totalUsers?: number;
+  activeUsers?: number;
+  completedUsers?: number;
+  completionRate?: number;
+  averageCompletionTime?: string;
+  totalViews?: number;
+  lastActivity?: string | null;
+  additionalMetrics?: {
+    [key: string]: unknown;
+  } | null;
+};
+
+export type GameGuildModulesProgramsProgramContentDto = {
+  id?: string;
+  programId?: string;
+  parentId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  type?: GameGuildModulesProgramsModelsProgramContentType;
+  body?: unknown;
+  sortOrder?: number;
+  isRequired?: boolean;
+  gradingMethod?: GameGuildModulesProgramsModelsGradingMethod;
+  maxPoints?: number | null;
+  estimatedMinutes?: number | null;
+  visibility?: GameGuildModulesProgramsModelsVisibility;
+  createdAt?: string;
+  updatedAt?: string | null;
+  programTitle?: string | null;
+  parentTitle?: string | null;
+  childrenCount?: number;
+  children?: Array<GameGuildModulesProgramsProgramContentDto> | null;
+};
+
+export enum GameGuildModulesProgramsProgramDifficulty {
+  _0 = 0,
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+}
+
+export type GameGuildModulesProgramsProgramRating = {
+  readonly isGlobal?: boolean;
+  readonly isNew?: boolean;
+  readonly isDeleted?: boolean;
+  readonly domainEvents?: Array<GameGuildCqrsIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  readonly tenantId?: string | null;
+  programId?: string;
+  userId?: string | null;
+  rating?: number;
+  review?: string | null;
+  isVerified?: boolean;
+  isFeatured?: boolean;
+  helpfulVotes?: number;
+  unhelpfulVotes?: number;
+  program?: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type GameGuildModulesProgramsProgramUserSummaryDto = {
+  id?: string;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
+};
+
+export type GameGuildModulesProgramsRejectProgramDto = {
+  reason?: string | null;
+};
+
+export type GameGuildModulesProgramsReorderContentDto = {
+  contentIds?: Array<string> | null;
+};
+
+export type GameGuildModulesProgramsRevenueAnalyticsDto = {
+  programId?: string;
+  totalRevenue?: number;
+  monthlyRevenue?: number;
+  totalPurchases?: number;
+  monthlyPurchases?: number;
+  averageRevenuePerUser?: number;
+  conversionRate?: number;
+  revenueChart?: Array<GameGuildModulesProgramsRevenueChartDto> | null;
+};
+
+export type GameGuildModulesProgramsRevenueChartDto = {
+  date?: string;
+  revenue?: number;
+  purchases?: number;
+};
+
+export type GameGuildModulesProgramsScheduleProgramDto = {
+  publishAt?: string;
+};
+
+export type GameGuildModulesProgramsSearchContentDto = {
+  programId: string;
+  searchTerm: string;
+  type?: GameGuildModulesProgramsModelsProgramContentType;
+  visibility?: GameGuildModulesProgramsModelsVisibility;
+  isRequired?: boolean | null;
+  parentId?: string | null;
+};
+
+export type GameGuildModulesProgramsStartContentRequest = {
+  programUserId?: string;
+  contentId?: string;
+};
+
+export type GameGuildModulesProgramsStudentSummaryDto = {
+  id?: string;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
+};
+
+export type GameGuildModulesProgramsSubmitContentRequest = {
+  programUserId?: string;
+  contentId?: string;
+  submissionData?: string | null;
+};
+
+export type GameGuildModulesProgramsUpdateActivityGradeDto = {
+  grade?: number | null;
+  feedback?: string | null;
+  gradingDetails?: string | null;
+};
+
+export type GameGuildModulesProgramsUpdateContentDto = {
+  title?: string | null;
+  description?: string | null;
+  body?: string | null;
+  sortOrder?: number | null;
+  isRequired?: boolean | null;
+  estimatedMinutes?: number | null;
+};
+
+export type GameGuildModulesProgramsUpdatePricingDto = {
+  price?: number | null;
+  currency?: string | null;
+  isSubscription?: boolean | null;
+  subscriptionDurationDays?: number | null;
+};
+
+export type GameGuildModulesProgramsUpdateProgramContentDto = {
+  id: string;
+  title?: string | null;
+  description?: string | null;
+  type?: GameGuildModulesProgramsModelsProgramContentType;
+  body?: string | null;
+  sortOrder?: number | null;
+  isRequired?: boolean | null;
+  gradingMethod?: GameGuildModulesProgramsModelsGradingMethod;
+  maxPoints?: number | null;
+  estimatedMinutes?: number | null;
+  visibility?: GameGuildModulesProgramsModelsVisibility;
+};
+
+export type GameGuildModulesProgramsUpdateProgramDto = {
+  title?: string | null;
+  description?: string | null;
+  thumbnail?: string | null;
+};
+
+export type GameGuildModulesProgramsUpdateProgressDto = {
+  status?: GameGuildModulesProgramsModelsProgressStatus;
+  lastAccessedAt?: string | null;
+  additionalData?: {
+    [key: string]: unknown;
+  } | null;
+};
+
+export type GameGuildModulesProgramsUpdateProgressRequest = {
+  programUserId?: string;
+  contentId?: string;
+  completionPercentage?: number;
+};
+
+export type GameGuildModulesProgramsUpdateTimeSpentRequest = {
+  programUserId?: string;
+  contentId?: string;
+  additionalMinutes?: number;
+};
+
+export type GameGuildModulesProgramsUserProgressDto = {
+  completionPercentage?: number;
+  lastAccessedAt?: string | null;
+  startedAt?: string | null;
+  completedAt?: string | null;
+  contentProgress?: Array<GameGuildModulesProgramsContentProgressDto> | null;
+};
+
 export type GameGuildMoney = {
   amount?: number;
   currency?: string | null;
@@ -2623,6 +3301,28 @@ export type GameGuildPermissionsDomainModelsResourceUser = {
   readonly isOwner?: boolean;
 };
 
+export enum GameGuildProgramCategory {
+  _0 = 0,
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+  _4 = 4,
+  _5 = 5,
+  _6 = 6,
+  _7 = 7,
+  _8 = 8,
+  _9 = 9,
+  _10 = 10,
+  _11 = 11,
+  _12 = 12,
+  _13 = 13,
+  _14 = 14,
+  _15 = 15,
+  _16 = 16,
+  _17 = 17,
+  _18 = 18,
+}
+
 export type GameGuildResourcesCommandsArchiveResourceUsageRecordsRequest = {
   olderThan?: string;
 };
@@ -2704,6 +3404,22 @@ export type GameGuildResourcesModelsResourceQuotaResponse = {
 };
 
 export enum GameGuildResourcesModelsResourceUsageType {
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+  _4 = 4,
+}
+
+export enum GameGuildSharedKernelEnumsAccessLevel {
+  _0 = 0,
+  _1 = 1,
+  _2 = 2,
+  _3 = 3,
+  _4 = 4,
+}
+
+export enum GameGuildSharedKernelEnumsContentStatus {
+  _0 = 0,
   _1 = 1,
   _2 = 2,
   _3 = 3,
@@ -3495,6 +4211,25 @@ export type GameGuildUsersCommandsUpdateUserRequestItem = {
   userId?: string;
   name?: string | null;
   phoneNumber?: string | null;
+};
+
+export type GameGuildUsersEntitiesUser = {
+  readonly isGlobal?: boolean;
+  readonly isNew?: boolean;
+  readonly isDeleted?: boolean;
+  readonly domainEvents?: Array<GameGuildCqrsIDomainEvent> | null;
+  id?: string;
+  version?: number;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string | null;
+  readonly tenantId?: string | null;
+  email: string;
+  name: string;
+  isActive?: boolean;
+  isSuspended?: boolean;
+  phoneNumber?: string | null;
+  lastSeenAt?: string | null;
 };
 
 export type GameGuildUsersModelsBulkNotificationRequest = {
@@ -4587,6 +5322,180 @@ export type PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignResponses =
 export type PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignResponse =
   PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignResponses[keyof PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignResponses];
 
+export type PostApiProgramsByProgramIdActivityGradesData = {
+  body?: GameGuildModulesProgramsCreateActivityGradeDto;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/activity-grades';
+};
+
+export type PostApiProgramsByProgramIdActivityGradesResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsActivityGradeDto;
+};
+
+export type PostApiProgramsByProgramIdActivityGradesResponse =
+  PostApiProgramsByProgramIdActivityGradesResponses[keyof PostApiProgramsByProgramIdActivityGradesResponses];
+
+export type GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData = {
+  body?: never;
+  path: {
+    programId: string;
+    contentInteractionId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/activity-grades/interaction/{contentInteractionId}';
+};
+
+export type GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsActivityGradeDto;
+};
+
+export type GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponse =
+  GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses[keyof GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses];
+
+export type GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData = {
+  body?: never;
+  path: {
+    programId: string;
+    graderProgramUserId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/activity-grades/grader/{graderProgramUserId}';
+};
+
+export type GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsActivityGradeDto>;
+};
+
+export type GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponse =
+  GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses[keyof GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses];
+
+export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData = {
+  body?: never;
+  path: {
+    programId: string;
+    programUserId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/activity-grades/student/{programUserId}';
+};
+
+export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsActivityGradeDto>;
+};
+
+export type GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponse =
+  GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses[keyof GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses];
+
+export type DeleteApiProgramsByProgramIdActivityGradesByGradeIdData = {
+  body?: never;
+  path: {
+    programId: string;
+    gradeId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/activity-grades/{gradeId}';
+};
+
+export type DeleteApiProgramsByProgramIdActivityGradesByGradeIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PutApiProgramsByProgramIdActivityGradesByGradeIdData = {
+  body?: GameGuildModulesProgramsUpdateActivityGradeDto;
+  path: {
+    programId: string;
+    gradeId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/activity-grades/{gradeId}';
+};
+
+export type PutApiProgramsByProgramIdActivityGradesByGradeIdResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsActivityGradeDto;
+};
+
+export type PutApiProgramsByProgramIdActivityGradesByGradeIdResponse =
+  PutApiProgramsByProgramIdActivityGradesByGradeIdResponses[keyof PutApiProgramsByProgramIdActivityGradesByGradeIdResponses];
+
+export type GetApiProgramsByProgramIdActivityGradesPendingData = {
+  body?: never;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/activity-grades/pending';
+};
+
+export type GetApiProgramsByProgramIdActivityGradesPendingResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsContentInteractionDto>;
+};
+
+export type GetApiProgramsByProgramIdActivityGradesPendingResponse =
+  GetApiProgramsByProgramIdActivityGradesPendingResponses[keyof GetApiProgramsByProgramIdActivityGradesPendingResponses];
+
+export type GetApiProgramsByProgramIdActivityGradesStatisticsData = {
+  body?: never;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/activity-grades/statistics';
+};
+
+export type GetApiProgramsByProgramIdActivityGradesStatisticsResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsGradeStatisticsDto;
+};
+
+export type GetApiProgramsByProgramIdActivityGradesStatisticsResponse =
+  GetApiProgramsByProgramIdActivityGradesStatisticsResponses[keyof GetApiProgramsByProgramIdActivityGradesStatisticsResponses];
+
+export type GetApiProgramsByProgramIdActivityGradesContentByContentIdData = {
+  body?: never;
+  path: {
+    programId: string;
+    contentId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/activity-grades/content/{contentId}';
+};
+
+export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsActivityGradeDto>;
+};
+
+export type GetApiProgramsByProgramIdActivityGradesContentByContentIdResponse =
+  GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses[keyof GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses];
+
 export type GetApiAdminAuditData = {
   body?: never;
   path?: never;
@@ -5648,6 +6557,151 @@ export type PostApiV1ConditionalPoliciesValidateConditionResponses = {
 export type PostApiV1ConditionalPoliciesValidateConditionResponse =
   PostApiV1ConditionalPoliciesValidateConditionResponses[keyof PostApiV1ConditionalPoliciesValidateConditionResponses];
 
+export type PostContentInteractionStartData = {
+  body?: GameGuildModulesProgramsStartContentRequest;
+  path?: never;
+  query?: {
+    programId?: string;
+  };
+  url: '/content-interaction/start';
+};
+
+export type PostContentInteractionStartResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsContentInteractionDto;
+};
+
+export type PostContentInteractionStartResponse = PostContentInteractionStartResponses[keyof PostContentInteractionStartResponses];
+
+export type PutContentInteractionByInteractionIdProgressData = {
+  body?: GameGuildModulesProgramsUpdateProgressRequest;
+  path: {
+    interactionId: string;
+  };
+  query?: {
+    programId?: string;
+  };
+  url: '/content-interaction/{interactionId}/progress';
+};
+
+export type PutContentInteractionByInteractionIdProgressResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsContentInteractionDto;
+};
+
+export type PutContentInteractionByInteractionIdProgressResponse =
+  PutContentInteractionByInteractionIdProgressResponses[keyof PutContentInteractionByInteractionIdProgressResponses];
+
+export type PostContentInteractionByInteractionIdSubmitData = {
+  body?: GameGuildModulesProgramsSubmitContentRequest;
+  path: {
+    interactionId: string;
+  };
+  query?: {
+    programId?: string;
+  };
+  url: '/content-interaction/{interactionId}/submit';
+};
+
+export type PostContentInteractionByInteractionIdSubmitResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsContentInteractionDto;
+};
+
+export type PostContentInteractionByInteractionIdSubmitResponse =
+  PostContentInteractionByInteractionIdSubmitResponses[keyof PostContentInteractionByInteractionIdSubmitResponses];
+
+export type PostContentInteractionByInteractionIdCompleteData = {
+  body?: GameGuildModulesProgramsCompleteContentRequest;
+  path: {
+    interactionId: string;
+  };
+  query?: {
+    programId?: string;
+  };
+  url: '/content-interaction/{interactionId}/complete';
+};
+
+export type PostContentInteractionByInteractionIdCompleteResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsContentInteractionDto;
+};
+
+export type PostContentInteractionByInteractionIdCompleteResponse =
+  PostContentInteractionByInteractionIdCompleteResponses[keyof PostContentInteractionByInteractionIdCompleteResponses];
+
+export type GetContentInteractionUserByProgramUserIdContentByContentIdData = {
+  body?: never;
+  path: {
+    programUserId: string;
+    contentId: string;
+  };
+  query?: {
+    programId?: string;
+  };
+  url: '/content-interaction/user/{programUserId}/content/{contentId}';
+};
+
+export type GetContentInteractionUserByProgramUserIdContentByContentIdResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsContentInteractionDto;
+};
+
+export type GetContentInteractionUserByProgramUserIdContentByContentIdResponse =
+  GetContentInteractionUserByProgramUserIdContentByContentIdResponses[keyof GetContentInteractionUserByProgramUserIdContentByContentIdResponses];
+
+export type GetContentInteractionUserByProgramUserIdData = {
+  body?: never;
+  path: {
+    programUserId: string;
+  };
+  query?: {
+    programId?: string;
+  };
+  url: '/content-interaction/user/{programUserId}';
+};
+
+export type GetContentInteractionUserByProgramUserIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsContentInteractionDto>;
+};
+
+export type GetContentInteractionUserByProgramUserIdResponse =
+  GetContentInteractionUserByProgramUserIdResponses[keyof GetContentInteractionUserByProgramUserIdResponses];
+
+export type PutContentInteractionByInteractionIdTimeSpentData = {
+  body?: GameGuildModulesProgramsUpdateTimeSpentRequest;
+  path: {
+    interactionId: string;
+  };
+  query?: {
+    programId?: string;
+  };
+  url: '/content-interaction/{interactionId}/time-spent';
+};
+
+export type PutContentInteractionByInteractionIdTimeSpentResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsContentInteractionDto;
+};
+
+export type PutContentInteractionByInteractionIdTimeSpentResponse =
+  PutContentInteractionByInteractionIdTimeSpentResponses[keyof PutContentInteractionByInteractionIdTimeSpentResponses];
+
 export type PostApiV1FeaturesEvaluateData = {
   body?: GameGuildFeaturesModelsFeatureEvaluationRequest;
   path?: never;
@@ -6630,6 +7684,1122 @@ export type PatchApiV1PaymentsByPaymentIdRetryResponses = {
 };
 
 export type PatchApiV1PaymentsByPaymentIdRetryResponse = PatchApiV1PaymentsByPaymentIdRetryResponses[keyof PatchApiV1PaymentsByPaymentIdRetryResponses];
+
+export type GetProgramData = {
+  body?: never;
+  path?: never;
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+  url: '/program';
+};
+
+export type GetProgramResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsEntitiesProgram>;
+};
+
+export type GetProgramResponse = GetProgramResponses[keyof GetProgramResponses];
+
+export type PostProgramData = {
+  body?: GameGuildModulesProgramsCreateProgramDto;
+  path?: never;
+  query?: never;
+  url: '/program';
+};
+
+export type PostProgramResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramResponse = PostProgramResponses[keyof PostProgramResponses];
+
+export type GetProgramPublishedData = {
+  body?: never;
+  path?: never;
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+  url: '/program/published';
+};
+
+export type GetProgramPublishedResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsEntitiesProgram>;
+};
+
+export type GetProgramPublishedResponse = GetProgramPublishedResponses[keyof GetProgramPublishedResponses];
+
+export type GetProgramCategoryByCategoryData = {
+  body?: never;
+  path: {
+    category: GameGuildProgramCategory;
+  };
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+  url: '/program/category/{category}';
+};
+
+export type GetProgramCategoryByCategoryResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsEntitiesProgram>;
+};
+
+export type GetProgramCategoryByCategoryResponse = GetProgramCategoryByCategoryResponses[keyof GetProgramCategoryByCategoryResponses];
+
+export type GetProgramDifficultyByDifficultyData = {
+  body?: never;
+  path: {
+    difficulty: GameGuildModulesProgramsProgramDifficulty;
+  };
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+  url: '/program/difficulty/{difficulty}';
+};
+
+export type GetProgramDifficultyByDifficultyResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsEntitiesProgram>;
+};
+
+export type GetProgramDifficultyByDifficultyResponse = GetProgramDifficultyByDifficultyResponses[keyof GetProgramDifficultyByDifficultyResponses];
+
+export type GetProgramSearchData = {
+  body?: never;
+  path?: never;
+  query?: {
+    searchTerm?: string;
+    skip?: number;
+    take?: number;
+  };
+  url: '/program/search';
+};
+
+export type GetProgramSearchResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsEntitiesProgram>;
+};
+
+export type GetProgramSearchResponse = GetProgramSearchResponses[keyof GetProgramSearchResponses];
+
+export type GetProgramCreatorByCreatorIdData = {
+  body?: never;
+  path: {
+    creatorId: string;
+  };
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+  url: '/program/creator/{creatorId}';
+};
+
+export type GetProgramCreatorByCreatorIdResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsEntitiesProgram>;
+};
+
+export type GetProgramCreatorByCreatorIdResponse = GetProgramCreatorByCreatorIdResponses[keyof GetProgramCreatorByCreatorIdResponses];
+
+export type GetProgramPopularData = {
+  body?: never;
+  path?: never;
+  query?: {
+    count?: number;
+  };
+  url: '/program/popular';
+};
+
+export type GetProgramPopularResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsEntitiesProgram>;
+};
+
+export type GetProgramPopularResponse = GetProgramPopularResponses[keyof GetProgramPopularResponses];
+
+export type GetProgramRecentData = {
+  body?: never;
+  path?: never;
+  query?: {
+    count?: number;
+  };
+  url: '/program/recent';
+};
+
+export type GetProgramRecentResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsEntitiesProgram>;
+};
+
+export type GetProgramRecentResponse = GetProgramRecentResponses[keyof GetProgramRecentResponses];
+
+export type DeleteProgramByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}';
+};
+
+export type DeleteProgramByIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetProgramByIdData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}';
+};
+
+export type GetProgramByIdResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type GetProgramByIdResponse = GetProgramByIdResponses[keyof GetProgramByIdResponses];
+
+export type PutProgramByIdData = {
+  body?: GameGuildModulesProgramsUpdateProgramDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}';
+};
+
+export type PutProgramByIdResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PutProgramByIdResponse = PutProgramByIdResponses[keyof PutProgramByIdResponses];
+
+export type GetProgramByIdWithContentData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/with-content';
+};
+
+export type GetProgramByIdWithContentResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type GetProgramByIdWithContentResponse = GetProgramByIdWithContentResponses[keyof GetProgramByIdWithContentResponses];
+
+export type PostProgramByIdCloneData = {
+  body?: GameGuildModulesProgramsCloneProgramDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/clone';
+};
+
+export type PostProgramByIdCloneResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdCloneResponse = PostProgramByIdCloneResponses[keyof PostProgramByIdCloneResponses];
+
+export type GetProgramSlugBySlugData = {
+  body?: never;
+  path: {
+    slug: string;
+  };
+  query?: never;
+  url: '/program/slug/{slug}';
+};
+
+export type GetProgramSlugBySlugResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type GetProgramSlugBySlugResponse = GetProgramSlugBySlugResponses[keyof GetProgramSlugBySlugResponses];
+
+export type PostProgramByIdContentData = {
+  body?: GameGuildModulesProgramsCreateContentDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/content';
+};
+
+export type PostProgramByIdContentResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgramContent;
+};
+
+export type PostProgramByIdContentResponse = PostProgramByIdContentResponses[keyof PostProgramByIdContentResponses];
+
+export type DeleteProgramByIdContentByContentIdData = {
+  body?: never;
+  path: {
+    id: string;
+    contentId: string;
+  };
+  query?: never;
+  url: '/program/{id}/content/{contentId}';
+};
+
+export type DeleteProgramByIdContentByContentIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PutProgramByIdContentByContentIdData = {
+  body?: GameGuildModulesProgramsUpdateContentDto;
+  path: {
+    id: string;
+    contentId: string;
+  };
+  query?: never;
+  url: '/program/{id}/content/{contentId}';
+};
+
+export type PutProgramByIdContentByContentIdResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgramContent;
+};
+
+export type PutProgramByIdContentByContentIdResponse = PutProgramByIdContentByContentIdResponses[keyof PutProgramByIdContentByContentIdResponses];
+
+export type PostProgramByIdContentReorderData = {
+  body?: GameGuildModulesProgramsReorderContentDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/content/reorder';
+};
+
+export type PostProgramByIdContentReorderResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type DeleteProgramByIdUsersByUserIdData = {
+  body?: never;
+  path: {
+    id: string;
+    userId: string;
+  };
+  query?: never;
+  url: '/program/{id}/users/{userId}';
+};
+
+export type DeleteProgramByIdUsersByUserIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostProgramByIdUsersByUserIdData = {
+  body?: never;
+  path: {
+    id: string;
+    userId: string;
+  };
+  query?: never;
+  url: '/program/{id}/users/{userId}';
+};
+
+export type PostProgramByIdUsersByUserIdResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsUserProgressDto;
+};
+
+export type PostProgramByIdUsersByUserIdResponse = PostProgramByIdUsersByUserIdResponses[keyof PostProgramByIdUsersByUserIdResponses];
+
+export type GetProgramByIdUsersData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: {
+    skip?: number;
+    take?: number;
+  };
+  url: '/program/{id}/users';
+};
+
+export type GetProgramByIdUsersResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsUserProgressDto>;
+};
+
+export type GetProgramByIdUsersResponse = GetProgramByIdUsersResponses[keyof GetProgramByIdUsersResponses];
+
+export type GetProgramByIdUsersByUserIdProgressData = {
+  body?: never;
+  path: {
+    id: string;
+    userId: string;
+  };
+  query?: never;
+  url: '/program/{id}/users/{userId}/progress';
+};
+
+export type GetProgramByIdUsersByUserIdProgressResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsUserProgressDto;
+};
+
+export type GetProgramByIdUsersByUserIdProgressResponse = GetProgramByIdUsersByUserIdProgressResponses[keyof GetProgramByIdUsersByUserIdProgressResponses];
+
+export type PutProgramByIdUsersByUserIdProgressData = {
+  body?: GameGuildModulesProgramsUpdateProgressDto;
+  path: {
+    id: string;
+    userId: string;
+  };
+  query?: never;
+  url: '/program/{id}/users/{userId}/progress';
+};
+
+export type PutProgramByIdUsersByUserIdProgressResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsUserProgressDto;
+};
+
+export type PutProgramByIdUsersByUserIdProgressResponse = PutProgramByIdUsersByUserIdProgressResponses[keyof PutProgramByIdUsersByUserIdProgressResponses];
+
+export type PostProgramByIdUsersByUserIdContentByContentIdCompleteData = {
+  body?: never;
+  path: {
+    id: string;
+    userId: string;
+    contentId: string;
+  };
+  query?: never;
+  url: '/program/{id}/users/{userId}/content/{contentId}/complete';
+};
+
+export type PostProgramByIdUsersByUserIdContentByContentIdCompleteResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostProgramByIdUsersByUserIdResetData = {
+  body?: never;
+  path: {
+    id: string;
+    userId: string;
+  };
+  query?: never;
+  url: '/program/{id}/users/{userId}/reset';
+};
+
+export type PostProgramByIdUsersByUserIdResetResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostProgramByIdSubmitData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/submit';
+};
+
+export type PostProgramByIdSubmitResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdSubmitResponse = PostProgramByIdSubmitResponses[keyof PostProgramByIdSubmitResponses];
+
+export type PostProgramByIdApproveData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/approve';
+};
+
+export type PostProgramByIdApproveResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdApproveResponse = PostProgramByIdApproveResponses[keyof PostProgramByIdApproveResponses];
+
+export type PostProgramByIdRejectData = {
+  body?: GameGuildModulesProgramsRejectProgramDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/reject';
+};
+
+export type PostProgramByIdRejectResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdRejectResponse = PostProgramByIdRejectResponses[keyof PostProgramByIdRejectResponses];
+
+export type PostProgramByIdWithdrawData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/withdraw';
+};
+
+export type PostProgramByIdWithdrawResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdWithdrawResponse = PostProgramByIdWithdrawResponses[keyof PostProgramByIdWithdrawResponses];
+
+export type PostProgramByIdArchiveData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/archive';
+};
+
+export type PostProgramByIdArchiveResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdArchiveResponse = PostProgramByIdArchiveResponses[keyof PostProgramByIdArchiveResponses];
+
+export type PostProgramByIdRestoreData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/restore';
+};
+
+export type PostProgramByIdRestoreResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdRestoreResponse = PostProgramByIdRestoreResponses[keyof PostProgramByIdRestoreResponses];
+
+export type PostProgramByIdPublishData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/publish';
+};
+
+export type PostProgramByIdPublishResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdPublishResponse = PostProgramByIdPublishResponses[keyof PostProgramByIdPublishResponses];
+
+export type PostProgramByIdUnpublishData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/unpublish';
+};
+
+export type PostProgramByIdUnpublishResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdUnpublishResponse = PostProgramByIdUnpublishResponses[keyof PostProgramByIdUnpublishResponses];
+
+export type PostProgramByIdScheduleData = {
+  body?: GameGuildModulesProgramsScheduleProgramDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/schedule';
+};
+
+export type PostProgramByIdScheduleResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdScheduleResponse = PostProgramByIdScheduleResponses[keyof PostProgramByIdScheduleResponses];
+
+export type PostProgramByIdMonetizeData = {
+  body?: GameGuildModulesProgramsMonetizationDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/monetize';
+};
+
+export type PostProgramByIdMonetizeResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdMonetizeResponse = PostProgramByIdMonetizeResponses[keyof PostProgramByIdMonetizeResponses];
+
+export type PostProgramByIdDisableMonetizationData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/disable-monetization';
+};
+
+export type PostProgramByIdDisableMonetizationResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEntitiesProgram;
+};
+
+export type PostProgramByIdDisableMonetizationResponse = PostProgramByIdDisableMonetizationResponses[keyof PostProgramByIdDisableMonetizationResponses];
+
+export type GetProgramByIdPricingData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/pricing';
+};
+
+export type GetProgramByIdPricingResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsPricingDto;
+};
+
+export type GetProgramByIdPricingResponse = GetProgramByIdPricingResponses[keyof GetProgramByIdPricingResponses];
+
+export type PutProgramByIdPricingData = {
+  body?: GameGuildModulesProgramsUpdatePricingDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/pricing';
+};
+
+export type PutProgramByIdPricingResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsPricingDto;
+};
+
+export type PutProgramByIdPricingResponse = PutProgramByIdPricingResponses[keyof PutProgramByIdPricingResponses];
+
+export type GetProgramByIdAnalyticsData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/analytics';
+};
+
+export type GetProgramByIdAnalyticsResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsProgramAnalyticsDto;
+};
+
+export type GetProgramByIdAnalyticsResponse = GetProgramByIdAnalyticsResponses[keyof GetProgramByIdAnalyticsResponses];
+
+export type GetProgramByIdAnalyticsCompletionRatesData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/analytics/completion-rates';
+};
+
+export type GetProgramByIdAnalyticsCompletionRatesResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsCompletionRatesDto;
+};
+
+export type GetProgramByIdAnalyticsCompletionRatesResponse =
+  GetProgramByIdAnalyticsCompletionRatesResponses[keyof GetProgramByIdAnalyticsCompletionRatesResponses];
+
+export type GetProgramByIdAnalyticsEngagementData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/analytics/engagement';
+};
+
+export type GetProgramByIdAnalyticsEngagementResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsEngagementMetricsDto;
+};
+
+export type GetProgramByIdAnalyticsEngagementResponse = GetProgramByIdAnalyticsEngagementResponses[keyof GetProgramByIdAnalyticsEngagementResponses];
+
+export type GetProgramByIdAnalyticsRevenueData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/analytics/revenue';
+};
+
+export type GetProgramByIdAnalyticsRevenueResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsRevenueAnalyticsDto;
+};
+
+export type GetProgramByIdAnalyticsRevenueResponse = GetProgramByIdAnalyticsRevenueResponses[keyof GetProgramByIdAnalyticsRevenueResponses];
+
+export type PostProgramByIdCreateProductData = {
+  body?: GameGuildModulesProgramsCreateProductFromProgramDto;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/create-product';
+};
+
+export type PostProgramByIdCreateProductResponses = {
+  /**
+   * OK
+   */
+  200: string;
+};
+
+export type PostProgramByIdCreateProductResponse = PostProgramByIdCreateProductResponses[keyof PostProgramByIdCreateProductResponses];
+
+export type DeleteProgramByIdLinkProductByProductIdData = {
+  body?: never;
+  path: {
+    id: string;
+    productId: string;
+  };
+  query?: never;
+  url: '/program/{id}/link-product/{productId}';
+};
+
+export type DeleteProgramByIdLinkProductByProductIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostProgramByIdLinkProductByProductIdData = {
+  body?: never;
+  path: {
+    id: string;
+    productId: string;
+  };
+  query?: never;
+  url: '/program/{id}/link-product/{productId}';
+};
+
+export type PostProgramByIdLinkProductByProductIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetProgramByIdProductsData = {
+  body?: never;
+  path: {
+    id: string;
+  };
+  query?: never;
+  url: '/program/{id}/products';
+};
+
+export type GetProgramByIdProductsResponses = {
+  /**
+   * OK
+   */
+  200: Array<string>;
+};
+
+export type GetProgramByIdProductsResponse = GetProgramByIdProductsResponses[keyof GetProgramByIdProductsResponses];
+
+export type GetApiProgramsByProgramIdContentData = {
+  body?: never;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content';
+};
+
+export type GetApiProgramsByProgramIdContentResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsProgramContentDto>;
+};
+
+export type GetApiProgramsByProgramIdContentResponse = GetApiProgramsByProgramIdContentResponses[keyof GetApiProgramsByProgramIdContentResponses];
+
+export type PostApiProgramsByProgramIdContentData = {
+  body?: GameGuildModulesProgramsCreateProgramContentDto;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content';
+};
+
+export type PostApiProgramsByProgramIdContentResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsProgramContentDto;
+};
+
+export type PostApiProgramsByProgramIdContentResponse = PostApiProgramsByProgramIdContentResponses[keyof PostApiProgramsByProgramIdContentResponses];
+
+export type GetApiProgramsByProgramIdContentTopLevelData = {
+  body?: never;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/top-level';
+};
+
+export type GetApiProgramsByProgramIdContentTopLevelResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsProgramContentDto>;
+};
+
+export type GetApiProgramsByProgramIdContentTopLevelResponse =
+  GetApiProgramsByProgramIdContentTopLevelResponses[keyof GetApiProgramsByProgramIdContentTopLevelResponses];
+
+export type DeleteApiProgramsByProgramIdContentByIdData = {
+  body?: never;
+  path: {
+    programId: string;
+    id: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/{id}';
+};
+
+export type DeleteApiProgramsByProgramIdContentByIdResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiProgramsByProgramIdContentByIdData = {
+  body?: never;
+  path: {
+    programId: string;
+    id: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/{id}';
+};
+
+export type GetApiProgramsByProgramIdContentByIdResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsProgramContentDto;
+};
+
+export type GetApiProgramsByProgramIdContentByIdResponse = GetApiProgramsByProgramIdContentByIdResponses[keyof GetApiProgramsByProgramIdContentByIdResponses];
+
+export type PutApiProgramsByProgramIdContentByIdData = {
+  body?: GameGuildModulesProgramsUpdateProgramContentDto;
+  path: {
+    programId: string;
+    id: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/{id}';
+};
+
+export type PutApiProgramsByProgramIdContentByIdResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsProgramContentDto;
+};
+
+export type PutApiProgramsByProgramIdContentByIdResponse = PutApiProgramsByProgramIdContentByIdResponses[keyof PutApiProgramsByProgramIdContentByIdResponses];
+
+export type GetApiProgramsByProgramIdContentByParentIdChildrenData = {
+  body?: never;
+  path: {
+    programId: string;
+    parentId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/{parentId}/children';
+};
+
+export type GetApiProgramsByProgramIdContentByParentIdChildrenResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsProgramContentDto>;
+};
+
+export type GetApiProgramsByProgramIdContentByParentIdChildrenResponse =
+  GetApiProgramsByProgramIdContentByParentIdChildrenResponses[keyof GetApiProgramsByProgramIdContentByParentIdChildrenResponses];
+
+export type PostApiProgramsByProgramIdContentReorderData = {
+  body?: GameGuildModulesProgramsReorderContentDto;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/reorder';
+};
+
+export type PostApiProgramsByProgramIdContentReorderResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type PostApiProgramsByProgramIdContentByIdMoveData = {
+  body?: GameGuildModulesProgramsMoveContentDto;
+  path: {
+    programId: string;
+    id: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/{id}/move';
+};
+
+export type PostApiProgramsByProgramIdContentByIdMoveResponses = {
+  /**
+   * OK
+   */
+  200: unknown;
+};
+
+export type GetApiProgramsByProgramIdContentRequiredData = {
+  body?: never;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/required';
+};
+
+export type GetApiProgramsByProgramIdContentRequiredResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsProgramContentDto>;
+};
+
+export type GetApiProgramsByProgramIdContentRequiredResponse =
+  GetApiProgramsByProgramIdContentRequiredResponses[keyof GetApiProgramsByProgramIdContentRequiredResponses];
+
+export type GetApiProgramsByProgramIdContentByTypeByTypeData = {
+  body?: never;
+  path: {
+    programId: string;
+    type: GameGuildModulesProgramsModelsProgramContentType;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/by-type/{type}';
+};
+
+export type GetApiProgramsByProgramIdContentByTypeByTypeResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsProgramContentDto>;
+};
+
+export type GetApiProgramsByProgramIdContentByTypeByTypeResponse =
+  GetApiProgramsByProgramIdContentByTypeByTypeResponses[keyof GetApiProgramsByProgramIdContentByTypeByTypeResponses];
+
+export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityData = {
+  body?: never;
+  path: {
+    programId: string;
+    visibility: GameGuildModulesProgramsModelsVisibility;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/by-visibility/{visibility}';
+};
+
+export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsProgramContentDto>;
+};
+
+export type GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponse =
+  GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses[keyof GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses];
+
+export type PostApiProgramsByProgramIdContentSearchData = {
+  body?: GameGuildModulesProgramsSearchContentDto;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/search';
+};
+
+export type PostApiProgramsByProgramIdContentSearchResponses = {
+  /**
+   * OK
+   */
+  200: Array<GameGuildModulesProgramsProgramContentDto>;
+};
+
+export type PostApiProgramsByProgramIdContentSearchResponse =
+  PostApiProgramsByProgramIdContentSearchResponses[keyof PostApiProgramsByProgramIdContentSearchResponses];
+
+export type GetApiProgramsByProgramIdContentStatsData = {
+  body?: never;
+  path: {
+    programId: string;
+  };
+  query?: never;
+  url: '/api/programs/{programId}/content/stats';
+};
+
+export type GetApiProgramsByProgramIdContentStatsResponses = {
+  /**
+   * OK
+   */
+  200: GameGuildModulesProgramsContentStatsDto;
+};
+
+export type GetApiProgramsByProgramIdContentStatsResponse =
+  GetApiProgramsByProgramIdContentStatsResponses[keyof GetApiProgramsByProgramIdContentStatsResponses];
 
 export type GetApiV1TenantsByTenantIdQuotasData = {
   body?: never;
