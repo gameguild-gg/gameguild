@@ -6,6 +6,7 @@ import { PythonRunner } from './python-runner'
 import { LuaRunner } from './lua-runner'
 import { CppRunner } from './cpp-runner'
 import { CRunner } from './c-runner'
+import { PhpRunner } from './php-runner'
 
 export class UnifiedCodeRunner {
   private runners: Map<SupportedLanguage, CodeRunner> = new Map()
@@ -103,9 +104,11 @@ export class UnifiedCodeRunner {
       case 'c':
         return new CRunner(this.options)
       
+      case 'php':
+        return new PhpRunner(this.options)
+      
       case 'rust':
       case 'csharp':
-      case 'php':
       case 'gdscript':
       case 'sql':
         throw new Error(`Runner for ${language} not implemented yet`)
@@ -123,4 +126,5 @@ export { PythonRunner } from './python-runner'
 export { LuaRunner } from './lua-runner'
 export { CppRunner } from './cpp-runner'
 export { CRunner } from './c-runner'
+export { PhpRunner } from './php-runner'
 export { setDownloadNotificationCallback, clearWasmCache } from './wasm-loader'
