@@ -179,14 +179,14 @@ export const MODE_CONFIGS: Record<CodeStudioMode, ModeConfig> = {
     label: "Execution Mode",
     description: "Write and execute code with real-time output console. Perfect for development and debugging.",
     icon: "Play",
-    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "php"],
+    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "php", "sql"],
   },
   test: {
     id: "test",
     label: "Test Mode",
     description: "Run automated test cases against your code. Validate inputs, outputs, and expected behaviors.",
     icon: "TestTube",
-    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "php"],
+    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "php", "sql"],
   },
 }
 

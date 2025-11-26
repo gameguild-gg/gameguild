@@ -121,6 +121,21 @@ interface RunnerOptions {
   - Runs as php-cgi with CGI environment
   - HTTP headers are automatically stripped from output
   - Supports multi-file projects with `require/include`
+
+### ✅ SQL
+- **Engine**: SQLite 3.x (WASM)
+- **Execution**: WASI runtime in Web Worker
+- **Features**: Full SQLite SQL dialect, in-memory database
+- **Size**: ~1.23MB (gzip compressed)
+- **Source**: `/langs/sqlite.wasm.gz`
+- **Progress Stages**:
+  1. Loading SQLite...
+  2. Running SQL queries...
+- **Notes**: 
+  - Uses `.read` command to execute SQL scripts
+  - In-memory database (resets between executions)
+  - Supports CREATE TABLE, INSERT, SELECT, UPDATE, DELETE, etc.
+  - Full SQLite3 SQL syntax support
 - **Compilation**: 3-stage process (compile → link → execute)
 - **Size**: ~10MB clang + ~1.7MB stdlib (gzip compressed)
 - **Source**: `/langs/clang.wasm.gz`, `/langs/wasm-ld.wasm.gz`, `/langs/clang-fs.tar.gz`

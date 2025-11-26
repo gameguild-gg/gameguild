@@ -129,6 +129,7 @@ interface CodeRunner {
 - **Python** (`python-runner.ts`): Pyodide (Python in WASM)
 - **Lua** (`lua-runner.ts`): Fengari (Lua in WASM)
 - **PHP** (`php-runner.ts`): PHP-CGI 8.2.0 (WASI runtime)
+- **SQL** (`sql-runner.ts`): SQLite 3.x (WASI runtime)
 
 ##### Compiled Languages (3-stage pipeline)
 - **C** (`c-runner.ts`): clang → wasm-ld → WASI execution
@@ -224,13 +225,14 @@ interface CachedFileSystem {
 - `wasm-ld.wasm.gz`: ~6.46 MB (LLVM linker)
 - `clang-fs.tar.gz`: ~1.71 MB (409 files: C/C++ headers + runtime libraries)
 - `php-cgi.wasm.gz`: ~3.95 MB (PHP 8.2.0 interpreter)
+- `sqlite.wasm.gz`: ~1.23 MB (SQLite 3.x database engine)
 - `pyodide.asm.wasm.gz`: ~3.07 MB (Python interpreter via Pyodide)
 - `pyodide.asm.js.gz`: ~0.22 MB (Pyodide runtime)
 - `python_stdlib.zip`: ~2.23 MB (Python standard library)
 - `esbuild.wasm.gz`: ~3.46 MB (TypeScript/JavaScript bundler)
 - `quickjs-asyncify.wasm.gz`: ~0.37 MB (QuickJS engine)
 
-**Total compressed size:** ~31.6 MB
+**Total compressed size:** ~32.85 MB
 
 ### 6. Terminal Integration
 
@@ -258,7 +260,7 @@ interface CachedFileSystem {
 - Progressive compilation feedback
 
 **Supported Languages:**
-JavaScript, TypeScript, Python, Lua, C, C++, PHP
+JavaScript, TypeScript, Python, Lua, C, C++, PHP, SQL
 
 #### Test Mode (`test`)
 - Automated test case execution
@@ -270,7 +272,7 @@ JavaScript, TypeScript, Python, Lua, C, C++, PHP
 - Pass/fail indicators
 
 **Supported Languages:**
-JavaScript, TypeScript, Python, Lua, C, C++, PHP
+JavaScript, TypeScript, Python, Lua, C, C++, PHP, SQL
 
 ### 8. Settings & Configuration
 
