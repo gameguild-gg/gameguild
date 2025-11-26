@@ -1,4 +1,5 @@
 using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Models;
 using System.Text.Json;
 
 
@@ -46,8 +47,8 @@ public static class ProgramContentMappingExtensions {
       Body = dto.Body,
       SortOrder = dto.SortOrder,
       IsRequired = dto.IsRequired,
-      GradingMethod = dto.GradingMethod,
-      MaxPoints = dto.MaxPoints,
+      GradingMethod = dto.GradingMethod ?? GradingMethod.None,
+      MaxPoints = (int?)dto.MaxPoints,
       EstimatedMinutes = dto.EstimatedMinutes,
       Visibility = dto.Visibility,
     };
@@ -61,8 +62,8 @@ public static class ProgramContentMappingExtensions {
     if (dto.Body != null) content.Body = dto.Body;
     if (dto.SortOrder != null) content.SortOrder = dto.SortOrder.Value;
     if (dto.IsRequired != null) content.IsRequired = dto.IsRequired.Value;
-    if (dto.GradingMethod != null) content.GradingMethod = dto.GradingMethod;
-    if (dto.MaxPoints != null) content.MaxPoints = dto.MaxPoints;
+    if (dto.GradingMethod != null) content.GradingMethod = dto.GradingMethod.Value;
+    if (dto.MaxPoints != null) content.MaxPoints = (int?)dto.MaxPoints;
     if (dto.EstimatedMinutes != null) content.EstimatedMinutes = dto.EstimatedMinutes;
     if (dto.Visibility != null) content.Visibility = dto.Visibility.Value;
   }

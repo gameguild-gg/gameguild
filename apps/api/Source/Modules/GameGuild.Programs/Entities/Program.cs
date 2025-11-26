@@ -44,9 +44,10 @@ public class Program : EntityBase {
     public AccessLevel Visibility { get; set; } = AccessLevel.Public;
 
     /// <summary>
-    /// Resource metadata (TODO: Implement ResourceMetadata type)
+    /// Metadata as JSON dictionary for storing additional properties
     /// </summary>
-    // public ResourceMetadata? Metadata { get; set; }
+    [MaxLength(4000)]
+    public string? Metadata { get; set; }
 
     /// <summary>
     /// URL-friendly identifier
@@ -237,5 +238,31 @@ public class Program : EntityBase {
             return false;
 
         return true;
+    }
+
+    /// <summary>
+    /// Sets a metadata value by key
+    /// </summary>
+    public void SetMetadata(string key, object value) {
+        var dict = GetMetadataDict();
+        dict[key] = value;
+        Metadata = System.Text.Json.JsonSerializer.Serialize(dict);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Gets the metadata dictionary
+    /// </summary>
+    private Dictionary<string, object> GetMetadataDict() {
+        if (string.IsNullOrWhiteSpace(Metadata))
+            return new Dictionary<string, object>();
+
+        try {
+            return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(Metadata)
+                   ?? new Dictionary<string, object>();
+        }
+        catch {
+            return new Dictionary<string, object>();
+        }
     }
 }
