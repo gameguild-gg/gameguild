@@ -1,3 +1,4 @@
+using GameGuild.Modules.Programs.Entities;
 ﻿namespace GameGuild.Modules.Programs;
 
 /// <summary> Interface for activity grading services </summary>
