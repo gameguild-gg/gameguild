@@ -24,8 +24,8 @@
 .DS_Store
 *.pem
 
-/public/wasm/*
-/apps/web/public/wasm/*
+/public/langs/*
+/apps/web/public/langs/*
 
 # debug
 npm-debug.log*
