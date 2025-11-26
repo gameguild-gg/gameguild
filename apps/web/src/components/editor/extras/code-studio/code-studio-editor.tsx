@@ -104,6 +104,17 @@ export function CodeStudioEditor({
           return await terminalRef.current.requestInput()
         }
         return ""
+      },
+      onProgress: (message: string) => {
+        // Atualizar terminal com mensagens de progresso
+        console.log('[Progress]', message, 'terminal:', !!terminalRef.current)
+        if (terminalRef.current) {
+          try {
+            terminalRef.current.write(`\x1b[36m${message}\x1b[0m\r\n`)
+          } catch (e) {
+            console.error('[Progress] Failed to write:', e)
+          }
+        }
       }
     })
     
@@ -521,7 +532,7 @@ export function CodeStudioEditor({
   }
 
   const handleExecute = async () => {
-    if (!codeRunnerRef.current) return
+    if (!codeRunnerRef.current || !terminalRef.current) return
     
     // Buscar arquivo ativo: primeiro tentar painéis únicos, depois global
     const activeDisplay = getActiveDisplay()
@@ -540,7 +551,11 @@ export function CodeStudioEditor({
     if (!fileToExecute) return
     
     setIsExecuting(true)
-    setOutput('')
+    setOutput('') // Limpar output anterior
+    
+    // Limpar terminal e mostrar início da execução
+    terminalRef.current.write('\x1b[2J\x1b[H') // Clear screen
+    terminalRef.current.write('\x1b[33m⟳ Starting execution...\x1b[0m\r\n')
 
     try {
       // Criar mapa de arquivos para suportar imports
@@ -556,21 +571,23 @@ export function CodeStudioEditor({
         filesMap
       )
 
-      let output = ''
+      // Limpar terminal e mostrar apenas o resultado
+      terminalRef.current.write('\x1b[2J\x1b[H') // Clear screen
+      
+      // Escrever resultado no terminal
       if (result.stdout) {
-        output += result.stdout
+        terminalRef.current.write(result.stdout.replace(/\n/g, '\r\n'))
       }
       if (result.stderr) {
-        output += (output ? '\n' : '') + '\x1b[31m' + result.stderr + '\x1b[0m'
+        if (result.stdout) terminalRef.current.write('\r\n')
+        terminalRef.current.write('\x1b[31m' + result.stderr.replace(/\n/g, '\r\n') + '\x1b[0m')
       }
       if (result.exitCode !== 0) {
-        output += (output ? '\n' : '') + `\x1b[33m[Process exited with code ${result.exitCode}]\x1b[0m`
+        terminalRef.current.write(`\r\n\x1b[33m[Process exited with code ${result.exitCode}]\x1b[0m`)
       }
-      output += `\n\x1b[90m[Execution time: ${result.executionTime.toFixed(2)}ms]\x1b[0m`
-
-      setOutput(output)
+      terminalRef.current.write(`\r\n\x1b[90m[Execution time: ${result.executionTime.toFixed(2)}ms]\x1b[0m\r\n`)
     } catch (error) {
-      setOutput(`\x1b[31mExecution error: ${error instanceof Error ? error.message : String(error)}\x1b[0m`)
+      terminalRef.current.write(`\r\n\x1b[31mExecution error: ${error instanceof Error ? error.message : String(error)}\x1b[0m\r\n`)
     } finally {
       setIsExecuting(false)
     }
