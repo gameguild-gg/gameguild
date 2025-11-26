@@ -25,6 +25,26 @@ export type SupportedLanguage =
   | "json"
   | "yaml"
   | "xml"
+  | "gdscript"
+  | "lexical"
+  | "prolog"
+  | "pascal"
+  | "fsharp"
+  | "haskell"
+  | "perl"
+  | "groovy"
+  | "elixir"
+  | "clojure"
+  | "erlang"
+  | "fortran"
+  | "ada"
+  | "cobol"
+  | "assembly_x86"
+  | "assembly_arm"
+  | "assembly_mips"
+  | "assembly_riscv"
+  | "assembly_powerpc"
+  | "webassembly"
 
 export type EditorMode = 
   | "execution"  // Executa código com console na direita
@@ -220,8 +240,7 @@ export const LANGUAGE_CONFIGS: Record<
     monacoLanguage: "cpp",
     defaultExtension: ".cpp",
     supportsExecution: true,
-    defaultTemplate:
-      '#include <iostream>\n\nint main() {\n    std::cout << "Hello, World!" << std::endl;\n    return 0;\n}',
+    defaultTemplate: '#include <iostream>\n\nint main() {\n    std::cout << "Hello, World!" << std::endl;\n    return 0;\n}',
   },
   html: {
     label: "HTML",
@@ -262,14 +281,14 @@ export const LANGUAGE_CONFIGS: Record<
     label: "Rust",
     monacoLanguage: "rust",
     defaultExtension: ".rs",
-    supportsExecution: false,
+    supportsExecution: true,
     defaultTemplate: 'fn main() {\n    println!("Hello, World!");\n}',
   },
   php: {
     label: "PHP",
     monacoLanguage: "php",
     defaultExtension: ".php",
-    supportsExecution: false,
+    supportsExecution: true,
     defaultTemplate: '<?php\necho "Hello, World!";\n?>',
   },
   ruby: {
@@ -297,14 +316,14 @@ export const LANGUAGE_CONFIGS: Record<
     label: "C#",
     monacoLanguage: "csharp",
     defaultExtension: ".cs",
-    supportsExecution: false,
+    supportsExecution: true,
     defaultTemplate: 'using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}',
   },
   sql: {
     label: "SQL",
     monacoLanguage: "sql",
     defaultExtension: ".sql",
-    supportsExecution: false,
+    supportsExecution: true,
     defaultTemplate: '-- Write your SQL code here\nSELECT \'Hello, World!\' AS greeting;',
   },
   bash: {
@@ -363,6 +382,146 @@ export const LANGUAGE_CONFIGS: Record<
     supportsExecution: false,
     defaultTemplate: '<?xml version="1.0" encoding="UTF-8"?>\n<root>\n  <message>Hello, World!</message>\n</root>',
   },
+  gdscript: {
+    label: "GDScript",
+    monacoLanguage: "gdscript",
+    defaultExtension: ".gd",
+    supportsExecution: true,
+    defaultTemplate: "# Write your GDScript code here\nextends Node\n\nfunc _ready():\n    print(\"Hello, World!\")"
+  },
+  lexical: {
+    label: "Lexical",
+    monacoLanguage: "lexical",
+    defaultExtension: ".lsp",
+    supportsExecution: false,
+    defaultTemplate: "% Write your Lexical code here\n"
+  },
+  prolog: {
+    label: "Prolog",
+    monacoLanguage: "prolog",
+    defaultExtension: ".pl",
+    supportsExecution: false,
+    defaultTemplate: "% Write your Prolog code here\nhello :- write('Hello, World!'), nl.\n"
+  },
+  pascal: {
+    label: "Pascal",
+    monacoLanguage: "pascal",
+    defaultExtension: ".pas",
+    supportsExecution: false,
+    defaultTemplate: "program HelloWorld;\nbegin\n  WriteLn('Hello, World!');\nend."
+  },
+  fsharp: {
+    label: "F#",
+    monacoLanguage: "fsharp",
+    defaultExtension: ".fs",
+    supportsExecution: false,
+    defaultTemplate: "// Write your F# code here\nprintfn \"Hello, World!\""
+  },
+  haskell: {
+    label: "Haskell",
+    monacoLanguage: "haskell",
+    defaultExtension: ".hs",
+    supportsExecution: false,
+    defaultTemplate: "-- Write your Haskell code here\nmain :: IO ()\nmain = putStrLn \"Hello, World!\""
+  },
+  perl: {
+    label: "Perl",
+    monacoLanguage: "perl",
+    defaultExtension: ".pl",
+    supportsExecution: false,
+    defaultTemplate: "#!/usr/bin/perl\n# Write your Perl code here\nprint \"Hello, World!\\n\";"
+  },
+  groovy: {
+    label: "Groovy",
+    monacoLanguage: "groovy",
+    defaultExtension: ".groovy",
+    supportsExecution: false,
+    defaultTemplate: "// Write your Groovy code here\nprintln 'Hello, World!'"
+  },
+  elixir: {
+    label: "Elixir",
+    monacoLanguage: "elixir",
+    defaultExtension: ".ex",
+    supportsExecution: false,
+    defaultTemplate: "# Write your Elixir code here\nIO.puts \"Hello, World!\""
+  },
+  clojure: {
+    label: "Clojure",
+    monacoLanguage: "clojure",
+    defaultExtension: ".clj",
+    supportsExecution: false,
+    defaultTemplate: "; Write your Clojure code here\n(println \"Hello, World!\")"
+  },
+  erlang: {
+    label: "Erlang",
+    monacoLanguage: "erlang",
+    defaultExtension: ".erl",
+    supportsExecution: false,
+    defaultTemplate: "% Write your Erlang code here\n-module(hello).\n-export([world/0]).\n\nworld() -> io:format(\"Hello, World!~n\")."
+  },
+  fortran: {
+    label: "Fortran",
+    monacoLanguage: "fortran",
+    defaultExtension: ".f90",
+    supportsExecution: false,
+    defaultTemplate: "! Write your Fortran code here\nprogram hello\n  print *, 'Hello, World!'\nend program hello"
+  },
+  ada: {
+    label: "Ada",
+    monacoLanguage: "ada",
+    defaultExtension: ".adb",
+    supportsExecution: false,
+    defaultTemplate: "-- Write your Ada code here\nwith Ada.Text_IO; use Ada.Text_IO;\n\nprocedure Hello is\nbegin\n   Put_Line(\"Hello, World!\");\nend Hello;"
+  },
+  cobol: {
+    label: "COBOL",
+    monacoLanguage: "cobol",
+    defaultExtension: ".cob",
+    supportsExecution: false,
+    defaultTemplate: "       IDENTIFICATION DIVISION.\n       PROGRAM-ID. HELLO.\n       PROCEDURE DIVISION.\n           DISPLAY 'Hello, World!'.\n           STOP RUN."
+  },
+  assembly_x86: {
+    label: "Assembly (x86)",
+    monacoLanguage: "asm",
+    defaultExtension: ".asm",
+    supportsExecution: false,
+    defaultTemplate: "; Write your x86 Assembly code here\nsection .data\n    msg db 'Hello, World!', 0xa\n    len equ $ - msg\n\nsection .text\n    global _start\n\n_start:\n    mov eax, 4\n    mov ebx, 1\n    mov ecx, msg\n    mov edx, len\n    int 0x80\n\n    mov eax, 1\n    xor ebx, ebx\n    int 0x80"
+  },
+  assembly_arm: {
+    label: "Assembly (ARM)",
+    monacoLanguage: "asm",
+    defaultExtension: ".arm",
+    supportsExecution: false,
+    defaultTemplate: "; Write your ARM Assembly code here\n.global _start\n\n.section .data\nmsg:\n    .ascii \"Hello, World!\\n\"\n    len = . - msg\n\n.section .text\n_start:\n    mov r0, #1\n    ldr r1, =msg\n    ldr r2, =len\n    mov r7, #4\n    svc #0\n\n    mov r0, #0\n    mov r7, #1\n    svc #0"
+  },
+  assembly_mips: {
+    label: "Assembly (MIPS)",
+    monacoLanguage: "mips",
+    defaultExtension: ".mips",
+    supportsExecution: false,
+    defaultTemplate: "# Write your MIPS Assembly code here\n.data\n    msg: .asciiz \"Hello, World!\\n\"\n\n.text\n.globl main\n\nmain:\n    li $v0, 4\n    la $a0, msg\n    syscall\n\n    li $v0, 10\n    syscall"
+  },
+  assembly_riscv: {
+    label: "Assembly (RISC-V)",
+    monacoLanguage: "riscv",
+    defaultExtension: ".riscv",
+    supportsExecution: false,
+    defaultTemplate: "# Write your RISC-V Assembly code here\n.section .data\nmsg:\n    .string \"Hello, World!\\n\"\n\n.section .text\n.globl _start\n\n_start:\n    li a0, 1\n    la a1, msg\n    li a2, 14\n    li a7, 64\n    ecall\n\n    li a0, 0\n    li a7, 93\n    ecall"
+  },
+  assembly_powerpc: {
+    label: "Assembly (PowerPC)",
+    monacoLanguage: "powerpc",
+    defaultExtension: ".ppc",
+    supportsExecution: false,
+    defaultTemplate: "# Write your PowerPC Assembly code here\n.section .data\nmsg:\n    .string \"Hello, World!\\n\"\n\n.section .text\n.globl _start\n\n_start:\n    li 0, 4\n    lis 3, msg@ha\n    addi 3, 3, msg@l\n    li 4, 14\n    sc\n\n    li 0, 1\n    li 3, 0\n    sc"
+  },
+  webassembly: {
+    label: "WebAssembly",
+    monacoLanguage: "wasm",
+    defaultExtension: ".wat",
+    supportsExecution: false,
+    defaultTemplate: ";; Write your WebAssembly Text Format code here\n(module\n  (func $main (export \"main\")\n    ;; Your code here\n  )\n)"
+  }
 }
 
 // Helper function to detect language from file extension
@@ -408,6 +567,46 @@ export function getLanguageFromExtension(filename: string): SupportedLanguage {
     case 'yaml':
     case 'yml': return 'yaml'
     case 'xml': return 'xml'
+    case 'gd': return 'gdscript'
+    case 'lsp':
+    case 'lexical': return 'lexical'
+    case 'pl':
+    case 'pro': return 'prolog'
+    case 'pas':
+    case 'pp': return 'pascal'
+    case 'fs':
+    case 'fsi':
+    case 'fsx': return 'fsharp'
+    case 'hs':
+    case 'lhs': return 'haskell'
+    case 'pl':
+    case 'pm': return 'perl'
+    case 'groovy':
+    case 'gvy': return 'groovy'
+    case 'ex':
+    case 'exs': return 'elixir'
+    case 'clj':
+    case 'cljs':
+    case 'cljc': return 'clojure'
+    case 'erl':
+    case 'hrl': return 'erlang'
+    case 'f':
+    case 'for':
+    case 'f90':
+    case 'f95': return 'fortran'
+    case 'ada':
+    case 'adb':
+    case 'ads': return 'ada'
+    case 'cob':
+    case 'cbl': return 'cobol'
+    case 'asm':
+    case 's': return 'assembly_x86'
+    case 'arm': return 'assembly_arm'
+    case 'mips': return 'assembly_mips'
+    case 'riscv': return 'assembly_riscv'
+    case 'ppc': return 'assembly_powerpc'
+    case 'wasm':
+    case 'wat': return 'webassembly'
     default: return 'javascript'
   }
 }
