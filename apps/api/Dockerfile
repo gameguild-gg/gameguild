@@ -1,22 +1,17 @@
 ﻿# Stage 1: Build stage
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
-COPY ["GameGuild.sln", "."]
-COPY ["GameGuild.csproj", "."]
-
-# Restore dependencies
-RUN dotnet restore "GameGuild.csproj"
-
-# Copy source code
 COPY . .
 
+# Restore dependencies
+RUN dotnet restore "GameGuild.Production.sln"
+
 # Build the application
-RUN dotnet build "GameGuild.csproj" -c Release -o /app/build
+RUN dotnet build "GameGuild.Production.sln" -c Release -o /app/build
 
 # Publish the application
-RUN dotnet publish "GameGuild.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Source/GameGuild.API/GameGuild.API.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 2: Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime
@@ -35,7 +30,7 @@ COPY --from=build --chown=appuser:appuser /app/publish .
 USER appuser
 
 # Expose port
-EXPOSE 5000
+EXPOSE 5295
 
 # Set environment variables
 ENV ASPNETCORE_URLS=http://+:5295 \
@@ -49,7 +44,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:5295/health || exit 1
 
 # Entry point
-ENTRYPOINT ["dotnet", "GameGuild.dll"]
+ENTRYPOINT ["dotnet", "GameGuild.API.dll"]
 
 #
 #FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
