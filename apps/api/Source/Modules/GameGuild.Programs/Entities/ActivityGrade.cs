@@ -1,4 +1,10 @@
-using GameGuild.Modules.Users;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
+using GameGuild.Users;
 
 
 namespace GameGuild.Modules.Programs.Entities;
@@ -45,8 +51,17 @@ public class ActivityGrade : EntityBase
     /// Points awarded (0-100 scale)
     /// </summary>
     [Column(TypeName = "decimal(5,2)")]
-    public decimal? Points { get; set; }
+        public decimal? Points { get; set; }
 
+        /// <summary>
+        /// Compatibility shim for legacy services referencing Grade property
+        /// </summary>
+        [NotMapped]
+        public decimal Grade
+        {
+            get => Points ?? 0m;
+            set => Points = value;
+        }
     /// <summary>
     /// Maximum points possible for this activity
     /// </summary>
@@ -57,7 +72,7 @@ public class ActivityGrade : EntityBase
     /// Grade letter/symbol (A, B, C, etc.)
     /// </summary>
     [MaxLength(10)]
-    public string? Grade { get; set; }
+    public string? GradeLetter { get; set; }
 
     /// <summary>
     /// Grader feedback/comments
@@ -115,6 +130,21 @@ public class ActivityGrade : EntityBase
     /// </summary>
     public virtual ProgramUser ProgramUser { get; set; } = null!;
 
+    /// <summary>
+    /// Grader's program user record (for tracking which program user did the grading)
+    /// </summary>
+    public virtual ProgramUser? GraderProgramUser { get; set; }
+
+    /// <summary>
+    /// Grader program user ID
+    /// </summary>
+    public Guid? GraderProgramUserId { get; set; }
+
+    /// <summary>
+    /// Detailed grading information (JSON format)
+    /// </summary>
+    public string? GradingDetails { get; set; }
+
     // Computed Properties
     /// <summary>
     /// Whether this grade is global (tenant-independent)
@@ -164,7 +194,7 @@ public class ActivityGrade : EntityBase
     /// </summary>
     public void SetLetterGrade(string grade)
     {
-        Grade = grade?.ToUpper();
+        GradeLetter = grade?.ToUpper();
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -269,8 +299,8 @@ public class ActivityGrade : EntityBase
             ProgramUserId = ProgramUserId,
             Points = newPoints,
             MaxPoints = MaxPoints,
-            Grade = CalculateLetterGrade(),
-            Feedback = reason != null ? $"Revision: {reason}\n\nOriginal feedback: {Feedback}" : Feedback,
+            GradeLetter = CalculateLetterGrade(),
+            Feedback = reason != null ? $"Revision: {reason}\\n\\nOriginal feedback: {Feedback}" : Feedback,
             GradedAt = DateTime.UtcNow,
             IsFinalized = false,
             GradeType = GradeType,
@@ -278,17 +308,4 @@ public class ActivityGrade : EntityBase
             TenantId = TenantId
         };
     }
-}
-
-/// <summary>
-/// Types of grades
-/// </summary>
-public enum GradeType
-{
-    Manual = 0,
-    Automatic = 1,
-    PeerReview = 2,
-    SelfAssessment = 3,
-    InstructorReview = 4,
-    SystemGenerated = 5
 }
