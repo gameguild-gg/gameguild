@@ -5,6 +5,7 @@ import { TypeScriptRunner } from './typescript-runner'
 import { PythonRunner } from './python-runner'
 import { LuaRunner } from './lua-runner'
 import { CppRunner } from './cpp-runner'
+import { CRunner } from './c-runner'
 
 export class UnifiedCodeRunner {
   private runners: Map<SupportedLanguage, CodeRunner> = new Map()
@@ -100,6 +101,8 @@ export class UnifiedCodeRunner {
         return new CppRunner(this.options)
       
       case 'c':
+        return new CRunner(this.options)
+      
       case 'rust':
       case 'csharp':
         throw new Error(`Runner for ${language} not implemented yet`)
@@ -116,4 +119,5 @@ export { TypeScriptRunner } from './typescript-runner'
 export { PythonRunner } from './python-runner'
 export { LuaRunner } from './lua-runner'
 export { CppRunner } from './cpp-runner'
+export { CRunner } from './c-runner'
 export { setDownloadNotificationCallback, clearWasmCache } from './wasm-loader'
