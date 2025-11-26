@@ -39,18 +39,18 @@ const nextConfig: NextConfig = {
     return [
       // WASM files
       {
-        source: '/wasm/:file*.wasm',
-        destination: '/wasm/:file*.wasm.gz',
+        source: '/langs/:file*.wasm',
+        destination: '/langs/:file*.wasm.gz',
       },
       // WASM directory JS files (pyodide.asm.js)
       {
-        source: '/wasm/:file*.js',
-        destination: '/wasm/:file*.js.gz',
+        source: '/langs/:file*.js',
+        destination: '/langs/:file*.js.gz',
       },
       // WASM directory JSON files (pyodide-lock.json)
       {
-        source: '/wasm/:file*.json',
-        destination: '/wasm/:file*.json.gz',
+        source: '/langs/:file*.json',
+        destination: '/langs/:file*.json.gz',
       },
       // Pyodide loader JS (kept in /pyodide/)
       {
@@ -62,6 +62,20 @@ const nextConfig: NextConfig = {
   // Set headers for compressed files
   async headers() {
     return [
+      // Enable SharedArrayBuffer for @runno/runtime (required for WASM threads)
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'require-corp',
+          },
+        ],
+      },
       {
         source: '/wasm/:path*.wasm',
         headers: [
@@ -77,10 +91,35 @@ const nextConfig: NextConfig = {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
           },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
         ],
       },
       {
-        source: '/wasm/:path*.js',
+        source: '/langs/:path*.wasm',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/wasm',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/langs/:path*.js',
         headers: [
           {
             key: 'Content-Encoding',
@@ -94,10 +133,14 @@ const nextConfig: NextConfig = {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
           },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
         ],
       },
       {
-        source: '/wasm/:path*.json',
+        source: '/langs/:path*.json',
         headers: [
           {
             key: 'Content-Encoding',
@@ -111,10 +154,14 @@ const nextConfig: NextConfig = {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
           },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
         ],
       },
       {
-        source: '/wasm/:path*.zip',
+        source: '/langs/:path*.zip',
         headers: [
           {
             key: 'Content-Type',
@@ -123,6 +170,10 @@ const nextConfig: NextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
           },
         ],
       },
@@ -140,6 +191,10 @@ const nextConfig: NextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
           },
         ],
       },
