@@ -105,6 +105,9 @@ export class UnifiedCodeRunner {
       
       case 'rust':
       case 'csharp':
+      case 'php':
+      case 'gdscript':
+      case 'sql':
         throw new Error(`Runner for ${language} not implemented yet`)
       
       default:
