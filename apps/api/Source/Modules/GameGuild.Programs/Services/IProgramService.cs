@@ -1,3 +1,8 @@
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.SharedKernel.Enums;
+
 namespace GameGuild.Modules.Programs;
 
 /// <summary>

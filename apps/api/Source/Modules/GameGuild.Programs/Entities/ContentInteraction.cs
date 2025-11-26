@@ -1,4 +1,11 @@
-using GameGuild.Modules.Users;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
+using GameGuild.Users;
 
 
 namespace GameGuild.Modules.Programs.Entities;
@@ -62,9 +69,38 @@ public class ContentInteraction : EntityBase
     public DateTime? CompletedAt { get; set; }
 
     /// <summary>
+    /// Current status of the interaction
+    /// </summary>
+    public ProgressStatus Status { get; set; } = ProgressStatus.NotStarted;
+
+    /// <summary>
+    /// When the user submitted their work (for assignments)
+    /// </summary>
+    public DateTime? SubmittedAt { get; set; }
+
+    /// <summary>
+    /// First time the user accessed this content
+    /// </summary>
+    public DateTime? FirstAccessedAt { get; set; }
+
+    /// <summary>
     /// Last access timestamp
     /// </summary>
     public DateTime? LastAccessedAt { get; set; }
+
+    /// <summary>
+    /// Completion percentage (0-100) - alias for ProgressPercentage
+    /// </summary>
+    public decimal CompletionPercentage
+    {
+        get => ProgressPercentage ?? 0m;
+        set => ProgressPercentage = value;
+    }
+
+    /// <summary>
+    /// Submission data (JSON format for assignments/activities)
+    /// </summary>
+    public string? SubmissionData { get; set; }
 
     /// <summary>
     /// Number of attempts (for quizzes/assignments)
