@@ -1,4 +1,10 @@
-using GameGuild.Modules.Users;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
+using GameGuild.Users;
 
 
 namespace GameGuild.Modules.Programs.Entities;

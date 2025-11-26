@@ -1,8 +1,17 @@
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
 namespace GameGuild.Modules.Programs;
 
+/*
 /// <summary>
 /// Resource-specific permissions for Program entities (Layer 3 of DAC permission system)
 /// Provides granular permission control for individual programs
+/// TODO: Implement proper inheritance when Resources module is available
 /// </summary>
 [Table("ProgramPermissions")]
 [Index(nameof(UserId), nameof(TenantId), nameof(ResourceId), IsUnique = true, Name = "IX_ProgramPermissions_User_Tenant_Resource")]
@@ -155,3 +164,4 @@ public class ProgramPermission : GameGuild.Modules.Resources.ResourcePermission<
   /// </summary>
   public bool CanCreateSeries { get => HasPermission(PermissionType.Series) && !IsExpired; }
 }
+*/

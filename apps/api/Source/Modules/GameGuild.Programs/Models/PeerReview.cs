@@ -1,4 +1,11 @@
-using GameGuild.Modules.Users;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
+using GameGuild.Users;
 
 
 namespace GameGuild.Modules.Programs;
@@ -104,23 +111,4 @@ public class PeerReview : EntityBase {
     ReviewQuality = Math.Max(1, Math.Min(5, quality));
     Touch();
   }
-}
-
-/// <summary> Peer review status enumeration </summary>
-public enum PeerReviewStatus {
-  Assigned = 0,
-
-  InProgress = 1,
-
-  Submitted = 2,
-
-  Accepted = 3,
-
-  Rejected = 4,
-
-  Disputed = 5,
-
-  Expired = 6,
-
-  Cancelled = 7,
 }

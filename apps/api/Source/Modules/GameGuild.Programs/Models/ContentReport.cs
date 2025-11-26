@@ -1,4 +1,9 @@
-using GameGuild.Modules.Users;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
+using GameGuild.Users;
 
 
 namespace GameGuild.Modules.Programs;
@@ -104,19 +109,3 @@ public class ContentReport : EntityBase {
     Touch();
   }
 }
-
-/// <summary> Type of report </summary>
-public enum ReportType {
-  Content = 0, Behavior = 1, PeerReview = 2, Technical = 3, Other = 4,
-}
-
-/// <summary> Subject being reported </summary>
-public enum ReportSubject { Content = 0, User = 1, PeerReview = 2, System = 3 }
-
-/// <summary> Report status </summary>
-public enum ReportStatus {
-  Pending = 0, InReview = 1, Resolved = 2, Dismissed = 3, Escalated = 4,
-}
-
-/// <summary> Report priority </summary>
-public enum ReportPriority { Low = 0, Medium = 1, High = 2, Critical = 3 }

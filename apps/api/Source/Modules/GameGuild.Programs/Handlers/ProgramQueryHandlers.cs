@@ -1,12 +1,17 @@
+using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Database;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Models;
 using GameGuild.Modules.Programs.Queries;
-
+using GameGuild.SharedKernel.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Modules.Programs;
 
 /// <summary> Query handlers for Program data retrieval operations Implements data access logic for program queries with proper filtering and authorization </summary>
-public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQueryHandlers> logger) : IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
+public class ProgramQueryHandlers(IApplicationDbContext context, ILogger<ProgramQueryHandlers> logger) : IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,
                                                                                                         IRequestHandler<GetProgramByIdQuery, Program?>,
                                                                                                         IRequestHandler<GetProgramBySlugQuery, Program?>,
                                                                                                         IRequestHandler<GetPublishedProgramBySlugQuery, Program?>,
@@ -34,7 +39,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     logger.LogInformation("Checking if program {ProgramId} is in wishlist for user {UserId}", request.ProgramId, request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
-    var exists = await context.ProgramWishlists.AnyAsync(pw => pw.ProgramId == request.ProgramId && pw.UserId == userGuid, cancellationToken); // Fixed: use converted Guid
+    var exists = await context.Set<ProgramWishlist>().AnyAsync(pw => pw.ProgramId == request.ProgramId && pw.UserId == userGuid, cancellationToken); // Fixed: use converted Guid
 
     return exists;
   }
@@ -43,7 +48,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     logger.LogInformation("Checking enrollment for user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
-    var enrollment = await context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == userGuid).FirstOrDefaultAsync(cancellationToken);
+    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == userGuid).FirstOrDefaultAsync(cancellationToken);
 
     return enrollment;
   }
@@ -52,7 +57,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<IEnumerable<Program>> Handle(GetAllProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting all programs with filters");
 
-    var query = context.Programs.Where(p => p.DeletedAt == null);
+    var query = context.Set<Program>().Where(p => p.DeletedAt == null);
 
     // Apply filters
     if (!string.IsNullOrEmpty(request.Search)) { query = query.Where(p => p.Title.Contains(request.Search) || p.Description != null && p.Description.Contains(request.Search)); }
@@ -93,7 +98,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     logger.LogInformation("Getting program statistics for creator: {CreatorId}", request.CreatorId);
 
     // CreatorId property doesn't exist in current Program model, return empty statistics for now
-    var query = context.Programs.Where(p => false && p.DeletedAt == null); // Return empty until CreatorId is added to model
+    var query = context.Set<Program>().Where(p => false && p.DeletedAt == null); // Return empty until CreatorId is added to model
 
     if (request.FromDate.HasValue) query = query.Where(p => p.CreatedAt >= request.FromDate.Value);
 
@@ -104,14 +109,14 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
     var programIds = await query.Select(p => p.Id).ToListAsync(cancellationToken);
 
-    var enrollmentQuery = context.ProgramUsers.Where(pu => programIds.Contains(pu.ProgramId));
+    var enrollmentQuery = context.Set<ProgramUser>().Where(pu => programIds.Contains(pu.ProgramId));
     if (request.FromDate.HasValue) enrollmentQuery = enrollmentQuery.Where(pu => pu.JoinedAt >= request.FromDate.Value); // Fixed property name
     if (request.ToDate.HasValue) enrollmentQuery = enrollmentQuery.Where(pu => pu.JoinedAt <= request.ToDate.Value); // Fixed property name
 
     var totalEnrollments = await enrollmentQuery.CountAsync(cancellationToken);
     var activeEnrollments = await enrollmentQuery.Where(pu => pu.IsActive).CountAsync(cancellationToken);
 
-    var ratings = await context.ProgramRatings.Where(pr => programIds.Contains(pr.ProgramId)).ToListAsync(cancellationToken);
+    var ratings = await context.Set<ProgramRating>().Where(pr => programIds.Contains(pr.ProgramId)).ToListAsync(cancellationToken);
 
     var averageRating = ratings.Count > 0 ? ratings.Average(r => r.Rating) : 0;
     var totalRatings = ratings.Count;
@@ -128,7 +133,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     logger.LogInformation("Getting featured programs");
 
     // Note: This is a simplified implementation. You might want to add a "Featured" flag to programs
-    var programs = await context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public)
+    var programs = await context.Set<Program>().Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public)
                                 .OrderByDescending(p => p.ProgramRatings.Count > 0 ? p.ProgramRatings.Average(pr => pr.Rating) : 0)
                                 .ThenByDescending(p => p.ProgramUsers.Count)
                                 .Skip(request.Skip)
@@ -143,7 +148,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<GlobalProgramStatistics> Handle(GetGlobalProgramStatisticsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting global program statistics");
 
-    var query = context.Programs.Where(p => p.DeletedAt == null);
+    var query = context.Set<Program>().Where(p => p.DeletedAt == null);
 
     if (request.FromDate.HasValue) query = query.Where(p => p.CreatedAt >= request.FromDate.Value);
 
@@ -152,25 +157,25 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     var totalPrograms = await query.CountAsync(cancellationToken);
     var publishedPrograms = await query.Where(p => p.Status == ContentStatus.Published).CountAsync(cancellationToken);
 
-    var enrollmentQuery = context.ProgramUsers.AsQueryable();
+    var enrollmentQuery = context.Set<ProgramUser>().AsQueryable();
     if (request.FromDate.HasValue) enrollmentQuery = enrollmentQuery.Where(pu => pu.JoinedAt >= request.FromDate.Value); // Fixed property name
     if (request.ToDate.HasValue) enrollmentQuery = enrollmentQuery.Where(pu => pu.JoinedAt <= request.ToDate.Value); // Fixed property name
 
     var totalEnrollments = await enrollmentQuery.CountAsync(cancellationToken);
     var activeEnrollments = await enrollmentQuery.Where(pu => pu.IsActive).CountAsync(cancellationToken);
 
-    var allRatings = await context.ProgramRatings.ToListAsync(cancellationToken);
+    var allRatings = await context.Set<ProgramRating>().ToListAsync(cancellationToken);
     var averageRating = allRatings.Count > 0 ? allRatings.Average(r => r.Rating) : 0;
     var totalRatings = allRatings.Count;
 
     // Most popular category and difficulty (simplified)
-    var mostPopularCategory = await context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
+    var mostPopularCategory = await context.Set<Program>().Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
                                            .GroupBy(p => p.Category)
                                            .OrderByDescending(g => g.Count())
                                            .Select(g => g.Key)
                                            .FirstOrDefaultAsync(cancellationToken);
 
-    var mostPopularDifficulty = await context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
+    var mostPopularDifficulty = await context.Set<Program>().Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published)
                                              .GroupBy(p => p.Difficulty)
                                              .OrderByDescending(g => g.Count())
                                              .Select(g => g.Key)
@@ -188,7 +193,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
     var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
 
-    var programs = await context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public)
+    var programs = await context.Set<Program>().Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public)
                                 .OrderByDescending(p => p.ProgramUsers.Count(pu => pu.JoinedAt >= sinceDate)) // Fixed property name
                                 .ThenByDescending(p => p.ProgramRatings.Count > 0 ? p.ProgramRatings.Average(pr => pr.Rating) : 0)
                                 .Skip(request.Skip)
@@ -203,7 +208,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<Program?> Handle(GetProgramByIdQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting program by ID: {ProgramId}", request.Id);
 
-    var query = context.Programs
+    var query = context.Set<Program>()
       .AsNoTracking() // Read-only query optimization
       .Where(p => p.Id == request.Id && p.DeletedAt == null);
 
@@ -226,7 +231,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<Program?> Handle(GetProgramBySlugQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting program by slug: {Slug}", request.Slug);
 
-    var query = context.Programs
+    var query = context.Set<Program>()
       .AsNoTracking() // Read-only query optimization
       .Where(p => p.Slug == request.Slug && p.DeletedAt == null);
 
@@ -251,12 +256,12 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<IEnumerable<ProgramContent>> Handle(GetProgramContentQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting content for program: {ProgramId}", request.ProgramId);
 
-    var query = context.ProgramContents
+    var query = context.Set<ProgramContent>()
       .AsNoTracking() // Read-only query optimization
       .Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted);
 
     if (request.OnlyVisible) {
-      query = query.Where(pc => pc.Visibility == Visibility.Published); // Fixed to use ProgramContent's own properties
+      query = query.Where(pc => pc.Visibility == Visibility.Public); // Filter by public visibility
     }
 
     var content = await query.OrderBy(pc => pc.SortOrder) // Fixed property name from Order to SortOrder
@@ -270,7 +275,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<IEnumerable<ProgramUser>> Handle(GetProgramEnrollmentsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting enrollments for program: {ProgramId}", request.ProgramId);
 
-    var query = context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId);
+    var query = context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId);
 
     if (request.OnlyActive) query = query.Where(pu => pu.IsActive);
 
@@ -289,7 +294,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<IEnumerable<ProgramRating>> Handle(GetProgramRatingsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting ratings for program: {ProgramId}", request.ProgramId);
 
-    var ratings = await context.ProgramRatings.Where(pr => pr.ProgramId == request.ProgramId).OrderByDescending(pr => pr.CreatedAt).Skip(request.Skip).Take(request.Take).ToListAsync(cancellationToken);
+    var ratings = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId).OrderByDescending(pr => pr.CreatedAt).Skip(request.Skip).Take(request.Take).ToListAsync(cancellationToken);
 
     logger.LogInformation("Found {Count} ratings for program {ProgramId}", ratings.Count, request.ProgramId);
 
@@ -299,7 +304,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<IEnumerable<Program>> Handle(GetProgramsByCategoryQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting programs by category: {Category}", request.Category);
 
-    var query = context.Programs.Where(p => p.Category == request.Category && p.DeletedAt == null);
+    var query = context.Set<Program>().Where(p => p.Category == request.Category && p.DeletedAt == null);
 
     if (request.OnlyPublished) { query = query.Where(p => p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public); }
 
@@ -314,8 +319,8 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     logger.LogInformation("Getting programs by creator: {CreatorId}", request.CreatorId);
 
     // CreatorId property doesn't exist in current Program model, return empty for now
-    // var query = context.Programs.Where(p => p.CreatorId == request.CreatorId && p.DeletedAt == null);
-    var query = context.Programs.Where(p => false); // Return empty until CreatorId is added to model
+    // var query = context.Set<Program>().Where(p => p.CreatorId == request.CreatorId && p.DeletedAt == null);
+    var query = context.Set<Program>().Where(p => false); // Return empty until CreatorId is added to model
 
     if (request.OnlyPublished) { query = query.Where(p => p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public); }
 
@@ -329,7 +334,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<IEnumerable<Program>> Handle(GetProgramsByDifficultyQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting programs by difficulty: {Difficulty}", request.Difficulty);
 
-    var query = context.Programs.Where(p => p.Difficulty == request.Difficulty && p.DeletedAt == null);
+    var query = context.Set<Program>().Where(p => p.Difficulty == request.Difficulty && p.DeletedAt == null);
 
     if (request.OnlyPublished) { query = query.Where(p => p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public); }
 
@@ -345,14 +350,14 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<ProgramStatistics> Handle(GetProgramStatisticsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting statistics for program: {ProgramId}", request.ProgramId);
 
-    var totalEnrollments = await context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId).CountAsync(cancellationToken);
+    var totalEnrollments = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId).CountAsync(cancellationToken);
 
-    var activeEnrollments = await context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId && pu.IsActive).CountAsync(cancellationToken);
+    var activeEnrollments = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.IsActive).CountAsync(cancellationToken);
 
-    var completedEnrollments = await context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId && pu.CompletedAt.HasValue) // Fixed: use CompletedAt instead of IsCompleted
+    var completedEnrollments = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.CompletedAt.HasValue) // Fixed: use CompletedAt instead of IsCompleted
                                             .CountAsync(cancellationToken);
 
-    var ratings = await context.ProgramRatings.Where(pr => pr.ProgramId == request.ProgramId).ToListAsync(cancellationToken);
+    var ratings = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId).ToListAsync(cancellationToken);
 
     var averageRating = ratings.Count > 0 ? ratings.Average(r => r.Rating) : 0;
     var totalRatings = ratings.Count;
@@ -369,7 +374,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<Program?> Handle(GetPublishedProgramBySlugQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting published program by slug: {Slug}", request.Slug);
 
-    var query = context.Programs.Where(p => p.Slug == request.Slug && p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public);
+    var query = context.Set<Program>().Where(p => p.Slug == request.Slug && p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public);
 
     if (request.IncludeContent) query = query.Include(p => p.ProgramContents.Where(pc => !pc.IsDeleted));
 
@@ -388,7 +393,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
     var sinceDate = DateTime.UtcNow.AddDays(-request.DaysBack);
 
-    var programs = await context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public && p.CreatedAt >= sinceDate // Fixed: use CreatedAt instead of PublishedAt
+    var programs = await context.Set<Program>().Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public && p.CreatedAt >= sinceDate // Fixed: use CreatedAt instead of PublishedAt
                                 )
                                 .OrderByDescending(p => p.CreatedAt) // Fixed: use CreatedAt instead of PublishedAt
                                 .Skip(request.Skip)
@@ -406,7 +411,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
 
     // Note: This is a simplified recommendation system. A real implementation would use more sophisticated algorithms
-    var userEnrollments = await context.ProgramUsers.Where(pu => pu.UserId == userGuid && pu.IsActive) // Fixed: use converted Guid
+    var userEnrollments = await context.Set<ProgramUser>().Where(pu => pu.UserId == userGuid && pu.IsActive) // Fixed: use converted Guid
                                        .Select(pu => pu.Program)
                                        .ToListAsync(cancellationToken);
 
@@ -415,7 +420,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
     var enrolledProgramIds = userEnrollments.Select(p => p.Id).ToList();
 
-    var recommendations = await context.Programs
+    var recommendations = await context.Set<Program>()
                                        .Where(p => p.DeletedAt == null &&
                                                    p.Status == ContentStatus.Published &&
                                                    p.Visibility == AccessLevel.Public &&
@@ -437,7 +442,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
     logger.LogInformation("Getting enrolled programs for user: {UserId}", request.UserId);
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
-    var query = context.Programs.Where(p => p.DeletedAt == null && p.ProgramUsers.Any(pu => pu.UserId == userGuid && (!request.OnlyActive || pu.IsActive)));
+    var query = context.Set<Program>().Where(p => p.DeletedAt == null && p.ProgramUsers.Any(pu => pu.UserId == userGuid && (!request.OnlyActive || pu.IsActive)));
 
     var programs = await query.OrderByDescending(p => p.ProgramUsers.First(pu => pu.UserId == userGuid).JoinedAt) // Fixed property name
                               .Skip(request.Skip)
@@ -452,12 +457,11 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<ProgramUserProgress?> Handle(GetUserProgramProgressQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting progress for user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
-    var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
-    var enrollment = await context.ProgramUsers.Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == userGuid && pu.IsActive).FirstOrDefaultAsync(cancellationToken);
+    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == request.UserId && pu.IsActive).FirstOrDefaultAsync(cancellationToken);
 
     if (enrollment == null) return null;
 
-    var totalContent = await context.ProgramContents.Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted).CountAsync(cancellationToken);
+    var totalContent = await context.Set<ProgramContent>().Where(pc => pc.ProgramId == request.ProgramId && !pc.IsDeleted).CountAsync(cancellationToken);
 
     // Note: This is a simplified implementation. You might want to track actual content completion
     var completedContent = 0; // This would need to be calculated from actual progress tracking
@@ -474,7 +478,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<ProgramRating?> Handle(GetUserProgramRatingQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
 
-    var rating = await context.ProgramRatings.Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId) // UserId is string in ProgramRating model
+    var rating = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId) // UserId is string in ProgramRating model
                               .FirstOrDefaultAsync(cancellationToken);
 
     return rating;
@@ -487,7 +491,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
 
     var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
 
-    var programs = await context.Programs.Where(p => p.DeletedAt == null && p.ProgramWishlists.Any(pw => pw.UserId == userGuid) // Fixed: use converted Guid
+    var programs = await context.Set<Program>().Where(p => p.DeletedAt == null && p.ProgramWishlists.Any(pw => pw.UserId == userGuid) // Fixed: use converted Guid
                                 )
                                 .OrderByDescending(p => p.ProgramWishlists.First(pw => pw.UserId == userGuid).CreatedAt) // Fixed: use converted Guid
                                 .Skip(request.Skip)
@@ -504,7 +508,7 @@ public class ProgramQueryHandlers(ApplicationDbContext context, ILogger<ProgramQ
   public async Task<IEnumerable<Program>> Handle(SearchProgramsQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Searching programs with term: {SearchTerm}", request.SearchTerm);
 
-    var query = context.Programs.Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public);
+    var query = context.Set<Program>().Where(p => p.DeletedAt == null && p.Status == ContentStatus.Published && p.Visibility == AccessLevel.Public);
 
     // Text search
     query = query.Where(p => p.Title.Contains(request.SearchTerm) || p.Description != null && p.Description.Contains(request.SearchTerm));
