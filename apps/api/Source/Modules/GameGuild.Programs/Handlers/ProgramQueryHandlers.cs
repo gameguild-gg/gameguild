@@ -457,8 +457,7 @@ public class ProgramQueryHandlers(IApplicationDbContext context, ILogger<Program
   public async Task<ProgramUserProgress?> Handle(GetUserProgramProgressQuery request, CancellationToken cancellationToken) {
     logger.LogInformation("Getting progress for user {UserId} in program {ProgramId}", request.UserId, request.ProgramId);
 
-    var userGuid = Guid.Parse(request.UserId); // Convert string UserId to Guid
-    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == userGuid && pu.IsActive).FirstOrDefaultAsync(cancellationToken);
+    var enrollment = await context.Set<ProgramUser>().Where(pu => pu.ProgramId == request.ProgramId && pu.UserId == request.UserId && pu.IsActive).FirstOrDefaultAsync(cancellationToken);
 
     if (enrollment == null) return null;
 
