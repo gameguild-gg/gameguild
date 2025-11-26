@@ -41,7 +41,7 @@ async function loadPyodideRuntime(): Promise<void> {
   if (typeof window.loadPyodide !== 'undefined') return
 
   // Load compressed Pyodide runtime scripts using wasm-loader
-  await loadCompressedScript('/wasm/pyodide.js.gz')
+  await loadCompressedScript('/langs/pyodide.js.gz')
   
   // Wait a bit for the script to initialize
   await new Promise(resolve => setTimeout(resolve, 100))
@@ -64,7 +64,7 @@ async function getPyodide(): Promise<PyodideModule> {
       // Initialize Pyodide pointing to our compressed files
       // Pyodide will automatically fetch .wasm files from indexURL
       const pyodide = await window.loadPyodide({
-        indexURL: '/wasm/',
+        indexURL: '/langs/',
         fullStdLib: false,
       })
 

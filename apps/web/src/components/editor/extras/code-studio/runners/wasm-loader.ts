@@ -1,11 +1,14 @@
 import { ungzip } from 'pako'
+import { Tarball } from '@obsidize/tar-browserify'
+import type { BinaryWASIFS } from '@runno/wasi'
 
 const wasmCache: Map<string, WebAssembly.Module> = new Map()
 
 // IndexedDB para cache persistente de arquivos descomprimidos
 const DB_NAME = 'wasm-cache'
-const DB_VERSION = 1
+const DB_VERSION = 2 // Incrementado para invalidar cache antigo com timestamps Date
 const STORE_NAME = 'decompressed-files'
+const CACHE_FORMAT_VERSION = 2 // Versão do formato de serialização
 
 interface CachedFile {
   url: string
@@ -84,6 +87,25 @@ async function setCachedFile(url: string, data: ArrayBuffer): Promise<void> {
     })
   } catch (error) {
     console.warn('[WASM Cache] Error writing cache:', error)
+  }
+}
+
+async function deleteCachedFile(url: string): Promise<void> {
+  try {
+    const db = await getDB()
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(STORE_NAME, 'readwrite')
+      const store = transaction.objectStore(STORE_NAME)
+      const request = store.delete(url)
+      
+      request.onsuccess = () => {
+        console.log(`[WASM Cache] Deleted from cache: ${url}`)
+        resolve()
+      }
+      request.onerror = () => reject(request.error)
+    })
+  } catch (error) {
+    console.warn('[WASM Cache] Error deleting cache:', error)
   }
 }
 
@@ -217,5 +239,149 @@ export async function clearWasmCache(): Promise<void> {
     })
   } catch (error) {
     console.warn('[WASM Cache] Error clearing cache:', error)
+  }
+}
+
+// Função para carregar e extrair tar.gz com cache
+export async function loadTarGz(path: string): Promise<BinaryWASIFS> {
+  // Tentar carregar do cache primeiro
+  const cached = await getCachedFile(path)
+  
+  if (cached) {
+    try {
+      // Deserializar o filesystem do cache
+      const text = new TextDecoder().decode(cached)
+      const parsed = JSON.parse(text)
+      
+      // Verificar versão do cache
+      if (parsed.version !== CACHE_FORMAT_VERSION) {
+        console.log(`[WASM Cache] Invalidating old cache format for: ${path}`)
+        await deleteCachedFile(path)
+        // Continuar para baixar novamente
+      } else {
+        // Converter base64 de volta para Uint8Array
+        const fs: BinaryWASIFS = {}
+        for (const [fpath, file] of Object.entries(parsed.files)) {
+          const fileData = file as any
+          
+          // Garantir que timestamps sejam Date objects (converter se necessário)
+          const timestamps = fileData.timestamps
+          const ensureDate = (val: any) => new Date(typeof val === 'number' ? val : Date.now())
+          
+          fs[fpath] = {
+            path: fileData.path,
+            timestamps: {
+              access: ensureDate(timestamps.access),
+              modification: ensureDate(timestamps.modification),
+              change: ensureDate(timestamps.change),
+            },
+            mode: fileData.mode,
+            content: Uint8Array.from(atob(fileData.contentBase64), c => c.charCodeAt(0))
+          }
+        }
+        
+        console.log(`[WASM Cache] Loaded tar.gz from cache: ${path}`)
+        return fs
+      }
+    } catch (e) {
+      console.warn(`[WASM Cache] Failed to load from cache, re-downloading: ${path}`, e)
+      await deleteCachedFile(path)
+      // Continuar para baixar novamente
+    }
+  }
+
+  // Se não estiver em cache, baixar e processar
+  const fileName = path.split('/').pop() || path
+  if (downloadNotificationCallback) {
+    downloadNotificationCallback(`Downloading ${fileName}...`, true)
+  }
+  
+  console.log(`[WASM Cache] Downloading tar.gz: ${path}`)
+  
+  try {
+    const response = await fetch(path)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${path}: ${response.statusText}`)
+    }
+
+    const tarGzBuffer = await response.arrayBuffer()
+    
+    // Descomprimir gzip
+    let inflatedBinary: Uint8Array
+    try {
+      inflatedBinary = ungzip(new Uint8Array(tarGzBuffer))
+    } catch (e) {
+      inflatedBinary = new Uint8Array(tarGzBuffer)
+    }
+
+    // Extrair tar
+    const entries = Tarball.extract(inflatedBinary)
+
+    const fs: BinaryWASIFS = {}
+    for (const entry of entries) {
+      if (!entry.isFile()) {
+        continue
+      }
+
+      // Garantir que cada arquivo comece com /
+      const name = entry.fileName.replace(/^([^/])/, '/$1')
+      const timestamp = new Date(entry.lastModified)
+      fs[name] = {
+        path: name,
+        timestamps: {
+          change: timestamp,
+          access: timestamp,
+          modification: timestamp,
+        },
+        mode: 'binary',
+        content: entry.content!,
+      }
+    }
+
+    // Serializar para cache (converter Uint8Array para base64)
+    const serializable: any = {
+      version: CACHE_FORMAT_VERSION,
+      files: {}
+    }
+    
+    for (const [path, file] of Object.entries(fs)) {
+      // Pular se o conteúdo for null/undefined (diretórios)
+      if (!file.content) {
+        continue
+      }
+      
+      // Converter Uint8Array para base64 em chunks para evitar "too many arguments"
+      let binary = ''
+      const chunkSize = 8192
+      for (let i = 0; i < file.content.length; i += chunkSize) {
+        const chunk = file.content.subarray(i, i + chunkSize)
+        binary += String.fromCharCode(...chunk)
+      }
+      
+      serializable.files[path] = {
+        path: file.path,
+        timestamps: file.timestamps, // Já são números
+        mode: file.mode,
+        contentBase64: btoa(binary),
+      }
+    }
+    
+    const serialized = JSON.stringify(serializable)
+    const buffer = new TextEncoder().encode(serialized).buffer
+    
+    // Salvar no cache
+    await setCachedFile(path, buffer)
+    
+    if (downloadNotificationCallback) {
+      downloadNotificationCallback(`${fileName} ready`, false)
+    }
+
+    console.log(`[WASM Cache] Extracted tar.gz: ${path}`)
+    return fs
+  } catch (error) {
+    if (downloadNotificationCallback) {
+      downloadNotificationCallback(`Failed to download ${fileName}`, false)
+    }
+    throw error
   }
 }
