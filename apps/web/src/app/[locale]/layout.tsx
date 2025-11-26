@@ -65,9 +65,10 @@ export default async function Layout({ children, params }: PropsWithChildren<Pro
           <ConditionalAnalytics />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
             <ErrorBoundaryProvider config={{ level: 'page', enableRetry: true, maxRetries: 3, reportToAnalytics: true, isolate: false }}>
-              {/* SessionProvider must wrap ApolloClientProvider since Apollo uses useSession */}
+              {/* SessionProvider must wrap ApolloClientProvider since Apollo uses useSession() */}
               <SessionProvider session={session}>
                 <ApolloClientProvider>
+                  {/* If the session has a user and it has signed-in by a web3 address then try to connect to the wallet address. */}
                   <Web3Provider>
                     <TenantProvider initialState={{ currentTenant: session?.currentTenant, availableTenants: session?.availableTenants }}>
                       <GitHubIssueProvider />
