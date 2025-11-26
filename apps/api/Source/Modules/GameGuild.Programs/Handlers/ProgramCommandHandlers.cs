@@ -160,10 +160,10 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
       Slug = slug,
       Thumbnail = request.Thumbnail,
       VideoShowcaseUrl = request.VideoShowcaseUrl,
-      EstimatedHours = request.EstimatedHours,
+      EstimatedHours = (int?)request.EstimatedHours,
       Category = request.Category,
       Difficulty = request.Difficulty,
-      EnrollmentStatus = (EnrollmentStatus)request.EnrollmentStatus,
+      EnrollmentStatus = request.EnrollmentStatus,
       MaxEnrollments = request.MaxEnrollments,
       EnrollmentDeadline = request.EnrollmentDeadline,
       Status = ContentStatus.Draft,
@@ -414,7 +414,7 @@ public class ProgramCommandHandlers(IApplicationDbContext context, ILogger<Progr
     if (request.Description != null) program.Description = request.Description;
     if (request.Thumbnail != null) program.Thumbnail = request.Thumbnail;
     if (request.VideoShowcaseUrl != null) program.VideoShowcaseUrl = request.VideoShowcaseUrl;
-    if (request.EstimatedHours.HasValue) program.EstimatedHours = request.EstimatedHours;
+    if (request.EstimatedHours.HasValue) program.EstimatedHours = (int?)request.EstimatedHours;
     if (request.Category.HasValue) program.Category = request.Category.Value;
     if (request.Difficulty.HasValue) program.Difficulty = request.Difficulty.Value;
     if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = (EnrollmentStatus)request.EnrollmentStatus.Value;

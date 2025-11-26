@@ -31,10 +31,10 @@ public class UpdateProgramCommandHandler(IApplicationDbContext context, ILogger<
     if (request.Description != null) program.Description = request.Description;
     if (request.Thumbnail != null) program.Thumbnail = request.Thumbnail;
     if (request.VideoShowcaseUrl != null) program.VideoShowcaseUrl = request.VideoShowcaseUrl;
-    if (request.EstimatedHours.HasValue) program.EstimatedHours = request.EstimatedHours;
+    if (request.EstimatedHours.HasValue) program.EstimatedHours = (int?)request.EstimatedHours;
     if (request.Category.HasValue) program.Category = request.Category.Value;
     if (request.Difficulty.HasValue) program.Difficulty = request.Difficulty.Value;
-    if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = (EnrollmentStatus)request.EnrollmentStatus.Value;
+    if (request.EnrollmentStatus.HasValue) program.EnrollmentStatus = request.EnrollmentStatus.Value;
     if (request.MaxEnrollments.HasValue) program.MaxEnrollments = request.MaxEnrollments;
     if (request.EnrollmentDeadline.HasValue) program.EnrollmentDeadline = request.EnrollmentDeadline;
 

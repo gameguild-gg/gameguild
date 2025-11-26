@@ -184,9 +184,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<GameGuild.Modules.Programs.Entities.ActivityGrade> ActivityGrades { get => Set<GameGuild.Modules.Programs.Entities.ActivityGrade>(); }
 
-    public DbSet<GameGuild.Modules.Programs.Entities.ContentProgress> ContentProgress { get => Set<GameGuild.Modules.Programs.Entities.ContentProgress>(); }
+    public DbSet<GameGuild.Modules.Programs.ContentProgress> ContentProgress { get => Set<GameGuild.Modules.Programs.ContentProgress>(); }
 
-    public DbSet<GameGuild.Modules.Programs.Entities.ProgramRating> ProgramRatings { get => Set<GameGuild.Modules.Programs.Entities.ProgramRating>(); }
+    public DbSet<GameGuild.Modules.Programs.ProgramRating> ProgramRatings { get => Set<GameGuild.Modules.Programs.ProgramRating>(); }
 
     public DbSet<GameGuild.Modules.Programs.Entities.ProgramWishlist> ProgramWishlists { get => Set<GameGuild.Modules.Programs.Entities.ProgramWishlist>(); }
 
