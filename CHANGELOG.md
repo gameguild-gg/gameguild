@@ -1,3 +1,54 @@
+# [2.24.0](https://github.com/gameguild-gg/gameguild/compare/v2.23.1...v2.24.0) (2025-11-13)
+
+
+### Features
+
+* contact/links page ([9e48e60](https://github.com/gameguild-gg/gameguild/commit/9e48e60b9a60f8b833e649b0091f1b63a0e4b6f7))
+
+## [2.23.1](https://github.com/gameguild-gg/gameguild/compare/v2.23.0...v2.23.1) (2025-11-07)
+
+
+### Bug Fixes
+
+* **gglexical:** admonition dark mode ([730c746](https://github.com/gameguild-gg/gameguild/commit/730c74634a0dae8b94ae010b01486b2bbcdf8c4f))
+* **gglexical:** admonition mouse capture ([0f5981c](https://github.com/gameguild-gg/gameguild/commit/0f5981c3c04e93ab66cae1a7d968597aff9a2807))
+* **gglexical:** audio node fix ([dc4931c](https://github.com/gameguild-gg/gameguild/commit/dc4931c910f0a36ef28be0bd4b7612a11061573d))
+* **gglexical:** button and divider mouse capture ([12f6f2d](https://github.com/gameguild-gg/gameguild/commit/12f6f2d8daee70dfe7233bc9bdce0b9e64c8553c))
+* **gglexical:** buttons studio and viewer open with button code 1 mouse ([15ba1be](https://github.com/gameguild-gg/gameguild/commit/15ba1bea17ff44be6d33e7d8328dc5ac6697dfa5))
+* **gglexical:** download dialog ([acbaabb](https://github.com/gameguild-gg/gameguild/commit/acbaabb217040e3e52d6f04f111ae71d20e511f3))
+* **gglexical:** edit-button works ([38a09df](https://github.com/gameguild-gg/gameguild/commit/38a09df46eb7dc83093cdce1ade7e91ded17e876))
+* **gglexical:** filters ([434ecae](https://github.com/gameguild-gg/gameguild/commit/434ecae25f03294128cd8c1fb1603261fafd3995))
+* **gglexical:** fix mermaid template quadrant-chart ([59039cb](https://github.com/gameguild-gg/gameguild/commit/59039cb1cb535ef1590698f17d9959e96299b241))
+* **gglexical:** fix theme dark mode in editor vega ([62ba7b2](https://github.com/gameguild-gg/gameguild/commit/62ba7b232504a0ec6d427e2c0bfe3449fad5b324))
+* **gglexical:** fixes in mermaid ([2b71f33](https://github.com/gameguild-gg/gameguild/commit/2b71f3369a41dca736f1b2316fe402605eb1b860))
+* **gglexical:** floating content fixed ([55503b5](https://github.com/gameguild-gg/gameguild/commit/55503b5d84f308694d7f59ca52a4f3d5e65fc4e9))
+* **gglexical:** floating toolbar ([3fdc925](https://github.com/gameguild-gg/gameguild/commit/3fdc9256370da45915a77d0fc27a01daf0449edf))
+* **gglexical:** media editor mouse capture fix ([3a60f4e](https://github.com/gameguild-gg/gameguild/commit/3a60f4e76c3e7aef71c8ed1267c06629b6572999))
+* **gglexical:** mermaid and vega editors dark-mode ([1eb6e9b](https://github.com/gameguild-gg/gameguild/commit/1eb6e9b8abac1680517d703ab5d5d3da0dff5f62))
+* **gglexical:** mermaid mouse capture ([b368c4d](https://github.com/gameguild-gg/gameguild/commit/b368c4d1f6d1b10c2f9a41d8860e69c126c54f86))
+* **gglexical:** mermaid suggestions ([b2c7f25](https://github.com/gameguild-gg/gameguild/commit/b2c7f25eefddf4cab51e7798051464c200ed981f))
+* **gglexical:** mermaid themes dark more light ([4802467](https://github.com/gameguild-gg/gameguild/commit/4802467296590c140ccdbdf8060dc84644ab426b))
+* **gglexical:** name vega manager ([55b4101](https://github.com/gameguild-gg/gameguild/commit/55b4101dcce65dca39959826ecd61c25f10a4de2))
+* **gglexical:** new atributes for vega theme dark ([c6df683](https://github.com/gameguild-gg/gameguild/commit/c6df683fff7e82267a98ed593263562ce3cb7895))
+* **gglexical:** open in new tab ([7d3dfc8](https://github.com/gameguild-gg/gameguild/commit/7d3dfc813ec13c8692ec5eaf037a936d54009e83))
+* **gglexical:** open studio/viewer documents ([ddd804e](https://github.com/gameguild-gg/gameguild/commit/ddd804e10073106f5b8599a462f485e2259360c1))
+* **gglexical:** quiz mouse capture ([ce3eb2b](https://github.com/gameguild-gg/gameguild/commit/ce3eb2b4bf5d41c2210f2e5a76e5c9e7d89064d5))
+* **gglexical:** selected fix ([68094ab](https://github.com/gameguild-gg/gameguild/commit/68094abd6919475c9f9e7f29b15092d7f5740f6f))
+* **gglexical:** storageType ([55cdab9](https://github.com/gameguild-gg/gameguild/commit/55cdab963ebdfcb8dff33d137c3c8188c1f3d31f))
+* **gglexical:** table mouse capture ([a1f591f](https://github.com/gameguild-gg/gameguild/commit/a1f591fec41e7e09f2d5ac231d94250a78953fed))
+* **gglexical:** toolbar not open in line without words ([de9391d](https://github.com/gameguild-gg/gameguild/commit/de9391d681fa0d2de5e1bcbeeb561c8b6e30d6cf))
+* **gglexical:** updating vega live preview ([805734e](https://github.com/gameguild-gg/gameguild/commit/805734e623685113b9924a410f19a5380e0e3d07))
+* **gglexical:** vega dark theme ([e26a23e](https://github.com/gameguild-gg/gameguild/commit/e26a23e3ee09c01def5ee528415ed73dc7451bbb))
+* **gglexical:** vega dimensions ([4cfa803](https://github.com/gameguild-gg/gameguild/commit/4cfa803fcbbb2e648d1b3c07d2045ce61687fd55))
+* **gglexical:** vega editor transition in update ([0dc8175](https://github.com/gameguild-gg/gameguild/commit/0dc8175fc01dbacf7483f079358f991d1f97076d))
+* **gglexical:** vega fix element center ([2932a68](https://github.com/gameguild-gg/gameguild/commit/2932a6817f311448b088d9f317e3fb2c42ab13f6))
+* **gglexical:** vega live preview update ([8106985](https://github.com/gameguild-gg/gameguild/commit/8106985f9f9e736322b2da904baa3b2bc6331a5d))
+* **gglexical:** vega themes order ([6c9c46c](https://github.com/gameguild-gg/gameguild/commit/6c9c46c1a7aa6c28ffb92344716ae5f035d67e66))
+* **gglexical:** vega update fix ([95f3a2b](https://github.com/gameguild-gg/gameguild/commit/95f3a2b6d369066ca8db789e062b62026fabfb28))
+* **gglexical:** vega zoom in viewer ([26f914c](https://github.com/gameguild-gg/gameguild/commit/26f914c4865ed0aa2fc10ce23b9589cc6f01527e))
+* **gglexical:** vega-lite mouse capture ([df2243f](https://github.com/gameguild-gg/gameguild/commit/df2243fd2b0f32538402d1e0182e4dddb75f4717))
+* **gglexical:** vega-lite template design fix ([fb6df83](https://github.com/gameguild-gg/gameguild/commit/fb6df83f5515d0a436d8d8ef4977ed7e9e0476ec))
+
 # [2.23.0](https://github.com/gameguild-gg/gameguild/compare/v2.22.1...v2.23.0) (2025-11-06)
 
 

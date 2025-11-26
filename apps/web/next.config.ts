@@ -1,5 +1,6 @@
 import { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import webpack from 'webpack';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
@@ -200,7 +201,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     // Allow importing .js files from TypeScript files
     // the api client generation requires this
     config.resolve.extensionAlias = {
@@ -221,6 +222,17 @@ const nextConfig: NextConfig = {
       test: /\.md$/,
       type: 'asset/source',
     });
+
+    // Fix for "self is not defined" error in server-side rendering
+    if (typeof isServer !== 'undefined' && isServer) {
+      // Define self for server-side to prevent ReferenceError
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'globalThis',
+        })
+      );
+    }
 
     return config;
   },
