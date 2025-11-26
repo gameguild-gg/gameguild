@@ -49,6 +49,12 @@ const WASM_FILES = [
     output: 'php-cgi.wasm.gz',
     compress: true,
   },
+  {
+    name: 'sqlite',
+    source: 'node_modules/@runno/sandbox/dist/langs/sqlite.wasm',
+    output: 'sqlite.wasm.gz',
+    compress: true,
+  },
 ]
 
 const PYODIDE_VERSION = '0.26.4'
