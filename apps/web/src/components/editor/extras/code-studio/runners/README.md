@@ -6,6 +6,19 @@
 
 The runner system is built on a modular architecture where each language has its own dedicated runner implementing the `CodeRunner` interface. All runners share common infrastructure for WASM loading, caching, and execution.
 
+### Runner Selection System
+
+For languages with multiple runner implementations, you can switch between them by modifying the `RUNNER_SELECTION` configuration in `runners/index.ts`:
+
+```typescript
+const RUNNER_SELECTION = {
+  PYTHON_RUNNER: 1, // 1=Pyodide, 2=WASI
+  // Add more languages here as needed
+} as const
+```
+
+This allows testing and comparing different runtime implementations for the same language without changing application code.
+
 ### Core Components
 
 **`UnifiedCodeRunner`** - Central orchestrator that manages runner instances and routes execution requests to the appropriate language runner.
@@ -71,6 +84,21 @@ interface RunnerOptions {
 - **Size**: ~2.7MB WASM (compressed) + ~6MB runtime
 - **Source**: `/wasm/pyodide.asm.wasm.gz` + `/pyodide/` (local CDN mirror)
 - **Version**: 0.26.4
+
+#### Alternative: Python (WASI)
+- **Engine**: CPython 3.11.3 (WASI runtime)
+- **Execution**: WASI runtime in Web Worker
+- **Features**: Basic standard library only
+- **Size**: ~9.50MB WASM + ~3.88MB stdlib (gzip compressed)
+- **Source**: `/langs/python-3.11.3.wasm.gz`, `/langs/python-3.11.3.tar.gz`
+- **Progress Stages**:
+  1. Loading Python interpreter...
+  2. Running Python code...
+- **Notes**: 
+  - Faster startup than Pyodide
+  - No external package support
+  - Full file system support
+  - Switch via `RUNNER_SELECTION.PYTHON_RUNNER = 2`
 
 ### ✅ Lua
 - **Engine**: Wasmoon (Lua 5.4 WASM)
