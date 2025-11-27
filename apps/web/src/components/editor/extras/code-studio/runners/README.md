@@ -164,6 +164,22 @@ interface RunnerOptions {
   - In-memory database (resets between executions)
   - Supports CREATE TABLE, INSERT, SELECT, UPDATE, DELETE, etc.
   - Full SQLite3 SQL syntax support
+
+### ✅ Ruby
+- **Interpreter**: Ruby 3.2.0 (WASM)
+- **Execution**: WASI runtime in Web Worker
+- **Features**: Core Ruby functionality, file system support
+- **Size**: ~7.3MB (gzip compressed)
+- **Source**: `/langs/ruby.wasm.gz`
+- **Progress Stages**:
+  1. Loading Ruby interpreter...
+  2. Running Ruby code...
+- **Notes**: 
+  - Full Ruby 3.2.0 interpreter
+  - Supports multi-file projects with `require/load`
+  - Standard library available
+  - No external gems (pure Ruby only)
+
 - **Compilation**: 3-stage process (compile → link → execute)
 - **Size**: ~10MB clang + ~1.7MB stdlib (gzip compressed)
 - **Source**: `/langs/clang.wasm.gz`, `/langs/wasm-ld.wasm.gz`, `/langs/clang-fs.tar.gz`

@@ -67,6 +67,12 @@ const WASM_FILES = [
     output: 'python-3.11.3.tar.gz',
     compress: false, // Já está compactado
   },
+  {
+    name: 'ruby',
+    source: 'node_modules/@runno/sandbox/dist/langs/ruby-3.2.0.wasm',
+    output: 'ruby.wasm.gz',
+    compress: true,
+  },
 ]
 
 const PYODIDE_VERSION = '0.26.4'

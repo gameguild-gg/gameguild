@@ -228,13 +228,14 @@ interface CachedFileSystem {
 - `python-3.11.3.tar.gz`: ~3.88 MB (Python 3.11.3 standard library)
 - `php-cgi.wasm.gz`: ~3.95 MB (PHP 8.2.0 interpreter)
 - `sqlite.wasm.gz`: ~1.23 MB (SQLite 3.x database engine)
+- `ruby.wasm.gz`: ~7.3 MB (Ruby 3.2.0 interpreter)
 - `pyodide.asm.wasm.gz`: ~3.07 MB (Python interpreter via Pyodide)
 - `pyodide.asm.js.gz`: ~0.22 MB (Pyodide runtime)
 - `python_stdlib.zip`: ~2.23 MB (Python standard library)
 - `esbuild.wasm.gz`: ~3.46 MB (TypeScript/JavaScript bundler)
 - `quickjs-asyncify.wasm.gz`: ~0.37 MB (QuickJS engine)
 
-**Total compressed size:** ~46.23 MB
+**Total compressed size:** ~53.49 MB
 
 **Note**: Python has two runner implementations available. Switch between them in `runners/index.ts` via `RUNNER_SELECTION.PYTHON_RUNNER`.
 
