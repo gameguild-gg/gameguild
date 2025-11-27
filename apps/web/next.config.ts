@@ -214,6 +214,9 @@ const nextConfig: NextConfig = {
       module: false,
       fs: false,
       path: false,
+      crypto: false,
+      stream: false,
+      buffer: false,
     };
 
     // Add rule to handle markdown files as raw text

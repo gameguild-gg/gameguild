@@ -151,6 +151,7 @@
         "vega-lite": "^6.4.1",
         "vega-schema": "^6.2.0",
         "vega-themes": "^3.0.0",
+        "wabt": "^1.0.39",
         "wasmoon": "^1.16.0",
         "zod": "^4.1.9",
         "zustand": "^5.0.8"

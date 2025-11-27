@@ -180,6 +180,21 @@ interface RunnerOptions {
   - Standard library available
   - No external gems (pure Ruby only)
 
+### ✅ WebAssembly (WAT)
+- **Compiler**: wabt (WebAssembly Binary Toolkit)
+- **Execution**: WASI runtime in Web Worker
+- **Features**: Full WAT to WASM compilation and execution
+- **Size**: ~400KB (wabt npm package)
+- **Source**: `wabt` npm package
+- **Progress Stages**:
+  1. Compiling WAT to WASM...
+  2. Running WebAssembly...
+- **Notes**: 
+  - Compiles WebAssembly Text Format (.wat) to binary WASM
+  - Supports all WAT features (SIMD, threads, bulk memory, etc.)
+  - Executes compiled WASM with full WASI support
+  - No additional WASM files needed (wabt is pure JS/WASM)
+
 - **Compilation**: 3-stage process (compile → link → execute)
 - **Size**: ~10MB clang + ~1.7MB stdlib (gzip compressed)
 - **Source**: `/langs/clang.wasm.gz`, `/langs/wasm-ld.wasm.gz`, `/langs/clang-fs.tar.gz`
