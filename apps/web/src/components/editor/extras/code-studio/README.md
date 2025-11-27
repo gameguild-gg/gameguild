@@ -224,6 +224,8 @@ interface CachedFileSystem {
 - `clang.wasm.gz`: ~10.13 MB (LLVM C/C++ compiler)
 - `wasm-ld.wasm.gz`: ~6.46 MB (LLVM linker)
 - `clang-fs.tar.gz`: ~1.71 MB (409 files: C/C++ headers + runtime libraries)
+- `python-3.11.3.wasm.gz`: ~9.50 MB (CPython 3.11.3 WASI - alternative runner)
+- `python-3.11.3.tar.gz`: ~3.88 MB (Python 3.11.3 standard library)
 - `php-cgi.wasm.gz`: ~3.95 MB (PHP 8.2.0 interpreter)
 - `sqlite.wasm.gz`: ~1.23 MB (SQLite 3.x database engine)
 - `pyodide.asm.wasm.gz`: ~3.07 MB (Python interpreter via Pyodide)
@@ -232,7 +234,9 @@ interface CachedFileSystem {
 - `esbuild.wasm.gz`: ~3.46 MB (TypeScript/JavaScript bundler)
 - `quickjs-asyncify.wasm.gz`: ~0.37 MB (QuickJS engine)
 
-**Total compressed size:** ~32.85 MB
+**Total compressed size:** ~46.23 MB
+
+**Note**: Python has two runner implementations available. Switch between them in `runners/index.ts` via `RUNNER_SELECTION.PYTHON_RUNNER`.
 
 ### 6. Terminal Integration
 

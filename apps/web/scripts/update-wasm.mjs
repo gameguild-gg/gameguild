@@ -55,6 +55,18 @@ const WASM_FILES = [
     output: 'sqlite.wasm.gz',
     compress: true,
   },
+  {
+    name: 'python-wasi',
+    source: 'node_modules/@runno/sandbox/dist/langs/python-3.11.3.wasm',
+    output: 'python-3.11.3.wasm.gz',
+    compress: true,
+  },
+  {
+    name: 'python-wasi-fs',
+    source: 'node_modules/@runno/sandbox/dist/langs/python-3.11.3.tar.gz',
+    output: 'python-3.11.3.tar.gz',
+    compress: false, // Já está compactado
+  },
 ]
 
 const PYODIDE_VERSION = '0.26.4'
