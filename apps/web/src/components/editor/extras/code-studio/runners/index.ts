@@ -10,6 +10,7 @@ import { CRunner } from './c-runner'
 import { PhpRunner } from './php-runner'
 import { SqlRunner } from './sql-runner'
 import { RubyRunner } from './ruby-runner'
+import { WatRunner } from './wat-runner'
 
 /**
  * Runner Selection Configuration
@@ -140,6 +141,9 @@ export class UnifiedCodeRunner {
       case 'ruby':
         return new RubyRunner(this.options)
       
+      case 'webassembly':
+        return new WatRunner(this.options)
+      
       case 'rust':
       case 'csharp':
       case 'gdscript':
@@ -162,4 +166,5 @@ export { CRunner } from './c-runner'
 export { PhpRunner } from './php-runner'
 export { SqlRunner } from './sql-runner'
 export { RubyRunner } from './ruby-runner'
+export { WatRunner } from './wat-runner'
 export { setDownloadNotificationCallback, clearWasmCache } from './wasm-loader'

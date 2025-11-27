@@ -179,14 +179,14 @@ export const MODE_CONFIGS: Record<CodeStudioMode, ModeConfig> = {
     label: "Execution Mode",
     description: "Write and execute code with real-time output console. Perfect for development and debugging.",
     icon: "Play",
-    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "php", "sql", "ruby"],
+    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "php", "sql", "ruby", "webassembly"],
   },
   test: {
     id: "test",
     label: "Test Mode",
     description: "Run automated test cases against your code. Validate inputs, outputs, and expected behaviors.",
     icon: "TestTube",
-    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "php", "sql", "ruby"],
+    supportedLanguages: ["javascript", "typescript", "python", "lua", "c", "cpp", "php", "sql", "ruby", "webassembly"],
   },
 }
 
@@ -519,8 +519,34 @@ export const LANGUAGE_CONFIGS: Record<
     label: "WebAssembly",
     monacoLanguage: "wasm",
     defaultExtension: ".wat",
-    supportsExecution: false,
-    defaultTemplate: ";; Write your WebAssembly Text Format code here\n(module\n  (func $main (export \"main\")\n    ;; Your code here\n  )\n)"
+    supportsExecution: true,
+    defaultTemplate: `;; WebAssembly Text Format (WAT) with WASI support
+(module
+  ;; Import WASI fd_write function for printing
+  (import "wasi_snapshot_preview1" "fd_write"
+    (func $fd_write (param i32 i32 i32 i32) (result i32)))
+  
+  ;; Memory for our data
+  (memory 1)
+  (export "memory" (memory 0))
+  
+  ;; Store "Hello, World!\\n" at memory offset 0
+  (data (i32.const 0) "Hello, World!\\n")
+  
+  ;; WASI entry point
+  (func (export "_start")
+    ;; iovec structure at offset 100: [ptr, len]
+    (i32.store (i32.const 100) (i32.const 0))
+    (i32.store (i32.const 104) (i32.const 14))
+    
+    ;; Call fd_write(1, 100, 1, 108)
+    ;; fd=1 (stdout), iov=100, iovcnt=1, nwritten=108
+    (call $fd_write
+      (i32.const 1)
+      (i32.const 100)
+      (i32.const 1)
+      (i32.const 108))
+    drop))`,
   }
 }
 

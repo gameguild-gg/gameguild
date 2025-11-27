@@ -73,6 +73,12 @@ const WASM_FILES = [
     output: 'ruby.wasm.gz',
     compress: true,
   },
+  {
+    name: 'wabt',
+    source: 'node_modules/wabt/index.js',
+    output: 'wabt.js.gz',
+    compress: true,
+  },
 ]
 
 const PYODIDE_VERSION = '0.26.4'
