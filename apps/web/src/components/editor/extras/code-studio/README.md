@@ -234,6 +234,7 @@ interface CachedFileSystem {
 - `python_stdlib.zip`: ~2.23 MB (Python standard library)
 - `esbuild.wasm.gz`: ~3.46 MB (TypeScript/JavaScript bundler)
 - `quickjs-asyncify.wasm.gz`: ~0.37 MB (QuickJS engine)
+- `wabt` (npm package): WebAssembly Binary Toolkit for WAT compilation
 
 **Total compressed size:** ~53.49 MB
 
