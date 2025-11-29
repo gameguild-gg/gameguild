@@ -551,10 +551,8 @@ export function CodeStudioEditor({
     if (!fileToExecute) return
     
     setIsExecuting(true)
-    setOutput('') // Limpar output anterior
-    
-    // Limpar terminal e mostrar início da execução
-    terminalRef.current.write('\x1b[2J\x1b[H') // Clear screen
+    setOutput('') // Limpar output anterior - isso vai limpar o terminal via useEffect
+
     terminalRef.current.write('\x1b[33m⟳ Starting execution...\x1b[0m\r\n')
 
     try {
@@ -571,10 +569,7 @@ export function CodeStudioEditor({
         filesMap
       )
 
-      // Limpar terminal e mostrar apenas o resultado
-      terminalRef.current.write('\x1b[2J\x1b[H') // Clear screen
-      
-      // Escrever resultado no terminal
+      // Escrever resultado no terminal (já foi limpo automaticamente quando isExecuting=true)
       if (result.stdout) {
         terminalRef.current.write(result.stdout.replace(/\n/g, '\r\n'))
       }

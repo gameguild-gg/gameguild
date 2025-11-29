@@ -1,5 +1,6 @@
 import type { CodeRunner, RunnerResult, RunnerOptions, FileMap } from './types'
 import { WASIWorkerHost, type WASIFS } from '@runno/wasi'
+import { createWatEnvironment } from './wat-env-bindings'
 
 // Load wabt from local public assets (managed by update-wasm.mjs script)
 let wabtInstance: any = null
@@ -171,109 +172,29 @@ export class WatRunner implements CodeRunner {
   ): Promise<{ exitCode: number; stdout: string; stderr: string }> {
     let wasmStdout = ''
     let wasmStderr = ''
-    let wasmUrl: string | null = null
 
     try {
-      // If there are no compiled modules to import, use the simpler WASIWorkerHost approach
-      if (compiledModules.size === 0) {
-        const wasmCopy = new Uint8Array(wasmBinary)
-        const blob = new Blob([wasmCopy], { type: 'application/wasm' })
-        wasmUrl = URL.createObjectURL(blob)
+      // Create shared memory for environment
+      const sharedMemory = new WebAssembly.Memory({ initial: 256, maximum: 512 })
 
-        const wasmHost = new WASIWorkerHost(wasmUrl, {
-          args: ['program.wasm'],
-          env: {},
-          fs: wasmFS,
-          stdout: (out) => { wasmStdout += out },
-          stderr: (err) => { wasmStderr += err },
-        })
+      // Create comprehensive environment using wat-env-bindings
+      const envBindings = createWatEnvironment(
+        (text: string) => {
+          wasmStdout += text
+          console.log('[WAT stdout]', text)
+        },
+        (text: string) => {
+          wasmStderr += text
+          console.error('[WAT stderr]', text)
+        },
+        sharedMemory
+      )
 
-        if (stdin) {
-          wasmHost.pushStdin(stdin)
-          wasmHost.pushEOF()
-        }
-
-        const result = await wasmHost.start()
-        
-        return {
-          exitCode: result.exitCode,
-          stdout: wasmStdout,
-          stderr: wasmStderr,
-        }
-      }
-
-      // When there are imports, we need to manually instantiate with import object
-      console.log(`[WatRunner] Creating import object for ${compiledModules.size} modules`)
-
-      // Create import object for resolving module imports
-      const importObject: Record<string, any> = {}
-
-      // Add environment functions that WAT modules can import
-      importObject.env = {
-        // Memory management
-        memory: new WebAssembly.Memory({ initial: 256, maximum: 256 }),
-        
-        // Console output functions
-        print_i32: (value: number) => {
-          wasmStdout += value.toString() + '\n'
-          console.log('[WAT print_i32]', value)
-        },
-        
-        print_i64: (value: bigint) => {
-          wasmStdout += value.toString() + '\n'
-          console.log('[WAT print_i64]', value)
-        },
-        
-        print_f32: (value: number) => {
-          wasmStdout += value.toString() + '\n'
-          console.log('[WAT print_f32]', value)
-        },
-        
-        print_f64: (value: number) => {
-          wasmStdout += value.toString() + '\n'
-          console.log('[WAT print_f64]', value)
-        },
-        
-        print_char: (charCode: number) => {
-          wasmStdout += String.fromCharCode(charCode)
-          console.log('[WAT print_char]', String.fromCharCode(charCode))
-        },
-        
-        print_newline: () => {
-          wasmStdout += '\n'
-          console.log('[WAT print_newline]')
-        },
-        
-        // Error output
-        error_i32: (value: number) => {
-          wasmStderr += value.toString() + '\n'
-          console.error('[WAT error_i32]', value)
-        },
-        
-        // JavaScript console access
-        log: (value: number) => {
-          wasmStdout += value.toString() + '\n'
-          console.log('[WAT log]', value)
-        },
-        
-        // Debugging
-        debug: (value: number) => {
-          console.log('[WAT debug]', value)
-        },
-        
-        // Math functions
-        abs_f32: Math.abs,
-        abs_f64: Math.abs,
-        ceil_f32: Math.ceil,
-        ceil_f64: Math.ceil,
-        floor_f32: Math.floor,
-        floor_f64: Math.floor,
-        sqrt_f32: Math.sqrt,
-        sqrt_f64: Math.sqrt,
-        
-        // Time
-        now: Date.now,
-      }
+      // Ensure importObject is properly structured
+      const importObject: Record<string, any> = { ...envBindings }
+      
+      console.log('[WatRunner] Import object keys:', Object.keys(importObject))
+      console.log('[WatRunner] env is object:', typeof importObject.env === 'object' && importObject.env !== null)
 
       // First, instantiate all imported modules
       for (const [moduleName, moduleBytes] of compiledModules.entries()) {
@@ -433,10 +354,6 @@ export class WatRunner implements CodeRunner {
       }
       
       throw new Error(`WASM execution failed: ${errorMessage}`)
-    } finally {
-      if (wasmUrl) {
-        URL.revokeObjectURL(wasmUrl)
-      }
     }
   }
 
