@@ -22,6 +22,7 @@ interface XTermTerminalProps {
 export interface XTermTerminalHandle {
   requestInput: () => Promise<string>
   write: (text: string) => void
+  clear: () => void
   search: (term: string, searchOptions?: { incremental?: boolean }) => boolean
   searchNext: () => boolean
   searchPrevious: () => boolean
@@ -106,6 +107,11 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
       write: (text: string) => {
         if (xtermRef.current) {
           xtermRef.current.write(text)
+        }
+      },
+      clear: () => {
+        if (xtermRef.current) {
+          xtermRef.current.clear()
         }
       },
       search: (term: string, searchOptions?: { incremental?: boolean }) => {
@@ -261,14 +267,14 @@ export const XTermTerminal = forwardRef<XTermTerminalHandle, XTermTerminalProps>
   useEffect(() => {
     if (!xtermRef.current) return
 
-    // Não limpar durante execução - o handleExecute já faz isso
+    // Quando começar uma execução, limpar o terminal
     if (isExecuting) {
+      xtermRef.current.clear()
       return
     }
     
-    // Só limpar e mostrar output quando não está executando
+    // Só mostrar output quando não está executando (já foi limpo quando isExecuting=true)
     if (output) {
-      xtermRef.current.clear()
       xtermRef.current.writeln(output.replace(/\n/g, "\r\n"))
       xtermRef.current.scrollToBottom()
     }
