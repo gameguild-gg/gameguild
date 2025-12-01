@@ -199,7 +199,7 @@ async function downloadPyodide() {
 }
 
 async function main() {
-  console.log('🔄 Updating WASM files...\n')
+  console.log(' Updating WASM files...\n')
 
   if (!existsSync(publicWasmDir)) {
     mkdirSync(publicWasmDir, { recursive: true })

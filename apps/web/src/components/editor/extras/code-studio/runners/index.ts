@@ -11,6 +11,7 @@ import { PhpRunner } from './php-runner'
 import { SqlRunner } from './sql-runner'
 import { RubyRunner } from './ruby-runner'
 import { WatRunner } from './wat-runner'
+import { DotNetRunner } from './dotnet-runner'
 
 /**
  * Runner Selection Configuration
@@ -144,8 +145,10 @@ export class UnifiedCodeRunner {
       case 'webassembly':
         return new WatRunner(this.options)
       
-      case 'rust':
       case 'csharp':
+        return new DotNetRunner(this.options)
+      
+      case 'rust':
       case 'gdscript':
         throw new Error(`Runner for ${language} not implemented yet`)
       
@@ -167,4 +170,5 @@ export { PhpRunner } from './php-runner'
 export { SqlRunner } from './sql-runner'
 export { RubyRunner } from './ruby-runner'
 export { WatRunner } from './wat-runner'
+export { DotNetRunner, preloadDotNetCompiler, disposeDotNetCompiler } from './dotnet-runner'
 export { setDownloadNotificationCallback, clearWasmCache } from './wasm-loader'

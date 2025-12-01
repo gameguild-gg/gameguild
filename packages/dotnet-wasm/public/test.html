@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C# Compiler - .NET 8 WASM</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 { color: #569cd6; }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 400px;
+            background: #252526;
+            color: #d4d4d4;
+            border: 1px solid #3c3c3c;
+            padding: 10px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover { background: #1177bb; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        #output {
+            background: #1e1e1e;
+            border: 1px solid #3c3c3c;
+            padding: 10px;
+            min-height: 400px;
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Courier New', monospace;
+        }
+        .error { color: #f48771; }
+        .success { color: #4ec9b0; }
+    </style>
+</head>
+<body>
+    <h1>C# Compiler - .NET 8 WASM</h1>
+    <p>Write C# code and run it in your browser!</p>
+    
+    <div class="container">
+        <div>
+            <h3>C# Code:</h3>
+            <textarea id="code">using System;
+
+class Program
+{
+    static void Main()
+    {
+        Console.WriteLine("Hello from C# in WASM!");
+        Console.WriteLine($"Current time: {DateTime.Now}");
+        
+        for (int i = 1; i <= 5; i++)
+        {
+            Console.WriteLine($"Count: {i}");
+        }
+    }
+}</textarea>
+            <button id="runBtn" onclick="runCode()">Run Code</button>
+        </div>
+        <div>
+            <h3>Output:</h3>
+            <div id="output">Loading .NET runtime...</div>
+        </div>
+    </div>
+
+    <script type="module" src="/managed/main.js"></script>
+    <script>
+        async function runCode() {
+            const output = document.getElementById('output');
+            const btn = document.getElementById('runBtn');
+            const code = document.getElementById('code').value;
+            
+            try {
+                btn.disabled = true;
+                output.innerHTML = 'Compiling and running...';
+                
+                // Wait for C# runtime to be ready
+                while (!window.CSharpCompiler) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                const result = window.CSharpCompiler.compileAndRun(code);
+                
+                if (result.startsWith('COMPILATION_ERROR')) {
+                    output.innerHTML = `<span class="error">${result}</span>`;
+                } else if (result.startsWith('RUNTIME_ERROR')) {
+                    output.innerHTML = `<span class="error">${result}</span>`;
+                } else {
+                    output.innerHTML = `<span class="success">${result || '(no output)'}</span>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.CSharpCompiler) {
+                    document.getElementById('output').innerHTML = '<span class="success">✓ C# Compiler ready! Click "Run Code" to execute.</span>';
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
