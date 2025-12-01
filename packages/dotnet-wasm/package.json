@@ -1,0 +1,38 @@
+{
+  "name": "@game-guild/dotnet-wasm",
+  "version": "0.1.0",
+  "description": "C# compiler and runtime for browser using Mono WebAssembly and Roslyn",
+  "type": "module",
+  "author": "Miguel Moroni <miguelmcontato@gmail.com>",
+  "homepage": "https://miguelmoroni.com",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "npm run clean-dotnet-artifacts && vite",
+    "build": "npm run clean-dotnet-artifacts && tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "clean-dotnet-artifacts": "rm -rf dotnet-runtime/bin dotnet-runtime/obj && find . -name 'package.json' -path '*/managed/*' -delete 2>/dev/null || true",
+    "build-runtime": "./build-dotnet.sh",
+    "compress": "./compress-assets.sh",
+    "setup": "npm run build-runtime && npm run compress && npm run build"
+  },
+  "keywords": [
+    "csharp",
+    "dotnet",
+    "mono",
+    "wasm",
+    "roslyn",
+    "compiler"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "pako": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@types/pako": "^2.0.3",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  }
+}
