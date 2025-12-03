@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import type { Notification, NotificationResponse } from '@/components/legacy/types/notification';
+import type { Notification } from '@/components/legacy/types/notification';
 import { getNotifications } from '@/lib/notifications/notifications.actions';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 interface NotificationContextValue {
   notifications: Notification[];
@@ -28,7 +28,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   const refreshNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response: NotificationResponse = await getNotifications({ limit: 50 });
+      const response = await getNotifications({ limit: 50 });
       setNotifications(response.notifications);
       setUnreadCount(response.unreadCount);
     } catch (error) {
@@ -43,9 +43,9 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       prev.map((notification) =>
         notification.id === id
           ? {
-              ...notification,
-              isRead: true,
-            }
+            ...notification,
+            isRead: true,
+          }
           : notification,
       ),
     );
@@ -57,10 +57,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       prev.map((notification) =>
         notification.id === id
           ? {
-              ...notification,
-              isArchived: true,
-              isRead: true,
-            }
+            ...notification,
+            isArchived: true,
+            isRead: true,
+          }
           : notification,
       ),
     );

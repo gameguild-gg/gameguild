@@ -1,31 +1,13 @@
-import {
-    deleteApiTenantDomainsById,
-    deleteApiTenantsById,
-    getApiTenantDomains,
-    getApiTenantDomainsUserGroups,
-    getApiTenants,
-    getApiTenantsActive,
-    getApiTenantsById,
-    getApiTenantsDeleted,
-    getApiTenantsSearch,
-    getApiTenantsStatistics,
-    postApiTenantDomains,
-    postApiTenantDomainsUserGroups,
-    postApiTenants,
-    putApiTenantDomainsById,
-    putApiTenantsById,
-} from '@/lib/api/generated/sdk.gen';
-import type {
-    ModulesTenantsCreateTenantDomainDto,
-    ModulesTenantsCreateTenantDto,
-    ModulesTenantsCreateTenantUserGroupDto,
-    ModulesTenantsTenant,
-    ModulesTenantsTenantDomain,
-    ModulesTenantsTenantUserGroup,
-    ModulesTenantsUpdateTenantDomainDto,
-    ModulesTenantsUpdateTenantDto
-} from '@/lib/api/generated/types.gen';
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
+
+export type ModulesTenantsCreateTenantDomainDto = any;
+export type ModulesTenantsCreateTenantDto = any;
+export type ModulesTenantsCreateTenantUserGroupDto = any;
+export type ModulesTenantsTenant = any;
+export type ModulesTenantsTenantDomain = any;
+export type ModulesTenantsTenantUserGroup = any;
+export type ModulesTenantsUpdateTenantDomainDto = any;
+export type ModulesTenantsUpdateTenantDto = any;
 
 export interface TenantListParams {
     page?: number;
@@ -44,184 +26,54 @@ export interface TenantStatsData {
     userGroupsCount: number;
 }
 
-// Helper function to configure authenticated client
-async function withAuth<T>(operation: () => Promise<T>): Promise<T> {
-    const { configureAuthenticatedClient } = await import('@/lib/api/authenticated-client');
-    await configureAuthenticatedClient();
-    return operation();
+async function fetchTenants(_params: TenantListParams = {}): Promise<ModulesTenantsTenant[]> {
+    throw new Error('Not implemented (STUB): fetchTenants');
 }
 
-// API fetching functions
-async function fetchTenants(params: TenantListParams = {}): Promise<ModulesTenantsTenant[]> {
-    return withAuth(async () => {
-        const { search, includeDeleted = false, isActive } = params;
-
-        if (search) {
-            const result = await getApiTenantsSearch({
-                query: { searchTerm: search },
-            });
-            return result.data || [];
-        }
-
-        if (includeDeleted) {
-            const result = await getApiTenantsDeleted();
-            return result.data || [];
-        }
-
-        if (isActive !== undefined) {
-            if (isActive) {
-                const result = await getApiTenantsActive();
-                return result.data || [];
-            } else {
-                const result = await getApiTenantsDeleted();
-                return result.data || [];
-            }
-        }
-
-        const result = await getApiTenants();
-        return result.data || [];
-    });
-}
-
-async function fetchTenantById(id: string): Promise<ModulesTenantsTenant> {
-    return withAuth(async () => {
-        const result = await getApiTenantsById({
-            path: { id },
-        });
-
-        if (!result.data) {
-            throw new Error('Tenant not found');
-        }
-
-        return result.data;
-    });
+async function fetchTenantById(_id: string): Promise<ModulesTenantsTenant> {
+    throw new Error('Not implemented (STUB): fetchTenantById');
 }
 
 async function fetchTenantStatistics(): Promise<TenantStatsData> {
-    return withAuth(async () => {
-        const result = await getApiTenantsStatistics();
-
-        // Transform API response to our expected format
-        const stats = result.data as any;
-        return {
-            totalTenants: stats?.totalTenants || 0,
-            activeTenants: stats?.activeTenants || 0,
-            deletedTenants: stats?.deletedTenants || 0,
-            newTenantsThisMonth: stats?.newTenantsThisMonth || 0,
-            domainsCount: stats?.domainsCount || 0,
-            userGroupsCount: stats?.userGroupsCount || 0,
-        };
-    });
+    throw new Error('Not implemented (STUB): fetchTenantStatistics');
 }
 
-async function fetchTenantDomains(tenantId?: string): Promise<ModulesTenantsTenantDomain[]> {
-    return withAuth(async () => {
-        const result = await getApiTenantDomains({
-            query: tenantId ? { tenantId } : {},
-        });
-        return result.data || [];
-    });
+async function fetchTenantDomains(_tenantId?: string): Promise<ModulesTenantsTenantDomain[]> {
+    throw new Error('Not implemented (STUB): fetchTenantDomains');
 }
 
-async function fetchTenantUserGroups(tenantId?: string): Promise<ModulesTenantsTenantUserGroup[]> {
-    return withAuth(async () => {
-        const result = await getApiTenantDomainsUserGroups({
-            query: tenantId ? { tenantId } : {},
-        });
-        return result.data || [];
-    });
+async function fetchTenantUserGroups(_tenantId?: string): Promise<ModulesTenantsTenantUserGroup[]> {
+    throw new Error('Not implemented (STUB): fetchTenantUserGroups');
 }
 
-async function createTenant(tenantData: ModulesTenantsCreateTenantDto): Promise<ModulesTenantsTenant> {
-    return withAuth(async () => {
-        const result = await postApiTenants({
-            body: tenantData,
-        });
-
-        if (!result.data) {
-            throw new Error('Failed to create tenant');
-        }
-
-        return result.data;
-    });
+async function createTenant(_tenantData: ModulesTenantsCreateTenantDto): Promise<ModulesTenantsTenant> {
+    throw new Error('Not implemented (STUB): createTenant');
 }
 
-async function updateTenant(id: string, tenantData: ModulesTenantsUpdateTenantDto): Promise<ModulesTenantsTenant> {
-    return withAuth(async () => {
-        const result = await putApiTenantsById({
-            path: { id },
-            body: tenantData,
-        });
-
-        if (!result.data) {
-            throw new Error('Failed to update tenant');
-        }
-
-        return result.data;
-    });
+async function updateTenant(_id: string, _tenantData: ModulesTenantsUpdateTenantDto): Promise<ModulesTenantsTenant> {
+    throw new Error('Not implemented (STUB): updateTenant');
 }
 
-async function deleteTenant(id: string, softDelete: boolean = true): Promise<void> {
-    return withAuth(async () => {
-        await deleteApiTenantsById({
-            path: { id },
-            query: { softDelete },
-        });
-    });
+async function deleteTenant(_id: string, _softDelete: boolean = true): Promise<void> {
+    throw new Error('Not implemented (STUB): deleteTenant');
 }
 
-async function createTenantDomain(domainData: ModulesTenantsCreateTenantDomainDto): Promise<ModulesTenantsTenantDomain> {
-    return withAuth(async () => {
-        const result = await postApiTenantDomains({
-            body: domainData,
-        });
-
-        if (!result.data) {
-            throw new Error('Failed to create tenant domain');
-        }
-
-        return result.data;
-    });
+async function createTenantDomain(_domainData: ModulesTenantsCreateTenantDomainDto): Promise<ModulesTenantsTenantDomain> {
+    throw new Error('Not implemented (STUB): createTenantDomain');
 }
 
-async function updateTenantDomain(id: string, domainData: ModulesTenantsUpdateTenantDomainDto): Promise<ModulesTenantsTenantDomain> {
-    return withAuth(async () => {
-        const result = await putApiTenantDomainsById({
-            path: { id },
-            body: domainData,
-        });
-
-        if (!result.data) {
-            throw new Error('Failed to update tenant domain');
-        }
-
-        return result.data;
-    });
+async function updateTenantDomain(_id: string, _domainData: ModulesTenantsUpdateTenantDomainDto): Promise<ModulesTenantsTenantDomain> {
+    throw new Error('Not implemented (STUB): updateTenantDomain');
 }
 
-async function deleteTenantDomain(id: string): Promise<void> {
-    return withAuth(async () => {
-        await deleteApiTenantDomainsById({
-            path: { id },
-        });
-    });
+async function deleteTenantDomain(_id: string): Promise<void> {
+    throw new Error('Not implemented (STUB): deleteTenantDomain');
 }
 
-async function createTenantUserGroup(groupData: ModulesTenantsCreateTenantUserGroupDto): Promise<ModulesTenantsTenantUserGroup> {
-    return withAuth(async () => {
-        const result = await postApiTenantDomainsUserGroups({
-            body: groupData,
-        });
-
-        if (!result.data) {
-            throw new Error('Failed to create tenant user group');
-        }
-
-        return result.data;
-    });
+async function createTenantUserGroup(_groupData: ModulesTenantsCreateTenantUserGroupDto): Promise<ModulesTenantsTenantUserGroup> {
+    throw new Error('Not implemented (STUB): createTenantUserGroup');
 }
 
-// Query options for React Query
 export const tenantQueries = {
     all: () => ['tenants'] as const,
 
@@ -230,8 +82,8 @@ export const tenantQueries = {
         queryOptions({
             queryKey: [...tenantQueries.lists(), params] as const,
             queryFn: () => fetchTenants(params),
-            staleTime: 2 * 60 * 1000, // 2 minutes
-            gcTime: 5 * 60 * 1000, // 5 minutes
+            staleTime: 2 * 60 * 1000,
+            gcTime: 5 * 60 * 1000,
         }),
 
     details: () => [...tenantQueries.all(), 'detail'] as const,
@@ -239,16 +91,16 @@ export const tenantQueries = {
         queryOptions({
             queryKey: [...tenantQueries.details(), id] as const,
             queryFn: () => fetchTenantById(id),
-            staleTime: 5 * 60 * 1000, // 5 minutes
-            gcTime: 10 * 60 * 1000, // 10 minutes
+            staleTime: 5 * 60 * 1000,
+            gcTime: 10 * 60 * 1000,
         }),
 
     stats: () =>
         queryOptions({
             queryKey: [...tenantQueries.all(), 'stats'] as const,
             queryFn: fetchTenantStatistics,
-            staleTime: 5 * 60 * 1000, // 5 minutes
-            gcTime: 10 * 60 * 1000, // 10 minutes
+            staleTime: 5 * 60 * 1000,
+            gcTime: 10 * 60 * 1000,
         }),
 
     domains: () => [...tenantQueries.all(), 'domains'] as const,
@@ -256,8 +108,8 @@ export const tenantQueries = {
         queryOptions({
             queryKey: [...tenantQueries.domains(), tenantId || 'all'] as const,
             queryFn: () => fetchTenantDomains(tenantId),
-            staleTime: 3 * 60 * 1000, // 3 minutes
-            gcTime: 10 * 60 * 1000, // 10 minutes
+            staleTime: 3 * 60 * 1000,
+            gcTime: 10 * 60 * 1000,
         }),
 
     userGroups: () => [...tenantQueries.all(), 'user-groups'] as const,
@@ -265,19 +117,17 @@ export const tenantQueries = {
         queryOptions({
             queryKey: [...tenantQueries.userGroups(), tenantId || 'all'] as const,
             queryFn: () => fetchTenantUserGroups(tenantId),
-            staleTime: 3 * 60 * 1000, // 3 minutes
-            gcTime: 10 * 60 * 1000, // 10 minutes
+            staleTime: 3 * 60 * 1000,
+            gcTime: 10 * 60 * 1000,
         }),
 } as const;
 
-// Mutation hooks for tenant operations
 export function useCreateTenant() {
     const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: createTenant,
         onSuccess: () => {
-            // Invalidate and refetch tenant lists
             queryClient.invalidateQueries({ queryKey: tenantQueries.lists() });
             queryClient.invalidateQueries({ queryKey: tenantQueries.stats().queryKey });
         },
@@ -290,16 +140,13 @@ export function useUpdateTenant() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: ModulesTenantsUpdateTenantDto }) =>
             updateTenant(id, data),
-        onSuccess: (updatedTenant) => {
-            // Update the specific tenant in cache
-            if (updatedTenant.id) {
+        onSuccess: (updatedTenant: any) => {
+            if (updatedTenant?.id) {
                 queryClient.setQueryData(
                     tenantQueries.detail(updatedTenant.id).queryKey,
                     updatedTenant
                 );
             }
-
-            // Invalidate lists to reflect changes
             queryClient.invalidateQueries({ queryKey: tenantQueries.lists() });
             queryClient.invalidateQueries({ queryKey: tenantQueries.stats().queryKey });
         },
@@ -312,18 +159,14 @@ export function useDeleteTenant() {
     return useMutation({
         mutationFn: ({ id, softDelete = true }: { id: string; softDelete?: boolean }) =>
             deleteTenant(id, softDelete),
-        onSuccess: (_, { id }) => {
-            // Remove from cache
+        onSuccess: (_: any, { id }: { id: string }) => {
             queryClient.removeQueries({ queryKey: tenantQueries.detail(id).queryKey });
-
-            // Invalidate lists to reflect changes
             queryClient.invalidateQueries({ queryKey: tenantQueries.lists() });
             queryClient.invalidateQueries({ queryKey: tenantQueries.stats().queryKey });
         },
     });
 }
 
-// Domain management mutations
 export function useCreateTenantDomain() {
     const queryClient = useQueryClient();
 
@@ -358,7 +201,6 @@ export function useDeleteTenantDomain() {
     });
 }
 
-// User group management mutations
 export function useCreateTenantUserGroup() {
     const queryClient = useQueryClient();
 

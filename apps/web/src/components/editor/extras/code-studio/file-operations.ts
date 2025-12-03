@@ -1,6 +1,6 @@
 import type { CodeStudioData, CodeFile, FileTreeFolder } from "./types"
 import { LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
-import { openFile, closeFile } from "./editor-state-utils"
+import { openFile } from "./editor-state-utils"
 
 export function createFile(
   draft: CodeStudioData,

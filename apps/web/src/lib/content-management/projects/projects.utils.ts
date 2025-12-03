@@ -1,4 +1,4 @@
-import { Project } from '@/lib/api/generated/types.gen';
+import { Project } from '@/lib/api/generated';
 import type { GameProject } from '@/lib/types';
 
 /**

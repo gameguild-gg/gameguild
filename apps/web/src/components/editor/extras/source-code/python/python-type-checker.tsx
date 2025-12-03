@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import type { editor } from "monaco-editor"
+import { useEffect, useState } from "react"
 
 interface PythonTypeCheckerProps {
   monaco: typeof import("monaco-editor") | null
@@ -38,12 +38,12 @@ export function PythonTypeChecker({ monaco, editor, code }: PythonTypeCheckerPro
           // Check for variable type annotations (var: type = value)
           const typeAnnotationMatch = line.match(/\s*(\w+)\s*:\s*(\w+)/)
           if (typeAnnotationMatch) {
-            const varName = typeAnnotationMatch[1]
-            const typeName = typeAnnotationMatch[2]
+            const varName = typeAnnotationMatch[1] ?? ''
+            const typeName = typeAnnotationMatch[2] ?? ''
 
             // Check for valid Python types
             const validTypes = ["int", "float", "str", "bool", "list", "dict", "tuple", "set", "None", "Any"]
-            if (!validTypes.includes(typeName) && !typeName.startsWith("List[") && !typeName.startsWith("Dict[")) {
+            if (typeName && !validTypes.includes(typeName) && !typeName.startsWith("List[") && !typeName.startsWith("Dict[")) {
               errors.push({
                 line: lineIndex + 1,
                 column: line.indexOf(typeName),
@@ -56,7 +56,7 @@ export function PythonTypeChecker({ monaco, editor, code }: PythonTypeCheckerPro
             if (line.includes("=")) {
               const valueMatch = line.match(/=\s*(.+)/)
               if (valueMatch) {
-                const value = valueMatch[1].trim()
+                const value = (valueMatch[1] ?? '').trim()
 
                 // Simple type checking based on literal values
                 if (typeName === "int" && !/^-?\d+$/.test(value) && !value.startsWith("int(")) {
@@ -100,12 +100,13 @@ export function PythonTypeChecker({ monaco, editor, code }: PythonTypeCheckerPro
           // Check for function return type annotations
           const funcMatch = line.match(/def\s+(\w+)\s*$$.*$$\s*->\s*(\w+)/)
           if (funcMatch) {
-            const funcName = funcMatch[1]
-            const returnType = funcMatch[2]
+            const funcName = funcMatch[1] ?? ''
+            const returnType = funcMatch[2] ?? ''
 
             // Check for valid Python types
             const validTypes = ["int", "float", "str", "bool", "list", "dict", "tuple", "set", "None", "Any"]
             if (
+              returnType &&
               !validTypes.includes(returnType) &&
               !returnType.startsWith("List[") &&
               !returnType.startsWith("Dict[")

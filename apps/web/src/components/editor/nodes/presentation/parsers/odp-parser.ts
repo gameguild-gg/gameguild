@@ -1,6 +1,6 @@
-import JSZip from "jszip"
 import { XMLParser } from "fast-xml-parser"
-import type { Slide, ParseProgress } from "../types"
+import JSZip from "jszip"
+import type { ParseProgress, Slide } from "../types"
 
 interface ODPParserCallbacks {
   onProgress?: (progress: ParseProgress) => void
@@ -45,8 +45,7 @@ export class ODPParser {
         textNodeName: "#text",
         parseAttributeValue: true,
         trimValues: true,
-        parseTrueNumberOnly: false,
-        arrayMode: (name: string) => {
+        isArray: (name: string) => {
           // These elements can appear multiple times
           return [
             "draw:page",

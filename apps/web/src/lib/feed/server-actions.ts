@@ -2,8 +2,8 @@
 
 import { revalidateTag } from 'next/cache';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import { postApiPosts, getApiPosts } from '@/lib/api/generated/sdk.gen';
-import type { CreatePostDto, PostsPageDto } from '@/lib/api/generated/types.gen';
+import { postApiPosts, getApiPosts } from '@/lib/api/generated';
+import type { CreatePostDto, PostsPageDto } from '@/lib/api/generated';
 import type { FeedFilters } from './index';
 
 export async function createPostAction(formData: FormData): Promise<{ success: boolean; error?: string }> {

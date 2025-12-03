@@ -1,9 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight, Eye, Blocks, Plus, Search, MoreVertical, Calendar, Tag, User, Grid, List, LayoutGrid } from "lucide-react"
+import { Eye, Blocks, Plus, Calendar, List, LayoutGrid } from "lucide-react"
 import Link from "next/link"
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"

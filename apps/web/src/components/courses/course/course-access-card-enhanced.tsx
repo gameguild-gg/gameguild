@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { createPaymentIntent, enrollInFreeCourse, type EnrollmentStatus, getCourseEnrollmentStatus, getProductsContainingCourse, type Product } from '@/lib/courses/actions/enrollment.actions';
 import { BookOpen, CreditCard, Gift, Loader2, Lock, Star, Trophy, Users } from 'lucide-react';
@@ -147,7 +147,7 @@ function ProductCard({
           <div className="flex justify-between">
             <span className="text-gray-400">Courses:</span>
             <span>
-              {product.courses.length} course{product.courses.length > 1 ? 's' : ''}
+              {product.courses?.length || 0} course{(product.courses?.length || 0) > 1 ? 's' : ''}
             </span>
           </div>
         </div>
@@ -287,7 +287,7 @@ export default function CourseAccessCard({ courseSlug }: Pick<CourseAccessCardPr
         if (result.success && result.paymentUrl) {
           router.push(result.paymentUrl);
         } else {
-          setError(result.message);
+          setError(result.message || 'Payment initiation failed');
         }
       } catch (err) {
         console.error('Error creating payment intent:', err);

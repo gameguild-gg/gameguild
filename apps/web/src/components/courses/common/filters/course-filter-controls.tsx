@@ -1,8 +1,9 @@
 'use client';
 
+import { PeriodType } from '@/components/common/filters/filter-context';
 import { PeriodSelector } from '@/components/common/filters/period-selector';
 import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
-import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/types.gen';
+import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/stub-types';
 import { CourseAreaFilter } from './course-area-filter';
 import { CourseLevelFilter } from './course-level-filter';
 import { CourseSearchBar } from './course-search-bar';
@@ -22,8 +23,8 @@ interface CourseFilterControlsProps {
   onToggleArea: (area: CourseArea) => void;
   selectedLevels: CourseLevel[];
   onToggleLevel: (level: CourseLevel) => void;
-  selectedPeriod: string;
-  onPeriodChange: (period: string) => void;
+  selectedPeriod: PeriodType;
+  onPeriodChange: (period: PeriodType) => void;
   viewMode: 'cards' | 'row' | 'table';
   onViewModeChange: (mode: 'cards' | 'row' | 'table') => void;
   hideViewToggle?: boolean;

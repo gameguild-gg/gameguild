@@ -1,7 +1,7 @@
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard/dashboard-page';
 import ProgramEditForm from '@/components/programs/program-edit-form';
 // TODO: PutApiProgramByIdData type not found in generated API types - API generation may not have included Programs module
-// import type { PutApiProgramByIdData } from '@/lib/api/generated/types.gen';
+// import type { PutApiProgramByIdData } from '@/lib/api/generated';
 import { updateProgram } from '@/lib/content-management/programs/programs.actions';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
 import { redirect } from 'next/navigation';

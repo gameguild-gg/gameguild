@@ -1,5 +1,10 @@
 import React, { useMemo } from 'react';
-import { SortConfig } from '../../../../old/data-display/types';
+
+// SortConfig type - previously from old data-display module
+export interface SortConfig {
+  key: string;
+  direction: 'asc' | 'desc';
+}
 
 export interface UseFilteredDataOptions<T> {
   data: T[];

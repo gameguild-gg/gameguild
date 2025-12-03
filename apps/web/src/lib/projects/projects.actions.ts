@@ -1,15 +1,20 @@
 // Legacy wrapper adapting old projects.actions API to new content-management implementation.
 'use server';
 
-import type {PostApiProjectsData, Project, PutApiProjectsByIdData} from '@/lib/api/generated/types.gen';
+import type { Project } from '@/lib/api/generated';
+
+// Stub types for PostApiProjectsData and PutApiProjectsByIdData
+type PostApiProjectsData = any;
+type PutApiProjectsByIdData = any;
+
 import {
-    archiveProject as archiveProjectNew,
-    createProject as createProjectNew,
-    deleteProject as deleteProjectNew,
-    getProjects as getProjectsRaw,
-    publishProject as publishProjectNew,
-    unpublishProject as unpublishProjectNew,
-    updateProject as updateProjectNew,
+  archiveProject as archiveProjectNew,
+  createProject as createProjectNew,
+  deleteProject as deleteProjectNew,
+  getProjects as getProjectsRaw,
+  publishProject as publishProjectNew,
+  unpublishProject as unpublishProjectNew,
+  updateProject as updateProjectNew,
 } from '@/lib/content-management/projects/projects.actions';
 
 // -----------------------------------------------------------------------------

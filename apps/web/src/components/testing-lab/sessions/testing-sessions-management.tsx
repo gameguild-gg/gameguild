@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createTestingSessionAction, deleteTestingSessionAction } from '@/lib/admin/testing-lab/sessions/sessions.actions';
-import { TestingLocation, TestingSession } from '@/lib/api/generated/types.gen';
+import { TestingLocation, TestingSession } from '@/lib/api/generated';
 import { TestingSessionCreateData, testingSessionCreateSchema } from '@/lib/schemas/testing-sessions.schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';

@@ -10,6 +10,8 @@ export interface AudioData {
   caption?: string
   size?: number
   isNew?: boolean
+  title?: string
+  artist?: string
 }
 
 export interface SerializedAudioNode extends SerializedLexicalNode {

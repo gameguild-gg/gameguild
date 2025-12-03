@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import type { TestingSession } from '@/lib/api/generated/types.gen';
+import type { TestingSession } from '@/lib/api/generated';
 import { Calendar, Clock, MapPin, TestTube, User, Users } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -75,7 +75,7 @@ export function TestingSessionDetails({ data: session }: TestingSessionDetailsPr
           <p className="text-muted-foreground mt-2">Testing Session Details</p>
         </div>
         <div className="flex items-center gap-2">
-          {getStatusBadge(session.status || 0)}
+          {getStatusBadge(typeof session.status === 'number' ? session.status : 0)}
           <Badge variant="outline">
             <TestTube className="w-4 h-4 mr-1" />
             Testing Session
