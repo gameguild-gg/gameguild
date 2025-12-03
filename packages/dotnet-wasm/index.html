@@ -3,404 +3,293 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DotNet Web - C# Compiler Demo</title>
+    <title>C# Compiler - .NET 8 WASM</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
-        }
-
-        h1 {
-            color: #569cd6;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: #858585;
-            margin-bottom: 30px;
-        }
-
-        .editor-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .editor, .output {
-            background: #252526;
-            border: 1px solid #3c3c3c;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .editor-header, .output-header {
-            background: #2d2d30;
-            padding: 10px 15px;
-            border-bottom: 1px solid #3c3c3c;
-            font-weight: 600;
-            color: #cccccc;
-        }
-
-        textarea {
-            width: 100%;
-            height: 400px;
+            padding: 20px;
             background: #1e1e1e;
             color: #d4d4d4;
-            border: none;
-            padding: 15px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 14px;
-            resize: vertical;
-            outline: none;
         }
-
-        .output-content {
-            padding: 15px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 13px;
-            min-height: 400px;
-            max-height: 600px;
-            overflow-y: auto;
-        }
-
-        .output-content pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-        }
-
-        .stdout {
-            color: #4ec9b0;
-        }
-
-        .stderr {
-            color: #f48771;
-        }
-
-        .info {
-            color: #858585;
-            margin-top: 10px;
-            font-size: 12px;
-        }
-
-        .controls {
+        h1 { color: #569cd6; }
+        .tabs {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
-
+        .tab {
+            background: #2d2d30;
+            color: #cccccc;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .tab.active {
+            background: #0e639c;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .file-section {
+            margin-bottom: 15px;
+        }
+        .file-section h4 {
+            color: #4ec9b0;
+            margin: 5px 0;
+        }
+        textarea {
+            width: 100%;
+            background: #252526;
+            color: #d4d4d4;
+            border: 1px solid #3c3c3c;
+            padding: 10px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .small-textarea {
+            height: 150px;
+        }
+        .large-textarea {
+            height: 400px;
+        }
         button {
             background: #0e639c;
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: background 0.2s;
+            font-size: 16px;
+            margin-top: 10px;
         }
-
-        button:hover {
-            background: #1177bb;
+        button:hover { background: #1177bb; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        #output {
+            background: #1e1e1e;
+            border: 1px solid #3c3c3c;
+            padding: 10px;
+            min-height: 400px;
+            white-space: pre-wrap;
+            font-family: 'Consolas', 'Courier New', monospace;
         }
-
-        button:disabled {
-            background: #3c3c3c;
-            color: #858585;
-            cursor: not-allowed;
-        }
-
-        .status {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            padding: 0 10px;
-            color: #858585;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #3c3c3c;
-            border-top-color: #569cd6;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .examples {
-            margin-top: 20px;
-        }
-
-        .example-buttons {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .example-btn {
-            background: #2d2d30;
-            padding: 8px 15px;
-            font-size: 13px;
-        }
-
-        .example-btn:hover {
-            background: #3e3e42;
-        }
+        .error { color: #f48771; }
+        .success { color: #4ec9b0; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>DotNet Web - C# Compiler</h1>
-        <p class="subtitle">Compile and run C# code in your browser using Mono WebAssembly and Roslyn</p>
+    <h1>C# Compiler - .NET 8 WASM</h1>
+    <p>Write C# code and run it in your browser!</p>
+    
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('single')">Single File</button>
+        <button class="tab" onclick="switchTab('multiple')">Multiple Files</button>
+    </div>
 
-        <div class="controls">
-            <button id="runBtn">▶ Run Code</button>
-            <button id="clearBtn">Clear Output</button>
-            <div class="status" id="status"></div>
-        </div>
+    <!-- Single File Tab -->
+    <div id="single" class="tab-content active">
+        <div class="container">
+            <div>
+                <h3>C# Code:</h3>
+                <textarea id="code" class="large-textarea">using System;
 
-        <div class="editor-container">
-            <div class="editor">
-                <div class="editor-header">C# Source Code</div>
-                <textarea id="codeEditor" spellcheck="false">using System;
-using System.Linq;
-
-class Program 
+class Program
 {
-    static void Main() 
+    static void Main()
     {
-        Console.WriteLine("Hello from C#!");
+        Console.WriteLine("Hello from C# in WASM!");
+        Console.WriteLine($"Current time: {DateTime.Now}");
         
-        // Calculate sum of numbers
-        var numbers = new[] { 1, 2, 3, 4, 5 };
-        var sum = numbers.Sum();
-        
-        Console.WriteLine($"Sum of 1-5: {sum}");
-        Console.WriteLine($"Average: {numbers.Average()}");
+        for (int i = 1; i <= 5; i++)
+        {
+            Console.WriteLine($"Count: {i}");
+        }
     }
 }</textarea>
+                <button id="runBtn" onclick="runCode()">Run Code</button>
             </div>
-
-            <div class="output">
-                <div class="output-header">Output</div>
-                <div class="output-content" id="output">
-                    <div class="info">Click "Run Code" to compile and execute your C# code.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="examples">
-            <div class="editor-header" style="margin-bottom: 10px;">Examples</div>
-            <div class="example-buttons">
-                <button class="example-btn" data-example="hello">Hello World</button>
-                <button class="example-btn" data-example="linq">LINQ Query</button>
-                <button class="example-btn" data-example="fibonacci">Fibonacci</button>
-                <button class="example-btn" data-example="class">Classes</button>
+            <div>
+                <h3>Output:</h3>
+                <div id="output">Loading .NET runtime...</div>
             </div>
         </div>
     </div>
 
-    <script type="module">
-        import { CSharpCompiler } from './src/index.ts'
+    <!-- Multiple Files Tab -->
+    <div id="multiple" class="tab-content">
+        <div class="container">
+            <div>
+                <h3>Additional Files:</h3>
+                
+                <div class="file-section">
+                    <h4>Person.cs</h4>
+                    <textarea id="file1" class="small-textarea">using System;
 
-        const codeEditor = document.getElementById('codeEditor')
-        const output = document.getElementById('output')
-        const runBtn = document.getElementById('runBtn')
-        const clearBtn = document.getElementById('clearBtn')
-        const status = document.getElementById('status')
-
-        let compiler = null
-        let isInitializing = false
-        let isRunning = false
-
-        const examples = {
-            hello: `using System;
-
-class Program 
+namespace MyApp.Models
 {
-    static void Main() 
+    public class Person
     {
-        Console.WriteLine("Hello from C#!");
-    }
-}`,
-            linq: `using System;
-using System.Linq;
-
-class Program 
-{
-    static void Main() 
-    {
-        var numbers = Enumerable.Range(1, 10);
-        var evens = numbers.Where(n => n % 2 == 0);
+        public string Name { get; set; }
+        public int Age { get; set; }
         
-        Console.WriteLine("Even numbers from 1-10:");
-        foreach (var num in evens)
+        public void Greet()
         {
-            Console.WriteLine(num);
+            Console.WriteLine($"Hello, I'm {Name} and I'm {Age} years old!");
         }
     }
-}`,
-            fibonacci: `using System;
+}</textarea>
+                </div>
 
-class Program 
-{
-    static void Main() 
-    {
-        Console.WriteLine("Fibonacci sequence (first 10):");
-        for (int i = 0; i < 10; i++)
-        {
-            Console.WriteLine($"F({i}) = {Fibonacci(i)}");
-        }
-    }
-    
-    static int Fibonacci(int n)
-    {
-        if (n <= 1) return n;
-        return Fibonacci(n - 1) + Fibonacci(n - 2);
-    }
-}`,
-            class: `using System;
-using System.Collections.Generic;
+                <div class="file-section">
+                    <h4>Calculator.cs</h4>
+                    <textarea id="file2" class="small-textarea">using System;
 
-class Person 
+namespace MyApp.Services
 {
-    public string Name { get; set; }
-    public int Age { get; set; }
-    
-    public void Greet()
+    public static class Calculator
     {
-        Console.WriteLine($"Hi, I'm {Name} and I'm {Age} years old!");
+        public static int Add(int a, int b) => a + b;
+        public static int Multiply(int a, int b) => a * b;
     }
-}
+}</textarea>
+                </div>
 
-class Program 
+                <h3>Main Program:</h3>
+                <textarea id="mainCode" class="small-textarea">using System;
+using MyApp.Models;
+using MyApp.Services;
+
+class Program
 {
-    static void Main() 
+    static void Main()
     {
-        var people = new List<Person>
-        {
-            new Person { Name = "Alice", Age = 25 },
-            new Person { Name = "Bob", Age = 30 }
+        var person = new Person 
+        { 
+            Name = "Alice", 
+            Age = 30 
         };
         
-        foreach (var person in people)
-        {
-            person.Greet();
-        }
+        person.Greet();
+        
+        int sum = Calculator.Add(5, 3);
+        Console.WriteLine($"5 + 3 = {sum}");
+        
+        int product = Calculator.Multiply(4, 7);
+        Console.WriteLine($"4 × 7 = {product}");
     }
-}`
-        }
+}</textarea>
+                <button id="runMultiBtn" onclick="runMultipleFiles()">Run Multiple Files</button>
+            </div>
+            <div>
+                <h3>Output:</h3>
+                <div id="multiOutput">Loading .NET runtime...</div>
+            </div>
+        </div>
+    </div>
 
-        function setStatus(message, showSpinner = false) {
-            status.innerHTML = showSpinner 
-                ? `<span class="spinner"></span>${message}`
-                : message
-        }
-
-        async function initializeCompiler() {
-            if (compiler || isInitializing) return
-
-            isInitializing = true
-            runBtn.disabled = true
-            setStatus('Initializing C# compiler...', true)
-
-            try {
-                // Use empty string for dev server (files at /managed/), '/dotnet' for production
-                compiler = new CSharpCompiler('')
-                await compiler.initialize()
-                setStatus('✓ Compiler ready')
-                runBtn.disabled = false
-            } catch (error) {
-                setStatus('❌ Failed to initialize compiler')
-                output.innerHTML = `<div class="stderr">Initialization Error:\n${error.message}\n\nStack:\n${error.stack}</div>`
-                console.error('Compiler initialization error:', error)
-                runBtn.disabled = false // Re-enable to allow retry
-            } finally {
-                isInitializing = false
-            }
+    <script type="module" src="/managed/main.js"></script>
+    <script>
+        function switchTab(tab) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
         }
 
         async function runCode() {
-            if (!compiler) {
-                await initializeCompiler()
-                if (!compiler) return
-            }
-
-            if (isRunning) return
-
-            isRunning = true
-            runBtn.disabled = true
-            setStatus('Compiling and running...', true)
-
+            const output = document.getElementById('output');
+            const btn = document.getElementById('runBtn');
+            const code = document.getElementById('code').value;
+            
             try {
-                const code = codeEditor.value
-                const result = await compiler.execute(code, { timeout: 30000 })
-
-                let html = ''
+                btn.disabled = true;
+                output.innerHTML = 'Compiling and running...';
                 
-                if (result.stderr) {
-                    html += `<div class="stderr">Compilation/Runtime Errors:\n${result.stderr}</div>`
+                // Wait for C# runtime to be ready
+                while (!window.CSharpCompiler) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
                 
-                if (result.stdout) {
-                    html += `<div class="stdout">Output:\n${result.stdout}</div>`
+                const result = window.CSharpCompiler.compileAndRun(code);
+                
+                if (result.startsWith('COMPILATION_ERROR')) {
+                    output.innerHTML = `<span class="error">${result}</span>`;
+                } else if (result.startsWith('RUNTIME_ERROR')) {
+                    output.innerHTML = `<span class="error">${result}</span>`;
+                } else {
+                    output.innerHTML = `<span class="success">${result || '(no output)'}</span>`;
                 }
-
-                html += `<div class="info">
-Exit Code: ${result.exitCode}
-Compilation Time: ${result.compilationTime?.toFixed(2) || 'N/A'} ms
-Execution Time: ${result.executionTime.toFixed(2)} ms
-</div>`
-
-                output.innerHTML = html
-                setStatus(result.exitCode === 0 ? '✓ Execution complete' : '❌ Execution failed')
             } catch (error) {
-                output.innerHTML = `<div class="stderr">Error:\n${error.message}</div>`
-                setStatus('❌ Error occurred')
+                output.innerHTML = `<span class="error">Error: ${error.message}</span>`;
             } finally {
-                isRunning = false
-                runBtn.disabled = false
+                btn.disabled = false;
             }
         }
 
-        runBtn.addEventListener('click', runCode)
-        
-        clearBtn.addEventListener('click', () => {
-            output.innerHTML = '<div class="info">Output cleared.</div>'
-            setStatus('')
-        })
-
-        document.querySelectorAll('.example-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const example = btn.dataset.example
-                if (examples[example]) {
-                    codeEditor.value = examples[example]
+        async function runMultipleFiles() {
+            const output = document.getElementById('multiOutput');
+            const btn = document.getElementById('runMultiBtn');
+            const mainCode = document.getElementById('mainCode').value;
+            const file1 = document.getElementById('file1').value;
+            const file2 = document.getElementById('file2').value;
+            
+            try {
+                btn.disabled = true;
+                output.innerHTML = 'Compiling and running...';
+                
+                // Wait for C# runtime to be ready
+                while (!window.CSharpCompiler) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
-            })
-        })
-
-        // Don't auto-initialize - wait for user to click Run
-        // initializeCompiler()
+                
+                // Build files JSON
+                const files = {
+                    'Models/Person.cs': file1,
+                    'Services/Calculator.cs': file2
+                };
+                const filesJson = JSON.stringify(files);
+                
+                const result = window.CSharpCompiler.compileAndRunMultiple(mainCode, filesJson);
+                
+                if (result.startsWith('COMPILATION_ERROR')) {
+                    output.innerHTML = `<span class="error">${result}</span>`;
+                } else if (result.startsWith('RUNTIME_ERROR')) {
+                    output.innerHTML = `<span class="error">${result}</span>`;
+                } else if (result.startsWith('ERROR:')) {
+                    output.innerHTML = `<span class="error">${result}</span>`;
+                } else {
+                    output.innerHTML = `<span class="success">${result || '(no output)'}</span>`;
+                }
+            } catch (error) {
+                output.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+        
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.CSharpCompiler) {
+                    document.getElementById('output').innerHTML = '<span class="success">✓ C# Compiler ready! Click "Run Code" to execute.</span>';
+                    document.getElementById('multiOutput').innerHTML = '<span class="success">✓ C# Compiler ready! Click "Run Multiple Files" to execute.</span>';
+                }
+            }, 2000);
+        });
     </script>
 </body>
 </html>
