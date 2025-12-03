@@ -1,3 +1,7 @@
+using GameGuild.SharedKernel.Enums;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Entities;
+using System.ComponentModel.DataAnnotations;
 ﻿namespace GameGuild.Modules.Programs;
 
 public record RevenueAnalyticsDto(Guid ProgramId, decimal TotalRevenue, decimal MonthlyRevenue, int TotalPurchases, int MonthlyPurchases, decimal AverageRevenuePerUser, decimal ConversionRate, List<RevenueChartDto> RevenueChart) {
