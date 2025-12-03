@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getTestingSessionsAction } from '@/lib/admin/testing-lab/sessions/sessions.actions';
 import { TestingSession } from '@/lib/admin/testing-lab/types';
-import { SessionStatus } from '@/lib/api/generated/types.gen';
+import { SessionStatus } from '@/lib/api/generated/stub-types';
 import { Calendar, Clock, Loader2, Search, Users } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 

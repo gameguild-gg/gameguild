@@ -14,7 +14,7 @@
     /* Modules */
     "module": "ESNext",
     "moduleResolution": "bundler",
-  "baseUrl": ".",
+    "baseUrl": ".",
     "resolveJsonModule": true,
     "allowImportingTsExtensions": false,
 

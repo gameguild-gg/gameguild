@@ -1,4 +1,4 @@
-import { Grid3X3 } from "lucide-react"
+import { Grid3x3 } from "lucide-react"
 import type { MermaidTemplate } from "./template-loader"
 
 export default {
@@ -6,7 +6,7 @@ export default {
   type: "treemap-beta",
   title: "Treemap Chart",
   description: "Visualize hierarchical data with nested rectangles",
-  icon: Grid3X3,
+  icon: Grid3x3,
   category: "charts",
   preview: "Hierarchical data visualization",
   previewImage: "previews/treemap-beta.svg",

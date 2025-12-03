@@ -22,7 +22,6 @@ import {
   $getSelection,
   $isRangeSelection,
   FORMAT_TEXT_COMMAND,
-  SELECTION_CHANGE_COMMAND,
   FORMAT_ELEMENT_COMMAND,
 } from "lexical"
 import { $createHeadingNode, $isHeadingNode, type HeadingTagType, $createQuoteNode } from "@lexical/rich-text"

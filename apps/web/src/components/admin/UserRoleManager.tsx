@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Trash2, Plus, Shield, Users, Settings, Eye } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useModulePermissions } from '@/hooks/useModulePermissions';
 import { ModuleType, RoleLevel } from '@/types/modulePermissions';
+import { Eye, Plus, Settings, Shield, Trash2, Users } from 'lucide-react';
+import { useState } from 'react';
 
 interface UserRoleManagerProps {
   userId: string;
@@ -30,7 +30,8 @@ export function UserRoleManager({ userId, tenantId, onRoleChanged }: UserRoleMan
 
     setIsAssigning(true);
     try {
-      await assignRole(selectedRoleId, tenantId);
+      // Assuming selectedRoleId contains the role name and we assign to Users module by default
+      await assignRole(userId, tenantId || null, ModuleType.Users, selectedRoleId);
       setShowAssignDialog(false);
       setSelectedRoleId('');
       onRoleChanged?.();
@@ -44,7 +45,11 @@ export function UserRoleManager({ userId, tenantId, onRoleChanged }: UserRoleMan
   const handleRevokeRole = async (roleAssignmentId: string) => {
     setIsRevoking(roleAssignmentId);
     try {
-      await revokeRole(roleAssignmentId);
+      // Find the role assignment to get module and roleId
+      const assignment = userRoles.find(r => r.id === roleAssignmentId);
+      if (assignment) {
+        await revokeRole(userId, tenantId || null, assignment.scope?.module || ModuleType.Users, assignment.roleId);
+      }
       onRoleChanged?.();
     } catch (error) {
       console.error('Failed to revoke role:', error);

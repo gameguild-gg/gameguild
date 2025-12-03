@@ -10,10 +10,10 @@ const nextConfig: NextConfig = {
   // Force the app to use the correct base URL
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   images: {
     remotePatterns: [
@@ -216,6 +216,7 @@ const nextConfig: NextConfig = {
       module: false,
       fs: false,
       path: false,
+      canvas: false, // vega-canvas uses canvas which is Node.js only
     };
 
     // Add rule to handle markdown files as raw text

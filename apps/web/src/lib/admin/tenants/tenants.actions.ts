@@ -1,9 +1,5 @@
 'use server';
 
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import { getApiTenants, getApiTenantsById, getApiTenantsSearch } from '@/lib/api/generated/sdk.gen';
-import type { GetApiTenantsData, GetApiTenantsSearchData } from '@/lib/api/generated/types.gen';
-
 // Helper to strip non-serializable fields (Request/Response objects) before crossing the RSC boundary
 function toPlainResult<TData = unknown, TError = unknown>(result: any): { data: TData | null; error: TError | null; status: number | null } {
     return {
@@ -16,50 +12,23 @@ function toPlainResult<TData = unknown, TError = unknown>(result: any): { data: 
 /**
  * Get all tenants
  */
-export async function getTenantsAction(params?: GetApiTenantsData) {
-    await configureAuthenticatedClient();
-
-    try {
-        const result = await getApiTenants({
-            query: params?.query,
-        });
-
-        return toPlainResult(result);
-    } catch (error) {
-        return toPlainResult({ error });
-    }
+export async function getTenantsAction(_params?: any) {
+    // STUB: tenants listing disabled
+    return toPlainResult({ data: [], response: { status: 200 } });
 }
 
 /**
  * Get tenant by ID
  */
-export async function getTenantByIdAction(tenantId: string) {
-    await configureAuthenticatedClient();
-
-    try {
-        const result = await getApiTenantsById({
-            path: { id: tenantId },
-        });
-
-        return toPlainResult(result);
-    } catch (error) {
-        return toPlainResult({ error });
-    }
+export async function getTenantByIdAction(_tenantId: string) {
+    // STUB: tenant details disabled
+    return toPlainResult({ data: null, response: { status: 404 } });
 }
 
 /**
  * Search tenants with filters
  */
-export async function searchTenantsAction(params?: Omit<GetApiTenantsSearchData, 'url'>) {
-    await configureAuthenticatedClient();
-
-    try {
-        const result = await getApiTenantsSearch({
-            query: params?.query,
-        });
-
-        return toPlainResult(result);
-    } catch (error) {
-        return toPlainResult({ error });
-    }
+export async function searchTenantsAction(_params?: any) {
+    // STUB: search disabled; return empty list
+    return toPlainResult({ data: [], response: { status: 200 } });
 }

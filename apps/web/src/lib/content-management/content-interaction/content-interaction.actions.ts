@@ -2,135 +2,84 @@
 
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
-  getApiContentinteractionUserByProgramUserId,
-  getApiContentinteractionUserByProgramUserIdContentByContentId,
-  postApiContentinteractionByInteractionIdComplete,
-  postApiContentinteractionByInteractionIdSubmit,
-  postApiContentinteractionStart,
-  putApiContentinteractionByInteractionIdProgress,
-  putApiContentinteractionByInteractionIdTimeSpent,
+  getContentInteractionUserByProgramUserId,
+  getContentInteractionUserByProgramUserIdContentByContentId,
+  postContentInteractionByInteractionIdComplete,
+  postContentInteractionByInteractionIdSubmit,
+  postContentInteractionStart,
+  putContentInteractionByInteractionIdProgress,
+  putContentInteractionByInteractionIdTimeSpent,
 } from '@/lib/api/generated/sdk.gen';
 import type {
-  GetApiContentinteractionUserByProgramUserIdContentByContentIdData,
-  GetApiContentinteractionUserByProgramUserIdData,
-  PostApiContentinteractionByInteractionIdCompleteData,
-  PostApiContentinteractionByInteractionIdSubmitData,
-  PostApiContentinteractionStartData,
-  PutApiContentinteractionByInteractionIdProgressData,
-  PutApiContentinteractionByInteractionIdTimeSpentData,
+  GetContentInteractionUserByProgramUserIdContentByContentIdData,
+  GetContentInteractionUserByProgramUserIdData,
+  PostContentInteractionByInteractionIdCompleteData,
+  PostContentInteractionByInteractionIdSubmitData,
+  PostContentInteractionStartData,
+  PutContentInteractionByInteractionIdProgressData,
+  PutContentInteractionByInteractionIdTimeSpentData,
 } from '@/lib/api/generated/types.gen';
 import { revalidateTag } from 'next/cache';
 
-// =============================================================================
-// CONTENT INTERACTION MANAGEMENT
-// =============================================================================
-
-/**
- * Start a content interaction
- */
-export async function startContentInteraction(data?: PostApiContentinteractionStartData) {
+export async function startContentInteraction(data?: PostContentInteractionStartData) {
   await configureAuthenticatedClient();
-
-  const result = await postApiContentinteractionStart({
+  const result = await postContentInteractionStart({
     body: data?.body,
   });
-
-  // Revalidate content interactions cache
   revalidateTag('content-interactions');
-
   return result;
 }
 
-/**
- * Update content interaction progress
- */
-export async function updateContentInteractionProgress(data: PutApiContentinteractionByInteractionIdProgressData) {
+export async function updateContentInteractionProgress(data: PutContentInteractionByInteractionIdProgressData) {
   await configureAuthenticatedClient();
-
-  const result = await putApiContentinteractionByInteractionIdProgress({
+  const result = await putContentInteractionByInteractionIdProgress({
     path: data.path,
     body: data.body,
   });
-
-  // Revalidate content interactions cache
   revalidateTag('content-interactions');
-
   return result;
 }
 
-/**
- * Submit content interaction
- */
-export async function submitContentInteraction(data: PostApiContentinteractionByInteractionIdSubmitData) {
+export async function submitContentInteraction(data: PostContentInteractionByInteractionIdSubmitData) {
   await configureAuthenticatedClient();
-
-  const result = await postApiContentinteractionByInteractionIdSubmit({
+  const result = await postContentInteractionByInteractionIdSubmit({
     path: data.path,
     body: data.body,
   });
-
-  // Revalidate content interactions cache
   revalidateTag('content-interactions');
-
   return result;
 }
 
-/**
- * Complete content interaction
- */
-export async function completeContentInteraction(data: PostApiContentinteractionByInteractionIdCompleteData) {
+export async function completeContentInteraction(data: PostContentInteractionByInteractionIdCompleteData) {
   await configureAuthenticatedClient();
-
-  const result = await postApiContentinteractionByInteractionIdComplete({
+  const result = await postContentInteractionByInteractionIdComplete({
     path: data.path,
     body: data.body,
   });
-
-  // Revalidate content interactions cache
   revalidateTag('content-interactions');
-
   return result;
 }
 
-/**
- * Update time spent on content interaction
- */
-export async function updateContentInteractionTimeSpent(data: PutApiContentinteractionByInteractionIdTimeSpentData) {
+export async function updateContentInteractionTimeSpent(data: PutContentInteractionByInteractionIdTimeSpentData) {
   await configureAuthenticatedClient();
-
-  const result = await putApiContentinteractionByInteractionIdTimeSpent({
+  const result = await putContentInteractionByInteractionIdTimeSpent({
     path: data.path,
     body: data.body,
   });
-
-  // Revalidate content interactions cache
   revalidateTag('content-interactions');
-
   return result;
 }
 
-// =============================================================================
-// CONTENT INTERACTION RETRIEVAL
-// =============================================================================
-
-/**
- * Get content interactions for a specific user and content
- */
-export async function getContentInteractionByUserAndContent(data: GetApiContentinteractionUserByProgramUserIdContentByContentIdData) {
+export async function getContentInteractionByUserAndContent(data: GetContentInteractionUserByProgramUserIdContentByContentIdData) {
   await configureAuthenticatedClient();
-
-  return getApiContentinteractionUserByProgramUserIdContentByContentId({
+  return getContentInteractionUserByProgramUserIdContentByContentId({
     path: data.path,
   });
 }
 
-/**
- * Get all content interactions for a program user
- */
-export async function getContentInteractionsByUser(data: GetApiContentinteractionUserByProgramUserIdData) {
+export async function getContentInteractionsByUser(data: GetContentInteractionUserByProgramUserIdData) {
   await configureAuthenticatedClient();
-
-  return getApiContentinteractionUserByProgramUserId({
+  return getContentInteractionUserByProgramUserId({
     path: data.path,
   });
 }

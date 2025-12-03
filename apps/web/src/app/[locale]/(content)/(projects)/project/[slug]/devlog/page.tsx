@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation"
 
-export default function LegacyDevlogRedirect({ params }: { params: { slug: string } }) {
-  redirect(`/dashboard/projects/${params.slug}/devlog`)
+export default async function LegacyDevlogRedirect({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+  redirect(`/dashboard/projects/${slug}/devlog`)
 }

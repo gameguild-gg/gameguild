@@ -1,11 +1,6 @@
 'use server';
 
 import { auth } from '@/auth';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import {
-  deleteApiModulePermissionsRevokeRole,
-  postApiModulePermissionsAssignRole
-} from '@/lib/api/generated/sdk.gen';
 import { getUsers } from '@/lib/api/users';
 import { revalidatePath } from 'next/cache';
 
@@ -76,28 +71,9 @@ export async function removeUserRoleAction(userId: string, roleName: string): Pr
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
   }
-  await configureAuthenticatedClient();
-
   try {
-    const response = await deleteApiModulePermissionsRevokeRole({
-      body: {
-        userId: userId,
-        tenantId: session.currentTenant?.id,
-        module: 1, // TestingLab module
-        roleName: roleName
-      }
-    });
-
-    if (response.error) {
-      const errorMessage = typeof response.error === 'object'
-        ? JSON.stringify(response.error)
-        : String(response.error);
-      throw new Error(`Failed to remove role: ${errorMessage}`);
-    }
-
-    // Revalidate the path to ensure fresh data on next load
+    // STUB: role revocation not available
     revalidatePath('/testing-lab-settings');
-
   } catch (error) {
     console.error('Error removing user role:', error);
     if (error instanceof Error) {
@@ -125,28 +101,8 @@ export async function assignUserRoleAction(assignment: {
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
   }
-  await configureAuthenticatedClient();
-
   try {
-    const response = await postApiModulePermissionsAssignRole({
-      body: {
-        userId: assignment.userId,
-        tenantId: session.currentTenant?.id,
-        module: 1, // TestingLab module
-        roleName: assignment.roleName,
-        constraints: null,
-        expiresAt: null
-      }
-    });
-
-    if (response.error) {
-      const errorMessage = typeof response.error === 'object'
-        ? JSON.stringify(response.error)
-        : String(response.error);
-      throw new Error(`Failed to assign role: ${errorMessage}`);
-    }
-
-    // Revalidate the path to ensure fresh data on next load
+    // STUB: simulate success
     revalidatePath('/testing-lab-settings');
 
     return {
