@@ -22,14 +22,14 @@ const LEARNING_OBJECTIVES = ['Master the fundamentals', 'Build practical project
 
 export function CourseOverview({ course, levelConfig }: CourseOverviewProps) {
   const [selectedContent, setSelectedContent] = useState<ProgramContent | null>(
-    course.programContents?.find(content => !content.parentId) || null
+    course.programContents?.find((content: any) => !content.parentId) || null
   );
 
   const config = levelConfig || getCourseLevelConfig(course.difficulty || 0);
   const categoryName = getCourseCategoryName(course.category || 0);
 
-  const topLevelContent = course.programContents?.filter(content => !content.parentId) || [];
-  const childContent = course.programContents?.filter(content => content.parentId) || [];
+  const topLevelContent = course.programContents?.filter((content: any) => !content.parentId) || [];
+  const childContent = course.programContents?.filter((content: any) => content.parentId) || [];
 
   const getContentIcon = (type: number) => {
     switch (type) {
@@ -121,13 +121,13 @@ export function CourseOverview({ course, levelConfig }: CourseOverviewProps) {
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
-                  {course.programContents.filter(c => c.isRequired).length}
+                  {course.programContents.filter((c: any) => c.isRequired).length}
                 </div>
                 <div className="text-sm text-muted-foreground">Required</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-primary">
-                  {course.programContents.filter(c => c.estimatedMinutes).reduce((acc, c) => acc + (c.estimatedMinutes || 0), 0)}
+                  {course.programContents.filter((c: any) => c.estimatedMinutes).reduce((acc: number, c: any) => acc + (c.estimatedMinutes || 0), 0)}
                 </div>
                 <div className="text-sm text-muted-foreground">Minutes</div>
               </div>
@@ -156,8 +156,8 @@ export function CourseOverview({ course, levelConfig }: CourseOverviewProps) {
               {/* Content Navigation */}
               <div className="lg:col-span-1">
                 <Accordion type="single" collapsible className="w-full">
-                  {topLevelContent.map((content) => {
-                    const children = childContent.filter(child => child.parentId === content.id);
+                  {topLevelContent.map((content: any) => {
+                    const children = childContent.filter((child: any) => child.parentId === content.id);
 
                     return (
                       <AccordionItem key={content.id} value={content.id!}>
@@ -179,7 +179,7 @@ export function CourseOverview({ course, levelConfig }: CourseOverviewProps) {
                         {children.length > 0 && (
                           <AccordionContent>
                             <div className="space-y-2 pl-4">
-                              {children.map((child) => (
+                              {children.map((child: any) => (
                                 <button
                                   key={child.id}
                                   className={`w-full text-left p-2 rounded-md hover:bg-accent transition-colors ${selectedContent?.id === child.id ? 'bg-accent' : ''
@@ -242,7 +242,7 @@ export function CourseOverview({ course, levelConfig }: CourseOverviewProps) {
                       <div className="space-y-2">
                         <h4 className="font-semibold">Sub-modules:</h4>
                         <div className="grid gap-2">
-                          {selectedContent.children.map((child) => (
+                          {selectedContent.children.map((child: any) => (
                             <button
                               key={child.id}
                               className="w-full text-left p-3 rounded-lg border hover:bg-accent transition-colors"

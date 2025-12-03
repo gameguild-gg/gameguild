@@ -11,5 +11,5 @@ export * from './subscriptions/subscriptions.actions';
 export * from './analytics/analytics.actions';
 
 // Re-export common types for convenience
-export type { PaymentStatus } from '@/lib/api/generated/types.gen';
-export type { SubscriptionStatus } from '@/lib/api/generated/types.gen';
+export type { PaymentStatus } from '@/lib/api/generated';
+export type { SubscriptionStatus } from '@/lib/api/generated';

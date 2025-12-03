@@ -68,18 +68,39 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
             {sessions.map((session) => {
               // Adapt the API session data to component-friendly format
               const adaptedSession = adaptTestingSessionForComponent(session);
-              const sessionDate = new Date(adaptedSession.sessionDate);
+              const sessionDate = new Date(adaptedSession.sessionDate || new Date());
 
-              // Helper function to convert numeric status to string
-              const getStatusString = (status: number): 'open' | 'full' | 'in-progress' | 'closed' => {
-                switch (status) {
-                  case SESSION_STATUS.SCHEDULED:
+              // Helper function to convert SessionStatus enum to display string
+              const getStatusString = (status: string | number | undefined): 'open' | 'full' | 'in-progress' | 'closed' => {
+                // Handle numeric status (SESSION_STATUS constants)
+                if (typeof status === 'number') {
+                  switch (status) {
+                    case SESSION_STATUS.SCHEDULED:
+                      return 'open';
+                    case SESSION_STATUS.ACTIVE:
+                      return 'in-progress';
+                    case SESSION_STATUS.COMPLETED:
+                      return 'closed';
+                    case SESSION_STATUS.CANCELLED:
+                      return 'closed';
+                    default:
+                      return 'closed';
+                  }
+                }
+                // Handle string status (SessionStatus enum)
+                const statusStr = String(status ?? '').toLowerCase();
+                switch (statusStr) {
+                  case 'scheduled':
+                  case 'pending':
                     return 'open';
-                  case SESSION_STATUS.ACTIVE:
+                  case 'active':
+                  case 'inprogress':
                     return 'in-progress';
-                  case SESSION_STATUS.COMPLETED:
-                    return 'closed';
-                  case SESSION_STATUS.CANCELLED:
+                  case 'completed':
+                  case 'full':
+                    return 'full';
+                  case 'cancelled':
+                  case 'failed':
                     return 'closed';
                   default:
                     return 'closed';

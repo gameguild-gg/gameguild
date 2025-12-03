@@ -1,3 +1,9 @@
+/**
+ * DISABLED: This file contains examples for Testing Lab module which is not enabled in production
+ * All code commented out to avoid compilation errors
+ */
+
+/*
 'use server';
 
 import { auth } from '@/auth';
@@ -8,7 +14,7 @@ import { createClient } from '@/lib/api/generated/client';
 /**
  * Alternative Approach: Create a custom authenticated client for each request
  * This is useful when you don't want to modify the global client
- */
+ *\/
 
 // Option 2: Create custom client per request
 export async function getTestingRequestsWithCustomClient() {
@@ -96,3 +102,7 @@ export async function getTestingRequestsWithUtility() {
     throw new Error('Failed to fetch testing requests');
   }
 }
+*/
+
+export { }; // Make this a module
+

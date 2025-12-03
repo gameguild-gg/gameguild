@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { 
-  X, Save, MousePointerClick, Eye, ExternalLink, Download, Copy, Mail, ArrowRight,
-  Link, Link2, ExternalLinkIcon,
-  ArrowDownToLine, FileDown,
-  Clipboard, ClipboardCopy, CopyCheck,
+  X, Save, MousePointerClick, Eye, ExternalLink, Download, Copy, Mail,
+  Link, Link2,
+  ArrowDownToLine, FileDown, ClipboardCopy, CopyCheck,
   AtSign, Send,
   MoveUp, MoveDown, MoveLeft, MoveRight
 } from "lucide-react"

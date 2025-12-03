@@ -2,9 +2,9 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
 import type { CodeFile, LanguageType } from "@/components/editor/extras/source-code/types"
 import { getExtension, getExtensionForLanguage, getLanguageFromExtension } from "@/components/editor/extras/source-code/utils"
+import { useRef, useState } from "react"
 
 interface UseFileManagementProps {
   files: CodeFile[]
@@ -21,6 +21,8 @@ interface UseFileManagementReturn {
   setNewFileName: (name: string) => void
   newFileLanguage: LanguageType
   setNewFileLanguage: (lang: LanguageType) => void
+  newFileHasStates: boolean
+  setNewFileHasStates: (hasStates: boolean) => void
 
   // Import dialog states
   showImportDialog: boolean
@@ -29,7 +31,13 @@ interface UseFileManagementReturn {
   setImportContents: (contents: { name: string; content: string }[]) => void
   importFileNames: string[]
   setImportFileNames: (names: string[]) => void
+  importFileHasStates: boolean
+  setImportFileHasStates: (hasStates: boolean) => void
   fileInputRef: React.RefObject<HTMLInputElement | null>
+
+  // Confirm dialog states
+  showConfirmDialog: boolean
+  setShowConfirmDialog: (show: boolean) => void
 
   // Rename dialog states
   showRenameDialog: boolean
@@ -72,7 +80,11 @@ export function useFileManagement({
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [importContents, setImportContents] = useState<{ name: string; content: string }[]>([])
   const [importFileNames, setImportFileNames] = useState<string[]>([])
+  const [importFileHasStates, setImportFileHasStates] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Confirm dialog states
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
 
   // Rename dialog states
   const [showRenameDialog, setShowRenameDialog] = useState(false)
@@ -143,7 +155,7 @@ export function useFileManagement({
     setFiles((prev) => [...prev, ...newFiles])
 
     // Set the active file to the first imported file
-    if (newFiles.length > 0) {
+    if (newFiles.length > 0 && newFiles[0]) {
       setActiveFileId(newFiles[0].id)
     }
 
@@ -259,7 +271,9 @@ export function useFileManagement({
       const [movedFile] = newFiles.splice(fileIndex, 1)
 
       // Insert it at the target position
-      newFiles.splice(targetIndex, 0, movedFile)
+      if (movedFile) {
+        newFiles.splice(targetIndex, 0, movedFile)
+      }
 
       return newFiles
     })
@@ -273,6 +287,8 @@ export function useFileManagement({
     setNewFileName,
     newFileLanguage,
     setNewFileLanguage,
+    newFileHasStates,
+    setNewFileHasStates,
 
     // Import dialog states
     showImportDialog,
@@ -281,7 +297,13 @@ export function useFileManagement({
     setImportContents,
     importFileNames,
     setImportFileNames,
+    importFileHasStates,
+    setImportFileHasStates,
     fileInputRef,
+
+    // Confirm dialog states
+    showConfirmDialog,
+    setShowConfirmDialog,
 
     // Rename dialog states
     showRenameDialog,

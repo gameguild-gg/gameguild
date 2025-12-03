@@ -1,14 +1,14 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { Search, Filter, Grid3X3, List, Plus, Star, Users, Tag } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import type { Project } from '@/lib/api/generated/types.gen';
+import type { Project } from '@/lib/api/generated/stub-types';
+import { Filter, Grid3X3, List, Plus, Search, Star, Tag, Users } from 'lucide-react';
+import Link from 'next/link';
+import React from 'react';
 import CreateProjectDialog from '../../../../../../components/projects/create-project-dialog';
 
 type ViewMode = 'grid' | 'list';
@@ -43,15 +43,15 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
   };
 
   const ProjectCard = ({ project }: { project: Project }) => (
-    <Link href={`/dashboard/projects/${project.slug ?? project.id}`}> 
+    <Link href={`/dashboard/projects/${project.slug ?? project.id}`}>
       <Card className="dark-card group hover:shadow-xl transition-all duration-200 cursor-pointer">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <CardTitle className="text-lg font-semibold truncate">{project.title}</CardTitle>
-            {project.shortDescription ? (
-              <CardDescription className="line-clamp-2">{project.shortDescription}</CardDescription>
-            ) : null}
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="text-lg font-semibold truncate">{project.title}</CardTitle>
+              {project.shortDescription ? (
+                <CardDescription className="line-clamp-2">{project.shortDescription}</CardDescription>
+              ) : null}
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 {project.category && <span className="inline-flex items-center gap-1"><Tag className="h-3 w-3" />{(project.category as any)?.toString?.() ?? String(project.category)}</span>}
                 {project.developmentStatus && <span className="inline-flex items-center gap-1">{String(project.developmentStatus)}</span>}
@@ -62,16 +62,16 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
                   <span className="inline-flex items-center gap-1"><Star className="h-3 w-3" />{project.averageRating.toFixed(1)}</span>
                 )}
               </div>
+            </div>
+            {getStatusBadge(project.status)}
           </div>
-          {getStatusBadge(project.status)}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{(project as any).type?.toString?.() ?? 'Project'}</span>
-          <span className="whitespace-nowrap">{project.createdAt ? new Date((project as any).createdAt).toLocaleDateString() : ''}</span>
-        </div>
-      </CardContent>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{(project as any).type?.toString?.() ?? 'Project'}</span>
+            <span className="whitespace-nowrap">{project.createdAt ? new Date((project as any).createdAt).toLocaleDateString() : ''}</span>
+          </div>
+        </CardContent>
       </Card>
     </Link>
   );

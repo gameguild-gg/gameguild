@@ -43,23 +43,22 @@ export function SessionTypeFilter({ selectedSessionTypes, onToggleSessionType }:
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className={`${
-            selectedSessionTypes.length === 0 ? 'backdrop-blur-md border border-slate-600/30 text-slate-400' : 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
-          } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-blue-400/60 hover:border-blue-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
+          className={`${selectedSessionTypes.length === 0 ? 'backdrop-blur-md border border-slate-600/30 text-slate-400' : 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
+            } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-blue-400/60 hover:border-blue-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
           style={
             selectedSessionTypes.length === 0
               ? {
-                  background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
-                  boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
-                }
+                background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+              }
               : {
-                  background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
-                  boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
-                }
+                background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
+              }
           }
         >
           <div className="flex items-center gap-2">
-            {selectedSessionTypes.length === 0 ? getSessionTypeIcon('all') : selectedSessionTypes.length === 1 ? getSessionTypeIcon(selectedSessionTypes[0]) : <Trophy className="h-4 w-4 text-slate-400" />}
+            {selectedSessionTypes.length === 0 ? getSessionTypeIcon('all') : selectedSessionTypes.length === 1 ? getSessionTypeIcon(selectedSessionTypes[0] || 'all') : <Trophy className="h-4 w-4 text-slate-400" />}
             <span>{getDisplayText(selectedSessionTypes)}</span>
           </div>
           <ChevronDown className="h-4 w-4 ml-2" />

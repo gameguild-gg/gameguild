@@ -17,8 +17,7 @@ import {
   type SerializedLexicalNode,
 } from "lexical"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Edit, Trash2, FileText } from "lucide-react"
+import { Edit } from "lucide-react"
 import { MarkdownEditor } from "@/components/editor/extras/markdown/markdown-editor"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import { useMarkdownComponents } from "@/components/editor/extras/markdown/markdown-components"

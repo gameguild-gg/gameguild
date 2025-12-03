@@ -4,7 +4,7 @@ export function readStr(u8: Uint8Array, o: number, len: number = -1): string {
   let str = '';
   let end = u8.length;
   if (len !== -1) end = o + len;
-  for (let i = o; i < end && u8[i] !== 0; ++i) str += String.fromCharCode(u8[i]);
+  for (let i = o; i < end && (u8[i] ?? 0) !== 0; ++i) str += String.fromCharCode(u8[i] ?? 0);
   return str;
 }
 

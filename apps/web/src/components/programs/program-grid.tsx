@@ -2,11 +2,11 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Program } from '@/lib/api/generated/types.gen';
-import { Clock, Eye, DollarSign, Calendar, BookOpen } from 'lucide-react';
+import { Program } from '@/lib/api/generated/stub-types';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { BookOpen, Calendar, Clock, DollarSign, Eye } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatDistanceToNow, parseISO } from 'date-fns';
 
 interface ProgramGridProps {
   programs: Program[];
@@ -107,7 +107,7 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
 
               {program.skillsProvided && program.skillsProvided.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1">
-                  {program.skillsProvided.slice(0, 3).map((skill) => (
+                  {program.skillsProvided.slice(0, 3).map((skill: { id: string; name: string }) => (
                     <Badge key={skill.id} variant="secondary" className="text-xs">
                       {skill.name}
                     </Badge>

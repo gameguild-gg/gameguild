@@ -4,8 +4,18 @@
  * Comprehensive type definitions for the Course Editor Provider system
  */
 
+import { Course } from '@/lib/courses';
 import { ReactNode } from 'react';
-import { CourseContent, Course } from '@/lib/courses';
+
+// Stub type for CourseContent which doesn't exist in @/lib/courses
+export interface CourseContent {
+  chapters?: any[];
+  syllabus?: string;
+  prerequisites?: string[];
+  objectives?: string[];
+  totalDuration?: number;
+  totalLessons?: number;
+}
 
 /**
  * Course Editor Action Types
@@ -259,25 +269,25 @@ export type CourseEditorAction =
 
   // Course editing
   | {
-      type: typeof CourseEditorActionType.UPDATE_COURSE_FIELD;
-      payload: { field: keyof Course; value: unknown };
-    }
+    type: typeof CourseEditorActionType.UPDATE_COURSE_FIELD;
+    payload: { field: keyof Course; value: unknown };
+  }
   | { type: typeof CourseEditorActionType.UPDATE_COURSE_CONTENT; payload: Partial<EnhancedCourseContent> }
   | { type: typeof CourseEditorActionType.UPDATE_COURSE_METADATA; payload: Partial<Course> }
 
   // Content operations
   | { type: typeof CourseEditorActionType.ADD_LESSON; payload: { chapterId: string; lesson: CourseLesson } }
   | {
-      type: typeof CourseEditorActionType.UPDATE_LESSON;
-      payload: { chapterId: string; lessonId: string; lesson: Partial<CourseLesson> };
-    }
+    type: typeof CourseEditorActionType.UPDATE_LESSON;
+    payload: { chapterId: string; lessonId: string; lesson: Partial<CourseLesson> };
+  }
   | { type: typeof CourseEditorActionType.DELETE_LESSON; payload: { chapterId: string; lessonId: string } }
   | { type: typeof CourseEditorActionType.REORDER_LESSONS; payload: { chapterId: string; lessonIds: string[] } }
   | { type: typeof CourseEditorActionType.ADD_CHAPTER; payload: CourseChapter }
   | {
-      type: typeof CourseEditorActionType.UPDATE_CHAPTER;
-      payload: { chapterId: string; chapter: Partial<CourseChapter> };
-    }
+    type: typeof CourseEditorActionType.UPDATE_CHAPTER;
+    payload: { chapterId: string; chapter: Partial<CourseChapter> };
+  }
   | { type: typeof CourseEditorActionType.DELETE_CHAPTER; payload: string }
   | { type: typeof CourseEditorActionType.REORDER_CHAPTERS; payload: string[] }
 

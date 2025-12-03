@@ -1,7 +1,15 @@
-import React from 'react';
-import { Contributor } from '@/lib/contributors/types';
-import Image from 'next/image';
 import { numberToAbbreviation } from '@/lib/utils';
+import Image from 'next/image';
+import React from 'react';
+
+interface Contributor {
+  login: string;
+  name?: string;
+  avatar_url?: string;
+  total_commits?: number;
+  additions?: number;
+  deletions?: number;
+}
 
 interface GlobalRankingTableProps {
   contributors: Contributor[];

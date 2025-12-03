@@ -1,16 +1,16 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Slider } from "@/components/ui/slider"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
-import { WebPConverter, type WebPConversionOptions, WEBP_PRESETS } from "@/lib/editor/webp-converter"
-import { Settings, ImageIcon, Zap, Palette } from "lucide-react"
+import { Slider } from "@/components/ui/slider"
+import { Switch } from "@/components/ui/switch"
+import { WEBP_PRESETS, WebPConverter, type WebPConversionOptions } from "@/lib/editor/webp-converter"
+import { ImageIcon, Palette, Settings, Zap } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
 
 export interface CompressionSettings extends WebPConversionOptions {
   applyToAll: boolean
@@ -119,11 +119,15 @@ export function CompressionSettingsDialog({
   }
 
   const handleQualityChange = (value: number[]) => {
-    setSettings((prev) => ({ ...prev, quality: value[0] / 100, preset: "custom" }))
+    const quality = value[0];
+    if (quality !== undefined) {
+      setSettings((prev) => ({ ...prev, quality: quality / 100, preset: "custom" }))
+    }
   }
 
   const handleScaleChange = (value: number[]) => {
     const newScale = value[0]
+    if (newScale === undefined) return;
     setScaleMultiplier(newScale)
 
     if (originalDimensions) {

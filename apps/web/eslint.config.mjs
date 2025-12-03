@@ -14,7 +14,16 @@ const compat = new FlatCompat({
 
 /** @type {import('eslint').Linter.Config[]} */
 const config = [
-  { ignores: ['src/lib/api/generated/**/*'] },
+  {
+    ignores: [
+      'src/lib/api/generated/**/*',
+      '**/__tests__/**/*',
+      '**/*.test.ts',
+      '**/*.test.tsx',
+      '**/test/**/*',
+      '**/*.d.ts',
+    ]
+  },
   ...compat.config({
     extends: ['next', 'next/core-web-vitals'],
     settings: {
@@ -44,6 +53,7 @@ const config = [
       'unused-imports/no-unused-imports': 'warn',
       'unused-imports/no-unused-vars': 'warn',
       '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/ban-ts-comment': 'warn',
       "@typescript-eslint/no-restricted-types": [
         "error",

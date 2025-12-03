@@ -1,13 +1,27 @@
 'use client';
 
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Users, Star, BookOpen, Play, Eye, FileText, Archive } from 'lucide-react';
-import { Program } from '@/lib/api/generated/types.gen';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Archive, BookOpen, Clock, Eye, FileText, Play, Star, Users } from 'lucide-react';
 
-// Type alias to maintain existing naming
-type Course = Program;
+// Local stub type for Course since backend Program type is disabled
+type CourseAnalytics = {
+  enrollments?: number;
+  averageRating?: number;
+};
+
+type Course = {
+  title: string;
+  area?: string;
+  status?: 'draft' | 'published' | 'archived' | string;
+  level: number;
+  description?: string;
+  content?: unknown[];
+  estimatedHours?: number;
+  analytics?: CourseAnalytics;
+  tools?: string[];
+};
 
 interface CourseCardProps {
   course: Course;

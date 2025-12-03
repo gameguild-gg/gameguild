@@ -1,8 +1,24 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
-import { useWeb3 } from '@/components/web3/hooks/use-web3';
 import { useConnectToWallet } from '@/components/web3/hooks/use-connect-to-wallet';
+import { useWeb3 } from '@/components/web3/hooks/use-web3';
+import { useCallback, useEffect } from 'react';
+
+// Stub functions - Web3 auth not enabled in production
+async function postAuthWeb3Challenge(_opts: { body: { walletAddress: string; chainId: string } }) {
+  console.warn('[STUB] postAuthWeb3Challenge called - Web3 auth not enabled');
+  return { data: { challenge: '' } };
+}
+
+async function signInWithWeb3(_signature: string, _address: string) {
+  console.warn('[STUB] signInWithWeb3 called - Web3 auth not enabled');
+  return null;
+}
+
+async function getSession() {
+  console.warn('[STUB] getSession called - Web3 auth not enabled');
+  return null;
+}
 
 export enum Web3ProviderChoice {
   METAMASK = 'METAMASK',
@@ -15,12 +31,12 @@ export function useSignInWithWeb3(choice: Web3ProviderChoice) {
 
   const signIn = useCallback(async () => {
     if (!state.provider) {
-      await connectToWallet();
+      await connectToWallet?.();
     }
   }, [state.provider, connectToWallet]);
 
   useEffect(() => {
-    const tryToSignInTorus = async () => {};
+    const tryToSignInTorus = async () => { };
 
     const tryToSignInMetamask = async () => {
       if (state.provider && state.accountAddress) {

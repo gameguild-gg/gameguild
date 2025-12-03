@@ -1,10 +1,10 @@
 import { getProgramBySlug, getProgramContentBySlug } from '@/data/courses/mock-data';
-import type { ProgramContentDto } from '@/lib/api/generated/types.gen';
+import type { ProgramContentDto } from '@/lib/api/generated/stub-types';
 import { getProgramContentChildren } from '@/lib/content-management/programs/programs.actions';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { CourseContentPageClient } from './course-content-page-client';
 
 interface PageProps {

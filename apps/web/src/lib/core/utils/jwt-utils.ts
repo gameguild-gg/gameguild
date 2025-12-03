@@ -34,6 +34,9 @@ export function decodeJwt(token: string): JwtPayload | null {
 
     // Decode the payload (second part)
     const payload = parts[1];
+    if (!payload) {
+      return null;
+    }
 
     // Add padding if needed for base64 decoding
     const paddedPayload = payload + '='.repeat((4 - (payload.length % 4)) % 4);
@@ -65,7 +68,7 @@ export function getJwtExpiryDate(token: string): Date | null {
     }
 
     // JWT exp claim is in seconds, Date constructor expects milliseconds
-    return new Date(payload.exp * 1000);
+    return new Date((payload?.exp || 0) * 1000);
   } catch (error) {
     console.error('Failed to get JWT expiry date:', error);
     return null;
