@@ -1,7 +1,7 @@
 "use client"
-import { LayoutGrid, FileText } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { SlidePlayer } from "@/components/editor/extras/presentation/slide-player"
+import { Badge } from "@/components/ui/badge"
+import { FileText, LayoutGrid } from "lucide-react"
 import type { Slide } from "./types"
 
 interface PresentationPreviewProps {
@@ -45,7 +45,10 @@ export function PresentationPreview({
     return null
   }
 
-  const currentSlide = slides[currentSlideIndex] || slides[0]
+  const currentSlide = slides[currentSlideIndex] ?? slides[0]
+  if (!currentSlide) {
+    return null
+  }
   const slideInfo = getSlideInfo(currentSlide)
 
   return (
@@ -86,7 +89,7 @@ export function PresentationPreview({
           customThemeColor={customThemeColor}
           size="lg"
           isEditing={false}
-          canFullscreen={true}
+          showFullscreenButton={true}
           title="Presentation Preview"
         />
 

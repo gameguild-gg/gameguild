@@ -1,7 +1,7 @@
 'use server';
 
 import { auth } from '@/auth';
-import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import type { UserResponseDto } from '@/lib/api/generated';
 import { getUserById } from '@/lib/users/users.actions';
 
 /**

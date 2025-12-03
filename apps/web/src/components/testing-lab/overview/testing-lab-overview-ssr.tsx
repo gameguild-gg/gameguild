@@ -61,5 +61,5 @@ export async function TestingLabOverview({ userRole = 'student' }: TestingLabOve
     // Use fallback stats
   }
 
-  return <TestingLabOverviewClient initialStats={stats} userRole={userRole} />;
+  return <TestingLabOverviewClient userRole={userRole} />;
 }

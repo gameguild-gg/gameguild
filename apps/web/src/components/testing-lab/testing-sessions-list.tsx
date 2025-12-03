@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { getTestingSessionsAction } from '@/lib/admin/testing-lab/sessions/sessions.actions';
 import { TestingSession } from '@/lib/admin/testing-lab/types';
-import { SessionStatus } from '@/lib/api/generated/types.gen';
+import { SessionStatus } from '@/lib/api/generated/stub-types';
 import { Calendar, Clock, Loader2, Search, Users } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -23,14 +23,20 @@ const INITIAL_FILTERS: SessionFilters = {
 };
 
 function getStatusColor(status: SessionStatus): string {
-    switch (status) {
+    const statusStr = status?.toString() ?? '';
+    switch (statusStr) {
         case SessionStatus.SCHEDULED:
+        case 'Scheduled':
             return 'bg-blue-100 text-blue-800 border-blue-200';
         case SessionStatus.ACTIVE:
+        case 'Active':
+        case 'InProgress':
             return 'bg-green-100 text-green-800 border-green-200';
-        case SessionStatus.COMPLETED:
+        case 'Completed':
+        case 'COMPLETED':
             return 'bg-gray-100 text-gray-800 border-gray-200';
-        case SessionStatus.CANCELLED:
+        case 'Cancelled':
+        case 'CANCELLED':
             return 'bg-red-100 text-red-800 border-red-200';
         default:
             return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -38,14 +44,20 @@ function getStatusColor(status: SessionStatus): string {
 }
 
 function getStatusText(status: SessionStatus): string {
-    switch (status) {
+    const statusStr = status?.toString() ?? '';
+    switch (statusStr) {
         case SessionStatus.SCHEDULED:
+        case 'Scheduled':
             return 'Scheduled';
         case SessionStatus.ACTIVE:
+        case 'Active':
+        case 'InProgress':
             return 'Active';
-        case SessionStatus.COMPLETED:
+        case 'Completed':
+        case 'COMPLETED':
             return 'Completed';
-        case SessionStatus.CANCELLED:
+        case 'Cancelled':
+        case 'CANCELLED':
             return 'Cancelled';
         default:
             return 'Unknown';
@@ -88,7 +100,7 @@ export function TestingSessionsList(): React.JSX.Element {
             }
 
             // Status filter
-            if (filters.status !== 'all' && filters.status !== session.status.toString()) {
+            if (filters.status !== 'all' && filters.status !== (session.status ?? '').toString()) {
                 return false;
             }
 
@@ -199,8 +211,8 @@ export function TestingSessionsList(): React.JSX.Element {
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <Badge className={getStatusColor(session.status)}>
-                                                {getStatusText(session.status)}
+                                            <Badge className={getStatusColor(session.status ?? SessionStatus.Pending)}>
+                                                {getStatusText(session.status ?? SessionStatus.Pending)}
                                             </Badge>
                                         </td>
                                         <td className="p-4">

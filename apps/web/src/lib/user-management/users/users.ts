@@ -1,6 +1,6 @@
 'use server';
 
-import type { UpdateUserDto, UserResponseDto, UserResponseDtoPagedResult } from '@/lib/api/generated/types.gen';
+import type { UpdateUserDto, UserResponseDto, UserResponseDtoPagedResult } from '@/lib/api/generated';
 import { revalidateTag, unstable_cache } from 'next/cache';
 
 export interface UserData {

@@ -1,16 +1,22 @@
 "use client"
 
-import { useCallback } from "react"
-import { $getSelection, $isRangeSelection } from "lexical"
 import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { $getSelection, $isRangeSelection, type LexicalNode } from "lexical"
+import { useCallback } from "react"
+
+// Type extension for nodes that support style methods (like TextNode)
+interface StylableNode extends LexicalNode {
+  getStyle?: () => string;
+  setStyle?: (style: string) => void;
+}
 
 interface FontSizeMenuComponentProps {
   editor: any
@@ -28,11 +34,12 @@ export function FontSizeMenuComponent({ editor, currentFontSize, setCurrentFontS
         if ($isRangeSelection(selection)) {
           const nodes = selection.getNodes()
           nodes.forEach((node) => {
-            if (node.getTextContent()) {
-              const currentStyle = node.getStyle() || ""
+            const stylableNode = node as StylableNode
+            if (node.getTextContent() && stylableNode.getStyle && stylableNode.setStyle) {
+              const currentStyle = stylableNode.getStyle() || ""
               let newStyle = currentStyle.replace(/font-size:\s*[^;]+;?/g, "")
               newStyle += `font-size: ${fontSize};`
-              node.setStyle(newStyle.trim())
+              stylableNode.setStyle(newStyle.trim())
             }
           })
         }
@@ -47,7 +54,7 @@ export function FontSizeMenuComponent({ editor, currentFontSize, setCurrentFontS
         <span className="mr-2 h-4 w-4 text-center">Aa</span>
         <span>Size: {currentFontSize || "Default"}</span>
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent side="right" align="start" className="w-40">
+      <DropdownMenuSubContent className="w-40">
         <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
           Current: {currentFontSize || "Default"}
         </div>

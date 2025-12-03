@@ -2,21 +2,21 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { Plus, Trash2, ChevronUp, ChevronDown, FileText, ImageIcon, Edit, GripVertical, Settings } from "lucide-react"
+import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
+import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
+import { SlideEditDialog } from "@/components/editor/extras/presentation/slide-edit-dialog"
+import { SlidePlayer } from "@/components/editor/extras/presentation/slide-player"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
-import { SlidePlayer } from "@/components/editor/extras/presentation/slide-player"
+import { ChevronDown, ChevronUp, Edit, FileText, GripVertical, ImageIcon, Plus, Settings, Trash2 } from "lucide-react"
+import { useEffect, useState } from "react"
 import type { Slide, TransitionEffect } from "./types"
-import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
-import { SlideEditDialog } from "@/components/editor/extras/presentation/slide-edit-dialog"
 
 interface PresentationSettingsProps {
   title: string
@@ -112,8 +112,11 @@ export function PresentationSettings({
     setShowImageDialog(true)
   }
 
-  const handleImportPresentationResult = (result: MediaUploadResult) => {
-    onImportPresentation(result)
+  const handleImportPresentationResult = (result: MediaUploadResult | MediaUploadResult[]) => {
+    const singleResult = Array.isArray(result) ? result[0] : result
+    if (singleResult) {
+      onImportPresentation(singleResult)
+    }
     setShowImportDialog(false)
   }
 
@@ -151,6 +154,7 @@ export function PresentationSettings({
 
     const updatedSlides = [...localSlides]
     const [movedSlide] = updatedSlides.splice(currentIndex, 1)
+    if (!movedSlide) return
     updatedSlides.splice(newIndex, 0, movedSlide)
 
     setLocalSlides(updatedSlides)
@@ -275,6 +279,7 @@ export function PresentationSettings({
       if (draggedSlideIndex !== -1 && targetIndex !== undefined && targetIndex !== draggedSlideIndex) {
         const updatedSlides = [...localSlides]
         const [draggedSlide] = updatedSlides.splice(draggedSlideIndex, 1)
+        if (!draggedSlide) return
         const insertIndex = targetIndex > draggedSlideIndex ? targetIndex - 1 : targetIndex
         updatedSlides.splice(insertIndex, 0, draggedSlide)
 
@@ -459,9 +464,8 @@ export function PresentationSettings({
                       }}
                       onDragLeave={() => setDragOverSlideIndex(null)}
                       onDrop={(e) => handleDropToSlides(e, index)}
-                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-move hover:bg-muted/50 transition-colors ${
-                        dragOverSlideIndex === index ? "border-primary bg-primary/5" : ""
-                      }`}
+                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-move hover:bg-muted/50 transition-colors ${dragOverSlideIndex === index ? "border-primary bg-primary/5" : ""
+                        }`}
                     >
                       <GripVertical className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm font-medium text-muted-foreground w-6">{index + 1}</div>
@@ -566,9 +570,8 @@ export function PresentationSettings({
                 {localSlides.map((slide, index) => (
                   <div
                     key={slide.id}
-                    className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${
-                      currentSlideIndex === index ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
-                    }`}
+                    className={`flex items-center gap-3 p-3 border rounded-lg transition-colors ${currentSlideIndex === index ? "bg-primary/10 border-primary" : "hover:bg-muted/50"
+                      }`}
                   >
                     <div className="text-sm font-medium text-muted-foreground w-6">{index + 1}</div>
                     <div
@@ -689,8 +692,8 @@ export function PresentationSettings({
                       id="auto-advance"
                       checked={autoAdvance}
                       onCheckedChange={(checked) => {
-                        setAutoAdvance(checked)
-                        setAutoAdvanceLoop(checked)
+                        setAutoAdvance(checked === true)
+                        setAutoAdvanceLoop(checked === true)
                       }}
                     />
                     <Label htmlFor="auto-advance">Auto-advance slides</Label>
