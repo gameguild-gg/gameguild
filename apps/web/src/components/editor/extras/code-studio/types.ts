@@ -45,6 +45,33 @@ export type SupportedLanguage =
   | "assembly_riscv"
   | "assembly_powerpc"
   | "webassembly"
+  | "forth"
+  | "dlang"
+  | "nim"
+  | "zig"
+  | "v"
+  | "crystal"
+  | "ocaml"
+  | "scheme"
+  | "smalltalk"
+  | "julia"
+  | "vb"
+  | "objectpascal"
+  | "hope"
+  | "b"
+  | "bcpl"
+  | "fantom"
+  | "modula3"
+  | "fstar"
+  | "elm"
+  | "haxe"
+  | "gleam"
+  | "rescript"
+  | "csharp_script"
+  | "fsharp_script"
+  | "assemblyscript"
+  | "factor"
+  | "purescript"
 
 export type EditorMode = 
   | "execution"  // Executa código com console na direita
@@ -547,6 +574,195 @@ export const LANGUAGE_CONFIGS: Record<
       (i32.const 1)
       (i32.const 108))
     drop))`,
+  },
+  forth: {
+    label: "Forth",
+    monacoLanguage: "forth",
+    defaultExtension: ".fth",
+    supportsExecution: false,
+    defaultTemplate: "\\ Write your Forth code here\n: HELLO  .\" Hello, World!\" CR ;\nHELLO"
+  },
+  dlang: {
+    label: "D",
+    monacoLanguage: "d",
+    defaultExtension: ".d",
+    supportsExecution: false,
+    defaultTemplate: "// Write your D code here\nimport std.stdio;\n\nvoid main()\n{\n    writeln(\"Hello, World!\");\n}"
+  },
+  nim: {
+    label: "Nim",
+    monacoLanguage: "nim",
+    defaultExtension: ".nim",
+    supportsExecution: false,
+    defaultTemplate: "# Write your Nim code here\necho \"Hello, World!\""
+  },
+  zig: {
+    label: "Zig",
+    monacoLanguage: "zig",
+    defaultExtension: ".zig",
+    supportsExecution: false,
+    defaultTemplate: "// Write your Zig code here\nconst std = @import(\"std\");\n\npub fn main() !void {\n    const stdout = std.io.getStdOut().writer();\n    try stdout.print(\"Hello, World!\\n\", .{});\n}"
+  },
+  v: {
+    label: "V",
+    monacoLanguage: "v",
+    defaultExtension: ".v",
+    supportsExecution: false,
+    defaultTemplate: "// Write your V code here\nfn main() {\n\tprintln('Hello, World!')\n}"
+  },
+  crystal: {
+    label: "Crystal",
+    monacoLanguage: "crystal",
+    defaultExtension: ".cr",
+    supportsExecution: false,
+    defaultTemplate: "# Write your Crystal code here\nputs \"Hello, World!\""
+  },
+  ocaml: {
+    label: "OCaml",
+    monacoLanguage: "ocaml",
+    defaultExtension: ".ml",
+    supportsExecution: false,
+    defaultTemplate: "(* Write your OCaml code here *)\nlet () = print_endline \"Hello, World!\""
+  },
+  scheme: {
+    label: "Scheme",
+    monacoLanguage: "scheme",
+    defaultExtension: ".scm",
+    supportsExecution: false,
+    defaultTemplate: "; Write your Scheme code here\n(display \"Hello, World!\")\n(newline)"
+  },
+  smalltalk: {
+    label: "Smalltalk",
+    monacoLanguage: "smalltalk",
+    defaultExtension: ".st",
+    supportsExecution: false,
+    defaultTemplate: "\"Write your Smalltalk code here\"\nTranscript show: 'Hello, World!'.\nTranscript cr."
+  },
+  julia: {
+    label: "Julia",
+    monacoLanguage: "julia",
+    defaultExtension: ".jl",
+    supportsExecution: false,
+    defaultTemplate: "# Write your Julia code here\nprintln(\"Hello, World!\")"
+  },
+  vb: {
+    label: "Visual Basic",
+    monacoLanguage: "vb",
+    defaultExtension: ".vb",
+    supportsExecution: false,
+    defaultTemplate: "' Write your Visual Basic code here\nModule Program\n    Sub Main()\n        Console.WriteLine(\"Hello, World!\")\n    End Sub\nEnd Module"
+  },
+  objectpascal: {
+    label: "Object Pascal",
+    monacoLanguage: "pascal",
+    defaultExtension: ".pas",
+    supportsExecution: false,
+    defaultTemplate: "// Write your Object Pascal code here\nprogram HelloWorld;\n\n{$mode objfpc}{$H+}\n\nuses\n  Classes, SysUtils;\n\nbegin\n  WriteLn('Hello, World!');\nend."
+  },
+  hope: {
+    label: "Hope",
+    monacoLanguage: "hope",
+    defaultExtension: ".hop",
+    supportsExecution: false,
+    defaultTemplate: "! Write your Hope code here\ndec hello : () -> list(char);\n--- hello() <= \"Hello, World!\";"
+  },
+  b: {
+    label: "B",
+    monacoLanguage: "b",
+    defaultExtension: ".b",
+    supportsExecution: false,
+    defaultTemplate: "/* Write your B code here */\nmain() {\n    extrn putstr;\n    putstr(\"Hello, World!*n\");\n}"
+  },
+  bcpl: {
+    label: "BCPL",
+    monacoLanguage: "bcpl",
+    defaultExtension: ".bcpl",
+    supportsExecution: false,
+    defaultTemplate: "// Write your BCPL code here\nGET \"libhdr\"\n\nLET start() = VALOF\n{ writes(\"Hello, World!*n\")\n  RESULTIS 0\n}"
+  },
+  fantom: {
+    label: "Fantom",
+    monacoLanguage: "fan",
+    defaultExtension: ".fan",
+    supportsExecution: false,
+    defaultTemplate: "// Write your Fantom code here\nclass Hello\n{\n  static Void main()\n  {\n    echo(\"Hello, World!\")\n  }\n}"
+  },
+  modula3: {
+    label: "Modula-3",
+    monacoLanguage: "modula3",
+    defaultExtension: ".m3",
+    supportsExecution: false,
+    defaultTemplate: "(* Write your Modula-3 code here *)\nMODULE Hello EXPORTS Main;\n\nIMPORT IO;\n\nBEGIN\n  IO.Put(\"Hello, World!\\n\");\nEND Hello."
+  },
+  fstar: {
+    label: "F*",
+    monacoLanguage: "fstar",
+    defaultExtension: ".fst",
+    supportsExecution: false,
+    defaultTemplate: "(* Write your F* code here *)\nmodule Hello\n\nlet main () : ML unit =\n  FStar.IO.print_string \"Hello, World!\\n\""
+  },
+  elm: {
+    label: "Elm",
+    monacoLanguage: "elm",
+    defaultExtension: ".elm",
+    supportsExecution: false,
+    defaultTemplate: "-- Write your Elm code here\nmodule Main exposing (main)\n\nimport Html exposing (text)\n\nmain =\n    text \"Hello, World!\""
+  },
+  haxe: {
+    label: "Haxe",
+    monacoLanguage: "haxe",
+    defaultExtension: ".hx",
+    supportsExecution: false,
+    defaultTemplate: "// Write your Haxe code here\nclass Main {\n    static public function main() {\n        trace(\"Hello, World!\");\n    }\n}"
+  },
+  gleam: {
+    label: "Gleam",
+    monacoLanguage: "gleam",
+    defaultExtension: ".gleam",
+    supportsExecution: false,
+    defaultTemplate: "// Write your Gleam code here\nimport gleam/io\n\npub fn main() {\n  io.println(\"Hello, World!\")\n}"
+  },
+  rescript: {
+    label: "ReScript",
+    monacoLanguage: "rescript",
+    defaultExtension: ".res",
+    supportsExecution: false,
+    defaultTemplate: "// Write your ReScript code here\nJs.log(\"Hello, World!\")"
+  },
+  csharp_script: {
+    label: "C# Script",
+    monacoLanguage: "csharp_script",
+    defaultExtension: ".csx",
+    supportsExecution: false,
+    defaultTemplate: "// Write your C# Script code here\nusing System;\n\nConsole.WriteLine(\"Hello, World!\");"
+  },
+  fsharp_script: {
+    label: "F# Script",
+    monacoLanguage: "fsharp_script",
+    defaultExtension: ".fsx",
+    supportsExecution: false,
+    defaultTemplate: "// Write your F# Script code here\nprintfn \"Hello, World!\""
+  },
+  assemblyscript: {
+    label: "AssemblyScript",
+    monacoLanguage: "typescript",
+    defaultExtension: ".as.ts",
+    supportsExecution: false,
+    defaultTemplate: "// Write your AssemblyScript code here\nexport function sayHello(): void {\n  trace(\"Hello, World!\");\n}\n\nsayHello();"
+  },
+  factor: {
+    label: "Factor",
+    monacoLanguage: "factor",
+    defaultExtension: ".factor",
+    supportsExecution: false,
+    defaultTemplate: "! Write your Factor code here\nUSING: io ;\nIN: hello\n\n: hello ( -- ) \"Hello, World!\" print ;\n\nMAIN: hello"
+  },
+  purescript: {
+    label: "PureScript",
+    monacoLanguage: "purescript",
+    defaultExtension: ".purs",
+    supportsExecution: false,
+    defaultTemplate: "-- Write your PureScript code here\nmodule Main where\n\nimport Prelude\nimport Effect (Effect)\nimport Effect.Console (log)\n\nmain :: Effect Unit\nmain = log \"Hello, World!\""
   }
 }
 
@@ -581,6 +797,7 @@ export function getLanguageFromExtension(filename: string): SupportedLanguage {
     case 'kt':
     case 'kts': return 'kotlin'
     case 'cs': return 'csharp'
+    case 'csx': return 'csharp_script'
     case 'sql': return 'sql'
     case 'sh':
     case 'bash': return 'bash'
@@ -596,13 +813,11 @@ export function getLanguageFromExtension(filename: string): SupportedLanguage {
     case 'gd': return 'gdscript'
     case 'lsp':
     case 'lexical': return 'lexical'
-    case 'pl':
     case 'pro': return 'prolog'
     case 'pas':
     case 'pp': return 'pascal'
-    case 'fs':
-    case 'fsi':
-    case 'fsx': return 'fsharp'
+    case 'fs': return 'fsharp'
+    case 'fsx': return 'fsharp_script'
     case 'hs':
     case 'lhs': return 'haskell'
     case 'pl':
@@ -631,8 +846,42 @@ export function getLanguageFromExtension(filename: string): SupportedLanguage {
     case 'mips': return 'assembly_mips'
     case 'riscv': return 'assembly_riscv'
     case 'ppc': return 'assembly_powerpc'
-    case 'wasm':
     case 'wat': return 'webassembly'
+    case 'fth':
+    case 'forth': return 'forth'
+    case 'd':
+    case 'di': return 'dlang'
+    case 'nim':
+    case 'nims':
+    case 'nimble': return 'nim'
+    case 'zig': return 'zig'
+    case 'v':
+    case 'vv': return 'v'
+    case 'cr': return 'crystal'
+    case 'ml':
+    case 'mli': return 'ocaml'
+    case 'scm':
+    case 'ss':
+    case 'rkt': return 'scheme'
+    case 'st': return 'smalltalk'
+    case 'jl': return 'julia'
+    case 'vb':
+    case 'vbs': return 'vb'
+    case 'hop': return 'hope'
+    case 'b': return 'b'
+    case 'bcpl': return 'bcpl'
+    case 'fan': return 'fantom'
+    case 'm3':
+    case 'i3': return 'modula3'
+    case 'fst':
+    case 'fsti': return 'fstar'
+    case 'elm': return 'elm'
+    case 'hx': return 'haxe'
+    case 'gleam': return 'gleam'
+    case 'res':
+    case 'resi': return 'rescript'
+    case 'factor': return 'factor'
+    case 'purs': return 'purescript'
     default: return 'javascript'
   }
 }
