@@ -1,3 +1,7 @@
+using GameGuild.SharedKernel.Enums;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Entities;
+using System.ComponentModel.DataAnnotations;
 namespace GameGuild.Modules.Programs;
 
 /// <summary> DTO for ContentInteraction responses - avoids circular references for Swagger/OpenAPI </summary>
