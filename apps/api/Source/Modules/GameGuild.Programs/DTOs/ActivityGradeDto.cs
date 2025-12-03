@@ -1,3 +1,7 @@
+using GameGuild.SharedKernel.Enums;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Entities;
+using System.ComponentModel.DataAnnotations;
 namespace GameGuild.Modules.Programs;
 
 /// <summary> DTO for ActivityGrade responses - avoids circular references for Swagger/OpenAPI </summary>
@@ -6,7 +10,7 @@ public class ActivityGradeDto {
 
   public Guid ContentInteractionId { get; set; }
 
-  public Guid GraderProgramUserId { get; set; }
+  public Guid? GraderProgramUserId { get; set; }
 
   public decimal Grade { get; set; }
 

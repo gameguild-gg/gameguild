@@ -1,19 +1,20 @@
-using GameGuild.Database;
+using GameGuild.Abstractions;
+using GameGuild.Modules.Programs.Entities;
 using GameGuild.Modules.Programs.Models;
-
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Modules.Programs;
 
 /// <summary> Service implementation for program enrollment management </summary>
 public class ProgramEnrollmentService : IProgramEnrollmentService {
-  private readonly ApplicationDbContext _context;
+  private readonly IApplicationDbContext _context;
 
-  public ProgramEnrollmentService(ApplicationDbContext context) { _context = context; }
+  public ProgramEnrollmentService(IApplicationDbContext context) { _context = context; }
 
   /// <summary> Enroll a user in a program </summary>
   public async Task<ProgramEnrollment> EnrollUserAsync(Guid userId, Guid programId, EnrollmentSource source = EnrollmentSource.Manual) {
     // Check if user is already enrolled
-    var existingEnrollment = await _context.ProgramEnrollments.FirstOrDefaultAsync(pe => pe.UserId == userId && pe.ProgramId == programId);
+    var existingEnrollment = await _context.Set<ProgramEnrollment>().FirstOrDefaultAsync(pe => pe.UserId == userId && pe.ProgramId == programId);
 
     if (existingEnrollment != null) {
       // Reactivate if cancelled or expired
@@ -29,16 +30,16 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
     }
 
     // Verify program exists and is available for enrollment
-    var program = await _context.Programs.FirstOrDefaultAsync(p => p.Id == programId);
+    var program = await _context.Set<Program>().FirstOrDefaultAsync(p => p.Id == programId);
 
     if (program == null) throw new ArgumentException("Program not found", nameof(programId));
 
-    if (program.EnrollmentStatus != Entities.EnrollmentStatus.Open) throw new InvalidOperationException("Program is not available for enrollment");
+    if (program.EnrollmentStatus != Models.EnrollmentStatus.Open) throw new InvalidOperationException("Program is not available for enrollment");
 
     // Create new enrollment
     var enrollment = new ProgramEnrollment { UserId = userId, ProgramId = programId, EnrollmentSource = source, EnrolledAt = DateTime.UtcNow, StartDate = DateTime.UtcNow };
 
-    _context.ProgramEnrollments.Add(enrollment);
+    _context.Set<ProgramEnrollment>().Add(enrollment);
     await _context.SaveChangesAsync();
 
     return enrollment;
@@ -47,7 +48,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
   /// <summary> Auto-enroll user in all programs included in a product </summary>
   public async Task<IEnumerable<ProgramEnrollment>> AutoEnrollInProductProgramsAsync(Guid userId, Guid productId) {
     // Get all programs in the product
-    var productPrograms = await _context.ProductPrograms.Include(pp => pp.Program).Where(pp => pp.ProductId == productId).OrderBy(pp => pp.SortOrder).ToListAsync();
+    var productPrograms = await _context.Set<ProductProgram>().Include(pp => pp.Program).Where(pp => pp.ProductId == productId).OrderBy(pp => pp.SortOrder).ToListAsync();
 
     var enrollments = new List<ProgramEnrollment>();
 
@@ -68,12 +69,12 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
   /// <summary> Get user's enrollment in a program </summary>
   public async Task<ProgramEnrollment?> GetEnrollmentAsync(Guid userId, Guid programId) {
-    return await _context.ProgramEnrollments.Include(pe => pe.Program).Include(pe => pe.User).FirstOrDefaultAsync(pe => pe.UserId == userId && pe.ProgramId == programId);
+    return await _context.Set<ProgramEnrollment>().Include(pe => pe.Program).Include(pe => pe.User).FirstOrDefaultAsync(pe => pe.UserId == userId && pe.ProgramId == programId);
   }
 
   /// <summary> Get all user's enrollments </summary>
-  public async Task<IEnumerable<ProgramEnrollment>> GetUserEnrollmentsAsync(Guid userId, Entities.EnrollmentStatus? status = null) {
-    var query = _context.ProgramEnrollments.Include(pe => pe.Program).Where(pe => pe.UserId == userId);
+  public async Task<IEnumerable<ProgramEnrollment>> GetUserEnrollmentsAsync(Guid userId, Models.EnrollmentStatus? status = null) {
+    var query = _context.Set<ProgramEnrollment>().Include(pe => pe.Program).Where(pe => pe.UserId == userId);
 
     if (status.HasValue) { query = query.Where(pe => pe.EnrollmentStatus == status.Value); }
 
@@ -82,7 +83,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
   /// <summary> Update enrollment progress </summary>
   public async Task<ProgramEnrollment> UpdateProgressAsync(Guid enrollmentId, decimal progressPercentage) {
-    var enrollment = await _context.ProgramEnrollments.FirstOrDefaultAsync(pe => pe.Id == enrollmentId);
+    var enrollment = await _context.Set<ProgramEnrollment>().FirstOrDefaultAsync(pe => pe.Id == enrollmentId);
 
     if (enrollment == null) throw new ArgumentException("Enrollment not found", nameof(enrollmentId));
 
@@ -103,7 +104,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
   /// <summary> Mark enrollment as completed </summary>
   public async Task<ProgramEnrollment> CompleteEnrollmentAsync(Guid enrollmentId, decimal? finalGrade = null) {
-    var enrollment = await _context.ProgramEnrollments.FirstOrDefaultAsync(pe => pe.Id == enrollmentId);
+    var enrollment = await _context.Set<ProgramEnrollment>().FirstOrDefaultAsync(pe => pe.Id == enrollmentId);
 
     if (enrollment == null) throw new ArgumentException("Enrollment not found", nameof(enrollmentId));
 
@@ -115,7 +116,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
   /// <summary> Cancel enrollment </summary>
   public async Task<bool> CancelEnrollmentAsync(Guid enrollmentId) {
-    var enrollment = await _context.ProgramEnrollments.FirstOrDefaultAsync(pe => pe.Id == enrollmentId);
+    var enrollment = await _context.Set<ProgramEnrollment>().FirstOrDefaultAsync(pe => pe.Id == enrollmentId);
 
     if (enrollment == null) return false;
 
@@ -127,11 +128,11 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
   }
 
   /// <summary> Check if user is enrolled in program </summary>
-  public async Task<bool> IsUserEnrolledAsync(Guid userId, Guid programId) { return await _context.ProgramEnrollments.AnyAsync(pe => pe.UserId == userId && pe.ProgramId == programId && pe.EnrollmentStatus == Models.EnrollmentStatus.Active); }
+  public async Task<bool> IsUserEnrolledAsync(Guid userId, Guid programId) { return await _context.Set<ProgramEnrollment>().AnyAsync(pe => pe.UserId == userId && pe.ProgramId == programId && pe.EnrollmentStatus == Models.EnrollmentStatus.Active); }
 
   /// <summary> Get enrollment statistics for a program </summary>
   public async Task<ProgramEnrollmentStats> GetEnrollmentStatsAsync(Guid programId) {
-    var enrollments = await _context.ProgramEnrollments.Where(pe => pe.ProgramId == programId).ToListAsync();
+    var enrollments = await _context.Set<ProgramEnrollment>().Where(pe => pe.ProgramId == programId).ToListAsync();
 
     var totalEnrollments = enrollments.Count;
     var activeEnrollments = enrollments.Count(e => e.EnrollmentStatus == Models.EnrollmentStatus.Active);
@@ -152,7 +153,7 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
   /// <summary> Issue certificate for completed enrollment </summary>
   public async Task<bool> IssueCertificateAsync(Guid enrollmentId) {
-    var enrollment = await _context.ProgramEnrollments.Include(pe => pe.Program).Include(pe => pe.User).FirstOrDefaultAsync(pe => pe.Id == enrollmentId);
+    var enrollment = await _context.Set<ProgramEnrollment>().Include(pe => pe.Program).Include(pe => pe.User).FirstOrDefaultAsync(pe => pe.Id == enrollmentId);
 
     if (enrollment == null || enrollment.CompletionStatus != CompletionStatus.Completed) return false;
 

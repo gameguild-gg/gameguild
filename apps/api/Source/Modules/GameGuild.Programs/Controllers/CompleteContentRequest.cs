@@ -1,3 +1,4 @@
+using GameGuild.Modules.Programs.Entities;
 ﻿namespace GameGuild.Modules.Programs;
 
 public record CompleteContentRequest(Guid ProgramUserId, Guid ContentId) {
