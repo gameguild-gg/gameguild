@@ -27,7 +27,7 @@ import * as LayoutOps from "./layout-operations"
 import * as TabOps from "./tab-operations"
 import * as PanelOps from "./panel-operations"
 import { getGridDimensions, getContainerDimensions } from "./grid-utils"
-import { UnifiedCodeRunner } from "./runners"
+import { UnifiedCodeRunner, setDownloadNotificationCallback } from "./runners"
 import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, deleteMonacoFile, disposeMonacoFileSystem, registerPathCompletionProvider } from "./monaco-file-system"
 
 interface CodeStudioEditorProps {
@@ -71,6 +71,24 @@ export function CodeStudioEditor({
 
   // Initialize runner and Monaco file system
   useEffect(() => {
+    // Setup download notification callback
+    setDownloadNotificationCallback((message: string, isDownloading: boolean) => {
+      // Mostrar no terminal
+      if (terminalRef.current) {
+        if (isDownloading) {
+          terminalRef.current.write(`\r\n\x1b[33m📥 ${message}\x1b[0m\r\n`)
+        } else {
+          terminalRef.current.write(`\x1b[32m✓ ${message}\x1b[0m\r\n\r\n`)
+          // Limpar o terminal após 2 segundos
+          setTimeout(() => {
+            if (terminalRef.current) {
+              terminalRef.current.write('\x1b[2J\x1b[H') // Clear screen
+            }
+          }, 2000)
+        }
+      }
+    })
+
     codeRunnerRef.current = new UnifiedCodeRunner({ 
       timeout: 30000,
       onRequestInput: async (prompt?: string, currentOutput?: string) => {
@@ -86,6 +104,17 @@ export function CodeStudioEditor({
           return await terminalRef.current.requestInput()
         }
         return ""
+      },
+      onProgress: (message: string) => {
+        // Atualizar terminal com mensagens de progresso
+        console.log('[Progress]', message, 'terminal:', !!terminalRef.current)
+        if (terminalRef.current) {
+          try {
+            terminalRef.current.write(`\x1b[36m${message}\x1b[0m\r\n`)
+          } catch (e) {
+            console.error('[Progress] Failed to write:', e)
+          }
+        }
       }
     })
     
@@ -259,6 +288,12 @@ export function CodeStudioEditor({
     })
   }
 
+  const handleReorderFiles = (newOrder: CodeFile[]) => {
+    setLocalData(draft => {
+      FileOps.reorderFiles(draft, newOrder)
+    })
+  }
+
   // Layout handlers
   const getActiveDisplay = (): DisplayConfig | undefined => {
     if (!localData.layout) return undefined
@@ -402,6 +437,7 @@ export function CodeStudioEditor({
             onToggleFolder={handleToggleFolder}
             onMoveFile={handleMoveFile}
             onMoveFolder={handleMoveFolder}
+            onReorderFiles={handleReorderFiles}
           />
         )
       
@@ -445,13 +481,13 @@ export function CodeStudioEditor({
                 <EmptyEditorState />
               ) : (
                 <>
-                  {currentOpenTabs.map((fileId) => {
+                  {currentOpenTabs.map((fileId, index) => {
                     const file = localData.files.find(f => f.id === fileId)
                     if (!file) return null
                     const isActive = fileId === currentActiveFileId
                     return (
                       <div
-                        key={file.id}
+                        key={`${file.id}-${index}`}
                         className="absolute inset-0"
                         style={{ 
                           visibility: isActive ? 'visible' : 'hidden',
@@ -496,7 +532,7 @@ export function CodeStudioEditor({
   }
 
   const handleExecute = async () => {
-    if (!codeRunnerRef.current) return
+    if (!codeRunnerRef.current || !terminalRef.current) return
     
     // Buscar arquivo ativo: primeiro tentar painéis únicos, depois global
     const activeDisplay = getActiveDisplay()
@@ -515,7 +551,11 @@ export function CodeStudioEditor({
     if (!fileToExecute) return
     
     setIsExecuting(true)
-    setOutput('')
+    setOutput('') // Limpar output anterior
+    
+    // Limpar terminal e mostrar início da execução
+    terminalRef.current.write('\x1b[2J\x1b[H') // Clear screen
+    terminalRef.current.write('\x1b[33m⟳ Starting execution...\x1b[0m\r\n')
 
     try {
       // Criar mapa de arquivos para suportar imports
@@ -531,21 +571,23 @@ export function CodeStudioEditor({
         filesMap
       )
 
-      let output = ''
+      // Limpar terminal e mostrar apenas o resultado
+      terminalRef.current.write('\x1b[2J\x1b[H') // Clear screen
+      
+      // Escrever resultado no terminal
       if (result.stdout) {
-        output += result.stdout
+        terminalRef.current.write(result.stdout.replace(/\n/g, '\r\n'))
       }
       if (result.stderr) {
-        output += (output ? '\n' : '') + '\x1b[31m' + result.stderr + '\x1b[0m'
+        if (result.stdout) terminalRef.current.write('\r\n')
+        terminalRef.current.write('\x1b[31m' + result.stderr.replace(/\n/g, '\r\n') + '\x1b[0m')
       }
       if (result.exitCode !== 0) {
-        output += (output ? '\n' : '') + `\x1b[33m[Process exited with code ${result.exitCode}]\x1b[0m`
+        terminalRef.current.write(`\r\n\x1b[33m[Process exited with code ${result.exitCode}]\x1b[0m`)
       }
-      output += `\n\x1b[90m[Execution time: ${result.executionTime.toFixed(2)}ms]\x1b[0m`
-
-      setOutput(output)
+      terminalRef.current.write(`\r\n\x1b[90m[Execution time: ${result.executionTime.toFixed(2)}ms]\x1b[0m\r\n`)
     } catch (error) {
-      setOutput(`\x1b[31mExecution error: ${error instanceof Error ? error.message : String(error)}\x1b[0m`)
+      terminalRef.current.write(`\r\n\x1b[31mExecution error: ${error instanceof Error ? error.message : String(error)}\x1b[0m\r\n`)
     } finally {
       setIsExecuting(false)
     }
@@ -860,10 +902,18 @@ export function CodeStudioEditor({
             </div>
 
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleCancelClick}>
+              <Button 
+                variant="outline" 
+                onClick={handleCancelClick}
+                disabled={localData.layout?.editMode}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleSaveClick} className="flex items-center gap-2">
+              <Button 
+                onClick={handleSaveClick} 
+                className="flex items-center gap-2"
+                disabled={localData.layout?.editMode}
+              >
                 <Save className="h-4 w-4" />
                 Save
               </Button>
