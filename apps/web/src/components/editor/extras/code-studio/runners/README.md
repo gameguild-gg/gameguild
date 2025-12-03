@@ -375,7 +375,4 @@ Planned additions with implementation notes:
 
 - **Go**: TinyGo WASM compiler
 - **Rust**: rustc + wasm32-wasi target
-- **C#**: Blazor WASM runtime
-- **Ruby**: ruby.wasm (CRuby 3.2+)
-- **PHP**: php-wasm
 

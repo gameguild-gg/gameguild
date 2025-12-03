@@ -15,7 +15,7 @@
     "clean-dotnet-artifacts": "rm -rf dotnet-runtime/bin dotnet-runtime/obj && find . -name 'package.json' -path '*/managed/*' -delete 2>/dev/null || true",
     "build-runtime": "./build-dotnet.sh",
     "compress": "./compress-assets.sh",
-    "setup": "npm run build-runtime && npm run compress && npm run build"
+    "setup": "npm run build-runtime && npm run build"
   },
   "keywords": [
     "csharp",
