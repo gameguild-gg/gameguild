@@ -1,3 +1,4 @@
+using GameGuild.Modules.Programs.Entities;
 ﻿namespace GameGuild.Modules.Programs;
 
 public record SubmitContentRequest(Guid ProgramUserId, Guid ContentId, string SubmissionData) {

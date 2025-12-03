@@ -1,6 +1,12 @@
-using GameGuild.Modules.Users;
-using GameGuild.Modules.Certificates.Entities;
-using GameGuild.Modules.Feedbacks.Entities;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
+using GameGuild.Users;
+// using GameGuild.Modules.Certificates.Entities; // Module not yet implemented
+// using GameGuild.Modules.Feedbacks.Entities; // Module not yet implemented
 
 
 namespace GameGuild.Modules.Programs.Entities;
@@ -94,14 +100,16 @@ public class ProgramUser : EntityBase
     public virtual ICollection<ActivityGrade> GivenGrades { get; set; } = new List<ActivityGrade>();
 
     /// <summary>
-    /// Certificates earned by this user
+    /// Certificates earned by this user (TODO: Implement when Certificates module is available)
     /// </summary>
-    public virtual ICollection<UserCertificate> UserCertificates { get; set; } = new List<UserCertificate>();
+    // public virtual ICollection<UserCertificate> UserCertificates { get; set; } = new List<UserCertificate>();
 
+    /*
     /// <summary>
-    /// Feedback submissions for this program enrollment
+    /// Feedback submissions for this program enrollment (TODO: Implement when Feedbacks module is available)
     /// </summary>
     public virtual ICollection<ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<ProgramFeedbackSubmission>();
+    */
 
     /// <summary>
     /// Program ratings submitted by this user

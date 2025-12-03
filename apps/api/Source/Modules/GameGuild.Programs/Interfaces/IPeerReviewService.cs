@@ -1,3 +1,4 @@
+using GameGuild.Modules.Programs.Entities;
 namespace GameGuild.Modules.Programs;
 
 /// <summary> Interface for peer review services </summary>
@@ -47,80 +48,3 @@ public interface IPeerReviewService {
   /// <summary> Get reviewer performance metrics </summary>
   Task<ReviewerMetrics> GetReviewerMetricsAsync(Guid reviewerId);
 }
-
-/// <summary> Consensus calculation result </summary>
-public class ConsensusResult {
-  public decimal ConsensusScore { get; set; }
-
-  public decimal AverageScore { get; set; }
-
-  public decimal ScoreVariance { get; set; }
-
-  public int TotalReviews { get; set; }
-
-  public int CompletedReviews { get; set; }
-
-  public bool HasConsensus { get; set; }
-
-  public decimal ConfidenceLevel { get; set; }
-}
-
-/// <summary> Review conflict detection result </summary>
-public class ReviewConflict {
-  public Guid SubmissionId { get; set; }
-
-  public IList<PeerReview> ConflictingReviews { get; set; } = new List<PeerReview>();
-
-  public decimal ScoreVariance { get; set; }
-
-  public ConflictSeverity Severity { get; set; }
-
-  public string Reason { get; set; } = string.Empty;
-
-  public DateTime DetectedAt { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary> Review statistics </summary>
-public class ReviewStatistics {
-  public int TotalAssignments { get; set; }
-
-  public int CompletedReviews { get; set; }
-
-  public int PendingReviews { get; set; }
-
-  public int EscalatedReviews { get; set; }
-
-  public decimal AverageScore { get; set; }
-
-  public decimal AverageCompletionTimeHours { get; set; }
-
-  public Dictionary<ReviewStatus, int> ReviewsByStatus { get; set; } = new Dictionary<ReviewStatus, int>();
-
-  public decimal ConsensusRate { get; set; }
-}
-
-/// <summary> Reviewer performance metrics </summary>
-public class ReviewerMetrics {
-  public Guid ReviewerId { get; set; }
-
-  public int TotalReviewsAssigned { get; set; }
-
-  public int TotalReviewsCompleted { get; set; }
-
-  public decimal CompletionRate { get; set; }
-
-  public decimal AverageScore { get; set; }
-
-  public decimal AverageCompletionTimeHours { get; set; }
-
-  public int ReviewsEscalated { get; set; }
-
-  public int ReviewsInConflict { get; set; }
-
-  public decimal ReliabilityScore { get; set; }
-
-  public DateTime LastReviewDate { get; set; }
-}
-
-/// <summary> Conflict severity levels </summary>
-public enum ConflictSeverity { Low = 0, Medium = 1, High = 2, Critical = 3 }

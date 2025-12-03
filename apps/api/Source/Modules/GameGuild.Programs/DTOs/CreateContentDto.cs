@@ -1,3 +1,7 @@
+using GameGuild.SharedKernel.Enums;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Entities;
+using System.ComponentModel.DataAnnotations;
 ﻿namespace GameGuild.Modules.Programs;
 
 public record CreateContentDto(string Title, string Description, ProgramContentType Type, string Body, int? SortOrder = null, bool IsRequired = true, int? EstimatedMinutes = null) {
