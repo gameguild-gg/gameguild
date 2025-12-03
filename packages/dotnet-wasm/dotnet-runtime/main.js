@@ -12,7 +12,8 @@ const exports = await getAssemblyExports(config.mainAssemblyName);
 
 // Expose to global window
 window.CSharpCompiler = {
-    compileAndRun: exports.RoslynWrapper.Program.CompileAndRun
+    compileAndRun: exports.RoslynWrapper.Program.CompileAndRun,
+    compileAndRunMultiple: exports.RoslynWrapper.Program.CompileAndRunMultiple
 };
 
 console.log('C# Compiler initialized and ready!');

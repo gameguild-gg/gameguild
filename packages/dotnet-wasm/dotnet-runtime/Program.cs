@@ -9,6 +9,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Basic.Reference.Assemblies;
+using System.Text.Json;
 
 namespace RoslynWrapper;
 
@@ -35,20 +36,48 @@ public partial class Program
     [JSExport]
     public static string CompileAndRun(string code)
     {
+        return CompileAndRunMultiple(code, null);
+    }
+
+    [JSExport]
+    public static string CompileAndRunMultiple(string mainCode, string? filesJson)
+    {
         try
         {
             if (_references == null)
                 InitializeReferences();
             
-            var syntaxTree = CSharpSyntaxTree.ParseText(code);
-            
-            // For now, use an empty reference list - user code must be self-contained
-            // Or we need to embed mscorlib, System.Runtime, etc. as resources
             var references = _references ?? new List<MetadataReference>();
+            var syntaxTrees = new List<SyntaxTree>();
+
+            // Parse additional files if provided
+            if (!string.IsNullOrEmpty(filesJson))
+            {
+                try
+                {
+                    var files = JsonSerializer.Deserialize<Dictionary<string, string>>(filesJson);
+                    if (files != null)
+                    {
+                        foreach (var file in files)
+                        {
+                            var tree = CSharpSyntaxTree.ParseText(file.Value, path: file.Key);
+                            syntaxTrees.Add(tree);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return $"ERROR: Failed to parse files JSON: {ex.Message}";
+                }
+            }
+
+            // Parse main code (if it contains Main method, it should be last)
+            var mainTree = CSharpSyntaxTree.ParseText(mainCode, path: "Program.cs");
+            syntaxTrees.Add(mainTree);
 
             var compilation = CSharpCompilation.Create(
                 "DynamicAssembly",
-                new[] { syntaxTree },
+                syntaxTrees,
                 references,
                 new CSharpCompilationOptions(
                     OutputKind.ConsoleApplication,
@@ -57,9 +86,7 @@ public partial class Program
                     checkOverflow: false));
 
             using var ms = new MemoryStream();
-            EmitResult result = compilation.Emit(ms, options: new EmitOptions(
-                debugInformationFormat: DebugInformationFormat.Embedded,
-                includePrivateMembers: false));
+            EmitResult result = compilation.Emit(ms);
 
             if (!result.Success)
             {
