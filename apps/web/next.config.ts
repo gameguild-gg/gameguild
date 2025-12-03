@@ -64,6 +64,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       // Enable SharedArrayBuffer for @runno/runtime (required for WASM threads)
+      // Using 'credentialless' for COEP allows external images while still enabling SharedArrayBuffer
       {
         source: '/:path*',
         headers: [
@@ -73,7 +74,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp',
+            value: 'credentialless',
           },
         ],
       },
