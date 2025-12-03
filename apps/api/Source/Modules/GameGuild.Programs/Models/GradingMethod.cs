@@ -1,3 +1,8 @@
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
 ﻿using System.ComponentModel;
 
 namespace GameGuild.Modules.Programs.Models;
@@ -6,6 +11,10 @@ namespace GameGuild.Modules.Programs.Models;
 /// Represents different methods for grading program content
 /// </summary>
 public enum GradingMethod {
+  /// <summary>No grading required for this content</summary>
+  [Description("No grading required for this content")]
+  None,
+
   /// <summary>Graded manually by an instructor or teaching assistant</summary>
   [Description("Graded manually by an instructor or teaching assistant")]
   Instructor,
