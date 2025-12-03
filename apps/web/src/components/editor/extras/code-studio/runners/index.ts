@@ -4,6 +4,7 @@ import { JavaScriptRunner } from './javascript-runner'
 import { TypeScriptRunner } from './typescript-runner'
 import { PythonRunner } from './python-runner'
 import { LuaRunner } from './lua-runner'
+import { CppRunner } from './cpp-runner'
 
 export class UnifiedCodeRunner {
   private runners: Map<SupportedLanguage, CodeRunner> = new Map()
@@ -95,8 +96,10 @@ export class UnifiedCodeRunner {
       case 'lua':
         return new LuaRunner(this.options)
       
-      case 'c':
       case 'cpp':
+        return new CppRunner(this.options)
+      
+      case 'c':
       case 'rust':
       case 'csharp':
         throw new Error(`Runner for ${language} not implemented yet`)
@@ -112,3 +115,5 @@ export { JavaScriptRunner } from './javascript-runner'
 export { TypeScriptRunner } from './typescript-runner'
 export { PythonRunner } from './python-runner'
 export { LuaRunner } from './lua-runner'
+export { CppRunner } from './cpp-runner'
+export { setDownloadNotificationCallback, clearWasmCache } from './wasm-loader'

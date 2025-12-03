@@ -1,6 +1,13 @@
-using GameGuild.Modules.Users;
+using GameGuild.Modules.Programs.DTOs;
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
+using GameGuild.Users;
 using GameGuild.Modules.Programs.Models;
-using ContentEntity = GameGuild.Modules.Contents.Models.Content;
+using GameGuild.Modules.Programs.Entities;
+// using ContentEntity = GameGuild.Modules.Contents.Models.Content; // Module not yet implemented
 
 
 namespace GameGuild.Modules.Programs;
@@ -25,9 +32,9 @@ public class ContentProgress : EntityBase {
   [Required]
   public Guid ContentId { get; set; }
 
-  /// <summary> Navigation property to the Content entity </summary>
+  /// <summary> Navigation property to the ProgramContent entity </summary>
   [ForeignKey(nameof(ContentId))]
-  public virtual ContentEntity Content { get; set; } = null!;
+  public virtual ProgramContent? Content { get; set; }
 
   /// <summary> Program enrollment this progress belongs to </summary>
   [Required]
@@ -117,19 +124,4 @@ public class ContentProgress : EntityBase {
     Attempts++;
     MarkAsAccessed();
   }
-}
-
-/// <summary> Content completion status enumeration </summary>
-public enum ContentCompletionStatus {
-  NotStarted = 0,
-
-  InProgress = 1,
-
-  Completed = 2,
-
-  Skipped = 3,
-
-  Failed = 4,
-
-  RequiresReview = 5,
 }
