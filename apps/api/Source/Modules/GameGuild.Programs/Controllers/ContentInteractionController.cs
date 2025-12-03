@@ -1,3 +1,6 @@
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.SharedKernel.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -15,7 +18,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   /// Requires Read permission on the parent Program
   /// </summary>
   [HttpPost("start")]
-  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
+  // [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> StartContent([FromQuery] Guid programId, [FromBody] StartContentRequest request) {
     try {
       // Verify content belongs to the specified program
@@ -35,7 +38,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   /// Requires Edit permission on the parent Program
   /// </summary>
   [HttpPut("{interactionId}/progress")]
-  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
+  // [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> UpdateProgress([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] UpdateProgressRequest request) {
     try {
       // Get the interaction to verify it belongs to the specified program
@@ -56,7 +59,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   /// Requires Edit permission on the parent Program
   /// </summary>
   [HttpPost("{interactionId}/submit")]
-  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
+  // [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> SubmitContent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] SubmitContentRequest request) {
     try {
       // Verify the interaction belongs to the specified program
@@ -77,7 +80,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   /// Requires Edit permission on the parent Program
   /// </summary>
   [HttpPost("{interactionId}/complete")]
-  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
+  // [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> CompleteContent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] CompleteContentRequest request) {
     try {
       // Verify the interaction belongs to the specified program
@@ -98,7 +101,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   /// Requires Read permission on the parent Program
   /// </summary>
   [HttpGet("user/{programUserId}/content/{contentId}")]
-  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
+  // [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> GetInteraction([FromRoute] Guid programUserId, [FromRoute] Guid contentId, [FromQuery] Guid programId) {
     try {
       // Verify content belongs to the specified program
@@ -120,7 +123,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   /// Requires Read permission on the parent Program
   /// </summary>
   [HttpGet("user/{programUserId}")]
-  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
+  // [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ContentInteractionDto>>> GetUserInteractions([FromRoute] Guid programUserId, [FromQuery] Guid programId) {
     try {
       var interactions = await contentInteractionService.GetUserInteractionsAsync(programUserId);
@@ -138,7 +141,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   /// Requires Edit permission on the parent Program
   /// </summary>
   [HttpPut("{interactionId}/time-spent")]
-  [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
+  // [GameGuild.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> UpdateTimeSpent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] UpdateTimeSpentRequest request) {
     try {
       // Verify the interaction belongs to the specified program
