@@ -38,17 +38,50 @@ export type GameGuildApiControllersReadinessResponse = {
 };
 
 export enum GameGuildAuditAuditCategory {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
-  _7 = 7,
-  _8 = 8,
-  _9 = 9,
-  _10 = 10,
+  /**
+   * General
+   */
+  GENERAL = 0,
+  /**
+   * Authentication
+   */
+  AUTHENTICATION = 1,
+  /**
+   * Authorization
+   */
+  AUTHORIZATION = 2,
+  /**
+   * Permission
+   */
+  PERMISSION = 3,
+  /**
+   * User
+   */
+  USER = 4,
+  /**
+   * Admin
+   */
+  ADMIN = 5,
+  /**
+   * Security
+   */
+  SECURITY = 6,
+  /**
+   * Data
+   */
+  DATA = 7,
+  /**
+   * System
+   */
+  SYSTEM = 8,
+  /**
+   * Tenant
+   */
+  TENANT = 9,
+  /**
+   * Privacy
+   */
+  PRIVACY = 10,
 }
 
 export type GameGuildAuditAuditExportRequest = {
@@ -91,10 +124,22 @@ export type GameGuildAuditAuditLogResponse = {
 };
 
 export enum GameGuildAuditAuditRiskLevel {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
+  /**
+   * Low
+   */
+  LOW = 0,
+  /**
+   * Medium
+   */
+  MEDIUM = 1,
+  /**
+   * High
+   */
+  HIGH = 2,
+  /**
+   * Critical
+   */
+  CRITICAL = 3,
 }
 
 export type GameGuildAuditAuditStatisticsResponse = {
@@ -1347,8 +1392,14 @@ export type GameGuildAuthenticationEntitiesAbacPolicy = {
 };
 
 export enum GameGuildAuthenticationEntitiesAbacPolicyEffect {
-  _1 = 1,
-  _2 = 2,
+  /**
+   * Allow
+   */
+  ALLOW = 1,
+  /**
+   * Deny
+   */
+  DENY = 2,
 }
 
 export type GameGuildAuthenticationEntitiesAccessReviewCampaign = {
@@ -1382,25 +1433,64 @@ export type GameGuildAuthenticationEntitiesAccessReviewCampaign = {
 };
 
 export enum GameGuildAuthenticationEntitiesAccessReviewCampaignStatus {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
+  /**
+   * Draft
+   */
+  DRAFT = 1,
+  /**
+   * InProgress
+   */
+  IN_PROGRESS = 2,
+  /**
+   * Completed
+   */
+  COMPLETED = 3,
+  /**
+   * Cancelled
+   */
+  CANCELLED = 4,
 }
 
 export enum GameGuildAuthenticationEntitiesAccessReviewCampaignType {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
+  /**
+   * AdHoc
+   */
+  AD_HOC = 1,
+  /**
+   * Quarterly
+   */
+  QUARTERLY = 2,
+  /**
+   * Annual
+   */
+  ANNUAL = 3,
+  /**
+   * SemiAnnual
+   */
+  SEMI_ANNUAL = 4,
+  /**
+   * Monthly
+   */
+  MONTHLY = 5,
 }
 
 export enum GameGuildAuthenticationEntitiesAccessReviewDecision {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
+  /**
+   * Approve
+   */
+  APPROVE = 1,
+  /**
+   * Revoke
+   */
+  REVOKE = 2,
+  /**
+   * Modify
+   */
+  MODIFY = 3,
+  /**
+   * Escalate
+   */
+  ESCALATE = 4,
 }
 
 export type GameGuildAuthenticationEntitiesAccessReviewItem = {
@@ -1432,10 +1522,22 @@ export type GameGuildAuthenticationEntitiesAccessReviewItem = {
 };
 
 export enum GameGuildAuthenticationEntitiesAccessReviewScope {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
+  /**
+   * Tenant
+   */
+  TENANT = 1,
+  /**
+   * ContentType
+   */
+  CONTENT_TYPE = 2,
+  /**
+   * Resource
+   */
+  RESOURCE = 3,
+  /**
+   * All
+   */
+  ALL = 4,
 }
 
 export type GameGuildAuthenticationEntitiesConditionalPolicy = {
@@ -1492,22 +1594,61 @@ export type GameGuildAuthenticationEntitiesContentTypePermission = {
 };
 
 export enum GameGuildAuthenticationEntitiesPolicyAction {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
+  /**
+   * Allow
+   */
+  ALLOW = 1,
+  /**
+   * Deny
+   */
+  DENY = 2,
+  /**
+   * Require2FA
+   */
+  REQUIRE2FA = 3,
+  /**
+   * RequireApproval
+   */
+  REQUIRE_APPROVAL = 4,
+  /**
+   * LogOnly
+   */
+  LOG_ONLY = 5,
+  /**
+   * Challenge
+   */
+  CHALLENGE = 6,
 }
 
 export enum GameGuildAuthenticationEntitiesPolicyConditionType {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
-  _99 = 99,
+  /**
+   * Time
+   */
+  TIME = 1,
+  /**
+   * Environment
+   */
+  ENVIRONMENT = 2,
+  /**
+   * Location
+   */
+  LOCATION = 3,
+  /**
+   * Device
+   */
+  DEVICE = 4,
+  /**
+   * Risk
+   */
+  RISK = 5,
+  /**
+   * Composite
+   */
+  COMPOSITE = 6,
+  /**
+   * Custom
+   */
+  CUSTOM = 99,
 }
 
 export type GameGuildAuthenticationEntitiesTenantPermission = {
@@ -1531,125 +1672,455 @@ export type GameGuildAuthenticationEntitiesTenantPermission = {
 };
 
 export enum GameGuildAuthenticationEnumsMfaMethod {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
+  /**
+   * Totp
+   */
+  TOTP = 1,
+  /**
+   * BackupCode
+   */
+  BACKUP_CODE = 2,
+  /**
+   * Sms
+   */
+  SMS = 3,
+  /**
+   * Email
+   */
+  EMAIL = 4,
 }
 
 export enum GameGuildAuthenticationEnumsPermissionType {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
-  _7 = 7,
-  _8 = 8,
-  _9 = 9,
-  _10 = 10,
-  _11 = 11,
-  _12 = 12,
-  _13 = 13,
-  _14 = 14,
-  _15 = 15,
-  _16 = 16,
-  _17 = 17,
-  _18 = 18,
-  _19 = 19,
-  _20 = 20,
-  _21 = 21,
-  _22 = 22,
-  _23 = 23,
-  _24 = 24,
-  _25 = 25,
-  _26 = 26,
-  _27 = 27,
-  _28 = 28,
-  _29 = 29,
-  _30 = 30,
-  _31 = 31,
-  _32 = 32,
-  _33 = 33,
-  _34 = 34,
-  _35 = 35,
-  _36 = 36,
-  _37 = 37,
-  _38 = 38,
-  _39 = 39,
-  _40 = 40,
-  _41 = 41,
-  _42 = 42,
-  _43 = 43,
-  _44 = 44,
-  _45 = 45,
-  _46 = 46,
-  _47 = 47,
-  _48 = 48,
-  _49 = 49,
-  _50 = 50,
-  _51 = 51,
-  _52 = 52,
-  _53 = 53,
-  _54 = 54,
-  _55 = 55,
-  _56 = 56,
-  _57 = 57,
-  _58 = 58,
-  _59 = 59,
-  _60 = 60,
-  _61 = 61,
-  _62 = 62,
-  _63 = 63,
-  _64 = 64,
-  _65 = 65,
-  _66 = 66,
-  _67 = 67,
-  _68 = 68,
-  _69 = 69,
-  _70 = 70,
-  _71 = 71,
-  _72 = 72,
-  _73 = 73,
-  _74 = 74,
-  _75 = 75,
-  _76 = 76,
-  _77 = 77,
-  _78 = 78,
-  _79 = 79,
-  _80 = 80,
-  _82 = 82,
-  _83 = 83,
-  _84 = 84,
-  _85 = 85,
-  _86 = 86,
-  _87 = 87,
-  _88 = 88,
-  _89 = 89,
-  _90 = 90,
-  _91 = 91,
-  _100 = 100,
-  _101 = 101,
-  _110 = 110,
-  _111 = 111,
-  _112 = 112,
-  _200 = 200,
-  _201 = 201,
-  _202 = 202,
-  _203 = 203,
+  /**
+   * Read
+   */
+  READ = 1,
+  /**
+   * Comment
+   */
+  COMMENT = 2,
+  /**
+   * Reply
+   */
+  REPLY = 3,
+  /**
+   * Vote
+   */
+  VOTE = 4,
+  /**
+   * Share
+   */
+  SHARE = 5,
+  /**
+   * Report
+   */
+  REPORT = 6,
+  /**
+   * Follow
+   */
+  FOLLOW = 7,
+  /**
+   * Bookmark
+   */
+  BOOKMARK = 8,
+  /**
+   * React
+   */
+  REACT = 9,
+  /**
+   * Subscribe
+   */
+  SUBSCRIBE = 10,
+  /**
+   * Mention
+   */
+  MENTION = 11,
+  /**
+   * Tag
+   */
+  TAG = 12,
+  /**
+   * Categorize
+   */
+  CATEGORIZE = 13,
+  /**
+   * Collection
+   */
+  COLLECTION = 14,
+  /**
+   * Series
+   */
+  SERIES = 15,
+  /**
+   * CrossReference
+   */
+  CROSS_REFERENCE = 16,
+  /**
+   * Translate
+   */
+  TRANSLATE = 17,
+  /**
+   * Version
+   */
+  VERSION = 18,
+  /**
+   * Template
+   */
+  TEMPLATE = 19,
+  /**
+   * Create
+   */
+  CREATE = 20,
+  /**
+   * Draft
+   */
+  DRAFT = 21,
+  /**
+   * Submit
+   */
+  SUBMIT = 22,
+  /**
+   * Withdraw
+   */
+  WITHDRAW = 23,
+  /**
+   * Archive
+   */
+  ARCHIVE = 24,
+  /**
+   * Restore
+   */
+  RESTORE = 25,
+  /**
+   * Delete
+   */
+  DELETE = 26,
+  /**
+   * HardDelete
+   */
+  HARD_DELETE = 27,
+  /**
+   * Backup
+   */
+  BACKUP = 28,
+  /**
+   * Migrate
+   */
+  MIGRATE = 29,
+  /**
+   * Clone
+   */
+  CLONE = 30,
+  /**
+   * Edit
+   */
+  EDIT = 31,
+  /**
+   * Proofread
+   */
+  PROOFREAD = 32,
+  /**
+   * FactCheck
+   */
+  FACT_CHECK = 33,
+  /**
+   * StyleGuide
+   */
+  STYLE_GUIDE = 34,
+  /**
+   * Plagiarism
+   */
+  PLAGIARISM = 35,
+  /**
+   * Seo
+   */
+  SEO = 36,
+  /**
+   * Accessibility
+   */
+  ACCESSIBILITY = 37,
+  /**
+   * Legal
+   */
+  LEGAL = 38,
+  /**
+   * Brand
+   */
+  BRAND = 39,
+  /**
+   * Guidelines
+   */
+  GUIDELINES = 40,
+  /**
+   * Approve
+   */
+  APPROVE = 41,
+  /**
+   * Reject
+   */
+  REJECT = 42,
+  /**
+   * RequestRevision
+   */
+  REQUEST_REVISION = 43,
+  /**
+   * Escalate
+   */
+  ESCALATE = 44,
+  /**
+   * Override
+   */
+  OVERRIDE = 45,
+  /**
+   * Delegate
+   */
+  DELEGATE = 46,
+  /**
+   * FastTrack
+   */
+  FAST_TRACK = 47,
+  /**
+   * BatchApprove
+   */
+  BATCH_APPROVE = 48,
+  /**
+   * ConditionalApprove
+   */
+  CONDITIONAL_APPROVE = 49,
+  /**
+   * RequireReview
+   */
+  REQUIRE_REVIEW = 50,
+  /**
+   * Publish
+   */
+  PUBLISH = 51,
+  /**
+   * Unpublish
+   */
+  UNPUBLISH = 52,
+  /**
+   * Schedule
+   */
+  SCHEDULE = 53,
+  /**
+   * SetPublishDate
+   */
+  SET_PUBLISH_DATE = 54,
+  /**
+   * Visibility
+   */
+  VISIBILITY = 55,
+  /**
+   * Feature
+   */
+  FEATURE = 56,
+  /**
+   * Pin
+   */
+  PIN = 57,
+  /**
+   * Sticky
+   */
+  STICKY = 58,
+  /**
+   * Highlight
+   */
+  HIGHLIGHT = 59,
+  /**
+   * Promote
+   */
+  PROMOTE = 60,
+  /**
+   * Moderate
+   */
+  MODERATE = 61,
+  /**
+   * Hide
+   */
+  HIDE = 62,
+  /**
+   * Flag
+   */
+  FLAG = 63,
+  /**
+   * Warn
+   */
+  WARN = 64,
+  /**
+   * Suspend
+   */
+  SUSPEND = 65,
+  /**
+   * Ban
+   */
+  BAN = 66,
+  /**
+   * Quarantine
+   */
+  QUARANTINE = 67,
+  /**
+   * Review
+   */
+  REVIEW = 68,
+  /**
+   * Investigate
+   */
+  INVESTIGATE = 69,
+  /**
+   * EscalateModeration
+   */
+  ESCALATE_MODERATION = 70,
+  /**
+   * Invite
+   */
+  INVITE = 71,
+  /**
+   * Assign
+   */
+  ASSIGN = 72,
+  /**
+   * Collaborate
+   */
+  COLLABORATE = 73,
+  /**
+   * CoAuthor
+   */
+  CO_AUTHOR = 74,
+  /**
+   * Contribute
+   */
+  CONTRIBUTE = 75,
+  /**
+   * Suggest
+   */
+  SUGGEST = 76,
+  /**
+   * Track
+   */
+  TRACK = 77,
+  /**
+   * Merge
+   */
+  MERGE = 78,
+  /**
+   * Resolve
+   */
+  RESOLVE = 79,
+  /**
+   * Coordinate
+   */
+  COORDINATE = 80,
+  /**
+   * Score
+   */
+  SCORE = 82,
+  /**
+   * Rate
+   */
+  RATE = 83,
+  /**
+   * Benchmark
+   */
+  BENCHMARK = 84,
+  /**
+   * Metrics
+   */
+  METRICS = 85,
+  /**
+   * Analytics
+   */
+  ANALYTICS = 86,
+  /**
+   * Performance
+   */
+  PERFORMANCE = 87,
+  /**
+   * Feedback
+   */
+  FEEDBACK = 88,
+  /**
+   * Audit
+   */
+  AUDIT = 89,
+  /**
+   * Standards
+   */
+  STANDARDS = 90,
+  /**
+   * Improvement
+   */
+  IMPROVEMENT = 91,
+  /**
+   * Manage
+   */
+  MANAGE = 100,
+  /**
+   * Admin
+   */
+  ADMIN = 101,
+  /**
+   * Execute
+   */
+  EXECUTE = 110,
+  /**
+   * Export
+   */
+  EXPORT = 111,
+  /**
+   * Import
+   */
+  IMPORT = 112,
+  /**
+   * SystemAdmin
+   */
+  SYSTEM_ADMIN = 200,
+  /**
+   * TenantAdmin
+   */
+  TENANT_ADMIN = 201,
+  /**
+   * UserManagement
+   */
+  USER_MANAGEMENT = 202,
+  /**
+   * Configure
+   */
+  CONFIGURE = 203,
 }
 
 export enum GameGuildAuthenticationEnumsRiskLevel {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
+  /**
+   * Low
+   */
+  LOW = 0,
+  /**
+   * Medium
+   */
+  MEDIUM = 1,
+  /**
+   * High
+   */
+  HIGH = 2,
+  /**
+   * Critical
+   */
+  CRITICAL = 3,
 }
 
 export enum GameGuildAuthenticationModelsAbacAbacDecision {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
+  /**
+   * Allow
+   */
+  ALLOW = 1,
+  /**
+   * Deny
+   */
+  DENY = 2,
+  /**
+   * NotApplicable
+   */
+  NOT_APPLICABLE = 3,
 }
 
 export type GameGuildAuthenticationModelsAbacAbacEvaluationContext = {
@@ -1837,12 +2308,30 @@ export type GameGuildAuthenticationQueriesPeriodicAccessReview = {
 };
 
 export enum GameGuildBillingCycle {
-  _0 = 0,
-  _1 = 1,
-  _3 = 3,
-  _6 = 6,
-  _12 = 12,
-  _24 = 24,
+  /**
+   * Weekly
+   */
+  WEEKLY = 0,
+  /**
+   * Monthly
+   */
+  MONTHLY = 1,
+  /**
+   * Quarterly
+   */
+  QUARTERLY = 3,
+  /**
+   * SemiAnnually
+   */
+  SEMI_ANNUALLY = 6,
+  /**
+   * Annually
+   */
+  ANNUALLY = 12,
+  /**
+   * Biannually
+   */
+  BIANNUALLY = 24,
 }
 
 export type GameGuildCqrsIDomainEvent = {
@@ -1883,11 +2372,26 @@ export type GameGuildFeaturesDtosFeatureFlagTargetDto = {
 };
 
 export enum GameGuildFeaturesEntitiesFeatureFlagType {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
+  /**
+   * Toggle
+   */
+  TOGGLE = 0,
+  /**
+   * Numeric
+   */
+  NUMERIC = 1,
+  /**
+   * String
+   */
+  STRING = 2,
+  /**
+   * Percentage
+   */
+  PERCENTAGE = 3,
+  /**
+   * UserSegment
+   */
+  USER_SEGMENT = 4,
 }
 
 export type GameGuildFeaturesModelsBulkEvaluationRequest = {
@@ -2200,12 +2704,30 @@ export type GameGuildModulesProgramsEntitiesContentInteraction = {
 };
 
 export enum GameGuildModulesProgramsEntitiesGradeType {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
+  /**
+   * Manual
+   */
+  MANUAL = 0,
+  /**
+   * Automatic
+   */
+  AUTOMATIC = 1,
+  /**
+   * PeerReview
+   */
+  PEER_REVIEW = 2,
+  /**
+   * SelfAssessment
+   */
+  SELF_ASSESSMENT = 3,
+  /**
+   * InstructorReview
+   */
+  INSTRUCTOR_REVIEW = 4,
+  /**
+   * SystemGenerated
+   */
+  SYSTEM_GENERATED = 5,
 }
 
 export type GameGuildModulesProgramsEntitiesProgram = {
@@ -2356,49 +2878,142 @@ export type GameGuildModulesProgramsGraderSummaryDto = {
 };
 
 export enum GameGuildModulesProgramsModelsEnrollmentStatus {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
-  _7 = 7,
-  _8 = 8,
+  /**
+   * Open
+   */
+  OPEN = 0,
+  /**
+   * Active
+   */
+  ACTIVE = 1,
+  /**
+   * Paused
+   */
+  PAUSED = 2,
+  /**
+   * Cancelled
+   */
+  CANCELLED = 3,
+  /**
+   * Expired
+   */
+  EXPIRED = 4,
+  /**
+   * Completed
+   */
+  COMPLETED = 5,
+  /**
+   * Closed
+   */
+  CLOSED = 6,
+  /**
+   * InviteOnly
+   */
+  INVITE_ONLY = 7,
+  /**
+   * Waitlist
+   */
+  WAITLIST = 8,
 }
 
 export enum GameGuildModulesProgramsModelsGradingMethod {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
+  /**
+   * None
+   */
+  NONE = 0,
+  /**
+   * Instructor
+   */
+  INSTRUCTOR = 1,
+  /**
+   * Peer
+   */
+  PEER = 2,
+  /**
+   * Ai
+   */
+  AI = 3,
+  /**
+   * AutomatedTests
+   */
+  AUTOMATED_TESTS = 4,
 }
 
 export enum GameGuildModulesProgramsModelsProgramContentType {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
-  _7 = 7,
-  _8 = 8,
+  /**
+   * Lesson
+   */
+  LESSON = 0,
+  /**
+   * Page
+   */
+  PAGE = 1,
+  /**
+   * Assignment
+   */
+  ASSIGNMENT = 2,
+  /**
+   * Questionnaire
+   */
+  QUESTIONNAIRE = 3,
+  /**
+   * Discussion
+   */
+  DISCUSSION = 4,
+  /**
+   * Code
+   */
+  CODE = 5,
+  /**
+   * Challenge
+   */
+  CHALLENGE = 6,
+  /**
+   * Reflection
+   */
+  REFLECTION = 7,
+  /**
+   * Survey
+   */
+  SURVEY = 8,
 }
 
 export enum GameGuildModulesProgramsModelsProgressStatus {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
+  /**
+   * NotStarted
+   */
+  NOT_STARTED = 0,
+  /**
+   * InProgress
+   */
+  IN_PROGRESS = 1,
+  /**
+   * Completed
+   */
+  COMPLETED = 2,
+  /**
+   * Submitted
+   */
+  SUBMITTED = 3,
 }
 
 export enum GameGuildModulesProgramsModelsVisibility {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
+  /**
+   * Public
+   */
+  PUBLIC = 0,
+  /**
+   * Internal
+   */
+  INTERNAL = 1,
+  /**
+   * Private
+   */
+  PRIVATE = 2,
+  /**
+   * Restricted
+   */
+  RESTRICTED = 3,
 }
 
 export type GameGuildModulesProgramsMonetizationDto = {
@@ -2460,10 +3075,22 @@ export type GameGuildModulesProgramsProgramContentDto = {
 };
 
 export enum GameGuildModulesProgramsProgramDifficulty {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
+  /**
+   * Beginner
+   */
+  BEGINNER = 0,
+  /**
+   * Intermediate
+   */
+  INTERMEDIATE = 1,
+  /**
+   * Advanced
+   */
+  ADVANCED = 2,
+  /**
+   * Expert
+   */
+  EXPERT = 3,
 }
 
 export type GameGuildModulesProgramsProgramRating = {
@@ -2667,20 +3294,53 @@ export type GameGuildMonitoringSlaCommandsUpdateSloCommand = {
 };
 
 export enum GameGuildMonitoringSlaEnumsSloStatus {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
+  /**
+   * Active
+   */
+  ACTIVE = 0,
+  /**
+   * Breached
+   */
+  BREACHED = 1,
+  /**
+   * AtRisk
+   */
+  AT_RISK = 2,
+  /**
+   * Disabled
+   */
+  DISABLED = 3,
+  /**
+   * Violated
+   */
+  VIOLATED = 4,
+  /**
+   * Warning
+   */
+  WARNING = 5,
+  /**
+   * Inactive
+   */
+  INACTIVE = 6,
 }
 
 export enum GameGuildMonitoringSlaEnumsViolationSeverity {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
+  /**
+   * Low
+   */
+  LOW = 0,
+  /**
+   * Medium
+   */
+  MEDIUM = 1,
+  /**
+   * High
+   */
+  HIGH = 2,
+  /**
+   * Critical
+   */
+  CRITICAL = 3,
 }
 
 export type GameGuildMonitoringSlaModelsErrorBudgetDto = {
@@ -2940,8 +3600,14 @@ export type GameGuildPaymentsControllersPaymentsControllerRefundRequest = {
 };
 
 export enum GameGuildPaymentsEntitiesCustomerType {
-  _0 = 0,
-  _1 = 1,
+  /**
+   * B2C
+   */
+  B2C = 0,
+  /**
+   * B2B
+   */
+  B2B = 1,
 }
 
 export type GameGuildPaymentsEntitiesTaxJurisdiction = {
@@ -2968,13 +3634,34 @@ export type GameGuildPaymentsEntitiesTaxJurisdiction = {
 };
 
 export enum GameGuildPaymentsEntitiesTaxJurisdictionType {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
+  /**
+   * Country
+   */
+  COUNTRY = 0,
+  /**
+   * State
+   */
+  STATE = 1,
+  /**
+   * Province
+   */
+  PROVINCE = 2,
+  /**
+   * Region
+   */
+  REGION = 3,
+  /**
+   * City
+   */
+  CITY = 4,
+  /**
+   * County
+   */
+  COUNTY = 5,
+  /**
+   * District
+   */
+  DISTRICT = 6,
 }
 
 export type GameGuildPaymentsEntitiesTaxRate = {
@@ -3033,34 +3720,100 @@ export type GameGuildPaymentsEntitiesTaxRule = {
 };
 
 export enum GameGuildPaymentsEntitiesTaxRuleType {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
-  _7 = 7,
+  /**
+   * Standard
+   */
+  STANDARD = 0,
+  /**
+   * Reduced
+   */
+  REDUCED = 1,
+  /**
+   * ZeroRated
+   */
+  ZERO_RATED = 2,
+  /**
+   * Exempt
+   */
+  EXEMPT = 3,
+  /**
+   * ReverseCharge
+   */
+  REVERSE_CHARGE = 4,
+  /**
+   * WithholdingTax
+   */
+  WITHHOLDING_TAX = 5,
+  /**
+   * Compound
+   */
+  COMPOUND = 6,
+  /**
+   * Custom
+   */
+  CUSTOM = 7,
 }
 
 export enum GameGuildPaymentsEntitiesTaxType {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
-  _7 = 7,
+  /**
+   * VAT
+   */
+  VAT = 0,
+  /**
+   * GST
+   */
+  GST = 1,
+  /**
+   * SalesTax
+   */
+  SALES_TAX = 2,
+  /**
+   * ServiceTax
+   */
+  SERVICE_TAX = 3,
+  /**
+   * WithholdingTax
+   */
+  WITHHOLDING_TAX = 4,
+  /**
+   * ExciseTax
+   */
+  EXCISE_TAX = 5,
+  /**
+   * CustomsDuty
+   */
+  CUSTOMS_DUTY = 6,
+  /**
+   * Other
+   */
+  OTHER = 7,
 }
 
 export enum GameGuildPaymentsEntitiesTransactionStatus {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
+  /**
+   * Pending
+   */
+  PENDING = 0,
+  /**
+   * Processing
+   */
+  PROCESSING = 1,
+  /**
+   * Completed
+   */
+  COMPLETED = 2,
+  /**
+   * Failed
+   */
+  FAILED = 3,
+  /**
+   * Cancelled
+   */
+  CANCELLED = 4,
+  /**
+   * Reversed
+   */
+  REVERSED = 5,
 }
 
 export type GameGuildPaymentsEntitiesUserWallet = {
@@ -3109,13 +3862,34 @@ export type GameGuildPaymentsEntitiesWalletTransaction = {
 };
 
 export enum GameGuildPaymentsEntitiesWalletTransactionType {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
+  /**
+   * Credit
+   */
+  CREDIT = 0,
+  /**
+   * Debit
+   */
+  DEBIT = 1,
+  /**
+   * TransferIn
+   */
+  TRANSFER_IN = 2,
+  /**
+   * TransferOut
+   */
+  TRANSFER_OUT = 3,
+  /**
+   * Refund
+   */
+  REFUND = 4,
+  /**
+   * Fee
+   */
+  FEE = 5,
+  /**
+   * Adjustment
+   */
+  ADJUSTMENT = 6,
 }
 
 export type GameGuildPaymentsModelsPaymentCancellationResult = {
@@ -3150,12 +3924,30 @@ export type GameGuildPaymentsModelsPaymentRetryResult = {
 };
 
 export enum GameGuildPaymentsModelsPaymentStatus {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
+  /**
+   * Pending
+   */
+  PENDING = 0,
+  /**
+   * Processing
+   */
+  PROCESSING = 1,
+  /**
+   * Succeeded
+   */
+  SUCCEEDED = 2,
+  /**
+   * Failed
+   */
+  FAILED = 3,
+  /**
+   * Cancelled
+   */
+  CANCELLED = 4,
+  /**
+   * Refunded
+   */
+  REFUNDED = 5,
 }
 
 export type GameGuildPaymentsModelsProcessRefundResult = {
@@ -3302,25 +4094,82 @@ export type GameGuildPermissionsDomainModelsResourceUser = {
 };
 
 export enum GameGuildProgramCategory {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
-  _7 = 7,
-  _8 = 8,
-  _9 = 9,
-  _10 = 10,
-  _11 = 11,
-  _12 = 12,
-  _13 = 13,
-  _14 = 14,
-  _15 = 15,
-  _16 = 16,
-  _17 = 17,
-  _18 = 18,
+  /**
+   * General
+   */
+  GENERAL = 0,
+  /**
+   * Programming
+   */
+  PROGRAMMING = 1,
+  /**
+   * DataScience
+   */
+  DATA_SCIENCE = 2,
+  /**
+   * WebDevelopment
+   */
+  WEB_DEVELOPMENT = 3,
+  /**
+   * MobileDevelopment
+   */
+  MOBILE_DEVELOPMENT = 4,
+  /**
+   * GameDevelopment
+   */
+  GAME_DEVELOPMENT = 5,
+  /**
+   * AI
+   */
+  AI = 6,
+  /**
+   * Cybersecurity
+   */
+  CYBERSECURITY = 7,
+  /**
+   * DevOps
+   */
+  DEV_OPS = 8,
+  /**
+   * Database
+   */
+  DATABASE = 9,
+  /**
+   * Business
+   */
+  BUSINESS = 10,
+  /**
+   * Design
+   */
+  DESIGN = 11,
+  /**
+   * Marketing
+   */
+  MARKETING = 12,
+  /**
+   * ProjectManagement
+   */
+  PROJECT_MANAGEMENT = 13,
+  /**
+   * PersonalDevelopment
+   */
+  PERSONAL_DEVELOPMENT = 14,
+  /**
+   * CreativeArts
+   */
+  CREATIVE_ARTS = 15,
+  /**
+   * Science
+   */
+  SCIENCE = 16,
+  /**
+   * Language
+   */
+  LANGUAGE = 17,
+  /**
+   * Other
+   */
+  OTHER = 18,
 }
 
 export type GameGuildResourcesCommandsArchiveResourceUsageRecordsRequest = {
@@ -3374,12 +4223,30 @@ export type GameGuildResourcesModelsResourceQuotaEnforcementResult = {
 };
 
 export enum GameGuildResourcesModelsResourceQuotaPeriod {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
+  /**
+   * Daily
+   */
+  DAILY = 1,
+  /**
+   * Weekly
+   */
+  WEEKLY = 2,
+  /**
+   * Monthly
+   */
+  MONTHLY = 3,
+  /**
+   * Quarterly
+   */
+  QUARTERLY = 4,
+  /**
+   * Yearly
+   */
+  YEARLY = 5,
+  /**
+   * Unlimited
+   */
+  UNLIMITED = 6,
 }
 
 export type GameGuildResourcesModelsResourceQuotaResponse = {
@@ -3404,26 +4271,68 @@ export type GameGuildResourcesModelsResourceQuotaResponse = {
 };
 
 export enum GameGuildResourcesModelsResourceUsageType {
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
+  /**
+   * Users
+   */
+  USERS = 1,
+  /**
+   * Projects
+   */
+  PROJECTS = 2,
+  /**
+   * Storage
+   */
+  STORAGE = 3,
+  /**
+   * ApiCalls
+   */
+  API_CALLS = 4,
 }
 
 export enum GameGuildSharedKernelEnumsAccessLevel {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
+  /**
+   * Private
+   */
+  PRIVATE = 0,
+  /**
+   * Internal
+   */
+  INTERNAL = 1,
+  /**
+   * Friends
+   */
+  FRIENDS = 2,
+  /**
+   * Protected
+   */
+  PROTECTED = 3,
+  /**
+   * Public
+   */
+  PUBLIC = 4,
 }
 
 export enum GameGuildSharedKernelEnumsContentStatus {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
+  /**
+   * Draft
+   */
+  DRAFT = 0,
+  /**
+   * Review
+   */
+  REVIEW = 1,
+  /**
+   * Published
+   */
+  PUBLISHED = 2,
+  /**
+   * Archived
+   */
+  ARCHIVED = 3,
+  /**
+   * Deleted
+   */
+  DELETED = 4,
 }
 
 export type GameGuildSubscriptionsControllersSubscriptionPlansControllerCreatePlanRequest = {
@@ -3553,13 +4462,34 @@ export type GameGuildSubscriptionsEntitiesSubscription = {
 };
 
 export enum GameGuildSubscriptionsModelsCancellationReason {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
+  /**
+   * UserRequested
+   */
+  USER_REQUESTED = 0,
+  /**
+   * PaymentFailed
+   */
+  PAYMENT_FAILED = 1,
+  /**
+   * PlanDiscontinued
+   */
+  PLAN_DISCONTINUED = 2,
+  /**
+   * PolicyViolation
+   */
+  POLICY_VIOLATION = 3,
+  /**
+   * Downgrade
+   */
+  DOWNGRADE = 4,
+  /**
+   * TrialEnded
+   */
+  TRIAL_ENDED = 5,
+  /**
+   * Custom
+   */
+  CUSTOM = 6,
 }
 
 export type GameGuildSubscriptionsModelsSubscriptionDowngradeResult = {
@@ -3571,13 +4501,34 @@ export type GameGuildSubscriptionsModelsSubscriptionDowngradeResult = {
 };
 
 export enum GameGuildSubscriptionsModelsSubscriptionStatus {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
-  _3 = 3,
-  _4 = 4,
-  _5 = 5,
-  _6 = 6,
+  /**
+   * PendingActivation
+   */
+  PENDING_ACTIVATION = 0,
+  /**
+   * Active
+   */
+  ACTIVE = 1,
+  /**
+   * Trialing
+   */
+  TRIALING = 2,
+  /**
+   * PastDue
+   */
+  PAST_DUE = 3,
+  /**
+   * Suspended
+   */
+  SUSPENDED = 4,
+  /**
+   * Cancelled
+   */
+  CANCELLED = 5,
+  /**
+   * Expired
+   */
+  EXPIRED = 6,
 }
 
 export type GameGuildSubscriptionsModelsSubscriptionUpgradeResult = {
@@ -4202,9 +5153,18 @@ export type GameGuildUsersCommandsCreateUserRequestItem = {
 };
 
 export enum GameGuildUsersCommandsPurgeStrategy {
-  _0 = 0,
-  _1 = 1,
-  _2 = 2,
+  /**
+   * Immediate
+   */
+  IMMEDIATE = 0,
+  /**
+   * Scheduled
+   */
+  SCHEDULED = 1,
+  /**
+   * GracePeriod
+   */
+  GRACE_PERIOD = 2,
 }
 
 export type GameGuildUsersCommandsUpdateUserRequestItem = {
