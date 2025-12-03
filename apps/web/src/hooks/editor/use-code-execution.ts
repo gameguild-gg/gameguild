@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState, useCallback } from "react"
 import type { CodeFile, ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
+import { useCallback, useState } from "react"
 import { getExecutor } from "./executors/executor-factory"
 import type { ExecutionContext } from "./executors/types"
 
@@ -13,13 +13,14 @@ interface UseCodeExecutionOptions {
   clearTerminalOnRun: boolean
   addOutput: (output: string | string[]) => void
   clearTerminal: () => void
+  testCases?: any[]
   setTestResults?: (results: Record<string, { passed: boolean; actual: string; expected: string }[]>) => void
 }
 
 export function useCodeExecution(options: UseCodeExecutionOptions) {
   const { files, selectedLanguage, clearTerminalOnRun, addOutput, clearTerminal } = options
   const [isExecuting, setIsExecuting] = useState(false)
-  const [setCapturedOutput] = useState<string[]>([])
+  const [capturedOutput, setCapturedOutput] = useState<string[]>([])
   const [isCapturingOutput, setIsCapturingOutput] = useState(false)
   const [currentTestFileId, setCurrentTestFileId] = useState<string | null>(null)
   const [currentTestIndex, setCurrentTestIndex] = useState<number>(-1)
@@ -86,9 +87,9 @@ export function useCodeExecution(options: UseCodeExecutionOptions) {
     setCurrentTestIndex(-1)
 
     // Reset callbacks
-    window.promptCallback = () => {}
-    window.confirmCallback = () => {}
-    window.alertCallback = () => {}
+    window.promptCallback = () => { }
+    window.confirmCallback = () => { }
+    window.alertCallback = () => { }
   }, [addOutput, selectedLanguage])
 
   // Execute code
@@ -106,9 +107,9 @@ export function useCodeExecution(options: UseCodeExecutionOptions) {
       }
 
       // Reset global callbacks
-      window.promptCallback = () => {}
-      window.confirmCallback = () => {}
-      window.alertCallback = () => {}
+      window.promptCallback = () => { }
+      window.confirmCallback = () => { }
+      window.alertCallback = () => { }
 
       // Get the appropriate executor for the selected language
       const executor = getExecutor(selectedLanguage)

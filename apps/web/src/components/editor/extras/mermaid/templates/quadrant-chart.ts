@@ -1,4 +1,4 @@
-import { Grid3X3 } from "lucide-react"
+import { Grid3x3 } from "lucide-react"
 import type { MermaidTemplate } from "./template-loader"
 
 export default {
@@ -6,7 +6,7 @@ export default {
   type: "quadrant",
   title: "Quadrant Chart",
   description: "Categorize items into four quadrants",
-  icon: Grid3X3,
+  icon: Grid3x3,
   category: "charts",
   preview: "Impact vs Effort matrix",
   code: `quadrantChart

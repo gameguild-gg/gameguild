@@ -1,8 +1,8 @@
 'use client';
 
+import { Program } from '@/lib/api/generated/stub-types';
 import { useRouter } from 'next/navigation';
 import { CourseList } from './course-list';
-import { Program } from '@/lib/api/generated/types.gen';
 
 interface CourseListWrapperProps {
   courses: Program[];

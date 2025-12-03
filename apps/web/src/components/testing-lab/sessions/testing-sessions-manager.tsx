@@ -1,16 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, CheckCircle, Clock, Edit, MapPin, Plus, UserCheck, Users, XCircle } from 'lucide-react';
 import { testingLabApi } from '@/lib/api/testing-lab/testing-lab-api';
+import { Calendar, CheckCircle, Clock, Edit, MapPin, Plus, UserCheck, Users, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface TestingSession {
   id: string;
@@ -136,7 +136,7 @@ export function TestingSessionsManager() {
     }
   };
 
-  const fetchSessionRegistrations = async () => {
+  const fetchSessionRegistrations = async (_sessionId?: string) => {
     try {
       // Mock data - replace with actual API call
       setRegistrations([

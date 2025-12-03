@@ -44,7 +44,7 @@ interface StudentProgress {
   };
   totalSessionsAttended: number;
   totalSessionsScheduled: number;
-  totalGamesTermd: number;
+  totalGamesTerm: number;
   totalFeedbackSubmitted: number;
   currentBlock: number;
   attendanceRate: number;
@@ -124,7 +124,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
           totalSessionsScheduled: studentRecord.totalSessions,
           totalSessionsAttended: studentRecord.totalSessions,
           attendanceRate: Math.round((studentRecord.totalSessions / Math.max(studentRecord.totalSessions, 1)) * 100),
-          totalGamesTermd: studentRecord.gamesTested,
+          totalGamesTerm: studentRecord.gamesTested,
           totalFeedbackSubmitted: studentRecord.gamesTested,
           currentBlock: 3, // Default to current block
           isOnTrack: studentRecord.status === 'onTrack',
@@ -418,7 +418,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
                     <TableCell>
                       {student.totalSessionsAttended}/{student.totalSessionsScheduled}
                     </TableCell>
-                    <TableCell>{student.totalGamesTermd}</TableCell>
+                    <TableCell>{student.totalGamesTerm}</TableCell>
                     <TableCell>{student.totalFeedbackSubmitted}</TableCell>
                     <TableCell>
                       <Badge variant={student.isOnTrack ? 'default' : 'destructive'}>{student.isOnTrack ? 'On Track' : 'At Risk'}</Badge>

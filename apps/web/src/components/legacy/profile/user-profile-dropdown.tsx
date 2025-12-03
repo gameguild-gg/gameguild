@@ -5,7 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/compon
 import { environment } from '@/configs/environment';
 import { getApiUsersById } from '@/lib/api/generated';
 import { createClient } from '@/lib/api/generated/client';
-import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import type { UserResponseDto } from '@/lib/api/generated';
 import { CreditCard, FileText, FolderOpen, LogOut, MoveUpRight, Settings, User } from 'lucide-react';
 import { signOut, useSession } from 'next-auth/react';
 import Image from 'next/image';

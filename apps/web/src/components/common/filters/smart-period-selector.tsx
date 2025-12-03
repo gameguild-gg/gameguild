@@ -1,10 +1,10 @@
 'use client';
 
-import * as React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import * as React from 'react';
 
 // Type-safe period configuration
 export interface PeriodConfig {
@@ -23,8 +23,8 @@ export interface PeriodValue {
 }
 
 interface SmartPeriodSelectorProps {
-  selectedPeriod: string;
-  onPeriodChange?: (period: string) => void;
+  selectedPeriod: PeriodValue['type'];
+  onPeriodChange?: (period: PeriodValue['type']) => void;
   onPeriodValueChange?: (value: PeriodValue) => void;
   className?: string;
   showNavigation?: boolean;
@@ -56,7 +56,7 @@ export function SmartPeriodSelector({ selectedPeriod, onPeriodChange, onPeriodVa
     setCurrentOffset((prev) => prev - 1);
   };
 
-  const handlePeriodTypeChange = (newPeriod: string) => {
+  const handlePeriodTypeChange = (newPeriod: PeriodValue['type']) => {
     setCurrentOffset(0); // Reset offset when changing period type
     onPeriodChange?.(newPeriod);
   };
@@ -83,21 +83,20 @@ export function SmartPeriodSelector({ selectedPeriod, onPeriodChange, onPeriodVa
                 <Button
                   variant="ghost"
                   size="default"
-                  className={`${
-                    selectedPeriod === period.type
-                      ? 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
-                      : 'backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
-                  } transition-all duration-200 h-10 w-10 p-0 ${index === 0 ? 'rounded-l-xl rounded-r-none border-r-0' : index === DEFAULT_PERIODS.length - 1 ? 'rounded-r-xl rounded-l-none border-l-0' : 'rounded-none border-x-0'}`}
+                  className={`${selectedPeriod === period.type
+                    ? 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20'
+                    : 'backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+                    } transition-all duration-200 h-10 w-10 p-0 ${index === 0 ? 'rounded-l-xl rounded-r-none border-r-0' : index === DEFAULT_PERIODS.length - 1 ? 'rounded-r-xl rounded-l-none border-l-0' : 'rounded-none border-x-0'}`}
                   style={
                     selectedPeriod === period.type
                       ? {
-                          background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
-                          boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
-                        }
+                        background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                        boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
+                      }
                       : {
-                          background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
-                          boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
-                        }
+                        background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                        boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+                      }
                   }
                   onClick={() => handlePeriodTypeChange(period.type)}
                 >
@@ -151,7 +150,11 @@ function PeriodValueRow({ values, onNext, onPrev, onSelect }: PeriodValueRowProp
 
   const handleSelect = (index: number) => {
     setActiveIndex(index);
-    onSelect(values[index]);
+    const selected = values[index];
+    if (!selected) {
+      return;
+    }
+    onSelect(selected);
   };
 
   return (
@@ -182,21 +185,19 @@ function PeriodValueRow({ values, onNext, onPrev, onSelect }: PeriodValueRowProp
               key={`${value.type}-${value.value}-${value.year || ''}`}
               variant="ghost"
               size="default"
-              className={`${
-                isActive ? 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20' : 'backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
-              } transition-all duration-200 flex h-10 w-20 flex-col p-0 items-center justify-center gap-0.5 ${
-                isFirst && isLast ? 'rounded-none border-x-0' : isFirst ? 'rounded-none border-r-0' : isLast ? 'rounded-none border-l-0' : 'rounded-none border-x-0'
-              }`}
+              className={`${isActive ? 'backdrop-blur-md border border-blue-400/40 text-white shadow-lg shadow-blue-500/20' : 'backdrop-blur-md border border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50'
+                } transition-all duration-200 flex h-10 w-20 flex-col p-0 items-center justify-center gap-0.5 ${isFirst && isLast ? 'rounded-none border-x-0' : isFirst ? 'rounded-none border-r-0' : isLast ? 'rounded-none border-l-0' : 'rounded-none border-x-0'
+                }`}
               style={
                 isActive
                   ? {
-                      background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
-                      boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
-                    }
+                    background: 'radial-gradient(ellipse 80% 60% at center, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.3) 50%, rgba(29, 78, 216, 0.2) 100%)',
+                    boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(59, 130, 246, 0.2)',
+                  }
                   : {
-                      background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
-                      boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
-                    }
+                    background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                    boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+                  }
               }
               onClick={() => handleSelect(index)}
             >
@@ -239,7 +240,7 @@ function generatePeriodValues(type: PeriodValue['type'], offset: number, count: 
         date.setDate(date.getDate() + index);
         value = {
           type: 'day',
-          value: date.toISOString().split('T')[0],
+          value: date.toISOString().slice(0, 10),
           label: date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' }),
           year: date.toLocaleDateString('en-US', { month: 'short' }),
           date,

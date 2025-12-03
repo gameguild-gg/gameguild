@@ -115,7 +115,7 @@ export const getLanguageFromExtension = (ext: string): LanguageType => {
 }
 
 // Update the getLanguageLabel function to handle C and C++
-export const getLanguageLabel = (lang: LanguageType): string => {
+export const getLanguageLabel = (lang: LanguageType | string): string => {
   switch (lang) {
     case "javascript":
       return ".js (JavaScript)"

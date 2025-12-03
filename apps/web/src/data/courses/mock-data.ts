@@ -1,11 +1,11 @@
 import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/generated';
-import { ai4gamesProgram, ai4gamesProduct, ai4gamesProductProgram } from './ai4games';
-import { dsaProgram, dsaProduct, dsaProductProgram } from './dsa';
-import { pythonProgram, pythonProduct, pythonProductProgram } from './python';
-import { ai4games2Program, ai4games2Product, ai4games2ProductProgram } from './ai4games2';
-import portfolioProgram, { portfolioProduct, portfolioProductProgram } from './portfolio';
-import intro2gproProgram, { intro2gproProduct, intro2gproProductProgram } from './intro2gpro';
+import { ai4gamesProduct, ai4gamesProductProgram, ai4gamesProgram } from './ai4games';
+import { ai4games2Product, ai4games2ProductProgram, ai4games2Program } from './ai4games2';
+import { dsaProduct, dsaProductProgram, dsaProgram } from './dsa';
 import gamePublishingProgram, { gamePublishingProduct, gamePublishingProductProgram } from './game-publishing';
+import intro2gproProgram, { intro2gproProduct, intro2gproProductProgram } from './intro2gpro';
+import portfolioProgram, { portfolioProduct, portfolioProductProgram } from './portfolio';
+import { pythonProduct, pythonProductProgram, pythonProgram } from './python';
 
 pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
@@ -82,19 +82,19 @@ export function getProgramContentBySlug(programSlug: string, contentPath: string
   });
   console.log(
     '🔍 Available slugs:',
-    program.programContents?.map(item => ({ slug: item.slug, parent: item.parent, parentId: item.parentId }))
+    program.programContents?.map((item: any) => ({ slug: item.slug, parent: item.parent, parentId: item.parentId }))
   );
 
   let content: ProgramContent | null =
     program.programContents?.find(
-      item => (item.parent === null || item.parent === undefined) && item.slug === contentPath[0]
+      (item: any) => (item.parent === null || item.parent === undefined) && item.slug === contentPath[0]
     ) || null;
 
   console.log('🔍 First level search result:', content ? { slug: content.slug, title: content.title } : 'Not found');
 
   if (contentPath.length > 1) {
     for (const slug of contentPath.slice(1)) {
-      content = content?.children?.find(item => item.slug === slug) || null;
+      content = content?.children?.find((item: any) => item.slug === slug) || null;
       if (!content) {
         return null;
       }

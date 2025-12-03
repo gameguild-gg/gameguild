@@ -1,10 +1,9 @@
 'use client';
 
-import React from 'react';
+import type { PostDto } from '@/lib/feed';
+import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Calendar, Heart, MessageCircle, Pin, Share2, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { PostDto } from '@/lib/feed';
 
 interface PostCardProps {
   post: PostDto;
@@ -106,7 +105,7 @@ export function PostCard({ post, showActions = true, className, onLike, onCommen
         {safePost.contentReferences.length > 0 && (
           <div className="mb-4">
             <div className="flex flex-wrap gap-2">
-              {safePost.contentReferences.slice(0, 3).map((ref, index) => (
+              {safePost.contentReferences.slice(0, 3).map((ref: { referenceType: string; resourceTitle: string }, index: number) => (
                 <div key={index} className="bg-slate-800/30 border border-slate-600/30 rounded-lg px-3 py-2 text-sm">
                   <span className="text-slate-400">{ref.referenceType}:</span>
                   <span className="text-white ml-1">{ref.resourceTitle}</span>

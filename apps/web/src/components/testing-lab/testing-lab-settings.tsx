@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
-import type { TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment, LocationStatus } from '@/lib/api/generated/types.gen';
-import { CollaboratorsSettings } from './sections/collaborators-settings';
+import type { TestingLocation as ApiTestingLocation } from '@/lib/api/generated';
+import { LocationStatus } from '@/lib/api/generated';
+import { CollaboratorsSettings, UserRoleAssignment } from './sections/collaborators-settings';
 // Legacy permission conversion utilities imported previously have been removed to avoid dual models.
 // We now rely exclusively on aggregated boolean permissions returned by server actions in actions/testing-lab-roles.
 import {
@@ -149,17 +150,7 @@ interface TestingLabManager {
 
 // Role management types
 // Use the proper RoleTemplate from actions which has both permissions and permissionTemplates
-
-// Define UserRoleAssignment locally since it's not exported
-// Extended type that combines API type with additional UI properties
-interface UserRoleAssignment extends GeneratedUserRoleAssignment {
-  id: string;
-  userEmail?: string;
-  userName?: string;
-  roleTemplateId?: string;
-  assignedAt?: string;
-  isActive: boolean;
-}
+// UserRoleAssignment is imported from ./sections/collaborators-settings
 
 interface RoleFormData {
   name: string;
@@ -202,19 +193,19 @@ interface RoleFormData {
 // Utility functions for type conversion
 const locationStatusToString = (status: LocationStatus): 'Active' | 'Inactive' | 'Maintenance' => {
   switch (status) {
-    case 0: return 'Active';      // ACTIVE = 0
-    case 1: return 'Maintenance'; // MAINTENANCE = 1  
-    case 2: return 'Inactive';    // INACTIVE = 2
+    case LocationStatus.ACTIVE: return 'Active';
+    case LocationStatus.MAINTENANCE: return 'Maintenance';
+    case LocationStatus.INACTIVE: return 'Inactive';
     default: return 'Active';
   }
 };
 
 const stringToLocationStatus = (status: 'Active' | 'Inactive' | 'Maintenance'): LocationStatus => {
   switch (status) {
-    case 'Active': return 0;      // ACTIVE = 0
-    case 'Maintenance': return 1; // MAINTENANCE = 1
-    case 'Inactive': return 2;    // INACTIVE = 2
-    default: return 0; // Default to Active (0)
+    case 'Active': return LocationStatus.ACTIVE;
+    case 'Maintenance': return LocationStatus.MAINTENANCE;
+    case 'Inactive': return LocationStatus.INACTIVE;
+    default: return LocationStatus.ACTIVE;
   }
 };
 
@@ -556,13 +547,13 @@ export function TestingLabSettings({ initialSection = 'general', sectionOnly = f
   const handleEditLocation = (location: TestingLocation) => {
     setEditingLocation(location);
     setFormData({
-      name: location.name,
+      name: location.name || '',
       description: location.description || '',
       address: location.address || '',
       maxTestersCapacity: location.maxTestersCapacity,
       maxProjectsCapacity: location.maxProjectsCapacity,
       equipmentAvailable: location.equipmentAvailable || '',
-      status: locationStatusToString(location.status),
+      status: locationStatusToString(location.status ?? LocationStatus.ACTIVE),
     });
     setIsLocationDialogOpen(true);
   };

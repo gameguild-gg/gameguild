@@ -22,11 +22,11 @@ export class Memory {
   }
 
   read8(o: number): number {
-    return this.u8[o];
+    return this.u8[o] ?? 0;
   }
 
   read32(o: number): number {
-    return this.u32[o >> 2];
+    return this.u32[o >> 2] ?? 0;
   }
 
   write8(o: number, v: number): void {

@@ -1,8 +1,9 @@
 'use client';
 
+import { PeriodType } from '@/components/common/filters/filter-context';
 import { CourseFilterControls } from '@/components/courses/common';
 import { Button } from '@/components/ui/button';
-import { ModulesContentsContentStatus, ModulesProgramsProgram, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/types.gen';
+import { ModulesContentsContentStatus, ModulesProgramsProgram, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/stub-types';
 import { Plus } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { CourseCard } from './course-card';
@@ -29,7 +30,7 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
   const [selectedStatuses, setSelectedStatuses] = useState<CourseStatus[]>([]);
   const [selectedAreas, setSelectedAreas] = useState<CourseArea[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<CourseLevel[]>([]);
-  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('week');
   const [viewMode, setViewMode] = useState<'cards' | 'row' | 'table'>(initialViewMode);
 
   // Filter handlers
@@ -162,7 +163,7 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
                 setSelectedStatuses([]);
                 setSelectedAreas([]);
                 setSelectedLevels([]);
-                setSelectedPeriod('all');
+                setSelectedPeriod('month');
               }}
               className="text-blue-400 hover:text-blue-300 transition-colors"
             >

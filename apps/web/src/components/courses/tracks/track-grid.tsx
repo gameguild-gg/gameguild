@@ -1,14 +1,13 @@
 'use client';
 
-import React from 'react';
 import { useRouter } from 'next/navigation';
 
-import { TrackCard } from './track-card';
 import { useFilteredTracks } from '@/lib/tracks/use-tracks';
+import { TrackCard } from './track-card';
 
 export function TrackGrid() {
   const router = useRouter();
-  const filteredTracks = useFilteredTracks();
+  const { tracks: filteredTracks } = useFilteredTracks();
 
   if (filteredTracks.length === 0) {
     return <div className="text-center py-10 text-muted-foreground">No tracks found matching your criteria. Try adjusting your filters.</div>;

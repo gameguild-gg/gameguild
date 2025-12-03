@@ -1,7 +1,7 @@
 import { AchievementManagementContent } from '@/components/achievements/management/achievement-management-content';
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
 import { getAchievementsAction } from '@/lib/admin/achievements/achievements.actions';
-import type { AchievementDto } from '@/lib/core/api/generated/types.gen';
+import type { AchievementDto } from '@/lib/core/api/generated';
 import { Loader2 } from 'lucide-react';
 import { Metadata } from 'next';
 import { Suspense } from 'react';

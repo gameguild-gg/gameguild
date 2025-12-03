@@ -1,5 +1,8 @@
 import { createContext, ReactNode, useContext, useReducer, useState } from 'react';
 
+// Period type used across filters
+export type PeriodType = 'day' | 'week' | 'month' | 'quarter' | 'year';
+
 // Generic filter option interface
 export interface FilterOption {
   value: string;
@@ -23,7 +26,7 @@ export interface FilterConfig<T extends Record<string, unknown> = Record<string,
 export interface BaseFilterState<T = Record<string, unknown>> {
   searchTerm: string;
   selectedFilters: Partial<Record<keyof T, string[]>>; // Type-safe dynamic filters
-  selectedPeriod: string;
+  selectedPeriod: PeriodType;
   viewMode: 'cards' | 'row' | 'table';
   // Legacy support for existing components (will be deprecated)
   selectedStatuses: string[];
@@ -37,7 +40,7 @@ export type FilterAction<T = Record<string, unknown>> =
   | { type: 'TOGGLE_STATUS'; payload: string }
   | { type: 'SET_SELECTED_TYPES'; payload: string[] }
   | { type: 'TOGGLE_TYPE'; payload: string }
-  | { type: 'SET_PERIOD'; payload: string }
+  | { type: 'SET_PERIOD'; payload: PeriodType }
   | { type: 'SET_VIEW_MODE'; payload: 'cards' | 'row' | 'table' }
   | { type: 'SET_FILTER'; payload: { key: keyof T; values: string[] } }
   | { type: 'TOGGLE_FILTER'; payload: { key: keyof T; value: string } }
@@ -167,7 +170,7 @@ interface FilterContextType<T extends Record<string, unknown> = Record<string, u
   setSearchTerm: (term: string) => void;
   toggleStatus: (status: string) => void;
   toggleType: (type: string) => void;
-  setPeriod: (period: string) => void;
+  setPeriod: (period: PeriodType) => void;
   setViewMode: (mode: 'cards' | 'row' | 'table') => void;
   clearSearch: () => void;
   clearFilters: () => void;
@@ -218,7 +221,7 @@ export function FilterProvider<T extends Record<string, unknown> = Record<string
   const setSearchTerm = (term: string) => dispatch({ type: 'SET_SEARCH_TERM', payload: term });
   const toggleStatus = (status: string) => dispatch({ type: 'TOGGLE_STATUS', payload: status });
   const toggleType = (type: string) => dispatch({ type: 'TOGGLE_TYPE', payload: type });
-  const setPeriod = (period: string) => dispatch({ type: 'SET_PERIOD', payload: period });
+  const setPeriod = (period: PeriodType) => dispatch({ type: 'SET_PERIOD', payload: period });
   const setViewMode = (mode: 'cards' | 'row' | 'table') => dispatch({ type: 'SET_VIEW_MODE', payload: mode });
   const clearSearch = () => dispatch({ type: 'CLEAR_SEARCH' });
   const clearFilters = () => dispatch({ type: 'CLEAR_FILTERS' });

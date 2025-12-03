@@ -30,7 +30,7 @@ function transformProgramToCourse(program: Program, index: number) {
     category: String(program.category || 'General'),
     level: (program.difficulty === ProgramDifficulty.Beginner ? 'Beginner' :
       program.difficulty === ProgramDifficulty.Intermediate ? 'Intermediate' : 'Advanced') as 'Beginner' | 'Intermediate' | 'Advanced',
-    duration: `${program.estimatedHours || 0}`,
+    duration: Number(program.estimatedHours || 0), // Changed to number to match CourseGridCourse
     enrolledStudents: program.currentEnrollments || 0,
     rating: program.averageRating || 0,
     price: 0, // No pricing info in Program type

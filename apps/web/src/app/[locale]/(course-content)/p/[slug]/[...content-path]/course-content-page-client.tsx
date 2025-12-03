@@ -2,7 +2,7 @@
 
 import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
 import { Card, CardContent } from '@/components/ui/card';
-import { ProgramContentDto } from '@/lib/api/generated/types.gen';
+import { ProgramContentDto } from '@/lib/api/generated/stub-types';
 
 interface CourseContentPageClientProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

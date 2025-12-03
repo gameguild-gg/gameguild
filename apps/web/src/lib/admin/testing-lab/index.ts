@@ -11,8 +11,11 @@ export * from './requests/testing-requests.actions';
 // Testing Feedbacks
 export * from './feedbacks/testing-feedbacks.actions';
 
-// Testing Sessions
-export * from './sessions/sessions.actions';
+// Testing Sessions (selective to avoid export name conflicts)
+export {
+    createTestingSessionAction,
+    deleteTestingSessionAction, getAvailableTestSessions, getSessionEnrollmentRequestsAction, getTestingLocationsAction, getTestingSessionByIdAction, getTestingSessionBySlug, getTestingSessionsAction, getTestSessionBySlug, processEnrollmentDecisionAction, searchTestingSessionsAction
+} from './sessions/sessions.actions';
 
 // Participant Management
 export * from './participants/participants.actions';

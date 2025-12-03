@@ -7,7 +7,7 @@ This file is a concise reference for automated coding agents to be productive in
 
 Essential commands (paths relative to repo root):
 
-- Start DB:  `docker-compose up -d adminer` (compose.yaml at repo root).
+- Start DB: `docker-compose up -d adminer` (compose.yaml at repo root).
 - Start API (dev): use the VS Code task `start-api` or run:
   `dotnet run --project apps/api/Source/GameGuild.API/GameGuild.API.csproj`
 - Start Web (dev + codegen): in `apps/web/` run `npm run dev` — this runs `api:gen`, `graphql:gen` and `next dev` in parallel.
@@ -49,7 +49,9 @@ Quick tips for agents (do these before code changes):
 If anything below is unclear or you want more examples (small handler, a module skeleton, or a codegen verification script), tell me which area to expand and I will add an example or tests.
 
 ---
+
 Last updated: automated merge — please review for any team-specific secrets or CI notes to add.
+
 # GameGuild Platform - AI Agent Instructions
 
 ## Architecture Overview
@@ -147,7 +149,7 @@ core/                # API clients, utils, health
 
 ```typescript
 // Use the configured authenticated client
-import { configureAuthenticatedClient } from "@/lib/api/authenticated-client";
+import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 
 export async function myServerAction() {
   await configureAuthenticatedClient(); // Sets up auth headers
@@ -234,7 +236,7 @@ Server actions return typed results with error handling built-in.
 ### Development Defaults
 
 - Database: `postgres/postgres/postgres` (matches docker-compose)
-- API Port: 5000
+- API Port: 5295
 - Web Port: 3000
 
 ## VS Code Integration

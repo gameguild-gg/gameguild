@@ -23,10 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const course = result.data;
 
   if (!course) {
-    return {
-      title: 'Course Not Found',
-      description: 'The requested course could not be found.',
-    };
+    notFound();
   }
 
   return {
@@ -44,7 +41,7 @@ interface CourseDetailPageProps {
   readonly params: Promise<{ slug: string }>;
 }
 
-async function CourseContent({ slug }: { slug: string }) {
+async function CourseContent({ slug }: { slug: string }): Promise<React.JSX.Element> {
   const result = await getCourseBySlug(slug);
 
   if (!result.success) {
@@ -55,10 +52,7 @@ async function CourseContent({ slug }: { slug: string }) {
   const course = result.data;
 
   if (!course) {
-    return {
-      title: 'Course Not Found',
-      description: 'The requested course could not be found.',
-    };
+    notFound();
   }
 
   return (
