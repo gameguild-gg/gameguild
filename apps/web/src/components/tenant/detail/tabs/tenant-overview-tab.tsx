@@ -1,7 +1,8 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import type { Tenant } from '@/lib/api/generated/types.gen';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Tenant } from '@/lib/api/generated';
 import {
     Building,
     Calendar,

@@ -55,7 +55,8 @@ export class CppTypeChecker {
           !line.includes("case")
         ) {
           // Check next line for opening brace to avoid flagging function/class declarations
-          const nextLine = lineIndex < lines.length - 1 ? lines[lineIndex + 1].trim() : ""
+          const nextLineRaw = lineIndex < lines.length - 1 ? lines[lineIndex + 1] : ""
+          const nextLine = nextLineRaw?.trim() ?? ""
           if (!nextLine.startsWith("{")) {
             markers.push({
               severity: this.monaco.MarkerSeverity.Warning,

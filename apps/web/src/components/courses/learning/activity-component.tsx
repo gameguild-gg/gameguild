@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Clock, Code, FileText, MessageSquare, Play, Save, Send, Upload } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
 import { submitActivity } from '@/lib/courses/server-actions';
+import { Clock, Code, FileText, MessageSquare, Play, Save, Send, Upload } from 'lucide-react';
+import { useState } from 'react';
 
 interface ContentItem {
   id: string;
@@ -110,8 +110,8 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
     return Math.round((earnedPoints / totalPoints) * 100);
   };
 
-  const getQuizContent = () => {
-    const quizzes = {
+  const getQuizContent = (): { title: string; description: string; timeLimit: number; questions: QuizQuestion[] } | undefined => {
+    const quizzes: Record<string, { title: string; description: string; timeLimit: number; questions: QuizQuestion[] }> = {
       'quiz-1': {
         title: 'Programming Concepts Quiz',
         description: 'Test your understanding of basic programming concepts',
@@ -120,7 +120,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
           {
             id: 'q1',
             question: 'What is a game loop?',
-            type: 'multiple-choice' as const,
+            type: 'multiple-choice',
             options: ['A loop that only runs once', 'A continuous cycle that updates game state and renders graphics', 'A loop used for loading game assets', 'A debugging tool for games'],
             correctAnswer: 'A continuous cycle that updates game state and renders graphics',
             points: 10,
@@ -128,7 +128,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
           {
             id: 'q2',
             question: 'Which programming pattern is commonly used for game events?',
-            type: 'multiple-choice' as const,
+            type: 'multiple-choice',
             options: ['Singleton Pattern', 'Observer Pattern', 'Factory Pattern', 'Decorator Pattern'],
             correctAnswer: 'Observer Pattern',
             points: 10,
@@ -136,7 +136,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
           {
             id: 'q3',
             question: 'Select all that are components of a typical game loop:',
-            type: 'multiple-select' as const,
+            type: 'multiple-select',
             options: ['Process Input', 'Update Game State', 'Render Graphics', 'Save Game Data', 'Load Assets'],
             correctAnswer: ['Process Input', 'Update Game State', 'Render Graphics'],
             points: 15,
@@ -144,7 +144,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
           {
             id: 'q4',
             question: 'Object pooling is used to optimize memory usage.',
-            type: 'true-false' as const,
+            type: 'true-false',
             options: ['True', 'False'],
             correctAnswer: 'True',
             points: 5,
@@ -153,7 +153,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
       },
     };
 
-    return quizzes[item.id as keyof typeof quizzes];
+    return quizzes[item.id];
   };
 
   const getActivityIcon = () => {
@@ -176,6 +176,7 @@ export function ActivityComponent({ item, onComplete }: ActivityComponentProps) 
     if (!quiz) return <div>Quiz content not found</div>;
 
     const currentQuestion = quiz.questions[currentStep];
+    if (!currentQuestion) return <div>Question not found</div>;
     const isLastQuestion = currentStep === quiz.questions.length - 1;
 
     return (

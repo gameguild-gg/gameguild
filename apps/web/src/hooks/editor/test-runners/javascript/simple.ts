@@ -23,6 +23,7 @@ export async function runSimpleTestsJavaScript(options: TestRunnerOptions) {
     window.__currentTestIndex = i
 
     const testCase = fileCases[i]
+    if (!testCase) continue
 
     // Get the appropriate executor for the selected language
     const executor = getExecutor(selectedLanguage)
@@ -143,7 +144,7 @@ window.prompt = __originalPrompt;
 
     // Reset prompt state after each test
     window.__awaitingPromptInput = false
-    window.promptCallback = null
+    window.promptCallback = () => { }
   }
 
   // Reset the current test index when all tests are complete

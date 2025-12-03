@@ -3,12 +3,12 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Program } from '@/lib/api/generated/types.gen';
-import { Clock, Eye, DollarSign, Calendar, MoreHorizontal } from 'lucide-react';
-import Link from 'next/link';
-import { formatDistanceToNow, parseISO } from 'date-fns';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Program } from '@/lib/api/generated/stub-types';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { Calendar, Clock, DollarSign, Eye, MoreHorizontal } from 'lucide-react';
+import Link from 'next/link';
 
 interface ProgramTableProps {
   programs: Program[];
@@ -82,7 +82,7 @@ export function ProgramTable({ programs }: ProgramTableProps) {
                     {program.description && <div className="text-sm text-slate-400 line-clamp-1 mt-0.5">{program.description}</div>}
                     {program.skillsProvided && program.skillsProvided.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {program.skillsProvided.slice(0, 2).map((skill) => (
+                        {program.skillsProvided.slice(0, 2).map((skill: { id: string; tag?: { name?: string } }) => (
                           <Badge key={skill.id} variant="secondary" className="text-xs">
                             {skill.tag?.name || 'Skill'}
                           </Badge>

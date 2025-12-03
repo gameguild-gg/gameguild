@@ -5,13 +5,9 @@ import { DecoratorNode, type SerializedLexicalNode } from "lexical"
 import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import { 
-  Pencil, ExternalLink, Download, ArrowRight, Mail, Copy,
-  Link, Link2, ExternalLinkIcon,
-  Download as DownloadIcon, ArrowDownToLine, FileDown,
-  Clipboard, ClipboardCopy, CopyCheck,
-  Mail as MailIcon, AtSign, Send
+  Pencil, ExternalLink, Download, Mail, Copy,
+  Link, Link2, ArrowDownToLine, FileDown, ClipboardCopy, CopyCheck, AtSign, Send
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import type { JSX } from "react/jsx-runtime"
 import { EditorLoadingContext } from "../lexical-editor"
 import { ButtonEditor } from "@/components/editor/extras/button"

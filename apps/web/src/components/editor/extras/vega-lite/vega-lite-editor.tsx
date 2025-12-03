@@ -10,7 +10,7 @@ import { X, Save, FileText, BarChart3, AlertCircle, CheckCircle, Square, Rectang
 import type { VegaLiteData } from "@/components/editor/nodes/vega-lite-node"
 import { VegaLiteTemplateSelector } from "./vega-lite-template-selector"
 import { MonacoVegaLiteEditor } from "./monaco-vega-lite-editor"
-import { VegaLiteValidator, type VegaLiteValidationResult } from "./vega-lite-validator"
+import { type VegaLiteValidationResult } from "./vega-lite-validator"
 import { VegaLiteExport } from "./vega-lite-export"
 import { ControlledVegaLiteViewer } from "./controlled-vega-lite-viewer"
 import { getThemePair, AVAILABLE_THEMES, THEME_DESCRIPTIONS, THEME_MODE_DESCRIPTIONS } from "@/lib/vega-theme-helper"

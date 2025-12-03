@@ -1,7 +1,7 @@
 "use client"
 
-import type { SerializedGalleryNode } from "../../nodes/gallery-node"
 import { ImageIcon } from 'lucide-react'
+import type { SerializedGalleryNode } from "../../nodes/gallery-node"
 
 export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
   if (!node?.data) {
@@ -29,6 +29,7 @@ export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
 
     // Font weight
     if (captionStyle?.fontWeight === "medium") classes.push("font-medium")
+    else if (captionStyle?.fontWeight === "normal") classes.push("font-normal")
     else if (captionStyle?.fontWeight === "bold") classes.push("font-bold")
     else classes.push("font-normal") // Default
 
@@ -63,7 +64,7 @@ export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
         {images.map((image) => {
           // Check if this is a placeholder (empty src means it's a placeholder)
           const isPlaceholder = !image.src || image.src.trim() === ''
-          
+
           // Calculate grid area style
           const gridAreaStyle = {
             gridRow: image.span === "2x1" || image.span === "2x2" ? "span 2" : undefined,

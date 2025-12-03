@@ -1,7 +1,7 @@
 'use client';
 
+import { type ConsentState, type CookieCategory, type CookiePreferences, acceptAllCookies, acceptEssentialOnly, declineAllCookies, getConsentState, getCookiePreferences, hasUserConsented, hasUserDeclined, isCookieCategoryEnabled, resetCookiePreferences, saveCookiePreferences } from '@/lib/cookies';
 import { useCallback, useEffect, useState } from 'react';
-import { type CookieCategory, type CookiePreferences, acceptAllCookies, acceptEssentialOnly, getCookiePreferences, hasUserConsented, isCookieCategoryEnabled, resetCookiePreferences, saveCookiePreferences, hasUserDeclined, declineAllCookies, type ConsentState, getConsentState } from '@/lib/cookies';
 
 export interface UseCookiesReturn {
   preferences: CookiePreferences;
@@ -11,7 +11,7 @@ export interface UseCookiesReturn {
   acceptAll: () => void;
   acceptEssential: () => void;
   reset: () => void;
-  savePreferences: (prefs: Partial<CookiePreferences>) => void;
+  savePreferences: () => void;
   isCategoryEnabled: (category: CookieCategory) => boolean;
   hasDeclined: boolean;
   decline: () => void;

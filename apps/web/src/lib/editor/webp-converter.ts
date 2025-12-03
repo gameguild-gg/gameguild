@@ -191,7 +191,9 @@ export class WebPConverter {
     const results: WebPConversionResult[] = []
 
     for (let i = 0; i < files.length; i++) {
-      const result = await this.convertToWebP(files[i], options)
+      const file = files[i];
+      if (!file) continue;
+      const result = await this.convertToWebP(file, options)
       results.push(result)
 
       if (onProgress) {

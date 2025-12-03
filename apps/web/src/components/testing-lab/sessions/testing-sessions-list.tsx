@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { TestingSession } from '@/lib/api/generated/types.gen';
+import { SessionStatus, TestingSession } from '@/lib/api/generated';
 import {
     Calendar,
     ChevronLeft,
@@ -101,24 +101,23 @@ export function TestingSessionsList({ sessions: incomingSessions }: TestingSessi
         }));
     };
 
-    const getStatusColor = (status: number): 'default' | 'secondary' | 'destructive' | 'outline' => {
-        switch (status) {
-            case 0: return 'secondary';   // Scheduled
-            case 1: return 'default';     // Active  
-            case 2: return 'outline';     // Completed
-            case 3: return 'destructive'; // Cancelled
-            default: return 'outline';
-        }
+    const getStatusColor = (status: SessionStatus | undefined): 'default' | 'secondary' | 'destructive' | 'outline' => {
+        const statusStr = String(status ?? '');
+        if (statusStr === 'Pending' || statusStr === 'PENDING' || statusStr === 'SCHEDULED') return 'secondary';
+        if (statusStr === 'InProgress' || statusStr === 'ACTIVE') return 'default';
+        if (statusStr === 'Completed' || statusStr === 'COMPLETED') return 'outline';
+        if (statusStr === 'Cancelled' || statusStr === 'CANCELLED' || statusStr === 'Failed') return 'destructive';
+        return 'outline';
     };
 
-    const getStatusText = (status: number): string => {
-        switch (status) {
-            case 0: return 'Scheduled';
-            case 1: return 'Active';
-            case 2: return 'Completed';
-            case 3: return 'Cancelled';
-            default: return 'Unknown';
-        }
+    const getStatusText = (status: SessionStatus | undefined): string => {
+        const statusStr = String(status ?? '');
+        if (statusStr === 'Pending' || statusStr === 'PENDING' || statusStr === 'SCHEDULED') return 'Scheduled';
+        if (statusStr === 'InProgress' || statusStr === 'ACTIVE') return 'Active';
+        if (statusStr === 'Completed' || statusStr === 'COMPLETED') return 'Completed';
+        if (statusStr === 'Cancelled' || statusStr === 'CANCELLED') return 'Cancelled';
+        if (statusStr === 'Failed') return 'Failed';
+        return 'Unknown';
     };
 
     const formatDate = (dateString?: string) => {

@@ -4,7 +4,6 @@ import type { CodeFile } from "./types"
 import { registerFileSystemOverlay, RegisteredFileSystemProvider } from '@codingame/monaco-vscode-files-service-override'
 import { URI } from 'vscode-uri'
 import type { Monaco } from "@monaco-editor/react"
-import type { languages } from "monaco-editor"
 
 let fileSystemProvider: RegisteredFileSystemProvider | null = null
 let disposable: ReturnType<typeof registerFileSystemOverlay> | null = null

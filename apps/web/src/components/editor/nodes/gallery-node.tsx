@@ -1,15 +1,13 @@
 "use client"
 
-import type React from "react"
-import type { JSX } from "react/jsx-runtime"
-import { useState, useEffect, useContext } from "react"
-import { DecoratorNode, type SerializedLexicalNode } from "lexical"
-import { $getNodeByKey } from "lexical"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { ImageIcon } from "lucide-react"
 import { ContentEditMenu, type EditMenuOption } from "@/components/editor/extras/content-edit-menu"
-import { EditorLoadingContext } from "../lexical-editor"
 import { UnifiedMediaEditor } from "@/components/editor/extras/media/unified-media-editor"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from "lexical"
+import { ImageIcon } from "lucide-react"
+import { useContext, useEffect, useState } from "react"
+import type { JSX } from "react/jsx-runtime"
+import { EditorLoadingContext } from "../lexical-editor"
 import type { BaseMediaData } from "./base/media-node-base"
 
 export type GalleryLayout = "1" | "2" | "3" | "4"
@@ -31,6 +29,12 @@ export interface GalleryData {
   images: GalleryImage[]
   layout: GalleryLayout
   caption?: string
+  captionStyle?: {
+    fontSize?: "xs" | "sm" | "base" | "lg"
+    fontFamily?: "sans" | "serif" | "mono"
+    fontWeight?: "normal" | "medium"
+    fontStyle?: "normal" | "italic"
+  }
   isNew?: boolean
   defaultDisplayMode?: ImageDisplayMode
 }
@@ -168,7 +172,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
         }
         altText = `__metadata__:${JSON.stringify(metadata)}`
       }
-      
+
       return {
         id: Math.random().toString(36).substring(7),
         src: item.src || '', // Ensure src is always a string
@@ -182,14 +186,14 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
 
   const handleSaveGallery = (items?: BaseMediaData[], columns?: number, caption?: string) => {
     if (!items || items.length === 0) return
-    
+
     // Filter items: keep those with src OR those that are placeholders
-    const validItems = items.filter(item => 
+    const validItems = items.filter(item =>
       item.isPlaceholder || (item.src && item.src.trim() !== "")
     )
-    
+
     if (validItems.length === 0) return
-    
+
     // Se tem apenas 1 item e não é placeholder, converte de volta para ImageNode simples
     if (validItems.length === 1 && !validItems[0]?.isPlaceholder) {
       editor.update(() => {
@@ -197,10 +201,10 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
         if (node) {
           // Import ImageNode dynamically
           const { ImageNode } = require('./image-node')
-          
+
           // Create simple image node
           const imageNode = new ImageNode(validItems[0])
-          
+
           // Replace gallery with simple image
           node.replace(imageNode)
         }
@@ -208,10 +212,10 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
       setIsEditing(false)
       return
     }
-    
+
     // Se tem 2+ itens ou 1 placeholder, mantém como galeria
     const galleryImages = mediaItemsToGallery(validItems)
-    
+
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
       if (node instanceof GalleryNode) {
@@ -256,10 +260,10 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                 {data.images.map((image) => {
                   // Check if this is a placeholder (empty src means it's a placeholder)
                   const isPlaceholder = !image.src || image.src.trim() === ''
-                  
+
                   return (
                     <div key={image.id} className="space-y-2">
-                      <div 
+                      <div
                         className="relative overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700"
                         style={{ aspectRatio: image.displayMode === "crop" ? "1/1" : "16/9" }}
                       >
@@ -325,10 +329,10 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
               {data.images.map((image) => {
                 // Check if this is a placeholder (empty src means it's a placeholder)
                 const isPlaceholder = !image.src || image.src.trim() === ''
-                
+
                 return (
                   <div key={image.id} className="space-y-2">
-                    <div 
+                    <div
                       className="relative overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700"
                       style={{ aspectRatio: image.displayMode === "crop" ? "1/1" : "16/9" }}
                     >
@@ -370,7 +374,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
 
       <UnifiedMediaEditor
         data={galleryToMediaItems(data.images)[0] || { type: 'image', src: '', alt: '', size: 100 }}
-        onChange={() => {}}
+        onChange={() => { }}
         onClose={() => setIsEditing(false)}
         onSave={handleSaveGallery}
         galleryItems={galleryToMediaItems(data.images)}

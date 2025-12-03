@@ -1,69 +1,23 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
-import { getApiPosts, postApiPosts, getApiPostsByPostId } from '@/lib/api/generated/sdk.gen';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import type { GetApiPostsData, PostApiPostsData, GetApiPostsByPostIdData } from '@/lib/api/generated/types.gen';
+// STUB: Posts actions are stubbed; endpoints are unavailable in current SDK.
 
-/**
- * Get all posts with optional filtering
- */
-export async function getPosts(data?: GetApiPostsData) {
-  await configureAuthenticatedClient();
+export type GetApiPostsData = any;
+export type PostApiPostsData = any;
+export type GetApiPostsByPostIdData = any;
 
-  return getApiPosts({
-    query: data?.query,
-  });
+export async function getPosts(_data?: GetApiPostsData): Promise<any> {
+  throw new Error('Not implemented (STUB): getPosts');
 }
 
-/**
- * Create a new post
- */
-export async function createPost(data?: PostApiPostsData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiPosts({
-    body: data?.body,
-  });
-
-  // Revalidate posts cache
-  revalidateTag('posts');
-
-  return result;
+export async function createPost(_data?: PostApiPostsData): Promise<any> {
+  throw new Error('Not implemented (STUB): createPost');
 }
 
-/**
- * Get a specific post by ID
- */
-export async function getPostById(data: GetApiPostsByPostIdData) {
-  await configureAuthenticatedClient();
-
-  return getApiPostsByPostId({
-    path: data.path,
-  });
+export async function getPostById(_data: GetApiPostsByPostIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): getPostById');
 }
 
-/**
- * Get recent posts with limit
- */
-export async function getRecentPosts(limit: number = 10) {
-  const result = await getApiPosts({
-    query: {
-      pageSize: limit,
-      orderBy: 'createdAt',
-      descending: true,
-    },
-  });
-  
-  return {
-    success: true,
-    data: Array.isArray(result.data) ? result.data.map(post => ({
-      id: post.id || '',
-      title: post.title || '',
-      authorId: post.authorId || '',
-      authorName: post.authorName || 'Unknown',
-      authorAvatar: post.authorAvatar || null,
-      createdAt: post.createdAt || new Date().toISOString(),
-    })) : [],
-  };
+export async function getRecentPosts(_limit: number = 10): Promise<any> {
+  throw new Error('Not implemented (STUB): getRecentPosts');
 }

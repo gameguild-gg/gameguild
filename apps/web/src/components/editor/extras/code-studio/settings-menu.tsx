@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { X, Lock, Unlock, Hash, FolderTree, Type, Palette } from "lucide-react"
+import { X, Lock, Unlock, Hash, Type, Palette } from "lucide-react"
 import type { CodeStudioData, ShikiTheme } from "./types"
 import { SHIKI_THEME_CONFIGS } from "./types"
 

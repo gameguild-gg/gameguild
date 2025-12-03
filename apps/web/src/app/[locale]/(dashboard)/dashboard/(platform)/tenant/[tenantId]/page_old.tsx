@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { getTenantByIdAction } from '@/lib/admin/tenants/tenants.actions';
-import type { Tenant } from '@/lib/api/generated/types.gen';
+import type { Tenant } from '@/lib/api/generated/stub-types';
 import { AlertCircle, ArrowLeft, Building, Calendar, Copy, Edit, RefreshCw, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';

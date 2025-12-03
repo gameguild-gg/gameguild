@@ -3,11 +3,14 @@ import React from 'react';
 
 interface LocationChipProps {
     locationName?: string | null;
+    isOnline?: boolean;
+    variant?: 'default' | 'compact' | 'inline';
     className?: string;
 }
 
-export const LocationChip: React.FC<LocationChipProps> = ({ locationName, className }) => {
-    if (!locationName) return null;
+export const LocationChip: React.FC<LocationChipProps> = ({ locationName, isOnline, variant = 'default', className }) => {
+    const displayText = locationName ?? (isOnline ? 'Online' : 'On-site');
+    if (!displayText) return null;
     return (
         <span
             className={
@@ -15,7 +18,7 @@ export const LocationChip: React.FC<LocationChipProps> = ({ locationName, classN
                 (className || '')
             }
         >
-            {locationName}
+            {displayText}
         </span>
     );
 };

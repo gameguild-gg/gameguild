@@ -2,23 +2,23 @@
 
 import React from "react"
 
-import { useState, useRef, useCallback } from "react"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Slider } from "@/components/ui/slider"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Slider } from "@/components/ui/slider"
 import { WebPConverter } from "@/lib/editor/webp-converter"
 import {
   Eye,
   EyeOff,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
   Move3D,
+  RotateCcw,
   SplitSquareHorizontal,
   ToggleLeft,
   ToggleRight,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react"
+import { useCallback, useRef, useState } from "react"
 
 export interface PreviewData {
   original: {
@@ -173,10 +173,10 @@ export function BeforeAfterPreview({ data, className = "" }: BeforeAfterPreviewP
         {data.compressed && (
           <div
             className="absolute inset-0 overflow-hidden"
-            style={{ clipPath: `inset(0 ${100 - sliderPosition[0]}% 0 0)` }}
+            style={{ clipPath: `inset(0 ${100 - (sliderPosition[0] ?? 50)}% 0 0)` }}
           >
             <img
-              src={data.compressed.url || "/placeholder.svg"}
+              src={data.compressed?.url || "/placeholder.svg"}
               alt="Compressed"
               className="w-full h-full object-contain"
               style={{ transform: `scale(${zoom / 100})` }}
@@ -187,7 +187,7 @@ export function BeforeAfterPreview({ data, className = "" }: BeforeAfterPreviewP
         {/* Slider Line */}
         <div
           className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg z-10 cursor-col-resize"
-          style={{ left: `${sliderPosition[0]}%` }}
+          style={{ left: `${sliderPosition && sliderPosition[0] !== undefined ? sliderPosition[0] : 50}%` }}
         >
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
             <Move3D className="h-4 w-4 text-gray-600" />

@@ -16,7 +16,6 @@ import {
   SELECTION_CHANGE_COMMAND,
 } from "lexical"
 import { useCallback, useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Edit } from "lucide-react"
 import { VegaLiteEditor } from "@/components/editor/extras/vega-lite/vega-lite-editor"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"

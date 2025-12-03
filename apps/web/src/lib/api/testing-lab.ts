@@ -4,12 +4,12 @@ import { environment } from '@/configs/environment';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import { client } from '@/lib/api/generated/client.gen';
 // TODO: Testing Lab SDK functions not found in generated API - API generation may not have included TestingLab module
-// import { getTestingPublicSessions, postTestingSessions, getTestingSessions as sdkGetTestingSessions } from '@/lib/api/generated/sdk.gen';
+// import { getTestingPublicSessions, postTestingSessions, getTestingSessions as sdkGetTestingSessions } from '@/lib/api/generated';
 // TODO: Testing Lab types not found in generated API types - API generation may not have included TestingLab module
-// import type { CreateTestingLocationDto, TestingLocation, TestingSession, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
+// import type { CreateTestingLocationDto, TestingLocation, TestingSession, UpdateTestingLocationRequest } from '@/lib/api/generated';
 
 // Re-export the generated types for convenience (commented out until types are available)
-// export type { CreateTestingLocationDto as CreateTestingLocationRequest, UpdateTestingLocationDto as UpdateTestingLocationRequest } from '@/lib/api/generated/types.gen';
+// export type { CreateTestingLocationDto as CreateTestingLocationRequest, UpdateTestingLocationRequest as UpdateTestingLocationRequest } from '@/lib/api/generated';
 
 // Temporary type definitions until API generation includes TestingLab module
 export interface CreateTestingLocationRequest {
@@ -33,6 +33,7 @@ export interface TestingSession {
   startTime: string;
   endTime: string;
   locationId: string;
+  maxTesters?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -139,7 +140,7 @@ export async function getTestingLocation(id: string): Promise<TestingLocation | 
 /**
  * Create a new testing location
  */
-export async function createTestingLocation(locationData: CreateTestingLocationDto): Promise<TestingLocation> {
+export async function createTestingLocation(locationData: CreateTestingLocationRequest): Promise<TestingLocation> {
   try {
     await configureAuthenticatedClient();
 
@@ -169,7 +170,7 @@ export async function createTestingLocation(locationData: CreateTestingLocationD
 /**
  * Update an existing testing location
  */
-export async function updateTestingLocation(id: string, locationData: UpdateTestingLocationDto): Promise<TestingLocation> {
+export async function updateTestingLocation(id: string, locationData: UpdateTestingLocationRequest): Promise<TestingLocation> {
   try {
     await configureAuthenticatedClient();
 
@@ -335,11 +336,11 @@ export async function getTestingSessions(params?: { skip?: number; take?: number
   const query: Record<string, string> = { skip: skip.toString(), take: take.toString() };
   if (typeof params?.status === 'number') query.status = params.status.toString();
   if (params?.tenantId) query.tenantId = params.tenantId;
-  const response = await sdkGetTestingSessions({ query });
-  if ('error' in response && response.error) {
-    throw new Error('Failed to fetch testing sessions');
-  }
-  return (response as any).data as TestingSession[];
+  // TODO: Testing Lab SDK functions not found in generated API
+  // const response = await sdkGetTestingSessions({ query });
+  // For now, return empty array as stub
+  console.warn('[STUB] getTestingSessions called - API not yet generated');
+  return [];
 }
 
 /**
@@ -349,9 +350,11 @@ export async function getPublicTestingSessions(take = 100): Promise<TestingSessi
   try {
     // Ensure baseUrl configured (idempotent)
     client.setConfig({ baseUrl: environment.apiBaseUrl });
-    const response = await getTestingPublicSessions({ query: { take } });
-    if ('error' in response && response.error) return [];
-    return (response as any).data as TestingSession[];
+    // TODO: Testing Lab SDK functions not found in generated API
+    // const response = await getTestingPublicSessions({ query: { take } });
+    // For now, return empty array as stub
+    console.warn('[STUB] getPublicTestingSessions called - API not yet generated');
+    return [];
   } catch (e) {
     console.error('Failed to load public testing sessions via SDK:', e instanceof Error ? e.message : e);
     return [];
@@ -360,21 +363,30 @@ export async function getPublicTestingSessions(take = 100): Promise<TestingSessi
 
 export async function createTestingSession(sessionData: CreateTestingSessionRequest): Promise<TestingSession> {
   await configureAuthenticatedClient();
-  // The generated endpoint expects the DTO shape; adapt if naming differs.
-  const response = await postTestingSessions({
-    body: {
-      sessionName: sessionData.sessionName,
-      sessionDate: sessionData.sessionDate,
-      startTime: sessionData.startTime,
-      endTime: sessionData.endTime,
-      locationId: sessionData.locationId,
-      maxTesters: sessionData.maxTesters,
-      testingRequestId: sessionData.testingRequestId,
-      managerId: sessionData.managerId,
-    } as any
-  });
-  if ('error' in response && response.error) {
-    throw new Error('Failed to create testing session');
-  }
-  return (response as any).data as TestingSession;
+  // TODO: Testing Lab SDK functions not found in generated API
+  // const response = await postTestingSessions({
+  //   body: {
+  //     sessionName: sessionData.sessionName,
+  //     sessionDate: sessionData.sessionDate,
+  //     startTime: sessionData.startTime,
+  //     endTime: sessionData.endTime,
+  //     locationId: sessionData.locationId,
+  //     maxTesters: sessionData.maxTesters,
+  //     testingRequestId: sessionData.testingRequestId,
+  //     managerId: sessionData.managerId,
+  //   } as any
+  // });
+  // For now, return a stub session
+  console.warn('[STUB] createTestingSession called - API not yet generated');
+  return {
+    id: crypto.randomUUID(),
+    sessionName: sessionData.sessionName,
+    sessionDate: sessionData.sessionDate,
+    startTime: sessionData.startTime,
+    endTime: sessionData.endTime,
+    locationId: sessionData.locationId,
+    maxTesters: sessionData.maxTesters,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
 }

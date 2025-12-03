@@ -1,8 +1,8 @@
 'use server';
 
-import { revalidateTag } from 'next/cache';
-import { getUsersData } from '@/lib/users/users.actions';
 import { getRecentPosts } from '@/lib/posts/posts.actions';
+import { getUsersData } from '@/lib/users/users.actions';
+import { revalidateTag } from 'next/cache';
 
 export interface ActivityItem {
   id: string;
@@ -45,7 +45,7 @@ export async function getRecentActivity(limit: number = 10): Promise<{ success: 
 
     // Add user activities
     if (usersResult.users && usersResult.users.length > 0) {
-      const userActivities = usersResult.users.map((user) => ({
+      const userActivities = usersResult.users.map((user: { id: string; name: string; createdAt: string }) => ({
         id: `user-${user.id}`,
         type: 'user_joined' as const,
         title: 'New User Joined',
@@ -66,7 +66,7 @@ export async function getRecentActivity(limit: number = 10): Promise<{ success: 
 
     // Add post activities
     if (postsResult.success && postsResult.data) {
-      const postActivities = postsResult.data.map((post) => ({
+      const postActivities = postsResult.data.map((post: { id: string; title: string; authorId: string; authorName: string; authorAvatar?: string; createdAt: string; excerpt?: string }) => ({
         id: `post-${post.id}`,
         type: 'post_created' as const,
         title: 'New Post Published',

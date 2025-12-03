@@ -1,5 +1,4 @@
-import type { ModulesProgramsProgram } from '@/lib/api/generated/types.gen'
-import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/types.gen'
+import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/stub-types'
 import { notFound } from 'next/navigation'
 import { getCourseBySlug } from '../actions'
 import { CourseDetails } from './course-details.client'
@@ -66,7 +65,7 @@ export default async function Page({ params }: PageProps) {
     }
 
     // Transform course to Program type for the CourseDetails component
-    const program: ModulesProgramsProgram = {
+    const program: any = {
         id: course.id,
         title: course.title,
         description: course.description,

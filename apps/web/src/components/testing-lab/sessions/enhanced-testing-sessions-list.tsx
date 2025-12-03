@@ -323,7 +323,7 @@ export function EnhancedTestingSessionsList({ initialSessions = [] }: EnhancedTe
   const formatTime = (timeString: string) => {
     const [hours, minutes] = timeString.split(':');
     const date = new Date();
-    date.setHours(parseInt(hours), parseInt(minutes));
+    date.setHours(parseInt(hours ?? '0'), parseInt(minutes ?? '0'));
     return date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
@@ -907,7 +907,7 @@ function CreateSessionDialog({ onClose, onSave }: CreateSessionDialogProps) {
       try {
         const { getTestingRequestsData } = await import('@/lib/testing-lab/testing-lab.actions');
         const data = await getTestingRequestsData();
-        setTestingRequests(data?.testingRequests || []);
+        setTestingRequests((data as { testingRequests?: any[] })?.testingRequests || []);
       } catch (error) {
         console.error('Error fetching testing requests:', error);
       }

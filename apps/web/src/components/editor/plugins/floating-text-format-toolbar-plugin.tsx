@@ -1,32 +1,6 @@
 "use client"
 
-import { DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import {
-  Bold,
-  Italic,
-  Quote,
-  Subscript,
-  Superscript,
-  Palette,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  TextCursorInput,
-  Check,
-  Type,
-} from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import {
-  $getSelection,
-  $isRangeSelection,
-  FORMAT_TEXT_COMMAND,
-  SELECTION_CHANGE_COMMAND,
-  FORMAT_ELEMENT_COMMAND,
-} from "lexical"
-import { $createHeadingNode, $isHeadingNode, type HeadingTagType, $createQuoteNode } from "@lexical/rich-text"
-import { $setBlocksType } from "@lexical/selection"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,19 +8,50 @@ import {
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
+  DropdownMenuSubTrigger, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { $isLinkNode } from "@lexical/link"
-import { ListMenuComponent } from "./floating-text-components/list-menu-component"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { $createHeadingNode, $createQuoteNode, $isHeadingNode, type HeadingTagType } from "@lexical/rich-text"
+import { $setBlocksType } from "@lexical/selection"
+import {
+  $createParagraphNode,
+  $getSelection,
+  $isRangeSelection,
+  FORMAT_ELEMENT_COMMAND,
+  FORMAT_TEXT_COMMAND,
+  type LexicalNode,
+} from "lexical"
+import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
+  Bold,
+  Check,
+  Italic,
+  Palette,
+  Quote,
+  Subscript,
+  Superscript,
+  TextCursorInput,
+  Type,
+} from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { BackgroundColorMenuComponent } from "./floating-text-components/background-color-menu-component"
 import { FontFamilyMenuComponent } from "./floating-text-components/font-family-menu-component"
 import { FontSizeMenuComponent } from "./floating-text-components/font-size-menu-component"
-import { TextColorMenuComponent } from "./floating-text-components/text-color-menu-component"
-import { BackgroundColorMenuComponent } from "./floating-text-components/background-color-menu-component"
-import { ListColorMenuComponent } from "./floating-text-components/list-color-menu-component"
-import { LinkMenuComponent } from "./floating-text-components/link-menu-component"
 import { FormattingMenuComponent } from "./floating-text-components/formatting-menu-component"
-import { Button } from "@/components/ui/button"
-import { $createParagraphNode } from "lexical"
+import { LinkMenuComponent } from "./floating-text-components/link-menu-component"
+import { ListColorMenuComponent } from "./floating-text-components/list-color-menu-component"
+import { ListMenuComponent } from "./floating-text-components/list-menu-component"
+import { TextColorMenuComponent } from "./floating-text-components/text-color-menu-component"
+
+// Type extension for nodes that support style methods (like TextNode)
+interface StylableNode extends LexicalNode {
+  getStyle?: () => string;
+  setStyle?: (style: string) => void;
+}
 
 export function FloatingTextFormatToolbarPlugin() {
   const [editor] = useLexicalComposerContext()
@@ -115,7 +120,7 @@ export function FloatingTextFormatToolbarPlugin() {
     setIsLink(isInLink)
 
     if (selection.getNodes().length > 0) {
-      const firstNode = selection.getNodes()[0]
+      const firstNode = selection.getNodes()[0] as StylableNode
       const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
 
       if (style.includes("text-transform: uppercase")) {
@@ -133,7 +138,7 @@ export function FloatingTextFormatToolbarPlugin() {
 
     const hasText = selection.getTextContent().length > 0
     setIsText(hasText)
-    
+
     // Se não há texto e não está forçando mostrar, limpar posição
     if (!hasText && !forceShow) {
       setPosition(null)
@@ -156,7 +161,7 @@ export function FloatingTextFormatToolbarPlugin() {
     }
 
     if (selection.getNodes().length > 0) {
-      const firstNode = selection.getNodes()[0]
+      const firstNode = selection.getNodes()[0] as StylableNode
       const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const fontFamilyMatch = style.match(/font-family:\s*([^;]+)/)
       if (fontFamilyMatch && fontFamilyMatch[1]) {
@@ -169,7 +174,7 @@ export function FloatingTextFormatToolbarPlugin() {
     }
 
     if (selection.getNodes().length > 0) {
-      const firstNode = selection.getNodes()[0]
+      const firstNode = selection.getNodes()[0] as StylableNode
       const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const fontSizeMatch = style.match(/font-size:\s*([^;]+)/)
       if (fontSizeMatch && fontSizeMatch[1]) {
@@ -182,7 +187,7 @@ export function FloatingTextFormatToolbarPlugin() {
     }
 
     if (selection.getNodes().length > 0) {
-      const firstNode = selection.getNodes()[0]
+      const firstNode = selection.getNodes()[0] as StylableNode
       const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const colorMatch = style.match(/(?<!background-)color:\s*([^;]+)/)
       if (colorMatch && colorMatch[1]) {
@@ -195,7 +200,7 @@ export function FloatingTextFormatToolbarPlugin() {
     }
 
     if (selection.getNodes().length > 0) {
-      const firstNode = selection.getNodes()[0]
+      const firstNode = selection.getNodes()[0] as StylableNode
       const style = firstNode?.getStyle ? String(firstNode.getStyle()) : ""
       const backgroundColorMatch = style.match(/background-color:\s*([^;]+)/)
       if (backgroundColorMatch && backgroundColorMatch[1]) {
@@ -216,7 +221,7 @@ export function FloatingTextFormatToolbarPlugin() {
 
     const parentElementList = anchorNode.getParent()
     if (parentElementList && parentElementList.getType() === "list") {
-      setCurrentListType(parentElementList.getListType())
+      setCurrentListType((parentElementList as unknown as { getListType: () => string }).getListType())
     } else {
       setCurrentListType("")
     }
@@ -244,12 +249,13 @@ export function FloatingTextFormatToolbarPlugin() {
     }
   }, [])
 
-    const applyCaseFormat = useCallback(
+  const applyCaseFormat = useCallback(
     (caseType: "uppercase" | "lowercase" | "capitalize") => {
       editor.update(() => {
         const selection = $getSelection()
         if ($isRangeSelection(selection)) {
-          const currentStyle = selection.getNodes()[0]?.getStyle?.() || ""
+          const firstNode = selection.getNodes()[0] as StylableNode | undefined
+          const currentStyle = firstNode?.getStyle?.() || ""
           const cleanStyle = currentStyle
             .replace(/text-transform:\s*[^;]+;?/g, "")
             .replace(/;;/g, ";")
@@ -258,8 +264,9 @@ export function FloatingTextFormatToolbarPlugin() {
           const newStyle = cleanStyle ? `${cleanStyle}; text-transform: ${caseType}` : `text-transform: ${caseType}`
 
           selection.getNodes().forEach((node) => {
-            if (node.setStyle) {
-              node.setStyle(newStyle)
+            const stylableNode = node as StylableNode
+            if (stylableNode.setStyle) {
+              stylableNode.setStyle(newStyle)
             }
           })
 
@@ -275,14 +282,15 @@ export function FloatingTextFormatToolbarPlugin() {
       const selection = $getSelection()
       if ($isRangeSelection(selection)) {
         selection.getNodes().forEach((node) => {
-          if (node.getStyle && node.setStyle) {
-            const currentStyle = node.getStyle()
+          const stylableNode = node as StylableNode
+          if (stylableNode.getStyle && stylableNode.setStyle) {
+            const currentStyle = stylableNode.getStyle()
             const cleanStyle = currentStyle
               .replace(/text-transform:\s*[^;]+;?/g, "")
               .replace(/;;/g, ";")
               .replace(/^;|;$/g, "")
 
-            node.setStyle(cleanStyle)
+            stylableNode.setStyle(cleanStyle)
           }
         })
         setCurrentCaseFormat(null)
@@ -299,7 +307,7 @@ export function FloatingTextFormatToolbarPlugin() {
         toolbarRef.current.dispatchEvent(event);
       }
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -325,7 +333,7 @@ export function FloatingTextFormatToolbarPlugin() {
 
   const forceShowRef = useRef(forceShow)
   const toolbarRefForListener = useRef(toolbarRef)
-  
+
   // Atualizar refs quando os valores mudarem
   useEffect(() => {
     forceShowRef.current = forceShow
@@ -336,15 +344,15 @@ export function FloatingTextFormatToolbarPlugin() {
     const handleClickOutside = (event: MouseEvent) => {
       // Não fazer nada se toolbar não está visível
       if (!forceShowRef.current) return
-      
+
       const target = event.target as HTMLElement
-      
+
       // Verificar se o clique foi dentro do toolbar principal
       const isClickInsideToolbar = toolbarRef.current?.contains(target)
       if (isClickInsideToolbar) {
         return
       }
-      
+
       // Usar setTimeout para permitir que Radix UI processe o evento primeiro
       setTimeout(() => {
         // Se há algum dropdown aberto, não fechar
@@ -352,7 +360,7 @@ export function FloatingTextFormatToolbarPlugin() {
         if (menuContent !== null) {
           return
         }
-        
+
         // Clicou fora de tudo - fechar o toolbar apenas se nenhum dropdown está aberto
         if (forceShowRef.current) {
           setForceShow(false)
@@ -391,8 +399,8 @@ export function FloatingTextFormatToolbarPlugin() {
             setOpenDropdown(null)
           }}
         >
-          <DropdownMenu 
-            open={openDropdown === "formatting"} 
+          <DropdownMenu
+            open={openDropdown === "formatting"}
             onOpenChange={(open) => setOpenDropdown(open ? "formatting" : null)}
           >
             <DropdownMenuTrigger asChild>
@@ -415,9 +423,9 @@ export function FloatingTextFormatToolbarPlugin() {
                 <Bold className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              side="top" 
-              align="start" 
+            <DropdownMenuContent
+              side="top"
+              align="start"
               className="w-48"
               onMouseDown={(e) => {
                 e.stopPropagation()
@@ -454,8 +462,8 @@ export function FloatingTextFormatToolbarPlugin() {
                 <span>Italic</span>
                 {isItalic && <Check className="ml-auto h-5 w-5" />}
               </DropdownMenuItem>
-              
-              <FormattingMenuComponent 
+
+              <FormattingMenuComponent
                 editor={editor}
                 isUnderline={isUnderline}
                 setIsUnderline={setIsUnderline}
@@ -560,13 +568,13 @@ export function FloatingTextFormatToolbarPlugin() {
                   )}
                 </DropdownMenuSubContent>
               </DropdownMenuSub>
-          
-              
+
+
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu 
-            open={openDropdown === "style"} 
+          <DropdownMenu
+            open={openDropdown === "style"}
             onOpenChange={(open) => setOpenDropdown(open ? "style" : null)}
           >
             <DropdownMenuTrigger asChild>
@@ -589,9 +597,9 @@ export function FloatingTextFormatToolbarPlugin() {
                 <Palette className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              side="top" 
-              align="start" 
+            <DropdownMenuContent
+              side="top"
+              align="start"
               className="w-64"
               onMouseDown={(e) => {
                 e.stopPropagation()
@@ -627,8 +635,8 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu 
-            open={openDropdown === "structure"} 
+          <DropdownMenu
+            open={openDropdown === "structure"}
             onOpenChange={(open) => setOpenDropdown(open ? "structure" : null)}
           >
             <DropdownMenuTrigger asChild>
@@ -651,9 +659,9 @@ export function FloatingTextFormatToolbarPlugin() {
                 <AlignLeft className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              side="top" 
-              align="start" 
+            <DropdownMenuContent
+              side="top"
+              align="start"
               className="w-auto"
               onMouseDown={(e) => {
                 e.stopPropagation()
@@ -903,8 +911,8 @@ export function FloatingTextFormatToolbarPlugin() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <DropdownMenu 
-            open={openDropdown === "insert"} 
+          <DropdownMenu
+            open={openDropdown === "insert"}
             onOpenChange={(open) => setOpenDropdown(open ? "insert" : null)}
           >
             <DropdownMenuTrigger asChild>
@@ -927,9 +935,9 @@ export function FloatingTextFormatToolbarPlugin() {
                 <TextCursorInput className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              side="top" 
-              align="start" 
+            <DropdownMenuContent
+              side="top"
+              align="start"
               className="w-48"
               onMouseDown={(e) => {
                 e.stopPropagation()

@@ -1,22 +1,5 @@
 "use client"
-import { useState } from "react"
-import {
-  Code,
-  Settings,
-  ChevronDown,
-  Sun,
-  Moon,
-  Plus,
-  Upload,
-  EyeOff,
-  Play,
-  Trash2,
-  Lock,
-  Unlock,
-  Check,
-} from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +7,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import type { FileTabsProps } from "./types"
+import { cn } from "@/lib/utils"
+import {
+  Check,
+  ChevronDown,
+  Code,
+  EyeOff,
+  Lock,
+  Moon,
+  Play,
+  Plus,
+  Settings,
+  Sun,
+  Trash2,
+  Unlock,
+  Upload,
+} from "lucide-react"
+import { useState } from "react"
+import type { CodeFile, FileTabsProps } from "./types"
 
 export function FileTabs({
   files,
@@ -33,28 +33,28 @@ export function FileTabs({
   isDarkTheme,
   setIsDarkTheme,
   isEditing,
-  showFileDialog = () => {},
-  showRenameDialog = () => {},
-  showImportDialog = () => {},
-  showConfirmDialog = () => {},
-  showLanguagesDialog = () => {},
-  toggleFileVisibility = () => {},
-  setMainFile = () => {},
-  deleteFile = () => {},
+  showFileDialog = () => { },
+  showRenameDialog = () => { },
+  showImportDialog = () => { },
+  showConfirmDialog = () => { },
+  showLanguagesDialog = () => { },
+  toggleFileVisibility = () => { },
+  setMainFile = () => { },
+  deleteFile = () => { },
   getBaseName = (name: string) => name,
   getExtensionForSelectedLanguage = () => "js",
   draggedFileId,
-  setDraggedFileId = () => {},
+  setDraggedFileId = () => { },
   dragOverFileId,
-  setDragOverFileId = () => {},
-  reorderFiles = () => {},
+  setDragOverFileId = () => { },
+  reorderFiles = () => { },
   getFileIcon = () => null,
   getStateIcon = () => null,
-  setFileReadOnlyState = () => {},
+  setFileReadOnlyState = () => { },
   showBasicFileActionsInReadMode = true,
   showFilePropertiesInReadMode = false,
-  setShowBasicFileActionsInReadMode = () => {},
-  setShowFilePropertiesInReadMode = () => {},
+  setShowBasicFileActionsInReadMode = () => { },
+  setShowFilePropertiesInReadMode = () => { },
   showDeleteConfirmDialog: externalShowDeleteConfirmDialog,
   setShowDeleteConfirmDialog: externalSetShowDeleteConfirmDialog,
 }: FileTabsProps) {
@@ -67,8 +67,8 @@ export function FileTabs({
 
   const setShowDeleteConfirmDialog = externalSetShowDeleteConfirmDialog || setLocalShowDeleteConfirmDialog
 
-  const visibleFiles = isEditing ? files : files.filter((file: { isVisible: any; readOnlyState: string }) => file.isVisible && file.readOnlyState !== "hidden")
-  const activeFile = files.find((file: { id: any }) => file.id === activeFileId) || files[0]
+  const visibleFiles = isEditing ? files : files.filter((file: CodeFile) => file.isVisible && file.readOnlyState !== "hidden")
+  const activeFile = files.find((file: CodeFile) => file.id === activeFileId) ?? files[0]
 
   // Determine if the File button should be shown in read mode
   const showFileButtonInReadMode = showBasicFileActionsInReadMode || showFilePropertiesInReadMode
@@ -286,7 +286,7 @@ export function FileTabs({
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0"
-            onClick={() => setIsDarkTheme(!isDarkTheme)}
+            onClick={() => setIsDarkTheme?.(!isDarkTheme)}
             title={isDarkTheme ? "Switch to light mode" : "Switch to dark mode"}
           >
             {isDarkTheme ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
@@ -354,10 +354,7 @@ export function FileTabs({
               title={file.name} // Add tooltip with full filename
             >
               <button
-                onClick={() => {
-                  setActiveFileId(file.id)
-                  // If this is a language-specific file, update the editor language
-                }}
+                onClick={() => setActiveFileId?.(file.id)}
                 className="flex items-center gap-1 w-full overflow-hidden"
               >
                 {getFileIcon(file)}

@@ -10,7 +10,7 @@ import { setTheme, toggleSidebar } from '@/lib/redux/slices/ui.slice';
  */
 export function ReduxTest() {
     const dispatch = useAppDispatch();
-    const { theme, sidebarOpen } = useAppSelector((state) => state.ui);
+    const { theme, isSidebarOpen } = useAppSelector((state) => state.ui);
     const { isAuthenticated, user } = useAppSelector((state) => state.auth);
 
     const handleToggleSidebar = () => {
@@ -36,7 +36,7 @@ export function ReduxTest() {
 
             <div className="space-y-2">
                 <p>Theme: {theme}</p>
-                <p>Sidebar Open: {sidebarOpen.toString()}</p>
+                <p>Sidebar Open: {isSidebarOpen.toString()}</p>
                 <p>Authenticated: {isAuthenticated.toString()}</p>
                 <p>User: {user?.name || 'None'}</p>
             </div>

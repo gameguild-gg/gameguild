@@ -1,10 +1,11 @@
 "use client";
 import React from 'react';
 
-export type SessionStatus = 'draft' | 'scheduled' | 'active' | 'completed' | 'cancelled';
+export type SessionStatus = 'draft' | 'scheduled' | 'active' | 'completed' | 'cancelled' | 'open' | 'full' | 'in-progress' | 'closed';
 
 interface StatusChipProps {
-    status?: SessionStatus | number | null;
+    status?: SessionStatus | number | string | null;
+    variant?: 'default' | 'compact';
     className?: string;
 }
 
@@ -14,6 +15,11 @@ const STATUS_MAP: Record<string, { label: string; color: string }> = {
     active: { label: 'Active', color: 'bg-green-500/15 text-green-600 ring-green-500/30 dark:text-green-400' },
     completed: { label: 'Completed', color: 'bg-zinc-500/15 text-zinc-600 ring-zinc-500/30 dark:text-zinc-300' },
     cancelled: { label: 'Cancelled', color: 'bg-red-500/15 text-red-600 ring-red-500/30 dark:text-red-400' },
+    // Additional display status values
+    open: { label: 'Open', color: 'bg-green-500/15 text-green-600 ring-green-500/30 dark:text-green-400' },
+    full: { label: 'Full', color: 'bg-orange-500/15 text-orange-600 ring-orange-500/30 dark:text-orange-400' },
+    'in-progress': { label: 'In Progress', color: 'bg-blue-500/15 text-blue-600 ring-blue-500/30 dark:text-blue-400' },
+    closed: { label: 'Closed', color: 'bg-zinc-500/15 text-zinc-600 ring-zinc-500/30 dark:text-zinc-300' },
     // numeric fallbacks
     '0': { label: 'Draft', color: 'bg-gray-500/15 text-gray-600 ring-gray-500/30 dark:text-gray-300' },
     '1': { label: 'Scheduled', color: 'bg-blue-500/15 text-blue-600 ring-blue-500/30 dark:text-blue-400' },

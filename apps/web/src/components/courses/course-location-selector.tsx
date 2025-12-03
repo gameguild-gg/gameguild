@@ -1,20 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MapPin, Users, FolderOpen, AlertCircle, CheckCircle } from 'lucide-react';
 import { getTestingLocations } from '@/lib/api/testing-lab';
-import type { TestingLocation } from '@/lib/api/testing-types';
+import type { TestingLocation as TestingLocationFull } from '@/lib/api/testing-types';
+import { AlertCircle, CheckCircle, FolderOpen, MapPin, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface CourseLocationSelectorProps {
-  onLocationSelected: (location: TestingLocation, maxTests: number, maxProjects: number) => void;
+  onLocationSelected: (location: TestingLocationFull, maxTests: number, maxProjects: number) => void;
 }
 
 export function CourseLocationSelector({ onLocationSelected }: CourseLocationSelectorProps) {
-  const [locations, setLocations] = useState<TestingLocation[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<TestingLocation | null>(null);
+  const [locations, setLocations] = useState<TestingLocationFull[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<TestingLocationFull | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,8 +26,8 @@ export function CourseLocationSelector({ onLocationSelected }: CourseLocationSel
         setError(null);
         const testingLocations = await getTestingLocations(0, 50);
 
-        // Filter to active locations only
-        const activeLocations = testingLocations.filter((location) => location.status === 1); // Active status
+        // Filter to active locations only and cast to full type with status property
+        const activeLocations = testingLocations.filter((location: any) => location.status === 1) as TestingLocationFull[]; // Active status
 
         setLocations(activeLocations);
       } catch (err) {
