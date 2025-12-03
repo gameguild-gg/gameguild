@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text;
+using System.Text.Json.Serialization;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using GameGuild.API.Authorization;
@@ -404,6 +405,9 @@ public static class ServiceCollectionExtensions
 
                 // Configure schema ID generator to use fully qualified names to avoid conflicts
                 c.CustomSchemaIds(type => type.FullName?.Replace('+', '.'));
+
+                // Apply schema filter for enum naming with x-enum-varnames extension
+                c.SchemaFilter<EnumSchemaFilter>();
 
                 // Add security definition for JWT Bearer token
                 c.AddSecurityDefinition(

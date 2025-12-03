@@ -6,7 +6,7 @@ let quickJSModule: Awaited<ReturnType<typeof newQuickJSAsyncWASMModule>> | null 
 
 async function getQuickJSModule() {
   if (!quickJSModule) {
-    const wasmBinary = await loadCompressedWasm('/wasm/quickjs-asyncify.wasm.gz')
+    const wasmBinary = await loadCompressedWasm('/langs/quickjs-asyncify.wasm.gz')
     
     const variant = {
       ...RELEASE_ASYNC,
