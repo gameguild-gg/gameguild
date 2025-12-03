@@ -1,309 +1,94 @@
 'use server';
 
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import {
-  deleteApiUsersById,
-  getApiUsers,
-  getApiUsersById,
-  getApiUsersByUserIdAchievements,
-  getApiUsersByUserIdAchievementsAvailable,
-  getApiUsersByUserIdAchievementsByAchievementIdPrerequisites,
-  getApiUsersByUserIdAchievementsProgress,
-  getApiUsersByUserIdAchievementsSummary,
-  getApiUsersSearch,
-  getApiUsersStatistics,
-  patchApiUsersBulkActivate,
-  patchApiUsersBulkDeactivate,
-  postApiUsers,
-  postApiUsersBulk,
-  postApiUsersByIdRestore,
-  postApiUsersByUserIdAchievementsByAchievementIdProgress,
-  putApiUsersById,
-  putApiUsersByIdBalance,
-} from '@/lib/api/generated/sdk.gen';
-import type {
-  DeleteApiUsersByIdData,
-  GetApiUsersByIdData,
-  GetApiUsersByUserIdAchievementsAvailableData,
-  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData,
-  GetApiUsersByUserIdAchievementsData,
-  GetApiUsersByUserIdAchievementsProgressData,
-  GetApiUsersByUserIdAchievementsSummaryData,
-  GetApiUsersData,
-  GetApiUsersSearchData,
-  GetApiUsersStatisticsData,
-  PatchApiUsersBulkActivateData,
-  PatchApiUsersBulkDeactivateData,
-  PostApiUsersBulkData,
-  PostApiUsersByIdRestoreData,
-  PostApiUsersByUserIdAchievementsByAchievementIdProgressData,
-  PostApiUsersData,
-  PutApiUsersByIdBalanceData,
-  PutApiUsersByIdData,
-} from '@/lib/api/generated/types.gen';
-import { revalidateTag } from 'next/cache';
+// STUB: User management actions are stubbed; endpoints are unavailable in current SDK.
 
-// =============================================================================
-// USER MANAGEMENT
-// =============================================================================
+export type DeleteApiUsersByIdData = any;
+export type GetApiUsersByIdData = any;
+export type GetApiUsersByUserIdAchievementsAvailableData = any;
+export type GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData = any;
+export type GetApiUsersByUserIdAchievementsData = any;
+export type GetApiUsersByUserIdAchievementsProgressData = any;
+export type GetApiUsersByUserIdAchievementsSummaryData = any;
+export type GetApiUsersData = any;
+export type GetApiUsersSearchData = any;
+export type GetApiUsersStatisticsData = any;
+export type PatchApiUsersBulkActivateData = any;
+export type PatchApiUsersBulkDeactivateData = any;
+export type PostApiUsersBulkData = any;
+export type PostApiUsersByIdRestoreData = any;
+export type PostApiUsersByUserIdAchievementsByAchievementIdProgressData = any;
+export type PostApiUsersData = any;
+export type PutApiUsersByIdBalanceData = any;
+export type PutApiUsersByIdData = any;
 
-/**
- * Get all users with optional filtering
- */
-export async function getUsers(data?: GetApiUsersData) {
-  await configureAuthenticatedClient();
-
-  return getApiUsers({
-    query: data?.query,
-  });
+export async function getUsers(_data?: GetApiUsersData): Promise<any> {
+  throw new Error('Not implemented (STUB): getUsers');
 }
 
-/**
- * Create a new user
- */
-export async function createUser(data?: PostApiUsersData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiUsers({
-    body: data?.body,
-  });
-
-  // Revalidate users cache
-  revalidateTag('users');
-
-  return result;
+export async function createUser(_data?: PostApiUsersData): Promise<any> {
+  throw new Error('Not implemented (STUB): createUser');
 }
 
-/**
- * Delete a user by ID
- */
-export async function deleteUser(data: DeleteApiUsersByIdData) {
-  await configureAuthenticatedClient();
-
-  const result = await deleteApiUsersById({
-    path: data.path,
-  });
-
-  // Revalidate users cache
-  revalidateTag('users');
-
-  return result;
+export async function deleteUser(_data: DeleteApiUsersByIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): deleteUser');
 }
 
-/**
- * Get a specific user by ID
- */
-export async function getUserById(data: Omit<GetApiUsersByIdData, 'url'>) {
-  await configureAuthenticatedClient();
-
-  const result = await getApiUsersById({
-    path: data.path,
-  });
-
-  // Return only the serializable data, not the full response object
-  return result.data;
+export async function getUserById(_data: Omit<GetApiUsersByIdData, 'url'>): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserById');
 }
 
-/**
- * Update a user by ID
- */
-export async function updateUser(data: PutApiUsersByIdData) {
-  await configureAuthenticatedClient();
-
-  const result = await putApiUsersById({
-    path: data.path,
-    body: data.body,
-  });
-
-  // Revalidate users cache
-  revalidateTag('users');
-
-  return result;
+export async function updateUser(_data: PutApiUsersByIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): updateUser');
 }
 
-/**
- * Restore a deleted user
- */
-export async function restoreUser(data: PostApiUsersByIdRestoreData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiUsersByIdRestore({
-    path: data.path,
-  });
-
-  // Revalidate users cache
-  revalidateTag('users');
-
-  return result;
+export async function restoreUser(_data: PostApiUsersByIdRestoreData): Promise<any> {
+  throw new Error('Not implemented (STUB): restoreUser');
 }
 
-/**
- * Update user balance
- */
-export async function updateUserBalance(data: PutApiUsersByIdBalanceData) {
-  await configureAuthenticatedClient();
-
-  const result = await putApiUsersByIdBalance({
-    path: data.path,
-    body: data.body,
-  });
-
-  // Revalidate users cache
-  revalidateTag('users');
-
-  return result;
+export async function updateUserBalance(_data: PutApiUsersByIdBalanceData): Promise<any> {
+  throw new Error('Not implemented (STUB): updateUserBalance');
 }
 
-// =============================================================================
-// USER ANALYTICS & SEARCH
-// =============================================================================
-
-/**
- * Get user statistics
- */
-export async function getUserStatistics(data?: GetApiUsersStatisticsData) {
-  await configureAuthenticatedClient();
-
-  return getApiUsersStatistics({
-    query: data?.query,
-  });
+export async function getUserStatistics(_data?: GetApiUsersStatisticsData): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserStatistics');
 }
 
-/**
- * Search users
- */
-export async function searchUsers(data?: GetApiUsersSearchData) {
-  await configureAuthenticatedClient();
-
-  return getApiUsersSearch({
-    query: data?.query,
-  });
+export async function searchUsers(_data?: GetApiUsersSearchData): Promise<any> {
+  throw new Error('Not implemented (STUB): searchUsers');
 }
 
-// =============================================================================
-// BULK USER OPERATIONS
-// =============================================================================
-
-/**
- * Create users in bulk
- */
-export async function createUsersBulk(data?: PostApiUsersBulkData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiUsersBulk({
-    body: data?.body,
-  });
-
-  // Revalidate users cache
-  revalidateTag('users');
-
-  return result;
+export async function createUsersBulk(_data?: PostApiUsersBulkData): Promise<any> {
+  throw new Error('Not implemented (STUB): createUsersBulk');
 }
 
-/**
- * Activate users in bulk
- */
-export async function activateUsersBulk(data?: PatchApiUsersBulkActivateData) {
-  await configureAuthenticatedClient();
-
-  const result = await patchApiUsersBulkActivate({
-    body: data?.body,
-  });
-
-  // Revalidate users cache
-  revalidateTag('users');
-
-  return result;
+export async function activateUsersBulk(_data?: PatchApiUsersBulkActivateData): Promise<any> {
+  throw new Error('Not implemented (STUB): activateUsersBulk');
 }
 
-/**
- * Deactivate users in bulk
- */
-export async function deactivateUsersBulk(data?: PatchApiUsersBulkDeactivateData) {
-  await configureAuthenticatedClient();
-
-  const result = await patchApiUsersBulkDeactivate({
-    body: data?.body,
-  });
-
-  // Revalidate users cache
-  revalidateTag('users');
-
-  return result;
+export async function deactivateUsersBulk(_data?: PatchApiUsersBulkDeactivateData): Promise<any> {
+  throw new Error('Not implemented (STUB): deactivateUsersBulk');
 }
 
-// =============================================================================
-// USER ACHIEVEMENTS INTEGRATION
-// =============================================================================
-
-/**
- * Get user achievements
- */
-export async function getUserAchievements(data: GetApiUsersByUserIdAchievementsData) {
-  await configureAuthenticatedClient();
-
-  return getApiUsersByUserIdAchievements({
-    path: data.path,
-  });
+export async function getUserAchievements(_data: GetApiUsersByUserIdAchievementsData): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserAchievements');
 }
 
-/**
- * Get user achievement progress
- */
-export async function getUserAchievementProgress(data: GetApiUsersByUserIdAchievementsProgressData) {
-  await configureAuthenticatedClient();
-
-  return getApiUsersByUserIdAchievementsProgress({
-    path: data.path,
-  });
+export async function getUserAchievementProgress(_data: GetApiUsersByUserIdAchievementsProgressData): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserAchievementProgress');
 }
 
-/**
- * Get user achievement summary
- */
-export async function getUserAchievementSummary(data: GetApiUsersByUserIdAchievementsSummaryData) {
-  await configureAuthenticatedClient();
-
-  return getApiUsersByUserIdAchievementsSummary({
-    path: data.path,
-  });
+export async function getUserAchievementSummary(_data: GetApiUsersByUserIdAchievementsSummaryData): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserAchievementSummary');
 }
 
-/**
- * Get available achievements for user
- */
-export async function getUserAvailableAchievements(data: GetApiUsersByUserIdAchievementsAvailableData) {
-  await configureAuthenticatedClient();
-
-  return getApiUsersByUserIdAchievementsAvailable({
-    path: data.path,
-  });
+export async function getUserAvailableAchievements(_data: GetApiUsersByUserIdAchievementsAvailableData): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserAvailableAchievements');
 }
 
-/**
- * Update user achievement progress
- */
-export async function updateUserAchievementProgress(data: PostApiUsersByUserIdAchievementsByAchievementIdProgressData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiUsersByUserIdAchievementsByAchievementIdProgress({
-    path: data.path,
-    body: data.body,
-  });
-
-  // Revalidate user achievements cache
-  revalidateTag('user-achievements');
-
-  return result;
+export async function updateUserAchievementProgress(_data: PostApiUsersByUserIdAchievementsByAchievementIdProgressData): Promise<any> {
+  throw new Error('Not implemented (STUB): updateUserAchievementProgress');
 }
 
-/**
- * Get achievement prerequisites for user
- */
-export async function getUserAchievementPrerequisites(data: GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData) {
-  await configureAuthenticatedClient();
-
-  return getApiUsersByUserIdAchievementsByAchievementIdPrerequisites({
-    path: data.path,
-  });
+export async function getUserAchievementPrerequisites(_data: GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserAchievementPrerequisites');
 }

@@ -1,11 +1,10 @@
 'use client';
 
-import {TestSession} from '@/lib/api/testing-lab/test-sessions';
-import {Badge} from '@/components/ui/badge';
-import {Button} from '@/components/ui/button';
-import {Carousel, type CarouselApi, CarouselContent, CarouselItem} from '@/components/ui/carousel';
-import {Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle} from '@/components/ui/sheet';
-import {Dialog, DialogContent, DialogHeader, DialogTitle} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Carousel, type CarouselApi, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +19,10 @@ import {
   SidebarProvider,
   SidebarTrigger
 } from '@/components/ui/sidebar';
+import { Link } from '@/i18n/navigation';
+import { TestSession } from '@/lib/api/testing-lab/test-sessions';
+import { format } from 'date-fns';
+import Autoplay from 'embla-carousel-autoplay';
 import {
   ArrowLeft,
   Calendar,
@@ -36,17 +39,14 @@ import {
   Users,
   Zap
 } from 'lucide-react';
-import {format} from 'date-fns';
-import {Link} from '@/i18n/navigation';
-import {useCallback, useEffect, useState} from 'react';
-import Autoplay from 'embla-carousel-autoplay';
-import {JoinProcess} from '../join/join-process';
+import { useCallback, useEffect, useState } from 'react';
+import { JoinProcess } from '../join/join-process';
 
 interface SessionDetailProps {
   session: TestSession;
 }
 
-export function SessionDetail({session}: SessionDetailProps) {
+export function SessionDetail({ session }: SessionDetailProps) {
   const [mounted, setMounted] = useState(false);
   const [showGameDetails, setShowGameDetails] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
@@ -184,13 +184,13 @@ export function SessionDetail({session}: SessionDetailProps) {
   const getSessionTypeIcon = (type: string) => {
     switch (type) {
       case 'gameplay':
-        return <GamepadIcon className="h-6 w-6"/>;
+        return <GamepadIcon className="h-6 w-6" />;
       case 'usability':
-        return <Users className="h-6 w-6"/>;
+        return <Users className="h-6 w-6" />;
       case 'bug-testing':
-        return <Target className="h-6 w-6"/>;
+        return <Target className="h-6 w-6" />;
       default:
-        return <Trophy className="h-6 w-6"/>;
+        return <Trophy className="h-6 w-6" />;
     }
   };
 
@@ -226,7 +226,7 @@ export function SessionDetail({session}: SessionDetailProps) {
             <div className="flex items-center gap-3">
               <Button asChild variant="ghost" size="sm" className="text-slate-400 hover:text-white">
                 <Link href="/testing-lab">
-                  <ArrowLeft className="h-4 w-4 mr-2"/>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
                   <span className="group-data-[collapsible=icon]:hidden">Back to Sessions</span>
                 </Link>
               </Button>
@@ -257,11 +257,11 @@ export function SessionDetail({session}: SessionDetailProps) {
 
                   <div className="flex flex-col gap-3 text-sm text-slate-400">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4"/>
+                      <Calendar className="h-4 w-4" />
                       {format(sessionDate, 'MMM dd, h:mm a')}
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4"/>
+                      <Clock className="h-4 w-4" />
                       {session.duration}m
                     </div>
                   </div>
@@ -277,7 +277,7 @@ export function SessionDetail({session}: SessionDetailProps) {
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div
                         className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
-                        style={{width: `${fillPercentage}%`}}/>
+                        style={{ width: `${fillPercentage}%` }} />
                     </div>
                   </div>
 
@@ -292,17 +292,17 @@ export function SessionDetail({session}: SessionDetailProps) {
                     <div className="w-full bg-slate-700 rounded-full h-2">
                       <div
                         className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300"
-                        style={{width: `${(session.currentGames / session.maxGames) * 100}%`}}/>
+                        style={{ width: `${(session.currentGames / session.maxGames) * 100}%` }} />
                     </div>
                   </div>
 
                   {/* Join Session Button */}
                   <div className="pt-3">
                     <Button asChild
-                            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-10 group-data-[collapsible=icon]:px-2"
-                            disabled={normalizedStatus !== 'open'}>
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 h-10 group-data-[collapsible=icon]:px-2"
+                      disabled={normalizedStatus !== 'open'}>
                       <Link href={`/testing-lab/sessions/${session.slug}/join`}>
-                        <Zap className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0"/>
+                        <Zap className="mr-2 h-4 w-4 group-data-[collapsible=icon]:mr-0" />
                         <span
                           className="group-data-[collapsible=icon]:hidden">{normalizedStatus === 'open' ? 'Join Session' : 'Session Full'}</span>
                       </Link>
@@ -313,11 +313,11 @@ export function SessionDetail({session}: SessionDetailProps) {
             </SidebarGroup>
 
             {/* Separator */}
-            <div className="h-px bg-slate-700/50 mx-3 group-data-[collapsible=icon]:hidden"/>
+            <div className="h-px bg-slate-700/50 mx-3 group-data-[collapsible=icon]:hidden" />
 
             <SidebarGroup className="mt-6">
               <SidebarGroupLabel className="text-white font-semibold flex items-center gap-2 px-2 py-2">
-                <GamepadIcon className="h-4 w-4 text-blue-400"/>
+                <GamepadIcon className="h-4 w-4 text-blue-400" />
                 <span className="group-data-[collapsible=icon]:hidden">Games ({allGames.length})</span>
               </SidebarGroupLabel>
 
@@ -325,12 +325,12 @@ export function SessionDetail({session}: SessionDetailProps) {
                 {allGames.map((game, index) => (
                   <SidebarMenuItem key={game.id}>
                     <SidebarMenuButton isActive={currentGameIndex === index}
-                                       className="group-data-[collapsible=icon]:justify-center h-auto py-4 cursor-pointer"
-                                       onClick={() => selectGame(index)}>
+                      className="group-data-[collapsible=icon]:justify-center h-auto py-4 cursor-pointer"
+                      onClick={() => selectGame(index)}>
                       <div className="flex items-center gap-3 w-full">
                         <div
                           className={`p-2 rounded-lg ${currentGameIndex === index ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-slate-700'}`}>
-                          <GamepadIcon className="h-4 w-4 text-white"/>
+                          <GamepadIcon className="h-4 w-4 text-white" />
                         </div>
 
                         <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
@@ -339,7 +339,7 @@ export function SessionDetail({session}: SessionDetailProps) {
                         </div>
 
                         {game.status === 'primary' && <Star
-                            className="h-3 w-3 text-yellow-400 flex-shrink-0 group-data-[collapsible=icon]:hidden"/>}
+                          className="h-3 w-3 text-yellow-400 flex-shrink-0 group-data-[collapsible=icon]:hidden" />}
                       </div>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -351,17 +351,17 @@ export function SessionDetail({session}: SessionDetailProps) {
                 <div
                   className="relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-600/20 via-blue-600/20 to-cyan-500/20 border border-purple-500/30 backdrop-blur-sm">
                   {/* Animated background elements */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10 animate-pulse"/>
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 to-blue-600/10 animate-pulse" />
                   <div
-                    className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-full blur-xl animate-bounce"/>
+                    className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-full blur-xl animate-bounce" />
                   <div
-                    className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-pink-500/20 to-purple-600/20 rounded-full blur-lg animate-pulse delay-1000"/>
+                    className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-pink-500/20 to-purple-600/20 rounded-full blur-lg animate-pulse delay-1000" />
 
                   {/* Content */}
                   <div className="relative z-10 p-4">
                     <div className="flex items-start gap-3 mb-3">
                       <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 shadow-lg">
-                        <GamepadIcon className="h-5 w-5 text-white"/>
+                        <GamepadIcon className="h-5 w-5 text-white" />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-bold text-white text-sm mb-1">Got a Game?</h3>
@@ -372,15 +372,15 @@ export function SessionDetail({session}: SessionDetailProps) {
 
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"/>
+                        <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
                         <span>Free playtesting sessions</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse delay-300"/>
+                        <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse delay-300" />
                         <span>Detailed feedback reports</span>
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse delay-500"/>
+                        <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-pulse delay-500" />
                         <span>Connect with real gamers</span>
                       </div>
                     </div>
@@ -407,13 +407,13 @@ export function SessionDetail({session}: SessionDetailProps) {
           <div className="relative min-h-screen">
             {/* Header with sidebar trigger */}
             <div className="absolute top-4 left-4 z-20">
-              <SidebarTrigger className="bg-slate-900/80 border-slate-700 text-slate-200 backdrop-blur-sm"/>
+              <SidebarTrigger className="bg-slate-900/80 border-slate-700 text-slate-200 backdrop-blur-sm" />
             </div>
 
             {/* Full Screen Game Carousel */}
             {allGames.length > 0 ? (
               <Carousel setApi={setCarouselApi} className="absolute inset-0" plugins={[autoplayPlugin]}
-                        opts={{loop: true}}>
+                opts={{ loop: true }}>
                 <CarouselContent>
                   {allGames.map((game, index) => (
                     <CarouselItem key={game.id}>
@@ -422,16 +422,16 @@ export function SessionDetail({session}: SessionDetailProps) {
                         {/* Animated Background Pattern */}
                         <div className="absolute inset-0 opacity-10">
                           <div
-                            className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(68,71,84,0.1)_25%,rgba(68,71,84,0.1)_50%,transparent_50%,transparent_75%,rgba(68,71,84,0.1)_75%)] bg-[length:40px_40px] animate-pulse"/>
+                            className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(68,71,84,0.1)_25%,rgba(68,71,84,0.1)_50%,transparent_50%,transparent_75%,rgba(68,71,84,0.1)_75%)] bg-[length:40px_40px] animate-pulse" />
                         </div>
 
                         {/* Game Character/Art Placeholder */}
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="text-center space-y-6">
                             <div className="relative">
-                              <GamepadIcon className="h-32 w-32 text-blue-400/60 mx-auto mb-6"/>
+                              <GamepadIcon className="h-32 w-32 text-blue-400/60 mx-auto mb-6" />
                               <div
-                                className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-xl scale-150"/>
+                                className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-full blur-xl scale-150" />
                             </div>
                           </div>
                         </div>
@@ -459,13 +459,13 @@ export function SessionDetail({session}: SessionDetailProps) {
                               {/* Action buttons for details and requirements */}
                               <div className="flex gap-3 mb-6">
                                 <Button variant="outline" onClick={() => setShowGameDetails(true)}
-                                        className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
-                                  <Info className="h-4 w-4 mr-2"/>
+                                  className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
+                                  <Info className="h-4 w-4 mr-2" />
                                   Game Details
                                 </Button>
                                 <Button variant="outline" onClick={() => setShowRequirements(true)}
-                                        className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
-                                  <FileText className="h-4 w-4 mr-2"/>
+                                  className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
+                                  <FileText className="h-4 w-4 mr-2" />
                                   Requirements
                                 </Button>
                               </div>
@@ -479,7 +479,7 @@ export function SessionDetail({session}: SessionDetailProps) {
                                 <div className="flex flex-wrap gap-2">
                                   {game.genre?.map((genre) => (
                                     <Badge key={genre} variant="outline"
-                                           className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 text-purple-300 border-purple-600/50 text-sm px-3 py-1">
+                                      className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 text-purple-300 border-purple-600/50 text-sm px-3 py-1">
                                       {genre}
                                     </Badge>
                                   ))}
@@ -489,15 +489,15 @@ export function SessionDetail({session}: SessionDetailProps) {
                               {/* Testing Focus */}
                               <div>
                                 <h4 className="text-white font-semibold mb-2 text-sm flex items-center gap-1">
-                                  <Target className="h-4 w-4 text-blue-400"/>
+                                  <Target className="h-4 w-4 text-blue-400" />
                                   Testing Focus
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                   {game.testingFocus?.map((focus) => (
                                     <span key={focus}
-                                          className="bg-blue-900/20 text-blue-300 text-sm px-3 py-1 rounded border border-blue-700/30">
-                                    {focus}
-                                  </span>
+                                      className="bg-blue-900/20 text-blue-300 text-sm px-3 py-1 rounded border border-blue-700/30">
+                                      {focus}
+                                    </span>
                                   ))}
                                 </div>
                               </div>
@@ -505,13 +505,13 @@ export function SessionDetail({session}: SessionDetailProps) {
                               {/* Platforms */}
                               <div>
                                 <h4 className="text-white font-semibold mb-2 text-sm flex items-center gap-1">
-                                  <Monitor className="h-4 w-4 text-green-400"/>
+                                  <Monitor className="h-4 w-4 text-green-400" />
                                   Platforms
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                   {toArray(('platforms' in game ? (game as any).platforms : 'platform' in game ? (game as any).platform : session.platform) as string | string[]).map((platform: string) => (
                                     <Badge key={platform} variant="outline"
-                                           className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 text-green-300 border-green-600/50 text-sm px-3 py-1">
+                                      className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 text-green-300 border-green-600/50 text-sm px-3 py-1">
                                       {platform}
                                     </Badge>
                                   ))}
@@ -524,7 +524,7 @@ export function SessionDetail({session}: SessionDetailProps) {
                               <div
                                 className="mb-8 inline-block bg-gradient-to-r from-yellow-900/20 to-orange-900/20 border border-yellow-700/50 rounded-lg p-4">
                                 <div className="flex items-center gap-3">
-                                  <Trophy className="h-6 w-6 text-yellow-400"/>
+                                  <Trophy className="h-6 w-6 text-yellow-400" />
                                   <div>
                                     <p className="text-yellow-300 font-semibold text-lg">{session.rewards.value}</p>
                                     <p className="text-yellow-400/80 text-sm">Testing Reward</p>
@@ -538,8 +538,8 @@ export function SessionDetail({session}: SessionDetailProps) {
                               <div
                                 className="flex items-center justify-center gap-4 pt-6 mt-6 border-t border-slate-700/30">
                                 <Button variant="outline" size="sm" onClick={prevGame}
-                                        className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
-                                  <ChevronLeft className="h-4 w-4"/>
+                                  className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
+                                  <ChevronLeft className="h-4 w-4" />
                                 </Button>
                                 <div className="flex gap-3">
                                   {allGames.map((_, dotIndex) => (
@@ -551,8 +551,8 @@ export function SessionDetail({session}: SessionDetailProps) {
                                   ))}
                                 </div>
                                 <Button variant="outline" size="sm" onClick={nextGame}
-                                        className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
-                                  <ChevronRight className="h-4 w-4"/>
+                                  className="bg-slate-800/80 border-slate-600 text-slate-200 hover:bg-slate-700/80 hover:border-slate-500">
+                                  <ChevronRight className="h-4 w-4" />
                                 </Button>
                               </div>
                             )}
@@ -596,7 +596,7 @@ export function SessionDetail({session}: SessionDetailProps) {
                       <div className="space-y-2">
                         {allGames[currentGameIndex]?.genre?.map((genre) => (
                           <span key={genre}
-                                className="block text-sm text-purple-300 bg-purple-900/30 px-3 py-2 rounded-md border border-purple-700/30">
+                            className="block text-sm text-purple-300 bg-purple-900/30 px-3 py-2 rounded-md border border-purple-700/30">
                             {genre}
                           </span>
                         ))}
@@ -607,14 +607,14 @@ export function SessionDetail({session}: SessionDetailProps) {
                       <h4 className="text-white font-semibold mb-4 text-lg">Platforms</h4>
                       <div className="space-y-2">
                         {toArray(
-                          'platforms' in allGames[currentGameIndex]
+                          allGames[currentGameIndex] && 'platforms' in allGames[currentGameIndex]
                             ? (allGames[currentGameIndex] as any).platforms
-                            : 'platform' in allGames[currentGameIndex]
+                            : allGames[currentGameIndex] && 'platform' in allGames[currentGameIndex]
                               ? (allGames[currentGameIndex] as any).platform
                               : session.platform,
                         ).map((platform: string) => (
                           <span key={platform}
-                                className="block text-sm text-green-300 bg-green-900/30 px-3 py-2 rounded-md border border-green-700/30">
+                            className="block text-sm text-green-300 bg-green-900/30 px-3 py-2 rounded-md border border-green-700/30">
                             {platform}
                           </span>
                         ))}
@@ -627,8 +627,8 @@ export function SessionDetail({session}: SessionDetailProps) {
                     <div className="space-y-3">
                       {allGames[currentGameIndex]?.testingFocus?.map((focus) => (
                         <div key={focus}
-                             className="flex items-center gap-3 text-sm text-blue-300 bg-blue-900/30 px-4 py-3 rounded-md border border-blue-700/30">
-                          <Target className="h-5 w-5 flex-shrink-0"/>
+                          className="flex items-center gap-3 text-sm text-blue-300 bg-blue-900/30 px-4 py-3 rounded-md border border-blue-700/30">
+                          <Target className="h-5 w-5 flex-shrink-0" />
                           <span className="font-medium">{focus}</span>
                         </div>
                       ))}
@@ -678,8 +678,8 @@ export function SessionDetail({session}: SessionDetailProps) {
                   <div className="space-y-4">
                     {(session.requirements ?? []).map((requirement, index) => (
                       <div key={index}
-                           className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                        <div className="w-3 h-3 bg-blue-400 rounded-full mt-2 flex-shrink-0"/>
+                        className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
+                        <div className="w-3 h-3 bg-blue-400 rounded-full mt-2 flex-shrink-0" />
                         <span className="text-slate-300 text-base leading-relaxed">{requirement}</span>
                       </div>
                     ))}
@@ -690,7 +690,7 @@ export function SessionDetail({session}: SessionDetailProps) {
                   <h3 className="text-xl font-bold text-white mb-6">What to Expect</h3>
                   <div className="space-y-6 text-base text-slate-300">
                     <div className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                      <Clock className="h-6 w-6 text-blue-400 mt-1 flex-shrink-0"/>
+                      <Clock className="h-6 w-6 text-blue-400 mt-1 flex-shrink-0" />
                       <div>
                         <p className="font-semibold text-white mb-2">Duration</p>
                         <p className="leading-relaxed">This session will run for
@@ -699,7 +699,7 @@ export function SessionDetail({session}: SessionDetailProps) {
                     </div>
 
                     <div className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                      <Users className="h-6 w-6 text-green-400 mt-1 flex-shrink-0"/>
+                      <Users className="h-6 w-6 text-green-400 mt-1 flex-shrink-0" />
                       <div>
                         <p className="font-semibold text-white mb-2">Participants</p>
                         <p className="leading-relaxed">Up to {session.maxTesters} testers will participate in this
@@ -708,7 +708,7 @@ export function SessionDetail({session}: SessionDetailProps) {
                     </div>
 
                     <div className="flex items-start gap-4 p-4 bg-slate-700/30 rounded-lg border border-slate-600/30">
-                      <Target className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0"/>
+                      <Target className="h-6 w-6 text-purple-400 mt-1 flex-shrink-0" />
                       <div>
                         <p className="font-semibold text-white mb-2">Focus</p>
                         <p className="leading-relaxed">Primary focus will be on {normalizedSessionType} testing</p>
@@ -718,7 +718,7 @@ export function SessionDetail({session}: SessionDetailProps) {
                     {session.rewards && (
                       <div
                         className="flex items-start gap-4 p-4 bg-gradient-to-r from-yellow-900/30 to-orange-900/30 rounded-lg border border-yellow-700/50">
-                        <Trophy className="h-6 w-6 text-yellow-400 mt-1 flex-shrink-0"/>
+                        <Trophy className="h-6 w-6 text-yellow-400 mt-1 flex-shrink-0" />
                         <div>
                           <p className="font-semibold text-white mb-2">Rewards</p>
                           <p className="text-yellow-200 leading-relaxed">{session.rewards.value}</p>
@@ -750,7 +750,7 @@ export function SessionDetail({session}: SessionDetailProps) {
             </DialogHeader>
             <div
               className="h-full overflow-y-auto rounded-lg border border-slate-700/50 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-              <JoinProcess sessionSlug={session.slug}/>
+              <JoinProcess sessionSlug={session.slug} />
             </div>
           </DialogContent>
         </Dialog>

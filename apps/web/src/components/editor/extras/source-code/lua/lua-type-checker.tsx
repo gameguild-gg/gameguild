@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import type { editor } from "monaco-editor"
+import { useEffect, useState } from "react"
 
 interface LuaTypeCheckerProps {
   monaco: typeof import("monaco-editor") | null
@@ -38,6 +38,7 @@ export function LuaTypeChecker({ monaco, editor, code }: LuaTypeCheckerProps) {
         const typeAnnotationMatch = line.match(/---?@type\s+(\w+)/)
         if (typeAnnotationMatch) {
           const typeName = typeAnnotationMatch[1]
+          if (!typeName) return // Skip if no type name captured
 
           // Check for valid Lua types
           const validTypes = ["string", "number", "boolean", "table", "function", "thread", "userdata", "nil", "any"]
@@ -56,7 +57,8 @@ export function LuaTypeChecker({ monaco, editor, code }: LuaTypeCheckerProps) {
             const varMatch = nextLine.match(/\s*(\w+)\s*=\s*(.+)/)
             if (varMatch) {
               const varName = varMatch[1]
-              const value = varMatch[2].trim()
+              const value = varMatch[2]?.trim()
+              if (!value) return
 
               // Simple type checking based on literal values
               if (

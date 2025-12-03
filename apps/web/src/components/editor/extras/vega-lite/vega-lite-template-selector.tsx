@@ -8,14 +8,10 @@ import {
   BarChart3, 
   Search,
   X,
-  ChevronRight,
-  FolderOpen,
-  Folder
+  ChevronRight
 } from "lucide-react"
 import { 
-  getAllTemplates, 
-  getTemplatesByCategory,
-  getTemplatesBySubcategory,
+  getAllTemplates,
   searchTemplates,
   TEMPLATE_CATEGORIES,
   type VegaLiteTemplate 

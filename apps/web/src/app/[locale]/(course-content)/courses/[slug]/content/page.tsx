@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { getProgramBySlug } from '@/data/courses/mock-data';
-import { Program } from '@/lib/api/generated';
+import { Program } from '@/lib/api/generated/stub-types';
 import { BookOpen } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -37,7 +37,7 @@ export default function CourseContentPage() {
   }, [program, slug, router]);
 
   const totalContent = program?.programContents?.length || 0;
-  const completedContent = program?.programContents?.filter(content => content.isRequired)?.length || 0;
+  const completedContent = program?.programContents?.filter((content: any) => content.isRequired)?.length || 0;
   const progressPercentage = totalContent > 0 ? (completedContent / totalContent) * 100 : 0;
 
   if (!program) {

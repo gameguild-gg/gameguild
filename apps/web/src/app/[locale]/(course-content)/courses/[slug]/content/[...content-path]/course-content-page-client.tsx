@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
 import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
 import { Card, CardContent } from '@/components/ui/card';
-import { ProgramContentDto } from '@/lib/api/generated/types.gen';
+import { ProgramContentDto } from '@/lib/api/generated/stub-types';
+import React from 'react';
 
 interface CourseContentPageClientProps {
     programData: ProgramContentDto;

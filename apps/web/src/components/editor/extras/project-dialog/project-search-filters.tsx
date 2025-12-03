@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { ChevronDown, ChevronUp, Cloud, Database, HardDrive, Calendar, Tag, User, AlertCircle } from "lucide-react"
+import { Cloud, Database, HardDrive, Calendar, User, AlertCircle } from "lucide-react"
 import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 
 interface ProjectSearchFiltersProps {

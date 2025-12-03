@@ -2,6 +2,9 @@
 
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import {
+    AccessLevel,
+    Project as ApiProject,
+    ContentStatus,
     deleteApiProjectsById,
     getApiProjects,
     getApiProjectsById,
@@ -14,15 +17,8 @@ import {
     postApiProjectsByIdArchive,
     postApiProjectsByIdPublish,
     postApiProjectsByIdUnpublish,
-    putApiProjectsById
-} from '@/lib/api/generated/sdk.gen';
-import type {
-    Project as ApiProject
-} from '@/lib/api/generated/types.gen';
-import {
-    AccessLevel,
-    ContentStatus
-} from '@/lib/api/generated/types.gen';
+    putApiProjectsById,
+} from '@/lib/api/generated';
 
 // Helper function to map API project to frontend project
 function mapApiProjectToProject(apiProject: ApiProject): Project {
@@ -41,7 +37,7 @@ function mapApiProjectToProject(apiProject: ApiProject): Project {
         isDeleted: apiProject.isDeleted || false,
         isPublic: apiProject.visibility === AccessLevel.PUBLIC,
         rating: 0, // Default rating, could be computed from feedback
-        tags: apiProject.tags ? apiProject.tags.split(',').map(tag => tag.trim()) : [],
+        tags: apiProject.tags ? apiProject.tags.split(',').map((tag: string) => tag.trim()) : [],
         sourceCodeUrl: apiProject.repositoryUrl || '',
         websiteUrl: apiProject.websiteUrl || '',
         screenshots: [], // Default empty array, could be from metadata
@@ -295,7 +291,9 @@ export async function searchProjects(params: ProjectSearchParams): Promise<Proje
             return [];
         }
 
-        return response.data?.data || [];
+        // Handle both array and object with data property
+        const data = response.data as any;
+        return Array.isArray(data) ? data : (data?.data || []);
     } catch (error) {
         console.error('Error searching projects:', error);
         return [];
@@ -316,7 +314,9 @@ export async function getPopularProjects(limit?: number): Promise<Project[]> {
             return [];
         }
 
-        return response.data?.data || [];
+        // Handle both array and object with data property
+        const data = response.data as any;
+        return Array.isArray(data) ? data : (data?.data || []);
     } catch (error) {
         console.error('Error fetching popular projects:', error);
         return [];
@@ -337,7 +337,9 @@ export async function getRecentProjects(limit?: number): Promise<Project[]> {
             return [];
         }
 
-        return response.data?.data || [];
+        // Handle both array and object with data property
+        const data = response.data as any;
+        return Array.isArray(data) ? data : (data?.data || []);
     } catch (error) {
         console.error('Error fetching recent projects:', error);
         return [];
@@ -358,7 +360,9 @@ export async function getFeaturedProjects(limit?: number): Promise<Project[]> {
             return [];
         }
 
-        return response.data?.data || [];
+        // Handle both array and object with data property
+        const data = response.data as any;
+        return Array.isArray(data) ? data : (data?.data || []);
     } catch (error) {
         console.error('Error fetching featured projects:', error);
         return [];

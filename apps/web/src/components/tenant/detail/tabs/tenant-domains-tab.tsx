@@ -1,13 +1,14 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Tenant } from '@/lib/api/generated/types.gen';
+import type { Tenant } from '@/lib/api/generated';
 import {
     Globe
 } from 'lucide-react';
 
 interface TenantDomainsTabProps {
     tenant: Tenant;
+    isAdmin?: boolean;
 }
 
 export function TenantDomainsTab({ tenant }: TenantDomainsTabProps) {
