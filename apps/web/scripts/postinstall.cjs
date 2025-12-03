@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const WASM_PACKAGES = ['esbuild-wasm', 'quickjs-emscripten']
+const WASM_PACKAGES = ['esbuild-wasm', 'quickjs-emscripten', '@runno/sandbox']
 
 const changedPackages = process.env.npm_package_json
   ? require(process.env.npm_package_json).dependencies || {}
