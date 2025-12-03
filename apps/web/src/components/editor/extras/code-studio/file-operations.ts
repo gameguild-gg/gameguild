@@ -235,3 +235,11 @@ export function moveFolder(
     }
   })
 }
+
+export function reorderFiles(
+  draft: CodeStudioData,
+  newOrder: CodeFile[]
+): void {
+  // Substituir a lista de arquivos pela nova ordem
+  draft.files = newOrder
+}

@@ -10,6 +10,7 @@ import { shikiToMonaco } from "@shikijs/monaco"
 import { useTheme } from "next-themes"
 import { createHighlighter, type Highlighter } from "shiki"
 import { registerPathCompletionProvider } from "./monaco-file-system"
+import { LinkConfirmDialog } from "../dialogs/link-confirm-dialog"
 
 // Singleton para o highlighter do Shiki
 let shikiHighlighter: Highlighter | null = null
@@ -102,6 +103,10 @@ export function MonacoCodeEditor({
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const monacoRef = useRef<Monaco | null>(null)
   const [isShikiReady, setIsShikiReady] = useState(false)
+  const [linkConfirmDialog, setLinkConfirmDialog] = useState<{ open: boolean; url: string }>({
+    open: false,
+    url: "",
+  })
   const { resolvedTheme, theme: themeState } = useTheme()
   
   // Determinar o tema atual (dark ou light) - usa theme como fallback
@@ -182,6 +187,74 @@ export function MonacoCodeEditor({
   const handleEditorDidMount = (editor: editor.IStandaloneCodeEditor) => {
     editorRef.current = editor
 
+    // Interceptar cliques em links para mostrar dialog de confirmação (apenas com Ctrl pressionado)
+    editor.onMouseDown((e) => {
+      // Só processa se Ctrl/Cmd estiver pressionado
+      if (!e.event.ctrlKey && !e.event.metaKey) return
+      if (!e.target.position) return
+
+      const model = editor.getModel()
+      if (!model) return
+
+      const lineContent = model.getLineContent(e.target.position.lineNumber)
+      const urlRegex = /(https?:\/\/[^\s"')\]]+)/g
+      let match
+
+      while ((match = urlRegex.exec(lineContent)) !== null) {
+        const startColumn = match.index + 1
+        const endColumn = startColumn + match[0].length
+
+        if (
+          e.target.position.column >= startColumn &&
+          e.target.position.column <= endColumn
+        ) {
+          e.event.preventDefault()
+          e.event.stopPropagation()
+          setLinkConfirmDialog({ open: true, url: match[0] })
+          return false
+        }
+      }
+    })
+
+    // Adicionar decorações para destacar links
+    let decorationIds: string[] = []
+    
+    const updateLinkDecorations = () => {
+      const model = editor.getModel()
+      if (!model) return
+
+      const decorations: editor.IModelDeltaDecoration[] = []
+      const urlRegex = /(https?:\/\/[^\s"')\]]+)/g
+
+      for (let lineNumber = 1; lineNumber <= model.getLineCount(); lineNumber++) {
+        const lineContent = model.getLineContent(lineNumber)
+        let match
+
+        while ((match = urlRegex.exec(lineContent)) !== null) {
+          decorations.push({
+            range: {
+              startLineNumber: lineNumber,
+              startColumn: match.index + 1,
+              endLineNumber: lineNumber,
+              endColumn: match.index + match[0].length + 1,
+            },
+            options: {
+              inlineClassName: 'monaco-link-decoration',
+              hoverMessage: { value: `Ctrl+Clique para abrir: ${match[0]}` },
+            },
+          })
+        }
+      }
+
+      decorationIds = editor.deltaDecorations(decorationIds, decorations)
+    }
+
+    // Atualizar decorações quando o conteúdo mudar
+    updateLinkDecorations()
+    editor.onDidChangeModelContent(() => {
+      updateLinkDecorations()
+    })
+
     // Configurações adicionais do editor
     editor.updateOptions({
       readOnly: readonly,
@@ -196,7 +269,7 @@ export function MonacoCodeEditor({
     // Centralizar a command palette no container do Monaco
     const container = editor.getDomNode()
     if (container) {
-      // Adicionar estilo para centralizar widgets do Monaco
+      // Adicionar estilo para centralizar widgets do Monaco e decoração de links
       const style = document.createElement('style')
       style.textContent = `
         .monaco-editor .quick-input-widget {
@@ -209,6 +282,14 @@ export function MonacoCodeEditor({
         }
         .monaco-editor .monaco-workbench .part.editor > .content .monaco-editor .quick-input-widget {
           position: absolute !important;
+        }
+        .monaco-link-decoration {
+          text-decoration: underline !important;
+          color: #0066cc !important;
+          cursor: pointer !important;
+        }
+        .monaco-editor.vs-dark .monaco-link-decoration {
+          color: #3794ff !important;
         }
       `
       container.appendChild(style)
@@ -240,36 +321,50 @@ export function MonacoCodeEditor({
   }, [currentTheme, isShikiReady])
 
   return (
-    <Editor
-      key={fileId} // Força nova instância do Monaco para cada arquivo
-      height={height}
-      language={language}
-      value={value}
-      path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
-      onChange={handleChange}
-      beforeMount={handleEditorWillMount}
-      onMount={handleEditorDidMount}
-      theme={currentTheme}
-      loading="" // Remove mensagem "Loading..."
-      options={{
-        readOnly: readonly,
-        fontSize,
-        lineNumbers: showLineNumbers ? "on" : "off",
-        minimap: { enabled: false },
-        scrollBeyondLastLine: false,
-        wordWrap: "on",
-        automaticLayout: true,
-        padding: { top: 8, bottom: 8 },
-        suggest: {
-          showKeywords: true,
-          showSnippets: true,
-        },
-        quickSuggestions: {
-          other: true,
-          comments: false,
-          strings: false,
-        },
-      }}
-    />
+    <>
+      {/* Link Confirmation Dialog */}
+      <LinkConfirmDialog
+        open={linkConfirmDialog.open}
+        onOpenChange={(open) => setLinkConfirmDialog({ open, url: "" })}
+        url={linkConfirmDialog.url}
+        onConfirm={() => {
+          window.open(linkConfirmDialog.url, '_blank', 'noopener,noreferrer')
+          setLinkConfirmDialog({ open: false, url: "" })
+        }}
+      />
+      
+      <Editor
+        key={fileId} // Força nova instância do Monaco para cada arquivo
+        height={height}
+        language={language}
+        value={value}
+        path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
+        onChange={handleChange}
+        beforeMount={handleEditorWillMount}
+        onMount={handleEditorDidMount}
+        theme={currentTheme}
+        loading="" // Remove mensagem "Loading..."
+        options={{
+          readOnly: readonly,
+          fontSize,
+          lineNumbers: showLineNumbers ? "on" : "off",
+          minimap: { enabled: false },
+          scrollBeyondLastLine: false,
+          wordWrap: "on",
+          automaticLayout: true,
+          padding: { top: 8, bottom: 8 },
+          suggest: {
+            showKeywords: true,
+            showSnippets: true,
+          },
+          quickSuggestions: {
+            other: true,
+            comments: false,
+            strings: false,
+          },
+          links: false, 
+        }}
+      />
+    </>
   )
 }
