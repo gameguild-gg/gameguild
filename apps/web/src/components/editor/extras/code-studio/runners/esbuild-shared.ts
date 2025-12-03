@@ -18,7 +18,7 @@ export async function initEsbuild() {
   // Inicia nova inicialização
   initializationPromise = (async () => {
     try {
-      const wasmBuffer = await loadCompressedWasm('/wasm/esbuild.wasm.gz')
+      const wasmBuffer = await loadCompressedWasm('/langs/esbuild.wasm.gz')
       await esbuild.initialize({
         wasmModule: await WebAssembly.compile(wasmBuffer),
       })
