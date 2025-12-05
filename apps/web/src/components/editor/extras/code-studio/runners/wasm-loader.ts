@@ -117,6 +117,100 @@ export function setDownloadNotificationCallback(callback: DownloadNotificationCa
   downloadNotificationCallback = callback
 }
 
+// Cache para filesystem do .NET managed extraído
+let managedFilesystem: Record<string, ArrayBuffer> | null = null
+
+/**
+ * Carrega e extrai o filesystem do .NET managed (managed.tar.gz)
+ * Retorna um mapa de caminhos para ArrayBuffers
+ */
+export async function loadManagedFilesystem(): Promise<Record<string, ArrayBuffer>> {
+  if (managedFilesystem) {
+    return managedFilesystem
+  }
+
+  console.log('[WASM Loader] Loading .NET managed filesystem...')
+  
+  // Carregar e extrair managed.tar.gz
+  const fs = await loadTarGz('/langs/managed.tar.gz')
+  
+  // Converter BinaryWASIFS para Record<string, ArrayBuffer>
+  managedFilesystem = {}
+  for (const [path, file] of Object.entries(fs)) {
+    if (file.content) {
+      managedFilesystem[path] = file.content.buffer as ArrayBuffer
+    }
+  }
+  
+  console.log(`[WASM Loader] ✓ Loaded ${Object.keys(managedFilesystem).length} .NET managed files`)
+  return managedFilesystem
+}
+
+// Interceptor para fetch de arquivos .NET managed
+const originalFetch = window.fetch
+let fetchInterceptorInstalled = false
+
+export function installManagedFetchInterceptor(): void {
+  if (fetchInterceptorInstalled) {
+    return
+  }
+
+  window.fetch = async function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    let url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+    
+    // Normalizar URL removendo origin se for localhost
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      try {
+        const urlObj = new URL(url)
+        url = urlObj.pathname + urlObj.search + urlObj.hash
+      } catch (e) {
+        // Keep original URL if parsing fails
+      }
+    }
+    
+    // Interceptar requisições para /managed/
+    if (url.includes('/managed/')) {
+      try {
+        // Carregar filesystem do managed (se ainda não foi carregado)
+        const filesystem = await loadManagedFilesystem()
+        
+        // Extrair o caminho relativo do arquivo
+        const relativePath = url.replace(/^.*\/managed\//, '/')
+        
+        // Buscar arquivo no filesystem
+        const fileBuffer = filesystem[relativePath]
+        
+        if (!fileBuffer) {
+          console.warn(`[WASM Cache] File not found in managed filesystem: ${relativePath}`)
+          // Fallback to original fetch
+          return originalFetch(input, init)
+        }
+        
+        // Determinar Content-Type
+        let contentType = 'application/octet-stream'
+        if (url.endsWith('.wasm')) contentType = 'application/wasm'
+        else if (url.endsWith('.js')) contentType = 'application/javascript'
+        else if (url.endsWith('.json')) contentType = 'application/json'
+        
+        return new Response(fileBuffer, {
+          status: 200,
+          headers: { 'Content-Type': contentType }
+        })
+      } catch (error) {
+        console.error(`[WASM Cache] Failed to load ${url}:`, error)
+        // Fallback to original fetch
+        return originalFetch(input, init)
+      }
+    }
+    
+    // Para outras URLs, usar fetch original
+    return originalFetch(input, init)
+  }
+
+  fetchInterceptorInstalled = true
+  console.log('[WASM Cache] Fetch interceptor installed for /managed/ files')
+}
+
 export async function loadCompressedWasm(path: string): Promise<ArrayBuffer> {
   // Tentar carregar do cache primeiro
   const cached = await getCachedFile(path)

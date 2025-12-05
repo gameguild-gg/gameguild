@@ -891,6 +891,93 @@ export function getMonacoLanguage(language: SupportedLanguage): string {
   return LANGUAGE_CONFIGS[language].monacoLanguage
 }
 
+// Helper function to get valid file extensions for a language
+export function getValidExtensions(language: SupportedLanguage): string[] {
+  switch (language) {
+    case 'javascript': return ['.js']
+    case 'typescript': return ['.ts', '.tsx']
+    case 'python': return ['.py']
+    case 'lua': return ['.lua']
+    case 'c': return ['.c', '.h']
+    case 'cpp': return ['.cpp', '.cc', '.cxx', '.hpp', '.h']
+    case 'html': return ['.html', '.htm']
+    case 'css': return ['.css']
+    case 'markdown': return ['.md', '.markdown']
+    case 'java': return ['.java']
+    case 'go': return ['.go']
+    case 'rust': return ['.rs']
+    case 'php': return ['.php']
+    case 'ruby': return ['.rb']
+    case 'swift': return ['.swift']
+    case 'kotlin': return ['.kt', '.kts']
+    case 'csharp': return ['.cs']
+    case 'csharp_script': return ['.csx']
+    case 'sql': return ['.sql']
+    case 'bash': return ['.sh', '.bash']
+    case 'powershell': return ['.ps1']
+    case 'r': return ['.r']
+    case 'scala': return ['.scala', '.sc']
+    case 'dart': return ['.dart']
+    case 'json': return ['.json']
+    case 'yaml': return ['.yaml', '.yml']
+    case 'xml': return ['.xml']
+    case 'gdscript': return ['.gd']
+    case 'lexical': return ['.lsp', '.lexical']
+    case 'prolog': return ['.pl', '.pro']
+    case 'pascal': return ['.pas', '.pp']
+    case 'objectpascal': return ['.pas']
+    case 'fsharp': return ['.fs']
+    case 'fsharp_script': return ['.fsx']
+    case 'haskell': return ['.hs', '.lhs']
+    case 'perl': return ['.pl', '.pm']
+    case 'groovy': return ['.groovy', '.gvy']
+    case 'elixir': return ['.ex', '.exs']
+    case 'clojure': return ['.clj', '.cljs', '.cljc']
+    case 'erlang': return ['.erl', '.hrl']
+    case 'fortran': return ['.f', '.for', '.f90', '.f95']
+    case 'ada': return ['.ada', '.adb', '.ads']
+    case 'cobol': return ['.cob', '.cbl']
+    case 'assembly_x86': return ['.asm', '.s']
+    case 'assembly_arm': return ['.arm']
+    case 'assembly_mips': return ['.mips']
+    case 'assembly_riscv': return ['.riscv']
+    case 'assembly_powerpc': return ['.ppc']
+    case 'webassembly': return ['.wat']
+    case 'forth': return ['.fth', '.forth']
+    case 'dlang': return ['.d', '.di']
+    case 'nim': return ['.nim', '.nims', '.nimble']
+    case 'zig': return ['.zig']
+    case 'v': return ['.v', '.vv']
+    case 'crystal': return ['.cr']
+    case 'ocaml': return ['.ml', '.mli']
+    case 'scheme': return ['.scm', '.ss', '.rkt']
+    case 'smalltalk': return ['.st']
+    case 'julia': return ['.jl']
+    case 'vb': return ['.vb', '.vbs']
+    case 'hope': return ['.hop']
+    case 'b': return ['.b']
+    case 'bcpl': return ['.bcpl']
+    case 'fantom': return ['.fan']
+    case 'modula3': return ['.m3', '.i3']
+    case 'fstar': return ['.fst', '.fsti']
+    case 'elm': return ['.elm']
+    case 'haxe': return ['.hx']
+    case 'gleam': return ['.gleam']
+    case 'rescript': return ['.res', '.resi']
+    case 'assemblyscript': return ['.as.ts']
+    case 'factor': return ['.factor']
+    case 'purescript': return ['.purs']
+    default: return ['.txt']
+  }
+}
+
+// Helper function to check if a file has a valid extension for a language
+export function hasValidExtension(filePath: string, language: SupportedLanguage): boolean {
+  const validExtensions = getValidExtensions(language)
+  const lowerPath = filePath.toLowerCase()
+  return validExtensions.some(ext => lowerPath.endsWith(ext))
+}
+
 // Shiki theme configurations
 export const SHIKI_THEME_CONFIGS: Record<ShikiTheme, { label: string; dark: string; light: string }> = {
   "github": {
