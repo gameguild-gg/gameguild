@@ -10,7 +10,7 @@ import type { CodeStudioData, CodeFile, FileTreeFolder, SupportedLanguage, Layou
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
 import type { XTermTerminalHandle } from "./xterm-terminal"
-import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension } from "./types"
+import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension, hasValidExtension } from "./types"
 import { useTheme } from "next-themes"
 import { FileExplorer } from "./file-system/file-explorer"
 import { FileTabs } from "./file-tabs"
@@ -556,11 +556,16 @@ export function CodeStudioEditor({
     terminalRef.current.write('\x1b[33m⟳ Starting execution...\x1b[0m\r\n')
 
     try {
-      // Criar mapa de arquivos para suportar imports
+      // Criar mapa de arquivos para suportar imports - apenas arquivos da mesma linguagem
       const filesMap: Record<string, string> = {}
-      localData.files.forEach(file => {
-        filesMap[`/${file.path}`] = file.content
-      })
+      localData.files
+        .filter(file => 
+          file.language === fileToExecute.language && 
+          hasValidExtension(file.path, fileToExecute.language)
+        )
+        .forEach(file => {
+          filesMap[`/${file.path}`] = file.content
+        })
 
       // Usar runWithFiles para suportar imports entre arquivos
       const result = await codeRunnerRef.current.runWithFiles(
