@@ -129,7 +129,7 @@ export class CSharpCompiler {
   }
 }
 
-// Export types
+// Export runtime loader
 export { RuntimeLoader }
 
 // Default export

@@ -57,6 +57,21 @@ const nextConfig: NextConfig = {
         source: '/pyodide/:file*.js',
         destination: '/pyodide/:file*.js.gz',
       },
+      // .NET managed runtime - rewrite .wasm to .wasm.gz
+      {
+        source: '/managed/:path*.wasm',
+        destination: '/managed/:path*.wasm.gz',
+      },
+      // .NET managed runtime - rewrite .dll to .dll.gz
+      {
+        source: '/managed/:path*.dll',
+        destination: '/managed/:path*.dll.gz',
+      },
+      // .NET managed runtime - rewrite .dat to .dat.gz
+      {
+        source: '/managed/:path*.dat',
+        destination: '/managed/:path*.dat.gz',
+      },
     ];
   },
   // Set headers for compressed files
@@ -187,6 +202,104 @@ const nextConfig: NextConfig = {
           {
             key: 'Content-Type',
             value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      // .NET WASM runtime files
+      {
+        source: '/managed/:path*.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/managed/:path*.wasm',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/wasm',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/managed/:path*.dll',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/octet-stream',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/managed/:path*.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/managed/:path*.dat',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/octet-stream',
           },
           {
             key: 'Cache-Control',

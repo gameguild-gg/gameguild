@@ -12,6 +12,7 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const rootDir = join(__dirname, '..', '..', '..') // Ajustado para apontar para o diretório raiz do projeto
 const publicWasmDir = join(rootDir, 'apps/web/public', 'langs')
+const publicManagedDir = join(rootDir, 'apps/web/public', 'managed')
 const hashCacheFile = join(publicWasmDir, '.wasm-hashes.json')
 
 const WASM_FILES = [
@@ -285,6 +286,89 @@ async function downloadPyodide(hashCache) {
   return { original: totalOriginal, compressed: totalCompressed, skipped }
 }
 
+async function copyDotNetManagedFiles(hashCache) {
+  console.log(`\n🔵 Processing .NET managed runtime files...\n`)
+
+  const dotnetWasmPackage = join(rootDir, 'packages/dotnet-wasm/dist/managed')
+  
+  if (!existsSync(dotnetWasmPackage)) {
+    console.log('⚠️  .NET managed files not found. Skipping...')
+    console.log(`   Expected: ${dotnetWasmPackage}`)
+    console.log('   Run: cd packages/dotnet-wasm && npm run build\n')
+    return { original: 0, compressed: 0, skipped: 0 }
+  }
+
+  if (!existsSync(publicManagedDir)) {
+    mkdirSync(publicManagedDir, { recursive: true })
+  }
+
+  // Criar managed.tar.gz com todos os arquivos
+  const { statSync } = await import('fs')
+  const { execSync } = await import('child_process')
+  
+  const tarGzPath = join(publicWasmDir, 'managed.tar.gz')
+  const cacheKey = 'dotnet:managed.tar.gz'
+  
+  // Calcular hash de todos os arquivos para detectar mudanças
+  const { readdirSync } = await import('fs')
+  let combinedHash = ''
+  
+  function hashDirectory(dir) {
+    const entries = readdirSync(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        hashDirectory(fullPath)
+      } else {
+        combinedHash += calculateFileHash(fullPath)
+      }
+    }
+  }
+  
+  hashDirectory(dotnetWasmPackage)
+  const dirHash = createHash('sha1').update(combinedHash).digest('hex')
+  
+  // Verificar se precisa atualizar
+  if (!needsUpdate(hashCache, cacheKey, dirHash) && existsSync(tarGzPath)) {
+    const compressedSize = statSync(tarGzPath).size
+    console.log(`⏭️  Skipped managed.tar.gz (unchanged, SHA1: ${dirHash.substring(0, 8)}...)`)
+    console.log(`   Size: ${(compressedSize / 1024 / 1024).toFixed(2)}MB\n`)
+    
+    return { original: 0, compressed: compressedSize, skipped: 1 }
+  }
+
+  // Criar tar.gz
+  console.log(`📦 Creating managed.tar.gz...`)
+  
+  try {
+    // Usar tar para criar arquivo comprimido
+    execSync(`tar -czf "${tarGzPath}" -C "${dotnetWasmPackage}" .`, { 
+      stdio: 'inherit',
+      cwd: rootDir 
+    })
+    
+    const originalSize = parseInt(execSync(`du -sb "${dotnetWasmPackage}" | cut -f1`).toString().trim())
+    const compressedSize = statSync(tarGzPath).size
+    const ratio = ((1 - compressedSize / originalSize) * 100).toFixed(1)
+    
+    console.log(`   ✅ Created: ${(originalSize / 1024 / 1024).toFixed(2)}MB → ${(compressedSize / 1024 / 1024).toFixed(2)}MB (${ratio}% reduction)`)
+    console.log(`   SHA1: ${dirHash.substring(0, 8)}...\n`)
+    
+    // Update cache
+    hashCache[cacheKey] = {
+      sha1: dirHash,
+      size: originalSize,
+      compressedSize,
+      timestamp: new Date().toISOString()
+    }
+    
+    return { original: originalSize, compressed: compressedSize, skipped: 0 }
+  } catch (error) {
+    console.error(`❌ Failed to create managed.tar.gz:`, error.message)
+    return { original: 0, compressed: 0, skipped: 0 }
+  }
+}
+
 async function main() {
   console.log('🔄 Updating WASM files...\n')
 
@@ -389,15 +473,18 @@ async function main() {
   // Download Pyodide from CDN
   const pyodideStats = await downloadPyodide(hashCache)
 
+  // Process .NET managed runtime files
+  const dotnetStats = await copyDotNetManagedFiles(hashCache)
+
   // Save updated hash cache
   saveHashCache(hashCache)
   console.log(`\n💾 Saved hash cache with ${Object.keys(hashCache).length} entries`)
 
   // Grand total
-  const grandOriginal = totalOriginal + pyodideStats.original
-  const grandCompressed = totalCompressed + pyodideStats.compressed
+  const grandOriginal = totalOriginal + pyodideStats.original + dotnetStats.original
+  const grandCompressed = totalCompressed + pyodideStats.compressed + dotnetStats.compressed
   const grandRatio = grandOriginal > 0 ? ((1 - grandCompressed / grandOriginal) * 100).toFixed(1) : 0
-  const totalSkipped = localSkipped + (pyodideStats.skipped || 0)
+  const totalSkipped = localSkipped + (pyodideStats.skipped || 0) + (dotnetStats.skipped || 0)
 
   console.log('\n🎉 Grand Total:')
   console.log(`   Total original: ${(grandOriginal / 1024 / 1024).toFixed(2)}MB`)
@@ -408,6 +495,7 @@ async function main() {
   }
   console.log('\n✨ All WASM files updated successfully!')
   console.log(`   Local WASM: public/langs/`)
+  console.log(`   .NET Runtime: public/langs/managed.tar.gz`)
   console.log(`   Hash cache: ${hashCacheFile}`)
 }
 
