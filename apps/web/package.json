@@ -26,6 +26,7 @@
         "@codingame/monaco-vscode-api": "^23.1.0",
         "@codingame/monaco-vscode-files-service-override": "^23.1.0",
         "@game-guild/dotnet-wasm": "file:../../packages/dotnet-wasm",
+        "@game-guild/rust-wasm": "file:../../packages/rust-wasm",
         "@graphql-typed-document-node/core": "^3.2.0",
         "@hookform/resolvers": "^5.2.2",
         "@lexical/code": "^0.38.2",

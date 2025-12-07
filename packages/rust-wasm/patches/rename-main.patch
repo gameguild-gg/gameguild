@@ -1,0 +1,9 @@
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -240,7 +240,8 @@
+ /// main!
+-int main(int argc, char *argv[])
++// Renamed to mrustc_main to avoid conflict with WASM runtime
++int mrustc_main(int argc, char *argv[])
+ {
+     ProgramParams   params;

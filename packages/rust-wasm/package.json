@@ -1,0 +1,49 @@
+{
+  "name": "@game-guild/rust-wasm",
+  "version": "0.1.0",
+  "description": "Rust compiler and runtime for browser using rustc WebAssembly",
+  "type": "module",
+  "author": "Miguel Moroni <miguelmcontato@gmail.com>",
+  "homepage": "https://miguelmoroni.com",
+  "main": "dist/rust-web.umd.js",
+  "module": "dist/rust-web.es.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/rust-web.es.js",
+      "require": "./dist/rust-web.umd.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./rust/*": "./dist/rust/*"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "npm run clean-artifacts && vite",
+    "build": "npm run clean-artifacts && tsc --listEmittedFiles && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "clean-artifacts": "rm -rf rust-runtime/target && find . -name 'package.json' -path '*/rust/*' -delete 2>/dev/null || true",
+    "build-runtime": "./build-rust.sh",
+    "build-mock": "cd rust-runtime && make -f Makefile.mock",
+    "setup": "npm run build-runtime && npm run build"
+  },
+  "keywords": [
+    "rust",
+    "rustc",
+    "wasm",
+    "webassembly",
+    "compiler"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "pako": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@types/pako": "^2.0.3",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  }
+}
