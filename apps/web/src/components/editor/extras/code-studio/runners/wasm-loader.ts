@@ -148,10 +148,11 @@ export async function loadManagedFilesystem(): Promise<Record<string, ArrayBuffe
 
 // Interceptor para fetch de arquivos .NET managed
 const originalFetch = window.fetch
-let fetchInterceptorInstalled = false
+let managedFetchInterceptorInstalled = false
+let rustFetchInterceptorInstalled = false
 
 export function installManagedFetchInterceptor(): void {
-  if (fetchInterceptorInstalled) {
+  if (managedFetchInterceptorInstalled) {
     return
   }
 
@@ -207,8 +208,100 @@ export function installManagedFetchInterceptor(): void {
     return originalFetch(input, init)
   }
 
-  fetchInterceptorInstalled = true
+  managedFetchInterceptorInstalled = true
   console.log('[WASM Cache] Fetch interceptor installed for /managed/ files')
+}
+
+// Cache para filesystem do Rust extraído
+let rustFilesystem: Record<string, ArrayBuffer> | null = null
+
+/**
+ * Carrega e extrai o filesystem do Rust (rust.tar.gz)
+ * Retorna um mapa de caminhos para ArrayBuffers
+ */
+export async function loadRustFilesystem(): Promise<Record<string, ArrayBuffer>> {
+  if (rustFilesystem) {
+    return rustFilesystem
+  }
+
+  console.log('[WASM Loader] Loading Rust filesystem...')
+  
+  // Carregar e extrair rust.tar.gz
+  const fs = await loadTarGz('/langs/rust.tar.gz')
+  
+  // Converter BinaryWASIFS para Record<string, ArrayBuffer>
+  rustFilesystem = {}
+  for (const [path, file] of Object.entries(fs)) {
+    if (file.content) {
+      rustFilesystem[path] = file.content.buffer as ArrayBuffer
+    }
+  }
+  
+  console.log(`[WASM Loader] ✓ Loaded ${Object.keys(rustFilesystem).length} Rust files`)
+  return rustFilesystem
+}
+
+export function installRustFetchInterceptor(): void {
+  if (rustFetchInterceptorInstalled) {
+    return
+  }
+
+  const currentFetch = window.fetch
+
+  window.fetch = async function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+    let url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+    
+    // Normalizar URL removendo origin se for localhost
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      try {
+        const urlObj = new URL(url)
+        url = urlObj.pathname + urlObj.search + urlObj.hash
+      } catch (e) {
+        // Keep original URL if parsing fails
+      }
+    }
+    
+    // Interceptar requisições para /rust/
+    if (url.includes('/rust/')) {
+      try {
+        // Carregar filesystem do rust (se ainda não foi carregado)
+        const filesystem = await loadRustFilesystem()
+        
+        // Extrair o caminho relativo do arquivo
+        const relativePath = url.replace(/^.*\/rust\//, '/')
+        
+        // Buscar arquivo no filesystem
+        const fileBuffer = filesystem[relativePath]
+        
+        if (!fileBuffer) {
+          console.warn(`[WASM Cache] File not found in rust filesystem: ${relativePath}`)
+          // Fallback to current fetch
+          return currentFetch(input, init)
+        }
+        
+        // Determinar Content-Type
+        let contentType = 'application/octet-stream'
+        if (url.endsWith('.wasm')) contentType = 'application/wasm'
+        else if (url.endsWith('.js')) contentType = 'application/javascript'
+        else if (url.endsWith('.json')) contentType = 'application/json'
+        
+        return new Response(fileBuffer, {
+          status: 200,
+          headers: { 'Content-Type': contentType }
+        })
+      } catch (error) {
+        console.error(`[WASM Cache] Failed to load ${url}:`, error)
+        // Fallback to current fetch
+        return currentFetch(input, init)
+      }
+    }
+    
+    // Para outras URLs, usar fetch anterior
+    return currentFetch(input, init)
+  }
+
+  rustFetchInterceptorInstalled = true
+  console.log('[WASM Cache] Fetch interceptor installed for /rust/ files')
 }
 
 export async function loadCompressedWasm(path: string): Promise<ArrayBuffer> {
