@@ -1,0 +1,55 @@
+# Custom Makefile for mrustc WASM build
+# This wraps mrustc with WASM-friendly interface
+
+# Emscripten compiler
+CXX = em++
+CC = emcc
+AR = emar
+
+# Compiler flags
+CXXFLAGS = -std=c++14 -O2 -DWASM_BUILD -I./src
+EMFLAGS = -s ALLOW_MEMORY_GROWTH=1 \
+          -s TOTAL_MEMORY=256MB \
+          -s MODULARIZE=1 \
+          -s EXPORT_ES6=1 \
+          -s EXPORT_NAME=mrustcModule \
+          -s EXPORTED_FUNCTIONS="['_compile_rust','_compile_rust_multi']" \
+          -s EXPORTED_RUNTIME_METHODS="['ccall','cwrap']" \
+          -s FORCE_FILESYSTEM=1 \
+          -s WASM=1 \
+          --bind
+
+# Source files
+WRAPPER_SRC = wasm-wrapper.cpp
+MRUSTC_SRCS = $(shell find mrustc/src -name "*.cpp" 2>/dev/null)
+
+# Output
+OUTPUT = ../public/rust/mrustc.js
+
+.PHONY: all clean wrapper mrustc
+
+all: wrapper
+
+# Build just the wrapper (for testing)
+wrapper:
+	@echo "Building WASM wrapper..."
+	$(CXX) $(CXXFLAGS) $(EMFLAGS) $(WRAPPER_SRC) -o $(OUTPUT)
+	@echo "Built: $(OUTPUT)"
+
+# Full build with mrustc (when ready)
+mrustc:
+	@echo "Building full mrustc..."
+	@if [ ! -d "mrustc" ]; then \
+		echo "Error: mrustc not found. Run: git clone https://github.com/thepowersgang/mrustc.git"; \
+		exit 1; \
+	fi
+	$(CXX) $(CXXFLAGS) $(EMFLAGS) $(WRAPPER_SRC) $(MRUSTC_SRCS) -o $(OUTPUT)
+
+clean:
+	rm -f $(OUTPUT) $(OUTPUT:.js=.wasm)
+	rm -rf build/
+
+# Test the build
+test:
+	@echo "Testing WASM module..."
+	@node -e "import('./$(OUTPUT)').then(m => m().then(mod => console.log('✓ Module loaded')))"
