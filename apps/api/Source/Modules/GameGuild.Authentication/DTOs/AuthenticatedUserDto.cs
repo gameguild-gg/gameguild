@@ -1,9 +1,9 @@
 ﻿namespace GameGuild.Authentication.DTOs;
 
 /// <summary>
-///     User data transfer object
+///     Authenticated user data transfer object
 /// </summary>
-public class UserDto
+public class AuthenticatedUserDto
 {
     public Guid Id { get; set; }
 
