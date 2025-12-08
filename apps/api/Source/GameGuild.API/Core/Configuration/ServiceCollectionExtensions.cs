@@ -403,8 +403,53 @@ public static class ServiceCollectionExtensions
                     );
                 }
 
-                // Configure schema ID generator to use fully qualified names to avoid conflicts
-                c.CustomSchemaIds(type => type.FullName?.Replace('+', '.'));
+                // Configure schema ID generator with smart naming that avoids namespace pollution
+                // Uses simple names when possible, but includes parent namespace segment for disambiguation
+                c.CustomSchemaIds(type =>
+                {
+                    string GetFriendlyTypeName(Type t)
+                    {
+                        if (!t.IsGenericType)
+                        {
+                            return t.Name;
+                        }
+
+                        // For generic types, include type parameter names
+                        var genericTypeName = t.Name.Split('`')[0];
+                        var genericArgs = t.GetGenericArguments()
+                            .Select(GetFriendlyTypeName)
+                            .ToArray();
+                        return $"{genericTypeName}Of{string.Join("And", genericArgs)}";
+                    }
+
+                    var friendlyName = GetFriendlyTypeName(type);
+
+                    // For Commands, Queries, and DTOs, include the parent namespace segment to avoid conflicts
+                    // Example: GrantTenantPermissionCommand exists in both Authentication and Permissions modules
+                    if (type.FullName != null &&
+                        (friendlyName.EndsWith("Command") ||
+                         friendlyName.EndsWith("Query") ||
+                         friendlyName.EndsWith("Dto") ||
+                         friendlyName.EndsWith("Request") ||
+                         friendlyName.EndsWith("Response")))
+                    {
+                        // Get the module name (e.g., "Authentication", "Permissions", "Users")
+                        var parts = type.FullName.Split('.');
+                        var moduleIndex = Array.FindIndex(parts, p => p == "GameGuild") + 1;
+
+                        if (moduleIndex > 0 && moduleIndex < parts.Length)
+                        {
+                            var moduleName = parts[moduleIndex];
+                            // Only prefix if it's a module name (not "API", "Core", "Modules", etc.)
+                            if (moduleName != "API" && moduleName != "Core" && moduleName != "Modules")
+                            {
+                                return $"{moduleName}{friendlyName}";
+                            }
+                        }
+                    }
+
+                    return friendlyName;
+                });
 
                 // Apply schema filter for enum naming with x-enum-varnames extension
                 c.SchemaFilter<EnumSchemaFilter>();
