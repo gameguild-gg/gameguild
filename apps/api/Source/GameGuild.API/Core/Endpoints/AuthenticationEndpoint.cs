@@ -81,7 +81,7 @@ public static class AuthenticationEndpoint
                     AccessTokenExpiresAt = response.ExpiresAt,
                     RefreshTokenExpiresAt = response.ExpiresAt.AddDays(7), // Assuming 7 day refresh token
                     ExpiresAt = response.ExpiresAt,
-                    User = new UserDto
+                    User = new AuthenticatedUserDto
                     {
                         Id = response.UserId,
                         Email = debugEmail, // Using debug email to test
@@ -125,7 +125,7 @@ public static class AuthenticationEndpoint
                     AccessTokenExpiresAt = tokens.AccessTokenExpiresAt,
                     RefreshTokenExpiresAt = tokens.RefreshTokenExpiresAt,
                     ExpiresAt = tokens.AccessTokenExpiresAt,
-                    User = new UserDto { Id = user.Id, Email = user.Email, Username = user.Username }
+                    User = new AuthenticatedUserDto { Id = user.Id, Email = user.Email, Username = user.Username }
                 }
             );
         }
@@ -164,7 +164,7 @@ public static class AuthenticationEndpoint
                     AccessTokenExpiresAt = DateTime.UtcNow.AddHours(1),
                     RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
                     ExpiresAt = DateTime.UtcNow.AddHours(1),
-                    User = new UserDto { Id = Guid.NewGuid(), Email = "google-user@example.com", Username = "googleuser" }
+                    User = new AuthenticatedUserDto { Id = Guid.NewGuid(), Email = "google-user@example.com", Username = "googleuser" }
                 }
             )
         );
@@ -184,7 +184,7 @@ public static class AuthenticationEndpoint
         var accessTokenExpiry = DateTime.UtcNow.AddMinutes(expirationMinutes);
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
 
-        var claims = new[ ]
+        var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
@@ -192,7 +192,7 @@ public static class AuthenticationEndpoint
             new Claim("username", user.Username ?? user.Email)
         };
 
-        var token = new JwtSecurityToken(jwtIssuer, jwtAudience, claims, expires : accessTokenExpiry, signingCredentials : credentials);
+        var token = new JwtSecurityToken(jwtIssuer, jwtAudience, claims, expires: accessTokenExpiry, signingCredentials: credentials);
 
         var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
         var refreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
@@ -222,7 +222,7 @@ public record SignInResponseDto
 
     public required DateTime RefreshTokenExpiresAt { get; init; }
 
-    public required UserDto User { get; init; }
+    public required AuthenticatedUserDto User { get; init; }
 
     public Guid? TenantId { get; init; }
 }
@@ -238,7 +238,7 @@ public record RefreshTokenResponseDto
     public required DateTime RefreshTokenExpiresAt { get; init; }
 }
 
-public record UserDto
+public record AuthenticatedUserDto
 {
     public required Guid Id { get; init; }
 
