@@ -1,5 +1,6 @@
 import { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import webpack from 'webpack';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
@@ -9,7 +10,7 @@ const nextConfig: NextConfig = {
   // Force the app to use the correct base URL
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
     ignoreDuringBuilds: true,
@@ -78,6 +79,7 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       // Enable SharedArrayBuffer for @runno/runtime (required for WASM threads)
+      // Using 'credentialless' for COEP allows external images while still enabling SharedArrayBuffer
       {
         source: '/:path*',
         headers: [
@@ -87,7 +89,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Cross-Origin-Embedder-Policy',
-            value: 'require-corp',
+            value: 'credentialless',
           },
         ],
       },
@@ -313,7 +315,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     // Allow importing .js files from TypeScript files
     // the api client generation requires this
     config.resolve.extensionAlias = {
@@ -327,6 +329,7 @@ const nextConfig: NextConfig = {
       module: false,
       fs: false,
       path: false,
+      canvas: false, // vega-canvas uses canvas which is Node.js only
       crypto: false,
       stream: false,
       buffer: false,
@@ -337,6 +340,17 @@ const nextConfig: NextConfig = {
       test: /\.md$/,
       type: 'asset/source',
     });
+
+    // Fix for "self is not defined" error in server-side rendering
+    if (typeof isServer !== 'undefined' && isServer) {
+      // Define self for server-side to prevent ReferenceError
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'globalThis',
+        })
+      );
+    }
 
     return config;
   },

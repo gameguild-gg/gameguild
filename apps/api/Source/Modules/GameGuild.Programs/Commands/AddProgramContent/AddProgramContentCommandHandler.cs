@@ -1,0 +1,36 @@
+using GameGuild.Abstractions;
+using GameGuild.CQRS;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.SharedKernel.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Modules.Programs.Commands;
+
+/// <summary>
+/// Command handler for AddProgramContentCommand
+/// </summary>
+public class AddProgramContentCommandHandler(IApplicationDbContext context, ILogger<AddProgramContentCommandHandler> logger)
+    : ICommandHandler<AddProgramContentCommand, ProgramContent>
+{
+    public async Task<ProgramContent> Handle(AddProgramContentCommand request, CancellationToken cancellationToken) {
+    logger.LogInformation("Adding content {ContentId} to program {ProgramId}", request.ContentId, request.ProgramId);
+
+    var programContent = new ProgramContent {
+      ProgramId = request.ProgramId,
+      // ContentId = request.ContentId,  // This property doesn't exist in the current model
+      SortOrder = request.Order,
+      IsRequired = request.IsRequired,
+      // PointsReward = request.PointsReward,  // This property doesn't exist in the current model
+      CreatedAt = DateTime.UtcNow,
+      UpdatedAt = DateTime.UtcNow,
+    };
+
+    context.Set<ProgramContent>().Add(programContent);
+    await context.SaveChangesAsync(cancellationToken);
+
+    logger.LogInformation("Added content {ContentId} to program {ProgramId}", request.ContentId, request.ProgramId);
+
+    return programContent;
+  }
+}

@@ -11,5 +11,5 @@ public class RefreshTokenResponse
 
     public DateTime ExpiresAt { get; set; }
 
-    public UserDto User { get; set; } = new UserDto();
+    public AuthenticatedUserDto User { get; set; } = new AuthenticatedUserDto();
 }

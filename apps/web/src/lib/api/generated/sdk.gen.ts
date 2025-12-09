@@ -88,6 +88,24 @@ import type {
   GetApiV1AccessReviewsTemplatesResponses,
   PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignData,
   PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignResponses,
+  PostApiProgramsByProgramIdActivityGradesData,
+  PostApiProgramsByProgramIdActivityGradesResponses,
+  GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData,
+  GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses,
+  GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData,
+  GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses,
+  GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData,
+  GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses,
+  DeleteApiProgramsByProgramIdActivityGradesByGradeIdData,
+  DeleteApiProgramsByProgramIdActivityGradesByGradeIdResponses,
+  PutApiProgramsByProgramIdActivityGradesByGradeIdData,
+  PutApiProgramsByProgramIdActivityGradesByGradeIdResponses,
+  GetApiProgramsByProgramIdActivityGradesPendingData,
+  GetApiProgramsByProgramIdActivityGradesPendingResponses,
+  GetApiProgramsByProgramIdActivityGradesStatisticsData,
+  GetApiProgramsByProgramIdActivityGradesStatisticsResponses,
+  GetApiProgramsByProgramIdActivityGradesContentByContentIdData,
+  GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses,
   GetApiAdminAuditData,
   GetApiAdminAuditResponses,
   GetApiAdminAuditStatisticsData,
@@ -210,6 +228,20 @@ import type {
   GetApiV1ConditionalPoliciesConditionTypesResponses,
   PostApiV1ConditionalPoliciesValidateConditionData,
   PostApiV1ConditionalPoliciesValidateConditionResponses,
+  PostContentInteractionStartData,
+  PostContentInteractionStartResponses,
+  PutContentInteractionByInteractionIdProgressData,
+  PutContentInteractionByInteractionIdProgressResponses,
+  PostContentInteractionByInteractionIdSubmitData,
+  PostContentInteractionByInteractionIdSubmitResponses,
+  PostContentInteractionByInteractionIdCompleteData,
+  PostContentInteractionByInteractionIdCompleteResponses,
+  GetContentInteractionUserByProgramUserIdContentByContentIdData,
+  GetContentInteractionUserByProgramUserIdContentByContentIdResponses,
+  GetContentInteractionUserByProgramUserIdData,
+  GetContentInteractionUserByProgramUserIdResponses,
+  PutContentInteractionByInteractionIdTimeSpentData,
+  PutContentInteractionByInteractionIdTimeSpentResponses,
   PostApiV1FeaturesEvaluateData,
   PostApiV1FeaturesEvaluateResponses,
   GetApiV1FeaturesByKeyValueData,
@@ -323,6 +355,128 @@ import type {
   PatchApiV1PaymentsByPaymentIdRetryData,
   PatchApiV1PaymentsByPaymentIdRetryResponses,
   PatchApiV1PaymentsByPaymentIdRetryErrors,
+  GetProgramData,
+  GetProgramResponses,
+  PostProgramData,
+  PostProgramResponses,
+  GetProgramPublishedData,
+  GetProgramPublishedResponses,
+  GetProgramCategoryByCategoryData,
+  GetProgramCategoryByCategoryResponses,
+  GetProgramDifficultyByDifficultyData,
+  GetProgramDifficultyByDifficultyResponses,
+  GetProgramSearchData,
+  GetProgramSearchResponses,
+  GetProgramCreatorByCreatorIdData,
+  GetProgramCreatorByCreatorIdResponses,
+  GetProgramPopularData,
+  GetProgramPopularResponses,
+  GetProgramRecentData,
+  GetProgramRecentResponses,
+  DeleteProgramByIdData,
+  DeleteProgramByIdResponses,
+  GetProgramByIdData,
+  GetProgramByIdResponses,
+  PutProgramByIdData,
+  PutProgramByIdResponses,
+  GetProgramByIdWithContentData,
+  GetProgramByIdWithContentResponses,
+  PostProgramByIdCloneData,
+  PostProgramByIdCloneResponses,
+  GetProgramSlugBySlugData,
+  GetProgramSlugBySlugResponses,
+  PostProgramByIdContentData,
+  PostProgramByIdContentResponses,
+  DeleteProgramByIdContentByContentIdData,
+  DeleteProgramByIdContentByContentIdResponses,
+  PutProgramByIdContentByContentIdData,
+  PutProgramByIdContentByContentIdResponses,
+  PostProgramByIdContentReorderData,
+  PostProgramByIdContentReorderResponses,
+  DeleteProgramByIdUsersByUserIdData,
+  DeleteProgramByIdUsersByUserIdResponses,
+  PostProgramByIdUsersByUserIdData,
+  PostProgramByIdUsersByUserIdResponses,
+  GetProgramByIdUsersData,
+  GetProgramByIdUsersResponses,
+  GetProgramByIdUsersByUserIdProgressData,
+  GetProgramByIdUsersByUserIdProgressResponses,
+  PutProgramByIdUsersByUserIdProgressData,
+  PutProgramByIdUsersByUserIdProgressResponses,
+  PostProgramByIdUsersByUserIdContentByContentIdCompleteData,
+  PostProgramByIdUsersByUserIdContentByContentIdCompleteResponses,
+  PostProgramByIdUsersByUserIdResetData,
+  PostProgramByIdUsersByUserIdResetResponses,
+  PostProgramByIdSubmitData,
+  PostProgramByIdSubmitResponses,
+  PostProgramByIdApproveData,
+  PostProgramByIdApproveResponses,
+  PostProgramByIdRejectData,
+  PostProgramByIdRejectResponses,
+  PostProgramByIdWithdrawData,
+  PostProgramByIdWithdrawResponses,
+  PostProgramByIdArchiveData,
+  PostProgramByIdArchiveResponses,
+  PostProgramByIdRestoreData,
+  PostProgramByIdRestoreResponses,
+  PostProgramByIdPublishData,
+  PostProgramByIdPublishResponses,
+  PostProgramByIdUnpublishData,
+  PostProgramByIdUnpublishResponses,
+  PostProgramByIdScheduleData,
+  PostProgramByIdScheduleResponses,
+  PostProgramByIdMonetizeData,
+  PostProgramByIdMonetizeResponses,
+  PostProgramByIdDisableMonetizationData,
+  PostProgramByIdDisableMonetizationResponses,
+  GetProgramByIdPricingData,
+  GetProgramByIdPricingResponses,
+  PutProgramByIdPricingData,
+  PutProgramByIdPricingResponses,
+  GetProgramByIdAnalyticsData,
+  GetProgramByIdAnalyticsResponses,
+  GetProgramByIdAnalyticsCompletionRatesData,
+  GetProgramByIdAnalyticsCompletionRatesResponses,
+  GetProgramByIdAnalyticsEngagementData,
+  GetProgramByIdAnalyticsEngagementResponses,
+  GetProgramByIdAnalyticsRevenueData,
+  GetProgramByIdAnalyticsRevenueResponses,
+  PostProgramByIdCreateProductData,
+  PostProgramByIdCreateProductResponses,
+  DeleteProgramByIdLinkProductByProductIdData,
+  DeleteProgramByIdLinkProductByProductIdResponses,
+  PostProgramByIdLinkProductByProductIdData,
+  PostProgramByIdLinkProductByProductIdResponses,
+  GetProgramByIdProductsData,
+  GetProgramByIdProductsResponses,
+  GetApiProgramsByProgramIdContentData,
+  GetApiProgramsByProgramIdContentResponses,
+  PostApiProgramsByProgramIdContentData,
+  PostApiProgramsByProgramIdContentResponses,
+  GetApiProgramsByProgramIdContentTopLevelData,
+  GetApiProgramsByProgramIdContentTopLevelResponses,
+  DeleteApiProgramsByProgramIdContentByIdData,
+  DeleteApiProgramsByProgramIdContentByIdResponses,
+  GetApiProgramsByProgramIdContentByIdData,
+  GetApiProgramsByProgramIdContentByIdResponses,
+  PutApiProgramsByProgramIdContentByIdData,
+  PutApiProgramsByProgramIdContentByIdResponses,
+  GetApiProgramsByProgramIdContentByParentIdChildrenData,
+  GetApiProgramsByProgramIdContentByParentIdChildrenResponses,
+  PostApiProgramsByProgramIdContentReorderData,
+  PostApiProgramsByProgramIdContentReorderResponses,
+  PostApiProgramsByProgramIdContentByIdMoveData,
+  PostApiProgramsByProgramIdContentByIdMoveResponses,
+  GetApiProgramsByProgramIdContentRequiredData,
+  GetApiProgramsByProgramIdContentRequiredResponses,
+  GetApiProgramsByProgramIdContentByTypeByTypeData,
+  GetApiProgramsByProgramIdContentByTypeByTypeResponses,
+  GetApiProgramsByProgramIdContentByVisibilityByVisibilityData,
+  GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses,
+  PostApiProgramsByProgramIdContentSearchData,
+  PostApiProgramsByProgramIdContentSearchResponses,
+  GetApiProgramsByProgramIdContentStatsData,
+  GetApiProgramsByProgramIdContentStatsResponses,
   GetApiV1TenantsByTenantIdQuotasData,
   GetApiV1TenantsByTenantIdQuotasResponses,
   DeleteApiV1TenantsByTenantIdQuotasByTypeData,
@@ -1603,6 +1757,149 @@ export const postApiV1AccessReviewsTemplatesByTemplateIdCreateCampaign = <ThrowO
   });
 };
 
+export const postApiProgramsByProgramIdActivityGrades = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiProgramsByProgramIdActivityGradesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdActivityGradesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/activity-grades',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiProgramsByProgramIdActivityGradesInteractionByContentInteractionId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/activity-grades/interaction/{contentInteractionId}',
+    ...options,
+  });
+};
+
+export const getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/activity-grades/grader/{graderProgramUserId}',
+    ...options,
+  });
+};
+
+export const getApiProgramsByProgramIdActivityGradesStudentByProgramUserId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/activity-grades/student/{programUserId}',
+    ...options,
+  });
+};
+
+export const deleteApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdActivityGradesByGradeIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/activity-grades/{gradeId}',
+    ...options,
+  });
+};
+
+export const putApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutApiProgramsByProgramIdActivityGradesByGradeIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/activity-grades/{gradeId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiProgramsByProgramIdActivityGradesPending = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdActivityGradesPendingData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesPendingResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/activity-grades/pending',
+    ...options,
+  });
+};
+
+export const getApiProgramsByProgramIdActivityGradesStatistics = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdActivityGradesStatisticsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesStatisticsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/activity-grades/statistics',
+    ...options,
+  });
+};
+
+export const getApiProgramsByProgramIdActivityGradesContentByContentId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdActivityGradesContentByContentIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/activity-grades/content/{contentId}',
+    ...options,
+  });
+};
+
 export const getApiAdminAudit = <ThrowOnError extends boolean = false>(options?: Options<GetApiAdminAuditData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).get<GetApiAdminAuditResponses, unknown, ThrowOnError>({
     security: [
@@ -2485,6 +2782,129 @@ export const postApiV1ConditionalPoliciesValidateCondition = <ThrowOnError exten
   });
 };
 
+export const postContentInteractionStart = <ThrowOnError extends boolean = false>(options?: Options<PostContentInteractionStartData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostContentInteractionStartResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/start',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const putContentInteractionByInteractionIdProgress = <ThrowOnError extends boolean = false>(
+  options: Options<PutContentInteractionByInteractionIdProgressData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutContentInteractionByInteractionIdProgressResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/{interactionId}/progress',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postContentInteractionByInteractionIdSubmit = <ThrowOnError extends boolean = false>(
+  options: Options<PostContentInteractionByInteractionIdSubmitData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostContentInteractionByInteractionIdSubmitResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/{interactionId}/submit',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postContentInteractionByInteractionIdComplete = <ThrowOnError extends boolean = false>(
+  options: Options<PostContentInteractionByInteractionIdCompleteData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostContentInteractionByInteractionIdCompleteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/{interactionId}/complete',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getContentInteractionUserByProgramUserIdContentByContentId = <ThrowOnError extends boolean = false>(
+  options: Options<GetContentInteractionUserByProgramUserIdContentByContentIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetContentInteractionUserByProgramUserIdContentByContentIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/user/{programUserId}/content/{contentId}',
+    ...options,
+  });
+};
+
+export const getContentInteractionUserByProgramUserId = <ThrowOnError extends boolean = false>(
+  options: Options<GetContentInteractionUserByProgramUserIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetContentInteractionUserByProgramUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/user/{programUserId}',
+    ...options,
+  });
+};
+
+export const putContentInteractionByInteractionIdTimeSpent = <ThrowOnError extends boolean = false>(
+  options: Options<PutContentInteractionByInteractionIdTimeSpentData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutContentInteractionByInteractionIdTimeSpentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/{interactionId}/time-spent',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
 export const postApiV1FeaturesEvaluate = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1FeaturesEvaluateData, ThrowOnError>) => {
   return (options?.client ?? _heyApiClient).post<PostApiV1FeaturesEvaluateResponses, unknown, ThrowOnError>({
     security: [
@@ -3352,6 +3772,919 @@ export const patchApiV1PaymentsByPaymentIdRetry = <ThrowOnError extends boolean 
       },
     ],
     url: '/api/v1/payments/{paymentId}/retry',
+    ...options,
+  });
+};
+
+export const getProgram = <ThrowOnError extends boolean = false>(options?: Options<GetProgramData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program',
+    ...options,
+  });
+};
+
+export const postProgram = <ThrowOnError extends boolean = false>(options?: Options<PostProgramData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostProgramResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getProgramPublished = <ThrowOnError extends boolean = false>(options?: Options<GetProgramPublishedData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramPublishedResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/published',
+    ...options,
+  });
+};
+
+export const getProgramCategoryByCategory = <ThrowOnError extends boolean = false>(options: Options<GetProgramCategoryByCategoryData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramCategoryByCategoryResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/category/{category}',
+    ...options,
+  });
+};
+
+export const getProgramDifficultyByDifficulty = <ThrowOnError extends boolean = false>(
+  options: Options<GetProgramDifficultyByDifficultyData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetProgramDifficultyByDifficultyResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/difficulty/{difficulty}',
+    ...options,
+  });
+};
+
+export const getProgramSearch = <ThrowOnError extends boolean = false>(options?: Options<GetProgramSearchData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramSearchResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/search',
+    ...options,
+  });
+};
+
+export const getProgramCreatorByCreatorId = <ThrowOnError extends boolean = false>(options: Options<GetProgramCreatorByCreatorIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramCreatorByCreatorIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/creator/{creatorId}',
+    ...options,
+  });
+};
+
+export const getProgramPopular = <ThrowOnError extends boolean = false>(options?: Options<GetProgramPopularData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramPopularResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/popular',
+    ...options,
+  });
+};
+
+export const getProgramRecent = <ThrowOnError extends boolean = false>(options?: Options<GetProgramRecentData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramRecentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/recent',
+    ...options,
+  });
+};
+
+export const deleteProgramById = <ThrowOnError extends boolean = false>(options: Options<DeleteProgramByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteProgramByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}',
+    ...options,
+  });
+};
+
+export const getProgramById = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}',
+    ...options,
+  });
+};
+
+export const putProgramById = <ThrowOnError extends boolean = false>(options: Options<PutProgramByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutProgramByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getProgramByIdWithContent = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdWithContentData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdWithContentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/with-content',
+    ...options,
+  });
+};
+
+export const postProgramByIdClone = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdCloneData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdCloneResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/clone',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getProgramSlugBySlug = <ThrowOnError extends boolean = false>(options: Options<GetProgramSlugBySlugData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramSlugBySlugResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/slug/{slug}',
+    ...options,
+  });
+};
+
+export const postProgramByIdContent = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdContentData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdContentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/content',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteProgramByIdContentByContentIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/content/{contentId}',
+    ...options,
+  });
+};
+
+export const putProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(
+  options: Options<PutProgramByIdContentByContentIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/content/{contentId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdContentReorder = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdContentReorderData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdContentReorderResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/content/reorder',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteProgramByIdUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<DeleteProgramByIdUsersByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteProgramByIdUsersByUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}',
+    ...options,
+  });
+};
+
+export const postProgramByIdUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdUsersByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdUsersByUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}',
+    ...options,
+  });
+};
+
+export const getProgramByIdUsers = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdUsersData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdUsersResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users',
+    ...options,
+  });
+};
+
+export const getProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(
+  options: Options<GetProgramByIdUsersByUserIdProgressData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}/progress',
+    ...options,
+  });
+};
+
+export const putProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(
+  options: Options<PutProgramByIdUsersByUserIdProgressData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}/progress',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdUsersByUserIdContentByContentIdComplete = <ThrowOnError extends boolean = false>(
+  options: Options<PostProgramByIdUsersByUserIdContentByContentIdCompleteData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdUsersByUserIdContentByContentIdCompleteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}/content/{contentId}/complete',
+    ...options,
+  });
+};
+
+export const postProgramByIdUsersByUserIdReset = <ThrowOnError extends boolean = false>(
+  options: Options<PostProgramByIdUsersByUserIdResetData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdUsersByUserIdResetResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}/reset',
+    ...options,
+  });
+};
+
+export const postProgramByIdSubmit = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdSubmitData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdSubmitResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/submit',
+    ...options,
+  });
+};
+
+export const postProgramByIdApprove = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdApproveData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdApproveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/approve',
+    ...options,
+  });
+};
+
+export const postProgramByIdReject = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdRejectData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdRejectResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/reject',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdWithdraw = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdWithdrawData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdWithdrawResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/withdraw',
+    ...options,
+  });
+};
+
+export const postProgramByIdArchive = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdArchiveData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdArchiveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/archive',
+    ...options,
+  });
+};
+
+export const postProgramByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdRestoreData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdRestoreResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/restore',
+    ...options,
+  });
+};
+
+export const postProgramByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdPublishData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdPublishResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/publish',
+    ...options,
+  });
+};
+
+export const postProgramByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdUnpublishData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdUnpublishResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/unpublish',
+    ...options,
+  });
+};
+
+export const postProgramByIdSchedule = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdScheduleData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdScheduleResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/schedule',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdMonetize = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdMonetizeData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdMonetizeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/monetize',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdDisableMonetization = <ThrowOnError extends boolean = false>(
+  options: Options<PostProgramByIdDisableMonetizationData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdDisableMonetizationResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/disable-monetization',
+    ...options,
+  });
+};
+
+export const getProgramByIdPricing = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdPricingData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdPricingResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/pricing',
+    ...options,
+  });
+};
+
+export const putProgramByIdPricing = <ThrowOnError extends boolean = false>(options: Options<PutProgramByIdPricingData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutProgramByIdPricingResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/pricing',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getProgramByIdAnalytics = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdAnalyticsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdAnalyticsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/analytics',
+    ...options,
+  });
+};
+
+export const getProgramByIdAnalyticsCompletionRates = <ThrowOnError extends boolean = false>(
+  options: Options<GetProgramByIdAnalyticsCompletionRatesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdAnalyticsCompletionRatesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/analytics/completion-rates',
+    ...options,
+  });
+};
+
+export const getProgramByIdAnalyticsEngagement = <ThrowOnError extends boolean = false>(
+  options: Options<GetProgramByIdAnalyticsEngagementData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdAnalyticsEngagementResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/analytics/engagement',
+    ...options,
+  });
+};
+
+export const getProgramByIdAnalyticsRevenue = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdAnalyticsRevenueData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdAnalyticsRevenueResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/analytics/revenue',
+    ...options,
+  });
+};
+
+export const postProgramByIdCreateProduct = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdCreateProductData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdCreateProductResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/create-product',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteProgramByIdLinkProductByProductIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/link-product/{productId}',
+    ...options,
+  });
+};
+
+export const postProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(
+  options: Options<PostProgramByIdLinkProductByProductIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/link-product/{productId}',
+    ...options,
+  });
+};
+
+export const getProgramByIdProducts = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdProductsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdProductsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/products',
+    ...options,
+  });
+};
+
+export const getApiProgramsByProgramIdContent = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdContentData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content',
+    ...options,
+  });
+};
+
+export const postApiProgramsByProgramIdContent = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiProgramsByProgramIdContentData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiProgramsByProgramIdContentTopLevel = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdContentTopLevelData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentTopLevelResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/top-level',
+    ...options,
+  });
+};
+
+export const deleteApiProgramsByProgramIdContentById = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiProgramsByProgramIdContentByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/{id}',
+    ...options,
+  });
+};
+
+export const getApiProgramsByProgramIdContentById = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdContentByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/{id}',
+    ...options,
+  });
+};
+
+export const putApiProgramsByProgramIdContentById = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiProgramsByProgramIdContentByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/{id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiProgramsByProgramIdContentByParentIdChildren = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdContentByParentIdChildrenData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByParentIdChildrenResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/{parentId}/children',
+    ...options,
+  });
+};
+
+export const postApiProgramsByProgramIdContentReorder = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiProgramsByProgramIdContentReorderData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentReorderResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/reorder',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiProgramsByProgramIdContentByIdMove = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiProgramsByProgramIdContentByIdMoveData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentByIdMoveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/{id}/move',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiProgramsByProgramIdContentRequired = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdContentRequiredData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentRequiredResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/required',
+    ...options,
+  });
+};
+
+export const getApiProgramsByProgramIdContentByTypeByType = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdContentByTypeByTypeData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByTypeByTypeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/by-type/{type}',
+    ...options,
+  });
+};
+
+export const getApiProgramsByProgramIdContentByVisibilityByVisibility = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdContentByVisibilityByVisibilityData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/by-visibility/{visibility}',
+    ...options,
+  });
+};
+
+export const postApiProgramsByProgramIdContentSearch = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiProgramsByProgramIdContentSearchData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentSearchResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/search',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getApiProgramsByProgramIdContentStats = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiProgramsByProgramIdContentStatsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentStatsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/programs/{programId}/content/stats',
     ...options,
   });
 };

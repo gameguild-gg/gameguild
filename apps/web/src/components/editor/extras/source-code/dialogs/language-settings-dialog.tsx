@@ -1,15 +1,15 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 export interface LanguageSettingsDialogProps {
   showLanguagesDialog: boolean
   setShowLanguagesDialog: (show: boolean) => void
   allowedLanguages: Record<string, boolean>
-  setAllowedLanguages: (langs: Record<string, boolean>) => void
+  setAllowedLanguages: (langs: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void
   selectedLanguage: string
   setSelectedLanguage: (lang: string) => void
   getLanguageLabel: (lang: string) => string
@@ -25,7 +25,7 @@ export interface LanguageSettingsDialogProps {
   isPreview?: boolean
   isInitialSetup?: boolean
   activeEnvironments: Record<string, boolean>
-  setActiveEnvironments: (envs: Record<string, boolean>) => void
+  setActiveEnvironments: (envs: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void
 }
 
 export function LanguageSettingsDialog({
@@ -164,7 +164,7 @@ export function LanguageSettingsDialog({
 
         // Reset all languages to false, except txt
         if (setAllowedLanguages && allowedLanguages) {
-          setAllowedLanguages((prev) => {
+          setAllowedLanguages((prev: Record<string, boolean>) => {
             const newState = { ...prev }
             Object.keys(newState).forEach((lang) => {
               newState[lang] = lang === "txt"
@@ -180,7 +180,7 @@ export function LanguageSettingsDialog({
       } else if (activeTab === "files") {
         // Reset all languages to false, except txt
         if (setAllowedLanguages && allowedLanguages) {
-          setAllowedLanguages((prev) => {
+          setAllowedLanguages((prev: Record<string, boolean>) => {
             const newState = { ...prev }
             Object.keys(newState).forEach((lang) => {
               newState[lang] = lang === "txt"
@@ -268,19 +268,17 @@ export function LanguageSettingsDialog({
           <div className="flex relative">
             {/* Tab buttons with step indicators */}
             <button
-              className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${
-                activeTab === "environment"
-                  ? "text-primary"
-                  : activeTab === "files" || activeTab === "settings"
-                    ? "text-muted-foreground"
-                    : "text-muted-foreground"
-              }`}
+              className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${activeTab === "environment"
+                ? "text-primary"
+                : activeTab === "files" || activeTab === "settings"
+                  ? "text-muted-foreground"
+                  : "text-muted-foreground"
+                }`}
               onClick={() => setActiveTab("environment")}
             >
               <div
-                className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${
-                  activeTab === "environment" ? "bg-primary text-white" : "bg-gray-200 text-gray-600"
-                }`}
+                className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${activeTab === "environment" ? "bg-primary text-white" : "bg-gray-200 text-gray-600"
+                  }`}
               >
                 1
               </div>
@@ -291,19 +289,17 @@ export function LanguageSettingsDialog({
             <div className="flex items-center text-gray-400 mx-1">→</div>
 
             <button
-              className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${
-                activeTab === "files"
-                  ? "text-primary"
-                  : activeTab === "settings"
-                    ? "text-muted-foreground"
-                    : "text-muted-foreground"
-              }`}
+              className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${activeTab === "files"
+                ? "text-primary"
+                : activeTab === "settings"
+                  ? "text-muted-foreground"
+                  : "text-muted-foreground"
+                }`}
               onClick={() => setActiveTab("files")}
             >
               <div
-                className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${
-                  activeTab === "files" ? "bg-primary text-white" : "bg-gray-200 text-gray-600"
-                }`}
+                className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${activeTab === "files" ? "bg-primary text-white" : "bg-gray-200 text-gray-600"
+                  }`}
               >
                 2
               </div>
@@ -314,15 +310,13 @@ export function LanguageSettingsDialog({
             <div className="flex items-center text-gray-400 mx-1">→</div>
 
             <button
-              className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${
-                activeTab === "settings" ? "text-primary" : "text-muted-foreground"
-              }`}
+              className={`relative z-10 px-4 py-2 font-medium text-sm flex items-center ${activeTab === "settings" ? "text-primary" : "text-muted-foreground"
+                }`}
               onClick={() => setActiveTab("settings")}
             >
               <div
-                className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${
-                  activeTab === "settings" ? "bg-primary text-white" : "bg-gray-200 text-gray-600"
-                }`}
+                className={`flex items-center justify-center w-6 h-6 rounded-full mr-2 ${activeTab === "settings" ? "bg-primary text-white" : "bg-gray-200 text-gray-600"
+                  }`}
               >
                 3
               </div>
@@ -343,9 +337,8 @@ export function LanguageSettingsDialog({
                     <div className="flex items-center justify-between mb-2">
                       <Label
                         htmlFor="env-javascript"
-                        className={`text-sm font-medium ${
-                          activeEnvironments.javascript ? "font-bold text-primary" : ""
-                        }`}
+                        className={`text-sm font-medium ${activeEnvironments.javascript ? "font-bold text-primary" : ""
+                          }`}
                       >
                         JavaScript Environment (Pure JS)
                       </Label>
@@ -367,7 +360,7 @@ export function LanguageSettingsDialog({
                               })
 
                               // Desativa todas as linguagens primeiro
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -396,7 +389,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -442,7 +435,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -469,7 +462,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -495,9 +488,8 @@ export function LanguageSettingsDialog({
                     <div className="flex items-center justify-between mb-2">
                       <Label
                         htmlFor="env-typescript"
-                        className={`text-sm font-medium ${
-                          activeEnvironments.typescript ? "font-bold text-primary" : ""
-                        }`}
+                        className={`text-sm font-medium ${activeEnvironments.typescript ? "font-bold text-primary" : ""
+                          }`}
                       >
                         TypeScript Environment
                       </Label>
@@ -517,7 +509,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -544,7 +536,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -590,7 +582,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => ({
+                              setAllowedLanguages((prev: Record<string, boolean>) => ({
                                 ...Object.keys(prev).reduce(
                                   (acc, lang) => {
                                     acc[lang] = lang === "txt" || lang === "python"
@@ -616,7 +608,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -662,7 +654,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => ({
+                              setAllowedLanguages((prev: Record<string, boolean>) => ({
                                 ...Object.keys(prev).reduce(
                                   (acc, lang) => {
                                     acc[lang] = lang === "txt" || lang === "lua"
@@ -688,7 +680,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -734,7 +726,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -761,7 +753,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -807,7 +799,7 @@ export function LanguageSettingsDialog({
                                 c: true,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -834,7 +826,7 @@ export function LanguageSettingsDialog({
                                 c: false,
                               })
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 Object.keys(newState).forEach((lang) => {
                                   newState[lang] = lang === "txt"
@@ -882,7 +874,7 @@ export function LanguageSettingsDialog({
                         </Label>
                         <Switch
                           id={`lang-${lang}`}
-                          size="sm"
+                          className="scale-75"
                           checked={allowedLanguages[lang]}
                           onCheckedChange={(checked) => {
                             try {
@@ -891,7 +883,7 @@ export function LanguageSettingsDialog({
                                 return
                               }
 
-                              setAllowedLanguages((prev) => {
+                              setAllowedLanguages((prev: Record<string, boolean>) => {
                                 const newState = { ...prev }
                                 newState[lang] = checked
                                 return newState

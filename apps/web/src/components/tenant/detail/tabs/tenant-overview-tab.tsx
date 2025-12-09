@@ -1,15 +1,14 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import type { Tenant } from '@/lib/api/generated/types.gen';
-import {
-    Building,
-    Calendar,
-    Globe
-} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { Tenant } from '@/lib/api/generated';
+import { Building, Calendar, Globe } from 'lucide-react';
+
+type TenantWithVisibility = Tenant & { visibility?: string | number | null };
 
 interface TenantOverviewTabProps {
-    tenant: Tenant;
+    tenant: TenantWithVisibility;
 }
 
 export function TenantOverviewTab({ tenant }: TenantOverviewTabProps) {
@@ -22,6 +21,15 @@ export function TenantOverviewTab({ tenant }: TenantOverviewTabProps) {
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const mapVisibility = (visibility: TenantWithVisibility['visibility']) => {
+        const value = typeof visibility === 'number' ? visibility : String(visibility ?? '').toLowerCase();
+        if (value === 0 || value === '0' || value === 'private') return 'Private';
+        if (value === 1 || value === '1' || value === 'public') return 'Public';
+        if (value === 2 || value === '2' || value === 'restricted') return 'Restricted';
+        if (!visibility) return undefined;
+        return String(visibility);
     };
 
     return (
@@ -84,22 +92,26 @@ export function TenantOverviewTab({ tenant }: TenantOverviewTabProps) {
             </div>
 
             {/* Additional Information */}
-            {tenant.visibility && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Globe className="h-5 w-5" />
-                            Visibility Settings
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div>
-                            <label className="text-sm font-medium text-muted-foreground">Visibility</label>
-                            <p className="text-sm">{tenant.visibility}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+            {(() => {
+                const visibilityLabel = mapVisibility(tenant.visibility);
+                if (!visibilityLabel) return null;
+                return (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Globe className="h-5 w-5" />
+                                Visibility Settings
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div>
+                                <label className="text-sm font-medium text-muted-foreground">Visibility</label>
+                                <p className="text-sm">{visibilityLabel}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                );
+            })()}
         </div>
     );
 }

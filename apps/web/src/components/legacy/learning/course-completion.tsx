@@ -77,7 +77,7 @@ export function CourseCompletion({ courseId, onCertificateRequest, onContinueLea
       toast({
         title: 'Error',
         description: 'Failed to generate certificate. Please try again.',
-        variant: 'destructive',
+        variant: 'error',
       });
     } finally {
       setIsGeneratingCertificate(false);

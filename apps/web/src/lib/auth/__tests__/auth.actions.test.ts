@@ -1,7 +1,6 @@
 import { signInWithEmailAndPassword, signInWithGoogle, localSign, googleIdTokenSignIn, refreshAccessToken } from '../auth.actions';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import { environment } from '@/configs/environment';
 
 // Mock dependencies
 jest.mock('@/auth', () => ({

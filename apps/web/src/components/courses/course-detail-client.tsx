@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Clock, Users, Star, BookOpen, Play } from 'lucide-react';
 import { CourseLocationSelector } from '@/components/courses/course-location-selector';
 import { LocationBasedContent } from '@/components/courses/location-based-content';
-import type { TestingLocation } from '@/lib/api/testing-types';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Program } from '@/lib/api/generated/types.gen';
+import type { TestingLocation } from '@/lib/api/testing-types';
+import { BookOpen, Clock, Play, Star, Users } from 'lucide-react';
+import { useState } from 'react';
 
 interface CourseDetailClientProps {
   course: Program;
@@ -94,7 +94,7 @@ export function CourseDetailClient({ course, levelConfig }: CourseDetailClientPr
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {course.programContents.slice(0, 5).map((content, index) => (
+                    {course.programContents.slice(0, 5).map((content: any, index: number) => (
                       <div key={content.id || index} className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50">
                         <Play className="h-4 w-4 text-blue-400" />
                         <span className="flex-1">{content.title || `Lesson ${index + 1}`}</span>

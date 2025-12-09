@@ -1,7 +1,7 @@
 using GameGuild.Authentication.Abstractions;
 using GameGuild.Authentication.Entities;
-using DomainResponses = GameGuild.Authentication.Models.Responses;
 using ApplicationDtos = GameGuild.Authentication.DTOs;
+using DomainResponses = GameGuild.Authentication.Models.Responses;
 
 namespace GameGuild.Authentication.Mappings;
 
@@ -26,7 +26,7 @@ public static class AuthenticationMappings
             ExpiresAt = domainResponse.ExpiresAt,
             AccessTokenExpiresAt = DateTime.UtcNow.AddSeconds(domainResponse.ExpiresIn),
             RefreshTokenExpiresAt = domainResponse.ExpiresAt,
-            User = new ApplicationDtos.UserDto
+            User = new ApplicationDtos.AuthenticatedUserDto
             {
                 Id = domainResponse.UserId,
                 Email = user?.Email ?? domainResponse.Email ?? string.Empty,

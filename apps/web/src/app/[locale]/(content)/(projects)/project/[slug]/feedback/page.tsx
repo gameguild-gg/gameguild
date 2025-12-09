@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation"
 
-export default function LegacyFeedbackRedirect({ params }: { params: { slug: string } }) {
-  redirect(`/dashboard/projects/${params.slug}/feedbacks`)
+export default async function LegacyFeedbackRedirect({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+  redirect(`/dashboard/projects/${slug}/feedbacks`)
 }

@@ -1,5 +1,4 @@
-import React from 'react';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/20/solid';
+import { ChevronDown as ChevronDownIcon, ChevronUp as ChevronUpIcon } from 'lucide-react';
 import { Column, TableDisplayProps } from './types';
 
 export function TableDisplay<T extends Record<string, unknown>>({ data, columns, loading = false, emptyMessage = 'No data available', sortConfig, onSort, className = '' }: TableDisplayProps<T>) {

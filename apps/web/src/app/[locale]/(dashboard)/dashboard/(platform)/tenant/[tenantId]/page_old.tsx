@@ -42,9 +42,29 @@ interface TenantDetailPageProps {
     tenantId: string;
 }
 
+type TenantWithLegacyFields = Tenant & {
+    title?: string | null;
+    visibility?: number | null;
+    description?: string | null;
+    slug?: string | null;
+    name?: string | null;
+    id?: string | null;
+    isActive?: boolean;
+    isDeleted?: boolean;
+    isGlobal?: boolean;
+    version?: number | null;
+    createdAt?: string | null;
+    updatedAt?: string | null;
+    deletedAt?: string | null;
+    tenantPermissions?: any[];
+    localizations?: any[];
+    metadata?: any;
+    [key: string]: any;
+};
+
 function TenantDetailPage({ tenantId }: TenantDetailPageProps) {
     const router = useRouter();
-    const [tenant, setTenant] = useState<Tenant | null>(null);
+    const [tenant, setTenant] = useState<TenantWithLegacyFields | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -67,7 +87,7 @@ function TenantDetailPage({ tenantId }: TenantDetailPageProps) {
                 setLoading(true);
                 const result = await getTenantByIdAction(tenantId);
                 if (result.data) {
-                    const tenantData = result.data as Tenant;
+                    const tenantData = result.data as TenantWithLegacyFields;
                     setTenant(tenantData);
                     setBasicForm({
                         name: tenantData.name || '',
@@ -203,8 +223,8 @@ function TenantDetailPage({ tenantId }: TenantDetailPageProps) {
                                         {tenant.isActive ? 'Active' : 'Inactive'}
                                     </Badge>
 
-                                    <Badge variant={getVisibilityBadgeVariant(tenant.visibility)}>
-                                        {getAccessLevelName(tenant.visibility)}
+                                    <Badge variant={getVisibilityBadgeVariant(tenant.visibility ?? 0)}>
+                                        {getAccessLevelName(tenant.visibility ?? 0)}
                                     </Badge>
 
                                     {tenant.isDeleted && (
@@ -325,8 +345,8 @@ function TenantDetailPage({ tenantId }: TenantDetailPageProps) {
                                 </Select>
                             ) : (
                                 <div className="mt-1">
-                                    <Badge variant={getVisibilityBadgeVariant(tenant.visibility)}>
-                                        {getAccessLevelName(tenant.visibility)}
+                                    <Badge variant={getVisibilityBadgeVariant(tenant.visibility ?? 0)}>
+                                        {getAccessLevelName(tenant.visibility ?? 0)}
                                     </Badge>
                                 </div>
                             )}

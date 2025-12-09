@@ -1,13 +1,13 @@
 'use client';
 
-import React from 'react';
-import { CourseProvider } from '@/lib/courses';
-import { getCourseData } from '@/lib/courses/actions/index';
 import { CourseErrorBoundary } from '@/components/courses/course-error-boundary';
 import { CourseGridEnhanced } from '@/components/courses/course-grid-enhanced';
 import { CoursePageError } from '@/components/courses/course-page-error';
 import { CourseStates } from '@/components/courses/course-states';
-import { Program } from '@/lib/api/generated';
+import { Program } from '@/lib/api/generated/types.gen';
+import { CourseProvider } from '@/lib/courses';
+import { getCourseData } from '@/lib/courses/actions/index';
+import React from 'react';
 
 export default function CourseCatalogPage() {
   const [courses, setCourses] = React.useState<Program[]>([]);

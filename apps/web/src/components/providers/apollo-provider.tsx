@@ -48,12 +48,9 @@ export function ApolloClientProvider({ children }: PropsWithChildren) {
     });
 
     return new ApolloClient({
-      name: 'gameguild-web',
-      version: '1.0',
       ssrMode: typeof window === 'undefined',
       link: from([errorLink, authLink as unknown as ApolloLink, httpLink as unknown as ApolloLink]),
       cache: new InMemoryCache({}),
-      connectToDevTools: typeof window !== 'undefined',
       defaultOptions: {
         watchQuery: { fetchPolicy: 'cache-and-network', errorPolicy: 'all' },
         query: { fetchPolicy: 'network-only', errorPolicy: 'all' },

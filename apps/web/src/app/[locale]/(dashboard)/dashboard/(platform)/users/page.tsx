@@ -16,19 +16,25 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 interface UsersPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     page?: string;
     limit?: string;
     search?: string;
     status?: string; // active|inactive
-  };
+  }>;
 }
 
-export default async function UsersPage({ searchParams = {} }: UsersPageProps) {
-  const page = parseInt(searchParams.page || '1');
-  const limit = parseInt(searchParams.limit || '20');
-  const search = searchParams.search?.trim() || '';
-  const status = searchParams.status;
+export default async function UsersPage({ searchParams }: UsersPageProps) {
+  const sp = (await (searchParams ?? Promise.resolve({}))) as {
+    page?: string;
+    limit?: string;
+    search?: string;
+    status?: string;
+  };
+  const page = parseInt(sp.page || '1');
+  const limit = parseInt(sp.limit || '20');
+  const search = sp.search?.trim() || '';
+  const status = sp.status;
 
   try {
     // Get auth session for API calls

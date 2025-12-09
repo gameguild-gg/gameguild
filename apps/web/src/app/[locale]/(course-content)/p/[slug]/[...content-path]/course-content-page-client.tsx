@@ -28,7 +28,7 @@ export function CourseContentPageClient({
                 <Card className="transition-all duration-300 py-0">
                     <CardContent className="px-6 py-6">
                         {/* Content Body */}
-                        {content.body && (
+                        {content.body !== undefined && content.body !== null && (
                             <div className="prose max-w-none">
                                 {typeof content.body === 'string' ? (
                                     <MarkdownRenderer content={content.body} />

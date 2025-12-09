@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-import { Edit, Eye, Play, Trash2, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { EnhancedTestingLabFilters, TestingLabSession } from '../filters/enhanced-testing-lab-filter-controls';
+import { Edit, Eye, Play, Trash2, Users } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { ActionConfig, CardConfig, ColumnConfig, GenericCardView, GenericRowView, GenericTableView } from '../../common/data-display/generic-data-views';
 import { useEnhancedFilterContext } from '../../common/filters/enhanced-filter-context';
+import { EnhancedTestingLabFilters, TestingLabSession } from '../filters/enhanced-testing-lab-filter-controls';
 
 // Mock data for demonstration
 const mockSessions: TestingLabSession[] = [
@@ -175,7 +175,7 @@ function SessionsDataDisplay() {
         <div className="flex items-center gap-1">
           <Users className="h-3 w-3" />
           <span>
-            {value}/{item.maxParticipants}
+            {String(value)}/{item.maxParticipants}
           </span>
         </div>
       ),

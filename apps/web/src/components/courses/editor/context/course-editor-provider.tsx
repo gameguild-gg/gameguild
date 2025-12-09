@@ -11,6 +11,13 @@ interface CourseSession {
 }
 
 interface CourseEditorState {
+  // Basic course info
+  title: string;
+  slug: string;
+  status: 'draft' | 'published' | 'archived';
+  isValid: boolean;
+  errors: Record<string, string>;
+  // Delivery settings
   delivery: {
     mode: string;
     sessions: CourseSession[];
@@ -34,12 +41,18 @@ interface CourseEditorContextType {
   addSession: (session: Omit<CourseSession, 'id'>) => void;
   removeSession: (sessionId: string) => void;
   setTimezone: (timezone: string) => void;
+  validate: () => { isValid: boolean; errors: string[] };
 }
 
 const CourseEditorContext = createContext<CourseEditorContextType | undefined>(undefined);
 
 export function CourseEditorProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<CourseEditorState>({
+    title: '',
+    slug: '',
+    status: 'draft',
+    isValid: true,
+    errors: {},
     delivery: {
       mode: 'self-paced',
       sessions: [],
@@ -98,6 +111,12 @@ export function CourseEditorProvider({ children }: { children: React.ReactNode }
     }));
   };
 
+  const validate = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    // Stub validation - always returns valid
+    return { isValid: errors.length === 0, errors };
+  };
+
   return (
     <CourseEditorContext.Provider
       value={{
@@ -108,6 +127,7 @@ export function CourseEditorProvider({ children }: { children: React.ReactNode }
         addSession,
         removeSession,
         setTimezone,
+        validate,
       }}
     >
       {children}
