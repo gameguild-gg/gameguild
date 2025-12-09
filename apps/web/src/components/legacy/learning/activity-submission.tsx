@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertCircle, Award, Clock, Code, FileText, Loader2, Upload } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/lib/old/hooks/use-toast';
+import { AlertCircle, Award, Clock, Code, FileText, Loader2, Upload } from 'lucide-react';
+import { useState } from 'react';
 
 interface ActivitySubmissionProps {
   readonly activityId: string;
@@ -47,7 +47,7 @@ export function ActivitySubmission({ activityId, activityTitle, activityType, is
       toast({
         title: 'Maximum attempts reached',
         description: `You have used all ${maxAttempts} attempts for this activity.`,
-        variant: 'destructive',
+        variant: 'error',
       });
       return;
     }
@@ -61,7 +61,7 @@ export function ActivitySubmission({ activityId, activityTitle, activityType, is
       const result = await submitActivity({
         activityId,
         activityType,
-        submissionData,
+        content: submissionData as Record<string, unknown>,
         isGraded,
         attempt: currentAttempts + 1,
       });
@@ -83,7 +83,7 @@ export function ActivitySubmission({ activityId, activityTitle, activityType, is
       toast({
         title: 'Submission failed',
         description: 'Failed to submit activity. Please try again.',
-        variant: 'destructive',
+        variant: 'error',
       });
     } finally {
       setIsSubmitting(false);

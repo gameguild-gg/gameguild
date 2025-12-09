@@ -2,9 +2,9 @@
 
 import React from 'react';
 
-import { TestingLabActiveFilters, useTestingLabFilters } from '@/components/testing-lab/filters';
 import { useResponsiveViewMode } from '@/components/common/hooks/use-responsive-view-mode';
-import { TestingLabFilterControls } from '@/components/testing-lab';
+import { TestingLabActiveFilters, useTestingLabFilters } from '@/components/testing-lab/filters';
+import { TestingLabFilterControls } from '@/components/testing-lab/landing/testing-lab-filter-controls';
 import { SessionContent, SessionEmptyState } from '@/components/testing-lab/sessions';
 
 export function TestingSessionsContent(): React.JSX.Element {

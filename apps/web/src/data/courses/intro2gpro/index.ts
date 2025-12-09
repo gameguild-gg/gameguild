@@ -36,9 +36,6 @@ export const intro2gproProgram: Program = {
   updatedAt: '2023-01-01T00:00:00Z',
   programContents: [],
   programUsers: [],
-  productPrograms: [],
-  certificates: [],
-  feedbackSubmissions: [],
   programRatings: [],
   programWishlists: [],
 };
@@ -104,7 +101,6 @@ const intro2gproSyllabusContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'syllabus',
 };
 
 const intro2gproExpectationsContent: ProgramContent = {
@@ -128,7 +124,6 @@ const intro2gproExpectationsContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'expectations',
 };
 
 const intro2gproInterviewContent: ProgramContent = {
@@ -152,7 +147,6 @@ const intro2gproInterviewContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'interview-a-gamedev',
 };
 
 const intro2gproGamedevToolsContent: ProgramContent = {
@@ -175,7 +169,6 @@ const intro2gproGamedevToolsContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'gamedev-tools',
 };
 
 const intro2gproGamedevCareersContent: ProgramContent = {
@@ -199,7 +192,6 @@ const intro2gproGamedevCareersContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'gamedev-careers',
 };
 
 const intro2gproGamedevIssuesContent: ProgramContent = {
@@ -223,7 +215,6 @@ const intro2gproGamedevIssuesContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'gamedev-issues',
 };
 
 const intro2gproGamedevIssuesPresentationsContent: ProgramContent = {
@@ -247,7 +238,6 @@ const intro2gproGamedevIssuesPresentationsContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'gamedev-issues-presentations',
 };
 
 const intro2gproAutomationContent: ProgramContent = {
@@ -271,7 +261,6 @@ const intro2gproAutomationContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'automation',
 };
 
 const intro2gproUnityPlatformerContent: ProgramContent = {
@@ -295,7 +284,6 @@ const intro2gproUnityPlatformerContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'unity-platformer',
 };
 
 const intro2gproAssignmentContent: ProgramContent = {
@@ -318,7 +306,6 @@ const intro2gproAssignmentContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'game-development-assignment',
 };
 
 const intro2gproProductionContent: ProgramContent = {
@@ -341,7 +328,6 @@ const intro2gproProductionContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'game-production',
 };
 
 const intro2gproGameMechanicsContent: ProgramContent = {
@@ -365,7 +351,6 @@ const intro2gproGameMechanicsContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'game-mechanics',
 };
 
 const intro2gproTestingSessionContent: ProgramContent = {
@@ -389,7 +374,6 @@ const intro2gproTestingSessionContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'testing-session',
 };
 
 // Child content for gamedev-issues
@@ -413,7 +397,6 @@ const intro2gproTechnicalChallengesContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'technical-challenges',
 };
 
 const intro2gproDesignChallengesContent: ProgramContent = {
@@ -436,7 +419,6 @@ const intro2gproDesignChallengesContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'design-challenges',
 };
 
 const intro2gproBusinessChallengesContent: ProgramContent = {
@@ -459,7 +441,6 @@ const intro2gproBusinessChallengesContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'business-challenges',
 };
 
 // Wire up program contents

@@ -1,6 +1,6 @@
 'use client';
 
-import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import type { UserResponseDto } from '@/lib/api/generated';
 import { UserList } from './user-list';
 
 interface UserManagementContentProps {

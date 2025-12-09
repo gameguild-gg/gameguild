@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
 import { MapPin } from 'lucide-react';
+import Link from 'next/link';
+import { useState } from 'react';
 
 interface RoadmapMilestone {
   id: string;
@@ -74,7 +74,8 @@ export function HorizontalRoadmap() {
     },
   ];
 
-  const currentMilestone = milestones.find((m) => m.id === selectedMilestone) || milestones[4] || milestones[0];
+  const idx = milestones.findIndex((m) => m.id === selectedMilestone);
+  const currentMilestone: RoadmapMilestone = (idx >= 0 ? milestones[idx] : milestones[4] ?? milestones[0]) as RoadmapMilestone;
 
   return (
     <section className="w-full py-16 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -109,13 +110,12 @@ export function HorizontalRoadmap() {
                   <button key={milestone.id} onClick={() => setSelectedMilestone(milestone.id)} className={`relative flex flex-col items-center group transition-all duration-300 ${selectedMilestone === milestone.id ? 'z-10' : 'z-0'}`}>
                     {/* Milestone dot */}
                     <div
-                      className={`w-8 h-8 rounded-full border-4 flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                        milestone.status === 'completed'
+                      className={`w-8 h-8 rounded-full border-4 flex items-center justify-center text-xs font-bold transition-all duration-300 ${milestone.status === 'completed'
                           ? 'bg-gradient-to-r from-green-500 to-emerald-500 border-green-400 text-white shadow-lg shadow-green-500/30'
                           : milestone.status === 'current'
                             ? 'bg-gradient-to-r from-blue-500 to-purple-500 border-blue-400 text-white shadow-lg shadow-blue-500/30 animate-pulse'
                             : 'bg-gradient-to-r from-slate-600 to-slate-700 border-slate-500 text-slate-300'
-                      } ${selectedMilestone === milestone.id ? 'scale-125 shadow-xl' : 'hover:scale-110'}`}
+                        } ${selectedMilestone === milestone.id ? 'scale-125 shadow-xl' : 'hover:scale-110'}`}
                     >
                       {milestone.version}
                     </div>
@@ -144,13 +144,12 @@ export function HorizontalRoadmap() {
               <div className="mb-4">
                 <div className="w-full bg-slate-700 rounded-full h-3">
                   <div
-                    className={`h-3 rounded-full transition-all duration-500 ${
-                      currentMilestone.status === 'completed'
+                    className={`h-3 rounded-full transition-all duration-500 ${currentMilestone.status === 'completed'
                         ? 'bg-gradient-to-r from-green-500 to-emerald-500'
                         : currentMilestone.status === 'current'
                           ? 'bg-gradient-to-r from-blue-500 to-purple-500'
                           : 'bg-gradient-to-r from-slate-500 to-slate-600'
-                    }`}
+                      }`}
                     style={{ width: `${currentMilestone.progress}%` }}
                   ></div>
                 </div>

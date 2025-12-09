@@ -8,15 +8,24 @@ export interface TestResult {
 
 export type TestType = "custom" | "function" | "console"
 
+export interface TestCase {
+  type?: "custom" | "function" | "console"
+  input?: string
+  expectedOutput?: string
+  args?: any[]
+  expectedReturn?: any[]
+}
+
 export interface TestRunnerOptions {
   fileId: string
   file: CodeFile
+  fileCases: TestCase[]
   files: CodeFile[]
   selectedLanguage: ProgrammingLanguage
   addOutput: (output: string | string[]) => void
   clearTerminal: () => void
   setIsExecuting: (isExecuting: boolean) => void
-  setTestResults: (results: Record<string, { passed: boolean; actual: string; expected: string }[]>) => void
+  setTestResults: (results: Record<string, { passed: boolean; actual: string; expected: string }[]> | ((prev: Record<string, { passed: boolean; actual: string; expected: string }[]>) => Record<string, { passed: boolean; actual: string; expected: string }[]>)) => void
   normalizeOutput: (output: string) => string
 }
 

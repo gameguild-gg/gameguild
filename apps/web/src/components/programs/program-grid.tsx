@@ -3,10 +3,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Program } from '@/lib/api/generated/types.gen';
-import { Clock, Eye, DollarSign, Calendar, BookOpen } from 'lucide-react';
+import { formatDistanceToNow, parseISO } from 'date-fns';
+import { BookOpen, Calendar, Clock, DollarSign, Eye } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { formatDistanceToNow, parseISO } from 'date-fns';
 
 interface ProgramGridProps {
   programs: Program[];
@@ -37,6 +37,8 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
       case 'Archived':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      case 'Under Review':
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
@@ -55,6 +57,23 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
     }
   };
 
+  const mapStatus = (status: Program['status']) => {
+    const value = typeof status === 'number' ? status : String(status ?? 'Unknown').toLowerCase();
+    if (value === 0 || value === '0' || value === 'draft') return 'Draft';
+    if (value === 1 || value === '1' || value === 'review' || value === 'under-review') return 'Under Review';
+    if (value === 2 || value === '2' || value === 'published') return 'Published';
+    if (value === 3 || value === '3' || value === 'archived') return 'Archived';
+    return String(status ?? 'Unknown');
+  };
+
+  const mapVisibility = (visibility: Program['visibility']) => {
+    const value = typeof visibility === 'number' ? visibility : String(visibility ?? 'Unknown').toLowerCase();
+    if (value === 0 || value === '0' || value === 'private') return 'Private';
+    if (value === 1 || value === '1' || value === 'public') return 'Public';
+    if (value === 2 || value === '2' || value === 'restricted') return 'Restricted';
+    return String(visibility ?? 'Unknown');
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {programs.map((program) => (
@@ -69,11 +88,17 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
                     <BookOpen className="h-10 w-10 text-slate-400" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-1.5 left-1.5 right-1.5 flex justify-between">
-                  <Badge className={getStatusColor(program.status)}>{program.status}</Badge>
-                  <Badge className={getVisibilityColor(program.visibility)}>{program.visibility}</Badge>
-                </div>
+                <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent" />
+                {(() => {
+                  const statusLabel = mapStatus(program.status);
+                  const visibilityLabel = mapVisibility(program.visibility);
+                  return (
+                    <div className="absolute bottom-1.5 left-1.5 right-1.5 flex justify-between">
+                      <Badge className={getStatusColor(statusLabel)}>{statusLabel}</Badge>
+                      <Badge className={getVisibilityColor(visibilityLabel)}>{visibilityLabel}</Badge>
+                    </div>
+                  );
+                })()}
               </div>
             </CardHeader>
 
@@ -97,7 +122,7 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
                   </div>
                 )}
 
-                {program.productPrograms && program.productPrograms.length > 0 && (
+                {Array.isArray((program as any).productPrograms) && (program as any).productPrograms.length > 0 && (
                   <div className="flex items-center gap-1 text-xs text-slate-400">
                     <DollarSign className="h-3 w-3" />
                     Paid Program
@@ -105,20 +130,24 @@ export function ProgramGrid({ programs }: ProgramGridProps) {
                 )}
               </div>
 
-              {program.skillsProvided && program.skillsProvided.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {program.skillsProvided.slice(0, 3).map((skill) => (
-                    <Badge key={skill.id} variant="secondary" className="text-xs">
-                      {skill.name}
-                    </Badge>
-                  ))}
-                  {program.skillsProvided.length > 3 && (
-                    <Badge variant="secondary" className="text-xs">
-                      +{program.skillsProvided.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              )}
+              {(() => {
+                const skills: any[] = Array.isArray(program.skillsProvided) ? [...program.skillsProvided] : [];
+                if (skills.length === 0) return null;
+                return (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {skills.slice(0, 3).map((skill: any, idx: number) => (
+                      <Badge key={skill?.id ?? idx} variant="secondary" className="text-xs">
+                        {typeof skill === 'string' ? skill : skill?.name ?? 'Skill'}
+                      </Badge>
+                    ))}
+                    {skills.length > 3 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{skills.length - 3}
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })()}
             </CardContent>
 
             <CardFooter className="px-3 pb-3 pt-0">

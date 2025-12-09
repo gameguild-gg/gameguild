@@ -1,16 +1,15 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { DecoratorNode, type SerializedLexicalNode } from "lexical"
-import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { X, Move, Type, Play } from "lucide-react"
-import type { JSX } from "react/jsx-runtime" // Import JSX to fix the undeclared variable error
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from "lexical"
+import { Move, Play, Type, X } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import type { JSX } from "react/jsx-runtime"; // Import JSX to fix the undeclared variable error
 
-import { ImageSizeControl } from "@/components/editor/extras/image-size-control"
 import { CaptionInput } from "@/components/editor/extras/caption-input"
-import { Button } from "@/components/ui/button"
 import { ContentEditMenu, type EditMenuOption } from "@/components/editor/extras/content-edit-menu"
+import { ImageSizeControl } from "@/components/editor/extras/image-size-control"
+import { Button } from "@/components/ui/button"
 
 export interface YouTubeData {
   videoId: string
@@ -291,9 +290,10 @@ export function extractYouTubeVideoId(url: string): string | null {
   // Regular expression to match YouTube video IDs from various URL formats
   const regExp = /^.*(youtu.be\/|v\/|e\/|u\/\w+\/|embed\/|v=)([^#&?]*).*/
   const match = url.match(regExp)
+  const videoId = match?.[2]
 
-  if (match && match[2].length === 11) {
-    return match[2]
+  if (match && videoId && videoId.length === 11) {
+    return videoId
   }
 
   return null

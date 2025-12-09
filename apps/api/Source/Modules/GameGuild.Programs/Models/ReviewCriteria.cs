@@ -1,3 +1,8 @@
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
 namespace GameGuild.Modules.Programs;
 
 /// <summary>
@@ -54,23 +59,4 @@ public class ReviewCriteria : EntityBase {
   public Guid PeerReviewId { get; set; }
 
   public virtual PeerReview PeerReview { get; set; } = null!;
-}
-
-/// <summary>
-/// Status of a review
-/// </summary>
-public enum ReviewStatus {
-  Pending = 0,
-
-  InProgress = 1,
-
-  Submitted = 2,
-
-  Approved = 3,
-
-  Rejected = 4,
-
-  RequiresRevision = 5,
-
-  Escalated = 6,
 }

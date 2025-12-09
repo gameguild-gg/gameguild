@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { ReportButton } from '@/components/common/report-button';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { AlertTriangle, CheckCircle, Clock, Loader2, Star, ThumbsDown, ThumbsUp, Users } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/lib/old/hooks/use-toast';
-import { ReportButton } from '@/components/common/report-button';
+import { AlertTriangle, CheckCircle, Clock, Loader2, Star, ThumbsDown, ThumbsUp, Users } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface PeerReviewProps {
   readonly submissionId: string;
@@ -63,9 +63,11 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
   }, [rubric]);
 
   const handleCriteriaScoreChange = (criteriaName: string, value: number[]) => {
+    const newValue = value[0];
+    if (newValue === undefined) return;
     setCriteriaScores((prev) => ({
       ...prev,
-      [criteriaName]: value[0],
+      [criteriaName]: newValue,
     }));
   };
 
@@ -75,7 +77,7 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
       const totalActualScore = Object.values(criteriaScores).reduce((sum, score) => sum + score, 0);
       return Math.round((totalActualScore / totalMaxScore) * 100);
     }
-    return score[0];
+    return score[0] ?? 75;
   };
 
   const handleSubmitReview = async () => {
@@ -83,7 +85,7 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
       score: calculateOverallScore(),
       feedback,
       criteriaScores,
-      qualityRating: qualityRating[0],
+      qualityRating: qualityRating[0] ?? 4,
     };
 
     setIsSubmitting(true);
@@ -113,7 +115,7 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
       toast({
         title: 'Submission failed',
         description: 'Failed to submit review. Please try again.',
-        variant: 'destructive',
+        variant: 'error',
       });
     } finally {
       setIsSubmitting(false);
@@ -174,7 +176,7 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
               <div className="space-y-2">
                 <Slider value={score} onValueChange={setScore} max={100} step={1} className="w-full" />
                 <div className="text-center">
-                  <span className="text-lg font-mono">{score[0]}/100</span>
+                  <span className="text-lg font-mono">{score[0] ?? 0}/100</span>
                 </div>
               </div>
             </div>
@@ -204,9 +206,9 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
               <Slider value={qualityRating} onValueChange={setQualityRating} max={5} min={1} step={1} className="flex-1" />
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }, (_, i) => (
-                  <Star key={i} className={`h-4 w-4 ${i < qualityRating[0] ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} />
+                  <Star key={i} className={`h-4 w-4 ${i < (qualityRating[0] ?? 0) ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} />
                 ))}
-                <span className="ml-2 text-sm font-mono">{qualityRating[0]}/5</span>
+                <span className="ml-2 text-sm font-mono">{qualityRating[0] ?? 0}/5</span>
               </div>
             </div>
           </div>
@@ -236,7 +238,7 @@ export function PeerReview({ submissionId, submissionTitle, submissionContent, r
               <div className="flex justify-between">
                 <span>Review Quality:</span>
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: qualityRating[0] }, (_, i) => (
+                  {Array.from({ length: qualityRating[0] ?? 0 }, (_, i) => (
                     <Star key={i} className="h-3 w-3 text-yellow-500 fill-current" />
                   ))}
                 </div>
@@ -301,7 +303,7 @@ export function ReceivedPeerReviews({ submissionId }: { submissionId: string }) 
       toast({
         title: 'Error',
         description: 'Failed to accept review.',
-        variant: 'destructive',
+        variant: 'error',
       });
     }
   };
@@ -317,9 +319,9 @@ export function ReceivedPeerReviews({ submissionId }: { submissionId: string }) 
           prev.map((review) =>
             review.id === reviewId
               ? {
-                  ...review,
-                  isAccepted: false,
-                }
+                ...review,
+                isAccepted: false,
+              }
               : review,
           ),
         );
@@ -333,7 +335,7 @@ export function ReceivedPeerReviews({ submissionId }: { submissionId: string }) 
       toast({
         title: 'Error',
         description: 'Failed to reject review.',
-        variant: 'destructive',
+        variant: 'error',
       });
     }
   };
@@ -384,7 +386,7 @@ export function ReceivedPeerReviews({ submissionId }: { submissionId: string }) 
                     Rejected
                   </Badge>
                 )}
-                <ReportButton reportType="review" targetId={review.id} targetTitle={`Review by ${review.reviewerName}`} variant="ghost" size="sm" />
+                <ReportButton contentType="review" contentId={review.id} variant="ghost" size="sm" />
               </div>
             </div>
           </CardHeader>

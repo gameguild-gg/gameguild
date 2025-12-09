@@ -1,7 +1,6 @@
 import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/generated';
 
 // Markdown content imports
-import dsaSyllabus from './syllabus.md';
 import dsaExpectations from './01-introduction/expectations.md';
 import dsaIntroduction from './01-introduction/introduction.md';
 import dsaAnalysis from './02-analysis/README.md';
@@ -19,6 +18,7 @@ import dsaBst from './13-bst/README.md';
 import dsaHeap from './14-heap/README.md';
 import dsaProject from './15-project/README.md';
 import dsaFinals from './16-finals/README.md';
+import dsaSyllabus from './syllabus.md';
 
 // Program definition
 export const dsaProgram: Program = {
@@ -41,9 +41,6 @@ export const dsaProgram: Program = {
     updatedAt: '2023-01-01T00:00:00Z',
     programContents: [],
     programUsers: [],
-    productPrograms: [],
-    certificates: [],
-    feedbackSubmissions: [],
     programRatings: [],
     programWishlists: [],
 };
@@ -108,7 +105,6 @@ export const dsaSyllabusContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'syllabus',
 };
 
 export const dsaIntroductionContent: ProgramContent = {
@@ -131,7 +127,6 @@ export const dsaIntroductionContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'introduction',
 };
 
 export const dsaExpectationsContent: ProgramContent = {
@@ -154,7 +149,6 @@ export const dsaExpectationsContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'expectations',
 };
 
 export const dsaAnalysisContent: ProgramContent = {
@@ -177,7 +171,6 @@ export const dsaAnalysisContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'analysis',
 };
 
 export const dsaDynamicDataContent: ProgramContent = {
@@ -200,7 +193,6 @@ export const dsaDynamicDataContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'dynamic-data',
 };
 
 export const dsaSortingContent: ProgramContent = {
@@ -223,7 +215,6 @@ export const dsaSortingContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'sorting',
 };
 
 export const dsaDivideAndConquerContent: ProgramContent = {
@@ -246,7 +237,6 @@ export const dsaDivideAndConquerContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'divide-and-conquer',
 };
 
 export const dsaHashtablesContent: ProgramContent = {
@@ -269,7 +259,6 @@ export const dsaHashtablesContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'hashtables',
 };
 
 export const dsaMidtermContent: ProgramContent = {
@@ -292,7 +281,6 @@ export const dsaMidtermContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'midterm',
 };
 
 export const dsaStackAndQueueContent: ProgramContent = {
@@ -315,7 +303,6 @@ export const dsaStackAndQueueContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'stack-and-queue',
 };
 
 export const dsaBreakContent: ProgramContent = {
@@ -338,7 +325,6 @@ export const dsaBreakContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'break',
 };
 
 export const dsaGraphsContent: ProgramContent = {
@@ -361,7 +347,6 @@ export const dsaGraphsContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'graphs',
 };
 
 export const dsaDijkstraContent: ProgramContent = {
@@ -384,7 +369,6 @@ export const dsaDijkstraContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'dijkstra',
 };
 
 export const dsaMstContent: ProgramContent = {
@@ -407,7 +391,6 @@ export const dsaMstContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'mst',
 };
 
 export const dsaBstContent: ProgramContent = {
@@ -430,7 +413,6 @@ export const dsaBstContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'bst',
 };
 
 export const dsaHeapContent: ProgramContent = {
@@ -453,7 +435,6 @@ export const dsaHeapContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'heap',
 };
 
 export const dsaProjectContent: ProgramContent = {
@@ -476,7 +457,6 @@ export const dsaProjectContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'project',
 };
 
 export const dsaFinalsContent: ProgramContent = {
@@ -499,7 +479,6 @@ export const dsaFinalsContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'finals',
 };
 
 // Wire program contents

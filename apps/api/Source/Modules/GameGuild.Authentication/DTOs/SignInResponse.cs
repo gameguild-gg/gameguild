@@ -33,7 +33,7 @@ public class SignInResponse
     /// <summary>
     ///     User information
     /// </summary>
-    public UserDto User { get; set; } = new UserDto();
+    public AuthenticatedUserDto User { get; set; } = new AuthenticatedUserDto();
 
     /// <summary>
     ///     Current tenant ID

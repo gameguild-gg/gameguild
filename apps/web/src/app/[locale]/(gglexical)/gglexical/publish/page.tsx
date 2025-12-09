@@ -1,1 +1,3 @@
-//Coming soon
+export default function Page() {
+    return null;
+}

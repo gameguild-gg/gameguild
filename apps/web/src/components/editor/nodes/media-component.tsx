@@ -17,7 +17,6 @@ import {
   SELECTION_CHANGE_COMMAND,
 } from "lexical"
 import { Pencil } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { MediaNodeBase, type BaseMediaData } from "./base/media-node-base"
 import { UnifiedMediaEditor } from "@/components/editor/extras/media/unified-media-editor"
 

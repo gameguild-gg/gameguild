@@ -11,7 +11,7 @@ import {
   getApiProgramsByProgramIdActivityGradesStudentByProgramUserId,
   postApiProgramsByProgramIdActivityGrades,
   putApiProgramsByProgramIdActivityGradesByGradeId,
-} from '@/lib/api/generated/sdk.gen';
+} from '@/lib/api/generated';
 import type {
   DeleteApiProgramsByProgramIdActivityGradesByGradeIdData,
   GetApiProgramsByProgramIdActivityGradesContentByContentIdData,
@@ -22,7 +22,7 @@ import type {
   GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData,
   PostApiProgramsByProgramIdActivityGradesData,
   PutApiProgramsByProgramIdActivityGradesByGradeIdData,
-} from '@/lib/api/generated/types.gen';
+} from '@/lib/api/generated';
 import { revalidateTag } from 'next/cache';
 
 /**

@@ -1,15 +1,15 @@
 "use client"
 
-import type React from "react"
 import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
-import type { CodeFile, ProgrammingLanguage } from "../types"
-import { FileTabs } from "../file-tabs"
-import { CodeEditor } from "../code-editor"
-import { Terminal } from "../terminal"
+import type React from "react"
 import { useEffect } from "react"
+import { CodeEditor } from "../code-editor"
+import { FileTabs } from "../file-tabs"
+import { Terminal } from "../terminal"
+import type { CodeFile, ProgrammingLanguage } from "../types"
 
 interface SourceCodeEditorEditProps {
   // File management
@@ -24,7 +24,7 @@ interface SourceCodeEditorEditProps {
   isDarkTheme: boolean
   setIsDarkTheme: (dark: boolean) => void
   selectedLanguage: ProgrammingLanguage
-  setSelectedLanguage: (lang: ProgrammingLanguage) => void
+  setSelectedLanguage: (lang: ProgrammingLanguage | string) => void
   readonly: boolean
   setReadonly: (readonly: boolean) => void
   showExecution: boolean
@@ -49,13 +49,13 @@ interface SourceCodeEditorEditProps {
   toggleFileVisibility: (fileId: string) => void
   setMainFile: (fileId: string) => void
   deleteFile: (fileId: string) => void
-  setFileReadOnlyState: (fileId: string, state: "always" | "never" | null) => void
+  setFileReadOnlyState: (fileId: string, state: "always" | "never" | "hidden" | null) => void
   reorderFiles: (fileId: string, targetFileId: string) => void
   addNewFile: () => void
 
   // Dialog handlers
   showFileDialog: () => void
-  showRenameDialog: (fileId: string) => void
+  showRenameDialog: (fileId?: string) => void
   showImportDialog: () => void
   showConfirmDialog: () => void
   showLanguagesDialog: () => void
@@ -93,7 +93,7 @@ interface SourceCodeEditorEditProps {
   clearTerminalOnRun: boolean
   setClearTerminalOnRun: (clear: boolean) => void
   updateSourceCode: (data: any) => void
-  terminalInputRef: React.RefObject<HTMLInputElement>
+  terminalInputRef: React.RefObject<HTMLInputElement | null>
   activeTab: "terminal" | "tests"
   setActiveTab: (tab: "terminal" | "tests") => void
   testCases: any
@@ -201,8 +201,9 @@ export function SourceCodeEditorEdit({
 
       // Usar a linguagem selecionada se estiver habilitada, senão usar a primeira habilitada
       let defaultLanguage = selectedLanguage
-      if (!enabledLanguages.includes(selectedLanguage) && enabledLanguages.length > 0) {
-        defaultLanguage = enabledLanguages[0]
+      const firstEnabled = enabledLanguages[0]
+      if (!enabledLanguages.includes(selectedLanguage) && enabledLanguages.length > 0 && firstEnabled) {
+        defaultLanguage = firstEnabled
       }
 
       // Determinar a extensão do arquivo com base na linguagem padrão
@@ -303,7 +304,7 @@ export function SourceCodeEditorEdit({
         showFilePropertiesInReadMode={showFilePropertiesInReadMode}
         setShowBasicFileActionsInReadMode={setShowBasicFileActionsInReadMode}
         setShowFilePropertiesInReadMode={setShowFilePropertiesInReadMode}
-        isFileReadOnly={(file) => isFileReadOnly(file, readonly)}
+        isFileReadOnly={(file: CodeFile) => isFileReadOnly(file, readonly)}
       />
 
       {/* Code editor for editing mode */}
