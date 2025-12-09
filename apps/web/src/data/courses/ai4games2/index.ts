@@ -48,9 +48,6 @@ export const ai4games2Program: Program = {
   updatedAt: "2023-01-01T00:00:00Z",
   programContents: [],
   programUsers: [],
-  productPrograms: [],
-  certificates: [],
-  feedbackSubmissions: [],
   programRatings: [],
   programWishlists: [],
 };
@@ -114,7 +111,6 @@ export const ai4games2SyllabusContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-syllabus",
 };
 
 export const ai4games2Week01Content: ProgramContent = {
@@ -137,7 +133,6 @@ export const ai4games2Week01Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-01",
 };
 
 export const ai4games2Week01ReadingsContent: ProgramContent = {
@@ -160,7 +155,6 @@ export const ai4games2Week01ReadingsContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-01-readings",
 };
 
 export const ai4games2Week02Content: ProgramContent = {
@@ -183,7 +177,6 @@ export const ai4games2Week02Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-02",
 };
 
 export const ai4games2Week02PcgContent: ProgramContent = {
@@ -206,7 +199,6 @@ export const ai4games2Week02PcgContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-02-pcg",
 };
 
 export const ai4games2Week03Content: ProgramContent = {
@@ -229,7 +221,6 @@ export const ai4games2Week03Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-03",
 };
 
 export const ai4games2Week03AstarContent: ProgramContent = {
@@ -252,7 +243,6 @@ export const ai4games2Week03AstarContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-03-astar",
 };
 
 export const ai4games2Week04Content: ProgramContent = {
@@ -275,7 +265,6 @@ export const ai4games2Week04Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-04",
 };
 
 export const ai4games2Week04AssignmentContent: ProgramContent = {
@@ -298,7 +287,6 @@ export const ai4games2Week04AssignmentContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-04-assignment",
 };
 
 export const ai4games2Week05Content: ProgramContent = {
@@ -321,7 +309,6 @@ export const ai4games2Week05Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-05",
 };
 
 export const ai4games2Week05CsharpContent: ProgramContent = {
@@ -344,7 +331,6 @@ export const ai4games2Week05CsharpContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-05-csharp",
 };
 
 export const ai4games2Week06Content: ProgramContent = {
@@ -367,7 +353,6 @@ export const ai4games2Week06Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-06",
 };
 
 export const ai4games2Week07Content: ProgramContent = {
@@ -390,7 +375,6 @@ export const ai4games2Week07Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-07",
 };
 
 export const ai4games2Week08Content: ProgramContent = {
@@ -413,7 +397,6 @@ export const ai4games2Week08Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-08",
 };
 
 export const ai4games2Week09Content: ProgramContent = {
@@ -436,7 +419,6 @@ export const ai4games2Week09Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-09",
 };
 
 export const ai4games2Week10Content: ProgramContent = {
@@ -459,7 +441,6 @@ export const ai4games2Week10Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-10",
 };
 
 export const ai4games2Week11AssignmentContent: ProgramContent = {
@@ -482,7 +463,6 @@ export const ai4games2Week11AssignmentContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-11-assignment",
 };
 
 export const ai4games2Week11BoardContent: ProgramContent = {
@@ -505,7 +485,6 @@ export const ai4games2Week11BoardContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-11-board",
 };
 
 export const ai4games2Week12Content: ProgramContent = {
@@ -528,7 +507,6 @@ export const ai4games2Week12Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-12",
 };
 
 export const ai4games2Week13Content: ProgramContent = {
@@ -551,7 +529,6 @@ export const ai4games2Week13Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-week-13",
 };
 
 export const ai4games2ExtraContent: ProgramContent = {
@@ -574,10 +551,8 @@ export const ai4games2ExtraContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "ai4games-extras-llms",
 };
 
-ai4games2Program.productPrograms = [ai4games2ProductProgram];
 ai4games2Product.productPrograms = [ai4games2ProductProgram];
 ai4games2Program.programContents = [
   ai4games2SyllabusContent,

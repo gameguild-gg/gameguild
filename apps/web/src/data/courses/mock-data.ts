@@ -81,20 +81,20 @@ export function getProgramContentBySlug(programSlug: string, contentPath: string
     programContentsCount: program.programContents?.length,
   });
   console.log(
-    '🔍 Available slugs:',
-    program.programContents?.map((item: any) => ({ slug: item.slug, parent: item.parent, parentId: item.parentId }))
+    '🔍 Available content:',
+    program.programContents?.map((item: any) => ({ id: item.id, title: item.title, parent: item.parent, parentId: item.parentId }))
   );
 
   let content: ProgramContent | null =
     program.programContents?.find(
-      (item: any) => (item.parent === null || item.parent === undefined) && item.slug === contentPath[0]
+      (item: any) => (item.parent === null || item.parent === undefined) && (item as any).slug === contentPath[0]
     ) || null;
 
-  console.log('🔍 First level search result:', content ? { slug: content.slug, title: content.title } : 'Not found');
+  console.log('🔍 First level search result:', content ? { id: content.id, title: content.title } : 'Not found');
 
   if (contentPath.length > 1) {
     for (const slug of contentPath.slice(1)) {
-      content = content?.children?.find((item: any) => item.slug === slug) || null;
+      content = content?.children?.find((item: any) => (item as any).slug === slug) || null;
       if (!content) {
         return null;
       }

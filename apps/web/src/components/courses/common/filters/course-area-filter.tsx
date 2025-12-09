@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ProgramCategory as CourseArea } from '@/lib/api/generated/stub-types';
+import { ProgramCategory as CourseArea } from '@/lib/api/generated';
 import { ChevronDown, Code, Headphones, Layers, Palette } from 'lucide-react';
 
 interface CourseAreaFilterProps {

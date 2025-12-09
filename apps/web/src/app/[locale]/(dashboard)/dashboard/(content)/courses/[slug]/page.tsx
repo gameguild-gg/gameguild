@@ -1,4 +1,5 @@
-import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/stub-types'
+import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty } from '@/lib/api/generated/stub-types'
+import { ProgramCategory } from '@/lib/api/generated/types.gen'
 import { notFound } from 'next/navigation'
 import { getCourseBySlug } from '../actions'
 import { CourseDetails } from './course-details.client'
