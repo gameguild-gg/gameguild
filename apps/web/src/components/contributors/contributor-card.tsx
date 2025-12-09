@@ -1,7 +1,15 @@
-import React from 'react';
-import Image from 'next/image';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Contributor } from '@/lib/contributors';
+import Image from 'next/image';
+import React from 'react';
+
+interface Contributor {
+  login: string;
+  name?: string;
+  avatar_url: string;
+  contributions?: number;
+  additions?: number;
+  deletions?: number;
+}
 
 interface ContributorCardProps {
   contributor: Contributor;

@@ -1,8 +1,8 @@
 import { auth } from '@/auth';
 import { ProjectManagementContent } from '@/components/project/project-management-content';
-import { getProjectsData } from '@/lib/projects/projects.actions';
-import type { Project } from '@/lib/api/generated/types.gen';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import type { Project } from '@/lib/api/generated/stub-types';
+import { getProjectsData } from '@/lib/projects/projects.actions';
 import { Loader2 } from 'lucide-react';
 
 export default async function ProjectsPage() {

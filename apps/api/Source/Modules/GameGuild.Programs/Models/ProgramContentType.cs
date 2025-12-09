@@ -1,3 +1,8 @@
+using GameGuild.SharedKernel.Enums;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using GameGuild.Users.Entities;
 ﻿using System.ComponentModel;
 
 namespace GameGuild.Modules.Programs.Models;
@@ -11,6 +16,8 @@ namespace GameGuild.Modules.Programs.Models;
 /// Each type has specific UI rendering and business logic requirements.
 /// </remarks>
 public enum ProgramContentType {
+  [Description("Instructional lesson content")] Lesson,
+
   [Description("Instructional content page")] Page,
 
   [Description("General assignment where students submit work for evaluation")] Assignment,

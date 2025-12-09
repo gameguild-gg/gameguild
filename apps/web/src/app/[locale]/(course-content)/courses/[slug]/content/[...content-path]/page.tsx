@@ -2,9 +2,9 @@ import { getProgramBySlug, getProgramContentBySlug } from '@/data/courses/mock-d
 import type { ProgramContentDto } from '@/lib/api/generated/types.gen';
 import { getProgramContentChildren } from '@/lib/content-management/programs/programs.actions';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { CourseContentPageClient } from './course-content-page-client';
 
 interface PageProps {
@@ -128,7 +128,7 @@ export default async function ContentPage({ params }: PageProps) {
     // Mock data fallback
     console.log('🔍 Trying mock data fallback for:', { slug, contentPath });
     const mockContent = getProgramContentBySlug(slug, contentPath);
-    console.log('🔍 Mock data result:', mockContent ? { slug: mockContent.slug, title: mockContent.title } : 'Not found');
+    console.log('🔍 Mock data result:', mockContent ? { slug: (mockContent as any).slug, title: mockContent.title } : 'Not found');
     if (mockContent) {
       content = mockContent;
       // For mock data, create a simple breadcrumb with just the content

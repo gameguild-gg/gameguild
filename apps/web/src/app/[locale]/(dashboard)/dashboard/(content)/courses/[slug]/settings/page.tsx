@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ModulesContentsContentStatus } from '@/lib/api/generated/types.gen';
+import { ModulesContentsContentStatus } from '@/lib/api/generated/stub-types';
 import { archiveProgram, publishProgram, restoreProgram, unpublishProgram } from '@/lib/content-management/programs/programs.actions';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
 import { redirect } from 'next/navigation';
@@ -43,7 +43,7 @@ export default async function CourseSettingsPage({ params }: PageProps) {
     redirect(`/dashboard/courses/${slug}/settings`);
   }
 
-  const status = (program?.status ?? 0) as ModulesContentsContentStatus;
+  const status = (program?.status ?? 0) as unknown as ModulesContentsContentStatus;
   const isPublished = status === ModulesContentsContentStatus.PUBLISHED;
   const isArchived = status === ModulesContentsContentStatus.ARCHIVED;
 

@@ -1,6 +1,6 @@
 import type { ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
-import type { ExecutionResult, ExecutionContext, LanguageExecutor } from "./types"
 import { getFileContent } from "@/components/editor/extras/source-code/utils"
+import type { ExecutionContext, ExecutionResult, LanguageExecutor } from "./types"
 
 class JavaScriptExecutor implements LanguageExecutor {
   private isExecutionCancelled = false
@@ -140,7 +140,7 @@ class JavaScriptExecutor implements LanguageExecutor {
       }
 
       // Execute the code in a safe context
-      const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor
+      const AsyncFunction = Object.getPrototypeOf(async () => { }).constructor
       const executeCode = new AsyncFunction("console", "window", modifiedCode)
       await executeCode(mockConsole, window)
 
@@ -199,7 +199,7 @@ class JavaScriptExecutor implements LanguageExecutor {
     const namedExportRegex = /export\s*{\s*([^}]+)\s*}/g
     let match
     while ((match = namedExportRegex.exec(contentWithoutComments)) !== null) {
-      const exportList = match[1]
+      const exportList = (match[1] ?? '')
         .split(",")
         .map((name) => name.trim())
         .filter((name) => name.length > 0)
@@ -209,25 +209,25 @@ class JavaScriptExecutor implements LanguageExecutor {
     // Pattern 2: export function functionName()
     const exportFunctionRegex = /export\s+function\s+(\w+)/g
     while ((match = exportFunctionRegex.exec(contentWithoutComments)) !== null) {
-      namedExports.add(match[1])
+      if (match[1]) namedExports.add(match[1])
     }
 
     // Pattern 3: export const variableName =
     const exportConstRegex = /export\s+const\s+(\w+)/g
     while ((match = exportConstRegex.exec(contentWithoutComments)) !== null) {
-      namedExports.add(match[1])
+      if (match[1]) namedExports.add(match[1])
     }
 
     // Pattern 4: export let variableName =
     const exportLetRegex = /export\s+let\s+(\w+)/g
     while ((match = exportLetRegex.exec(contentWithoutComments)) !== null) {
-      namedExports.add(match[1])
+      if (match[1]) namedExports.add(match[1])
     }
 
     // Pattern 5: export var variableName =
     const exportVarRegex = /export\s+var\s+(\w+)/g
     while ((match = exportVarRegex.exec(contentWithoutComments)) !== null) {
-      namedExports.add(match[1])
+      if (match[1]) namedExports.add(match[1])
     }
 
     // Pattern 6: export default expression
@@ -235,7 +235,7 @@ class JavaScriptExecutor implements LanguageExecutor {
     match = exportDefaultRegex.exec(contentWithoutComments)
     if (match) {
       hasDefaultExport = true
-      defaultExportName = match[1]
+      defaultExportName = match[1] ?? null
     }
 
     // Pattern 7: export default function name() or export default class name
@@ -243,7 +243,7 @@ class JavaScriptExecutor implements LanguageExecutor {
     match = exportDefaultFunctionRegex.exec(contentWithoutComments)
     if (match) {
       hasDefaultExport = true
-      defaultExportName = match[2]
+      defaultExportName = match[2] ?? null
     }
 
     // Pattern 8: export default anonymous function or object
@@ -288,14 +288,14 @@ class JavaScriptExecutor implements LanguageExecutor {
       // Process active imports first
       for (const match of activeImports) {
         const [fullMatch, defaultImport, namedImports, namespaceImport, importPath] = match
-        const resolvedPath = this.resolveRelativePath(fileName, importPath, vfs)
+        const resolvedPath = this.resolveRelativePath(fileName, importPath ?? '', vfs)
 
         if (resolvedPath) {
           debugLog(`Importing: ${importPath} -> ${resolvedPath}`)
 
           // Get the imported file content
           const importedContent = resolveFile(resolvedPath)
-          const importedFileContent = vfs[resolvedPath]
+          const importedFileContent = vfs[resolvedPath] ?? ''
 
           // Extract exports from the imported file
           const {
@@ -305,8 +305,7 @@ class JavaScriptExecutor implements LanguageExecutor {
           } = this.extractExports(importedFileContent)
 
           debugLog(
-            `Available exports from ${resolvedPath}: [${Array.from(availableExports).join(", ")}]${
-              hasDefaultExport ? ` with default export${defaultExportName ? ` (${defaultExportName})` : ""}` : ""
+            `Available exports from ${resolvedPath}: [${Array.from(availableExports).join(", ")}]${hasDefaultExport ? ` with default export${defaultExportName ? ` (${defaultExportName})` : ""}` : ""
             }`,
           )
 
@@ -395,15 +394,14 @@ window.${namespaceImport} = {};
 
 // Add all named exports to namespace
 ${Array.from(availableExports)
-  .map((name) => `if (typeof ${name} !== 'undefined') { window.${namespaceImport}.${name} = ${name}; }`)
-  .join("\n")}
+                .map((name) => `if (typeof ${name} !== 'undefined') { window.${namespaceImport}.${name} = ${name}; }`)
+                .join("\n")}
 
 // Add default export to namespace if available
-${
-  hasDefaultExport && defaultExportName
-    ? `if (typeof ${defaultExportName} !== 'undefined') { window.${namespaceImport}.default = ${defaultExportName}; }`
-    : ""
-}
+${hasDefaultExport && defaultExportName
+                ? `if (typeof ${defaultExportName} !== 'undefined') { window.${namespaceImport}.default = ${defaultExportName}; }`
+                : ""
+              }
 })();
 `
           } else {

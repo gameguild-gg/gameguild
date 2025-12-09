@@ -1,28 +1,28 @@
 "use client"
 
-import type React from "react"
-import { GripVertical } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { CodeFile, ProgrammingLanguage } from "../types"
-import { FileTabs } from "../file-tabs"
-import { CodeEditor } from "../code-editor"
-import { Terminal } from "../terminal"
-import { SettingsPanel } from "../settings-panel"
+import { GripVertical } from "lucide-react"
+import type React from "react"
 import { ContentEditMenu, type EditMenuOption } from "../../content-edit-menu"
+import { CodeEditor } from "../code-editor"
+import { FileTabs } from "../file-tabs"
+import { SettingsPanel } from "../settings-panel"
+import { Terminal } from "../terminal"
+import type { CodeFile, ProgrammingLanguage } from "../types"
 
 interface SourceCodeEditorViewProps {
   // File management
   files: CodeFile[]
   activeFileId: string
   setActiveFileId: (id: string) => void
-  activeFile: CodeFile
+  activeFile?: CodeFile
   activeFileContent: string
 
   // UI state
   isDarkTheme: boolean
   setIsDarkTheme: (dark: boolean) => void
   selectedLanguage: ProgrammingLanguage
-  setSelectedLanguage: (lang: ProgrammingLanguage) => void
+  setSelectedLanguage: (lang: ProgrammingLanguage | string) => void
   readonly: boolean
   showExecution: boolean
   showSettings: boolean
@@ -43,12 +43,12 @@ interface SourceCodeEditorViewProps {
   toggleFileVisibility: (fileId: string) => void
   setMainFile: (fileId: string) => void
   deleteFile: (fileId: string) => void
-  setFileReadOnlyState: (fileId: string, state: "always" | "never" | null) => void
+  setFileReadOnlyState: (fileId: string, state: "always" | "never" | "hidden" | null) => void
   reorderFiles: (fileId: string, targetFileId: string) => void
 
   // Dialog handlers
   showFileDialog: () => void
-  showRenameDialog: (fileId: string) => void
+  showRenameDialog: (fileId?: string) => void
   showImportDialog: () => void
   showConfirmDialog: () => void
   showLanguagesDialog: () => void
@@ -86,7 +86,7 @@ interface SourceCodeEditorViewProps {
   clearTerminalOnRun: boolean
   setClearTerminalOnRun: (clear: boolean) => void
   updateSourceCode: (data: any) => void
-  terminalInputRef: React.RefObject<HTMLInputElement>
+  terminalInputRef: React.RefObject<HTMLInputElement | null>
   activeTab: "terminal" | "tests"
   setActiveTab: (tab: "terminal" | "tests") => void
   showTests: boolean
@@ -220,18 +220,20 @@ export function SourceCodeEditorView({
         className={cn("bg-background font-mono text-sm relative", readonly ? "opacity-90" : "")}
         style={{ overflow: "visible" }}
       >
-        <CodeEditor
-          codeEditorHeight={codeEditorHeight}
-          activeFileLanguage={activeFile.language}
-          activeFileContent={activeFileContent}
-          isDarkTheme={isDarkTheme}
-          readonly={isFileReadOnly(activeFile, readonly)}
-          isEditing={false}
-          updateActiveFileContent={updateActiveFileContent}
-          handleCodeEditorResize={handleCodeEditorResize}
-          onEditorMount={handleEditorMount}
-          isAutocompleteEnabled={isAutocompleteEnabled}
-        />
+        {activeFile && (
+          <CodeEditor
+            codeEditorHeight={codeEditorHeight}
+            activeFileLanguage={activeFile.language}
+            activeFileContent={activeFileContent}
+            isDarkTheme={isDarkTheme}
+            readonly={isFileReadOnly(activeFile, readonly)}
+            isEditing={false}
+            updateActiveFileContent={updateActiveFileContent}
+            handleCodeEditorResize={handleCodeEditorResize}
+            onEditorMount={handleEditorMount}
+            isAutocompleteEnabled={isAutocompleteEnabled}
+          />
+        )}
         {/* Drag handle para redimensionar o editor */}
         <div
           className={cn(
@@ -301,30 +303,30 @@ export function SourceCodeEditorView({
         <SettingsPanel
           isDarkTheme={isDarkTheme}
           readonly={readonly}
-          setReadonly={() => { } } // No-op in view mode
+          setReadonly={() => { }} // No-op in view mode
           showExecution={showExecution}
-          setShowExecution={() => { } } // No-op in view mode
+          setShowExecution={() => { }} // No-op in view mode
           showTests={showTests}
-          setShowTests={() => { } } // No-op in view mode
+          setShowTests={() => { }} // No-op in view mode
           updateSourceCode={updateSourceCode} setSelectedLanguage={function (language: ProgrammingLanguage): void {
             throw new Error("Function not implemented.")
-          } } fontSize={0} setFontSize={function (size: number): void {
+          }} fontSize={0} setFontSize={function (size: number): void {
             throw new Error("Function not implemented.")
-          } } tabSize={0} setTabSize={function (size: number): void {
+          }} tabSize={0} setTabSize={function (size: number): void {
             throw new Error("Function not implemented.")
-          } } wordWrap={false} setWordWrap={function (wrap: boolean): void {
+          }} wordWrap={false} setWordWrap={function (wrap: boolean): void {
             throw new Error("Function not implemented.")
-          } } showLineNumbers={false} setShowLineNumbers={function (show: boolean): void {
+          }} showLineNumbers={false} setShowLineNumbers={function (show: boolean): void {
             throw new Error("Function not implemented.")
-          } } showMinimap={false} setShowMinimap={function (show: boolean): void {
+          }} showMinimap={false} setShowMinimap={function (show: boolean): void {
             throw new Error("Function not implemented.")
-          } } setIsDarkTheme={function (dark: boolean): void {
+          }} setIsDarkTheme={function (dark: boolean): void {
             throw new Error("Function not implemented.")
-          } } clearTerminalOnRun={false} setClearTerminalOnRun={function (clear: boolean): void {
+          }} clearTerminalOnRun={false} setClearTerminalOnRun={function (clear: boolean): void {
             throw new Error("Function not implemented.")
-          } } setShowSettings={function (show: boolean): void {
+          }} setShowSettings={function (show: boolean): void {
             throw new Error("Function not implemented.")
-          } } selectedLanguage={"javascript"}        />
+          }} selectedLanguage={"javascript"} />
       )}
     </div>
   )

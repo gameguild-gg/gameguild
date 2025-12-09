@@ -9,8 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import type { RoleTemplate } from '@/lib/actions/testing-lab-roles';
 import { assignUserRoleAction } from '@/lib/actions/testing-lab-user-roles';
 import { searchTestingLabUsersAction, type SearchUserResult } from '@/lib/actions/testing-lab-user-search';
-import type { TestingLocation as ApiTestingLocation, UserRoleAssignment as GeneratedUserRoleAssignment } from '@/lib/api/generated/types.gen';
-import { ModuleType } from '@/lib/api/generated/types.gen';
+import type { TestingLocation as ApiTestingLocation } from '@/lib/api/generated/stub-types';
+import { ModuleType } from '@/lib/api/generated/stub-types';
 import { Edit, Search, Trash2, UserCheck, UserMinus, UserPlus, Users } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -38,13 +38,16 @@ export interface TestingLabManager {
 
 export type TestingLocation = ApiTestingLocation;
 
-export interface UserRoleAssignment extends GeneratedUserRoleAssignment {
+export interface UserRoleAssignment {
   id: string;
   userEmail?: string;
   userName?: string;
   roleTemplateId?: string;
   assignedAt?: string;
   isActive: boolean;
+  userId: string;
+  roleName?: string;
+  module: string | ModuleType;
 }
 
 export interface CollaboratorsSettingsProps {

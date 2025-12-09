@@ -1,7 +1,7 @@
 "use client"
 
-import { useRef, useEffect } from "react"
 import * as monaco from "monaco-editor"
+import { useEffect, useRef } from "react"
 import type { VegaLiteValidationResult } from "./vega-lite-validator"
 import { VegaLiteValidator } from "./vega-lite-validator"
 
@@ -29,35 +29,21 @@ export function MonacoVegaLiteEditor({
   useEffect(() => {
     if (!containerRef.current) return
 
-    // Configure Monaco editor for JSON with offline Vega/Vega-Lite schemas when available
+    // Configure Monaco editor for JSON; fetch Vega/Vega-Lite schemas at runtime to avoid bundler export issues
     (async () => {
-      let vegaLiteSchema: any | undefined
-      let vegaSchema: any | undefined
-
-      // Try to get schemas from the vega-schema package first (offline)
-      try {
-        // Common path in vega-schema package
-        const mod = await import("vega-schema/vega-lite/v5.json")
-        vegaLiteSchema = (mod as any).default || mod
-      } catch {
-        // Fallbacks commonly used by other packages
+      async function fetchJson(url: string) {
         try {
-          const mod = await import("vega-lite/build/vega-lite-schema.json")
-          vegaLiteSchema = (mod as any).default || mod
-        } catch {}
+          const res = await fetch(url)
+          if (!res.ok) return undefined
+          return await res.json()
+        } catch {
+          return undefined
+        }
       }
 
-      try {
-        const mod = await import("vega-schema/vega/v5.json")
-        vegaSchema = (mod as any).default || mod
-      } catch {
-        try {
-          const mod = await import("vega/build/vega-schema.json")
-          vegaSchema = (mod as any).default || mod
-        } catch {}
-      }
+      const vegaLiteSchema = await fetchJson('https://cdn.jsdelivr.net/npm/vega-lite@5/build/vega-lite-schema.json')
+      const vegaSchema = await fetchJson('https://cdn.jsdelivr.net/npm/vega@5/build/vega-schema.json')
 
-      // Build the schemas array; keep the official URIs so $ref targets resolve locally
       const schemas: monaco.languages.json.DiagnosticsOptions["schemas"] = []
       if (vegaLiteSchema) {
         schemas.push({
@@ -65,12 +51,6 @@ export function MonacoVegaLiteEditor({
           fileMatch: ["*"],
           schema: vegaLiteSchema as any,
         })
-      } else {
-        // Last resort: still register the URI so Monaco knows the base, but without content it would try network
-        schemas.push({
-          uri: "https://vega.github.io/schema/vega-lite/v5.json",
-          fileMatch: ["*"],
-        } as any)
       }
 
       if (vegaSchema) {
@@ -83,7 +63,7 @@ export function MonacoVegaLiteEditor({
 
       monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
         validate: true,
-        enableSchemaRequest: false, // avoid network fetch; rely on provided schemas
+        enableSchemaRequest: false,
         schemas,
       })
     })()
@@ -282,8 +262,8 @@ export function MonacoVegaLiteEditor({
   }, [theme])
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       style={{ height: typeof height === "number" ? `${height}px` : height }}
       className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden"
     />

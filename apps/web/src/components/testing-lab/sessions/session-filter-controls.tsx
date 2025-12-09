@@ -1,10 +1,11 @@
 'use client';
 
+import { PeriodType } from '@/components/common/filters/filter-context';
+import { PeriodSelector } from '@/components/common/filters/period-selector';
 import { SessionSearchBar } from './session-search-bar';
 import { SessionStatusFilter } from './session-status-filter';
 import { SessionTypeFilter } from './session-type-filter';
 import { SessionViewToggle } from './session-view-toggle';
-import { PeriodSelector } from '@/components/common/filters/period-selector';
 
 interface SessionFilterControlsProps {
   searchTerm: string;
@@ -13,8 +14,8 @@ interface SessionFilterControlsProps {
   onToggleStatus: (status: string) => void;
   selectedSessionTypes: string[];
   onToggleSessionType: (type: string) => void;
-  selectedPeriod: string;
-  onPeriodChange: (period: string) => void;
+  selectedPeriod: PeriodType;
+  onPeriodChange: (period: PeriodType) => void;
   viewMode: 'cards' | 'row' | 'table';
   onViewModeChange: (mode: 'cards' | 'row' | 'table') => void;
   hideViewToggle?: boolean;

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Tenant } from '@/lib/api/generated/types.gen';
+import type { Tenant } from '@/lib/api/generated';
 import { updateTenantClient } from '@/lib/admin/tenants/tenant-client-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
