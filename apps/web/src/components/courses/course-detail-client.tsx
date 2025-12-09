@@ -5,7 +5,7 @@ import { LocationBasedContent } from '@/components/courses/location-based-conten
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { Program } from '@/lib/api/generated/stub-types';
+import type { Program } from '@/lib/api/generated/types.gen';
 import type { TestingLocation } from '@/lib/api/testing-types';
 import { BookOpen, Clock, Play, Star, Users } from 'lucide-react';
 import { useState } from 'react';
