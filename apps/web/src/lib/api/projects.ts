@@ -57,7 +57,7 @@ function mapApiProjectToProject(apiProject: ApiProject): Project {
 function mapStatusToContentStatus(status: 'development' | 'beta' | 'released' | 'archived'): ContentStatus {
     switch (status) {
         case 'development': return ContentStatus.DRAFT;
-        case 'beta': return ContentStatus.UNDER_REVIEW;
+        case 'beta': return ContentStatus.REVIEW;
         case 'released': return ContentStatus.PUBLISHED;
         case 'archived': return ContentStatus.ARCHIVED;
         default: return ContentStatus.DRAFT;
@@ -68,7 +68,7 @@ function mapStatusToContentStatus(status: 'development' | 'beta' | 'released' | 
 function mapContentStatusToStatus(status?: ContentStatus): 'development' | 'beta' | 'released' | 'archived' {
     switch (status) {
         case ContentStatus.DRAFT: return 'development';
-        case ContentStatus.UNDER_REVIEW: return 'beta';
+        case ContentStatus.REVIEW: return 'beta';
         case ContentStatus.PUBLISHED: return 'released';
         case ContentStatus.ARCHIVED: return 'archived';
         default: return 'development';

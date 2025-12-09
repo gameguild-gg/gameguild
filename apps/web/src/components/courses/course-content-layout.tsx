@@ -1,6 +1,6 @@
 'use client';
 
-import { ProgramContent } from '@/lib/api/generated/stub-types';
+import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { cn } from '@/lib/utils';
 import { CourseContentSidebar } from './course-content-sidebar';
 import { useSidebar } from './sidebar-context';

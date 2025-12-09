@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Program } from '@/lib/api/generated/stub-types';
+import { Program } from '@/lib/api/generated/types.gen';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Calendar, Clock, DollarSign, Eye, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
@@ -39,6 +39,8 @@ export function ProgramTable({ programs }: ProgramTableProps) {
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
       case 'Archived':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+      case 'Under Review':
+        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
@@ -55,6 +57,23 @@ export function ProgramTable({ programs }: ProgramTableProps) {
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
+  };
+
+  const mapStatus = (status: Program['status']) => {
+    const value = typeof status === 'number' ? status : String(status ?? 'Unknown').toLowerCase();
+    if (value === 0 || value === '0' || value === 'draft') return 'Draft';
+    if (value === 1 || value === '1' || value === 'review' || value === 'under-review') return 'Under Review';
+    if (value === 2 || value === '2' || value === 'published') return 'Published';
+    if (value === 3 || value === '3' || value === 'archived') return 'Archived';
+    return String(status ?? 'Unknown');
+  };
+
+  const mapVisibility = (visibility: Program['visibility']) => {
+    const value = typeof visibility === 'number' ? visibility : String(visibility ?? 'Unknown').toLowerCase();
+    if (value === 0 || value === '0' || value === 'private') return 'Private';
+    if (value === 1 || value === '1' || value === 'public') return 'Public';
+    if (value === 2 || value === '2' || value === 'restricted') return 'Restricted';
+    return String(visibility ?? 'Unknown');
   };
 
   return (
@@ -80,27 +99,37 @@ export function ProgramTable({ programs }: ProgramTableProps) {
                   <div>
                     <div className="font-medium text-slate-200 line-clamp-1">{program.title}</div>
                     {program.description && <div className="text-sm text-slate-400 line-clamp-1 mt-0.5">{program.description}</div>}
-                    {program.skillsProvided && program.skillsProvided.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {program.skillsProvided.slice(0, 2).map((skill: { id: string; tag?: { name?: string } }) => (
-                          <Badge key={skill.id} variant="secondary" className="text-xs">
-                            {skill.tag?.name || 'Skill'}
-                          </Badge>
-                        ))}
-                        {program.skillsProvided.length > 2 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{program.skillsProvided.length - 2}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
+                    {(() => {
+                      const skills: any[] = Array.isArray(program.skillsProvided) ? [...program.skillsProvided] : [];
+                      if (skills.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {skills.slice(0, 2).map((skill: any, idx: number) => (
+                            <Badge key={skill?.id ?? idx} variant="secondary" className="text-xs">
+                              {typeof skill === 'string' ? skill : skill?.tag?.name || 'Skill'}
+                            </Badge>
+                          ))}
+                          {skills.length > 2 && (
+                            <Badge variant="secondary" className="text-xs">
+                              +{skills.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </TableCell>
                 <TableCell className="py-2">
-                  <Badge className={getStatusColor(program.status?.toString() || 'Draft')}>{program.status?.toString() || 'Draft'}</Badge>
+                  {(() => {
+                    const statusLabel = mapStatus(program.status);
+                    return <Badge className={getStatusColor(statusLabel)}>{statusLabel}</Badge>;
+                  })()}
                 </TableCell>
                 <TableCell className="py-2">
-                  <Badge className={getVisibilityColor(program.visibility?.toString() || 'Private')}>{program.visibility?.toString() || 'Private'}</Badge>
+                  {(() => {
+                    const visibilityLabel = mapVisibility(program.visibility);
+                    return <Badge className={getVisibilityColor(visibilityLabel)}>{visibilityLabel}</Badge>;
+                  })()}
                 </TableCell>
                 <TableCell className="py-2">
                   <div className="flex items-center gap-1 text-slate-400">

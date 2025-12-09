@@ -3,7 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { getProgramBySlug } from '@/data/courses/mock-data';
-import { Program } from '@/lib/api/generated/stub-types';
+import { Program } from '@/lib/api/generated/types.gen';
 import { BookOpen } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -30,7 +30,7 @@ export default function CourseContentPage() {
     if (program && program.programContents && program.programContents.length > 0) {
       const firstContent = program.programContents[0];
       if (firstContent) {
-        const firstContentSlug = firstContent.slug;
+        const firstContentSlug = (firstContent as any).slug ?? firstContent.id;
         router.replace(`/p/${slug}/${firstContentSlug}`);
       }
     }
