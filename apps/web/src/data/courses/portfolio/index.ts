@@ -48,9 +48,6 @@ export const portfolioProgram: Program = {
   updatedAt: "2023-01-01T00:00:00Z",
   programContents: [],
   programUsers: [],
-  productPrograms: [],
-  certificates: [],
-  feedbackSubmissions: [],
   programRatings: [],
   programWishlists: [],
 };
@@ -113,7 +110,6 @@ export const portfolioSyllabusContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "portfolio-syllabus",
 };
 
 export const portfolioWeek01Lecture01Content: ProgramContent = {
@@ -136,7 +132,6 @@ export const portfolioWeek01Lecture01Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "introduction-portfolio-development",
 };
 
 export const portfolioWeek01Assignment01Content: ProgramContent = {
@@ -159,7 +154,6 @@ export const portfolioWeek01Assignment01Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "first-portfolio-assignment",
 };
 
 export const portfolioWeek01Assignment02Content: ProgramContent = {
@@ -182,7 +176,6 @@ export const portfolioWeek01Assignment02Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "second-portfolio-assignment",
 };
 
 export const portfolioWeek02Lecture02Content: ProgramContent = {
@@ -205,7 +198,6 @@ export const portfolioWeek02Lecture02Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "portfolio-planning",
 };
 
 export const portfolioWeek02Assignment03Content: ProgramContent = {
@@ -228,7 +220,6 @@ export const portfolioWeek02Assignment03Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "portfolio-planning-assignment",
 };
 
 export const portfolioWeek02Assignment04Content: ProgramContent = {
@@ -251,7 +242,6 @@ export const portfolioWeek02Assignment04Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "advanced-portfolio-assignment",
 };
 
 export const portfolioWeek03LectureContent: ProgramContent = {
@@ -274,7 +264,6 @@ export const portfolioWeek03LectureContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "content-creation",
 };
 
 export const portfolioWeek03Assignment05Content: ProgramContent = {
@@ -297,7 +286,6 @@ export const portfolioWeek03Assignment05Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "content-creation-assignment",
 };
 
 export const portfolioWeek04LectureContent: ProgramContent = {
@@ -320,7 +308,6 @@ export const portfolioWeek04LectureContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "design-principles",
 };
 
 export const portfolioWeek04Assignment06Content: ProgramContent = {
@@ -343,7 +330,6 @@ export const portfolioWeek04Assignment06Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "design-principles-assignment",
 };
 
 export const portfolioWeek05LectureContent: ProgramContent = {
@@ -366,7 +352,6 @@ export const portfolioWeek05LectureContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "technical-implementation",
 };
 
 export const portfolioWeek05Assignment07Content: ProgramContent = {
@@ -389,7 +374,6 @@ export const portfolioWeek05Assignment07Content: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "technical-implementation-assignment",
 };
 
 export const portfolioWeek05ActivityContent: ProgramContent = {
@@ -412,7 +396,6 @@ export const portfolioWeek05ActivityContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "hands-on-activity",
 };
 
 export const portfolioWeek06LectureContent: ProgramContent = {
@@ -435,7 +418,6 @@ export const portfolioWeek06LectureContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "deployment-hosting",
 };
 
 export const portfolioWeek06AssignmentContent: ProgramContent = {
@@ -458,7 +440,6 @@ export const portfolioWeek06AssignmentContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "deployment-assignment",
 };
 
 export const portfolioWeek07LectureContent: ProgramContent = {
@@ -481,7 +462,6 @@ export const portfolioWeek07LectureContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "seo-analytics",
 };
 
 export const portfolioWeek07AssignmentContent: ProgramContent = {
@@ -504,7 +484,6 @@ export const portfolioWeek07AssignmentContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "seo-assignment",
 };
 
 export const portfolioWeek08LectureContent: ProgramContent = {
@@ -527,7 +506,6 @@ export const portfolioWeek08LectureContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "performance-optimization",
 };
 
 export const portfolioWeek08AssignmentContent: ProgramContent = {
@@ -550,7 +528,6 @@ export const portfolioWeek08AssignmentContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "performance-assignment",
 };
 
 export const portfolioWeek08ActivityContent: ProgramContent = {
@@ -573,7 +550,6 @@ export const portfolioWeek08ActivityContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "performance-activity",
 };
 
 export const portfolioWeek09LectureContent: ProgramContent = {
@@ -596,7 +572,6 @@ export const portfolioWeek09LectureContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "advanced-features",
 };
 
 export const portfolioWeek09AssignmentContent: ProgramContent = {
@@ -619,7 +594,6 @@ export const portfolioWeek09AssignmentContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "advanced-features-assignment",
 };
 
 export const portfolioWeek10AssignmentContent: ProgramContent = {
@@ -642,7 +616,6 @@ export const portfolioWeek10AssignmentContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "final-assignment",
 };
 
 export const portfolioWeek11LectureContent: ProgramContent = {
@@ -665,7 +638,6 @@ export const portfolioWeek11LectureContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "portfolio-review",
 };
 
 export const portfolioWeek11ActivityContent: ProgramContent = {
@@ -688,7 +660,6 @@ export const portfolioWeek11ActivityContent: ProgramContent = {
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
-  slug: "final-activity",
 };
 
 portfolioProgram.programContents = [
@@ -721,6 +692,5 @@ portfolioProgram.programContents = [
 ];
 
 portfolioProduct.productPrograms = [portfolioProductProgram];
-portfolioProgram.productPrograms = [portfolioProductProgram];
 
 export default portfolioProgram;

@@ -1,7 +1,7 @@
 import { CourseContentLayoutClient } from '@/components/courses/course-content-layout';
 import { SidebarProvider } from '@/components/courses/sidebar-context';
 import { getProgramBySlug } from '@/data/courses/mock-data';
-import { ProgramContent } from '@/lib/api/generated/stub-types';
+import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { getTopLevelProgramContent } from '@/lib/content-management/programs/programs.actions';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
 import { notFound } from 'next/navigation';

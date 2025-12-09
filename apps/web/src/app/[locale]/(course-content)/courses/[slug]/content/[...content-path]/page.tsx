@@ -1,5 +1,5 @@
 import { getProgramBySlug, getProgramContentBySlug } from '@/data/courses/mock-data';
-import type { ProgramContentDto } from '@/lib/api/generated/stub-types';
+import type { ProgramContentDto } from '@/lib/api/generated/types.gen';
 import { getProgramContentChildren } from '@/lib/content-management/programs/programs.actions';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
 import { ChevronRight } from 'lucide-react';
@@ -128,7 +128,7 @@ export default async function ContentPage({ params }: PageProps) {
     // Mock data fallback
     console.log('🔍 Trying mock data fallback for:', { slug, contentPath });
     const mockContent = getProgramContentBySlug(slug, contentPath);
-    console.log('🔍 Mock data result:', mockContent ? { slug: mockContent.slug, title: mockContent.title } : 'Not found');
+    console.log('🔍 Mock data result:', mockContent ? { slug: (mockContent as any).slug, title: mockContent.title } : 'Not found');
     if (mockContent) {
       content = mockContent;
       // For mock data, create a simple breadcrumb with just the content

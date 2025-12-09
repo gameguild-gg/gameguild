@@ -3,7 +3,7 @@
 // STUB: Projects server actions are stubbed because backend endpoints are not available.
 // These stubs preserve compilation while mappings to enabled modules are clarified.
 
-import { AccessLevel, ContentStatus } from '@/lib/api/generated/stub-types';
+import { AccessLevel, ContentStatus } from '@/lib/api/generated/types.gen';
 
 export type ProjectAccessLevel = AccessLevel;
 export type ProjectContentStatus = ContentStatus;

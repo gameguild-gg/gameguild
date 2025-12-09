@@ -43,9 +43,6 @@ export const gamePublishingProgram: Program = {
   updatedAt: '2023-01-01T00:00:00Z',
   programContents: [],
   programUsers: [],
-  productPrograms: [],
-  certificates: [],
-  feedbackSubmissions: [],
   programRatings: [],
   programWishlists: [],
 };
@@ -71,7 +68,6 @@ const gamePublishingSyllabusContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'syllabus',
 };
 
 const gamePublishingDesktopContent: ProgramContent = {
@@ -94,7 +90,6 @@ const gamePublishingDesktopContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'desktop',
 };
 
 const gamePublishingMobileContent: ProgramContent = {
@@ -117,7 +112,6 @@ const gamePublishingMobileContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'mobile',
 };
 
 const gamePublishingConsoleContent: ProgramContent = {
@@ -140,7 +134,6 @@ const gamePublishingConsoleContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'console',
 };
 
 const gamePublishingHtml5Content: ProgramContent = {
@@ -163,7 +156,6 @@ const gamePublishingHtml5Content: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'html5',
 };
 
 const gamePublishingSteamContent: ProgramContent = {
@@ -186,7 +178,6 @@ const gamePublishingSteamContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'steam',
 };
 
 const gamePublishingEpicGamesStoreContent: ProgramContent = {
@@ -209,7 +200,6 @@ const gamePublishingEpicGamesStoreContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'epic-games-store',
 };
 
 const gamePublishingGogContent: ProgramContent = {
@@ -232,7 +222,6 @@ const gamePublishingGogContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'gog',
 };
 
 const gamePublishingMicrosoftStoreContent: ProgramContent = {
@@ -255,7 +244,6 @@ const gamePublishingMicrosoftStoreContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'microsoft-store',
 };
 
 const gamePublishingGooglePlayContent: ProgramContent = {
@@ -278,7 +266,6 @@ const gamePublishingGooglePlayContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'google-play',
 };
 
 const gamePublishingAppStoreContent: ProgramContent = {
@@ -301,7 +288,6 @@ const gamePublishingAppStoreContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'app-store',
 };
 
 const gamePublishingNintendoSwitchContent: ProgramContent = {
@@ -324,7 +310,6 @@ const gamePublishingNintendoSwitchContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'nintendo-switch',
 };
 
 const gamePublishingPlaystationStoreContent: ProgramContent = {
@@ -347,7 +332,6 @@ const gamePublishingPlaystationStoreContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'playstation-store',
 };
 
 const gamePublishingXboxContent: ProgramContent = {
@@ -370,7 +354,6 @@ const gamePublishingXboxContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'xbox',
 };
 
 const gamePublishingOculusQuestContent: ProgramContent = {
@@ -393,7 +376,6 @@ const gamePublishingOculusQuestContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'oculus-quest',
 };
 
 const gamePublishingPokiContent: ProgramContent = {
@@ -416,7 +398,6 @@ const gamePublishingPokiContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'poki',
 };
 
 const gamePublishingCrazyGamesContent: ProgramContent = {
@@ -439,7 +420,6 @@ const gamePublishingCrazyGamesContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'crazy-games',
 };
 
 const gamePublishingSelfHostingContent: ProgramContent = {
@@ -462,7 +442,6 @@ const gamePublishingSelfHostingContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'self-hosting',
 };
 
 const gamePublishingGithubPagesContent: ProgramContent = {
@@ -485,7 +464,6 @@ const gamePublishingGithubPagesContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'github-pages',
 };
 
 const gamePublishingFirebaseHostingContent: ProgramContent = {
@@ -508,7 +486,6 @@ const gamePublishingFirebaseHostingContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'firebase-hosting',
 };
 
 const gamePublishingNetlifyContent: ProgramContent = {
@@ -531,7 +508,6 @@ const gamePublishingNetlifyContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'netlify',
 };
 
 const gamePublishingVercelContent: ProgramContent = {
@@ -554,7 +530,6 @@ const gamePublishingVercelContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'vercel',
 };
 
 const gamePublishingItchioContent: ProgramContent = {
@@ -577,7 +552,6 @@ const gamePublishingItchioContent: ProgramContent = {
   contentInteractions: [],
   createdAt: '2023-01-01T00:00:00Z',
   updatedAt: '2023-01-01T00:00:00Z',
-  slug: 'itchio',
 };
 
 // Wire program contents

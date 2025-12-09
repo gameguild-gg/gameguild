@@ -3,7 +3,8 @@
 import { PeriodType } from '@/components/common/filters/filter-context';
 import { PeriodSelector } from '@/components/common/filters/period-selector';
 import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
-import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty, ProgramCategory } from '@/lib/api/generated/stub-types';
+import { ProgramCategory } from '@/lib/api/generated';
+import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty } from '@/lib/api/generated/stub-types';
 import { CourseAreaFilter } from './course-area-filter';
 import { CourseLevelFilter } from './course-level-filter';
 import { CourseSearchBar } from './course-search-bar';

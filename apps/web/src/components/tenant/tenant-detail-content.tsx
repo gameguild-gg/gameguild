@@ -9,12 +9,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { tenantQueries, useUpdateTenant } from '@/lib/queries/tenants.query';
-import type { ModulesTenantsTenantDomain, ModulesTenantsTenantUserGroup } from '@/lib/api/generated';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, ArrowLeft, Building, Calendar, Copy, Edit, Loader2, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+
+type ModulesTenantsTenantDomain = any;
+type ModulesTenantsTenantUserGroup = any;
 
 interface TenantDetailContentProps {
     tenantId: string;
@@ -54,15 +56,15 @@ export function TenantDetailContent({ tenantId }: TenantDetailContentProps) {
         error
     } = useQuery(tenantQueries.detail(tenantId));
 
-    const { 
-        data: domains = [] 
+    const {
+        data: domains = []
     } = useQuery(tenantQueries.domainsList(tenantId));
-    
-    const { 
-        data: userGroups = [] 
+
+    const {
+        data: userGroups = []
     } = useQuery(tenantQueries.userGroupsList(tenantId));    // Mutations
     const updateTenantMutation = useUpdateTenant();
-    
+
     // Handle success/error states
     useEffect(() => {
         if (updateTenantMutation.isSuccess) {
