@@ -4,7 +4,7 @@ import { CourseErrorBoundary } from '@/components/courses/course-error-boundary'
 import { CourseGridEnhanced } from '@/components/courses/course-grid-enhanced';
 import { CoursePageError } from '@/components/courses/course-page-error';
 import { CourseStates } from '@/components/courses/course-states';
-import { Program } from '@/lib/api/generated/stub-types';
+import { Program } from '@/lib/api/generated/types.gen';
 import { CourseProvider } from '@/lib/courses';
 import { getCourseData } from '@/lib/courses/actions/index';
 import React from 'react';

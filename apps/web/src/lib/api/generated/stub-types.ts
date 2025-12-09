@@ -40,28 +40,7 @@ export enum ModuleType {
 
 // Add other stub types as needed for disabled modules
 
-// STUB: Added to satisfy missing imports from disabled/legacy modules
-export enum AccessLevel {
-  Public = 'Public',
-  Private = 'Private',
-  Restricted = 'Restricted',
-  // Also add uppercase aliases for compatibility
-  PUBLIC = 'Public',
-  PRIVATE = 'Private',
-  RESTRICTED = 'Restricted',
-}
-
-// STUB: Content status placeholder for legacy references
-export enum ContentStatus {
-  Draft = 'Draft',
-  Published = 'Published',
-  Archived = 'Archived',
-  // Also add uppercase and other values for compatibility
-  DRAFT = 'Draft',
-  PUBLISHED = 'Published',
-  ARCHIVED = 'Archived',
-  UNDER_REVIEW = 'Under Review',
-}
+// NOTE: Avoid exporting enums that conflict with generated OpenAPI types.
 
 // STUB: Testing Session interface for disabled testing-lab module
 export interface TestingSession {
@@ -151,26 +130,7 @@ export type PostApiPostsData = any;
 export const postApiPosts = async (_options?: any): Promise<{ data?: any; error?: { message: string } }> => ({ data: {} });
 
 // STUB: Program-related enums referenced in dashboard course pages
-export enum ProgramCategory {
-  PROGRAMMING = 'programming',
-  DATA_SCIENCE = 'data-science',
-  WEB_DEVELOPMENT = 'web-development',
-  MOBILE_DEVELOPMENT = 'mobile-development',
-  GAME_DEVELOPMENT = 'game-development',
-  AI = 'ai',
-  CYBERSECURITY = 'cybersecurity',
-  DEV_OPS = 'devops',
-  DATABASE = 'database',
-  BUSINESS = 'business',
-  DESIGN = 'design',
-  MARKETING = 'marketing',
-  PROJECT_MANAGEMENT = 'project-management',
-  PERSONAL_DEVELOPMENT = 'personal-development',
-  CREATIVE_ARTS = 'creative-arts',
-  SCIENCE = 'science',
-  LANGUAGE = 'language',
-  OTHER = 'other',
-}
+// Note: AccessLevel, ContentStatus, and ProgramCategory are available from the generated types.gen module
 
 export enum ModulesProgramsProgramDifficulty {
   BEGINNER = 'beginner',
@@ -186,22 +146,11 @@ export enum ModulesContentsContentStatus {
   ARCHIVED = 'archived',
 }
 
-// STUB: Program type placeholder for disabled/legacy modules
-export type Program = any;
+// Note: Program, ProgramContentDto, ProgramContent, CreateContentDto, Project,
+// PricingDto, Tenant and related types are available from the generated types.gen module
 
-// STUB: ProgramContentDto for course content pages
-export type ProgramContentDto = any;
-
-// STUB: ProgramContent for course content layout
-export type ProgramContent = any;
-
-// STUB: CreateContentDto for creating course content
-export type CreateContentDto = any;
-
-// STUB: Project type for disabled modules
+// STUB: Project type for disabled modules (keeping for legacy compatibility)
 export type Project = any;
-
-// STUB: ProjectVersion type for disabled modules
 export type ProjectVersion = any;
 
 // STUB: User types (may be partially available)
@@ -210,13 +159,7 @@ export type UserResponseDto = any;
 // STUB: Program alias for compatibility
 export type ModulesProgramsProgram = any;
 
-// STUB: ProgramDifficulty alias
-export enum ProgramDifficulty {
-  BEGINNER = 'beginner',
-  INTERMEDIATE = 'intermediate',
-  ADVANCED = 'advanced',
-  EXPERT = 'expert',
-}
+// ProgramDifficulty stub removed to avoid conflicts with generated enums
 
 // STUB: Testing Lab types
 export type TestingFeedback = any;
@@ -226,15 +169,6 @@ export enum LocationStatus {
   MAINTENANCE = 1,
 }
 export type UserRoleAssignment = any;
-
-// STUB: Commerce/Pricing types
-export type PricingDto = any;
-
-// STUB: Tenant types
-export type Tenant = any;
-export type ModulesTenantsTenant = any;
-export type ModulesTenantsTenantDomain = any;
-export type ModulesTenantsTenantUserGroup = any;
 
 // ================================
 // Additional Stub Types
@@ -254,20 +188,14 @@ export type UpdateTestingLocationDto = any;
 export type TestingLabPermissions = any;
 export type TestingLabFilterControls = any;
 
-// STUB: Activity/Grading types
-export type ActivityGradeDto = any;
+// Note: ActivityGradeDto is available from the generated types.gen module
 
 // STUB: Posts types
 export type CreatePostDto = any;
 export type PostsPageDto = any;
 
 // STUB: Commerce/Subscription types
-export enum SubscriptionStatus {
-  ACTIVE = 'active',
-  CANCELLED = 'cancelled',
-  EXPIRED = 'expired',
-  PENDING = 'pending',
-}
+// SubscriptionStatus stub removed to avoid conflicts with generated enums
 
 // STUB: Module permission types
 export type ModuleAction = any;
@@ -276,12 +204,7 @@ export type ModulePermission = any;
 // STUB: Product (commerce)
 export type Product = any;
 
-// STUB: Visibility enum
-export enum Visibility {
-  PUBLIC = 'public',
-  PRIVATE = 'private',
-  UNLISTED = 'unlisted',
-}
+// Visibility stub removed to avoid conflicts with generated enums
 
 // ================================
 // Stub SDK Functions (disabled modules)
@@ -344,15 +267,7 @@ export type PostApiPaymentByIdRefundData = any;
 export type ModuleRole = any;
 export type PermissionConstraint = any;
 
-// STUB: Payment types
-export enum PaymentStatus {
-  PENDING = 'pending',
-  PROCESSING = 'processing',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-  REFUNDED = 'refunded',
-}
+// PaymentStatus stub removed to avoid conflicts with generated enums
 
 // ================================
 // Additional Stub SDK Functions
@@ -378,3 +293,31 @@ export const putApiSubscriptionsById = async (_options?: any): StubApiResult<any
 export const deleteApiSubscriptionsById = async (_options?: any): StubApiResult<any> => ({ data: {} });
 export const postApiSubscriptionsByIdCancel = async (_options?: any): StubApiResult<any> => ({ data: {} });
 export const postApiSubscriptionsByIdRenew = async (_options?: any): StubApiResult<any> => ({ data: {} });
+
+// ================================
+// Legacy Stubs (from legacy-stubs.ts)
+// ================================
+// Temporary legacy stubs to satisfy legacy project form imports.
+// These endpoints are no longer present in the generated API client.
+// TODO: Remove this section once the legacy project form is migrated to the current API.
+
+export interface LegacyProject {
+  imageUrl?: string;
+  [key: string]: unknown;
+}
+
+export interface LegacyApiResponse<T = unknown> {
+  data?: T;
+}
+
+export interface LegacyRequestOptions {
+  // Generic shape matching what legacy callers expect
+  path?: Record<string, unknown>;
+  headers?: Record<string, string>;
+  body?: unknown;
+}
+
+export async function getApiProjectsSlugBySlug(_options: LegacyRequestOptions = {}): Promise<LegacyApiResponse<LegacyProject>> {
+  // Placeholder implementation; returns empty response to avoid runtime failures.
+  return { data: undefined };
+}

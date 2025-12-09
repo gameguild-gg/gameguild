@@ -3,7 +3,7 @@
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ProgramContent } from '@/lib/api/generated/stub-types';
+import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { cn } from '@/lib/utils';
 import { BarChart3, ClipboardList, Code, FileText, Folder, FolderOpen, HelpCircle, MessageSquare, Trophy } from 'lucide-react';
 import Link from 'next/link';
@@ -47,7 +47,7 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const contentSlug = item.slug || item.id || 'untitled';
+  const contentSlug = (item as any).slug || item.id || 'untitled';
   const currentPath = parentPath ? `${parentPath}/${contentSlug}` : contentSlug;
   const href = `/p/${courseSlug}/${currentPath}`;
   const isActive = pathname === href;
@@ -55,7 +55,7 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
 
   const hasChildren = item.children && item.children.length > 0;
   const hasActiveChild = hasChildren && item.children?.some((child: ProgramContent) => {
-    const childSlug = child.slug || child.id || 'untitled';
+    const childSlug = (child as any).slug || child.id || 'untitled';
     const childPath = `${currentPath}/${childSlug}`;
     const childHref = `/p/${courseSlug}/${childPath}`;
     return pathname === childHref || pathname.startsWith(`${childHref}/`);
