@@ -2,7 +2,7 @@
 
 import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
 import { Card, CardContent } from '@/components/ui/card';
-import { ProgramContentDto } from '@/lib/api/generated/stub-types';
+import { ProgramContentDto } from '@/lib/api/generated/types.gen';
 
 interface CourseContentPageClientProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,7 +28,7 @@ export function CourseContentPageClient({
                 <Card className="transition-all duration-300 py-0">
                     <CardContent className="px-6 py-6">
                         {/* Content Body */}
-                        {content.body && (
+                        {content.body !== undefined && content.body !== null && (
                             <div className="prose max-w-none">
                                 {typeof content.body === 'string' ? (
                                     <MarkdownRenderer content={content.body} />

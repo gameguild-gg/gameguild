@@ -18,7 +18,7 @@ import { Plus, X } from 'lucide-react';
 
 // Import types from the generated API
 // import type { ProjectReadable, ProjectWritable } from '@/lib/api/generated';
-import { getApiProjectsSlugBySlug, postApiProjects } from '@/lib/api/generated/legacy-stubs';
+import { getApiProjectsSlugBySlug, postApiProjects } from '@/lib/api/generated/stub-types';
 
 // Define a simple error response type for generic error handling
 interface ApiErrorResponse {

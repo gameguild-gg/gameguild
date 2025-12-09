@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { CreateContentDto, ProgramContent } from '@/lib/api/generated/stub-types';
+import type { CreateContentDto, ProgramContent } from '@/lib/api/generated/types.gen';
 import { createProgramContent, deleteProgramContent, getTopLevelProgramContent, reorderProgramContent } from '@/lib/content-management/programs/programs.actions';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
 import { ChevronRight } from 'lucide-react';
@@ -103,7 +103,7 @@ export default async function CourseContentPage({ params }: PageProps) {
               {items.length === 0 && <div className="text-muted-foreground">No content yet.</div>}
               {items.map((c, idx) => {
                 // Generate content slug for navigation
-                const contentSlug = c.slug || c.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || c.id;
+                const contentSlug = (c as any).slug || c.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || c.id;
 
                 return (
                   <div key={c.id} className="flex items-center justify-between border rounded p-3">

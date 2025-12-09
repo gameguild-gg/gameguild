@@ -23,7 +23,7 @@ import type {
   GetProgramRecentData,
   GetProgramSearchData,
   GetProgramSlugBySlugData,
-  GameGuildModulesProgramsSearchContentDto as ModulesProgramsSearchContentDto,
+  SearchContentDto as ModulesProgramsSearchContentDto,
   PostProgramByIdCloneData,
   PostProgramByIdContentData,
   PostProgramByIdContentReorderData,
@@ -31,8 +31,8 @@ import type {
   PostProgramData,
   PutProgramByIdContentByContentIdData,
   PutProgramByIdData,
-  GameGuildModulesProgramsModelsProgramContentType as SourceModulesProgramsModelsProgramContentType,
-  GameGuildModulesProgramsModelsVisibility as Visibility,
+  ProgramContentType as SourceModulesProgramsModelsProgramContentType,
+  Visibility,
 } from '@/lib/api/generated';
 import {
   deleteProgramById,
