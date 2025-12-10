@@ -11,10 +11,12 @@ export function PreviewAudio({ node }: { node: SerializedAudioNode }) {
     return null
   }
 
-  const { src, title, artist, caption, size = 100 } = node.data
+  const { src, title, artist, caption, size = 100 } = node.data as any
 
   // Verificar se é um áudio incorporado
   const getAudioEmbedInfo = (url: string): { type: string; id: string } | null => {
+    if (!url) return null
+    
     // YouTube
     const youtubeRegex = /(?:youtube\.com\/(?:[^/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i
     const youtubeMatch = url.match(youtubeRegex)
@@ -49,7 +51,7 @@ export function PreviewAudio({ node }: { node: SerializedAudioNode }) {
       const url = new URL(src)
       const pathSegments = url.pathname.split("/")
       const filename = pathSegments[pathSegments.length - 1]
-      return decodeURIComponent(filename.split(".")[0])
+      return filename ? decodeURIComponent(filename.split(".")[0] || "") : "Audio"
     } catch (e) {
       return "Audio"
     }

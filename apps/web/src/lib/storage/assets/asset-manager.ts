@@ -1,0 +1,546 @@
+import type {
+  AssetMetadata,
+  AssetUsage,
+  AssetIndex,
+  AssetData,
+  SaveAssetParams,
+  SaveAssetResult,
+} from "./types"
+
+/**
+ * AssetManager handles storage and management of media assets
+ * Assets are stored in IndexedDB with a separate assets.json index
+ */
+export class AssetManager {
+  private db: IDBDatabase | null = null
+  private isInitialized = false
+
+  private readonly DB_NAME = "GGAssetsDB"
+  private readonly DB_VERSION = 1
+  private readonly ASSETS_STORE = "assets"
+  private readonly INDEX_STORE = "asset_index"
+  private readonly INDEX_KEY = "main_index"
+
+  /**
+   * Initialize the AssetManager and IndexedDB
+   */
+  async init(): Promise<void> {
+    if (this.isInitialized) return
+
+    console.log("AssetManager: Initializing...")
+
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.DB_NAME, this.DB_VERSION)
+
+      request.onerror = () => {
+        console.error("AssetManager: Failed to open IndexedDB", request.error)
+        reject(request.error)
+      }
+      request.onsuccess = () => {
+        this.db = request.result
+        this.isInitialized = true
+        console.log("AssetManager: Initialized successfully")
+        resolve()
+      }
+
+      request.onupgradeneeded = (event) => {
+        console.log("AssetManager: Database upgrade needed")
+        const db = (event.target as IDBOpenDBRequest).result
+
+        // Create assets store
+        if (!db.objectStoreNames.contains(this.ASSETS_STORE)) {
+          console.log(`AssetManager: Creating object store: ${this.ASSETS_STORE}`)
+          db.createObjectStore(this.ASSETS_STORE, { keyPath: "metadata.id" })
+        }
+
+        // Create index store
+        if (!db.objectStoreNames.contains(this.INDEX_STORE)) {
+          console.log(`AssetManager: Creating object store: ${this.INDEX_STORE}`)
+          db.createObjectStore(this.INDEX_STORE, { keyPath: "key" })
+        }
+      }
+    })
+  }
+
+  /**
+   * Generate SHA1 hash from data
+   */
+  private async generateSHA1(data: string | ArrayBuffer): Promise<string> {
+    let buffer: ArrayBuffer
+
+    if (typeof data === "string") {
+      // Convert data URL to ArrayBuffer
+      if (data.startsWith("data:")) {
+        const base64 = data.split(",")[1]
+        if (!base64) {
+          throw new Error("Invalid data URL format")
+        }
+        const binaryString = atob(base64)
+        const bytes = new Uint8Array(binaryString.length)
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i)
+        }
+        buffer = bytes.buffer
+      } else {
+        // Regular string
+        const encoder = new TextEncoder()
+        buffer = encoder.encode(data).buffer
+      }
+    } else {
+      buffer = data
+    }
+
+    const hashBuffer = await crypto.subtle.digest("SHA-1", buffer)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+    return hashHex
+  }
+
+  /**
+   * Load the asset index from IndexedDB
+   */
+  private async loadIndex(): Promise<AssetIndex> {
+    if (!this.db) throw new Error("AssetManager not initialized")
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.INDEX_STORE], "readonly")
+      const store = transaction.objectStore(this.INDEX_STORE)
+      const request = store.get(this.INDEX_KEY)
+
+      request.onsuccess = () => {
+        const result = request.result
+        if (result && result.index) {
+          resolve(result.index)
+        } else {
+          // Create new index
+          const newIndex: AssetIndex = {
+            version: "1.0",
+            lastUpdated: new Date().toISOString(),
+            assets: {},
+          }
+          resolve(newIndex)
+        }
+      }
+      request.onerror = () => reject(request.error)
+    })
+  }
+
+  /**
+   * Save the asset index to IndexedDB
+   */
+  private async saveIndex(index: AssetIndex): Promise<void> {
+    if (!this.db) throw new Error("AssetManager not initialized")
+
+    index.lastUpdated = new Date().toISOString()
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.INDEX_STORE], "readwrite")
+      const store = transaction.objectStore(this.INDEX_STORE)
+      const request = store.put({ key: this.INDEX_KEY, index })
+
+      request.onsuccess = () => {
+        console.log(`Asset index saved: ${Object.keys(index.assets).length} assets`)
+        resolve()
+      }
+      request.onerror = () => {
+        console.error("Failed to save asset index", request.error)
+        reject(request.error)
+      }
+    })
+  }
+
+  /**
+   * Save an asset to storage
+   */
+  async saveAsset(params: SaveAssetParams): Promise<SaveAssetResult> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    console.log("AssetManager: Starting saveAsset", { 
+      hasFile: !!params.file, 
+      hasDataUrl: !!params.dataUrl, 
+      hasUrlSource: !!params.urlSource 
+    })
+
+    try {
+      let dataUrl: string
+      let fileName: string
+      let mimeType: string
+      let size: number
+      let origin: string
+
+      // Determine the source and prepare data
+      if (params.file) {
+        // File upload
+        fileName = params.file.name
+        mimeType = params.file.type
+        size = params.file.size
+        origin = "upload"
+        dataUrl = await this.fileToDataUrl(params.file)
+      } else if (params.dataUrl) {
+        // Data URL (already converted)
+        dataUrl = params.dataUrl
+        origin = "data"
+        // Extract MIME type from data URL
+        const matches = dataUrl.match(/^data:([^;]+);/)
+        mimeType = matches && matches[1] ? matches[1] : "application/octet-stream"
+        // Estimate size from data URL
+        const base64 = dataUrl.split(",")[1]
+        size = base64 ? Math.ceil((base64.length * 3) / 4) : 0
+        fileName = `asset-${Date.now()}`
+      } else if (params.urlSource) {
+        // URL source
+        dataUrl = params.urlSource
+        origin = "url"
+        mimeType = "unknown"
+        size = 0
+        fileName = params.urlSource.split("/").pop() || `url-asset-${Date.now()}`
+      } else {
+        return {
+          success: false,
+          error: "No file, dataUrl, or urlSource provided",
+        }
+      }
+
+      // Generate SHA1 hash
+      const sha1hash = await this.generateSHA1(dataUrl)
+      console.log(`AssetManager: Generated SHA1 hash: ${sha1hash}`)
+
+      // Load index
+      const index = await this.loadIndex()
+      console.log(`AssetManager: Loaded index with ${Object.keys(index.assets).length} assets`)
+
+      // Check if asset already exists in store
+      const existingAsset = await this.getAssetFromStore(sha1hash)
+      const isNewAsset = !existingAsset
+      console.log(`AssetManager: Asset ${isNewAsset ? 'is new' : 'already exists'}`)
+
+      let metadata: AssetMetadata
+
+      if (isNewAsset) {
+        // Create new metadata
+        metadata = {
+          id: sha1hash,
+          name: fileName,
+          origin,
+          author: params.author,
+          license: params.license,
+          sha1hash,
+          size,
+          mimeType,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+
+        // Save asset data to store
+        const assetData: AssetData = {
+          metadata,
+          data: dataUrl,
+        }
+        console.log(`AssetManager: Saving new asset to store: ${sha1hash}`)
+        await this.saveAssetToStore(assetData)
+      } else {
+        // Use existing metadata
+        metadata = existingAsset.metadata
+        metadata.updatedAt = new Date().toISOString()
+        
+        // Update metadata in store
+        const assetData: AssetData = {
+          metadata,
+          data: existingAsset.data,
+        }
+        await this.saveAssetToStore(assetData)
+      }
+
+      // Update usage tracking in index (separate from asset metadata)
+      if (params.projectId && params.nodeId) {
+        let usageList = index.assets[sha1hash] || []
+        const existingUsage = usageList.find((u) => u.projectId === params.projectId)
+        
+        if (existingUsage) {
+          if (!existingUsage.nodeIds.includes(params.nodeId)) {
+            existingUsage.nodeIds.push(params.nodeId)
+          }
+        } else {
+          usageList.push({
+            projectId: params.projectId,
+            nodeIds: [params.nodeId],
+          })
+        }
+        
+        index.assets[sha1hash] = usageList
+        console.log(`AssetManager: Updating index with usage tracking`)
+        await this.saveIndex(index)
+      }
+
+      // Return asset URL (using the SHA1 hash as identifier)
+      const assetUrl = `asset://${sha1hash}`
+      console.log(`AssetManager: Asset saved successfully, URL: ${assetUrl}`)
+
+      return {
+        success: true,
+        assetId: sha1hash,
+        assetUrl,
+        metadata,
+      }
+    } catch (error) {
+      console.error("AssetManager: Failed to save asset:", error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      }
+    }
+  }
+
+  /**
+   * Convert File to data URL
+   */
+  private fileToDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  /**
+   * Save asset data to IndexedDB
+   */
+  private async saveAssetToStore(assetData: AssetData): Promise<void> {
+    if (!this.db) throw new Error("AssetManager not initialized")
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.ASSETS_STORE], "readwrite")
+      const store = transaction.objectStore(this.ASSETS_STORE)
+      const request = store.put(assetData)
+
+      request.onsuccess = () => {
+        console.log(`Asset saved to IndexedDB: ${assetData.metadata.id} (${assetData.metadata.name})`)
+        resolve()
+      }
+      request.onerror = () => {
+        console.error(`Failed to save asset to IndexedDB: ${assetData.metadata.id}`, request.error)
+        reject(request.error)
+      }
+    })
+  }
+
+  /**
+   * Get an asset from store by ID (internal method)
+   */
+  private async getAssetFromStore(assetId: string): Promise<AssetData | null> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    if (!this.db) throw new Error("AssetManager not initialized")
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.ASSETS_STORE], "readonly")
+      const store = transaction.objectStore(this.ASSETS_STORE)
+      const request = store.get(assetId)
+
+      request.onsuccess = () => resolve(request.result || null)
+      request.onerror = () => reject(request.error)
+    })
+  }
+
+  /**
+   * Get an asset by ID (public method - returns data and metadata)
+   */
+  async getAsset(assetId: string): Promise<AssetData | null> {
+    return this.getAssetFromStore(assetId)
+  }
+
+  /**
+   * Get asset URL (data URL) by asset ID
+   */
+  async getAssetUrl(assetId: string): Promise<string | null> {
+    const asset = await this.getAsset(assetId)
+    return asset ? asset.data : null
+  }
+
+  /**
+   * Delete an asset
+   */
+  async deleteAsset(assetId: string, projectId?: string, nodeId?: string): Promise<boolean> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    try {
+      const index = await this.loadIndex()
+      const usageList = index.assets[assetId]
+
+      if (!usageList) {
+        console.warn(`Asset ${assetId} not found in index`)
+        // Asset may exist in store but not tracked, delete from store anyway
+        await this.deleteAssetFromStore(assetId)
+        return true
+      }
+
+      // If projectId and nodeId are provided, remove only that usage
+      if (projectId && nodeId) {
+        const usage = usageList.find((u: AssetUsage) => u.projectId === projectId)
+        if (usage) {
+          usage.nodeIds = usage.nodeIds.filter((id: string) => id !== nodeId)
+          if (usage.nodeIds.length === 0) {
+            index.assets[assetId] = usageList.filter((u: AssetUsage) => u.projectId !== projectId)
+          }
+        }
+
+        // If no more usages, delete the asset entirely
+        const updatedUsageList = index.assets[assetId]
+        if (updatedUsageList && updatedUsageList.length === 0) {
+          delete index.assets[assetId]
+          await this.deleteAssetFromStore(assetId)
+        }
+
+        await this.saveIndex(index)
+        return true
+      }
+
+      // If no projectId/nodeId, delete the asset entirely
+      delete index.assets[assetId]
+      await this.deleteAssetFromStore(assetId)
+      await this.saveIndex(index)
+      return true
+    } catch (error) {
+      console.error("Failed to delete asset:", error)
+      return false
+    }
+  }
+
+  /**
+   * Delete asset from IndexedDB store
+   */
+  private async deleteAssetFromStore(assetId: string): Promise<void> {
+    if (!this.db) throw new Error("AssetManager not initialized")
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.ASSETS_STORE], "readwrite")
+      const store = transaction.objectStore(this.ASSETS_STORE)
+      const request = store.delete(assetId)
+
+      request.onsuccess = () => resolve()
+      request.onerror = () => reject(request.error)
+    })
+  }
+
+  /**
+   * List all assets
+   */
+  async listAssets(): Promise<AssetMetadata[]> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.ASSETS_STORE], "readonly")
+      const store = transaction.objectStore(this.ASSETS_STORE)
+      const request = store.getAll()
+
+      request.onsuccess = () => {
+        const assets: AssetMetadata[] = request.result.map((assetData: AssetData) => assetData.metadata)
+        resolve(assets)
+      }
+      request.onerror = () => reject(request.error)
+    })
+  }
+
+  /**
+   * Get assets used by a specific project
+   */
+  async getAssetsForProject(projectId: string): Promise<AssetMetadata[]> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    const index = await this.loadIndex()
+    const assetIds: string[] = []
+
+    // Find all assets used by this project
+    for (const assetId in index.assets) {
+      const usageList = index.assets[assetId]
+      if (usageList && usageList.some((u) => u.projectId === projectId)) {
+        assetIds.push(assetId)
+      }
+    }
+
+    // Fetch metadata for these assets
+    const assets: AssetMetadata[] = []
+    for (const assetId of assetIds) {
+      const assetData = await this.getAssetFromStore(assetId)
+      if (assetData) {
+        assets.push(assetData.metadata)
+      }
+    }
+
+    return assets
+  }
+
+  /**
+   * Clean up unused assets (assets with no usages)
+   */
+  async cleanupUnusedAssets(): Promise<number> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    const index = await this.loadIndex()
+    let deletedCount = 0
+
+    for (const assetId in index.assets) {
+      const usageList = index.assets[assetId]
+      if (usageList && usageList.length === 0) {
+        delete index.assets[assetId]
+        await this.deleteAssetFromStore(assetId)
+        deletedCount++
+      }
+    }
+
+    if (deletedCount > 0) {
+      await this.saveIndex(index)
+    }
+
+    return deletedCount
+  }
+
+  /**
+   * Get storage statistics
+   */
+  async getStats(): Promise<{
+    totalAssets: number
+    totalSize: number
+    usedAssets: number
+    unusedAssets: number
+  }> {
+    const assets = await this.listAssets()
+    const index = await this.loadIndex()
+    
+    const totalSize = assets.reduce((sum, asset) => sum + asset.size, 0)
+    let usedAssets = 0
+    let unusedAssets = 0
+
+    for (const asset of assets) {
+      const usageList = index.assets[asset.id] || []
+      if (usageList.length > 0) {
+        usedAssets++
+      } else {
+        unusedAssets++
+      }
+    }
+
+    return {
+      totalAssets: assets.length,
+      totalSize,
+      usedAssets,
+      unusedAssets,
+    }
+  }
+}
+
+// Export singleton instance
+export const assetManager = new AssetManager()
