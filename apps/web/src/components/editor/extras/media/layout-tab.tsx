@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import type { BaseMediaData } from "@/components/editor/nodes/base/media-node-base"
+import { AssetImage } from "./asset-image"
 
 interface LayoutTabProps {
   items: BaseMediaData[]
@@ -468,7 +469,7 @@ export function LayoutTab({ items, onItemsChange, columns, onColumnsChange }: La
                     {/* Item Preview */}
                     <div className="aspect-video bg-gray-200 dark:bg-gray-700 rounded overflow-hidden">
                       {slot.type === "image" && slot.src && (
-                        <img src={slot.src} alt="" className="w-full h-full object-cover" />
+                        <AssetImage src={slot.src} alt="" className="w-full h-full object-cover" />
                       )}
                       {slot.type !== "image" && (
                         <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">

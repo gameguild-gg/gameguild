@@ -1,6 +1,7 @@
 "use client"
 
 import type { SerializedImageNode } from "../../nodes/image-node"
+import { AssetImage } from "../../extras/media/asset-image"
 
 export function PreviewImage({ node }: { node: SerializedImageNode }) {
   if (!node?.data) {
@@ -13,7 +14,7 @@ export function PreviewImage({ node }: { node: SerializedImageNode }) {
   return (
     <div className="my-4 relative">
       <div className="relative flex justify-center">
-        <img src={src || "/placeholder.svg"} alt={alt} style={{ width: `${size}%` }} className="h-auto rounded-lg" />
+        <AssetImage src={src || "/placeholder.svg"} alt={alt} style={{ width: `${size}%` }} className="h-auto rounded-lg" />
       </div>
       {caption && <div className="mt-2 text-sm text-muted-foreground text-center">{caption}</div>}
     </div>

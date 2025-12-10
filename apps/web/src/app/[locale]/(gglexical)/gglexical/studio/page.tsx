@@ -934,6 +934,7 @@ export default function Page() {
                   onLoadingChange={(setLoading) => {
                     setLoadingRef.current = setLoading
                   }}
+                  projectId={currentProjectId}
                 />
               </div>
             </div>

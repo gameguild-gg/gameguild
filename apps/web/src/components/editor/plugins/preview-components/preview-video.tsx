@@ -78,7 +78,6 @@ function EmbeddedVideoPreview({
 
 export function PreviewVideo({ node }: { node: SerializedVideoNode }) {
   const [hasError, setHasError] = useState(false)
-  const embedInfo = getVideoEmbedInfo(node.data?.src)
 
   if (!node?.data) {
     console.error("Invalid video node structure:", node)
@@ -86,6 +85,7 @@ export function PreviewVideo({ node }: { node: SerializedVideoNode }) {
   }
 
   const { src, alt, caption, size = 100 } = node.data
+  const embedInfo = src ? getVideoEmbedInfo(src) : null
 
   const renderErrorMessage = () => (
     <div

@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useRef, useState, useContext, useEffect } from "react"
 import { AlertCircle, Upload, X, Trash2, Plus, Send, Settings, Zap, ImageIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -13,15 +13,18 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { CompressionSettingsDialog, type CompressionSettings } from "@/components/editor/extras/compressor/compression-settings-dialog"
 import { WebPConverter } from "@/lib/editor/webp-converter"
+import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { ProjectIdContext } from "../lexical-editor"
 
 export interface MediaUploadResult {
   type: "file" | "url"
-  data: string // Either a data URL or a web URL
+  data: string // Asset URL (asset://hash) or web URL
   name?: string // Original filename if available
   size?: number // File size in bytes if available
   compressed?: boolean // Whether the file was compressed
   originalSize?: number // Original size before compression
   compressionRatio?: number // Compression ratio if compressed
+  assetId?: string // Asset ID (SHA1 hash) for file uploads
 }
 
 interface MediaUploadDialogProps {
@@ -62,6 +65,8 @@ export function MediaUploadDialog({
   compress = true,
   allowCompressionToggle = false,
 }: MediaUploadDialogProps) {
+  const projectIdFromContext = useContext(ProjectIdContext)
+  const projectId = projectIdFromContext && typeof projectIdFromContext === 'string' ? projectIdFromContext : undefined
   const [mediaUrl, setMediaUrl] = useState("")
   const [activeTab, setActiveTab] = useState<string>(mode === 2 ? "url" : "upload")
   const [error, setError] = useState<string | null>(null)
@@ -71,6 +76,13 @@ export function MediaUploadDialog({
   const [currentCompressionFile, setCurrentCompressionFile] = useState<File | null>(null)
   const [globalCompressionSettings, setGlobalCompressionSettings] = useState<CompressionSettings | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Debug: Log projectId when dialog opens or projectId changes
+  useEffect(() => {
+    if (open) {
+      console.log("MediaUploadDialog: projectId =", projectId)
+    }
+  }, [open, projectId])
 
   const isImageFile = (file: File): boolean => {
     return file.type.startsWith("image/")
@@ -272,7 +284,7 @@ export function MediaUploadDialog({
     setPendingUploads((prev) => prev.filter((upload) => upload.id !== id))
   }
 
-  const handleSubmitAll = () => {
+  const handleSubmitAll = async () => {
     if (pendingUploads.length === 0) {
       setError("Please add at least one file or URL")
       return
@@ -285,25 +297,85 @@ export function MediaUploadDialog({
       return
     }
 
-    const results: MediaUploadResult[] = pendingUploads.map((upload) => ({
-      type: upload.type,
-      data: upload.data,
-      name: upload.name,
-      size: upload.size,
-      compressed: upload.compressed,
-      originalSize: upload.originalSize,
-      compressionRatio: upload.compressionRatio,
-    }))
+    try {
+      setError(null)
+      const results: MediaUploadResult[] = []
 
-    if (multiple) {
-      onMediaSelected(results)
-    } else {
-      onMediaSelected(results[0])
+      console.log("MediaUploadDialog: handleSubmitAll - projectId =", projectId)
+
+      // Process files one by one for safety
+      for (const upload of pendingUploads) {
+        if (upload.type === "file") {
+          // Save file to assets
+          console.log("MediaUploadDialog: Saving file asset with projectId =", projectId)
+          const saveResult = await assetManager.saveAsset({
+            file: upload.file,
+            dataUrl: upload.data,
+            author: "user", // TODO: Get from auth context
+            license: "user-uploaded",
+            projectId,
+            nodeId: `temp-${Date.now()}`, // Temporary ID, will be updated when node is created
+          })
+
+          if (saveResult.success && saveResult.assetUrl) {
+            results.push({
+              type: "file",
+              data: saveResult.assetUrl, // Asset URL: asset://hash
+              name: upload.name,
+              size: upload.size,
+              compressed: upload.compressed,
+              originalSize: upload.originalSize,
+              compressionRatio: upload.compressionRatio,
+              assetId: saveResult.assetId,
+            })
+          } else {
+            setError(`Failed to save asset: ${saveResult.error || "Unknown error"}`)
+            return
+          }
+        } else {
+          // URL type - save URL reference to assets
+          const saveResult = await assetManager.saveAsset({
+            urlSource: upload.data,
+            author: "user",
+            license: "external-url",
+            projectId,
+            nodeId: `temp-${Date.now()}`,
+          })
+
+          if (saveResult.success && saveResult.assetUrl) {
+            results.push({
+              type: "url",
+              data: saveResult.assetUrl, // Asset URL: asset://hash
+              name: upload.name,
+              assetId: saveResult.assetId,
+            })
+          } else {
+            // Fallback to direct URL if asset save fails
+            results.push({
+              type: "url",
+              data: upload.data,
+              name: upload.name,
+            })
+          }
+        }
+      }
+
+      if (multiple) {
+        onMediaSelected(results)
+      } else {
+        const firstResult = results[0]
+        if (firstResult) {
+          onMediaSelected(firstResult)
+        }
+      }
+
+      setPendingUploads([])
+      onOpenChange(false)
+      setError(null)
+    } catch (error) {
+      console.error("Error saving assets:", error)
+      setError(`Failed to save assets: ${error instanceof Error ? error.message : "Unknown error"}`)
     }
-
-    setPendingUploads([])
-    onOpenChange(false)
-    setError(null)
   }
 
   const formatFileSize = (bytes?: number) => {

@@ -11,6 +11,7 @@ import { ContentEditMenu, type EditMenuOption } from "@/components/editor/extras
 import { EditorLoadingContext } from "../lexical-editor"
 import { UnifiedMediaEditor } from "@/components/editor/extras/media/unified-media-editor"
 import type { BaseMediaData } from "./base/media-node-base"
+import { AssetImage } from "../extras/media/asset-image"
 
 export type GalleryLayout = "1" | "2" | "3" | "4"
 
@@ -268,7 +269,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                           <div className="h-full w-full" />
                         ) : (
                           // Render actual image
-                          <img
+                          <AssetImage
                             src={image.src}
                             alt={image.alt}
                             className={
@@ -337,7 +338,7 @@ function GalleryComponent({ data, nodeKey }: GalleryComponentProps) {
                         <div className="h-full w-full" />
                       ) : (
                         // Render actual image
-                        <img
+                        <AssetImage
                           src={image.src}
                           alt={image.alt}
                           className={
