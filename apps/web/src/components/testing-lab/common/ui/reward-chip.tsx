@@ -3,11 +3,14 @@ import React from 'react';
 
 interface RewardChipProps {
     reward?: string | number | null;
+    value?: string | number | null;
+    variant?: 'default' | 'compact' | 'inline';
     className?: string;
 }
 
-export const RewardChip: React.FC<RewardChipProps> = ({ reward, className }) => {
-    if (reward === undefined || reward === null || reward === '') return null;
+export const RewardChip: React.FC<RewardChipProps> = ({ reward, value, variant = 'default', className }) => {
+    const displayValue = reward ?? value;
+    if (displayValue === undefined || displayValue === null || displayValue === '') return null;
     return (
         <span
             className={
@@ -15,7 +18,7 @@ export const RewardChip: React.FC<RewardChipProps> = ({ reward, className }) => 
                 (className || '')
             }
         >
-            {typeof reward === 'number' ? reward.toLocaleString() : reward}
+            {typeof displayValue === 'number' ? displayValue.toLocaleString() : displayValue}
         </span>
     );
 };

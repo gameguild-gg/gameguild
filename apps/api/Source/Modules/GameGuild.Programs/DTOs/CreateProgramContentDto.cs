@@ -1,3 +1,7 @@
+using GameGuild.SharedKernel.Enums;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Entities;
+using System.ComponentModel.DataAnnotations;
 namespace GameGuild.Modules.Programs;
 
 /// <summary> DTO for creating new program content </summary>
@@ -24,5 +28,5 @@ public class CreateProgramContentDto {
 
   public int? EstimatedMinutes { get; set; }
 
-  public Visibility Visibility { get; set; } = Visibility.Published;
+  public Visibility Visibility { get; set; } = Visibility.Public;
 }

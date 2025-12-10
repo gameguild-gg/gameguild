@@ -4,12 +4,12 @@ import Link from 'next/link';
 import React, { PropsWithChildren } from 'react';
 
 import { UserProfile } from '@/components/common/header/common/ui/user-profile';
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuList, NavigationMenuTrigger, NavigationMenuLink } from '@/components/ui/navigation-menu';
-import { MobileMenu } from './mobile-menu';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
-import { GitHubForkButton } from './github-fork-button';
+import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
+import type { UserResponseDto } from '@/lib/api/generated/stub-types';
 import type { Session } from 'next-auth';
-import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import { GitHubForkButton } from './github-fork-button';
+import { MobileMenu } from './mobile-menu';
 
 type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement> & {
   session?: Session | null;

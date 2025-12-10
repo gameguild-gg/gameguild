@@ -1,4 +1,4 @@
-import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import type { UserResponseDto } from '@/lib/api/generated';
 import type { User } from '@/lib/api/users';
 import { getUserByUsername } from '@/lib/api/users';
 import { getUserProfileByUserId } from '@/lib/user-management/profiles/profiles.actions';

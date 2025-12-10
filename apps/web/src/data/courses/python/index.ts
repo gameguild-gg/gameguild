@@ -1,18 +1,17 @@
 import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/generated';
 
 // Markdown content imports
-import pythonSyllabus from './syllabus.md';
 import week01Lecture from './chapters/week01/lecture.md';
 import week02Lecture from './chapters/week02/lecture.md';
 import week03Lecture from './chapters/week03/lecture.md';
-import week04Lecture from './chapters/week04/lecture.md';
 import week04BooleanOperations from './chapters/week04/boolean_operations.md';
+import week04Lecture from './chapters/week04/lecture.md';
 import week04Switch from './chapters/week04/switch.md';
+import week05Exercise01 from './chapters/week05/exercise-lists-01.md';
+import week05Exercise02 from './chapters/week05/exercise-lists-02.md';
 import week05Lists from './chapters/week05/lists.md';
 import week05Sets from './chapters/week05/sets.md';
 import week05Tuples from './chapters/week05/tuples.md';
-import week05Exercise01 from './chapters/week05/exercise-lists-01.md';
-import week05Exercise02 from './chapters/week05/exercise-lists-02.md';
 import week06Lecture from './chapters/week06/lecture.md';
 import week07Lecture from './chapters/week07/lecture.md';
 import week10Dictionaries from './chapters/week10/dictionaries.md';
@@ -20,6 +19,7 @@ import week10Sets from './chapters/week10/sets.md';
 import week11Lecture from './chapters/week11/lecture.md';
 import week12Lecture from './chapters/week12/lecture.md';
 import week12LocalLlm from './chapters/week12/local-llm.md';
+import pythonSyllabus from './syllabus.md';
 
 // Program definition
 export const pythonProgram: Program = {
@@ -42,9 +42,6 @@ export const pythonProgram: Program = {
     updatedAt: '2023-01-01T00:00:00Z',
     programContents: [],
     programUsers: [],
-    productPrograms: [],
-    certificates: [],
-    feedbackSubmissions: [],
     programRatings: [],
     programWishlists: [],
 };
@@ -103,7 +100,6 @@ export const pythonSyllabusContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 30,
     visibility: 1, // Published
-    slug: 'python-syllabus',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -126,7 +122,6 @@ export const pythonWeek01Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
-    slug: 'introduction-to-python',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -149,7 +144,6 @@ export const pythonWeek02Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
-    slug: 'python-basics',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -172,7 +166,6 @@ export const pythonWeek03Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
-    slug: 'functions-and-math',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -195,7 +188,6 @@ export const pythonWeek04Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 105,
     visibility: 1, // Published
-    slug: 'conditionals-and-loops',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -218,7 +210,6 @@ export const pythonWeek05ListsContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
-    slug: 'lists-and-data-structures',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -241,7 +232,6 @@ export const pythonWeek05Exercise01Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
-    slug: 'exercise-two-sum',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -264,7 +254,6 @@ export const pythonWeek05Exercise02Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
-    slug: 'exercise-search-insert-position',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -287,7 +276,6 @@ export const pythonWeek06Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
-    slug: 'advanced-loops',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -310,7 +298,6 @@ export const pythonWeek07Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
-    slug: 'nested-loops',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -333,7 +320,6 @@ export const pythonWeek10DictionariesContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
-    slug: 'dictionaries-and-sets',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -356,7 +342,6 @@ export const pythonWeek10SetsContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 105,
     visibility: 1, // Published
-    slug: 'sets-and-operations',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -379,7 +364,6 @@ export const pythonWeek11Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 120,
     visibility: 1, // Published
-    slug: 'files-and-exceptions',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -402,7 +386,6 @@ export const pythonWeek12Content: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
-    slug: 'apis-and-web-services',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -425,7 +408,6 @@ export const pythonWeek12LocalLlmContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 90,
     visibility: 1, // Published
-    slug: 'local-llms-ollama',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -448,7 +430,6 @@ export const pythonWeek04BooleanOperationsContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
-    slug: 'boolean-operations',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -471,7 +452,6 @@ export const pythonWeek04SwitchContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
-    slug: 'switch-statements',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -494,7 +474,6 @@ export const pythonWeek05SetsContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 60,
     visibility: 1, // Published
-    slug: 'sets-data-structure',
     program: pythonProgram,
     parent: undefined,
     children: [],
@@ -517,7 +496,6 @@ export const pythonWeek05TuplesContent: ProgramContent = {
     maxPoints: null,
     estimatedMinutes: 45,
     visibility: 1, // Published
-    slug: 'tuples-immutability',
     program: pythonProgram,
     parent: undefined,
     children: [],

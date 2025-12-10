@@ -1,18 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Progress } from '@/components/ui/progress';
+import { useCallback, useEffect, useState } from 'react';
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CourseCompletionCertificateService } from '@/lib/courses/services/certificate.service';
+import { ContentReportService } from '@/lib/courses/services/content-report.service';
 import { BookOpen, CheckCircle, ChevronLeft, ChevronRight, Clock, FileText, Flag, MessageSquare, MoreVertical, Play, Trophy, Upload } from 'lucide-react';
+import { ActivityComponent } from './activity-component';
+import { CertificateNotification } from './certificate-notification';
 import { ContentNavigationSidebar } from './content-navigation-sidebar';
 import { LessonViewer } from './lesson-viewer';
-import { ActivityComponent } from './activity-component';
 import { ReportContentDialog } from './report-content-dialog';
-import { CertificateNotification } from './certificate-notification';
-import { ContentReportService } from '@/lib/courses/services/content-report.service';
-import { CourseCompletionCertificateService } from '@/lib/courses/services/certificate.service';
 
 interface ContentItem {
   id: string;
@@ -309,12 +309,12 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
 
     if (direction === 'prev' && currentIndex > 0) {
       const prevItem = allItems[currentIndex - 1];
-      if (prevItem.status !== 'locked') {
+      if (prevItem && prevItem.status !== 'locked') {
         setCurrentItem(prevItem);
       }
     } else if (direction === 'next' && currentIndex < allItems.length - 1) {
       const nextItem = allItems[currentIndex + 1];
-      if (nextItem.status !== 'locked') {
+      if (nextItem && nextItem.status !== 'locked') {
         setCurrentItem(nextItem);
       }
     }
@@ -324,13 +324,10 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
     if (!certificateEligibility) return;
 
     try {
-      const result = await CourseCompletionCertificateService.generateCertificate({
-        courseId: certificateEligibility.courseId,
-        courseTitle: certificateEligibility.courseTitle,
-        studentName: 'Current Student', // In real app, get from user context
-        completionDate: certificateEligibility.completedAt.toISOString(),
-        finalGrade: certificateEligibility.finalGrade,
-      });
+      const result = await CourseCompletionCertificateService.generateCertificate(
+        certificateEligibility.courseId,
+        'current-user-id' // In real app, get from user context
+      );
 
       if (result.success) {
         console.log('Certificate generated successfully!', result);
@@ -355,8 +352,11 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
       const report = await ContentReportService.createReport({
         contentId: currentItem.id,
         contentTitle: currentItem.title,
+        contentType: currentItem.type || 'content',
         reportType: reason,
+        reason,
         description,
+        userId: 'current-user', // TODO: Get from auth context
       });
 
       console.log('Content reported successfully:', report);
@@ -533,7 +533,7 @@ export function CourseContentViewer({ courseSlug }: CourseContentViewerProps) {
                     {currentItem.type === 'lesson' ? (
                       <LessonViewer item={currentItem} onComplete={() => handleItemComplete(currentItem.id)} />
                     ) : (
-                      <ActivityComponent item={currentItem} onComplete={(score: number) => handleItemComplete(currentItem.id, score)} />
+                      <ActivityComponent item={currentItem} onComplete={(score?: number) => handleItemComplete(currentItem.id, score)} />
                     )}
                   </CardContent>
                 </Card>

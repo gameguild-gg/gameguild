@@ -193,7 +193,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
         toast({
           title: 'Error',
           description: 'Failed to load notifications',
-          variant: 'destructive',
+          variant: 'error',
         });
       } finally {
         setIsLoading(false);
@@ -216,7 +216,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
       toast({
         title: 'Error',
         description: result.error,
-        variant: 'destructive',
+        variant: 'error',
       });
     }
   };
@@ -233,7 +233,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
       toast({
         title: 'Error',
         description: result.error,
-        variant: 'destructive',
+        variant: 'error',
       });
     }
   };
@@ -246,7 +246,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
       toast({
         title: 'Error',
         description: result.error,
-        variant: 'destructive',
+        variant: 'error',
       });
     }
   };
@@ -263,7 +263,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
       toast({
         title: 'Error',
         description: result.error,
-        variant: 'destructive',
+        variant: 'error',
       });
     }
   };
@@ -280,7 +280,7 @@ export const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ clas
       toast({
         title: 'Error',
         description: result.error,
-        variant: 'destructive',
+        variant: 'error',
       });
     }
   };

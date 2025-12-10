@@ -1,14 +1,14 @@
 "use client";
 
-import React from 'react';
-import { notFound, useParams } from 'next/navigation';
 import { PageHeader } from '@/components/projects/page-header';
-import { ProjectSubNav } from '@/components/projects/project-sub-nav';
 import { ProjectProvider } from '@/components/projects/project-context';
+import { ProjectSubNav } from '@/components/projects/project-sub-nav';
+import type { Project } from '@/lib/api/generated/stub-types';
 import { getProjectBySlugService } from '@/lib/content-management/projects/projects.service';
 import { transformProjectToGameProject } from '@/lib/content-management/projects/projects.utils';
 import type { GameProject } from '@/lib/types';
-import type { Project } from '@/lib/api/generated/types.gen';
+import { notFound, useParams } from 'next/navigation';
+import React from 'react';
 
 export default function ProjectDetailLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
@@ -22,7 +22,7 @@ export default function ProjectDetailLayout({ children }: { children: React.Reac
       try {
         setLoading(true);
         const result = await getProjectBySlugService(slug);
-        
+
         if (result.success && result.data) {
           const transformed = transformProjectToGameProject(result.data);
           setProject(result.data);

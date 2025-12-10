@@ -1,6 +1,6 @@
 'use server';
 
-import type { AchievementDto } from '@/lib/core/api/generated/types.gen';
+import type { AchievementDto } from '@/lib/core/api/generated';
 
 export interface AchievementActionResult<T = unknown> {
     success: boolean;

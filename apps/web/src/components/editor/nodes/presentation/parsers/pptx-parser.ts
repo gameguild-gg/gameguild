@@ -1,6 +1,6 @@
-import JSZip from "jszip"
 import { DOMParser } from "@xmldom/xmldom"
-import type { Slide, ParseProgress } from "../types"
+import JSZip from "jszip"
+import type { ParseProgress, Slide } from "../types"
 
 export class PPTXParser {
   private callbacks: {
@@ -78,6 +78,7 @@ export class PPTXParser {
 
         for (let i = 0; i < slideFiles.length; i++) {
           const slideRel = slideFiles[i]
+          if (!slideRel) continue
           const slideTarget = slideRel.getAttribute("Target")?.replace("../", "")
 
           if (!slideTarget) continue
@@ -121,6 +122,7 @@ export class PPTXParser {
             content: content || "",
             layout: "title-content",
             theme: "light",
+            notes: "",
           })
         }
 
@@ -130,14 +132,15 @@ export class PPTXParser {
           extractedSlides.length > 0
             ? extractedSlides
             : [
-                {
-                  id: `slide-${Date.now()}-0`,
-                  title: "Imported Slide",
-                  content: "PowerPoint content was imported. Some formatting may need manual adjustment.",
-                  layout: "title-content",
-                  theme: "light",
-                },
-              ],
+              {
+                id: `slide-${Date.now()}-0`,
+                title: "Imported Slide",
+                content: "PowerPoint content was imported. Some formatting may need manual adjustment.",
+                layout: "title-content",
+                theme: "light",
+                notes: "",
+              },
+            ],
         )
       } catch (error) {
         console.error("PPTX parsing error:", error)

@@ -1,13 +1,35 @@
 'use client';
 
-import React, { useRef } from 'react';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Play, Upload, X } from 'lucide-react';
 import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Play, Upload, X } from 'lucide-react';
+import React, { useRef } from 'react';
 
 export function ThumbnailMediaSection() {
-  const { state, setThumbnail, setShowcaseVideo } = useCourseEditor();
+  const { state: contextState } = useCourseEditor();
+
+  // TODO: Implement actual media state in context
+  const state = {
+    ...contextState,
+    media: {
+      thumbnail: undefined as { url: string; alt: string; file?: File } | undefined,
+      showcaseVideo: undefined as { url: string; platform: string; embedId?: string } | undefined,
+    },
+    errors: {
+      thumbnail: undefined as string | undefined,
+      video: undefined as string | undefined,
+    },
+  };
+
+  // TODO: Implement actual media methods in context
+  const setThumbnail = (..._args: any[]) => {
+    console.log('setThumbnail not implemented', _args);
+  };
+  const setShowcaseVideo = (..._args: any[]) => {
+    console.log('setShowcaseVideo not implemented', _args);
+  };
+
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -18,7 +40,7 @@ export function ThumbnailMediaSection() {
       const url = URL.createObjectURL(file);
       setThumbnail({
         url,
-        alt: `Thumbnail for ${state.title}`,
+        alt: `Thumbnail for course`,
         file,
       });
     }

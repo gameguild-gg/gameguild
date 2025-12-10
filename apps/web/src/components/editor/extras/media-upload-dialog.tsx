@@ -3,15 +3,15 @@
 import { useRef, useState, useContext, useEffect } from "react"
 import { AlertCircle, Upload, X, Trash2, Plus, Send, Settings, Zap, ImageIcon } from "lucide-react"
 
+import { CompressionSettingsDialog, type CompressionSettings } from "@/components/editor/extras/compressor/compression-settings-dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { CompressionSettingsDialog, type CompressionSettings } from "@/components/editor/extras/compressor/compression-settings-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WebPConverter } from "@/lib/editor/webp-converter"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { ProjectIdContext } from "../lexical-editor"
@@ -211,14 +211,14 @@ export function MediaUploadDialog({
           prev.map((upload) =>
             upload.id === fileId
               ? {
-                  ...upload,
-                  data: result.dataUrl!,
-                  size: result.compressedSize,
-                  compressed: true,
-                  compressionRatio: result.compressionRatio,
-                  needsCompression: false,
-                  isCompressing: false,
-                }
+                ...upload,
+                data: result.dataUrl!,
+                size: result.compressedSize,
+                compressed: true,
+                compressionRatio: result.compressionRatio,
+                needsCompression: false,
+                isCompressing: false,
+              }
               : upload,
           ),
         )
@@ -239,13 +239,13 @@ export function MediaUploadDialog({
                   prev.map((u) =>
                     u.id === upload.id
                       ? {
-                          ...u,
-                          data: batchResult.dataUrl!,
-                          size: batchResult.compressedSize,
-                          compressed: true,
-                          compressionRatio: batchResult.compressionRatio,
-                          needsCompression: false,
-                        }
+                        ...u,
+                        data: batchResult.dataUrl!,
+                        size: batchResult.compressedSize,
+                        compressed: true,
+                        compressionRatio: batchResult.compressionRatio,
+                        needsCompression: false,
+                      }
                       : u,
                   ),
                 )
@@ -669,9 +669,8 @@ export function MediaUploadDialog({
                           </p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${
-                                upload.type === "file" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
-                              }`}
+                              className={`px-2 py-1 rounded text-xs ${upload.type === "file" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
+                                }`}
                             >
                               {upload.type === "file" ? "File" : "URL"}
                             </span>

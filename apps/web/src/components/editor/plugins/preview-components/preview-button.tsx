@@ -1,8 +1,7 @@
 "use client"
 
 import type { SerializedButtonNode } from "../../nodes/button-node"
-import { 
-  ArrowRight, Copy, Download, ExternalLink, Mail,
+import { Copy, Download, ExternalLink, Mail,
   Link, Link2,
   ArrowDownToLine, FileDown,
   ClipboardCopy, CopyCheck,

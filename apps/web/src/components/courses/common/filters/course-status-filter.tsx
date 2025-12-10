@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ModulesContentsContentStatus as CourseStatus } from '@/lib/api/generated/types.gen';
+import { ModulesContentsContentStatus as CourseStatus } from '@/lib/api/generated/stub-types';
 import { Archive, ChevronDown, Eye, FileText } from 'lucide-react';
 
 interface CourseStatusFilterProps {

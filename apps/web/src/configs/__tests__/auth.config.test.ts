@@ -1,4 +1,3 @@
-import { NextAuthConfig } from 'next-auth';
 import { authConfig } from '../auth.config';
 import { localSign, googleIdTokenSignIn } from '@/lib/auth/auth.actions';
 import { User, Account } from 'next-auth';

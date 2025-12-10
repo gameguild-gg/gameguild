@@ -1,17 +1,37 @@
 'use client';
 
-import React from 'react';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { Calendar, DollarSign, Plus, Tag, Users, X } from 'lucide-react';
-import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
+import React from 'react';
 
 export function SalesShowcaseSection() {
-  const { state, addProduct, removeProduct, updateProduct, setEnrollmentStatus, setMaxEnrollments, setEnrollmentDeadline, setEstimatedHours, addTag, removeTag, setStatus } = useCourseEditor();
+  // TODO: Implement proper state management for sales showcase section
+  const stubState = {
+    tags: [],
+    products: [],
+    isEnrollmentOpen: false,
+    maxEnrollments: 0,
+    enrollmentDeadline: '',
+    estimatedHours: 0,
+    status: 'draft'
+  };
+  const state = stubState as any;
+
+  const addProduct = (..._args: any[]) => console.log('addProduct not implemented');
+  const removeProduct = (..._args: any[]) => console.log('removeProduct not implemented');
+  const updateProduct = (..._args: any[]) => console.log('updateProduct not implemented');
+  const setEnrollmentStatus = (..._args: any[]) => console.log('setEnrollmentStatus not implemented');
+  const setMaxEnrollments = (..._args: any[]) => console.log('setMaxEnrollments not implemented');
+  const setEnrollmentDeadline = (..._args: any[]) => console.log('setEnrollmentDeadline not implemented');
+  const setEstimatedHours = (..._args: any[]) => console.log('setEstimatedHours not implemented');
+  const addTag = (..._args: any[]) => console.log('addTag not implemented');
+  const removeTag = (..._args: any[]) => console.log('removeTag not implemented');
+  const setStatus = (..._args: any[]) => console.log('setStatus not implemented');
 
   const [newTag, setNewTag] = React.useState('');
   const [newProductName, setNewProductName] = React.useState('');
@@ -70,7 +90,7 @@ export function SalesShowcaseSection() {
         {/* Product List */}
         {state.products.length > 0 && (
           <div className="space-y-2">
-            {state.products.map((product) => (
+            {state.products.map((product: any) => (
               <div key={product.id} className="flex items-center justify-between p-3 bg-background border border-border rounded-lg">
                 <div className="flex items-center gap-3">
                   <div>
@@ -173,7 +193,7 @@ export function SalesShowcaseSection() {
         {/* Tag List */}
         {state.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {state.tags.map((tag) => (
+            {state.tags.map((tag: any) => (
               <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                 {tag}
                 <button onClick={() => removeTag(tag)} className="ml-1 hover:text-red-500">

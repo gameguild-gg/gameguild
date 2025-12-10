@@ -1,15 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { DecoratorNode, type SerializedLexicalNode } from "lexical"
-import { $getNodeByKey } from "lexical"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from "lexical"
 import { Move, Type, X } from "lucide-react"
+import type { JSX } from "react"
+import { useEffect, useState } from "react"
 
-import { ImageSizeControl } from "@/components/editor/extras/image-size-control"
 import { CaptionInput } from "@/components/editor/extras/caption-input"
-import { Button } from "@/components/ui/button"
 import { ContentEditMenu, type EditMenuOption } from "@/components/editor/extras/content-edit-menu"
+import { ImageSizeControl } from "@/components/editor/extras/image-size-control"
+import { Button } from "@/components/ui/button"
 
 export interface SpotifyData {
   spotifyId: string

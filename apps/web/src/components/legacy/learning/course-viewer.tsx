@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertTriangle, ArrowLeft, ArrowRight, BookOpen, CheckCircle2, Clock, Code, FileText, MessageSquare, PlayCircle, Trophy, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 interface ContentItem {
   id: string;
@@ -69,14 +69,14 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
   const [currentContentIndex, setCurrentContentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const currentContent = course.contents[currentContentIndex];
+  const currentContent = course.contents[currentContentIndex] as ContentItem | undefined;
   const canGoNext = currentContentIndex < course.contents.length - 1;
   const canGoPrevious = currentContentIndex > 0;
 
   // Find next available content (not locked)
   const getNextAvailableIndex = () => {
     for (let i = currentContentIndex + 1; i < course.contents.length; i++) {
-      if (!course.contents[i].isLocked) {
+      if (!course.contents[i]?.isLocked) {
         return i;
       }
     }
@@ -114,10 +114,10 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
         contents: prev.contents.map((content) =>
           content.id === contentId
             ? {
-                ...content,
-                isCompleted: true,
-                progress: 100,
-              }
+              ...content,
+              isCompleted: true,
+              progress: 100,
+            }
             : content,
         ),
       }));
@@ -149,7 +149,7 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
 
   const reportContent = () => {
     // TODO: Implement reporting functionality
-    console.log('Reporting content:', currentContent.id);
+    console.log('Reporting content:', currentContent?.id);
   };
 
   if (!course.isEnrolled) {
@@ -255,15 +255,15 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="flex items-center gap-2">
-                      <ContentTypeIcon type={currentContent.type} />
-                      {currentContent.title}
+                      <ContentTypeIcon type={currentContent?.type ?? 'page'} />
+                      {currentContent?.title}
                     </CardTitle>
                     <div className="flex items-center gap-4 text-sm text-gray-400 mt-2">
-                      <span>{currentContent.duration} minutes</span>
-                      {currentContent.isRequired && <Badge variant="outline">Required</Badge>}
-                      {currentContent.score !== undefined && (
+                      <span>{currentContent?.duration} minutes</span>
+                      {currentContent?.isRequired && <Badge variant="outline">Required</Badge>}
+                      {currentContent?.score !== undefined && (
                         <span>
-                          Score: {currentContent.score}/{currentContent.maxScore}
+                          Score: {currentContent?.score}/{currentContent?.maxScore}
                         </span>
                       )}
                     </div>
@@ -277,24 +277,24 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
               <CardContent className="space-y-6">
                 {/* Content Display Area */}
                 <div className="min-h-96 bg-gray-800/50 rounded-lg p-6">
-                  {currentContent.type === 'video' && (
+                  {currentContent?.type === 'video' && (
                     <div className="aspect-video bg-black rounded-lg flex items-center justify-center">
                       <PlayCircle className="h-16 w-16 text-gray-400" />
                     </div>
                   )}
 
-                  {currentContent.type === 'page' && (
+                  {currentContent?.type === 'page' && (
                     <div className="prose prose-invert max-w-none">
-                      <h3>Content: {currentContent.title}</h3>
-                      <p>{currentContent.description}</p>
+                      <h3>Content: {currentContent?.title}</h3>
+                      <p>{currentContent?.description}</p>
                       {/* Content would be rendered here */}
                     </div>
                   )}
 
-                  {currentContent.type === 'assignment' && (
+                  {currentContent?.type === 'assignment' && (
                     <div className="space-y-4">
-                      <h3 className="text-xl font-semibold">Assignment: {currentContent.title}</h3>
-                      <p className="text-gray-300">{currentContent.description}</p>
+                      <h3 className="text-xl font-semibold">Assignment: {currentContent?.title}</h3>
+                      <p className="text-gray-300">{currentContent?.description}</p>
                       <div className="bg-gray-800 p-4 rounded-lg">
                         <h4 className="font-medium mb-2">Instructions:</h4>
                         <p className="text-sm text-gray-300">Complete the assignment and submit your work for review.</p>
@@ -311,14 +311,14 @@ export function CourseViewer({ courseId, initialCourse }: CourseViewerProps) {
                   </Button>
 
                   <div className="flex items-center gap-4">
-                    {!currentContent.isCompleted && (
+                    {currentContent && !currentContent.isCompleted && (
                       <Button onClick={() => handleContentComplete(currentContent.id)} disabled={isLoading} className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4" />
                         Mark Complete
                       </Button>
                     )}
 
-                    {currentContent.isCompleted && (
+                    {currentContent?.isCompleted && (
                       <Badge variant="secondary" className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4" />
                         Completed

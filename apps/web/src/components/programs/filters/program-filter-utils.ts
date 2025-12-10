@@ -11,28 +11,30 @@ export function filterPrograms(programs: Program[], filters: ProgramFilterState)
           program.title.toLowerCase().includes(searchLower) ||
           (program.description && program.description.toLowerCase().includes(searchLower)) ||
           (program.shortDescription && program.shortDescription.toLowerCase().includes(searchLower)) ||
-          (program.tags && program.tags.some((tag) => tag.toLowerCase().includes(searchLower)));
+          (program.tags && program.tags.some((tag: string) => tag.toLowerCase().includes(searchLower)));
 
         if (!matchesSearch) return false;
       }
 
-      // Status filter
+      // Status filter (using selectedStatuses from BaseFilterState)
       if (filters.selectedStatuses.length > 0 && !filters.selectedStatuses.includes(program.status)) {
         return false;
       }
 
-      // Visibility filter
-      if (filters.selectedVisibilities.length > 0 && !filters.selectedVisibilities.includes(program.visibility)) {
+      // Type/Visibility filter (using selectedTypes from BaseFilterState)
+      if (filters.selectedTypes.length > 0 && !filters.selectedTypes.includes(program.visibility)) {
         return false;
       }
 
-      // Content type filter
-      if (filters.selectedContentTypes.length > 0 && !filters.selectedContentTypes.includes(program.contentType)) {
+      // Content type filter (using selectedFilters dynamic filter)
+      const selectedContentTypes = filters.selectedFilters?.contentType ?? [];
+      if (selectedContentTypes.length > 0 && !selectedContentTypes.includes(program.contentType)) {
         return false;
       }
 
-      // Difficulty filter
-      if (filters.selectedDifficulties.length > 0 && program.difficulty && !filters.selectedDifficulties.includes(program.difficulty)) {
+      // Difficulty filter (using selectedFilters dynamic filter)
+      const selectedDifficulties = filters.selectedFilters?.difficulty ?? [];
+      if (selectedDifficulties.length > 0 && program.difficulty && !selectedDifficulties.includes(program.difficulty)) {
         return false;
       }
 

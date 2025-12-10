@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Star, MessageSquare, ThumbsUp, ThumbsDown, TestTube } from 'lucide-react';
 import Link from 'next/link';
-import type { TestingFeedback } from '@/lib/api/generated/types.gen';
+import type { TestingFeedback } from '@/lib/api/generated';
 
 interface TestingFeedbackDetailsProps {
   data: TestingFeedback;

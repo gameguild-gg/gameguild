@@ -1,6 +1,6 @@
 'use client';
 
-import type { AchievementDto } from '@/lib/core/api/generated/types.gen';
+import type { AchievementDto } from '@/lib/core/api/generated';
 import { AchievementsList } from '../achievements-list';
 
 interface AchievementManagementContentProps {

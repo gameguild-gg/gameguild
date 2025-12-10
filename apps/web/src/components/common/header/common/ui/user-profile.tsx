@@ -1,8 +1,8 @@
+import type { UserResponseDto } from '@/lib/api/generated/stub-types';
+import { Settings, User } from 'lucide-react';
+import type { Session } from 'next-auth';
 import Link from 'next/link';
 import { UserProfileMenu } from './user-profile-menu';
-import { User, Settings } from 'lucide-react';
-import type { Session } from 'next-auth';
-import type { UserResponseDto } from '@/lib/api/generated/types.gen';
 
 interface UserProfileProps {
   session: Session | null;

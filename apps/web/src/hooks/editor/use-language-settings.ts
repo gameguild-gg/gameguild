@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useState } from "react"
 import type { LanguageType, ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
+import { useState } from "react"
 
 interface UseLanguageSettingsProps {
   initialAllowedLanguages?: Record<LanguageType, boolean>
@@ -12,7 +12,7 @@ interface UseLanguageSettingsProps {
 
 interface UseLanguageSettingsReturn {
   selectedLanguage: ProgrammingLanguage
-  setSelectedLanguage: (lang: ProgrammingLanguage) => void
+  setSelectedLanguage: (lang: ProgrammingLanguage | string) => void
   allowedLanguages: Record<LanguageType, boolean>
   setAllowedLanguages: React.Dispatch<React.SetStateAction<Record<LanguageType, boolean>>>
   showLanguagesDialog: boolean
@@ -64,7 +64,7 @@ export function useLanguageSettings({
 
   return {
     selectedLanguage,
-    setSelectedLanguage,
+    setSelectedLanguage: setSelectedLanguage as (lang: ProgrammingLanguage | string) => void,
     allowedLanguages,
     setAllowedLanguages,
     showLanguagesDialog,

@@ -1,6 +1,6 @@
 "use client"
 import { Button } from "@/components/ui/button"
-import { ChevronUp, ChevronDown } from "lucide-react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 interface OrderingQuestionProps {
   question: string
@@ -20,8 +20,13 @@ export function OrderingQuestion({ question, userOrder, onOrderChange, disabled 
     const targetIndex = direction === "up" ? index - 1 : index + 1
 
     if (targetIndex >= 0 && targetIndex < newOrder.length) {
-      ;[newOrder[index], newOrder[targetIndex]] = [newOrder[targetIndex], newOrder[index]]
-      onOrderChange(newOrder)
+      const currentItem = newOrder[index]
+      const targetItem = newOrder[targetIndex]
+      if (currentItem !== undefined && targetItem !== undefined) {
+        newOrder[index] = targetItem
+        newOrder[targetIndex] = currentItem
+        onOrderChange(newOrder)
+      }
     }
   }
 

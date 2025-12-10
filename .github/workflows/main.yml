@@ -21,17 +21,17 @@ jobs:
       - name: Cache node modules
         uses: actions/cache@v4
         with:
-          path: "**/node_modules"
+          path: '**/node_modules'
           key: node-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install dotnet
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: '9.0.x'
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: '22'
 
       - run: cd apps/web ; npm install
         name: Install dependencies
@@ -76,5 +76,15 @@ jobs:
             @semantic-release/commit-analyzer@9.0.2
             @semantic-release/github@8.0.7
             @semantic-release/release-notes-generator@10.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Rollback commit on build failure
+        if: failure()
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git reset --hard HEAD~1
+          git push origin main --force
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

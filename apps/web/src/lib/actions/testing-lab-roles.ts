@@ -1,14 +1,6 @@
 'use server';
 
 import { auth } from '@/auth';
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import { client } from '@/lib/api/generated/client.gen';
-import {
-  deleteApiTestingLabPermissionsRoleTemplatesByIdOrName,
-  getApiTestingLabPermissionsRoleTemplates,
-  postApiTestingLabPermissionsRoleTemplates,
-  putApiTestingLabPermissionsRoleTemplatesByIdOrName
-} from '@/lib/api/generated/sdk.gen';
 import { revalidatePath } from 'next/cache';
 
 /**
@@ -140,30 +132,13 @@ export async function getTestingLabRoleTemplatesAction(): Promise<RoleTemplate[]
     throw new Error('Authentication required');
   }
 
-  // Ensure HTTP client has baseUrl + auth headers (avoids relative URL parse errors)
-  await configureAuthenticatedClient();
-
   // Ensure fresh data by revalidating the paths
   revalidatePath('/dashboard/testing-lab/settings');
   revalidatePath('/testing-lab/settings');
 
   try {
-    console.log('Fetching role templates from API...');
-    const response = await getApiTestingLabPermissionsRoleTemplates({ client });
-
-    console.log('API response:', { status: response.response?.status, hasData: !!response.data, hasError: !!response.error });
-
-    if (response.error) {
-      console.error('Failed to get role templates from API:', response.error);
-      const errorMessage = typeof response.error === 'object'
-        ? JSON.stringify(response.error)
-        : String(response.error);
-      throw new Error(`Failed to get role templates: ${errorMessage}`);
-    }
-
-    // Convert backend format to frontend format
-    const backendTemplates = response.data as any[];
-    console.log('Backend templates:', backendTemplates);
+    // STUB: return an empty list while backend endpoints are disabled
+    const backendTemplates: any[] = [];
 
     const mapTemplate = (template: any, index: number): RoleTemplate => {
       const perms = template.permissions || template.Permissions || {};
@@ -237,39 +212,9 @@ export async function createRoleTemplateAction(roleData: {
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
   }
-  await configureAuthenticatedClient();
-
   try {
-    // Convert form permissions to the format expected by backend
-    const backendPermissions = convertFormPermissionsToBackendDto(roleData.permissions);
-
-    console.log('Creating role with data:', JSON.stringify({
-      name: roleData.name,
-      description: roleData.description,
-      permissions: backendPermissions
-    }, null, 2));
-
-    const response = await postApiTestingLabPermissionsRoleTemplates({
-      client,
-      body: {
-        name: roleData.name,
-        description: roleData.description,
-        permissions: backendPermissions,
-      },
-    });
-
-    if (response.error) {
-      const errorMessage = typeof response.error === 'object'
-        ? JSON.stringify(response.error)
-        : String(response.error);
-      throw new Error(`Failed to create role template: ${errorMessage}`);
-    }
-
-    // Revalidate the paths to ensure fresh data on next load
-    revalidatePath('/dashboard/testing-lab/settings');
-    revalidatePath('/testing-lab/settings');
-
-    return response.data as RoleTemplate;
+    // STUB: creation not available
+    throw new Error('Not implemented (STUB)');
   } catch (error) {
     console.error('Error creating role template:', error);
     if (error instanceof Error) {
@@ -300,55 +245,9 @@ export async function updateRoleTemplateAction(roleId: string, roleData: {
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
   }
-  await configureAuthenticatedClient();
-
   try {
-    // Convert form permissions to the format expected by backend
-    const backendPermissions = convertFormPermissionsToBackendDto(roleData.permissions);
-
-    console.log('Updating role template with data:', {
-      roleId,
-      name: roleData.name,
-      description: roleData.description,
-      permissions: backendPermissions
-    });
-
-    const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-    if (!guidRegex.test(roleId)) {
-      throw new Error('Invalid role id supplied for update (expected GUID). Refresh the page to reload proper identifiers.');
-    }
-
-    const response = await putApiTestingLabPermissionsRoleTemplatesByIdOrName({
-      client,
-      path: {
-        idOrName: roleId
-      },
-      body: {
-        ...(roleData.name && { name: roleData.name }),
-        description: roleData.description,
-        permissions: backendPermissions,
-      },
-    });
-
-    console.log('API Response:', response);
-
-    if (response.error) {
-      const errorMessage = typeof response.error === 'object'
-        ? JSON.stringify(response.error)
-        : String(response.error);
-      throw new Error(`Failed to update role template: ${errorMessage}`);
-    }
-
-    // Revalidate the paths to ensure fresh data on next load
-    revalidatePath('/dashboard/settings/testing-lab');
-    revalidatePath('/settings/testing-lab');
-    revalidatePath('/dashboard/testing-lab/settings');
-    revalidatePath('/testing-lab/settings');
-    revalidatePath('/', 'layout'); // Revalidate entire layout to clear all caches
-
-    console.log('Cache revalidated successfully');
-
-    return response.data as RoleTemplate;
+    // STUB: update not available
+    throw new Error('Not implemented (STUB)');
   } catch (error) {
     console.error('Error updating role template:', error);
     if (error instanceof Error) {
@@ -372,29 +271,8 @@ export async function deleteRoleTemplateAction(roleId: string): Promise<void> {
   if (!session?.api.accessToken) {
     throw new Error('Authentication required');
   }
-  await configureAuthenticatedClient();
-
   try {
-    const guidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
-    if (!guidRegex.test(roleId)) {
-      throw new Error('Invalid role id supplied for delete (expected GUID). Refresh the page to reload proper identifiers.');
-    }
-
-    const response = await deleteApiTestingLabPermissionsRoleTemplatesByIdOrName({
-      client,
-      path: {
-        idOrName: roleId
-      }
-    });
-
-    if (response.error) {
-      const errorMessage = typeof response.error === 'object'
-        ? JSON.stringify(response.error)
-        : String(response.error);
-      throw new Error(`Failed to delete role template: ${errorMessage}`);
-    }
-
-    // Revalidate the paths to ensure fresh data on next load
+    // STUB: delete not available
     revalidatePath('/dashboard/testing-lab/settings');
     revalidatePath('/testing-lab/settings');
   } catch (error) {

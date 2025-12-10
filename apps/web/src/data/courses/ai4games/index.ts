@@ -39,9 +39,6 @@ export const ai4gamesProgram: Program = {
     updatedAt: '2023-01-01T00:00:00Z',
     programContents: [],
     programUsers: [],
-    productPrograms: [],
-    certificates: [],
-    feedbackSubmissions: [],
     programRatings: [],
     programWishlists: [],
 };
@@ -107,7 +104,6 @@ export const ai4gamesSyllabusContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'syllabus',
 };
 
 export const ai4gamesSetupContent: ProgramContent = {
@@ -130,7 +126,6 @@ export const ai4gamesSetupContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'setup',
 };
 
 export const ai4gamesExpectationsContent: ProgramContent = {
@@ -153,7 +148,6 @@ export const ai4gamesExpectationsContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'expectations',
 };
 
 export const ai4gamesFlockingContent: ProgramContent = {
@@ -176,7 +170,6 @@ export const ai4gamesFlockingContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'flocking',
 };
 
 export const ai4gamesStateMachinesContent: ProgramContent = {
@@ -199,7 +192,6 @@ export const ai4gamesStateMachinesContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'state-machines',
 };
 
 export const ai4gamesLifeContent: ProgramContent = {
@@ -222,7 +214,6 @@ export const ai4gamesLifeContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'life',
 };
 
 export const ai4gamesRngContent: ProgramContent = {
@@ -245,9 +236,7 @@ export const ai4gamesRngContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'rng',
 };
-
 export const ai4gamesMazeContent: ProgramContent = {
     id: 'ai4games-maze',
     programId: 'ai4games-program-1',
@@ -268,7 +257,6 @@ export const ai4gamesMazeContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'maze',
 };
 
 export const ai4gamesMazeDatastructureContent: ProgramContent = {
@@ -291,7 +279,6 @@ export const ai4gamesMazeDatastructureContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'maze-datastructure',
 };
 
 export const ai4gamesPathfindingContent: ProgramContent = {
@@ -314,7 +301,6 @@ export const ai4gamesPathfindingContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'pathfinding',
 };
 
 export const ai4gamesCatchTheCatContent: ProgramContent = {
@@ -337,7 +323,6 @@ export const ai4gamesCatchTheCatContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'catchthecat',
 };
 
 export const ai4gamesWeek08AssignmentContent: ProgramContent = {
@@ -360,7 +345,6 @@ export const ai4gamesWeek08AssignmentContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'spatial-quantization-assignment',
 };
 
 export const ai4gamesSpatialQuantizationContent: ProgramContent = {
@@ -383,7 +367,6 @@ export const ai4gamesSpatialQuantizationContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'spatial-quantization',
 };
 
 export const ai4gamesPathSmoothingContent: ProgramContent = {
@@ -406,7 +389,6 @@ export const ai4gamesPathSmoothingContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'path-smoothing',
 };
 
 export const ai4gamesNoiseContent: ProgramContent = {
@@ -429,7 +411,6 @@ export const ai4gamesNoiseContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'noise',
 };
 
 export const ai4gamesFinalProjectContent: ProgramContent = {
@@ -452,7 +433,6 @@ export const ai4gamesFinalProjectContent: ProgramContent = {
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
     updatedAt: '2023-01-01T00:00:00Z',
-    slug: 'final-project',
 };
 
 // Wire program contents and product-program relations

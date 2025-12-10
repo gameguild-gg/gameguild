@@ -50,8 +50,8 @@ export function PreviewAudio({ node }: { node: SerializedAudioNode }) {
     try {
       const url = new URL(src)
       const pathSegments = url.pathname.split("/")
-      const filename = pathSegments[pathSegments.length - 1]
-      return filename ? decodeURIComponent(filename.split(".")[0] || "") : "Audio"
+      const filename = pathSegments[pathSegments.length - 1] ?? ''
+      return decodeURIComponent(filename.split(".")[0] ?? 'Audio')
     } catch (e) {
       return "Audio"
     }

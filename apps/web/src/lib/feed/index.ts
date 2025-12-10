@@ -1,4 +1,4 @@
-export type { PostDto, PostsPageDto, GetApiPostsData, PostApiPostsData } from '@/lib/api/generated/types.gen';
+export type { PostDto, PostsPageDto, GetApiPostsData, PostApiPostsData } from '@/lib/api/generated';
 
 export type FeedFilters = {
   postType?: string;

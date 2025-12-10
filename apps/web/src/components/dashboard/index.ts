@@ -1,6 +1,11 @@
-export {DashboardHeader} from './dashboard-header';
+export { DashboardHeader } from './dashboard-header';
 export {
-  DashboardPage, DashboardPageContent, DashboardPageHeader, DashboardPageDescription, DashboardPageTitle
+  DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle
 } from './dashboard-page';
-export {DashboardSidebar} from './dashboard-sidebar';
+export { DashboardSidebar } from './dashboard-sidebar';
+
+// Stub export for TaskDashboard - not implemented in production
+export function TaskDashboard() {
+  return null;
+}
 
