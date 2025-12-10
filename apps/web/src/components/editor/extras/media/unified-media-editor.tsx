@@ -22,6 +22,7 @@ import {
   detectAudioFileType
 } from "./url-detection"
 import type { BaseMediaData } from "@/components/editor/nodes/base/media-node-base"
+import { AssetImage } from "./asset-image"
 
 interface UnifiedMediaEditorProps {
   data: BaseMediaData
@@ -433,7 +434,7 @@ export function UnifiedMediaEditor({
                           }}
                         >
                           {item.type === "image" && item.src && (
-                            <img src={item.src} alt={item.alt || ""} className="w-full h-auto" />
+                            <AssetImage src={item.src} alt={item.alt || ""} className="w-full h-auto" />
                           )}
                           {item.type === "video" && (
                             <div className="w-full h-full flex items-center justify-center">

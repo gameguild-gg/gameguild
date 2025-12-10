@@ -5,6 +5,8 @@ import { Play, Pause, Volume2, VolumeX, Maximize, AlertCircle } from "lucide-rea
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import type { BaseMediaData } from "@/components/editor/nodes/base/media-node-base"
+import { resolveAssetUrl, isAssetUrl } from "@/lib/storage/assets"
+import { AssetImage } from "./asset-image"
 
 interface MediaPreviewProps {
   data: BaseMediaData
@@ -14,6 +16,34 @@ export function MediaPreview({ data }: MediaPreviewProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(null)
+  const [isLoadingAsset, setIsLoadingAsset] = useState(false)
+
+  // Resolve asset URL
+  useEffect(() => {
+    async function loadAsset() {
+      if (!data.src) {
+        setResolvedSrc(null)
+        return
+      }
+
+      if (isAssetUrl(data.src)) {
+        setIsLoadingAsset(true)
+        try {
+          const url = await resolveAssetUrl(data.src)
+          setResolvedSrc(url)
+        } catch (error) {
+          console.error("Failed to resolve asset URL:", error)
+          setResolvedSrc(null)
+        } finally {
+          setIsLoadingAsset(false)
+        }
+      } else {
+        setResolvedSrc(data.src)
+      }
+    }
+    loadAsset()
+  }, [data.src])
 
   // Video/Audio player state
   const [isPlaying, setIsPlaying] = useState(false)
@@ -98,7 +128,7 @@ export function MediaPreview({ data }: MediaPreviewProps) {
   const renderImage = () => (
     <div className="flex items-center justify-center h-full w-full p-8">
       <div style={{ width: `${data.size}%` }} className="relative">
-        {isLoading && (
+        {(isLoading || isLoadingAsset) && (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
@@ -109,7 +139,7 @@ export function MediaPreview({ data }: MediaPreviewProps) {
             <p className="text-center">{errorMessage || "Erro ao carregar imagem"}</p>
           </div>
         ) : (
-          <img
+          <AssetImage
             src={data.src || "/placeholder.svg"}
             alt={data.alt || ""}
             className="w-full h-auto rounded-lg"
@@ -153,7 +183,7 @@ export function MediaPreview({ data }: MediaPreviewProps) {
             <>
               <video
                 ref={mediaRef as React.RefObject<HTMLVideoElement>}
-                src={data.src}
+                src={resolvedSrc || data.src}
                 className="w-full h-auto rounded-lg"
                 onLoadedData={() => setIsLoading(false)}
                 onTimeUpdate={handleTimeUpdate}
@@ -164,7 +194,7 @@ export function MediaPreview({ data }: MediaPreviewProps) {
                   setErrorMessage("Não foi possível carregar o vídeo")
                 }}
               >
-                <source src={data.src} type={data.videoType || "video/mp4"} />
+                <source src={resolvedSrc || data.src} type={data.videoType || "video/mp4"} />
               </video>
 
               {/* Custom controls */}
@@ -307,7 +337,7 @@ export function MediaPreview({ data }: MediaPreviewProps) {
             <div className="bg-card border rounded-lg p-4">
               <audio
                 ref={mediaRef as React.RefObject<HTMLAudioElement>}
-                src={data.src}
+                src={resolvedSrc || data.src}
                 onLoadedData={() => setIsLoading(false)}
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={() => setIsPlaying(false)}
@@ -317,7 +347,7 @@ export function MediaPreview({ data }: MediaPreviewProps) {
                   setErrorMessage("Não foi possível carregar o áudio")
                 }}
               >
-                <source src={data.src} type={data.audioType || "audio/mpeg"} />
+                <source src={resolvedSrc || data.src} type={data.audioType || "audio/mpeg"} />
               </audio>
 
               {/* Custom controls */}

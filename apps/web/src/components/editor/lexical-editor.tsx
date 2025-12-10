@@ -116,9 +116,17 @@ import type React from "react"
 // Create and export the EditorLoadingContext
 export const EditorLoadingContext = createContext<boolean>(false)
 
+// Create and export the ProjectIdContext
+export const ProjectIdContext = createContext<string | null>(null)
+
 // Export the provider component for convenience
 export function EditorLoadingProvider({ children, value }: { children: React.ReactNode; value: boolean }) {
   return <EditorLoadingContext.Provider value={value}>{children}</EditorLoadingContext.Provider>
+}
+
+// Export the ProjectId provider component
+export function ProjectIdProvider({ children, value }: { children: React.ReactNode; value: string | null }) {
+  return <ProjectIdContext.Provider value={value}>{children}</ProjectIdContext.Provider>
 }
 
 function StructureDeleteConfirmPlugin() {
@@ -360,6 +368,7 @@ interface EditorProps {
   onChange?: (state: string) => void
   editorRef?: React.MutableRefObject<LexicalEditor | null>
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
+  projectId?: string | null
 }
 
 // Criar um plugin para gerenciar a referência do editor:
@@ -417,7 +426,7 @@ const MATCHERS: LinkMatcher[] = [
 ]
 
 // Atualizar a função Editor para incluir o EditorRefPlugin:
-export function Editor({ className, initialState, onChange, editorRef, onLoadingChange }: EditorProps) {
+export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId }: EditorProps) {
   const [isLoadingProject, setIsLoadingProject] = useState(false)
 
   useEffect(() => {
@@ -433,7 +442,8 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
         editorState: initialState || undefined,
       }}
     >
-      <EditorLoadingProvider value={isLoadingProject}>
+      <ProjectIdProvider value={projectId || null}>
+        <EditorLoadingProvider value={isLoadingProject}>
         <div className={cn("rounded-lg border-2 border-gray-300 dark:border-gray-700", className)}>
           <YouTubeAudioStyle />
           <EditorToolbar />
@@ -486,6 +496,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
           </div>
         </div>
       </EditorLoadingProvider>
+      </ProjectIdProvider>
     </LexicalComposer>
   )
 }
