@@ -2,7 +2,6 @@
 
 import { ImageIcon } from 'lucide-react'
 import type { SerializedGalleryNode } from "../../nodes/gallery-node"
-import { ImageIcon } from 'lucide-react'
 import { AssetImage } from "../../extras/media/asset-image"
 
 export function PreviewGallery({ node }: { node: SerializedGalleryNode }) {
