@@ -198,6 +198,26 @@ export function ImportProjectDialog({
       const newProjectId = generateProjectId()
       await storageAdapter.save(newProjectId, projectName.trim(), importedProject.data, projectTags)
 
+      // Import assets if present
+      if (importedProject.assets && importedProject.assetIndex) {
+        const { assetManager } = await import("@/lib/storage/assets/asset-manager")
+        const importResult = await assetManager.importProjectAssets(
+          importedProject.assets,
+          importedProject.assetIndex,
+          newProjectId
+        )
+
+        console.log("Assets import result:", importResult)
+        
+        if (importResult.imported > 0 || importResult.updated > 0) {
+          toast.info("Assets imported", {
+            description: `${importResult.imported} new assets, ${importResult.updated} updated`,
+            duration: 3000,
+            icon: "📦",
+          })
+        }
+      }
+
       const projectData = {
         id: newProjectId,
         name: projectName.trim(),

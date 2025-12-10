@@ -5,6 +5,8 @@
  */
 
 import JSZip from "jszip"
+import { assetManager } from "@/lib/storage/assets/asset-manager"
+import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
 
 export interface ProjectData {
   id: string
@@ -29,6 +31,7 @@ export interface ProjectMetadata {
   storageType: string
   version: string
   exportedAt?: string
+  assetsCount?: number
 }
 
 export interface ImportedProjectData {
@@ -37,6 +40,8 @@ export interface ImportedProjectData {
   data: string
   tags: string[]
   metadata: ProjectMetadata | null
+  assets?: Record<string, AssetData>
+  assetIndex?: Record<string, AssetUsage[]>
 }
 
 export interface FolderStructureData {
@@ -49,6 +54,8 @@ export class ProjectImporter {
   private static readonly SUPPORTED_EXTENSIONS = ['.zip', '.gglexical']
   private static readonly METADATA_FILENAME = 'index.json'
   private static readonly DATA_FILENAME = 'data.gglexical'
+  private static readonly ASSETS_FOLDER = 'assets'
+  private static readonly ASSET_INDEX_FILENAME = 'asset_index.json'
 
   /**
    * Import from file (ZIP or .gglexical)
@@ -117,12 +124,45 @@ export class ProjectImporter {
       // Validate lexical data
       JSON.parse(dataContent)
 
+      // Import assets if present
+      const assets: Record<string, AssetData> = {}
+      let assetIndex: Record<string, AssetUsage[]> = {}
+
+      // Check for asset_index.json
+      const assetIndexPath = `${projectFolderPath}/${ProjectImporter.ASSET_INDEX_FILENAME}`
+      const assetIndexFile = zipContent.files[assetIndexPath]
+      
+      if (assetIndexFile) {
+        const assetIndexContent = await assetIndexFile.async('text')
+        assetIndex = JSON.parse(assetIndexContent)
+      }
+
+      // Check for assets folder
+      const assetsPath = `${projectFolderPath}/${ProjectImporter.ASSETS_FOLDER}/`
+      const assetFiles = Object.keys(zipContent.files).filter(path => 
+        path.startsWith(assetsPath) && path.endsWith('.json')
+      )
+
+      for (const assetPath of assetFiles) {
+        const assetFile = zipContent.files[assetPath]
+        if (assetFile && !assetFile.dir) {
+          const assetContent = await assetFile.async('text')
+          const assetData: AssetData = JSON.parse(assetContent)
+          const assetId = assetPath.split('/').pop()?.replace('.json', '')
+          if (assetId) {
+            assets[assetId] = assetData
+          }
+        }
+      }
+
       return {
         id: metadata.id,
         name: metadata.name,
         data: dataContent,
         tags: metadata.tags,
-        metadata
+        metadata,
+        assets: Object.keys(assets).length > 0 ? assets : undefined,
+        assetIndex: Object.keys(assetIndex).length > 0 ? assetIndex : undefined,
       }
     } catch (error) {
       throw new Error(`Failed to parse project data: ${error instanceof Error ? error.message : 'Unknown error'}`)

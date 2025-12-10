@@ -201,6 +201,39 @@ Get storage statistics:
 }
 ```
 
+#### `exportProjectAssets(projectId: string): Promise<Record<string, AssetData>>`
+Export all assets used by a specific project for backup/transfer.
+
+**Returns:** Map of assetId → AssetData
+
+#### `exportProjectAssetIndex(projectId: string): Promise<Record<string, AssetUsage[]>>`
+Export usage index for a specific project.
+
+**Returns:** Map of assetId → AssetUsage[] (filtered for project)
+
+#### `importProjectAssets(assets, assetIndex, targetProjectId): Promise<ImportResult>`
+Import assets from exported data into the current storage.
+
+**Parameters:**
+- `assets`: Record<string, AssetData> - Exported assets
+- `assetIndex`: Record<string, AssetUsage[]> - Exported usage index
+- `targetProjectId`: string - ID of project importing the assets
+
+**Returns:**
+```typescript
+{
+  imported: number,  // New assets added
+  updated: number,   // Existing assets updated
+  skipped: number    // Assets that failed to import
+}
+```
+
+#### `removeProjectFromAssets(projectId: string): Promise<number>`
+Remove all usage tracking for a project (when project is deleted).
+Returns count of assets affected
+}
+```
+
 ## Integration with MediaUploadDialog
 
 The `MediaUploadDialog` component has been updated to:
@@ -232,7 +265,65 @@ Example usage:
 3. **Centralized Management**: Single source of truth for all assets
 4. **Space Efficiency**: Remove unused assets, compress before storage
 5. **Performance**: Load assets on-demand instead of embedding in documents
-6. **Migration Ready**: Easy to migrate to cloud storage in the future
+6. **Export/Import Support**: Assets are included when exporting/importing projects
+7. **Migration Ready**: Easy to migrate to cloud storage in the future
+
+## Project Export/Import
+
+### Export Structure
+
+When exporting a project, assets are included in the ZIP file:
+
+```
+projeto-abc123/
+├── index.json           # Project metadata (includes assetsCount)
+├── data.gglexical       # Lexical editor state
+├── asset_index.json     # Asset usage tracking for this project
+└── assets/              # Asset files
+    ├── hash1.json       # Asset metadata + data
+    ├── hash2.json
+    └── hash3.json
+```
+
+### Export Process
+
+```typescript
+// Automatic - handled by ProjectExporter
+const zipBlob = await ProjectExporter.createZipFile(projectData, hash)
+// Assets are automatically included
+```
+
+### Import Process
+
+```typescript
+// Automatic - handled by ProjectImporter
+const importedData = await ProjectImporter.importFromFile(file)
+// importedData.assets and importedData.assetIndex are populated
+
+// Then imported automatically when saving:
+await assetManager.importProjectAssets(
+  importedData.assets,
+  importedData.assetIndex,
+  newProjectId
+)
+```
+
+### Asset Index Structure in Export
+
+The `asset_index.json` contains only usage tracking for the exported project:
+
+```json
+{
+  "abc123...": [
+    {
+      "projectId": "project-123",
+      "nodeIds": ["node-456", "node-789"]
+    }
+  ]
+}
+```
+
+When imported, the projectId is updated to the new project's ID.
 
 ## Future Enhancements
 
@@ -244,6 +335,7 @@ Example usage:
 - [ ] Asset analytics (usage statistics)
 - [ ] Asset sharing between users
 - [ ] Asset CDN integration
+- [x] Project export/import with assets
 
 ## Migration Notes
 
