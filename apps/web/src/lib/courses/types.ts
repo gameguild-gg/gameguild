@@ -1,4 +1,4 @@
-import { EnrollmentStatus as APIEnrollmentStatus } from '@/lib/core/api/generated/types.gen';
+import { EnrollmentStatus as APIEnrollmentStatus } from '@/lib/core/api/generated';
 
 export interface Course {
   id: string;

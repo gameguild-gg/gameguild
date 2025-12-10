@@ -1,7 +1,7 @@
 import { NotImplemented, ProcExit } from './errors';
+import { MemFS } from './memfs';
 import { Memory } from './memory';
 import { ESUCCESS, getImportObject, RAF_PROC_EXIT_CODE } from './shared';
-import { MemFS } from './memfs';
 
 interface AppExports extends WebAssembly.Exports {
   memory: WebAssembly.Memory;
@@ -28,9 +28,9 @@ export class App {
     this.handles = new Map();
     this.nextHandle = 0;
 
-    const env = getImportObject(this);
+    const env = getImportObject(this as unknown as Record<string, unknown>);
 
-    const wasi_unstable = getImportObject(this, ['proc_exit', 'environ_sizes_get', 'environ_get', 'args_sizes_get', 'args_get', 'random_get', 'clock_time_get', 'poll_oneoff']);
+    const wasi_unstable = getImportObject(this as unknown as Record<string, unknown>, ['proc_exit', 'environ_sizes_get', 'environ_get', 'args_sizes_get', 'args_get', 'random_get', 'clock_time_get', 'poll_oneoff']);
 
     // Fill in some WASI implementations from memfs.
     Object.assign(wasi_unstable, this.memfs.wasmExports);
@@ -84,7 +84,7 @@ export class App {
     let size = 0;
     const names = Object.getOwnPropertyNames(this.environ);
     for (const name of names) {
-      const value = this.environ[name];
+      const value = this.environ[name] ?? '';
       // +2 to account for = and \0 in "name=value\0".
       size += name.length + value.length + 2;
     }
@@ -99,7 +99,7 @@ export class App {
     for (const name of names) {
       this.mem.write32(environ_ptrs, environ_buf);
       environ_ptrs += 4;
-      environ_buf += this.mem.writeStr(environ_buf, `${name}=${this.environ[name]}`);
+      environ_buf += this.mem.writeStr(environ_buf, `${name}=${this.environ[name] ?? ''}`);
     }
     this.mem.write32(environ_ptrs, 0);
     return ESUCCESS;

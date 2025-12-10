@@ -1,7 +1,7 @@
-import { expose } from 'comlink';
 import { CodeExecutorBase, StageOutput } from '@/components/content/coding/code-executor.base';
-import { API } from './api';
+import { expose } from 'comlink';
 import { RunnerStatus } from '../types';
+import { API } from './api';
 import { MemFS } from './memfs';
 
 // Variables for API management
@@ -120,7 +120,7 @@ class ClangWorker implements CodeExecutorBase {
       // Execution stage
       this.currentStage = 'execute';
       const buffer = this.api.getFileContents(wasm);
-      const testMod = await WebAssembly.compile(buffer);
+      const testMod = await WebAssembly.compile(buffer.buffer as ArrayBuffer);
       await this.api.run(testMod, wasm);
 
       // Successful completion - reset to ready state

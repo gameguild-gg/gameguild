@@ -1,5 +1,5 @@
-import type React from "react"
 import type { CodeFile } from "@/components/editor/extras/source-code/types"
+import type React from "react"
 
 interface UseFileStateProps {
   files: CodeFile[]
@@ -9,7 +9,7 @@ interface UseFileStateProps {
 interface UseFileStateReturn {
   toggleFileVisibility: (fileId: string) => void
   setMainFile: (fileId: string) => void
-  setFileReadOnlyState: (fileId: string, state: "always" | "never" | null) => void
+  setFileReadOnlyState: (fileId: string, state: "hidden" | "always" | "never" | null) => void
   isFileReadOnly: (file: CodeFile, globalReadOnly: boolean) => boolean
 }
 
@@ -33,7 +33,7 @@ export function useFileState({ files, setFiles }: UseFileStateProps): UseFileSta
   }
 
   // Set file read-only state
-  const setFileReadOnlyState = (fileId: string, state: "always" | "never" | null) => {
+  const setFileReadOnlyState = (fileId: string, state: "hidden" | "always" | "never" | null) => {
     setFiles((prevFiles) => prevFiles.map((file) => (file.id === fileId ? { ...file, readOnlyState: state } : file)))
   }
 

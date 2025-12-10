@@ -205,7 +205,7 @@ export function EnhancedFilterProvider<T extends Record<string, unknown> = Recor
 
   const registerFilterConfig = useCallback(
     <K extends keyof T>(config: EnhancedFilterConfig<T, K>) => {
-      filterConfigs.set(config.key, config as EnhancedFilterConfig<T>);
+      filterConfigs.set(config.key as keyof T, config as unknown as EnhancedFilterConfig<T, keyof T>);
     },
     [filterConfigs],
   );

@@ -1,15 +1,15 @@
 'use client';
 
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { cn } from '@/lib/utils';
-import { BarChart3, ClipboardList, Code, FileText, HelpCircle, MessageSquare, Trophy, Folder, FolderOpen } from 'lucide-react';
+import { BarChart3, ClipboardList, Code, FileText, Folder, FolderOpen, HelpCircle, MessageSquare, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useSidebar } from './sidebar-context';
-import { ThemeToggle } from '@/components/theme/theme-toggle';
 
 interface CourseContentSidebarProps {
   courseSlug: string;
@@ -47,15 +47,15 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const contentSlug = item.slug || item.id || 'untitled';
+  const contentSlug = (item as any).slug || item.id || 'untitled';
   const currentPath = parentPath ? `${parentPath}/${contentSlug}` : contentSlug;
   const href = `/p/${courseSlug}/${currentPath}`;
   const isActive = pathname === href;
   const Icon = getContentIcon(item.type || 0);
 
   const hasChildren = item.children && item.children.length > 0;
-  const hasActiveChild = hasChildren && item.children?.some(child => {
-    const childSlug = child.slug || child.id || 'untitled';
+  const hasActiveChild = hasChildren && item.children?.some((child: ProgramContent) => {
+    const childSlug = (child as any).slug || child.id || 'untitled';
     const childPath = `${currentPath}/${childSlug}`;
     const childHref = `/p/${courseSlug}/${childPath}`;
     return pathname === childHref || pathname.startsWith(`${childHref}/`);
@@ -73,7 +73,7 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
     if (hasChildren) {
       setIsExpanded(!isExpanded);
     }
-    
+
     // Close sidebar on mobile when clicking a content item
     if (isMobile) {
       closeSidebar();
@@ -103,14 +103,14 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
         >
 
           {hasChildren ? (
-              isExpanded ? (
-                <FolderOpen className="h-3 w-3" />
-              ) : (
-                <Folder className="h-3 w-3" />
-              )
+            isExpanded ? (
+              <FolderOpen className="h-3 w-3" />
             ) : (
-              <Icon className="h-3 w-3" />
-            )}
+              <Folder className="h-3 w-3" />
+            )
+          ) : (
+            <Icon className="h-3 w-3" />
+          )}
           <div className="flex-1 min-w-0">
             <div className="font-medium text-sm break-words">{item.title || 'Untitled'}</div>
             {item.estimatedMinutes && (
@@ -128,7 +128,7 @@ function ContentItem({ item, courseSlug, index, level, parentPath = '', isMobile
           isExpanded ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
         )}>
           <div className="mt-1">
-            {item.children!.map((child, childIndex) => (
+            {item.children!.map((child: ProgramContent, childIndex: number) => (
               <ContentItem
                 key={child.id}
                 item={child}
@@ -181,15 +181,15 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <Button
-                 variant="ghost"
-                 size="sm"
-                 asChild
-                 className="text-muted-foreground hover:text-foreground"
-               >
-                 <Link href="/programs">
-                   ← Courses
-                 </Link>
-               </Button>
+                variant="ghost"
+                size="sm"
+                asChild
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Link href="/programs">
+                  ← Courses
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

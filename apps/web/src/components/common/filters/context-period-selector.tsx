@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import type { PeriodType } from './filter-context';
 import { useFilterContext } from './filter-context';
 import { PeriodValue, SmartPeriodSelector } from './smart-period-selector';
 
@@ -17,7 +17,7 @@ interface ContextPeriodSelectorProps {
 export function ContextPeriodSelector({ className, showNavigation = true, maxVisible = 3 }: ContextPeriodSelectorProps) {
   const { state, setPeriod } = useFilterContext();
 
-  const handlePeriodChange = (period: string) => {
+  const handlePeriodChange = (period: PeriodType) => {
     setPeriod(period);
   };
 

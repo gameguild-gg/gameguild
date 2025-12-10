@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
 import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProgramContentDto } from '@/lib/api/generated/types.gen';
+import React from 'react';
 
 interface CourseContentPageClientProps {
-    programData: ProgramContentDto;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    programData: any;
     content: ProgramContentDto;
     contentPath: string[];
     basePath: string;
@@ -28,7 +29,7 @@ export function CourseContentPageClient({
                 <Card className="transition-all duration-300 py-0">
                     <CardContent className="px-6 py-6">
                         {/* Content Body */}
-                        {content.body && (
+                        {content.body !== undefined && content.body !== null && (
                             <div className="prose max-w-none">
                                 <MarkdownRenderer content={JSON.stringify(content.body)} />
                             </div>

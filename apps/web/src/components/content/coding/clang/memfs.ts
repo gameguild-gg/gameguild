@@ -53,7 +53,7 @@ export class MemFS {
     this.stdinStrPos = 0;
     this.hostMem_ = null;
 
-    const env = getImportObject(this, ['abort', 'host_write', 'host_read', 'memfs_log', 'copy_in', 'copy_out']);
+    const env = getImportObject(this as unknown as Record<string, unknown>, ['abort', 'host_write', 'host_read', 'memfs_log', 'copy_in', 'copy_out']);
 
     this.ready = (async () => {
       try {

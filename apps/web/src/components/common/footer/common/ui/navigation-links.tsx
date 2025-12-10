@@ -84,7 +84,6 @@ export function NavigationLinks() {
                 'Blog', 
                 'Careers', 
                 'News', 
-                'Contact', 
                 'Documentation', 
                 'Tutorials', 
                 'Support', 

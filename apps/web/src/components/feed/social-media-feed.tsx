@@ -303,15 +303,15 @@ export function SocialMediaFeed({ className }: SocialMediaFeedProps) {
               {/* Media */}
               {post.content.media && post.content.media.length > 0 && (
                 <div className="relative">
-                  {post.content.media[0].type === 'video' ? (
+                  {post.content.media[0]?.type === 'video' ? (
                     <div className="relative group">
-                      <video className="w-full h-auto max-h-[600px] object-cover" poster={post.content.media[0].thumbnail} controls preload="metadata">
-                        <source src={post.content.media[0].url} type="video/mp4" />
+                      <video className="w-full h-auto max-h-[600px] object-cover" poster={post.content.media[0]?.thumbnail} controls preload="metadata">
+                        <source src={post.content.media[0]?.url} type="video/mp4" />
                       </video>
                       <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors pointer-events-none" />
                     </div>
                   ) : (
-                    <Image src={post.content.media[0].url} alt="Post content" width={800} height={600} className="w-full h-auto max-h-[600px] object-cover" />
+                    <Image src={post.content.media[0]?.url ?? ''} alt="Post content" width={800} height={600} className="w-full h-auto max-h-[600px] object-cover" />
                   )}
                 </div>
               )}
