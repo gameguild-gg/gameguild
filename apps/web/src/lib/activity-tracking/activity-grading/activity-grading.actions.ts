@@ -11,8 +11,8 @@ import {
   getApiProgramsByProgramIdActivityGradesStudentByProgramUserId,
   postApiProgramsByProgramIdActivityGrades,
   putApiProgramsByProgramIdActivityGradesByGradeId,
-} from '@/lib/api/generated/sdk.gen';
-import type { ActivityGradeDto } from '@/lib/api/generated/types.gen';
+} from '@/lib/api/generated';
+import type { ActivityGradeDto } from '@/lib/api/generated';
 import { revalidateTag } from 'next/cache';
 
 // =============================================================================

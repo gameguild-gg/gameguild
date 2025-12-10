@@ -3,7 +3,7 @@
 import { Editor } from "@/components/editor/lexical-editor"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Save, HardDrive, Eye, Blocks, Home, FileText } from "lucide-react"
+import { Save, HardDrive, Eye, Blocks, Home } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import Link from "next/link"

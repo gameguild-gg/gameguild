@@ -55,7 +55,7 @@ export function ReportButton({ reportType, targetId, targetTitle, variant = 'gho
       toast({
         title: 'Error',
         description: 'Please select a reason for reporting',
-        variant: 'destructive',
+        variant: 'error',
       });
       return;
     }
@@ -89,7 +89,7 @@ export function ReportButton({ reportType, targetId, targetTitle, variant = 'gho
       toast({
         title: 'Error',
         description: 'Failed to submit report. Please try again.',
-        variant: 'destructive',
+        variant: 'error',
       });
     } finally {
       setIsSubmitting(false);

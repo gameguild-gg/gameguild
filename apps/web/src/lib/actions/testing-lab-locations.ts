@@ -7,7 +7,7 @@ import {
   deleteTestingLocation, 
   getTestingLocations
 } from '@/lib/api/testing-lab';
-import type { TestingLocation, CreateTestingLocationDto, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
+import type { TestingLocation, CreateTestingLocationDto, UpdateTestingLocationDto } from '@/lib/api/generated';
 import { revalidatePath } from 'next/cache';
 
 /**

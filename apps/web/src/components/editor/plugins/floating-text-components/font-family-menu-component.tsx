@@ -1,15 +1,21 @@
 "use client"
 
-import { useCallback, useState, useEffect } from "react"
-import { $getSelection, $isRangeSelection } from "lexical"
-import { Type } from "lucide-react"
 import {
+  DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { $getSelection, $isRangeSelection, type LexicalNode } from "lexical"
+import { Type } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+
+// Type extension for nodes that support style methods (like TextNode)
+interface StylableNode extends LexicalNode {
+  getStyle?: () => string;
+  setStyle?: (style: string) => void;
+}
 
 interface FontFamilyMenuComponentProps {
   editor: any
@@ -34,7 +40,7 @@ const GROUPED_FONT_FAMILIES: { [key: string]: FontFamily[] } = {
       name: "Pacifico",
       family: "'Pacifico', cursive",
       variations: [
-        { name: "Regular", style: "normal", weight: "400" }, 
+        { name: "Regular", style: "normal", weight: "400" },
         { name: "Bold", style: "normal", weight: "700" }
       ],
     },
@@ -534,8 +540,9 @@ export function FontFamilyMenuComponent({ editor, currentFontFamily }: FontFamil
         if ($isRangeSelection(selection)) {
           const nodes = selection.getNodes()
           nodes.forEach((node) => {
-            if (node.getTextContent()) {
-              const currentStyle = node.getStyle() || ""
+            const stylableNode = node as StylableNode
+            if (node.getTextContent() && stylableNode.getStyle && stylableNode.setStyle) {
+              const currentStyle = stylableNode.getStyle() || ""
               // Remove existing font properties
               let newStyle = currentStyle
                 .replace(/font-family:\s*[^;]+;?/g, "")
@@ -545,7 +552,7 @@ export function FontFamilyMenuComponent({ editor, currentFontFamily }: FontFamil
               // Add new font properties
               newStyle += `font-family: ${fontFamily}; font-weight: ${fontWeight}; font-style: ${fontStyle};`
 
-              node.setStyle(newStyle.trim())
+              stylableNode.setStyle(newStyle.trim())
             }
           })
         }
@@ -586,7 +593,7 @@ export function FontFamilyMenuComponent({ editor, currentFontFamily }: FontFamil
         {/* MODIFIED: Use local state for display */}
         <span>Font: {getCurrentFontDisplay()}</span>
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent side="right" align="start" className="max-h-[90vh] overflow-y-auto">
+      <DropdownMenuSubContent className="max-h-[90vh] overflow-y-auto">
         {/* MODIFIED: Use local state for display */}
         <div className="px-2 py-1 text-xs font-medium text-muted-foreground">Current: {getCurrentFontDisplay()}</div>
         <DropdownMenuSeparator />
@@ -595,13 +602,13 @@ export function FontFamilyMenuComponent({ editor, currentFontFamily }: FontFamil
             <DropdownMenuSubTrigger>
               <span>{categoryName}</span>
             </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent side="right" align="start">
+            <DropdownMenuSubContent>
               {fontFamilies.map((fontFamily) => (
                 <DropdownMenuSub key={fontFamily.name}>
                   <DropdownMenuSubTrigger>
                     <span style={{ fontFamily: fontFamily.family }}>{fontFamily.name}</span>
                   </DropdownMenuSubTrigger>
-                  <DropdownMenuSubContent side="right" align="start">
+                  <DropdownMenuSubContent>
                     {fontFamily.variations.map((variation) => (
                       <DropdownMenuItem
                         key={`${fontFamily.name}-${variation.name}`}

@@ -222,7 +222,20 @@ export async function createCourse(course: Omit<CourseLegacy, 'id'>): Promise<Co
 export async function updateCourse(id: number, updates: Partial<Omit<CourseLegacy, 'id'>>): Promise<CourseLegacy | undefined> {
   const idx = courses.findIndex((c) => c.id === id);
   if (idx === -1) return undefined;
-  courses[idx] = { ...courses[idx], ...updates };
+  const existing = courses[idx]!;
+  const merged = { ...existing, ...updates } as Partial<CourseLegacy> & Pick<CourseLegacy, 'id'>;
+  const updated: CourseLegacy = {
+    id: existing.id,
+    title: merged.title ?? existing.title,
+    category: merged.category ?? existing.category,
+    description: merged.description ?? existing.description,
+    image: merged.image ?? existing.image,
+    slug: merged.slug ?? existing.slug,
+    level: merged.level ?? existing.level,
+    duration: merged.duration ?? existing.duration,
+    seatsLeft: merged.seatsLeft ?? existing.seatsLeft,
+  };
+  courses[idx] = updated;
   return courses[idx];
 }
 

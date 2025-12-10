@@ -1,13 +1,28 @@
 'use client';
 
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, Users, Star, BookOpen, Play, Eye, FileText, Archive } from 'lucide-react';
-import { Program } from '@/lib/api/generated/types.gen';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import type { Program } from '@/lib/api/generated/types.gen';
+import { Archive, BookOpen, Clock, Eye, FileText, Play, Star, Users } from 'lucide-react';
 
-// Type alias to maintain existing naming
-type Course = Program;
+// Local stub type for Course since backend Program type is disabled
+type CourseAnalytics = {
+  enrollments?: number;
+  averageRating?: number;
+};
+
+type Course = Partial<Program> & {
+  area?: string;
+  status?: 'draft' | 'published' | 'archived' | string | number | null;
+  level?: number | null;
+  difficulty?: number | null;
+  analytics?: CourseAnalytics;
+  tools?: string[];
+  content?: unknown[];
+};
+
+export type CourseCardCourse = Course;
 
 interface CourseCardProps {
   course: Course;
@@ -17,6 +32,18 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ course, onEdit, onView, onEnroll }: CourseCardProps) {
+  const normalizedStatus = (course.status as any)?.toString?.() || 'draft';
+  const normalizedLevel = (() => {
+    if (typeof course.level === 'number') return course.level;
+    if (typeof course.difficulty === 'number') return course.difficulty + 1;
+    return 1;
+  })();
+  const normalizedArea = (course.area as any) ?? (course.category as any);
+  const lessonsCount = (course.content ?? course.programContents)?.length || 0;
+  const analyticsEnrollments = course.analytics?.enrollments ?? (course.currentEnrollments as any) ?? 0;
+  const analyticsRating = course.analytics?.averageRating ?? (typeof course.averageRating === 'number' ? course.averageRating : undefined);
+  const title = course.title || 'Untitled course';
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'published':
@@ -78,28 +105,28 @@ export function CourseCard({ course, onEdit, onView, onEnroll }: CourseCardProps
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-white text-lg leading-tight line-clamp-2 group-hover:text-blue-300 transition-colors">{course.title}</h3>
-            <p className="text-slate-400 text-sm mt-1 capitalize">{course.area}</p>
+            <h3 className="font-semibold text-white text-lg leading-tight line-clamp-2 group-hover:text-blue-300 transition-colors">{title}</h3>
+            <p className="text-slate-400 text-sm mt-1 capitalize">{normalizedArea || 'General'}</p>
           </div>
-          <div className="flex flex-col gap-2 items-end flex-shrink-0">
-            <Badge className={`text-xs px-2 py-1 ${getStatusColor(course.status || 'draft')} flex items-center gap-1`}>
-              {getStatusIcon(course.status || 'draft')}
-              {course.status || 'draft'}
+          <div className="flex flex-col gap-2 items-end shrink-0">
+            <Badge className={`text-xs px-2 py-1 ${getStatusColor(normalizedStatus)} flex items-center gap-1`}>
+              {getStatusIcon(normalizedStatus)}
+              {normalizedStatus}
             </Badge>
-            <div className={`text-xs font-medium ${getLevelColor(course.level)}`}>
-              Level {course.level} • {getLevelName(course.level)}
+            <div className={`text-xs font-medium ${getLevelColor(normalizedLevel)}`}>
+              Level {normalizedLevel} • {getLevelName(normalizedLevel)}
             </div>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="pb-4">
-        <p className="text-slate-300 text-sm line-clamp-3 mb-4">{course.description}</p>
+        <p className="text-slate-300 text-sm line-clamp-3 mb-4">{course.description || ''}</p>
 
         <div className="flex items-center gap-4 text-sm text-slate-400">
           <div className="flex items-center gap-1">
             <BookOpen className="h-4 w-4" />
-            <span>{course.content?.length || 0} lessons</span>
+            <span>{lessonsCount} lessons</span>
           </div>
           <div className="flex items-center gap-1">
             <Clock className="h-4 w-4" />
@@ -107,12 +134,12 @@ export function CourseCard({ course, onEdit, onView, onEnroll }: CourseCardProps
           </div>
           <div className="flex items-center gap-1">
             <Users className="h-4 w-4" />
-            <span>{course.analytics?.enrollments || 0}</span>
+            <span>{analyticsEnrollments}</span>
           </div>
-          {course.analytics?.averageRating && (
+          {analyticsRating !== undefined && (
             <div className="flex items-center gap-1">
               <Star className="h-4 w-4 text-yellow-400" />
-              <span>{course.analytics.averageRating.toFixed(1)}</span>
+              <span>{analyticsRating.toFixed(1)}</span>
             </div>
           )}
         </div>
@@ -147,7 +174,7 @@ export function CourseCard({ course, onEdit, onView, onEnroll }: CourseCardProps
               Edit
             </Button>
           )}
-          {onEnroll && (course.status || 'draft') === 'published' && (
+          {onEnroll && normalizedStatus === 'published' && (
             <Button size="sm" onClick={() => onEnroll(course)} className="flex-1">
               <Play className="h-4 w-4 mr-1" />
               Enroll

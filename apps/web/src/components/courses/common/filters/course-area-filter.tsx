@@ -2,8 +2,8 @@
 
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ChevronDown, Code, Palette, Layers, Headphones } from 'lucide-react';
-import { ProgramCategory as CourseArea } from '@/lib/api/generated/types.gen';
+import { ProgramCategory as CourseArea } from '@/lib/api/generated';
+import { ChevronDown, Code, Headphones, Layers, Palette } from 'lucide-react';
 
 interface CourseAreaFilterProps {
   selectedAreas: CourseArea[];
@@ -36,8 +36,8 @@ export function CourseAreaFilter({ selectedAreas, onToggleArea }: CourseAreaFilt
   const getDisplayText = (selected: CourseArea[]) => {
     if (selected.length === 0) return 'All Areas';
     if (selected.length === 1) {
-  const item = areaItems.find((i) => i.value === selected[0]);
-  return item?.label || 'Category';
+      const item = areaItems.find((i) => i.value === selected[0]);
+      return item?.label || 'Category';
     }
     return `${selected.length} selected`;
   };
@@ -56,19 +56,18 @@ export function CourseAreaFilter({ selectedAreas, onToggleArea }: CourseAreaFilt
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className={`${
-            selectedAreas.length === 0 ? 'backdrop-blur-md border border-slate-600/30 text-slate-400' : 'backdrop-blur-md border border-purple-400/40 text-white shadow-lg shadow-purple-500/20'
-          } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-purple-400/60 hover:border-purple-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
+          className={`${selectedAreas.length === 0 ? 'backdrop-blur-md border border-slate-600/30 text-slate-400' : 'backdrop-blur-md border border-purple-400/40 text-white shadow-lg shadow-purple-500/20'
+            } rounded-xl px-4 h-10 text-sm focus:outline-none focus:border-purple-400/60 hover:border-purple-400/60 hover:bg-white/5 transition-all duration-200 justify-between min-w-[140px]`}
           style={
             selectedAreas.length === 0
               ? {
-                  background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
-                  boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
-                }
+                background: 'radial-gradient(ellipse 80% 60% at center, rgba(51, 65, 85, 0.3) 0%, rgba(30, 41, 59, 0.25) 50%, rgba(15, 23, 42, 0.2) 100%)',
+                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.05)',
+              }
               : {
-                  background: 'radial-gradient(ellipse 80% 60% at center, rgba(147, 51, 234, 0.4) 0%, rgba(126, 34, 206, 0.3) 50%, rgba(107, 33, 168, 0.2) 100%)',
-                  boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(147, 51, 234, 0.2)',
-                }
+                background: 'radial-gradient(ellipse 80% 60% at center, rgba(147, 51, 234, 0.4) 0%, rgba(126, 34, 206, 0.3) 50%, rgba(107, 33, 168, 0.2) 100%)',
+                boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(147, 51, 234, 0.2)',
+              }
           }
         >
           <div className="flex items-center gap-2">

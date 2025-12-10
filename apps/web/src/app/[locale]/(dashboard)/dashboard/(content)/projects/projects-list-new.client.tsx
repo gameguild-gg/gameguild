@@ -1,14 +1,14 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
-import { Search, Filter, Grid3X3, List, Plus, Star, Users, Tag } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import type { Project } from '@/lib/api/generated/types.gen';
+import type { Project } from '@/lib/api/generated/stub-types';
+import { Filter, Grid3X3, List, Plus, Search, Star, Tag, Users } from 'lucide-react';
+import Link from 'next/link';
+import React from 'react';
 import CreateProjectDialog from '../../../../../../components/projects/create-project-dialog';
 
 type ViewMode = 'grid' | 'list';
@@ -38,12 +38,12 @@ export function ProjectsListClient({ initialProjects, onCreate }: { initialProje
       '1': { label: 'Published', variant: 'default' },
       '2': { label: 'Archived', variant: 'secondary' },
     };
-    const info = statusMap[statusKey] || statusMap['0'];
+    const info = statusMap[statusKey] || statusMap['0']!;
     return <Badge variant={info.variant}>{info.label}</Badge>;
   };
 
   const ProjectCard = ({ project }: { project: Project }) => (
-    <Link href={`./${project.slug ?? project.id}`}> 
+    <Link href={`./${project.slug ?? project.id}`}>
       <Card className="dark-card group hover:shadow-xl transition-all duration-200 cursor-pointer">
         <CardHeader>
           <div className="flex items-start justify-between gap-3">

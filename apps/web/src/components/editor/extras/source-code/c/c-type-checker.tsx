@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import type { editor } from "monaco-editor"
+import { useEffect, useState } from "react"
 
 interface CTypeCheckerProps {
   monaco: typeof import("monaco-editor") | null
@@ -122,9 +122,11 @@ export function CTypeChecker({ monaco, editor, code }: CTypeCheckerProps) {
         const varMatch = line.match(varDeclarationRegex)
 
         if (varMatch && !line.includes("(")) {
-          const varType = varMatch[1]
+          const varType = varMatch[1] ?? ''
           const varName = varMatch[2]
-          variables[varName] = varType
+          if (varName) {
+            variables[varName] = varType
+          }
         }
 
         // Check for function declarations
@@ -133,9 +135,11 @@ export function CTypeChecker({ monaco, editor, code }: CTypeCheckerProps) {
         const funcMatch = line.match(funcDeclarationRegex)
 
         if (funcMatch) {
-          const returnType = funcMatch[1]
+          const returnType = funcMatch[1] ?? ''
           const funcName = funcMatch[2]
-          functions[funcName] = returnType
+          if (funcName) {
+            functions[funcName] = returnType
+          }
 
           if (line.includes("{")) {
             inFunction = true
@@ -219,8 +223,8 @@ export function CTypeChecker({ monaco, editor, code }: CTypeCheckerProps) {
         let arrayMatch
 
         while ((arrayMatch = arrayAccessRegex.exec(line)) !== null) {
-          const arrayName = arrayMatch[1]
-          const indexExpr = arrayMatch[2]
+          const arrayName = arrayMatch[1] ?? ''
+          const indexExpr = arrayMatch[2] ?? ''
 
           // Check for negative indices
           if (indexExpr.includes("-") || indexExpr === "0-1") {
@@ -249,9 +253,10 @@ export function CTypeChecker({ monaco, editor, code }: CTypeCheckerProps) {
 
       // Check for unbalanced braces
       if (braceCount !== 0) {
+        const lastLine = lines[lines.length - 1] ?? ""
         errors.push({
           line: lines.length,
-          column: lines[lines.length - 1].length,
+          column: lastLine.length,
           message: braceCount > 0 ? "Missing closing brace(s)" : "Extra closing brace(s)",
           severity: "error",
         })
