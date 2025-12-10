@@ -540,6 +540,165 @@ export class AssetManager {
       unusedAssets,
     }
   }
+
+  /**
+   * Export assets for a specific project
+   * Returns a map of assetId -> AssetData for all assets used by the project
+   */
+  async exportProjectAssets(projectId: string): Promise<Record<string, AssetData>> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    const index = await this.loadIndex()
+    const projectAssets: Record<string, AssetData> = {}
+
+    // Find all assets used by this project
+    for (const assetId in index.assets) {
+      const usageList = index.assets[assetId]
+      if (usageList && usageList.some((u) => u.projectId === projectId)) {
+        const assetData = await this.getAssetFromStore(assetId)
+        if (assetData) {
+          projectAssets[assetId] = assetData
+        }
+      }
+    }
+
+    console.log(`AssetManager: Exported ${Object.keys(projectAssets).length} assets for project ${projectId}`)
+    return projectAssets
+  }
+
+  /**
+   * Export usage index for a specific project
+   * Returns only the usage tracking for assets used by this project
+   */
+  async exportProjectAssetIndex(projectId: string): Promise<Record<string, AssetUsage[]>> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    const index = await this.loadIndex()
+    const projectIndex: Record<string, AssetUsage[]> = {}
+
+    // Filter index to only include assets used by this project
+    for (const assetId in index.assets) {
+      const usageList = index.assets[assetId]
+      if (usageList && usageList.some((u) => u.projectId === projectId)) {
+        // Only include usage for this specific project
+        projectIndex[assetId] = usageList.filter((u) => u.projectId === projectId)
+      }
+    }
+
+    return projectIndex
+  }
+
+  /**
+   * Import assets from exported data
+   * Merges imported assets with existing ones, updating usage tracking
+   */
+  async importProjectAssets(
+    assets: Record<string, AssetData>,
+    assetIndex: Record<string, AssetUsage[]>,
+    targetProjectId: string
+  ): Promise<{ imported: number; skipped: number; updated: number }> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    let imported = 0
+    let skipped = 0
+    let updated = 0
+
+    const index = await this.loadIndex()
+
+    for (const assetId in assets) {
+      const assetData = assets[assetId]
+      if (!assetData) continue
+
+      try {
+        // Check if asset already exists
+        const existingAsset = await this.getAssetFromStore(assetId)
+
+        if (existingAsset) {
+          // Asset exists, just update usage tracking
+          updated++
+        } else {
+          // New asset, save to store
+          await this.saveAssetToStore(assetData)
+          imported++
+        }
+
+        // Update usage index with new project ID
+        const importedUsage = assetIndex[assetId] || []
+        let currentUsageList = index.assets[assetId] || []
+
+        // Update usage to point to target project
+        for (const usage of importedUsage) {
+          const existingUsage = currentUsageList.find((u) => u.projectId === targetProjectId)
+          
+          if (existingUsage) {
+            // Merge node IDs
+            for (const nodeId of usage.nodeIds) {
+              if (!existingUsage.nodeIds.includes(nodeId)) {
+                existingUsage.nodeIds.push(nodeId)
+              }
+            }
+          } else {
+            // Add new usage entry
+            currentUsageList.push({
+              projectId: targetProjectId,
+              nodeIds: usage.nodeIds,
+            })
+          }
+        }
+
+        index.assets[assetId] = currentUsageList
+      } catch (error) {
+        console.error(`Failed to import asset ${assetId}:`, error)
+        skipped++
+      }
+    }
+
+    // Save updated index
+    await this.saveIndex(index)
+
+    console.log(`AssetManager: Import complete - ${imported} imported, ${updated} updated, ${skipped} skipped`)
+    return { imported, skipped, updated }
+  }
+
+  /**
+   * Remove project from all asset usage tracking (when project is deleted)
+   */
+  async removeProjectFromAssets(projectId: string): Promise<number> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    const index = await this.loadIndex()
+    let removedCount = 0
+
+    for (const assetId in index.assets) {
+      const usageList = index.assets[assetId]
+      if (usageList) {
+        const originalLength = usageList.length
+        index.assets[assetId] = usageList.filter((u) => u.projectId !== projectId)
+        
+        if (index.assets[assetId].length < originalLength) {
+          removedCount++
+        }
+
+        // If no more usages, delete the asset
+        if (index.assets[assetId].length === 0) {
+          delete index.assets[assetId]
+          await this.deleteAssetFromStore(assetId)
+        }
+      }
+    }
+
+    await this.saveIndex(index)
+    console.log(`AssetManager: Removed project ${projectId} from ${removedCount} assets`)
+    return removedCount
+  }
 }
 
 // Export singleton instance

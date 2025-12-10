@@ -5,6 +5,8 @@
  */
 
 import JSZip from "jszip"
+import { assetManager } from "@/lib/storage/assets/asset-manager"
+import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
 
 export interface ProjectData {
   id: string
@@ -29,26 +31,35 @@ export interface ProjectMetadata {
   storageType: string
   version: string
   exportedAt: string
+  assetsCount?: number
 }
 
 export interface ExportedProjectStructure {
   metadata: ProjectMetadata
   data: string
   folderName: string
+  assets?: Record<string, AssetData>
+  assetIndex?: Record<string, AssetUsage[]>
 }
 
 export class ProjectExporter {
-  private static readonly EXPORT_VERSION = "1.0"
+  private static readonly EXPORT_VERSION = "2.0" // Updated to include assets
   private static readonly METADATA_FILENAME = "index.json"
   private static readonly DATA_FILENAME = "data.gglexical"
+  private static readonly ASSETS_FOLDER = "assets"
+  private static readonly ASSET_INDEX_FILENAME = "asset_index.json"
 
   /**
    * Prepare project data for export with standardized structure
    */
-  static prepareForExport(
+  static async prepareForExport(
     projectData: ProjectData,
     hash: string
-  ): ExportedProjectStructure {
+  ): Promise<ExportedProjectStructure> {
+    // Export project assets
+    const projectAssets = await assetManager.exportProjectAssets(projectData.id)
+    const assetIndex = await assetManager.exportProjectAssetIndex(projectData.id)
+
     const metadata: ProjectMetadata = {
       id: projectData.id,
       name: projectData.name,
@@ -59,13 +70,16 @@ export class ProjectExporter {
       updatedAt: projectData.updatedAt,
       storageType: projectData.storageType || "local",
       version: ProjectExporter.EXPORT_VERSION,
-      exportedAt: new Date().toISOString()
+      exportedAt: new Date().toISOString(),
+      assetsCount: Object.keys(projectAssets).length,
     }
 
     return {
       metadata,
       data: projectData.data,
-      folderName: `projeto-${projectData.id}`
+      folderName: `projeto-${projectData.id}`,
+      assets: projectAssets,
+      assetIndex,
     }
   }
 
@@ -95,7 +109,7 @@ export class ProjectExporter {
     projectData: ProjectData,
     hash: string
   ): Promise<Blob> {
-    const exportedProject = ProjectExporter.prepareForExport(projectData, hash)
+    const exportedProject = await ProjectExporter.prepareForExport(projectData, hash)
     const folderStructure = ProjectExporter.createFolderStructure(exportedProject)
 
     const zip = new JSZip()
@@ -112,6 +126,30 @@ export class ProjectExporter {
     
     // Add data file
     projectFolder.file(folderStructure.dataFileName, folderStructure.dataContent)
+
+    // Add assets if present
+    if (exportedProject.assets && Object.keys(exportedProject.assets).length > 0) {
+      const assetsFolder = projectFolder.folder(ProjectExporter.ASSETS_FOLDER)
+      
+      if (assetsFolder) {
+        // Add each asset file
+        for (const assetId in exportedProject.assets) {
+          const assetData = exportedProject.assets[assetId]
+          if (assetData) {
+            // Save asset metadata and data as JSON
+            assetsFolder.file(`${assetId}.json`, JSON.stringify(assetData, null, 2))
+          }
+        }
+
+        // Add asset index
+        if (exportedProject.assetIndex) {
+          projectFolder.file(
+            ProjectExporter.ASSET_INDEX_FILENAME,
+            JSON.stringify(exportedProject.assetIndex, null, 2)
+          )
+        }
+      }
+    }
 
     // Generate ZIP blob
     return await zip.generateAsync({ 
@@ -168,11 +206,12 @@ export class ProjectExporter {
   /**
    * Get metadata only (for quick sync checks)
    */
-  static getMetadataOnly(
+  static async getMetadataOnly(
     projectData: ProjectData,
     hash: string
-  ): ProjectMetadata {
-    return ProjectExporter.prepareForExport(projectData, hash).metadata
+  ): Promise<ProjectMetadata> {
+    const exportedProject = await ProjectExporter.prepareForExport(projectData, hash)
+    return exportedProject.metadata
   }
 
   /**

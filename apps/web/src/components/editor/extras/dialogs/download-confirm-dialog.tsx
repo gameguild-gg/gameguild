@@ -78,13 +78,23 @@ export function DownloadConfirmDialog({
           <div className="space-y-2 text-sm">
             <div className="flex items-center gap-2 text-muted-foreground">
               <FileText className="h-3 w-3" />
-              <span>{project?.name || "project"}.gglexical</span>
+              <span>data.gglexical</span>
               <span className="text-xs text-muted-foreground/70">(Lexical editor data)</span>
             </div>
             <div className="flex items-center gap-2 text-muted-foreground">
               <FileJson className="h-3 w-3" />
               <span>index.json</span>
               <span className="text-xs text-muted-foreground/70">(Project metadata)</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Archive className="h-3 w-3" />
+              <span>assets/</span>
+              <span className="text-xs text-muted-foreground/70">(Media files)</span>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <FileJson className="h-3 w-3" />
+              <span>asset_index.json</span>
+              <span className="text-xs text-muted-foreground/70">(Asset tracking)</span>
             </div>
           </div>
         </div>
