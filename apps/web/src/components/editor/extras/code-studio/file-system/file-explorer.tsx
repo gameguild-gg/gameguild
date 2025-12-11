@@ -291,16 +291,17 @@ export function FileExplorer({
       return
     }
 
-    // Se dropou arquivo sobre arquivo, reordenar
+    // Se dropou arquivo sobre arquivo
     if (targetType === "file" && draggedType === "file" && onReorderFiles) {
       const draggedFile = files.find(f => f.id === draggedId)
       const targetFile = files.find(f => f.id === targetId)
       
       if (draggedFile && targetFile) {
-        // Só reordenar se estão no mesmo nível (mesmo path pai)
+        // Extrair o path pai de cada arquivo
         const draggedPath = draggedFile.path.substring(0, draggedFile.path.lastIndexOf('/') + 1)
         const targetPath = targetFile.path.substring(0, targetFile.path.lastIndexOf('/') + 1)
         
+        // Se estão no mesmo nível, reordenar
         if (draggedPath === targetPath) {
           // Filtrar arquivos do mesmo nível
           const sameLevelFiles = files.filter(f => {
@@ -335,6 +336,59 @@ export function FileExplorer({
             
             onReorderFiles([...otherFiles, ...newOrder])
           }
+          
+          setDraggedItem(null)
+          setDropTarget(null)
+          return
+        } else {
+          // Se estão em níveis diferentes, mover e depois reordenar na posição do alvo
+          const targetFolderPath = targetPath.slice(0, -1)
+          const targetFileId = targetFile.id
+          
+          // Primeiro move o arquivo
+          onMoveFile(draggedId, targetFolderPath)
+          
+          // Depois reordena para garantir a posição correta
+          setTimeout(() => {
+            if (!onReorderFiles) return
+            
+            // Simular o novo path do arquivo movido
+            const draggedFileName = draggedFile.path.substring(draggedFile.path.lastIndexOf('/') + 1)
+            const newDraggedPath = targetFolderPath ? `${targetFolderPath}/${draggedFileName}` : draggedFileName
+            
+            // Pegar todos os arquivos do nível de destino (incluindo o que acabou de ser movido)
+            const targetLevelFiles = files
+              .map(f => {
+                // Atualizar o path do arquivo movido
+                if (f.id === draggedId) {
+                  return { ...f, path: newDraggedPath }
+                }
+                return f
+              })
+              .filter(f => {
+                const filePath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
+                return filePath === targetPath
+              })
+            
+            // Criar nova ordem: remover o movido e inserir antes do alvo
+            const newOrder = targetLevelFiles.filter(f => f.id !== draggedId)
+            const targetIndex = newOrder.findIndex(f => f.id === targetFileId)
+            const movedFile = targetLevelFiles.find(f => f.id === draggedId)
+            
+            if (targetIndex !== -1 && movedFile) {
+              newOrder.splice(targetIndex, 0, movedFile)
+              
+              // Combinar com arquivos de outros níveis
+              const otherFiles = files
+                .filter(f => f.id !== draggedId) // Remover o arquivo movido da lista antiga
+                .filter(f => {
+                  const filePath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
+                  return filePath !== targetPath
+                })
+              
+              onReorderFiles([...otherFiles, ...newOrder])
+            }
+          }, 100)
           
           setDraggedItem(null)
           setDropTarget(null)
@@ -581,6 +635,7 @@ export function FileExplorer({
           <div>
             {subFolders.map(subFolder => renderFolder(subFolder, level + 1))}
             {folderFiles.map((file, index) => renderFile(file, level + 1, index === folderFiles.length - 1))}
+            
             {creatingType && creatingPath === folder.path && (
               <div 
                 className="flex items-center gap-1 px-2 py-1"
@@ -724,7 +779,7 @@ export function FileExplorer({
               e.stopPropagation()
               if (!dragEnabled || !draggedItem || draggedItem.type !== "file") return
               
-              // Get the files in the same level
+              // Get the files in the same level as target
               const filePath = file.path.substring(0, file.path.lastIndexOf('/') + 1)
               const sameLevelFiles = files.filter(f => {
                 const fPath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
@@ -736,28 +791,80 @@ export function FileExplorer({
               
               // Check if same level
               const draggedPath = draggedFile.path.substring(0, draggedFile.path.lastIndexOf('/') + 1)
-              if (draggedPath !== filePath) return
               
-              // Create new order - append after this file
-              const newOrder = [...sameLevelFiles]
-              const draggedIndex = newOrder.findIndex(f => f.id === draggedItem.id)
-              const targetIndex = newOrder.findIndex(f => f.id === file.id)
-              
-              if (draggedIndex !== -1 && targetIndex !== -1) {
-                const [movedFile] = newOrder.splice(draggedIndex, 1)
-                if (!movedFile) return
+              if (draggedPath === filePath) {
+                // Same level - reorder
+                const newOrder = [...sameLevelFiles]
+                const draggedIndex = newOrder.findIndex(f => f.id === draggedItem.id)
+                const targetIndex = newOrder.findIndex(f => f.id === file.id)
                 
-                // Insert after target (no adjustment needed since we're going after)
-                newOrder.splice(targetIndex + (draggedIndex < targetIndex ? 0 : 1), 0, movedFile)
-                
-                const otherFiles = files.filter(f => {
-                  const fPath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
-                  return fPath !== filePath
-                })
-                
-                if (onReorderFiles) {
-                  onReorderFiles([...otherFiles, ...newOrder])
+                if (draggedIndex !== -1 && targetIndex !== -1) {
+                  const [movedFile] = newOrder.splice(draggedIndex, 1)
+                  if (!movedFile) return
+                  
+                  // Insert after target (no adjustment needed since we're going after)
+                  newOrder.splice(targetIndex + (draggedIndex < targetIndex ? 0 : 1), 0, movedFile)
+                  
+                  const otherFiles = files.filter(f => {
+                    const fPath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
+                    return fPath !== filePath
+                  })
+                  
+                  if (onReorderFiles) {
+                    onReorderFiles([...otherFiles, ...newOrder])
+                  }
                 }
+              } else {
+                // Different level - move to target folder and reorder after target file
+                const targetFolderPath = filePath.slice(0, -1)
+                const targetFileId = file.id
+                const draggedFileId = draggedItem.id
+                
+                // Primeiro move o arquivo
+                onMoveFile(draggedFileId, targetFolderPath)
+                
+                // Depois reordena para garantir a posição após o arquivo alvo
+                setTimeout(() => {
+                  if (!onReorderFiles) return
+                  
+                  // Simular o novo path do arquivo movido
+                  const draggedFileName = draggedFile.path.substring(draggedFile.path.lastIndexOf('/') + 1)
+                  const newDraggedPath = targetFolderPath ? `${targetFolderPath}/${draggedFileName}` : draggedFileName
+                  
+                  // Pegar todos os arquivos do nível de destino (incluindo o que acabou de ser movido)
+                  const targetLevelFiles = files
+                    .map(f => {
+                      // Atualizar o path do arquivo movido
+                      if (f.id === draggedFileId) {
+                        return { ...f, path: newDraggedPath }
+                      }
+                      return f
+                    })
+                    .filter(f => {
+                      const fPath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
+                      return fPath === filePath
+                    })
+                  
+                  // Criar nova ordem: remover o movido e inserir após o alvo
+                  const newOrder = targetLevelFiles.filter(f => f.id !== draggedFileId)
+                  const targetIndex = newOrder.findIndex(f => f.id === targetFileId)
+                  const movedFile = targetLevelFiles.find(f => f.id === draggedFileId)
+                  
+                  if (targetIndex !== -1 && movedFile) {
+                    // Inserir após o arquivo alvo
+                    newOrder.splice(targetIndex + 1, 0, movedFile)
+                    
+                    // Combinar com arquivos de outros níveis
+                    const otherFiles = files
+                      .filter(f => f.id !== draggedFileId) // Remover o arquivo movido da lista antiga
+                      .filter(f => {
+                        const fPath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
+                        return fPath !== filePath
+                      })
+                    
+                    onReorderFiles([...otherFiles, ...newOrder])
+                  }
+                }, 100)
               }
               
               setDraggedItem(null)
