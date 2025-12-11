@@ -73,10 +73,6 @@ import { YouTubePlugin } from "./plugins/youtube-plugin"
 import { SpotifyNode } from "./nodes/spotify-node"
 import { SpotifyPlugin } from "./plugins/spotify-plugin"
 
-// Add the import for the SourceCodeNode and SourceCodePlugin:
-import { SourceCodeNode } from "./nodes/source-code-node"
-import { SourceCodePlugin } from "./plugins/source-code-plugin"
-
 // Add the import for the CodeStudioNode and CodeStudioPlugin:
 import { CodeStudioNode } from "./nodes/code-studio-node"
 import { CodeStudioPlugin } from "./plugins/code-studio-plugin"
@@ -326,7 +322,6 @@ const initialConfig = {
     SourceNode,
     YouTubeNode,
     SpotifyNode,
-    SourceCodeNode,
     CodeStudioNode,
     MermaidNode,
     VegaLiteNode,
@@ -477,7 +472,6 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <YouTubePlugin />
             <SpotifyPlugin />
             <CodePlugin />
-            <SourceCodePlugin />
             <CodeStudioPlugin />
             <MermaidPlugin />
             <VegaLitePlugin />
