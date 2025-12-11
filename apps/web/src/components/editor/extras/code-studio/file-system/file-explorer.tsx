@@ -320,8 +320,12 @@ export function FileExplorer({
             // Verificar se o arquivo foi encontrado
             if (!movedFile) return
 
+            // Ajustar o índice de destino se estamos movendo para baixo
+            // Quando removemos o item antes, os índices mudam
+            const adjustedTargetIndex = draggedIndex < targetIndex ? targetIndex - 1 : targetIndex
+
             // Inserir na nova posição
-            newOrder.splice(targetIndex, 0, movedFile)
+            newOrder.splice(adjustedTargetIndex, 0, movedFile)
             
             // Combinar com arquivos de outros níveis mantendo ordem
             const otherFiles = files.filter(f => {
@@ -576,7 +580,7 @@ export function FileExplorer({
         {isExpanded && (
           <div>
             {subFolders.map(subFolder => renderFolder(subFolder, level + 1))}
-            {folderFiles.map(file => renderFile(file, level + 1))}
+            {folderFiles.map((file, index) => renderFile(file, level + 1, index === folderFiles.length - 1))}
             {creatingType && creatingPath === folder.path && (
               <div 
                 className="flex items-center gap-1 px-2 py-1"
@@ -607,31 +611,32 @@ export function FileExplorer({
     )
   }
 
-  const renderFile = (file: CodeFile, level: number = 0) => {
+  const renderFile = (file: CodeFile, level: number = 0, isLastInLevel: boolean = false) => {
     const isActive = file.id === activeFileId
     const isDragging = draggedItem?.id === file.id
     const isDropTarget = dropTarget === file.id
+    const isDropTargetAfter = dropTarget === `${file.id}-after`
     
     return (
-      <div
-        key={file.id}
-        className={cn(
-          "flex items-center gap-1 px-2 py-1 cursor-pointer group text-sm select-none",
-          isActive 
-            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" 
-            : "hover:bg-gray-100 dark:hover:bg-gray-800",
-          isDragging && "opacity-50",
-          isDropTarget && "border-t-2 border-blue-500"
-        )}
-        style={{ paddingLeft: `${level * 12 + 8}px` }}
-        onClick={() => onFileSelect(file.id)}
-        draggable={dragEnabled && !editingId}
-        onDragStart={(e) => handleDragStart(e, file.id, "file")}
-        onDragOver={(e) => handleDragOver(e, file.id)}
-        onDragLeave={handleDragLeave}
-        onDrop={(e) => handleDrop(e, file.id, "file")}
-        onDragEnd={handleDragEnd}
-      >
+      <div key={file.id}>
+        <div
+          className={cn(
+            "flex items-center gap-1 px-2 py-1 cursor-pointer group text-sm select-none",
+            isActive 
+              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300" 
+              : "hover:bg-gray-100 dark:hover:bg-gray-800",
+            isDragging && "opacity-50",
+            isDropTarget && "border-t-2 border-blue-500"
+          )}
+          style={{ paddingLeft: `${level * 12 + 8}px` }}
+          onClick={() => onFileSelect(file.id)}
+          draggable={dragEnabled && !editingId}
+          onDragStart={(e) => handleDragStart(e, file.id, "file")}
+          onDragOver={(e) => handleDragOver(e, file.id)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, file.id, "file")}
+          onDragEnd={handleDragEnd}
+        >
         {dragEnabled && !editingId && (
           <GripVertical className="h-3 w-3 text-gray-400 shrink-0 cursor-grab active:cursor-grabbing" />
         )}
@@ -696,6 +701,70 @@ export function FileExplorer({
             </div>
           </>
         )}
+        </div>
+        
+        {/* Drop zone after last file */}
+        {isLastInLevel && draggedItem?.type === "file" && (
+          <div
+            className={cn(
+              "h-4 transition-all",
+              isDropTargetAfter && "h-8 bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-500"
+            )}
+            style={{ paddingLeft: `${level * 12 + 8}px` }}
+            onDragOver={(e) => {
+              if (!dragEnabled || !draggedItem) return
+              e.preventDefault()
+              e.stopPropagation()
+              e.dataTransfer.dropEffect = "move"
+              setDropTarget(`${file.id}-after`)
+            }}
+            onDragLeave={() => setDropTarget(null)}
+            onDrop={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (!dragEnabled || !draggedItem || draggedItem.type !== "file") return
+              
+              // Get the files in the same level
+              const filePath = file.path.substring(0, file.path.lastIndexOf('/') + 1)
+              const sameLevelFiles = files.filter(f => {
+                const fPath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
+                return fPath === filePath
+              })
+              
+              const draggedFile = files.find(f => f.id === draggedItem.id)
+              if (!draggedFile) return
+              
+              // Check if same level
+              const draggedPath = draggedFile.path.substring(0, draggedFile.path.lastIndexOf('/') + 1)
+              if (draggedPath !== filePath) return
+              
+              // Create new order - append after this file
+              const newOrder = [...sameLevelFiles]
+              const draggedIndex = newOrder.findIndex(f => f.id === draggedItem.id)
+              const targetIndex = newOrder.findIndex(f => f.id === file.id)
+              
+              if (draggedIndex !== -1 && targetIndex !== -1) {
+                const [movedFile] = newOrder.splice(draggedIndex, 1)
+                if (!movedFile) return
+                
+                // Insert after target (no adjustment needed since we're going after)
+                newOrder.splice(targetIndex + (draggedIndex < targetIndex ? 0 : 1), 0, movedFile)
+                
+                const otherFiles = files.filter(f => {
+                  const fPath = f.path.substring(0, f.path.lastIndexOf('/') + 1)
+                  return fPath !== filePath
+                })
+                
+                if (onReorderFiles) {
+                  onReorderFiles([...otherFiles, ...newOrder])
+                }
+              }
+              
+              setDraggedItem(null)
+              setDropTarget(null)
+            }}
+          />
+        )}
       </div>
     )
   }
@@ -753,7 +822,7 @@ export function FileExplorer({
       {/* File Tree */}
       <div className="flex-1 overflow-auto">
         {folders.filter(f => !f.path.includes("/")).map(folder => renderFolder(folder))}
-        {rootFiles.map(file => renderFile(file))}
+        {rootFiles.map((file, index) => renderFile(file, 0, index === rootFiles.length - 1))}
         
         {creatingType && creatingPath === "" && (
           <div className="flex items-center gap-1 px-2 py-1">
