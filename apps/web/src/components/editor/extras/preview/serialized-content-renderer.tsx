@@ -15,7 +15,6 @@ import { PreviewPresentation } from "@/components/editor/plugins/preview-compone
 import { PreviewSource } from "@/components/editor/plugins/preview-components/preview-source"
 import { PreviewYouTube } from "@/components/editor/plugins/preview-components/preview-youtube"
 import { PreviewSpotify } from "@/components/editor/plugins/preview-components/preview-spotify"
-import { PreviewSourceCode } from "@/components/editor/plugins/preview-components/preview-source-code"
 import { PreviewAdmonition } from "@/components/editor/plugins/preview-components/preview-admonition"
 import { PreviewButton } from "@/components/editor/plugins/preview-components/preview-button"
 import { PreviewText } from "@/components/editor/plugins/preview-components/preview-text"
@@ -118,11 +117,6 @@ export function SerializedContentRenderer({
     // Handle Spotify nodes
     if (node.type === "spotify") {
       return <PreviewSpotify key={uniqueKey} node={node} />
-    }
-
-    // Handle source code nodes
-    if (node.type === "source-code") {
-      return <PreviewSourceCode key={uniqueKey} node={node} />
     }
 
     // For text content - now using the new component
