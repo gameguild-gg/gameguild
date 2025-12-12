@@ -1069,6 +1069,7 @@ public class DatabaseSeeder(
     var mockUsers = new[] {
       new User {
         Name = "Alice Johnson",
+        Username = "alice-johnson",
         Email = "alice.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1076,6 +1077,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "Bob Smith",
+        Username = "bob-smith",
         Email = "bob.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1083,6 +1085,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "Carol Williams",
+        Username = "carol-williams",
         Email = "carol.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1090,6 +1093,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "David Brown",
+        Username = "david-brown",
         Email = "david.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1097,6 +1101,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "Eva Garcia",
+        Username = "eva-garcia",
         Email = "eva.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
@@ -1104,6 +1109,7 @@ public class DatabaseSeeder(
       },
       new User {
         Name = "Frank Miller",
+        Username = "frank-miller",
         Email = "frank.test@gameguild.local",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,

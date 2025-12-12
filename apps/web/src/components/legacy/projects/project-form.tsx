@@ -5,20 +5,20 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { getSession } from 'next-auth/react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import slugify from 'slugify';
 import { toast } from 'sonner';
-import { getSession } from 'next-auth/react';
-import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, X } from 'lucide-react';
-import { FileUploader } from '@/components/legacy/custom/file-uploader';
+// import { FileUploader } from '@/components/legacy/custom/file-uploader'; // TODO: Component not found
 
 // Import types from the generated API
 // import type { ProjectReadable, ProjectWritable } from '@/lib/api/generated';
-import { getApiProjectsSlugBySlug, postApiProjects } from '@/lib/api/generated';
+import { getApiProjectsSlugBySlug, postApiProjects } from '@/lib/api/generated/stub-types';
 
 // Define a simple error response type for generic error handling
 interface ApiErrorResponse {
@@ -152,7 +152,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
       }
     }
   };
-  const updateProject = async () => {};
+  const updateProject = async () => { };
 
   const submit = async () => {
     if (!project) {
@@ -170,7 +170,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
         // await uploadImages();
         break;
     }
-  router.push(`/[locale]/(dashboard)/dashboard/(content)/projects/${project.slug}`);
+    router.push(`/[locale]/(dashboard)/dashboard/(content)/projects/${project.slug}`);
   };
 
   // return (
@@ -357,7 +357,7 @@ export default function ProjectForm({ action, slug }: Readonly<ProjectFormProps>
 
               <div>
                 <Label htmlFor="banner">Banner Image</Label>
-                <FileUploader id="banner" accept="image/*" onFileSelect={(file) => setBannerImage(file)} />
+                <Input id="banner" type="file" accept="image/*" onChange={(e) => setBannerImage(e.target.files?.[0] || null)} />
                 <p className="text-sm text-gray-500 mt-1">Recommended size: 1200x400px</p>
                 {bannerImage && (
                   <div className="relative inline-block">

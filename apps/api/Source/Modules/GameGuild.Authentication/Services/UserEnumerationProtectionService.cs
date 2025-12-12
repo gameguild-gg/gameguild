@@ -1,0 +1,192 @@
+using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
+using GameGuild.Authentication.Abstractions;
+using GameGuild.Authentication.Models.Analysis;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Authentication.Services;
+
+/// <summary>
+///     Service to protect against user enumeration attacks by ensuring consistent timing and responses
+/// </summary>
+public class UserEnumerationProtectionService(ILogger<UserEnumerationProtectionService> logger, IConfiguration configuration) : IUserEnumerationProtectionService
+{
+    // Consistent error message to prevent user enumeration
+    private const string ConsistentErrorMessage = "Invalid credentials. Please check your email and password.";
+
+    private static readonly Random _random = new Random();
+
+    // Timing constants
+    private static readonly TimeSpan MinProcessingTime = TimeSpan.FromMilliseconds(200);
+
+    private static readonly TimeSpan MaxProcessingTime = TimeSpan.FromMilliseconds(800);
+
+    private static readonly TimeSpan TargetProcessingTime = TimeSpan.FromMilliseconds(400);
+
+    private readonly IConfiguration _configuration = configuration;
+
+    // Interface implementation methods
+
+    public async Task AddTimingProtectionDelayAsync(bool isValidUser, DateTime startTime)
+    {
+        var stopwatch = Stopwatch.StartNew();
+        var elapsed = DateTime.UtcNow - startTime;
+
+        try
+        {
+            // Calculate target delay based on whether user exists
+            var targetDelay = TargetProcessingTime;
+
+            // If user doesn't exist, simulate authentication work
+            if (!isValidUser)
+            {
+                await Task.Delay(_random.Next(50, 150)).ConfigureAwait(false);
+                await PerformDummyPasswordHashAsync("dummy_password_for_timing").ConfigureAwait(false);
+                await Task.Delay(_random.Next(30, 100)).ConfigureAwait(false);
+            }
+
+            stopwatch.Stop();
+            var totalElapsed = elapsed + stopwatch.Elapsed;
+
+            // Add remaining delay to reach target
+            var remainingDelay = targetDelay - totalElapsed;
+
+            if (remainingDelay > TimeSpan.Zero) { await Task.Delay(remainingDelay).ConfigureAwait(false); }
+        }
+        catch (Exception ex) { logger.LogError(ex, "Error in timing protection delay"); }
+    }
+
+    public string GetGenericErrorMessage(string context)
+    {
+        // Return consistent error message regardless of context to prevent enumeration
+        return context switch
+        {
+            "login" => "Invalid credentials. Please check your email and password.",
+            "password_reset" => "If an account exists with that email, a password reset link has been sent.",
+            "registration" => "Unable to complete registration. Please try again.",
+            "mfa" => "Invalid authentication code. Please try again.",
+            _ => "Authentication failed. Please try again."
+        };
+    }
+
+    public async Task<ThrottleDecision> ShouldThrottleAsync(string identifier)
+    {
+        // TODO: Implement actual enumeration tracking with database/cache
+        // For now, return a basic decision
+
+        await Task.CompletedTask.ConfigureAwait(false);
+
+        return new ThrottleDecision { ShouldThrottle = false, DelayMs = 0, AttemptCount = 0, TimeWindowMinutes = 15 };
+    }
+
+    public async Task RecordEnumerationAttemptAsync(string identifier, string attemptType)
+    {
+        // TODO: Implement enumeration attempt tracking
+        // This would typically store attempts in cache/database for analysis
+
+        logger.LogWarning("Potential enumeration attempt detected - Identifier: {Identifier}, Type: {AttemptType}", identifier, attemptType);
+
+        await Task.CompletedTask.ConfigureAwait(false);
+    }
+
+    public async Task SimulateAuthenticationDelayAsync(string email, bool userExists)
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        try
+        {
+            // Calculate a consistent delay based on email hash
+            var targetDelay = CalculateConsistentDelay(email);
+
+            // If user doesn't exist, we need to simulate the full authentication process
+            if (!userExists)
+            {
+                // Simulate database lookup time
+                await Task.Delay(_random.Next(50, 150));
+
+                // Perform dummy password hashing to simulate verification
+                await PerformDummyPasswordHashAsync("dummy_password_for_timing");
+
+                // Simulate additional processing
+                await Task.Delay(_random.Next(30, 100));
+            }
+
+            stopwatch.Stop();
+
+            // Calculate remaining delay needed to reach target
+            var elapsed = stopwatch.Elapsed;
+            var remainingDelay = targetDelay - elapsed;
+
+            if (remainingDelay > TimeSpan.Zero) { await Task.Delay(remainingDelay); }
+
+            var totalTime = stopwatch.Elapsed + (remainingDelay > TimeSpan.Zero ? remainingDelay : TimeSpan.Zero);
+
+            // Log timing analysis for security monitoring
+            if (logger.IsEnabled(LogLevel.Debug))
+            {
+                logger.LogDebug(
+                    "Authentication timing: EmailHash={EmailHash}, UserExists={UserExists}, ProcessingTime={ProcessingTimeMs}ms, TargetTime={TargetTimeMs}ms",
+                    HashEmail(email),
+                    userExists,
+                    totalTime.TotalMilliseconds,
+                    targetDelay.TotalMilliseconds
+                );
+            }
+        }
+        catch (Exception ex) { logger.LogError(ex, "Error in authentication delay simulation"); }
+    }
+
+    public string GetConsistentErrorMessage() { return ConsistentErrorMessage; }
+
+    public async Task PerformDummyPasswordHashAsync(string password)
+    {
+        // Perform actual BCrypt hashing to maintain realistic timing
+        // Use a fixed salt to ensure consistent timing
+        var dummySalt = "$2a$12$abcdefghijklmnopqrstuu"; // Fixed salt for dummy operations
+
+        await Task.Run(() =>
+            {
+                try
+                {
+                    // Simulate BCrypt.HashPassword operation
+                    BCrypt.Net.BCrypt.HashPassword(password, dummySalt);
+                }
+                catch
+                {
+                    // Ignore errors in dummy operation, just maintain timing
+                    Thread.Sleep(_random.Next(100, 300));
+                }
+            }
+        );
+    }
+
+    public TimeSpan GetBaseProcessingTime() { return TargetProcessingTime; }
+
+    /// <summary>
+    ///     Calculates a consistent delay based on email hash to prevent timing analysis
+    /// </summary>
+    private TimeSpan CalculateConsistentDelay(string email)
+    {
+        // Use deterministic hash to ensure same email always gets same delay
+        var emailHash = HashEmail(email);
+        var hashBytes = Convert.FromHexString(emailHash);
+
+        // Use first 4 bytes of hash to determine delay within acceptable range
+        var delayMs = BitConverter.ToUInt32(hashBytes, 0) % (uint) (MaxProcessingTime.TotalMilliseconds - MinProcessingTime.TotalMilliseconds) + (uint) MinProcessingTime.TotalMilliseconds;
+
+        return TimeSpan.FromMilliseconds(delayMs);
+    }
+
+    /// <summary>
+    ///     Creates a hash of the email for logging without exposing the actual email
+    /// </summary>
+    private string HashEmail(string email)
+    {
+        using var sha256 = SHA256.Create();
+        var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(email.ToLowerInvariant()));
+
+        return Convert.ToHexString(hash)[..16]; // First 16 chars for brevity
+    }
+}

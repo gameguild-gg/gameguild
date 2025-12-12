@@ -1,21 +1,21 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback, useRef, useContext } from "react"
-import { Code, Play, Settings } from "lucide-react"
 import type { EditMenuOption } from "@/components/editor/extras/content-edit-menu"
-import type { CodeFile, LanguageType, ProgrammingLanguage } from "../extras/source-code/types"
+import { Code, Play, Settings } from "lucide-react"
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 import { SourceCodeRenderer } from "../extras/source-code/source-code-renderer"
+import type { CodeFile, LanguageType, ProgrammingLanguage } from "../extras/source-code/types"
 import { EditorLoadingContext } from "../lexical-editor"
 
 // Import hooks
-import { useResize } from "@/hooks/editor/use-resize"
-import { useTerminal } from "@/hooks/editor/use-terminal"
 import { useCodeExecution } from "@/hooks/editor/use-code-execution"
+import { useEditorStyles } from "@/hooks/editor/use-editor-styles"
+import { useFileContent } from "@/hooks/editor/use-file-content"
 import { useFileManagement } from "@/hooks/editor/use-file-management"
 import { useFileState } from "@/hooks/editor/use-file-state"
-import { useFileContent, insertSolutionTemplate } from "@/hooks/editor/use-file-content"
 import { useLanguageSettings } from "@/hooks/editor/use-language-settings"
-import { useEditorStyles } from "@/hooks/editor/use-editor-styles"
+import { useResize } from "@/hooks/editor/use-resize"
+import { useTerminal } from "@/hooks/editor/use-terminal"
 
 // Update the SourceCodeNodeData interface to include the predicate test type
 export interface SourceCodeNodeData {
@@ -319,8 +319,9 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
       setTestCases((prev) => {
         const fileCases = prev[fileId] || []
 
-        // If there are existing tests, use their type
-        const testType = fileCases.length > 0 ? fileCases[0].type : type
+        // If there are existing tests, use their type (with fallback)
+        const existingCase = fileCases[0]
+        const testType = existingCase?.type ?? type
 
         return {
           ...prev,
@@ -373,7 +374,10 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
     ) => {
       setTestCases((prev) => {
         const fileCases = [...(prev[fileId] || [])]
-        fileCases[index] = { ...fileCases[index], ...testData }
+        const existingCase = fileCases[index]
+        if (existingCase) {
+          fileCases[index] = { ...existingCase, ...testData, type: testData.type ?? existingCase.type }
+        }
         return {
           ...prev,
           [fileId]: fileCases,
@@ -510,7 +514,7 @@ export function SourceCodeCore({ data, isPreview = false, onUpdateSourceCode, on
                 },
               ],
             )
-            setActiveFileId(data.activeFileId || data.files?.[0]?.id)
+            setActiveFileId(data.activeFileId || data.files?.[0]?.id || '')
             setReadonly(data.readonly ?? false)
             setShowExecution(data.showExecution ?? false)
             setIsDarkTheme(data.isDarkTheme ?? false)

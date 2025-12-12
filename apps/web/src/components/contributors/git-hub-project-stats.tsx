@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertCircle, Eye, FileText, GitBranch, GitPullRequest, Shield, Users } from 'lucide-react';
-import type { Issue, PullRequest, Repository } from '@/lib/integrations/github';
+import type { Issue, PullRequest } from '@/lib/integrations/github';
 
 interface ProjectStat {
   icon: React.ReactNode;

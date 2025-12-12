@@ -1,10 +1,9 @@
-import { Program } from '@/lib/api/generated/types.gen';
 import type { Course } from '@/lib/types';
 
 /**
  * Transform Program to Course type for UI compatibility
  */
-export function transformProgramToCourse(program: Program): Course {
+export function transformProgramToCourse(program: any): Course {
   return {
     id: program.id || '',
     title: program.title || '',

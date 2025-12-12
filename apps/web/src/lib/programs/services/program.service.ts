@@ -1,4 +1,9 @@
-import { getAllProducts, getAllPrograms, getProductBySlug, getProgramBySlug } from '@/data/courses/mock-data';
+import {
+    getAllProducts as getMockAllProducts,
+    getAllPrograms as getMockAllPrograms,
+    getProductBySlug as getMockProductBySlug,
+    getProgramBySlug as getMockProgramBySlug
+} from '@/data/courses/mock-data';
 import { Product, Program, ProgramContent } from '@/lib/api/generated';
 
 export interface ProgramService {
@@ -17,19 +22,19 @@ export interface ProgramLevelConfig {
 
 export const programService: ProgramService = {
     async getProgramBySlug(slug: string) {
-        return getProgramBySlug(slug);
+        return getMockProgramBySlug(slug);
     },
 
     async getProductBySlug(slug: string) {
-        return getProductBySlug(slug);
+        return getMockProductBySlug(slug);
     },
 
     async getAllPrograms() {
-        return getAllPrograms();
+        return getMockAllPrograms();
     },
 
     async getAllProducts() {
-        return getAllProducts();
+        return getMockAllProducts();
     },
 
     async getProgramContent(programId: string) {

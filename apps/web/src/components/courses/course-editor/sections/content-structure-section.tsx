@@ -1,15 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Activity, BookOpen, CheckSquare, ChevronDown, ChevronRight, Copy, Edit, Eye, EyeOff, File, FileText, Folder, FolderOpen, GripVertical, HelpCircle, MoreHorizontal, Plus, Redo, Trash2, Undo, Video } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { type CourseLesson, type CourseModule, useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
+import { Textarea } from '@/components/ui/textarea';
+import { Activity, BookOpen, CheckSquare, ChevronDown, ChevronRight, Copy, Edit, Eye, EyeOff, File, FileText, Folder, FolderOpen, GripVertical, HelpCircle, MoreHorizontal, Plus, Redo, Trash2, Undo, Video } from 'lucide-react';
+import { useState } from 'react';
+
+// Stub types for disabled backend modules
+type CourseLesson = any;
+type CourseModule = any;
 
 // Content type icons
 const CONTENT_TYPE_ICONS = {
@@ -72,14 +75,28 @@ const defaultLessonData: LessonFormData = {
 };
 
 export function ContentStructureSection() {
-  const { state, dispatch } = useCourseEditor();
+  // TODO: Implement content structure editing with proper state management
+  // Stub state and dispatch for now
+  const stubState = {
+    content: {
+      modules: [],
+      selectedItems: []
+    },
+    undoRedo: {
+      canUndo: false,
+      canRedo: false
+    }
+  };
+  const state = stubState as any;
+  const dispatch = (..._args: any[]) => {
+    console.log('Dispatch not implemented');
+  };
+
   const [showModuleDialog, setShowModuleDialog] = useState(false);
   const [showLessonDialog, setShowLessonDialog] = useState(false);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [moduleFormData, setModuleFormData] = useState<ModuleFormData>(defaultModuleData);
-  const [lessonFormData, setLessonFormData] = useState<LessonFormData>(defaultLessonData);
-
-  // Handle adding a new module
+  const [lessonFormData, setLessonFormData] = useState<LessonFormData>(defaultLessonData);  // Handle adding a new module
   const handleAddModule = () => {
     if (!moduleFormData.title.trim()) return;
 
@@ -142,7 +159,7 @@ export function ContentStructureSection() {
           type: 'UPDATE_MODULE',
           moduleId,
           updates: {
-            visibility: state.content.modules.find((m) => m.id === moduleId)?.visibility === 'public' ? 'private' : 'public',
+            visibility: state.content.modules.find((m: any) => m.id === moduleId)?.visibility === 'public' ? 'private' : 'public',
           },
         });
         break;
@@ -165,7 +182,7 @@ export function ContentStructureSection() {
         dispatch({ type: 'DUPLICATE_LESSON', lessonId });
         break;
       case 'toggle-visibility':
-        const lesson = state.content.modules.flatMap((m) => m.lessons).find((l) => l.id === lessonId);
+        const lesson = state.content.modules.flatMap((m: any) => m.lessons).find((l: any) => l.id === lessonId);
         if (lesson) {
           dispatch({
             type: 'UPDATE_LESSON',
@@ -181,15 +198,14 @@ export function ContentStructureSection() {
 
   // Render lesson item
   const renderLesson = (lesson: CourseLesson, moduleId: string) => {
-    const IconComponent = CONTENT_TYPE_ICONS[lesson.type];
-    const colorClass = CONTENT_TYPE_COLORS[lesson.type];
+    const IconComponent = CONTENT_TYPE_ICONS[lesson.type as keyof typeof CONTENT_TYPE_ICONS] || FileText;
+    const colorClass = CONTENT_TYPE_COLORS[lesson.type as keyof typeof CONTENT_TYPE_COLORS] || 'text-slate-400';
 
     return (
       <div
         key={lesson.id}
-        className={`group flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-sm ${
-          state.content.selectedItems.includes(lesson.id) ? 'bg-primary/5 border-primary/20' : 'bg-background border-border hover:border-border/60'
-        }`}
+        className={`group flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-sm ${state.content.selectedItems.includes(lesson.id) ? 'bg-primary/5 border-primary/20' : 'bg-background border-border hover:border-border/60'
+          }`}
       >
         {/* Drag handle */}
         <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 cursor-grab" />
@@ -266,7 +282,7 @@ export function ContentStructureSection() {
   const renderModule = (module: CourseModule) => {
     const isExpanded = module.isExpanded ?? false;
     const lessonCount = module.lessons?.length ?? 0;
-    const totalDuration = module.lessons?.reduce((sum, lesson) => sum + lesson.duration, 0) ?? 0;
+    const totalDuration = module.lessons?.reduce((sum: number, lesson: any) => sum + lesson.duration, 0) ?? 0;
 
     return (
       <div key={module.id} className="border border-border rounded-lg overflow-hidden">
@@ -357,7 +373,7 @@ export function ContentStructureSection() {
         {isExpanded && (
           <div className="p-4 pt-0 space-y-2 bg-muted/20">
             {module.lessons && module.lessons.length > 0 ? (
-              module.lessons.map((lesson) => renderLesson(lesson, module.id))
+              module.lessons.map((lesson: any) => renderLesson(lesson, module.id))
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />

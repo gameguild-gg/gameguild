@@ -1,6 +1,6 @@
 import type { ProgrammingLanguage } from "@/components/editor/extras/source-code/types"
-import type { ExecutionResult, ExecutionContext, LanguageExecutor } from "./types"
 import { getFileContent } from "@/components/editor/extras/source-code/utils"
+import type { ExecutionContext, ExecutionResult, LanguageExecutor } from "./types"
 
 class TypeScriptExecutor implements LanguageExecutor {
   private isExecutionCancelled = false
@@ -131,7 +131,7 @@ class TypeScriptExecutor implements LanguageExecutor {
 
         // Execute the transpiled code in a safe context
         addOutput("Executing transpiled JavaScript...")
-        const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor
+        const AsyncFunction = Object.getPrototypeOf(async () => { }).constructor
         const executeCode = new AsyncFunction("console", "window", finalCode)
         await executeCode(mockConsole, window)
 
@@ -177,6 +177,7 @@ class TypeScriptExecutor implements LanguageExecutor {
       // Process imports first
       for (const match of imports) {
         const [fullMatch, defaultImport, namedImports, namespaceImport, importPath] = match
+        if (!importPath) continue;
         const resolvedPath = this.resolveRelativePath(fileName, importPath, vfs)
 
         if (resolvedPath) {

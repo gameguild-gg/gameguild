@@ -1,3 +1,621 @@
+# [2.25.0](https://github.com/gameguild-gg/gameguild/compare/v2.24.0...v2.25.0) (2025-12-09)
+
+
+### Bug Fixes
+
+* Add 'new' keyword to resolve property hiding warnings across modules ([89019a3](https://github.com/gameguild-gg/gameguild/commit/89019a36739d5c529a877690dc6b250c0191c05a))
+* add back gource video generation ([81fe005](https://github.com/gameguild-gg/gameguild/commit/81fe00564bb4145c9fc629b068f77bd863c323e9))
+* Add CQRS and Database namespaces, remove invalid references ([118d784](https://github.com/gameguild-gg/gameguild/commit/118d78436bb15c4a868c83f9102850a0abb490fe))
+* Add missing namespace references and CQRS imports ([dc233da](https://github.com/gameguild-gg/gameguild/commit/dc233da73c7c66acace88bd6fdd759b123813c38))
+* add TODO comments and temporary types for missing API generation ([a9d2704](https://github.com/gameguild-gg/gameguild/commit/a9d2704f155237541d8128d6107b029f9eba512c))
+* api gen to generate enums properly ([adb9442](https://github.com/gameguild-gg/gameguild/commit/adb94426b6074c61d523f6f6f1c19d23cfbfd723))
+* **api:** Add GameGuild.Authorization import to TenantsController (36 errors fixed) ([374eb74](https://github.com/gameguild-gg/gameguild/commit/374eb74c69f35b0d0679df4818ca398938479782))
+* **api:** Add missing enum imports to Programs and UserAchievements modules (202 errors fixed) ([3aa4f2c](https://github.com/gameguild-gg/gameguild/commit/3aa4f2c7144bb23af335c259351807fad630e292))
+* **api:** Fix context import namespaces in Projects module (72 errors fixed) ([13611bf](https://github.com/gameguild-gg/gameguild/commit/13611bff197da4776a62839ed4997b9b7350cad8))
+* **api:** Fix context imports, Product namespace, and ResourcePermission constraint (120 errors fixed) ([1027b35](https://github.com/gameguild-gg/gameguild/commit/1027b35eed84ac12032a8eb1870c21d088c75fcd))
+* **api:** Fix CQRS interfaces, missing imports, and override modifiers (24 errors fixed) ([01e0836](https://github.com/gameguild-gg/gameguild/commit/01e0836510ca068516a33f672e8b182575c111b4))
+* **api:** Fix enum ambiguity and Slug index in Programs (2 errors fixed) ([cd8c7a6](https://github.com/gameguild-gg/gameguild/commit/cd8c7a651a308004f6ed20ffee81dc45eaf18b5f))
+* **api:** Fix Product namespace ambiguity in ProductController (26 errors fixed) ([d1ef749](https://github.com/gameguild-gg/gameguild/commit/d1ef749ed64d8e9c5505304c5d728c21a4eb5f21))
+* **api:** Fix property hiding warnings and implement missing interface methods (86 errors fixed) ([1fa4add](https://github.com/gameguild-gg/gameguild/commit/1fa4add458873d4c28d55252a5f441f994078fa4))
+* **api:** Fix SLA queries, ActivityGrade attribute, Program indexes, and ProjectFeedback (34 errors fixed) ([bc4a8d5](https://github.com/gameguild-gg/gameguild/commit/bc4a8d588e4646302c3832cf29149b065e2d00e8))
+* **api:** Replace Product with ProductEntity in ProductController attributes (52 errors fixed) ([4017792](https://github.com/gameguild-gg/gameguild/commit/4017792080650b9ca0bbe1fd90d385d56c0d8e01))
+* **api:** Resolve duplicate usings, context interfaces, and missing enums (22 errors fixed) ([85673d9](https://github.com/gameguild-gg/gameguild/commit/85673d969282a5f2f706c4a7cc1ba3b0d7043724))
+* **api:** Resolve namespace and interface errors (340 errors fixed) ([f68d1e2](https://github.com/gameguild-gg/gameguild/commit/f68d1e25252c7f4f7c1738f7e65bf20b89d44ad9))
+* **apps/web/hooks:** Clean up import order and whitespace in useUserDetail hook ([c732bcd](https://github.com/gameguild-gg/gameguild/commit/c732bcddef496006bdbc9b6011fcc991ba728b64))
+* **apps/web:** Correct achievements actions export path ([212db6d](https://github.com/gameguild-gg/gameguild/commit/212db6d4008e8896bbeadcee3ddfc01eacfbcdb8))
+* **apps/web:** Correct prop name for TenantsList in tenant dashboard page ([bbaaa80](https://github.com/gameguild-gg/gameguild/commit/bbaaa80bb25be8785820cf52e3b52aa792920763))
+* **auth/anomaly:** correct property initialization for unique counters ([f15f7d0](https://github.com/gameguild-gg/gameguild/commit/f15f7d01cf681d8dedf2efd1a8c84e18ba4edf52))
+* **auth/mfa:** ensure Success result returns array for backup codes ([38d5de6](https://github.com/gameguild-gg/gameguild/commit/38d5de6d0ce453a977d4193bac5565274b899603))
+* **auth/session:** use correct termination reason for user-initiated logout ([06242d9](https://github.com/gameguild-gg/gameguild/commit/06242d931b8d1989e5660e5b0ee9de7dc8784986))
+* build by enforcing types ([934eed7](https://github.com/gameguild-gg/gameguild/commit/934eed73b9cd26f959a63cba8d912747d79571c5))
+* **compat:** disable missing GraphQL extension and EF query splitting ([d4799ac](https://github.com/gameguild-gg/gameguild/commit/d4799ac4ca6f41f37710d1db50490d90ca5cd78c))
+* complete build error resolution across workspaces ([fa7e788](https://github.com/gameguild-gg/gameguild/commit/fa7e788db4349a4e3140a885c063bf3cbfdcceb3))
+* **core/exceptions:** normalize validation problem details payload ([c96ccd6](https://github.com/gameguild-gg/gameguild/commit/c96ccd642089a40c429bb75b23ef98a2a10992c0))
+* **core:** add missing middleware namespace import ([c771a30](https://github.com/gameguild-gg/gameguild/commit/c771a30433c710eb7ef35f42bed5f680641caeb2))
+* Create missing DTOs and enums, add DomainEvent base class ([db50d8e](https://github.com/gameguild-gg/gameguild/commit/db50d8e41604ed4c02a43e9b595d3754cedba378))
+* **db:** correct model namespaces in ApplicationDbContext ([586431e](https://github.com/gameguild-gg/gameguild/commit/586431e8bcac34f3afd5a74ed959714edbdc2066))
+* **events:** add EF Core and database usings to DomainEventProcessorService ([4c4f4ec](https://github.com/gameguild-gg/gameguild/commit/4c4f4ec7178a159563a09322fc762cf53585d3ef))
+* **gglexical:** adapt new page names ([aa528a5](https://github.com/gameguild-gg/gameguild/commit/aa528a5ca1386b7def1951fa0080a3fe064ab4e6))
+* **gglexical:** admonition styles ([43dc5b7](https://github.com/gameguild-gg/gameguild/commit/43dc5b74a1414a2cf5a926a238be6bbdd143ec99))
+* **gglexical:** api tagData ([451c87e](https://github.com/gameguild-gg/gameguild/commit/451c87e8127b967907a2154e15556fcae7af8649))
+* **gglexical:** button plugin fix style ([5999d24](https://github.com/gameguild-gg/gameguild/commit/5999d24305484ba4cb37f9de7cd03996b86efd0f))
+* **gglexical:** code editor button editor ([8b17a29](https://github.com/gameguild-gg/gameguild/commit/8b17a29345c9329097f8f5eee701885b76a3eefb))
+* **gglexical:** code editor cancel its save ([31e52cc](https://github.com/gameguild-gg/gameguild/commit/31e52ccff3be0caef8504dd5abce9b2f7244c8d6))
+* **gglexical:** code editor command palette fix ([9d37f4f](https://github.com/gameguild-gg/gameguild/commit/9d37f4f1b878cdd4288523b77be379a69e905d19))
+* **gglexical:** code editor drag tab on instance unique ([dbe52e9](https://github.com/gameguild-gg/gameguild/commit/dbe52e9e53553ef31c4cf1f2ad0844bccdc01153))
+* **gglexical:** code editor execution and test modes ([aba04a0](https://github.com/gameguild-gg/gameguild/commit/aba04a0030cb6d42ac707869f27dd266d82821c5))
+* **gglexical:** code editor file explorer select ([4e27ae6](https://github.com/gameguild-gg/gameguild/commit/4e27ae6f5ee62d1653e008900c379bdc91dae0f6))
+* **gglexical:** code editor file explorer subfolders ([d7cb984](https://github.com/gameguild-gg/gameguild/commit/d7cb9840c541f24b0f62663a1f370936b011fdb0))
+* **gglexical:** code editor file tab selected file inside a folder ([65e5a53](https://github.com/gameguild-gg/gameguild/commit/65e5a53bf90c434be8827fa5855b26f708c37717))
+* **gglexical:** code editor file-explorer ([5ea3e5e](https://github.com/gameguild-gg/gameguild/commit/5ea3e5e5df8091a7d25ddeba7a777e9282638faa))
+* **gglexical:** code editor file-explorer drag-drop style ([81e00d1](https://github.com/gameguild-gg/gameguild/commit/81e00d1d16e09067070b546353be2a58d8732cc4))
+* **gglexical:** code editor file-explorer reorder files ([9ec42c2](https://github.com/gameguild-gg/gameguild/commit/9ec42c23c80883d8aa95d799a1f57d45457d386b))
+* **gglexical:** code editor file-explorer selected file display ([f346478](https://github.com/gameguild-gg/gameguild/commit/f346478073f7110ca819435449624a3f9e43d274))
+* **gglexical:** code editor fix display name ([1168c4e](https://github.com/gameguild-gg/gameguild/commit/1168c4ed2fb4940390c503f7ed3c86b402bedf80))
+* **gglexical:** code editor hello-world files ([c14cca7](https://github.com/gameguild-gg/gameguild/commit/c14cca7fa8e93f3c4cd819d678114f7bfe6bce7a))
+* **gglexical:** code editor instanceID ([92e6342](https://github.com/gameguild-gg/gameguild/commit/92e634260cdbe8e094156e686fd27aef0c56a85b))
+* **gglexical:** code editor layout button fix ([c132c87](https://github.com/gameguild-gg/gameguild/commit/c132c879ebb9264c0b82dec5f3cf1ee2975554b7))
+* **gglexical:** code editor major number of colums ([4b17748](https://github.com/gameguild-gg/gameguild/commit/4b17748a734e7a3d9b988ca7aefd25c15d8d011d))
+* **gglexical:** code editor monaco background logo ([182ae80](https://github.com/gameguild-gg/gameguild/commit/182ae804a0e45a35fcb3823fbbed362a06997ea2))
+* **gglexical:** code editor monaco link ([95ab268](https://github.com/gameguild-gg/gameguild/commit/95ab268df43c74dac93511e1772b77c228617111))
+* **gglexical:** code editor monaco undo/redo ([4571ea9](https://github.com/gameguild-gg/gameguild/commit/4571ea9e90533c83bf23e84121865cdfe5fe6f73))
+* **gglexical:** code editor node fix ([9d50077](https://github.com/gameguild-gg/gameguild/commit/9d5007769259cd0f02f6c022610910e8d0a4a3ff))
+* **gglexical:** code editor path ([5f9dd16](https://github.com/gameguild-gg/gameguild/commit/5f9dd16edf35b2cd5351734d35f033f9faa32b8d))
+* **gglexical:** code editor path error ([0bb3ec9](https://github.com/gameguild-gg/gameguild/commit/0bb3ec98e036ec30b510a4558ad5fc1560509983))
+* **gglexical:** code editor preview/viewer ([ed57540](https://github.com/gameguild-gg/gameguild/commit/ed5754027b2ee4e36d7b71a346458c79ba26514c))
+* **gglexical:** code editor quickjs race condition fix ([9cfd712](https://github.com/gameguild-gg/gameguild/commit/9cfd712d8534a12a13bbba098155b111c16d8c5f))
+* **gglexical:** code editor remove button editor old ([cf159d0](https://github.com/gameguild-gg/gameguild/commit/cf159d075d08d79d3b09e756dbcb5d9ef9d99719))
+* **gglexical:** code editor remove monaco message "loading" ([453dac7](https://github.com/gameguild-gg/gameguild/commit/453dac7e2900ba54dbad5f005cfc70a0754dce4d))
+* **gglexical:** code editor resizable panel 4 directions ([317284b](https://github.com/gameguild-gg/gameguild/commit/317284b7e76938c8e711b799c5c668785ae980d9))
+* **gglexical:** code editor resizable panel up to panel ([0b1b93c](https://github.com/gameguild-gg/gameguild/commit/0b1b93c29fac4fb0017d6cc93ed371dbac68df93))
+* **gglexical:** code editor save outside editor ([ebb5a9b](https://github.com/gameguild-gg/gameguild/commit/ebb5a9b9db9c5824f7fc7fa1c75490a03884d1d6))
+* **gglexical:** code editor save system ([3e385ed](https://github.com/gameguild-gg/gameguild/commit/3e385edd62d292a27f2c0006257b292017991050))
+* **gglexical:** code editor tab and file-explorer not sync ([c9d9fc1](https://github.com/gameguild-gg/gameguild/commit/c9d9fc1e3a761e6a1136d50196699903e61729bb))
+* **gglexical:** code editor tabs fix ([86050db](https://github.com/gameguild-gg/gameguild/commit/86050db8aeeafd42a85e1ea728bb79a36b17e5d8))
+* **gglexical:** code editor tabs reorder ([5dbbe9f](https://github.com/gameguild-gg/gameguild/commit/5dbbe9f376593ace1f17a270d281b59eaa956e8a))
+* **gglexical:** code editor terminal dont execute tab without selected ([dac37eb](https://github.com/gameguild-gg/gameguild/commit/dac37ebb1aff0f41b40502ebf9325a396727303b))
+* **gglexical:** code editor terminal scroll ([c4f5d52](https://github.com/gameguild-gg/gameguild/commit/c4f5d526ff0ab66b18e3d7f20ff5b7b9899a159e))
+* **gglexical:** code editor view mode ([73127dd](https://github.com/gameguild-gg/gameguild/commit/73127dd3e6cdb225edf5087e7b095e783af2d42f))
+* **gglexical:** code studio node constructor ([4d8d332](https://github.com/gameguild-gg/gameguild/commit/4d8d3321c9d75c3bbb5568250f3d5b1e56ecaf9c))
+* **gglexical:** create dialog inserts correct storageType ([ebc7f6d](https://github.com/gameguild-gg/gameguild/commit/ebc7f6d896640a44cc0f1a581cf51cfdbd062e27))
+* **gglexical:** divider-styles ([116bd9c](https://github.com/gameguild-gg/gameguild/commit/116bd9cbc643a41567ce3b1ae313f112dac19441))
+* **gglexical:** doc architecture ([074d5f5](https://github.com/gameguild-gg/gameguild/commit/074d5f56a762c44295c3627a19f7bd486e9ded48))
+* **gglexical:** doc gglexical + storage architecture ([6dae552](https://github.com/gameguild-gg/gameguild/commit/6dae552ff07b3c90dcb6e8f14f9df539c2eef363))
+* **gglexical:** docs architecture ([0045296](https://github.com/gameguild-gg/gameguild/commit/0045296307ae5a00dd1fcd18504ec0631262514f))
+* **gglexical:** editor button fix ([d67ca1b](https://github.com/gameguild-gg/gameguild/commit/d67ca1b7b8b94b2a694cafe20619f1879f519708))
+* **gglexical:** editor rounded layout fix ([d51062b](https://github.com/gameguild-gg/gameguild/commit/d51062b82cf442307df1fd84658dd01fe478f89d))
+* **gglexical:** fix folder gglexical ([3d7c131](https://github.com/gameguild-gg/gameguild/commit/3d7c131a3babac98c055f8cb769d8389be13ade4))
+* **gglexical:** fix storage ([a7f1382](https://github.com/gameguild-gg/gameguild/commit/a7f138281e5dea89c6a90f5f1a5f909afc08ba39))
+* **gglexical:** fixed value for itemsPerPage ([fc8f60c](https://github.com/gameguild-gg/gameguild/commit/fc8f60cbd724bd44c6d320f11e8be19ca72f0101))
+* **gglexical:** floating content dialog dont scroll ([08d4872](https://github.com/gameguild-gg/gameguild/commit/08d4872ce8a3eca18c179bdd5e5161435ddc5dfa))
+* **gglexical:** floating content dialog scrolls studio page ([a570729](https://github.com/gameguild-gg/gameguild/commit/a570729d5290d33c3a98e0a65ce2bda66b3c77c3))
+* **gglexical:** formatting fix ([d108d71](https://github.com/gameguild-gg/gameguild/commit/d108d711ba955e88d1092ccabd4e6b93be3a1485))
+* **gglexical:** gallery grid ([7f908a4](https://github.com/gameguild-gg/gameguild/commit/7f908a4ebff267856312fbe9a82e122ed438fdc1))
+* **gglexical:** gallery-node size control ([660b445](https://github.com/gameguild-gg/gameguild/commit/660b445540ca40abf8a3f421e62b62eeb8e1a9f8))
+* **gglexical:** google-drive save document ([76c4d6b](https://github.com/gameguild-gg/gameguild/commit/76c4d6b790959543b9eff5cbe529e3a777f123c4))
+* **gglexical:** google-drive sync ([a8b705f](https://github.com/gameguild-gg/gameguild/commit/a8b705f424ad8e2c0ccd3257117173c5c5ee7476))
+* **gglexical:** hyperlink plugin ([44d1ff4](https://github.com/gameguild-gg/gameguild/commit/44d1ff41eb61d7114aa2a0c8f3c0cff296bae096))
+* **gglexical:** hyperlink plugin and selector http/https/local ([da34efa](https://github.com/gameguild-gg/gameguild/commit/da34efa876ee0cdf5ffc689d73e898918e9d568a))
+* **gglexical:** hyperlink plugin component ([7be8195](https://github.com/gameguild-gg/gameguild/commit/7be81955ba892c07438cf6f882e3828f65650846))
+* **gglexical:** hyperlink plugin open past link ([689b3fe](https://github.com/gameguild-gg/gameguild/commit/689b3fee5a7d43cd80a6502955829b402e3e917f))
+* **gglexical:** import project fixes ([9ff0800](https://github.com/gameguild-gg/gameguild/commit/9ff0800262494c2ac78cb8977d80a0da8aa10aed))
+* **gglexical:** info-dialog tags ([2afcacd](https://github.com/gameguild-gg/gameguild/commit/2afcacd6b2bfe3832227f21e35706cfe8595e88a))
+* **gglexical:** list color fix ([b89d160](https://github.com/gameguild-gg/gameguild/commit/b89d1609ff606e1151cd13191c7150a53d274209))
+* **gglexical:** list color in editor ([c06cab6](https://github.com/gameguild-gg/gameguild/commit/c06cab622c7fa02063da3fc8612cb320bd866db7))
+* **gglexical:** list color use color-palette ([bcb7519](https://github.com/gameguild-gg/gameguild/commit/bcb751974be0c2c6a3fe732d4e2166a580fa3bc6))
+* **gglexical:** markdown dont open and plugin dialog more space ([9af5c85](https://github.com/gameguild-gg/gameguild/commit/9af5c85e0443ba04dc9e82f50bd2dbc2991b748d))
+* **gglexical:** mode filter list ([e2629b8](https://github.com/gameguild-gg/gameguild/commit/e2629b8220060f26747b7ade4394e265e3b2f6d8))
+* **gglexical:** modes and modal ([7e4911b](https://github.com/gameguild-gg/gameguild/commit/7e4911b347fe332224e9f9092b744bbea5783323))
+* **gglexical:** new Google api GIS ([920fa96](https://github.com/gameguild-gg/gameguild/commit/920fa96afdb5da8521e52626ea2d2c7b3d5ecf3b))
+* **gglexical:** next and app/layout ([c7c03e9](https://github.com/gameguild-gg/gameguild/commit/c7c03e98065dac62b28db794bfc5fd5790271aac))
+* **gglexical:** open project auto sync googledrive ([ba45d34](https://github.com/gameguild-gg/gameguild/commit/ba45d34d4e2d134de3ec947278d5cae395fa19b9))
+* **gglexical:** open project storage fix ([1fbdd7c](https://github.com/gameguild-gg/gameguild/commit/1fbdd7c1aeff139c5f5e29d70378b2d81f06b0b0))
+* **gglexical:** open project sync google-drive analyzer ([85b39eb](https://github.com/gameguild-gg/gameguild/commit/85b39eb0ac0a6181e9c5fd865aa73fb83ad93904))
+* **gglexical:** ordered list ([889c1ac](https://github.com/gameguild-gg/gameguild/commit/889c1accdc9b3765993dbc6d82f884623ee7acb9))
+* **gglexical:** ordered list fix ([d7a422f](https://github.com/gameguild-gg/gameguild/commit/d7a422ff53bf066026c2a1618798120155348a2e))
+* **gglexical:** presentation fixes ([175e6a5](https://github.com/gameguild-gg/gameguild/commit/175e6a5eebd2dcc865e78d30f08843d76da168e4))
+* **gglexical:** preview width ([3afd0fa](https://github.com/gameguild-gg/gameguild/commit/3afd0fa5479ac798dce4ab56dd34112cf58a09d1))
+* **gglexical:** project list line break ([141947d](https://github.com/gameguild-gg/gameguild/commit/141947d6747d92cf1e55d9d9390fb728a053b0e4))
+* **gglexical:** quiz editor dark mode fix ([4c01d93](https://github.com/gameguild-gg/gameguild/commit/4c01d93d22a1dbc03a442e985847ba25b484e32d))
+* **gglexical:** save and sync efficient ([7f45999](https://github.com/gameguild-gg/gameguild/commit/7f45999625ec9d6ffe419364538a77491205f5a1))
+* **gglexical:** semantic fix ([3ca9021](https://github.com/gameguild-gg/gameguild/commit/3ca90211a2b733dd799150b38184e609d13f70bc))
+* **gglexical:** side error ([54b80d6](https://github.com/gameguild-gg/gameguild/commit/54b80d677b41bc100f6632c9c3209aed23d12ebb))
+* **gglexical:** storage selector fix ([0d92dc2](https://github.com/gameguild-gg/gameguild/commit/0d92dc26622014fc2a1393fecc7104adfe25d594))
+* **gglexical:** studio page design fix ([6d8bb05](https://github.com/gameguild-gg/gameguild/commit/6d8bb05ab35cea57b499be99afa3ca3053bf5cc7))
+* **gglexical:** superscript fix ([166a097](https://github.com/gameguild-gg/gameguild/commit/166a0978764c06e8915469309dfae16fb33bd8d7))
+* **gglexical:** system api for local, gameguild-cloud and google-drive ([aa70b42](https://github.com/gameguild-gg/gameguild/commit/aa70b423c7fb9c345a572774259054010ef57769))
+* **gglexical:** table edit dark mode fix ([526a512](https://github.com/gameguild-gg/gameguild/commit/526a512134879852d78f9bc1483dc724b30d95d2))
+* **gglexical:** table editor edit button ([6123682](https://github.com/gameguild-gg/gameguild/commit/6123682c36408b6da74bf42d34a6b668e9a367ab))
+* **gglexical:** table plugin fix ([791fb97](https://github.com/gameguild-gg/gameguild/commit/791fb971911569040dc9c9b3c0fb5cdb1d9cf751))
+* **gglexical:** table style in studio ([96b8243](https://github.com/gameguild-gg/gameguild/commit/96b824360845809b8d83465066bcc8379342e19d))
+* **gglexical:** table truncate fix ([dfc842e](https://github.com/gameguild-gg/gameguild/commit/dfc842e1f49da655500cd8ee414857316e4749b6))
+* **gglexical:** table viewer fix ([6ccabf3](https://github.com/gameguild-gg/gameguild/commit/6ccabf3f999e93e319a781b98b4db19ce27d4154))
+* **gglexical:** table-of-contents container ([6074527](https://github.com/gameguild-gg/gameguild/commit/6074527f5d281a14a5cbc8efa595f73ec7ff3aff))
+* **gglexical:** text color apply color in text not marked ([cd40161](https://github.com/gameguild-gg/gameguild/commit/cd4016197ccea18637b3c70644e5f81cf917c2c1))
+* **gglexical:** toolbar not open ([942a776](https://github.com/gameguild-gg/gameguild/commit/942a776abd0d4cc20ddc970e915b0ec81f44f466))
+* **gglexical:** TopMenu ([ed4543a](https://github.com/gameguild-gg/gameguild/commit/ed4543a1ed14ae96b92ed35fd92fc9fac333f6c9))
+* **gglexical:** unordered list fix ([d4491f1](https://github.com/gameguild-gg/gameguild/commit/d4491f1f214fea80425879df1a2423716ac10c4b))
+* **gglexical:** view document list layout fix ([ac3adc9](https://github.com/gameguild-gg/gameguild/commit/ac3adc9e675318fb2be3b0472c595a39352b168b))
+* **logging:** streamline request context creation and correct header value enumeration ([4e6d9c6](https://github.com/gameguild-gg/gameguild/commit/4e6d9c6453a5aae60f0c3c49e210011e14b002ae))
+* **programs:** Change Program base class from Content to EntityBase<Guid> ([1a91d7a](https://github.com/gameguild-gg/gameguild/commit/1a91d7ae15dace95d7166f31f5cc5dd3964558ef))
+* rendering issues related to cors ([2f88f7e](https://github.com/gameguild-gg/gameguild/commit/2f88f7e1811dd66f12736e5bbf11881328a4e421))
+* Replace MediatR with GameGuild.CQRS and fix namespace references ([21bb3d7](https://github.com/gameguild-gg/gameguild/commit/21bb3d72d9a7cc57f2960d68594643e31b691599))
+* Replace remaining MediatR references and add Content namespace ([ec6a43d](https://github.com/gameguild-gg/gameguild/commit/ec6a43ded83dc9e9867c19b0b57b6d1e364a6375))
+* Replace remaining MediatR refs and fix Description attribute namespace ([830bcb5](https://github.com/gameguild-gg/gameguild/commit/830bcb5d2caf7e60e605c8aff9648b1b51b92906))
+* resolve build errors across workspace packages ([3c31a87](https://github.com/gameguild-gg/gameguild/commit/3c31a8742e43058b7cd235ad39f69f0366e4342d))
+* SLA queries, ActivityGrade attribute, Program indexes, ProjectFeedback (34 errors) ([f72f7ec](https://github.com/gameguild-gg/gameguild/commit/f72f7ec3b5913768edc1e5876e2fd14c2539cd28))
+* **TestingLab,Projects:** Remove stub methods and fix property hiding (20→12 errors, 8 fixed) ([dc43104](https://github.com/gameguild-gg/gameguild/commit/dc431043e63c0447261905216ba4a9867063f809))
+* update references from gameguild to game-guild across multiple files ([6a1b920](https://github.com/gameguild-gg/gameguild/commit/6a1b9204c33d049cbffa730e5e4ed5bededc7833))
+* Update RemainingQuota logic to return zero instead of negative value when over limit ([e361263](https://github.com/gameguild-gg/gameguild/commit/e3612639e51267c262e737119430c708dfe00102))
+* **web:** Fixes "self is not defined" error ([012b424](https://github.com/gameguild-gg/gameguild/commit/012b42430cb83e6fb0405e6f065bc263428bd50c))
+
+
+### Features
+
+* Add Apple Pay webhook handling and enhance PayPal webhook header validation ([93d4b9a](https://github.com/gameguild-gg/gameguild/commit/93d4b9a8d92d43500c6f739ace809c425c060b19))
+* Add dotnet-tools configuration for EF Core ([923666d](https://github.com/gameguild-gg/gameguild/commit/923666d5c53926ab0b14a469ccacb82c06a1a74d))
+* Add Feature Flags and Resources management pages with server-side data prefetching ([da6709d](https://github.com/gameguild-gg/gameguild/commit/da6709d604c14921726c14dc2606280b297db1fd))
+* Add Game Jams and Localization modules with necessary models and services ([16874c2](https://github.com/gameguild-gg/gameguild/commit/16874c28f6d4f7953e561f0cc829cdc34c4e309b))
+* add global exception handler ([8555164](https://github.com/gameguild-gg/gameguild/commit/85551644675ed8dc2425960a0ff09695135ea4d1))
+* Add resource quota management with RequiresQuota attribute ([8f18bd5](https://github.com/gameguild-gg/gameguild/commit/8f18bd54cc2b530f802cb840e19a018e219768a2))
+* Add subscription plans domain events and models ([ffe8ce5](https://github.com/gameguild-gg/gameguild/commit/ffe8ce5553a23720bd34e7d43f918a6e7b980ef9))
+* Add TargetingRule model for feature flag targeting ([63080e0](https://github.com/gameguild-gg/gameguild/commit/63080e00e708b59dbcfc0af89ae48ad2853c669b))
+* Add tenant import/export commands and DTOs ([1e2e133](https://github.com/gameguild-gg/gameguild/commit/1e2e1339ea3d504e03b0757e798ac2d5a959d766))
+* **api-sdk:** regenerate REST SDK with path & enum changes and adapt web layer ([d7cfbe3](https://github.com/gameguild-gg/gameguild/commit/d7cfbe3bdfd04aae62b4c6504b4f959ab603671a))
+* **api/authz:** enhance context and authorization logging across REST and GraphQL; wire ContextMiddleware; add docs ([0b31a70](https://github.com/gameguild-gg/gameguild/commit/0b31a70516233721bcab0ec48491e4bd872e03bd))
+* **api:** add multi-tenant support with domain and tenant seeding ([e18d507](https://github.com/gameguild-gg/gameguild/commit/e18d50742dea039ae44007d7ab9c57709b4c85ef))
+* **api:** Add program activity grades endpoints ([27b52ee](https://github.com/gameguild-gg/gameguild/commit/27b52eec2827c554f701ccc61b9d5c3d459bcb22))
+* **api:** refine Program GraphQL mutations and queries ([987fcc4](https://github.com/gameguild-gg/gameguild/commit/987fcc49ead889e71382fb0413f11e6f6f252024))
+* **apps/api:** Add public testing sessions endpoint and improve TestingLab API consistency ([bdf97eb](https://github.com/gameguild-gg/gameguild/commit/bdf97ebbe2e1e92522a0e1bfa6b10958b49dd23f))
+* **apps/api:** Add TestingLab services, repositories, and dependency registrations with improved service initialization order ([aab436c](https://github.com/gameguild-gg/gameguild/commit/aab436c1501f8c6255ac411d99ab52a3dac7802d))
+* **apps/api:** Configure GraphQL options based on environment variables ([069d5ca](https://github.com/gameguild-gg/gameguild/commit/069d5ca5db09620a618d5300bf3ad247d329e186))
+* **apps/web/components/auth:** Refactor auth forms and update exports structure ([14d2c5e](https://github.com/gameguild-gg/gameguild/commit/14d2c5ea51e5a31ec404011d93b4acd5d1d396aa))
+* **apps/web/components/profile:** Add new SubmitForTestingSheet component with enhanced UI and filtering ([2261c89](https://github.com/gameguild-gg/gameguild/commit/2261c89e67ad85a3c69c59e18e895f7324690677))
+* **apps/web/components/testing-lab/testing-sessions-list:** Add TestingSessionsList component with filtering, pagination, and UI ([8b0a818](https://github.com/gameguild-gg/gameguild/commit/8b0a818ee45d92db318616b6af0782f3e658108f))
+* **apps/web/components/testing-lab:** Add TestingRequestsList component with search, sort, pagination, and table UI ([550e382](https://github.com/gameguild-gg/gameguild/commit/550e3824a14f419262f10753c508cb6d2c5ed31f))
+* **apps/web/components/testing-lab:** Add TestingSessionManagementContent component as session management wrapper ([cf96b1e](https://github.com/gameguild-gg/gameguild/commit/cf96b1ea4d1b4111a4acd4b78af55dc2f8acd23e))
+* **apps/web/components/testing-lab:** Add TestingSessionsList component with filtering, sorting, and pagination ([5aa4df1](https://github.com/gameguild-gg/gameguild/commit/5aa4df1b0ad83f46a153ca33834e35087c2830f6))
+* **apps/web/components/testing-lab:** Export TestingSessionsList from index for easier imports ([dd5ada8](https://github.com/gameguild-gg/gameguild/commit/dd5ada82f1ff4ba331a1be4842e4519b8078dbb7))
+* **apps/web/components/users:** Add new simplified user list component ([34420e3](https://github.com/gameguild-gg/gameguild/commit/34420e3c4468938762a74062976dd50212434a49))
+* **apps/web/lib/admin/testing-lab/sessions:** Replace sample data with API calls for testing sessions ([9ad4c16](https://github.com/gameguild-gg/gameguild/commit/9ad4c16a045d21a949e54239832b3a231ade82cc))
+* **apps/web/lib/admin/testing-lab:** Add server actions for fetching and searching testing requests ([7d312bd](https://github.com/gameguild-gg/gameguild/commit/7d312bdb5f49d061d55f0344a73043bc4dd8448f))
+* **apps/web/src/app/[locale]/dashboard/testing-lab/sessions:** Replace TestingSessionList with new TestingSessionManagementContent and update data fetching ([2e55ce3](https://github.com/gameguild-gg/gameguild/commit/2e55ce3dcee73ca6759e15da630f64736355ccbd))
+* **apps/web/src/lib/admin/testing-lab:** Refactor testing session actions with mock data and simplified API usage ([43d0a63](https://github.com/gameguild-gg/gameguild/commit/43d0a63466760a677c2730698a840a04cb573c6c))
+* **apps/web:** Add achievements and user management components with tenant management update ([9127412](https://github.com/gameguild-gg/gameguild/commit/912741205d5fe090463b833c0872c6b390fd49e9))
+* **apps/web:** Add action to fetch testing session by slug ([8805052](https://github.com/gameguild-gg/gameguild/commit/88050528a829efc72d71b08142a9edc497c60541))
+* **apps/web:** Add comprehensive project management and testing lab features ([d513a09](https://github.com/gameguild-gg/gameguild/commit/d513a0985669c8a00e89da4221ed4b0b8abf822a))
+* **apps/web:** Add comprehensive testing lab settings and enhanced user management UI ([fbcab49](https://github.com/gameguild-gg/gameguild/commit/fbcab491010ee8dabc42aa90e6be07be2bed9b01))
+* **apps/web:** Add dashboard layout with header, sidebar, and page components ([d66f9ff](https://github.com/gameguild-gg/gameguild/commit/d66f9ffe742c3dc37b19377fadf1066fac376dcf))
+* **apps/web:** Add detailed logging and fallback handling in UsersPage ([2ce288f](https://github.com/gameguild-gg/gameguild/commit/2ce288f41fe490f6b290447de95a1f8ae7e2b973))
+* **apps/web:** Add full project management with API integration and detail enhancements ([5b00ea8](https://github.com/gameguild-gg/gameguild/commit/5b00ea836955847a01e53508f430c9ebaf1fe7be))
+* **apps/web:** Add global providers, zustand store, and query client integration ([1bd21e0](https://github.com/gameguild-gg/gameguild/commit/1bd21e05e4edb92eea02799e99f7b15b608bdee0))
+* **apps/web:** Add new API routes and remove deprecated session lookup action ([b0f20e6](https://github.com/gameguild-gg/gameguild/commit/b0f20e6313cb05ebd3526fa667cbb1580f28c6e8))
+* **apps/web:** Add react-query client setup and project list page with updated dependencies ([a64b92c](https://github.com/gameguild-gg/gameguild/commit/a64b92ccfc307c352cbd6c1feac61f1a7eaafa80))
+* **apps/web:** Add tenant detail page with tabs and loading states; enhance user detail routing and lists ([e1c8a9a](https://github.com/gameguild-gg/gameguild/commit/e1c8a9ae1c520e5c391b6a71397c4bfb0035ecee))
+* **apps/web:** Add TenantManagementContent component with tenant refresh capability ([9b5af1c](https://github.com/gameguild-gg/gameguild/commit/9b5af1cbb5896468e3712f1f99d76c5caa24b91a))
+* **apps/web:** Add user management and testing request approval workflow ([85319b0](https://github.com/gameguild-gg/gameguild/commit/85319b0cbf0cd00fc3d95257eaf101d79637ab22))
+* **apps/web:** Add version management and enhanced testing session handling in project details ([46be10d](https://github.com/gameguild-gg/gameguild/commit/46be10dadcaf145d31f946ecc0583268060a18db))
+* **apps/web:** Enhance TenantsList component with filtering, sorting, and pagination ([0e5f911](https://github.com/gameguild-gg/gameguild/commit/0e5f911935b74eb90fd45b1e3da01c321518fb63))
+* **apps/web:** Improve project tags handling and enhance update debugging ([a50b72c](https://github.com/gameguild-gg/gameguild/commit/a50b72c9a54d0a58629276a2ee27ba915478bbfa))
+* **apps/web:** Migrate achievements page to use server-side data fetching ([1c7d340](https://github.com/gameguild-gg/gameguild/commit/1c7d340294f361f8de2262eeeb473b1b5d0ed658))
+* **apps/web:** Replace testing session API with server actions and add tenant tab placeholders ([c705795](https://github.com/gameguild-gg/gameguild/commit/c705795ae236e6a0894dec7dbabcbdd8b293a172))
+* **apps/web:** unify testing session data and update session UI links and details component ([5da3bdb](https://github.com/gameguild-gg/gameguild/commit/5da3bdbcff70e75d9678cefeb71e64bb59129c36))
+* **apps/web:** Update testing lab sessions page to use new session fetch action ([a3214d7](https://github.com/gameguild-gg/gameguild/commit/a3214d722d8b39f405d9cb17f9ede5f9067446db))
+* **audit:** Implement cryptographic signing service for audit logs ([801a1a2](https://github.com/gameguild-gg/gameguild/commit/801a1a25dc98e3587a004b7e4c4bc86352c6bb5c))
+* **auth/mfa:** align controller with new service API and safer user handling ([0220493](https://github.com/gameguild-gg/gameguild/commit/02204935c5ba166ab76a044da20492dc0cf39c40))
+* **auth:** add comprehensive authentication and audit services with MFA and session management ([187e577](https://github.com/gameguild-gg/gameguild/commit/187e57706981b0caa8abdf7e4034bf0871219a56))
+* **auth:** add comprehensive authentication controller and clean up repositories ([170262e](https://github.com/gameguild-gg/gameguild/commit/170262efeb8456a5f4632305512b18dcc18ae56d))
+* **auth:** add CQRS using to notification classes and standardize UserSignedUpNotification formatting ([cd7249f](https://github.com/gameguild-gg/gameguild/commit/cd7249f1ac608f4c0cb88188800f798b96bada15))
+* **authentication:** add comprehensive user auth events and handlers with enhanced sign-in/out logging and token management ([6b57cf6](https://github.com/gameguild-gg/gameguild/commit/6b57cf61d1d70d12c9415e48ea7941267043ebe5))
+* **authentication:** Enhance refresh token handling with anomaly detection and repository usage ([dc7c0fb](https://github.com/gameguild-gg/gameguild/commit/dc7c0fb7480d5f979965c62062a3f993eb49efa1))
+* **authentication:** implement comprehensive auth service with anomaly detection and repositories ([cd6f966](https://github.com/gameguild-gg/gameguild/commit/cd6f966a172da2cb2f3bdf79179982e36b4224da))
+* **authentication:** implement comprehensive user authentication and token management ([3bc9f93](https://github.com/gameguild-gg/gameguild/commit/3bc9f9358151d3655f6d4028d6d5d0ce1bdb40f0))
+* **authentication:** integrate permission service for tenant user management and token enhancements ([49f64f1](https://github.com/gameguild-gg/gameguild/commit/49f64f13a4831bd63af2da081f79302d9ee9d764))
+* **authentication:** switch to permission service for tenant data and set current tenant context ([4f837c7](https://github.com/gameguild-gg/gameguild/commit/4f837c70d3d0dd5502c6568eea0a8eb62f5a716e))
+* **auth:** modernize authorization configuration ([9ae5cf3](https://github.com/gameguild-gg/gameguild/commit/9ae5cf3340f69ddc2ccce4ddc527ad5f0a2f8cd8))
+* **auth:** tenant token enrichment respects expiration and emits permission claims ([ae77496](https://github.com/gameguild-gg/gameguild/commit/ae77496130bf961e024ddb6289ce1d0701ccf590))
+* **billing:** add webhook processing pipeline for Stripe and PayPal ([a97a29d](https://github.com/gameguild-gg/gameguild/commit/a97a29d842f3d0014fe88175741f0b8ec03539e1))
+* **certificates:** add certificate enums and verification method ([7db9736](https://github.com/gameguild-gg/gameguild/commit/7db9736695d0fabb9cc5ad3ff0e707add3be1feb))
+* **common:** introduce request context services and wire up DI + middleware ([c40785f](https://github.com/gameguild-gg/gameguild/commit/c40785f2268530b2f3762619a62e43815dc819d4))
+* **config:** introduce unified security, auth, rate limiting, and validation settings per environment ([947f6c9](https://github.com/gameguild-gg/gameguild/commit/947f6c9cafa8237b8613601ae3db119f5800092f))
+* **content:** add visibility, moderation, development, progress, and project enums ([91aa253](https://github.com/gameguild-gg/gameguild/commit/91aa253a5f85e87435b0c1fb1ae95e4ccf666d7d))
+* **core,cqrs:** introduce legacy ValidationError types and deprecate ValidationResult in favor of unified Error/Result ([5d2f419](https://github.com/gameguild-gg/gameguild/commit/5d2f4198740e4affde611e0224fa992bd85d958b))
+* **core:** add ASP.NET Core route parameter transformers (kebab/slug/snake) and refine ToKebabParameterTransformer ([80f8d5b](https://github.com/gameguild-gg/gameguild/commit/80f8d5b01a7b8a2448c042d46138f12b6e159b29))
+* **core:** add comprehensive CQRS infrastructure with optimized mediator and pipeline behaviors ([db912e5](https://github.com/gameguild-gg/gameguild/commit/db912e575523ec47459e31d66fa5436767cb9717))
+* **core:** add domain error types (Error, ErrorType, ValidationError) ([2e2f7c3](https://github.com/gameguild-gg/gameguild/commit/2e2f7c3f9e2b8957a2b5403eb310101a7ab58952))
+* **core:** add ToUniqueSlugCase extension and update SlugCase docs ([ec4c8fa](https://github.com/gameguild-gg/gameguild/commit/ec4c8faa8058ddd6e3600a3e4ddb3910ea0b3c4c))
+* **core:** add UnifiedExceptionHandler and relocate GlobalExceptionHandler to Core/Exceptions ([269ea9a](https://github.com/gameguild-gg/gameguild/commit/269ea9a935be66eb96af7881efecd10edf035258))
+* **core:** implement Cloudflare Dynamic DNS service with support classes and configuration ([8a41122](https://github.com/gameguild-gg/gameguild/commit/8a41122c5dbd63515a68919cd0bacf2bc5ce4c71))
+* **core:** improve exception handler visibility and add cache get-or-set method ([7366f6d](https://github.com/gameguild-gg/gameguild/commit/7366f6dbc6f5fcda682d6ba19a9f92c8fa66ab8c))
+* **core:** introduce CustomResults for ProblemDetails mapping ([a52798d](https://github.com/gameguild-gg/gameguild/commit/a52798da569ef8d446314ad17df8527aad01a896))
+* **core:** move IValidator to Core.Behaviors and return Result with FluentValidation context ([a4fdc31](https://github.com/gameguild-gg/gameguild/commit/a4fdc31b54cedebe02854e2133a8d5fc3596daa9))
+* **core:** register external module services in AddExternalServices ([6e34afa](https://github.com/gameguild-gg/gameguild/commit/6e34afa406902300c8584f25a0f1e3557339afc7))
+* **cors:** enhance CORS policy logic and apply to GraphQL endpoint; add development CORS config ([0bba7a5](https://github.com/gameguild-gg/gameguild/commit/0bba7a5a2b7eb9e532e1987084f5b106147685e7))
+* **cqrs:** add PaginatedQuery<TResult> base class and SortDirection enum ([eeeebbb](https://github.com/gameguild-gg/gameguild/commit/eeeebbbd41e60c4f99db5ad2967c8c48a55ae3d5))
+* **credentials:** Add comprehensive credentials REST API controller using CQRS pattern ([dfa76d1](https://github.com/gameguild-gg/gameguild/commit/dfa76d18cb705bdd60efbc26a4982a555b8b6e75))
+* **credentials:** add full CQRS commands, events, and validations for credential management including soft-deletes ([c659093](https://github.com/gameguild-gg/gameguild/commit/c65909372c63556ccbbc97fb917658525fa84bed))
+* **credentials:** Add validator for creating user credentials ensuring data integrity ([dce6a2d](https://github.com/gameguild-gg/gameguild/commit/dce6a2dbc643e94a40337f1c92915baee2ca7baf))
+* **credentials:** refactor to hexagonal architecture with CQRS and repository pattern ([182ecb9](https://github.com/gameguild-gg/gameguild/commit/182ecb9a14a19e87d073f56fcd8c860d7ed2d396))
+* **database:** introduce streamlined ApplicationDbContext and seeding with language defaults ([48c394a](https://github.com/gameguild-gg/gameguild/commit/48c394a88071ec01acf25c661ed7dc10714184b3))
+* **db:** add DbSets for billing, feature flags, and resource quotas; move FinancialTransaction DbSet; add required usings ([5fc5a18](https://github.com/gameguild-gg/gameguild/commit/5fc5a18eda2cbf81dbb2a06e068b050f9369fad7))
+* **ef:** add ModelBuilder extensions for base entities and soft delete filters ([17fedbb](https://github.com/gameguild-gg/gameguild/commit/17fedbbd71ba739e8aee2c715ee446fedc88ae3e))
+* **features:** add DatabaseFeatureFlagProvider backed by EF Core ([cc0c958](https://github.com/gameguild-gg/gameguild/commit/cc0c958a377716beadef7f8b8d76202a1364ad02))
+* **features:** add feature flags system with targeting, caching, and analytics ([dfac125](https://github.com/gameguild-gg/gameguild/commit/dfac125fb7cddfca86fd57a84e9dcd6a31b0e8a9))
+* **features:** integrate OpenFeature DB provider and adjust feature flag schema ([2e74b97](https://github.com/gameguild-gg/gameguild/commit/2e74b97e033611dc8836301a4c70344a94dc6a51))
+* **features:** integrate OpenFeature SDK and register feature flag services ([ac521ad](https://github.com/gameguild-gg/gameguild/commit/ac521ad7ab80a74022f3aab2345214c25748267a))
+* **feedback:** add FeedbackFormQuestionType enum ([7a0f111](https://github.com/gameguild-gg/gameguild/commit/7a0f11180edf4d8d69b47856645e8bf079e82031))
+* **gglexical:** code editor cpp runner ([5230749](https://github.com/gameguild-gg/gameguild/commit/5230749f1cd8848337f421cb03310f5f5e71d0d6))
+* **gglexical:** code editor display grid layout ([1490fef](https://github.com/gameguild-gg/gameguild/commit/1490fefb139853fd7b8c8a5f985fd2b101d82228))
+* **gglexical:** code editor duplicate name dialog ([ddcc0ef](https://github.com/gameguild-gg/gameguild/commit/ddcc0ef6595f17dfe44412e8458d7c4dc914d7a8))
+* **gglexical:** code editor executing state progress ([9035555](https://github.com/gameguild-gg/gameguild/commit/9035555cee9871a5b75ad196d13917f67c4f5dec))
+* **gglexical:** code editor file explorer delete confirm ([d5ac97d](https://github.com/gameguild-gg/gameguild/commit/d5ac97d9f87a6e06056ca0337f13cf79880cfe39))
+* **gglexical:** code editor file explorer drag drop ([60c1603](https://github.com/gameguild-gg/gameguild/commit/60c160343b44788998c2e143145a0d3a89dced93))
+* **gglexical:** code editor file explorer vertical menu ([b523f42](https://github.com/gameguild-gg/gameguild/commit/b523f429d67facd34ef5f7342195c59b232971e5))
+* **gglexical:** code editor file-tabs ([959a5d8](https://github.com/gameguild-gg/gameguild/commit/959a5d8c3197cc531aab7b9c8a48e4aa86a6805c))
+* **gglexical:** code editor file-tabs better user experience ([586a6c0](https://github.com/gameguild-gg/gameguild/commit/586a6c0086a61eea7a35f0a193785a05de3d4ee7))
+* **gglexical:** code editor file-tabs drag-drop ([a095b6a](https://github.com/gameguild-gg/gameguild/commit/a095b6ad9d6f3aebe5c4d32bb067802a9e9ae5fb))
+* **gglexical:** code editor grid dimensions ([72e35ea](https://github.com/gameguild-gg/gameguild/commit/72e35ea2b50d29e0077c6afd23b7f026af08a57c))
+* **gglexical:** code editor link confirmation ([63704e7](https://github.com/gameguild-gg/gameguild/commit/63704e7c844146c519dd1f17877403d38b053f56))
+* **gglexical:** code editor lua runner ([04683f2](https://github.com/gameguild-gg/gameguild/commit/04683f2f8779b91e6399882a8e0628d479ff0f0b))
+* **gglexical:** code editor multiple and unique instancies ([8f198a2](https://github.com/gameguild-gg/gameguild/commit/8f198a22ad7600b863a889696e3342a52fe6a809))
+* **gglexical:** code editor no open file message ([63fd7f1](https://github.com/gameguild-gg/gameguild/commit/63fd7f1031e3d4dae8d9b3ff0f91c6fb3ebc1021))
+* **gglexical:** code editor python path support ([b62cad2](https://github.com/gameguild-gg/gameguild/commit/b62cad291cf43009df0f6da56365440585fa558e))
+* **gglexical:** code editor python support ([45a31b3](https://github.com/gameguild-gg/gameguild/commit/45a31b34e8cb1a75a4e434177fad47451e0a0414))
+* **gglexical:** code editor reduce download wasm ([1ecd823](https://github.com/gameguild-gg/gameguild/commit/1ecd82342a8b6a07e689d7c4279434bd9d7e0e22))
+* **gglexical:** code editor shiki Highlighter ([69d58f1](https://github.com/gameguild-gg/gameguild/commit/69d58f1c92288f264210f5d915f1de2ed78ada9b))
+* **gglexical:** code editor studio/viewer node from display-1 ([a9e3b04](https://github.com/gameguild-gg/gameguild/commit/a9e3b04d06fe3455c0a6738b561ec921ecf705a4))
+* **gglexical:** code editor templates and support for more languages ([7dfaf2d](https://github.com/gameguild-gg/gameguild/commit/7dfaf2d2d78ac856785c7de47b2b12d8a0e1904d))
+* **gglexical:** code editor unified runner and JS/TS ([69fa793](https://github.com/gameguild-gg/gameguild/commit/69fa7935dbd42b3ce182c11932901943bbed912d))
+* **gglexical:** code editor virtual file system ([669eb5b](https://github.com/gameguild-gg/gameguild/commit/669eb5b0c310185ddcd3cb4823c781a0421152dd))
+* **gglexical:** code editor xterm addons ([cc0692e](https://github.com/gameguild-gg/gameguild/commit/cc0692eda7673b87da32cb81759672fb193c6a1f))
+* **gglexical:** code editor xterm request input with Lua ([4d3e070](https://github.com/gameguild-gg/gameguild/commit/4d3e07036e332c7f7b0cf1d1969809301e976022))
+* **gglexical:** link confirm dialog ([0facbd2](https://github.com/gameguild-gg/gameguild/commit/0facbd240261ab38cafd8a4cef5a573afbdd4d80))
+* **gglexical:** script update wasm packages ([6bd2f7b](https://github.com/gameguild-gg/gameguild/commit/6bd2f7bb525bd5fbcd21e1ccaef27bdcc7318abf))
+* **gglexical:** xterm link confirm ([73d63cd](https://github.com/gameguild-gg/gameguild/commit/73d63cda0b322ad314570ab6b6e29736a66b7b8b))
+* **graphql-schema:** regenerate schema with program CRUD & extended entities ([46371f6](https://github.com/gameguild-gg/gameguild/commit/46371f682191853ffc158dbde26ba76d4d71673e))
+* **graphql-security:** support batched GraphQL operation introspection in security middleware ([d97cd0f](https://github.com/gameguild-gg/gameguild/commit/d97cd0f0847283ee6dad9876055444bb48b09d02))
+* **graphql:** add base Query and Mutation root types ([8fd5c6a](https://github.com/gameguild-gg/gameguild/commit/8fd5c6a3fc79284f025029ed27eb1be542a0c5c5))
+* **graphql:** add permission queries and mutations ([a07741c](https://github.com/gameguild-gg/gameguild/commit/a07741cbb07fc23c577cf01fbf6fe32411ad2369))
+* **graphql:** introduce 3-layer DAC authorization (attributes, middleware, directive, extensions) ([9299e55](https://github.com/gameguild-gg/gameguild/commit/9299e55da1535207ea4dc28d3b71aedd97c3a3c8))
+* **identity:** add HTTP-based context implementations, adapters, and request logging middleware ([654eea9](https://github.com/gameguild-gg/gameguild/commit/654eea9d32a5abc9647cb1239fa10e4c32456358))
+* **identity:** introduce core identity context interfaces and remove legacy duplicates ([da32cfc](https://github.com/gameguild-gg/gameguild/commit/da32cfcb4a6a88c115280bb84458e99e777b0fec))
+* Implement billing webhook processing module ([5e27837](https://github.com/gameguild-gg/gameguild/commit/5e2783717c9314700856a13c08e2b4b387d6e4db))
+* Implement country-based targeting handler for feature flags ([5a2c135](https://github.com/gameguild-gg/gameguild/commit/5a2c135c3fc3f0fe56230c6bb60050a9a5f5f0b0))
+* Implement Just-in-Time (JIT) permission elevation handlers and services ([ad4ea57](https://github.com/gameguild-gg/gameguild/commit/ad4ea57d4d263b1e6d711c89d1710cfbbec617da))
+* Implement notification management system ([50c246d](https://github.com/gameguild-gg/gameguild/commit/50c246de0beb699b9edadcba4ca1bbbde61cf71f))
+* Implement ProcessPayPalWebhookCommandHandler and integrate CQRS in billing module ([bf99457](https://github.com/gameguild-gg/gameguild/commit/bf9945712ff577d2cd070e95f891fd74b6406e6b))
+* Implement SIEM integration service for security event logging ([6122609](https://github.com/gameguild-gg/gameguild/commit/61226094b5b31464aa52d41fb754a97cbc3520dc))
+* Implement Testing Lab module with services, validators, and settings management ([02bdc8d](https://github.com/gameguild-gg/gameguild/commit/02bdc8db10915da87ab8100774369d3cb4041cb6))
+* Implement user profile and user management queries with pagination and filtering ([895cc1f](https://github.com/gameguild-gg/gameguild/commit/895cc1f81fb9f96d27f745c6ad3afcfd4cf4d519))
+* **infra:** Cloudflare Dynamic DNS service and hosted worker ([b6cee86](https://github.com/gameguild-gg/gameguild/commit/b6cee869b15a2306c02ae7971f6bc66dce622226))
+* Integrate Audit module with necessary services and database context updates ([5d7a5aa](https://github.com/gameguild-gg/gameguild/commit/5d7a5aa28a11630001c433c3d62d0b7617a0dbfc))
+* **json:** introduce centralized JsonSerializerConfiguration and apply across API, SignalR, OAuth, tests ([4bec959](https://github.com/gameguild-gg/gameguild/commit/4bec9595a56b475b968ddb120980924cf8e62b95))
+* **kyc:** add KYC provider and verification status enums ([74279eb](https://github.com/gameguild-gg/gameguild/commit/74279ebe0b0a8baaa3ade913b2a0b0001fc5b491))
+* **learning:** add program and product learning domain enums ([362f6fe](https://github.com/gameguild-gg/gameguild/commit/362f6feeea052678c28bb837390f6c079f954980))
+* **logging:** bootstrap Serilog early and enable structured request logging ([9e3a78a](https://github.com/gameguild-gg/gameguild/commit/9e3a78a01a908d6062aa2aba115abc8eb16b9b71))
+* **notifications:** add in-app notifications with preferences and bulk operations ([9005744](https://github.com/gameguild-gg/gameguild/commit/90057446c3dc4becb1906a3a033186e26b4d9803))
+* **notifications:** consolidate module namespaces, split DTOs/enums, add service and controller, register DbSets ([1609fa9](https://github.com/gameguild-gg/gameguild/commit/1609fa9c9da84387354a41f8cd9f86b1a96d9100))
+* **observability:** bind OpenTelemetry options and adjust development exporter defaults ([8ab3d31](https://github.com/gameguild-gg/gameguild/commit/8ab3d31b49f50273063908c98acc0693520a0e9a))
+* **payments:** add advanced payment commands, result models, and service interface ([dcb1c5c](https://github.com/gameguild-gg/gameguild/commit/dcb1c5ca990f4a3553459bdebb19384d25b1ebce))
+* **payments:** add gateways, methods, transaction types/statuses, and wallet status ([ffaa365](https://github.com/gameguild-gg/gameguild/commit/ffaa36571eb43acd295e6cc91d00c8fc89a6893a))
+* **permissions-domain:** add DAC/Module permission contracts and permission entities ([426697a](https://github.com/gameguild-gg/gameguild/commit/426697a1592cce42aa533a72c72f53fe02dbc0b9))
+* **permissions:** add comprehensive multi-layer permission module with caching and auditing ([90863be](https://github.com/gameguild-gg/gameguild/commit/90863bed9fd9e5558b496bd6fe60f20f2516327f))
+* **permissions:** implement DAC resolver and permission services; update DbContext and seeders ([85c1811](https://github.com/gameguild-gg/gameguild/commit/85c1811aaeffed9cce265e35afd47a2e3a8187a6))
+* **products-graphql:** add authenticated product queries and diagnostic auth logging ([082a104](https://github.com/gameguild-gg/gameguild/commit/082a104ae2a04208777365f27963a5167c52f3be))
+* **products-graphql:** integrate Program relationships into Product schema ([33ba038](https://github.com/gameguild-gg/gameguild/commit/33ba038db432f4a4abe462ea817da4ee0f5c2e97))
+* **programs-graphql:** add Program GraphQL module with queries, mutations, type definitions, and DI registration ([a4bb9f0](https://github.com/gameguild-gg/gameguild/commit/a4bb9f0276716cd500ef98c4166fd27fcd70a2bd))
+* **programs:** adopt GameGuild.Authorization namespace in GraphQL ([540f614](https://github.com/gameguild-gg/gameguild/commit/540f614c78287b2fc2cf4e190bc92c6f07689c32))
+* **programs:** expand IProgramService contract with detailed operations and docs ([8566034](https://github.com/gameguild-gg/gameguild/commit/8566034776ff9c2e098b03c32e122deae3f6fdb5))
+* register Resources, Tenants, and Projects modules in DI ([20895a6](https://github.com/gameguild-gg/gameguild/commit/20895a6ce36cd9fa4ace7230c45c15d9e383d0f8))
+* Remove development configuration files for GameGuild ([3e5c2bc](https://github.com/gameguild-gg/gameguild/commit/3e5c2bc5e90f41b99369e4e04ff0bcd9b9e2d288))
+* Remove GameGuild project files and configuration settings ([4760366](https://github.com/gameguild-gg/gameguild/commit/4760366458f6bd2414958d75c3f18e63a7fb85bf))
+* **resources:** add resource quota and permission service abstractions and implementations ([917ea51](https://github.com/gameguild-gg/gameguild/commit/917ea51a888a1931aec0712e9264781b362744f0))
+* **resources:** introduce tenant resource quotas, usage tracking and admin APIs ([44c577d](https://github.com/gameguild-gg/gameguild/commit/44c577d2c91d34649bf0167046a7ca358f7dc428))
+* **seeding:** add database seeder and contract ([606146d](https://github.com/gameguild-gg/gameguild/commit/606146df94ada3460b1d3204a52d477c2237d788))
+* **shared:** add core value objects (Address, EmailAddress, PhoneNumber, Money, BillingCycle) ([576ca9f](https://github.com/gameguild-gg/gameguild/commit/576ca9f849605b69c55f9f81e8ed2a4ca6ee0a37))
+* **SLA Monitoring:** Implement SLO compliance and violation queries ([ad85657](https://github.com/gameguild-gg/gameguild/commit/ad856576e9933b5a65efb7665c443b549c542f6e))
+* **subscriptions:** add repository, CQRS commands/handlers, controller, events, and DI registration ([cac1bde](https://github.com/gameguild-gg/gameguild/commit/cac1bde720c37962485d1ce9b2bbf78745b205ce))
+* **subscriptions:** add subscription types/intervals/statuses, acquisition/access, and promos ([d1d391e](https://github.com/gameguild-gg/gameguild/commit/d1d391eff63c84da676c9fd11819ea489d91c45e))
+* **subscriptions:** Add Subscriptions module with clean architecture ([4147055](https://github.com/gameguild-gg/gameguild/commit/4147055ce13033ed9c1eab8cce1e2d767255743a))
+* **subscriptions:** Complete SubscriptionRepository implementation (92→65 errors, 27 fixed) ([572b56b](https://github.com/gameguild-gg/gameguild/commit/572b56b611a709735554f36cdf3eee0561603fba))
+* **subscriptions:** enhance UserSubscription domain and service behaviors ([61d38e1](https://github.com/gameguild-gg/gameguild/commit/61d38e102d51d7c22db73c9ad8f99dd1a1125a65))
+* **subscriptions:** register repository and add required usings ([822d1e6](https://github.com/gameguild-gg/gameguild/commit/822d1e655548275c5cc815cd05f94b8bc50b9dea))
+* **tags:** add TagType, TagRelationshipType, and SkillProficiencyLevel enums ([f526503](https://github.com/gameguild-gg/gameguild/commit/f5265033c0fbb039911f1609659178ebfa3356f2))
+* **telemetry:** refine OpenTelemetry resource config and align instrumentation with available APIs ([c18113d](https://github.com/gameguild-gg/gameguild/commit/c18113db2ad3cf4e0ab54447be151ceab48a694a))
+* **tenants,users:** Add detailed validators, enhance handlers, and improve EF configurations ([792722e](https://github.com/gameguild-gg/gameguild/commit/792722e4aceed49f416bc0850f3179ad3a31ff2c))
+* **tenants:** add caching, context, and core services; remove legacy commands and controllers ([3c6eded](https://github.com/gameguild-gg/gameguild/commit/3c6ededf3e81dd00a3be29ec7eee1b5edc118b2b))
+* **tenants:** add tenant defaulting and settings integration ([e379af0](https://github.com/gameguild-gg/gameguild/commit/e379af0b9dcfbd82d63d62197cdc741996fce811))
+* **tenants:** enhance Tenant entity with slug index, fields, and helpers ([c99a7b1](https://github.com/gameguild-gg/gameguild/commit/c99a7b1c77745c03a1e4df66644d2075fc81bb20))
+* **tenants:** separate tenant domains and settings into dedicated modules and services ([72835d2](https://github.com/gameguild-gg/gameguild/commit/72835d22239a973bb0a748dadd616f7dfcb80967))
+* **TestingLab:** Complete TestingLab module integration ([8673463](https://github.com/gameguild-gg/gameguild/commit/86734638cbe171129e5bf160c9a7c215874da2b1))
+* **TestingLab:** Integrate TestingLab module with custom CQRS ([1df8f04](https://github.com/gameguild-gg/gameguild/commit/1df8f044746797a6529e3ee6265cc8d2b5261a7c))
+* update CourseCard component to use a new CourseCardCourse type for better type safety ([80f92a9](https://github.com/gameguild-gg/gameguild/commit/80f92a9749d7d800878e7a91ff994c1df9fa1581))
+* Update HealthController and HealthEndpoint for anonymous access; refactor namespaces and add integration tests ([96fad4c](https://github.com/gameguild-gg/gameguild/commit/96fad4c036c3a6d973c92172e818ca566cbc5acd))
+* **user-profiles:** replace GraphQL with repository pattern and add user profile service and handlers; extend user entity with names ([af0af99](https://github.com/gameguild-gg/gameguild/commit/af0af99f0a25cd7a069ecc4d5cbee478d0341784))
+* **user-profiles:** restructure module with CQRS, validation, and handlers ([bfa4083](https://github.com/gameguild-gg/gameguild/commit/bfa4083b6cca7fce9b53c2df89d6f2a295930e11))
+* **users:** extend User entity with phone, last seen, and domain helpers ([8d6ac59](https://github.com/gameguild-gg/gameguild/commit/8d6ac596d24a47a97d858763518e67a634aac7b9))
+* **users:** increase balance precision and align EF configuration; improve create handler ([997f255](https://github.com/gameguild-gg/gameguild/commit/997f255fb8e2c21998786616a3b5f00f8b421cef))
+* **users:** overhaul user module with CQRS, services, and API controller ([2e27066](https://github.com/gameguild-gg/gameguild/commit/2e270660d9dd9c9f9229f9c9842d63b1e18f5aee))
+* **web/courses:** switch to myPrograms hook, add null-safe filtering/sorting, remove debug UI ([108978e](https://github.com/gameguild-gg/gameguild/commit/108978e967e6785bc235c39b7f7b8182b835da3a))
+* **web/graphql:** refresh codegen and queries; align mutations with API changes ([98ae7ae](https://github.com/gameguild-gg/gameguild/commit/98ae7aef5a25aab5988ad10d0e96882d3fdd9134))
+* **web:** Enhances testing lab UI and functionality ([cdcad06](https://github.com/gameguild-gg/gameguild/commit/cdcad0623ad0c2bf7dd3e7e13a4d0a85e7b2142d))
+* **web:** improve Apollo provider auth flow and provider composition ([1694d2f](https://github.com/gameguild-gg/gameguild/commit/1694d2f828664e7e61cbc7a44d98248af195a5ef))
+* **web:** integrate GraphQL program & product operations into courses UI ([1b4af93](https://github.com/gameguild-gg/gameguild/commit/1b4af932469362806b843cbacaeeb4175d02187b))
+* **web:** migrate course detail pages to server components with GraphQL-backed actions ([1e52b9c](https://github.com/gameguild-gg/gameguild/commit/1e52b9c8cef7f348f9495086d794f5984ae7b575))
+
+
+### Performance Improvements
+
+* **rate-limiting:** switch to source-generated Regex and set headers safely ([682817e](https://github.com/gameguild-gg/gameguild/commit/682817ebb07c6bf4caf071a251c554d4f1f77b8b))
+* **regex:** adopt source-generated Regex across normalization and transformers ([17e59ef](https://github.com/gameguild-gg/gameguild/commit/17e59ef27a6a8c00f96745c2cd6e495aa2ebef36))
+
+# [2.24.0](https://github.com/gameguild-gg/gameguild/compare/v2.23.1...v2.24.0) (2025-11-13)
+
+
+### Features
+
+* contact/links page ([9e48e60](https://github.com/gameguild-gg/gameguild/commit/9e48e60b9a60f8b833e649b0091f1b63a0e4b6f7))
+
+## [2.23.1](https://github.com/gameguild-gg/gameguild/compare/v2.23.0...v2.23.1) (2025-11-07)
+
+
+### Bug Fixes
+
+* **gglexical:** admonition dark mode ([730c746](https://github.com/gameguild-gg/gameguild/commit/730c74634a0dae8b94ae010b01486b2bbcdf8c4f))
+* **gglexical:** admonition mouse capture ([0f5981c](https://github.com/gameguild-gg/gameguild/commit/0f5981c3c04e93ab66cae1a7d968597aff9a2807))
+* **gglexical:** audio node fix ([dc4931c](https://github.com/gameguild-gg/gameguild/commit/dc4931c910f0a36ef28be0bd4b7612a11061573d))
+* **gglexical:** button and divider mouse capture ([12f6f2d](https://github.com/gameguild-gg/gameguild/commit/12f6f2d8daee70dfe7233bc9bdce0b9e64c8553c))
+* **gglexical:** buttons studio and viewer open with button code 1 mouse ([15ba1be](https://github.com/gameguild-gg/gameguild/commit/15ba1bea17ff44be6d33e7d8328dc5ac6697dfa5))
+* **gglexical:** download dialog ([acbaabb](https://github.com/gameguild-gg/gameguild/commit/acbaabb217040e3e52d6f04f111ae71d20e511f3))
+* **gglexical:** edit-button works ([38a09df](https://github.com/gameguild-gg/gameguild/commit/38a09df46eb7dc83093cdce1ade7e91ded17e876))
+* **gglexical:** filters ([434ecae](https://github.com/gameguild-gg/gameguild/commit/434ecae25f03294128cd8c1fb1603261fafd3995))
+* **gglexical:** fix mermaid template quadrant-chart ([59039cb](https://github.com/gameguild-gg/gameguild/commit/59039cb1cb535ef1590698f17d9959e96299b241))
+* **gglexical:** fix theme dark mode in editor vega ([62ba7b2](https://github.com/gameguild-gg/gameguild/commit/62ba7b232504a0ec6d427e2c0bfe3449fad5b324))
+* **gglexical:** fixes in mermaid ([2b71f33](https://github.com/gameguild-gg/gameguild/commit/2b71f3369a41dca736f1b2316fe402605eb1b860))
+* **gglexical:** floating content fixed ([55503b5](https://github.com/gameguild-gg/gameguild/commit/55503b5d84f308694d7f59ca52a4f3d5e65fc4e9))
+* **gglexical:** floating toolbar ([3fdc925](https://github.com/gameguild-gg/gameguild/commit/3fdc9256370da45915a77d0fc27a01daf0449edf))
+* **gglexical:** media editor mouse capture fix ([3a60f4e](https://github.com/gameguild-gg/gameguild/commit/3a60f4e76c3e7aef71c8ed1267c06629b6572999))
+* **gglexical:** mermaid and vega editors dark-mode ([1eb6e9b](https://github.com/gameguild-gg/gameguild/commit/1eb6e9b8abac1680517d703ab5d5d3da0dff5f62))
+* **gglexical:** mermaid mouse capture ([b368c4d](https://github.com/gameguild-gg/gameguild/commit/b368c4d1f6d1b10c2f9a41d8860e69c126c54f86))
+* **gglexical:** mermaid suggestions ([b2c7f25](https://github.com/gameguild-gg/gameguild/commit/b2c7f25eefddf4cab51e7798051464c200ed981f))
+* **gglexical:** mermaid themes dark more light ([4802467](https://github.com/gameguild-gg/gameguild/commit/4802467296590c140ccdbdf8060dc84644ab426b))
+* **gglexical:** name vega manager ([55b4101](https://github.com/gameguild-gg/gameguild/commit/55b4101dcce65dca39959826ecd61c25f10a4de2))
+* **gglexical:** new atributes for vega theme dark ([c6df683](https://github.com/gameguild-gg/gameguild/commit/c6df683fff7e82267a98ed593263562ce3cb7895))
+* **gglexical:** open in new tab ([7d3dfc8](https://github.com/gameguild-gg/gameguild/commit/7d3dfc813ec13c8692ec5eaf037a936d54009e83))
+* **gglexical:** open studio/viewer documents ([ddd804e](https://github.com/gameguild-gg/gameguild/commit/ddd804e10073106f5b8599a462f485e2259360c1))
+* **gglexical:** quiz mouse capture ([ce3eb2b](https://github.com/gameguild-gg/gameguild/commit/ce3eb2b4bf5d41c2210f2e5a76e5c9e7d89064d5))
+* **gglexical:** selected fix ([68094ab](https://github.com/gameguild-gg/gameguild/commit/68094abd6919475c9f9e7f29b15092d7f5740f6f))
+* **gglexical:** storageType ([55cdab9](https://github.com/gameguild-gg/gameguild/commit/55cdab963ebdfcb8dff33d137c3c8188c1f3d31f))
+* **gglexical:** table mouse capture ([a1f591f](https://github.com/gameguild-gg/gameguild/commit/a1f591fec41e7e09f2d5ac231d94250a78953fed))
+* **gglexical:** toolbar not open in line without words ([de9391d](https://github.com/gameguild-gg/gameguild/commit/de9391d681fa0d2de5e1bcbeeb561c8b6e30d6cf))
+* **gglexical:** updating vega live preview ([805734e](https://github.com/gameguild-gg/gameguild/commit/805734e623685113b9924a410f19a5380e0e3d07))
+* **gglexical:** vega dark theme ([e26a23e](https://github.com/gameguild-gg/gameguild/commit/e26a23e3ee09c01def5ee528415ed73dc7451bbb))
+* **gglexical:** vega dimensions ([4cfa803](https://github.com/gameguild-gg/gameguild/commit/4cfa803fcbbb2e648d1b3c07d2045ce61687fd55))
+* **gglexical:** vega editor transition in update ([0dc8175](https://github.com/gameguild-gg/gameguild/commit/0dc8175fc01dbacf7483f079358f991d1f97076d))
+* **gglexical:** vega fix element center ([2932a68](https://github.com/gameguild-gg/gameguild/commit/2932a6817f311448b088d9f317e3fb2c42ab13f6))
+* **gglexical:** vega live preview update ([8106985](https://github.com/gameguild-gg/gameguild/commit/8106985f9f9e736322b2da904baa3b2bc6331a5d))
+* **gglexical:** vega themes order ([6c9c46c](https://github.com/gameguild-gg/gameguild/commit/6c9c46c1a7aa6c28ffb92344716ae5f035d67e66))
+* **gglexical:** vega update fix ([95f3a2b](https://github.com/gameguild-gg/gameguild/commit/95f3a2b6d369066ca8db789e062b62026fabfb28))
+* **gglexical:** vega zoom in viewer ([26f914c](https://github.com/gameguild-gg/gameguild/commit/26f914c4865ed0aa2fc10ce23b9589cc6f01527e))
+* **gglexical:** vega-lite mouse capture ([df2243f](https://github.com/gameguild-gg/gameguild/commit/df2243fd2b0f32538402d1e0182e4dddb75f4717))
+* **gglexical:** vega-lite template design fix ([fb6df83](https://github.com/gameguild-gg/gameguild/commit/fb6df83f5515d0a436d8d8ef4977ed7e9e0476ec))
+
+# [2.23.0](https://github.com/gameguild-gg/gameguild/compare/v2.22.1...v2.23.0) (2025-11-06)
+
+
+### Features
+
+* **web:** Add testing session content for Intro2GPro ([bc3ade5](https://github.com/gameguild-gg/gameguild/commit/bc3ade5b0bab75f930aa0fbb65fb439a8df61177))
+
+## [2.22.1](https://github.com/gameguild-gg/gameguild/compare/v2.22.0...v2.22.1) (2025-10-17)
+
+
+### Bug Fixes
+
+* **editor:** callout to admonition ([1a78079](https://github.com/gameguild-gg/gameguild/commit/1a780792b5d572cb0a6d14da600d707999314f16))
+* **editor:** import fix ([f0ba9b3](https://github.com/gameguild-gg/gameguild/commit/f0ba9b32f9c3a8c5d57560472b6370e854999ca8))
+* **editor:** logic fix in preview-table-of-contents ([5b7f908](https://github.com/gameguild-gg/gameguild/commit/5b7f908cf573af2c8173460d3b08f24ea2cddac8))
+* **editor:** open project fix ([ad87c18](https://github.com/gameguild-gg/gameguild/commit/ad87c18d64fa93ac64b1ae19b20f38b4792a6c12))
+* **editor:** preview page = serializedState type ([8fbf60b](https://github.com/gameguild-gg/gameguild/commit/8fbf60bfcc0712a41413c644c0f58fce5dcb44eb))
+* **editor:** preview page focus serializedState ([72e941e](https://github.com/gameguild-gg/gameguild/commit/72e941e6448010df3ae9c71855d916c5144ae727))
+* **gglexical:** adapt new page names ([46b6f10](https://github.com/gameguild-gg/gameguild/commit/46b6f1081d194ce1ac9ea32387ed1cd936e2802f))
+* **gglexical:** api tagData ([d8587e7](https://github.com/gameguild-gg/gameguild/commit/d8587e79578fddf834557eb85de5c3247adbee5e))
+* **gglexical:** create dialog inserts correct storageType ([0c5ab81](https://github.com/gameguild-gg/gameguild/commit/0c5ab8128041aa715f31d787c20dc3585b53222f))
+* **gglexical:** doc architecture ([dbbb8e2](https://github.com/gameguild-gg/gameguild/commit/dbbb8e24eb316784c50d668dde4f1fc71d8874c7))
+* **gglexical:** doc gglexical + storage architecture ([12f18fe](https://github.com/gameguild-gg/gameguild/commit/12f18fee868de43bbcdf0991b91dd01ec40c4b2b))
+* **gglexical:** docs architecture ([38a9104](https://github.com/gameguild-gg/gameguild/commit/38a91042383cb24688a123b5db1a90867a95a362))
+* **gglexical:** error exception ([cb6bfd2](https://github.com/gameguild-gg/gameguild/commit/cb6bfd23c66384a9e8a4b3d7a33136226c3fec35))
+* **gglexical:** fill-in-the-blank fix ([a976121](https://github.com/gameguild-gg/gameguild/commit/a97612111fb3a487ed4430a445e08622f6ba9399))
+* **gglexical:** fill-in-the-blank preview fix ([1ab2620](https://github.com/gameguild-gg/gameguild/commit/1ab26204785b59e07fc926ea26f3581a72680d00))
+* **gglexical:** fill-in-the-blank preview fix 2 ([05f870c](https://github.com/gameguild-gg/gameguild/commit/05f870cd45bca783513caef4a6c17bf1020c235c))
+* **gglexical:** fill-in-the-blank quiz fix ([1af6623](https://github.com/gameguild-gg/gameguild/commit/1af6623656988992df67819354abfcca39419bec))
+* **gglexical:** fix storage ([ff24003](https://github.com/gameguild-gg/gameguild/commit/ff2400321cef533aaa8abe293bf57d5316eb1dc7))
+* **gglexical:** fixed value for itemsPerPage ([8c1d037](https://github.com/gameguild-gg/gameguild/commit/8c1d03786a01862654e1a520be8eb3f9180a21fd))
+* **gglexical:** formatting fix ([a6ed3c4](https://github.com/gameguild-gg/gameguild/commit/a6ed3c49e3fc156773a905ec822a8fb00c73bb3b))
+* **gglexical:** google-drive save document ([caca636](https://github.com/gameguild-gg/gameguild/commit/caca636e3922508c73c3dd056821ec2f7f350446))
+* **gglexical:** google-drive sync ([182f5b2](https://github.com/gameguild-gg/gameguild/commit/182f5b29b034817cdb1f84616e9fee9e105699ea))
+* **gglexical:** hyperlink plugin ([5ce161a](https://github.com/gameguild-gg/gameguild/commit/5ce161aa9f67dae59df9d375bc164f77f39e2028))
+* **gglexical:** hyperlink plugin and selector http/https/local ([b1c5352](https://github.com/gameguild-gg/gameguild/commit/b1c53528cd7b039066b1fbe5173e5c3b28001f42))
+* **gglexical:** hyperlink plugin component ([65ef83e](https://github.com/gameguild-gg/gameguild/commit/65ef83e405b111d51cad468220aa981cd7dc65b6))
+* **gglexical:** hyperlink plugin open past link ([ece04e6](https://github.com/gameguild-gg/gameguild/commit/ece04e62ec9e4436ed4642542a2e9868eb245c30))
+* **gglexical:** import project fixes ([a3bad6c](https://github.com/gameguild-gg/gameguild/commit/a3bad6ca330628cf7d01c78f5a68df55b1dafacf))
+* **gglexical:** info-dialog tags ([fd096d2](https://github.com/gameguild-gg/gameguild/commit/fd096d2a039364a4ff6ab6e29948d8200b66303f))
+* **gglexical:** list color fix ([384cfc9](https://github.com/gameguild-gg/gameguild/commit/384cfc9d555c5d3b420272e6d7939d54f9731e5e))
+* **gglexical:** list color in editor ([dbbc213](https://github.com/gameguild-gg/gameguild/commit/dbbc213268f068bf5b84136d865138eb3f9b40ff))
+* **gglexical:** list color use color-palette ([d7d3b03](https://github.com/gameguild-gg/gameguild/commit/d7d3b0300e21ea306ddb49fa1e7f85ddee54295e))
+* **gglexical:** mode filter list ([a0a2e95](https://github.com/gameguild-gg/gameguild/commit/a0a2e957d21d2da3e2c0e303b46eb16d42bbd5a3))
+* **gglexical:** new Google api GIS ([e759953](https://github.com/gameguild-gg/gameguild/commit/e759953977b5ec0c55b5c3711cf0be49cc377694))
+* **gglexical:** open project auto sync googledrive ([46ecee2](https://github.com/gameguild-gg/gameguild/commit/46ecee233212fa01cd580ab55e040833db4c53db))
+* **gglexical:** open project storage fix ([4757f2b](https://github.com/gameguild-gg/gameguild/commit/4757f2b9fd377be287073bc77328b50af9238895))
+* **gglexical:** open project sync google-drive analyzer ([0aceb1f](https://github.com/gameguild-gg/gameguild/commit/0aceb1fd3abc559fe110b71dff43c357c5dadecc))
+* **gglexical:** ordered list ([a2c7b0e](https://github.com/gameguild-gg/gameguild/commit/a2c7b0eaf2888b418c3c865f970d790031af6efa))
+* **gglexical:** ordered list fix ([a432231](https://github.com/gameguild-gg/gameguild/commit/a43223156656467e9a5d45ce406f44515c038f3e))
+* **gglexical:** presentation fixes ([2971c90](https://github.com/gameguild-gg/gameguild/commit/2971c9021446c140a58d5bfd15758768785d470c))
+* **gglexical:** preview width ([b2c1e26](https://github.com/gameguild-gg/gameguild/commit/b2c1e26637b9c50e6a00b9c6c08c52898781f1ca))
+* **gglexical:** project list line break ([a2099f1](https://github.com/gameguild-gg/gameguild/commit/a2099f1c1af7e8ce0b8ac3326029fd9b75416682))
+* **gglexical:** quiz selection visible ([fd906e0](https://github.com/gameguild-gg/gameguild/commit/fd906e0d18294f11cb7cb1fe29790824df595801))
+* **gglexical:** save and sync efficient ([80bdc6b](https://github.com/gameguild-gg/gameguild/commit/80bdc6bc62855b5db7124acb6bae45b8600b0052))
+* **gglexical:** side error ([9e0f6a9](https://github.com/gameguild-gg/gameguild/commit/9e0f6a9242354b7849486966c5a097b5051acfbd))
+* **gglexical:** storage selector fix ([f7c7727](https://github.com/gameguild-gg/gameguild/commit/f7c772763ea119211ebe057c7f101cffe8ceaa02))
+* **gglexical:** superscript fix ([b44face](https://github.com/gameguild-gg/gameguild/commit/b44face0ac970b4a7c6a288eebd3d0b5ab46ef89))
+* **gglexical:** system api for local, gameguild-cloud and google-drive ([f1d17c0](https://github.com/gameguild-gg/gameguild/commit/f1d17c0b743355f1c2d9f838713a1e0450d5e3f8))
+* **gglexical:** table plugin fix ([7d38ae5](https://github.com/gameguild-gg/gameguild/commit/7d38ae5a83bde8789d44f0c77d0ac2dd2b554af4))
+* **gglexical:** table-of-contents container ([37d3c52](https://github.com/gameguild-gg/gameguild/commit/37d3c5266e5f12ffe5cbc26a5dc701bef398436a))
+* **gglexical:** text color apply color in text not marked ([04bd911](https://github.com/gameguild-gg/gameguild/commit/04bd9116f7c9e5b20a66e38804cb2a1aead8e9f4))
+* **gglexical:** TopMenu ([122a38f](https://github.com/gameguild-gg/gameguild/commit/122a38f232946a7745edfd6e0b3ca61e15e36c80))
+* **gglexical:** unordered list fix ([6556b6d](https://github.com/gameguild-gg/gameguild/commit/6556b6d942a8ff29d3e34cc20ec392cbb1d57a82))
+* **gglexical:** view document list layout fix ([f4afc5e](https://github.com/gameguild-gg/gameguild/commit/f4afc5ea27f3eae507ad0262703ef5c37825f935))
+
+
+### Reverts
+
+* Revert "refactor(gglexical): search filters" ([2f5e78c](https://github.com/gameguild-gg/gameguild/commit/2f5e78cce0faa4b418f46b9107d64533706722ba))
+
+# [2.22.0](https://github.com/gameguild-gg/gameguild/compare/v2.21.4...v2.22.0) (2025-09-29)
+
+
+### Features
+
+* **course:** Add 'Automation in Game Development' module to Intro to GPro ([413efd2](https://github.com/gameguild-gg/gameguild/commit/413efd2f6326c6b309811ee1574cbf284d39335e))
+* **mermaid:** Standardize chart background and container styling ([6b1af26](https://github.com/gameguild-gg/gameguild/commit/6b1af26dffc29b13ef4807881acd295b157463ef))
+
+## [2.21.4](https://github.com/gameguild-gg/gameguild/compare/v2.21.3...v2.21.4) (2025-09-22)
+
+
+### Bug Fixes
+
+* **web:** Adds week 5 content on game dev issues ([eddf87c](https://github.com/gameguild-gg/gameguild/commit/eddf87c81a6aad43175f50a004df031b89ee2eaa))
+
+## [2.21.3](https://github.com/gameguild-gg/gameguild/compare/v2.21.2...v2.21.3) (2025-09-22)
+
+
+### Bug Fixes
+
+* **dsa:** Refactors merge sort explanations ([0ed52dc](https://github.com/gameguild-gg/gameguild/commit/0ed52dc3dcbb60201e5154fba4ccff9a0153f511))
+
+## [2.21.2](https://github.com/gameguild-gg/gameguild/compare/v2.21.1...v2.21.2) (2025-09-22)
+
+
+### Bug Fixes
+
+* **web:** Adds content for AI for games week 3 and 5 ([4b0d2fe](https://github.com/gameguild-gg/gameguild/commit/4b0d2fe36905fdca92b833997cc5c885ebb11830))
+
+## [2.21.1](https://github.com/gameguild-gg/gameguild/compare/v2.21.0...v2.21.1) (2025-09-20)
+
+
+### Bug Fixes
+
+* **web:** Adds behaviour and decision trees ([44eead1](https://github.com/gameguild-gg/gameguild/commit/44eead14dd9f0115e38a8644768ef732133f442c))
+
+# [2.21.0](https://github.com/gameguild-gg/gameguild/compare/v2.20.0...v2.21.0) (2025-09-16)
+
+
+### Features
+
+* **api:** Add TestingLab adapter services ([407fdde](https://github.com/gameguild-gg/gameguild/commit/407fddeebfbb8e4e27882aa8a5286a30e595e73d))
+* **api:** Add TestingLab repositories ([e0bba37](https://github.com/gameguild-gg/gameguild/commit/e0bba376e2def4a79844c7212b0d3687c19985df))
+* **web:** Add nested content for 'Gamedev Issues' in mock data ([c051067](https://github.com/gameguild-gg/gameguild/commit/c0510671c48775f78ce58e62eea05653bba055b7))
+* **web:** Group game publishing content by platform in mock data ([2c6cd95](https://github.com/gameguild-gg/gameguild/commit/2c6cd95b044382f757456a17bd4fc40b830072d5))
+* **web:** Refactor course content sidebar for hierarchical display ([0898092](https://github.com/gameguild-gg/gameguild/commit/08980928f7c4826f150544a185409f8bd0d97297))
+
+# [2.20.0](https://github.com/gameguild-gg/gameguild/compare/v2.19.0...v2.20.0) (2025-09-15)
+
+
+### Features
+
+* **web:** Add game development issues content ([06466e6](https://github.com/gameguild-gg/gameguild/commit/06466e63f878cca5ba571f4f7450ecae73a96753))
+
+# [2.19.0](https://github.com/gameguild-gg/gameguild/compare/v2.18.0...v2.19.0) (2025-09-13)
+
+
+### Features
+
+* **web:** Adds game publishing course content ([cf9ad40](https://github.com/gameguild-gg/gameguild/commit/cf9ad40642d41cd8ee614b8eed7b6ce3e346e8cd))
+
+# [2.18.0](https://github.com/gameguild-gg/gameguild/compare/v2.17.2...v2.18.0) (2025-09-08)
+
+
+### Features
+
+* **web:** Adds game development careers content ([4e89619](https://github.com/gameguild-gg/gameguild/commit/4e8961979352c25984a9ce6a31cbc85c0c79b888))
+
+## [2.17.2](https://github.com/gameguild-gg/gameguild/compare/v2.17.1...v2.17.2) (2025-09-06)
+
+
+### Bug Fixes
+
+* **ai4games:** Corrects cohesion image label ([71d896f](https://github.com/gameguild-gg/gameguild/commit/71d896f1a5075ecbe7f54815496312d3d030ac6d))
+
+## [2.17.1](https://github.com/gameguild-gg/gameguild/compare/v2.17.0...v2.17.1) (2025-09-06)
+
+
+### Bug Fixes
+
+* **courses:** Corrects cohesion example image link ([a70f1fe](https://github.com/gameguild-gg/gameguild/commit/a70f1fe5297f9d6e079184ee37d129f9db9ee2cf))
+
+# [2.17.0](https://github.com/gameguild-gg/gameguild/compare/v2.16.0...v2.17.0) (2025-09-04)
+
+
+### Bug Fixes
+
+* **ai4games:** Improve math notation in 'Conway's Game of Life' lesson ([de1331c](https://github.com/gameguild-gg/gameguild/commit/de1331c8274eac08aa59b2582a432c1f0ff2cfb8))
+
+
+### Features
+
+* **ai4games:** Add 'State Machines' lesson content ([741c1d5](https://github.com/gameguild-gg/gameguild/commit/741c1d5ef503b81e1372cec2fedcf8442ef2a79a))
+* **ai4games:** Integrate 'State Machines' content into course mock data ([dde83d5](https://github.com/gameguild-gg/gameguild/commit/dde83d539a6b97e965904c1a5046c073d20ed8d6))
+
+# [2.16.0](https://github.com/gameguild-gg/gameguild/compare/v2.15.3...v2.16.0) (2025-09-01)
+
+
+### Features
+
+* **courses:** Adds intro to game dev tools content ([4a61039](https://github.com/gameguild-gg/gameguild/commit/4a61039887463ca8e78c55c9eaae1b8d60d8d135))
+
+## [2.15.3](https://github.com/gameguild-gg/gameguild/compare/v2.15.2...v2.15.3) (2025-08-28)
+
+
+### Bug Fixes
+
+* **courses:** expectations and add week01 content ([2a3e65c](https://github.com/gameguild-gg/gameguild/commit/2a3e65c1e2116467d2a31143024c22ba61db0490))
+
+## [2.15.2](https://github.com/gameguild-gg/gameguild/compare/v2.15.1...v2.15.2) (2025-08-28)
+
+
+### Bug Fixes
+
+* **ai_for_games:** Wrong image for Cohesion ([640d6c0](https://github.com/gameguild-gg/gameguild/commit/640d6c0557f6544bf780e6f9e1ff181aca28b590))
+
+## [2.15.1](https://github.com/gameguild-gg/gameguild/compare/v2.15.0...v2.15.1) (2025-08-28)
+
+
+### Bug Fixes
+
+* **dsa:** add more details to dsa content ([ed403f3](https://github.com/gameguild-gg/gameguild/commit/ed403f3443c82b8483dd6ab79bb9e4e7f0902bd8))
+
+# [2.15.0](https://github.com/gameguild-gg/gameguild/compare/v2.14.0...v2.15.0) (2025-08-28)
+
+
+### Bug Fixes
+
+* Ferpa Waiver ([6b66fe2](https://github.com/gameguild-gg/gameguild/commit/6b66fe2a675d9a4a1c352f570767b9a9db49aa6f))
+
+
+### Features
+
+* **ai4games:** Add week 01 expectations content file ([346e24b](https://github.com/gameguild-gg/gameguild/commit/346e24b935af65a52ce7fe661e8ee45817f1166b))
+* **dsa:** Add week 01 expectations content file ([c27a23a](https://github.com/gameguild-gg/gameguild/commit/c27a23ae0692811a59fd7a3b81e9b0ff381f78ee))
+* **mock-data:** Integrate AI for Games expectations into mock data ([99308cc](https://github.com/gameguild-gg/gameguild/commit/99308cce7a9dbb4142b6ada94d5f3bd04fbc5e2f))
+* **mock-data:** Integrate DSA expectations and update sort orders ([45a7d58](https://github.com/gameguild-gg/gameguild/commit/45a7d588aa610ebde2c2e9db5b3745d14d2734bd))
+
+# [2.14.0](https://github.com/gameguild-gg/gameguild/compare/v2.13.0...v2.14.0) (2025-08-27)
+
+
+### Features
+
+* **academic-honesty:** Introduce Academic Honesty Policy page ([3835957](https://github.com/gameguild-gg/gameguild/commit/3835957e7dfdd385515dbec20dd0dd5bab45244d))
+
 # [2.13.0](https://github.com/gameguild-gg/gameguild/compare/v2.12.0...v2.13.0) (2025-08-25)
 
 
@@ -21,743 +639,1258 @@
 
 ## [2.10.2](https://github.com/gameguild-gg/gameguild/compare/v2.10.1...v2.10.2) (2025-08-23)
 
-
 ### Bug Fixes
 
-* add .vscode settings to prevent markdown auto-formatting ([63b9e8c](https://github.com/gameguild-gg/gameguild/commit/63b9e8c87c43be8ca30d764cfb9f9f2bdcf54ca0))
-* correct LaTeX formatting in flocking.md ([b23fb18](https://github.com/gameguild-gg/gameguild/commit/b23fb183c901a8328ec793fcce8a1b3af5b07341))
-* update markdown content and renderer ([d70579d](https://github.com/gameguild-gg/gameguild/commit/d70579d85ea7449fd0dd3f6c11a45106006db088))
+* add .vscode settings to prevent markdown
+  auto-formatting ([63b9e8c](https://github.com/gameguild-gg/gameguild/commit/63b9e8c87c43be8ca30d764cfb9f9f2bdcf54ca0))
+* correct LaTeX formatting in
+  flocking.md ([b23fb18](https://github.com/gameguild-gg/gameguild/commit/b23fb183c901a8328ec793fcce8a1b3af5b07341))
+* update markdown content and
+  renderer ([d70579d](https://github.com/gameguild-gg/gameguild/commit/d70579d85ea7449fd0dd3f6c11a45106006db088))
 
 ## [2.10.1](https://github.com/gameguild-gg/gameguild/compare/v2.10.0...v2.10.1) (2025-08-23)
 
-
 ### Bug Fixes
 
-* Update flocking.md content ([e8f09c9](https://github.com/gameguild-gg/gameguild/commit/e8f09c9f7d422f8f3bb1919f5f5ad2a7a8bf7d2a))
+* Update flocking.md
+  content ([e8f09c9](https://github.com/gameguild-gg/gameguild/commit/e8f09c9f7d422f8f3bb1919f5f5ad2a7a8bf7d2a))
 
 # [2.10.0](https://github.com/gameguild-gg/gameguild/compare/v2.9.0...v2.10.0) (2025-08-21)
 
-
 ### Features
 
-* add redirect from /p to /programs ([378fadc](https://github.com/gameguild-gg/gameguild/commit/378fadcd334c5c498683547caf59d30b3f8e3a03))
-* restructure course routes and cleanup empty files ([ed7c4c4](https://github.com/gameguild-gg/gameguild/commit/ed7c4c42b9f24462193cf8abd6cf2594bc5f479f))
+* add redirect from /p to
+  /programs ([378fadc](https://github.com/gameguild-gg/gameguild/commit/378fadcd334c5c498683547caf59d30b3f8e3a03))
+* restructure course routes and cleanup empty
+  files ([ed7c4c4](https://github.com/gameguild-gg/gameguild/commit/ed7c4c42b9f24462193cf8abd6cf2594bc5f479f))
 
 # [2.9.0](https://github.com/gameguild-gg/gameguild/compare/v2.8.3...v2.9.0) (2025-08-21)
 
-
 ### Bug Fixes
 
-* Add missing username generation for OAuth user creation ([6420e6a](https://github.com/gameguild-gg/gameguild/commit/6420e6aa8f337b67cfc294c8aa3f57fa830da8c8))
-
+* Add missing username generation for OAuth user
+  creation ([6420e6a](https://github.com/gameguild-gg/gameguild/commit/6420e6aa8f337b67cfc294c8aa3f57fa830da8c8))
 
 ### Features
 
-* add GitHub issue modals to auth links and remove sign-up div ([0a79d0f](https://github.com/gameguild-gg/gameguild/commit/0a79d0f83ddccecc146318fcb85b0e952bf5080e))
+* add GitHub issue modals to auth links and remove sign-up
+  div ([0a79d0f](https://github.com/gameguild-gg/gameguild/commit/0a79d0f83ddccecc146318fcb85b0e952bf5080e))
 
 ## [2.8.3](https://github.com/gameguild-gg/gameguild/compare/v2.8.2...v2.8.3) (2025-08-21)
 
-
 ### Bug Fixes
 
-* cloudflare dns update ([d10a377](https://github.com/gameguild-gg/gameguild/commit/d10a37780fe7e55f1d84aa8aa8c071ece8379268))
-* DNS update logic and enhance authentication error handling ([fe8cf02](https://github.com/gameguild-gg/gameguild/commit/fe8cf02316bd7867a854b9c3269676d9a2b4f48a))
+* cloudflare dns
+  update ([d10a377](https://github.com/gameguild-gg/gameguild/commit/d10a37780fe7e55f1d84aa8aa8c071ece8379268))
+* DNS update logic and enhance authentication error
+  handling ([fe8cf02](https://github.com/gameguild-gg/gameguild/commit/fe8cf02316bd7867a854b9c3269676d9a2b4f48a))
 
 ## [2.8.2](https://github.com/gameguild-gg/gameguild/compare/v2.8.1...v2.8.2) (2025-08-21)
 
-
 ### Bug Fixes
 
-* Allow course content access without authentication ([3d523e8](https://github.com/gameguild-gg/gameguild/commit/3d523e8eb21306110a8feeebb4b89a0ceb929065))
+* Allow course content access without
+  authentication ([3d523e8](https://github.com/gameguild-gg/gameguild/commit/3d523e8eb21306110a8feeebb4b89a0ceb929065))
 
 ## [2.8.1](https://github.com/gameguild-gg/gameguild/compare/v2.8.0...v2.8.1) (2025-08-21)
 
-
 ### Bug Fixes
 
-* Add suppressHydrationWarning to gglexical layout body element ([d886d14](https://github.com/gameguild-gg/gameguild/commit/d886d1456db47db3687decc414dbf52b5159f8f5))
+* Add suppressHydrationWarning to gglexical layout body
+  element ([d886d14](https://github.com/gameguild-gg/gameguild/commit/d886d1456db47db3687decc414dbf52b5159f8f5))
 
 # [2.8.0](https://github.com/gameguild-gg/gameguild/compare/v2.7.1...v2.8.0) (2025-08-21)
-
 
 ### Bug Fixes
 
 * actions ([5d27c92](https://github.com/gameguild-gg/gameguild/commit/5d27c926b3b9e978f286ae19642169e7c1a8ec17))
-* resolve conflicting star exports in activity-tracking module ([2d29a60](https://github.com/gameguild-gg/gameguild/commit/2d29a60e6151394304cc6a5c97fd2e76d99b0872))
-
+* resolve conflicting star exports in activity-tracking
+  module ([2d29a60](https://github.com/gameguild-gg/gameguild/commit/2d29a60e6151394304cc6a5c97fd2e76d99b0872))
 
 ### Features
 
-* add GitHub fork button component ([649af32](https://github.com/gameguild-gg/gameguild/commit/649af326636e6c1be94c1bafa41d8797fe67a099))
-* add responsive sidebar infrastructure for course content ([0ec4fac](https://github.com/gameguild-gg/gameguild/commit/0ec4fac254768ccb8de4a631f0fed3eb576c1922))
-* enhance course content sidebar with theme toggle and header ([3d3234e](https://github.com/gameguild-gg/gameguild/commit/3d3234edc423562a29c21a01e3b8188ba031e97b))
-* integrate GitHub fork button into default header ([0e48290](https://github.com/gameguild-gg/gameguild/commit/0e48290520c309019d4b3c32f50025b915ad2031))
-* restructure course content routing with new layout ([1893d0e](https://github.com/gameguild-gg/gameguild/commit/1893d0e214111c38d73eb756d51dae34d704e395))
+* add GitHub fork button
+  component ([649af32](https://github.com/gameguild-gg/gameguild/commit/649af326636e6c1be94c1bafa41d8797fe67a099))
+* add responsive sidebar infrastructure for course
+  content ([0ec4fac](https://github.com/gameguild-gg/gameguild/commit/0ec4fac254768ccb8de4a631f0fed3eb576c1922))
+* enhance course content sidebar with theme toggle and
+  header ([3d3234e](https://github.com/gameguild-gg/gameguild/commit/3d3234edc423562a29c21a01e3b8188ba031e97b))
+* integrate GitHub fork button into default
+  header ([0e48290](https://github.com/gameguild-gg/gameguild/commit/0e48290520c309019d4b3c32f50025b915ad2031))
+* restructure course content routing with new
+  layout ([1893d0e](https://github.com/gameguild-gg/gameguild/commit/1893d0e214111c38d73eb756d51dae34d704e395))
 
 ## [2.7.1](https://github.com/gameguild-gg/gameguild/compare/v2.7.0...v2.7.1) (2025-08-20)
 
-
 ### Bug Fixes
 
-* **editor:** callout to admonition ([6a24b8b](https://github.com/gameguild-gg/gameguild/commit/6a24b8b6026ba3bda6794aaf41b7fc9a24d55adb))
-* **editor:** import fix ([641e441](https://github.com/gameguild-gg/gameguild/commit/641e4410ca0b6592a63d82090e149d1e69581895))
-* **editor:** logic fix in preview-table-of-contents ([365637d](https://github.com/gameguild-gg/gameguild/commit/365637da8ef16f1a1ddfdc90e65a040594f8928a))
-* **editor:** open project fix ([09561b1](https://github.com/gameguild-gg/gameguild/commit/09561b1ac301af84df013d57dcc82f06cca3ad87))
-* **editor:** preview page = serializedState type ([3a96333](https://github.com/gameguild-gg/gameguild/commit/3a9633305f82d465853859d0e2cb0717c818d229))
-* **editor:** preview page focus serializedState ([f21ec4d](https://github.com/gameguild-gg/gameguild/commit/f21ec4dd2a5e8e12a1572ae82c8baac90ce1aea9))
-* **layouts:** implement comprehensive hydration and theme fixes ([c908e0b](https://github.com/gameguild-gg/gameguild/commit/c908e0bcc74f4c0cc589e55dac70ed475619472b))
-* **ui:** resolve hydration issues, theme persistence, and error handling ([bce7a6a](https://github.com/gameguild-gg/gameguild/commit/bce7a6a2ec8c6134c49b2ed30c4e809138f4ee07))
+* **editor:** callout to
+  admonition ([6a24b8b](https://github.com/gameguild-gg/gameguild/commit/6a24b8b6026ba3bda6794aaf41b7fc9a24d55adb))
+* **editor:** import
+  fix ([641e441](https://github.com/gameguild-gg/gameguild/commit/641e4410ca0b6592a63d82090e149d1e69581895))
+* **editor:** logic fix in
+  preview-table-of-contents ([365637d](https://github.com/gameguild-gg/gameguild/commit/365637da8ef16f1a1ddfdc90e65a040594f8928a))
+* **editor:** open project
+  fix ([09561b1](https://github.com/gameguild-gg/gameguild/commit/09561b1ac301af84df013d57dcc82f06cca3ad87))
+* **editor:** preview page = serializedState
+  type ([3a96333](https://github.com/gameguild-gg/gameguild/commit/3a9633305f82d465853859d0e2cb0717c818d229))
+* **editor:** preview page focus
+  serializedState ([f21ec4d](https://github.com/gameguild-gg/gameguild/commit/f21ec4dd2a5e8e12a1572ae82c8baac90ce1aea9))
+* **layouts:** implement comprehensive hydration and theme
+  fixes ([c908e0b](https://github.com/gameguild-gg/gameguild/commit/c908e0bcc74f4c0cc589e55dac70ed475619472b))
+* **ui:** resolve hydration issues, theme persistence, and error
+  handling ([bce7a6a](https://github.com/gameguild-gg/gameguild/commit/bce7a6a2ec8c6134c49b2ed30c4e809138f4ee07))
 
 # [2.7.0](https://github.com/gameguild-gg/gameguild/compare/v2.6.0...v2.7.0) (2025-08-20)
 
-
 ### Bug Fixes
 
-* **editor:** open project fix ([75a2b51](https://github.com/gameguild-gg/gameguild/commit/75a2b51dfc4f7606c3860a8f29e42a4c62a23684))
-
+* **editor:** open project
+  fix ([75a2b51](https://github.com/gameguild-gg/gameguild/commit/75a2b51dfc4f7606c3860a8f29e42a4c62a23684))
 
 ### Features
 
-* **courses:** add AI for Games course content and update mock data ([b54825a](https://github.com/gameguild-gg/gameguild/commit/b54825a748b009f20e0f8c49902fd340d547545b))
+* **courses:** add AI for Games course content and update mock
+  data ([b54825a](https://github.com/gameguild-gg/gameguild/commit/b54825a748b009f20e0f8c49902fd340d547545b))
 
 # [2.6.0](https://github.com/gameguild-gg/gameguild/compare/v2.5.3...v2.6.0) (2025-08-19)
 
-
 ### Features
 
-* add slug field to ProgramContent model ([e124989](https://github.com/gameguild-gg/gameguild/commit/e124989da8afdd60f4393f6475987c02fead65c5))
-* add slug field to ProgramContent model ([b644747](https://github.com/gameguild-gg/gameguild/commit/b644747a50d153be0a1435cc26f5d5da82b6b2da))
+* add slug field to ProgramContent
+  model ([e124989](https://github.com/gameguild-gg/gameguild/commit/e124989da8afdd60f4393f6475987c02fead65c5))
+* add slug field to ProgramContent
+  model ([b644747](https://github.com/gameguild-gg/gameguild/commit/b644747a50d153be0a1435cc26f5d5da82b6b2da))
 
 ## [2.5.3](https://github.com/gameguild-gg/gameguild/compare/v2.5.2...v2.5.3) (2025-08-19)
 
-
 ### Bug Fixes
 
-* remove /dashboard prefix from course and program viewing links ([95c3fea](https://github.com/gameguild-gg/gameguild/commit/95c3feacffefe2d01aa70a701c43d5cc2c363fa6))
+* remove /dashboard prefix from course and program viewing
+  links ([95c3fea](https://github.com/gameguild-gg/gameguild/commit/95c3feacffefe2d01aa70a701c43d5cc2c363fa6))
 
 ## [2.5.2](https://github.com/gameguild-gg/gameguild/compare/v2.5.1...v2.5.2) (2025-08-19)
 
-
 ### Bug Fixes
 
-* **editor:** callout component ([439c983](https://github.com/gameguild-gg/gameguild/commit/439c98377fd3c434841746a4e3ded451d0d72d2e))
-* **web:** new packages ([7f4f7e5](https://github.com/gameguild-gg/gameguild/commit/7f4f7e5f09d625e66c93a9bd3f966458fc6b6b9e))
+* **editor:** callout
+  component ([439c983](https://github.com/gameguild-gg/gameguild/commit/439c98377fd3c434841746a4e3ded451d0d72d2e))
+* **web:** new
+  packages ([7f4f7e5](https://github.com/gameguild-gg/gameguild/commit/7f4f7e5f09d625e66c93a9bd3f966458fc6b6b9e))
 
 ## [2.5.1](https://github.com/gameguild-gg/gameguild/compare/v2.5.0...v2.5.1) (2025-08-18)
 
-
 ### Bug Fixes
 
-* Add global user permission fallback in PermissionService ([b62cd81](https://github.com/gameguild-gg/gameguild/commit/b62cd8136fa0b7aed41e6ac6c11ae2b83b0779c6))
+* Add global user permission fallback in
+  PermissionService ([b62cd81](https://github.com/gameguild-gg/gameguild/commit/b62cd8136fa0b7aed41e6ac6c11ae2b83b0779c6))
 
 # [2.5.0](https://github.com/gameguild-gg/gameguild/compare/v2.4.2...v2.5.0) (2025-08-18)
 
-
 ### Features
 
-* replace ForbidResult with custom PermissionDeniedResult for better error messaging ([bc4d002](https://github.com/gameguild-gg/gameguild/commit/bc4d002705c9717eeb9d28405e3eb04eccde9983))
+* replace ForbidResult with custom PermissionDeniedResult for better error
+  messaging ([bc4d002](https://github.com/gameguild-gg/gameguild/commit/bc4d002705c9717eeb9d28405e3eb04eccde9983))
 
 ## [2.4.2](https://github.com/gameguild-gg/gameguild/compare/v2.4.1...v2.4.2) (2025-08-18)
 
-
 ### Bug Fixes
 
-* improve GitHub API error handling and data display ([071a85e](https://github.com/gameguild-gg/gameguild/commit/071a85e3400b6d5c2642ee64ba933ab70e356610))
+* improve GitHub API error handling and data
+  display ([071a85e](https://github.com/gameguild-gg/gameguild/commit/071a85e3400b6d5c2642ee64ba933ab70e356610))
 
 ## [2.4.1](https://github.com/gameguild-gg/gameguild/compare/v2.4.0...v2.4.1) (2025-08-18)
 
-
 ### Bug Fixes
 
-* update AGPL v3 license link to point to LICENSE instead of LICENSE.md ([1ab28e7](https://github.com/gameguild-gg/gameguild/commit/1ab28e718339ff8a3e31ff48132dc6fca74a1d9a))
+* update AGPL v3 license link to point to LICENSE instead of
+  LICENSE.md ([1ab28e7](https://github.com/gameguild-gg/gameguild/commit/1ab28e718339ff8a3e31ff48132dc6fca74a1d9a))
 
 # [2.4.0](https://github.com/gameguild-gg/gameguild/compare/v2.3.0...v2.4.0) (2025-08-18)
 
-
 ### Features
 
-* fix post-login UI state update and add password visibility toggle ([8e8c677](https://github.com/gameguild-gg/gameguild/commit/8e8c67776b36ad8e5fbc074710668af1d544b9ef))
+* fix post-login UI state update and add password visibility
+  toggle ([8e8c677](https://github.com/gameguild-gg/gameguild/commit/8e8c67776b36ad8e5fbc074710668af1d544b9ef))
 
 # [2.3.0](https://github.com/gameguild-gg/gameguild/compare/v2.2.0...v2.3.0) (2025-08-18)
 
-
 ### Features
 
-* add GitHub issue modal to Terms of Service, Privacy, and Cookies links ([cc47342](https://github.com/gameguild-gg/gameguild/commit/cc473429cffb2d87599e0df0f1591fa3389e7236))
-* update licenses page to fetch from GitHub API with caching and remove SPDX identifier ([7065633](https://github.com/gameguild-gg/gameguild/commit/706563356ab5bdb8171135a30f4157d0c8cfc251))
+* add GitHub issue modal to Terms of Service, Privacy, and Cookies
+  links ([cc47342](https://github.com/gameguild-gg/gameguild/commit/cc473429cffb2d87599e0df0f1591fa3389e7236))
+* update licenses page to fetch from GitHub API with caching and remove SPDX
+  identifier ([7065633](https://github.com/gameguild-gg/gameguild/commit/706563356ab5bdb8171135a30f4157d0c8cfc251))
 
 # [2.2.0](https://github.com/gameguild-gg/gameguild/compare/v2.1.0...v2.2.0) (2025-08-18)
 
-
 ### Bug Fixes
 
-* improve GitHub license detection ([0b89092](https://github.com/gameguild-gg/gameguild/commit/0b890926afe7ead5e43592f129857fa3d0346463))
-* remove note from LICENSE file to restore GitHub AGPL detection ([ccf5b16](https://github.com/gameguild-gg/gameguild/commit/ccf5b1608a7a81cf3b1e224d5b72b6ac53dbbee3))
-
+* improve GitHub license
+  detection ([0b89092](https://github.com/gameguild-gg/gameguild/commit/0b890926afe7ead5e43592f129857fa3d0346463))
+* remove note from LICENSE file to restore GitHub AGPL
+  detection ([ccf5b16](https://github.com/gameguild-gg/gameguild/commit/ccf5b1608a7a81cf3b1e224d5b72b6ac53dbbee3))
 
 ### Features
 
-* restructure licensing with separate license files ([26467b6](https://github.com/gameguild-gg/gameguild/commit/26467b67d6cdb8bc066b4b29193a8f9e23a2bd57))
+* restructure licensing with separate license
+  files ([26467b6](https://github.com/gameguild-gg/gameguild/commit/26467b67d6cdb8bc066b4b29193a8f9e23a2bd57))
 
 # [2.1.0](https://github.com/gameguild-gg/gameguild/compare/v2.0.4...v2.1.0) (2025-08-18)
 
-
 ### Bug Fixes
 
-* **apps/api:** Add slug generation for projects and fix existing projects without slugs ([cb1481f](https://github.com/gameguild-gg/gameguild/commit/cb1481f0e555224107bc7027ad12e0e32f2ee26c))
-* **apps/web/src/components/courses/forms/create-course-form.tsx:** Improve error handling and logging in create course form submission ([8bf2b7d](https://github.com/gameguild-gg/gameguild/commit/8bf2b7d9c3f3abdd0adaa0bff82484445fa9e1aa))
-* **apps/web:** Add safety checks and error handling for autoplay ([bfb28dc](https://github.com/gameguild-gg/gameguild/commit/bfb28dc8013d94c6d466f31a501fefdaba889962))
-* **apps/web:** Use fallback project ID in project card links and fix sub-nav base path ([2740583](https://github.com/gameguild-gg/gameguild/commit/2740583b883ae8312a9528d3f41a14c4cfc01f82))
-* **apps/web:** Use project slug in ProjectCard links instead of ID ([8f31892](https://github.com/gameguild-gg/gameguild/commit/8f31892fd8ac6a4b5b1b4cd9ece62a7a1749f27a))
-* **courses:** Implement better validation for tools in course cards ([46f19b4](https://github.com/gameguild-gg/gameguild/commit/46f19b47c5cbcd6a701ec8d4bdabceb7b3103c59))
-* **projects:** Refactor project list to support creation and display enhancements ([521b6a5](https://github.com/gameguild-gg/gameguild/commit/521b6a592277d31da022a4779358de794e392000))
-
+* **apps/api:** Add slug generation for projects and fix existing projects without
+  slugs ([cb1481f](https://github.com/gameguild-gg/gameguild/commit/cb1481f0e555224107bc7027ad12e0e32f2ee26c))
+* **apps/web/src/components/courses/forms/create-course-form.tsx:** Improve error handling and logging in create course
+  form submission ([8bf2b7d](https://github.com/gameguild-gg/gameguild/commit/8bf2b7d9c3f3abdd0adaa0bff82484445fa9e1aa))
+* **apps/web:** Add safety checks and error handling for
+  autoplay ([bfb28dc](https://github.com/gameguild-gg/gameguild/commit/bfb28dc8013d94c6d466f31a501fefdaba889962))
+* **apps/web:** Use fallback project ID in project card links and fix sub-nav base
+  path ([2740583](https://github.com/gameguild-gg/gameguild/commit/2740583b883ae8312a9528d3f41a14c4cfc01f82))
+* **apps/web:** Use project slug in ProjectCard links instead of
+  ID ([8f31892](https://github.com/gameguild-gg/gameguild/commit/8f31892fd8ac6a4b5b1b4cd9ece62a7a1749f27a))
+* **courses:** Implement better validation for tools in course
+  cards ([46f19b4](https://github.com/gameguild-gg/gameguild/commit/46f19b47c5cbcd6a701ec8d4bdabceb7b3103c59))
+* **projects:** Refactor project list to support creation and display
+  enhancements ([521b6a5](https://github.com/gameguild-gg/gameguild/commit/521b6a592277d31da022a4779358de794e392000))
 
 ### Features
 
-* **apps/api:** Add AddCertificateTagDto for managing certificate tags ([5f3f79d](https://github.com/gameguild-gg/gameguild/commit/5f3f79d30ca97b7e767ba918a2c096510cdc1227))
-* **apps/api:** Add CertificateDtoMappings for entity to DTO conversion ([c0da78d](https://github.com/gameguild-gg/gameguild/commit/c0da78d00f8422b2848cdeaa39da7980e238c3d9))
-* **apps/api:** Add CreateCertificateDto and UpdateCertificateDto for certificate data transfer ([514a898](https://github.com/gameguild-gg/gameguild/commit/514a898a54629b9a4bc1c3af09183fc8130a2354))
-* **apps/api:** Add unique username field with auto-generation support ([a9d9557](https://github.com/gameguild-gg/gameguild/commit/a9d95575f51768e4a6b7252ca4f1914fab0a9e83))
-* **apps/api:** Add username migration files ([4cf5c99](https://github.com/gameguild-gg/gameguild/commit/4cf5c998df85ebf2a25462bac45204bb549c216a))
-* **apps/api:** Implement ProgramCertificatesController for managing certificates ([35961fa](https://github.com/gameguild-gg/gameguild/commit/35961fa2c060ac0aa522a137dbb34aa39bbbcff8))
-* **apps/api:** Implement unique username migration and update handler ([6f61680](https://github.com/gameguild-gg/gameguild/commit/6f61680b4b308249291cbefbef034b830c8c7408))
-* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/courses/page.tsx:** Add Create Course button to courses list page ([c4fa719](https://github.com/gameguild-gg/gameguild/commit/c4fa7190e70ffde931cbc1015f3f9c51875d3e25))
-* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/distribution/page.tsx:** Implement Distribution page with channels and promotion cards ([95a68b8](https://github.com/gameguild-gg/gameguild/commit/95a68b8d7ff826d1743f77f93d47cd05ca45cb8f))
-* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/feedbacks/page.tsx:** Add feedbacks page with message for no feedback yet ([8989246](https://github.com/gameguild-gg/gameguild/commit/89892468d22f058cd9d26a4700fdd226a7fd33ca))
-* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/game-jams/page.tsx:** Add Game Jams page with empty participations message ([102e10e](https://github.com/gameguild-gg/gameguild/commit/102e10e2ef91e4eb93209acf8b334c7c84dfebed))
-* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/settings/page.tsx:** Replace project testing lab settings placeholder with project settings card ([ba500e7](https://github.com/gameguild-gg/gameguild/commit/ba500e756460c68aaa02a77b408f3f3549aaee52))
-* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/store-presence/page.tsx:** Add editable store presence page with basic info and media asset sections ([7f7c258](https://github.com/gameguild-gg/gameguild/commit/7f7c25867e89279f20144f61af71806b6bab6276))
-* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/team/page.tsx:** Implement team page displaying team members with avatars and roles ([0971dd2](https://github.com/gameguild-gg/gameguild/commit/0971dd232a3fef1473ba31e9e5432dd472971e39))
-* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/testing/page.tsx:** Add testing sessions page with table and new session button ([be6cd96](https://github.com/gameguild-gg/gameguild/commit/be6cd96f488f9e1372e4f8f4b95472ca31219e5b))
-* **apps/web/users:** Add top-right profile action buttons ([a445f66](https://github.com/gameguild-gg/gameguild/commit/a445f6606c5095c146d6b83cfc0266d3a5b773ba))
-* **apps/web:** Add CourseCard component with default and compact views ([8f06574](https://github.com/gameguild-gg/gameguild/commit/8f0657491cc476875e5c3455237d3d44cc5324ea))
-* **apps/web:** Add legacy redirects and update routing ([b1793de](https://github.com/gameguild-gg/gameguild/commit/b1793def0a55f69749947e06357e30a7ea157db9))
-* **apps/web:** Add legacy route rewrites for projects ([c125822](https://github.com/gameguild-gg/gameguild/commit/c125822f8b4dc256559dafa2baf89120626490b4))
-* **apps/web:** Add project route layout with context provider and navigation ([3aa53cf](https://github.com/gameguild-gg/gameguild/commit/3aa53cf8555133d6470a70aad85f62113a83fc53))
-* **apps/web:** Add Store Presence page for managing project store info and media ([a9b2d6a](https://github.com/gameguild-gg/gameguild/commit/a9b2d6a44fa1f34f280857d30e0ee52c5934e9ac))
-* **apps/web:** Add Team page to manage and invite project members ([6d15edd](https://github.com/gameguild-gg/gameguild/commit/6d15eddfc363543b129de0ce332ce955e2f58d2f))
-* **apps/web:** Add user profile page with username lookup ([3729b58](https://github.com/gameguild-gg/gameguild/commit/3729b58047c160838fe544e62b312f14f07c383a))
-* **apps/web:** Add Versions page to manage game builds and show upload history ([ed8d846](https://github.com/gameguild-gg/gameguild/commit/ed8d8460f16c122ef450b18b9669e010c6721235))
-* **apps/web:** Enhance user lookup with auth fallback ([d4d5985](https://github.com/gameguild-gg/gameguild/commit/d4d59853663257bc271ec29a38b951ddeba43e0e))
-* **apps/web:** Implement CourseCard for program details in list and grid view ([d635b75](https://github.com/gameguild-gg/gameguild/commit/d635b753f2f01633a3a1a22a6dfe91e33764dda0))
-* **apps/web:** Implement detailed project overview page with stats and activities ([279299c](https://github.com/gameguild-gg/gameguild/commit/279299c05c1d9491a31df4c83ab491ed6817ed02))
-* **apps/web:** Integrate content management API for projects ([723761f](https://github.com/gameguild-gg/gameguild/commit/723761f4dc2884831eae988a638f5a178f0e150b))
-* **apps/web:** Update courses and projects dashboard pages ([97ff75d](https://github.com/gameguild-gg/gameguild/commit/97ff75dd5cfe248402547ab8e978ea3f3eee3778))
-* **apps:** Update GraphQL resolvers, schema and client auth ([4a43e4f](https://github.com/gameguild-gg/gameguild/commit/4a43e4f7c2248bdc732a2dcf2db262516a109f80))
-* **content-management/programs:** Add program-to-course transformation utility ([9176960](https://github.com/gameguild-gg/gameguild/commit/91769608cdb310f16d575ec37e1a52062a88a4db))
-* **courses:** Add course card and filtering mechanisms ([0ce270f](https://github.com/gameguild-gg/gameguild/commit/0ce270f17980a1f68cc2f7531809d31ca9811fa1))
-* **courses:** Create initial course page with mock data ([5185c7e](https://github.com/gameguild-gg/gameguild/commit/5185c7ec35936fed60be0278283949ef744746b4))
-* **github-issues-modal:** add a new modal to allow users to report issues directly to github ([fb1f976](https://github.com/gameguild-gg/gameguild/commit/fb1f976cd9b8139d79fb12e68311db10460d6941))
-* implement fail-safe GraphQL codegen to prevent build failures ([3b19128](https://github.com/gameguild-gg/gameguild/commit/3b191282948898da60c3a2100a45a41972c11c3e))
-* **local-db:** Implement local storage for game projects and courses ([20a3fd7](https://github.com/gameguild-gg/gameguild/commit/20a3fd7c6cad160270580912ec7a08897ff0ad41))
-* **projects:** Integrate new project management dialog in projects page ([881be20](https://github.com/gameguild-gg/gameguild/commit/881be209354da36187f75910a4e88de5e2c35dac))
-* **types:** Define Course and related types for course management ([a5861cb](https://github.com/gameguild-gg/gameguild/commit/a5861cb67d0a745f47ea49cbca964e2c846b653c))
-* **users:** Improve search matching and profile redirection ([c6d42d0](https://github.com/gameguild-gg/gameguild/commit/c6d42d06c28bc8fcafd6b063406d902bcbaa2781))
+* **apps/api:** Add AddCertificateTagDto for managing certificate
+  tags ([5f3f79d](https://github.com/gameguild-gg/gameguild/commit/5f3f79d30ca97b7e767ba918a2c096510cdc1227))
+* **apps/api:** Add CertificateDtoMappings for entity to DTO
+  conversion ([c0da78d](https://github.com/gameguild-gg/gameguild/commit/c0da78d00f8422b2848cdeaa39da7980e238c3d9))
+* **apps/api:** Add CreateCertificateDto and UpdateCertificateDto for certificate data
+  transfer ([514a898](https://github.com/gameguild-gg/gameguild/commit/514a898a54629b9a4bc1c3af09183fc8130a2354))
+* **apps/api:** Add unique username field with auto-generation
+  support ([a9d9557](https://github.com/gameguild-gg/gameguild/commit/a9d95575f51768e4a6b7252ca4f1914fab0a9e83))
+* **apps/api:** Add username migration
+  files ([4cf5c99](https://github.com/gameguild-gg/gameguild/commit/4cf5c998df85ebf2a25462bac45204bb549c216a))
+* **apps/api:** Implement ProgramCertificatesController for managing
+  certificates ([35961fa](https://github.com/gameguild-gg/gameguild/commit/35961fa2c060ac0aa522a137dbb34aa39bbbcff8))
+* **apps/api:** Implement unique username migration and update
+  handler ([6f61680](https://github.com/gameguild-gg/gameguild/commit/6f61680b4b308249291cbefbef034b830c8c7408))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/courses/page.tsx:** Add Create Course button to courses
+  list page ([c4fa719](https://github.com/gameguild-gg/gameguild/commit/c4fa7190e70ffde931cbc1015f3f9c51875d3e25))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/distribution/page.tsx:** Implement
+  Distribution page with channels and promotion
+  cards ([95a68b8](https://github.com/gameguild-gg/gameguild/commit/95a68b8d7ff826d1743f77f93d47cd05ca45cb8f))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/feedbacks/page.tsx:** Add feedbacks page
+  with message for no feedback
+  yet ([8989246](https://github.com/gameguild-gg/gameguild/commit/89892468d22f058cd9d26a4700fdd226a7fd33ca))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/game-jams/page.tsx:** Add Game Jams page
+  with empty participations
+  message ([102e10e](https://github.com/gameguild-gg/gameguild/commit/102e10e2ef91e4eb93209acf8b334c7c84dfebed))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/settings/page.tsx:** Replace project
+  testing lab settings placeholder with project settings
+  card ([ba500e7](https://github.com/gameguild-gg/gameguild/commit/ba500e756460c68aaa02a77b408f3f3549aaee52))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/store-presence/page.tsx:** Add editable
+  store presence page with basic info and media asset
+  sections ([7f7c258](https://github.com/gameguild-gg/gameguild/commit/7f7c25867e89279f20144f61af71806b6bab6276))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/team/page.tsx:** Implement team page
+  displaying team members with avatars and
+  roles ([0971dd2](https://github.com/gameguild-gg/gameguild/commit/0971dd232a3fef1473ba31e9e5432dd472971e39))
+* **apps/web/src/app/[locale]/(dashboard)/dashboard/(content)/projects/[slug]/testing/page.tsx:** Add testing sessions
+  page with table and new session
+  button ([be6cd96](https://github.com/gameguild-gg/gameguild/commit/be6cd96f488f9e1372e4f8f4b95472ca31219e5b))
+* **apps/web/users:** Add top-right profile action
+  buttons ([a445f66](https://github.com/gameguild-gg/gameguild/commit/a445f6606c5095c146d6b83cfc0266d3a5b773ba))
+* **apps/web:** Add CourseCard component with default and compact
+  views ([8f06574](https://github.com/gameguild-gg/gameguild/commit/8f0657491cc476875e5c3455237d3d44cc5324ea))
+* **apps/web:** Add legacy redirects and update
+  routing ([b1793de](https://github.com/gameguild-gg/gameguild/commit/b1793def0a55f69749947e06357e30a7ea157db9))
+* **apps/web:** Add legacy route rewrites for
+  projects ([c125822](https://github.com/gameguild-gg/gameguild/commit/c125822f8b4dc256559dafa2baf89120626490b4))
+* **apps/web:** Add project route layout with context provider and
+  navigation ([3aa53cf](https://github.com/gameguild-gg/gameguild/commit/3aa53cf8555133d6470a70aad85f62113a83fc53))
+* **apps/web:** Add Store Presence page for managing project store info and
+  media ([a9b2d6a](https://github.com/gameguild-gg/gameguild/commit/a9b2d6a44fa1f34f280857d30e0ee52c5934e9ac))
+* **apps/web:** Add Team page to manage and invite project
+  members ([6d15edd](https://github.com/gameguild-gg/gameguild/commit/6d15eddfc363543b129de0ce332ce955e2f58d2f))
+* **apps/web:** Add user profile page with username
+  lookup ([3729b58](https://github.com/gameguild-gg/gameguild/commit/3729b58047c160838fe544e62b312f14f07c383a))
+* **apps/web:** Add Versions page to manage game builds and show upload
+  history ([ed8d846](https://github.com/gameguild-gg/gameguild/commit/ed8d8460f16c122ef450b18b9669e010c6721235))
+* **apps/web:** Enhance user lookup with auth
+  fallback ([d4d5985](https://github.com/gameguild-gg/gameguild/commit/d4d59853663257bc271ec29a38b951ddeba43e0e))
+* **apps/web:** Implement CourseCard for program details in list and grid
+  view ([d635b75](https://github.com/gameguild-gg/gameguild/commit/d635b753f2f01633a3a1a22a6dfe91e33764dda0))
+* **apps/web:** Implement detailed project overview page with stats and
+  activities ([279299c](https://github.com/gameguild-gg/gameguild/commit/279299c05c1d9491a31df4c83ab491ed6817ed02))
+* **apps/web:** Integrate content management API for
+  projects ([723761f](https://github.com/gameguild-gg/gameguild/commit/723761f4dc2884831eae988a638f5a178f0e150b))
+* **apps/web:** Update courses and projects dashboard
+  pages ([97ff75d](https://github.com/gameguild-gg/gameguild/commit/97ff75dd5cfe248402547ab8e978ea3f3eee3778))
+* **apps:** Update GraphQL resolvers, schema and client
+  auth ([4a43e4f](https://github.com/gameguild-gg/gameguild/commit/4a43e4f7c2248bdc732a2dcf2db262516a109f80))
+* **content-management/programs:** Add program-to-course transformation
+  utility ([9176960](https://github.com/gameguild-gg/gameguild/commit/91769608cdb310f16d575ec37e1a52062a88a4db))
+* **courses:** Add course card and filtering
+  mechanisms ([0ce270f](https://github.com/gameguild-gg/gameguild/commit/0ce270f17980a1f68cc2f7531809d31ca9811fa1))
+* **courses:** Create initial course page with mock
+  data ([5185c7e](https://github.com/gameguild-gg/gameguild/commit/5185c7ec35936fed60be0278283949ef744746b4))
+* **github-issues-modal:** add a new modal to allow users to report issues directly to
+  github ([fb1f976](https://github.com/gameguild-gg/gameguild/commit/fb1f976cd9b8139d79fb12e68311db10460d6941))
+* implement fail-safe GraphQL codegen to prevent build
+  failures ([3b19128](https://github.com/gameguild-gg/gameguild/commit/3b191282948898da60c3a2100a45a41972c11c3e))
+* **local-db:** Implement local storage for game projects and
+  courses ([20a3fd7](https://github.com/gameguild-gg/gameguild/commit/20a3fd7c6cad160270580912ec7a08897ff0ad41))
+* **projects:** Integrate new project management dialog in projects
+  page ([881be20](https://github.com/gameguild-gg/gameguild/commit/881be209354da36187f75910a4e88de5e2c35dac))
+* **types:** Define Course and related types for course
+  management ([a5861cb](https://github.com/gameguild-gg/gameguild/commit/a5861cb67d0a745f47ea49cbca964e2c846b653c))
+* **users:** Improve search matching and profile
+  redirection ([c6d42d0](https://github.com/gameguild-gg/gameguild/commit/c6d42d06c28bc8fcafd6b063406d902bcbaa2781))
 
 ## [2.0.4](https://github.com/gameguild-gg/gameguild/compare/v2.0.3...v2.0.4) (2025-08-13)
 
-
 ### Bug Fixes
 
-* **contributors:** better alignment or contributors cards ([d303043](https://github.com/gameguild-gg/gameguild/commit/d30304378d15d7dbb10da334b2dc7bf9cedd4624))
+* **contributors:** better alignment or contributors
+  cards ([d303043](https://github.com/gameguild-gg/gameguild/commit/d30304378d15d7dbb10da334b2dc7bf9cedd4624))
 
 ## [2.0.3](https://github.com/gameguild-gg/gameguild/compare/v2.0.2...v2.0.3) (2025-08-13)
 
-
 ### Bug Fixes
 
-* **contributors:** improve numbers and links on contributors ([8b59735](https://github.com/gameguild-gg/gameguild/commit/8b59735a5070fa43ec481cfda80c9cef5fe537d0))
-* **license:** add dual license identifier so GH capture its properly [skip ci] ([3877922](https://github.com/gameguild-gg/gameguild/commit/3877922cf020b9b4d8c88a2b823bb539f17af25d))
+* **contributors:** improve numbers and links on
+  contributors ([8b59735](https://github.com/gameguild-gg/gameguild/commit/8b59735a5070fa43ec481cfda80c9cef5fe537d0))
+* **license:** add dual license identifier so GH capture its
+  properly [skip ci] ([3877922](https://github.com/gameguild-gg/gameguild/commit/3877922cf020b9b4d8c88a2b823bb539f17af25d))
 
 ## [2.0.2](https://github.com/gameguild-gg/gameguild/compare/v2.0.1...v2.0.2) (2025-08-13)
 
-
 ### Bug Fixes
 
-* **header:** fix header collapsible menu ([66cdfd8](https://github.com/gameguild-gg/gameguild/commit/66cdfd8045da56888c630ca169d93507d6a6edab))
+* **header:** fix header collapsible
+  menu ([66cdfd8](https://github.com/gameguild-gg/gameguild/commit/66cdfd8045da56888c630ca169d93507d6a6edab))
 
 ## [2.0.1](https://github.com/gameguild-gg/gameguild/compare/v2.0.0...v2.0.1) (2025-08-13)
 
-
 ### Bug Fixes
 
-* **contributors:** horizontal scroll ([03122b4](https://github.com/gameguild-gg/gameguild/commit/03122b42f707db0f0bad9a550acd225d877b558a))
-* **header:** add drop shadow to the logo ([4b9e21f](https://github.com/gameguild-gg/gameguild/commit/4b9e21feb72ae583ed6d9283bd6bd2eb6bc5dfd6))
-* **header:** in small screens ([f65e9d5](https://github.com/gameguild-gg/gameguild/commit/f65e9d573c83527c14d8830d2c5759071d2989d6))
+* **contributors:** horizontal
+  scroll ([03122b4](https://github.com/gameguild-gg/gameguild/commit/03122b42f707db0f0bad9a550acd225d877b558a))
+* **header:** add drop shadow to the
+  logo ([4b9e21f](https://github.com/gameguild-gg/gameguild/commit/4b9e21feb72ae583ed6d9283bd6bd2eb6bc5dfd6))
+* **header:** in small
+  screens ([f65e9d5](https://github.com/gameguild-gg/gameguild/commit/f65e9d573c83527c14d8830d2c5759071d2989d6))
 
 # [2.0.0](https://github.com/gameguild-gg/gameguild/compare/v1.21.8...v2.0.0) (2025-08-12)
 
-
 ### Bug Fixes
 
-* add next-intl configuration to resolve internationalization error ([46aa730](https://github.com/gameguild-gg/gameguild/commit/46aa73086672f400f44ba67213ae5087f3c0e0f1))
+* add next-intl configuration to resolve internationalization
+  error ([46aa730](https://github.com/gameguild-gg/gameguild/commit/46aa73086672f400f44ba67213ae5087f3c0e0f1))
 * api build ([1500a76](https://github.com/gameguild-gg/gameguild/commit/1500a7611bd9d8c1e415e6c26925eee448495cc7))
-* **api/migrations:** Remove IsDefault column from TenantUserGroups ([baca158](https://github.com/gameguild-gg/gameguild/commit/baca1582c5682a3ad5b38254dc116a0a724e8661))
-* **api/tests:** Update endpoints and DbContext factory usage ([cf9d20a](https://github.com/gameguild-gg/gameguild/commit/cf9d20a96648207d8825ca281e7e7325e553a3cb))
-* **api/tests:** Use Append for tenant header and update assembly info version ([0bdafa6](https://github.com/gameguild-gg/gameguild/commit/0bdafa6e861dc46d1142e4dd9d71d1261f6819a8))
-* **api:** Change API port from 5001 to 5000 ([ed02711](https://github.com/gameguild-gg/gameguild/commit/ed027111bc7461c211e87e39f0dcd2431aadf617))
+* **api/migrations:** Remove IsDefault column from
+  TenantUserGroups ([baca158](https://github.com/gameguild-gg/gameguild/commit/baca1582c5682a3ad5b38254dc116a0a724e8661))
+* **api/tests:** Update endpoints and DbContext factory
+  usage ([cf9d20a](https://github.com/gameguild-gg/gameguild/commit/cf9d20a96648207d8825ca281e7e7325e553a3cb))
+* **api/tests:** Use Append for tenant header and update assembly info
+  version ([0bdafa6](https://github.com/gameguild-gg/gameguild/commit/0bdafa6e861dc46d1142e4dd9d71d1261f6819a8))
+* **api:** Change API port from 5001 to
+  5000 ([ed02711](https://github.com/gameguild-gg/gameguild/commit/ed027111bc7461c211e87e39f0dcd2431aadf617))
 * **api:** cors ([62cf69c](https://github.com/gameguild-gg/gameguild/commit/62cf69c5391e7f078bfdeed648d625c10b10d8a8))
-* **apigen:** fix enum serialization ([5ff3b64](https://github.com/gameguild-gg/gameguild/commit/5ff3b641cfdab5409223b54b4a131356b51521c8))
-* **api:** Improve error handling and domain deserialization ([9b21db4](https://github.com/gameguild-gg/gameguild/commit/9b21db42b47cb4f2f9836cf28352a6b1a799b1b9))
-* **api:** swagger generation ([61defa2](https://github.com/gameguild-gg/gameguild/commit/61defa2af37c4a98486ed9145b41a35bd7ec5ff4))
-* **api:** Update endpoints and tests for user profiles ([793882e](https://github.com/gameguild-gg/gameguild/commit/793882e31d794eb26aaaf07a9dc6301ac84b937c))
-* **apps/api/TestingLab:** Add sessionId parameter to resource permission attribute ([74ad256](https://github.com/gameguild-gg/gameguild/commit/74ad256198c9424ef6ef90f0852cfa707b0cde3f))
-* **apps/api:** Add null fallbacks in achievement module ([a08a049](https://github.com/gameguild-gg/gameguild/commit/a08a049e6709f1b8f415eefedb1c64dfd6ec9197))
-* **apps/api:** Add resource id parameter for permission attribute ([a069d8a](https://github.com/gameguild-gg/gameguild/commit/a069d8ac525ed9885d64f92c2fa5e15bab17a478))
-* **apps/api:** Default test status to Draft ([2a6c592](https://github.com/gameguild-gg/gameguild/commit/2a6c5927187ac76178bc036a9605fdc0fbca0f2f))
-* **apps/api:** Improve introspection, validation, and error handling ([fb22c7d](https://github.com/gameguild-gg/gameguild/commit/fb22c7d68d2b21b9d2b75a5705ab941c2431c765))
-* **apps/api:** Update permission attribute with sessionId parameter ([2334337](https://github.com/gameguild-gg/gameguild/commit/233433784b5cd82fda67ff8baef63503560bd7ec))
-* **apps/web/dashboard:** Handle tenant load error gracefully ([1ff35df](https://github.com/gameguild-gg/gameguild/commit/1ff35df6aaac89eb73a32aae46d134c84f9106f6))
-* **apps/web/tenants:** Update tenant management header text ([c325751](https://github.com/gameguild-gg/gameguild/commit/c32575102d5249f8120ca802e63e699c4ceae1ef))
-* **apps/web:** Add missing comma after zod dependency ([4146f0b](https://github.com/gameguild-gg/gameguild/commit/4146f0b1592d63ca5bd580f7f55e39bf65802245))
-* **apps/web:** Add project list to the creators dashboard. ([84ea4d3](https://github.com/gameguild-gg/gameguild/commit/84ea4d359340b085a26f8d9bc7f78cb5dad0b97c))
-* **apps/web:** Add web vitals and feedback floating button ([a1d1650](https://github.com/gameguild-gg/gameguild/commit/a1d165069f42a664bdfc3ccfbd2309d01b87e18d))
-* **apps/web:** clean up the chaos ([bb5aa47](https://github.com/gameguild-gg/gameguild/commit/bb5aa47b0addb2169660f795495605dfbaa34c31))
-* **apps/web:** Handle undefined testing requests count ([4ef979c](https://github.com/gameguild-gg/gameguild/commit/4ef979c7d3138a787d4d5e6f4664846b0fdb4f39))
-* **apps/web:** Replace testing request call with feedback call ([9462550](https://github.com/gameguild-gg/gameguild/commit/9462550f63cf7acf8610edf8182c2d94ca5f9138))
-* **apps/web:** Set locale prefix: 'as-needed' ([265cc34](https://github.com/gameguild-gg/gameguild/commit/265cc342fa9bc491501ea2265d9ccf65e5301ed3))
-* **apps/web:** Update auth flow to use client-side signIn and direct fetch endpoints ([260a801](https://github.com/gameguild-gg/gameguild/commit/260a801f59e5a9e17f5620e12873e7c998faa399))
-* **apps/web:** Update errors import paths and sign in URL ([24bfdaf](https://github.com/gameguild-gg/gameguild/commit/24bfdaf7845b5f48e57b48855afdd62ce2dc3ea6))
-* **apps/web:** Use fallback arrays and remove unused feed component ([e789026](https://github.com/gameguild-gg/gameguild/commit/e7890262dbf8f9b969e54966d462c819410906f2))
-* **apps/web:** Use optional chaining for testing requests length checks ([ce161a6](https://github.com/gameguild-gg/gameguild/commit/ce161a64d2521e36104c9cf50d0aee0801865a02))
-* **apps/web:** Use session.api accessToken for program actions ([2745707](https://github.com/gameguild-gg/gameguild/commit/2745707ec367c82a43394087ccd69213e6bb6490))
-* **apps/web:** Use session.api.accessToken for auth headers ([485fc73](https://github.com/gameguild-gg/gameguild/commit/485fc73cb35355c8d1437c53c7b84369d0c1ad75))
-* **apps/web:** WIP create project form ([99f5d66](https://github.com/gameguild-gg/gameguild/commit/99f5d6670e28322ff6218d9b09743339faab5e22))
-* **auth:** Fix early return in permission checking logic ([dc80726](https://github.com/gameguild-gg/gameguild/commit/dc807264ccb200287e505728e96c57771fca23cf))
-* **auth:** fix refresh token ([a1840a6](https://github.com/gameguild-gg/gameguild/commit/a1840a6c3da5b81506abe51f2969a2f55f5e70c4))
-* **auth:** user image ([df3d157](https://github.com/gameguild-gg/gameguild/commit/df3d1570c79bbc31bc37f10f788562542d6b75e3))
-* build api via docker ([0288679](https://github.com/gameguild-gg/gameguild/commit/0288679f78104216bf600229d19ae1b30fbdd4b2))
-* build web via docker ([171027d](https://github.com/gameguild-gg/gameguild/commit/171027dcbacddbe5f11acfa179310668bba5e11f))
-* build with docker-compose ([501821d](https://github.com/gameguild-gg/gameguild/commit/501821d22ec404d7f0f9f6fe90108b1150ed730f))
-* **cf:** fix cloudflare redirects ([9113b0c](https://github.com/gameguild-gg/gameguild/commit/9113b0cb2dc5a088911b46e0265ff49b813bced0))
-* **cf:** fix redirect ([1c065bd](https://github.com/gameguild-gg/gameguild/commit/1c065bd86dcd5d44acdf543c6eeb14e3cd0ef525))
-* **cf:** fix redirect ([c0248a4](https://github.com/gameguild-gg/gameguild/commit/c0248a4dfaed919998bb2e1dd565d1cc9296fc4c))
-* **cf:** redirect auth issues ([0b3991c](https://github.com/gameguild-gg/gameguild/commit/0b3991cdc3f1f13db35a0c5961a629f1e5aa83bd))
-* **cloudflare:** add debug info to detect env vars errors ([67467f6](https://github.com/gameguild-gg/gameguild/commit/67467f67cd5bb95dcbbe5bc899d83fdf44520ac4))
-* **cms:** Update slugify cache key prefix ([dd1d5ed](https://github.com/gameguild-gg/gameguild/commit/dd1d5ed4b361d16d375f7cf21c4505e003ebb399))
-* **courses:** courses python now reads data from markdown ([d5eb0b9](https://github.com/gameguild-gg/gameguild/commit/d5eb0b91c4128c5c6a20ea0fd0a90e4773f9c13a))
-* **courses:** finish adding mock data ([6785bd7](https://github.com/gameguild-gg/gameguild/commit/6785bd780999309243831d1258d64d740089f343))
-* **courses:** markdown code and quiz activity ([503f247](https://github.com/gameguild-gg/gameguild/commit/503f24707bd16e479da23d31123a7b291dbfd4f2))
-* **courses:** minor issues on rendering courses, only first python content is there ([eadbb18](https://github.com/gameguild-gg/gameguild/commit/eadbb18844965d74cdc98f4ba2e1160feba17d18))
-* **courses:** placeholder fixes ([d0f00c6](https://github.com/gameguild-gg/gameguild/commit/d0f00c6d4efb6a8e933ea1ef805921b040656a36))
-* **dashboard:** Update testing feedback labels ([ec95b57](https://github.com/gameguild-gg/gameguild/commit/ec95b57e3c1e37e4da313564a86f5c55ef52abdf))
-* **dbml:** Fix formatting in program database schema document ([04a3dd6](https://github.com/gameguild-gg/gameguild/commit/04a3dd6953ce9066ad208e101322d3befb5eebcc))
-* **editor:** add pyodide to python-executor ([3d16cd7](https://github.com/gameguild-gg/gameguild/commit/3d16cd7181e0cd8c64eb6be4d63c858e7510d3a4))
-* **editor:** Bold and Italic fix ([ce8d87d](https://github.com/gameguild-gg/gameguild/commit/ce8d87d5319793ef32d1c41c25ddda5b4f97b5f7))
-* **editor:** color palette fix order ([3416185](https://github.com/gameguild-gg/gameguild/commit/341618518f2abb453f4e2e44618c17809f98e813))
-* **editor:** color palette fix order ([96b118c](https://github.com/gameguild-gg/gameguild/commit/96b118cf01d7fb72ac7f0bbcd66a1e1ef664c0ef))
-* **editor:** fix executors ([3e48cf8](https://github.com/gameguild-gg/gameguild/commit/3e48cf8e962178071248bc389d14afb2eebe6810))
-* **editor:** font bold ([3639ee7](https://github.com/gameguild-gg/gameguild/commit/3639ee7aceac208e03f6504d8fd72ead8a470994))
-* **editor:** general fixes ([ba2c86e](https://github.com/gameguild-gg/gameguild/commit/ba2c86e919ebca3ae90bb79ba6d41a62bdae8421))
-* **editor:** imports ([ed051a2](https://github.com/gameguild-gg/gameguild/commit/ed051a263386df9c8d73f0c27334efc739899652))
-* **editor:** return python executor ([8cc27da](https://github.com/gameguild-gg/gameguild/commit/8cc27da324f20c97ad2ba3938c0521a82764af7e))
-* **editor:** several fixes ([ec4af81](https://github.com/gameguild-gg/gameguild/commit/ec4af8131090eef7f93c09245bd165340ba93e20))
-* **editor:** Translate /page.tsx to en-us language ([1edd9ef](https://github.com/gameguild-gg/gameguild/commit/1edd9efc52b986e37b2fca7abcbe52ad8a9644f4))
-* **editor:** Translate page to en-us and update track paths ([0b6ef47](https://github.com/gameguild-gg/gameguild/commit/0b6ef47b91dcab39f349af24c103c11831258586))
+* **apigen:** fix enum
+  serialization ([5ff3b64](https://github.com/gameguild-gg/gameguild/commit/5ff3b641cfdab5409223b54b4a131356b51521c8))
+* **api:** Improve error handling and domain
+  deserialization ([9b21db4](https://github.com/gameguild-gg/gameguild/commit/9b21db42b47cb4f2f9836cf28352a6b1a799b1b9))
+* **api:** swagger
+  generation ([61defa2](https://github.com/gameguild-gg/gameguild/commit/61defa2af37c4a98486ed9145b41a35bd7ec5ff4))
+* **api:** Update endpoints and tests for user
+  profiles ([793882e](https://github.com/gameguild-gg/gameguild/commit/793882e31d794eb26aaaf07a9dc6301ac84b937c))
+* **apps/api/TestingLab:** Add sessionId parameter to resource permission
+  attribute ([74ad256](https://github.com/gameguild-gg/gameguild/commit/74ad256198c9424ef6ef90f0852cfa707b0cde3f))
+* **apps/api:** Add null fallbacks in achievement
+  module ([a08a049](https://github.com/gameguild-gg/gameguild/commit/a08a049e6709f1b8f415eefedb1c64dfd6ec9197))
+* **apps/api:** Add resource id parameter for permission
+  attribute ([a069d8a](https://github.com/gameguild-gg/gameguild/commit/a069d8ac525ed9885d64f92c2fa5e15bab17a478))
+* **apps/api:** Default test status to
+  Draft ([2a6c592](https://github.com/gameguild-gg/gameguild/commit/2a6c5927187ac76178bc036a9605fdc0fbca0f2f))
+* **apps/api:** Improve introspection, validation, and error
+  handling ([fb22c7d](https://github.com/gameguild-gg/gameguild/commit/fb22c7d68d2b21b9d2b75a5705ab941c2431c765))
+* **apps/api:** Update permission attribute with sessionId
+  parameter ([2334337](https://github.com/gameguild-gg/gameguild/commit/233433784b5cd82fda67ff8baef63503560bd7ec))
+* **apps/web/dashboard:** Handle tenant load error
+  gracefully ([1ff35df](https://github.com/gameguild-gg/gameguild/commit/1ff35df6aaac89eb73a32aae46d134c84f9106f6))
+* **apps/web/tenants:** Update tenant management header
+  text ([c325751](https://github.com/gameguild-gg/gameguild/commit/c32575102d5249f8120ca802e63e699c4ceae1ef))
+* **apps/web:** Add missing comma after zod
+  dependency ([4146f0b](https://github.com/gameguild-gg/gameguild/commit/4146f0b1592d63ca5bd580f7f55e39bf65802245))
+* **apps/web:** Add project list to the creators
+  dashboard. ([84ea4d3](https://github.com/gameguild-gg/gameguild/commit/84ea4d359340b085a26f8d9bc7f78cb5dad0b97c))
+* **apps/web:** Add web vitals and feedback floating
+  button ([a1d1650](https://github.com/gameguild-gg/gameguild/commit/a1d165069f42a664bdfc3ccfbd2309d01b87e18d))
+* **apps/web:** clean up the
+  chaos ([bb5aa47](https://github.com/gameguild-gg/gameguild/commit/bb5aa47b0addb2169660f795495605dfbaa34c31))
+* **apps/web:** Handle undefined testing requests
+  count ([4ef979c](https://github.com/gameguild-gg/gameguild/commit/4ef979c7d3138a787d4d5e6f4664846b0fdb4f39))
+* **apps/web:** Replace testing request call with feedback
+  call ([9462550](https://github.com/gameguild-gg/gameguild/commit/9462550f63cf7acf8610edf8182c2d94ca5f9138))
+* **apps/web:** Set locale prefix: '
+  as-needed' ([265cc34](https://github.com/gameguild-gg/gameguild/commit/265cc342fa9bc491501ea2265d9ccf65e5301ed3))
+* **apps/web:** Update auth flow to use client-side signIn and direct fetch
+  endpoints ([260a801](https://github.com/gameguild-gg/gameguild/commit/260a801f59e5a9e17f5620e12873e7c998faa399))
+* **apps/web:** Update errors import paths and sign in
+  URL ([24bfdaf](https://github.com/gameguild-gg/gameguild/commit/24bfdaf7845b5f48e57b48855afdd62ce2dc3ea6))
+* **apps/web:** Use fallback arrays and remove unused feed
+  component ([e789026](https://github.com/gameguild-gg/gameguild/commit/e7890262dbf8f9b969e54966d462c819410906f2))
+* **apps/web:** Use optional chaining for testing requests length
+  checks ([ce161a6](https://github.com/gameguild-gg/gameguild/commit/ce161a64d2521e36104c9cf50d0aee0801865a02))
+* **apps/web:** Use session.api accessToken for program
+  actions ([2745707](https://github.com/gameguild-gg/gameguild/commit/2745707ec367c82a43394087ccd69213e6bb6490))
+* **apps/web:** Use session.api.accessToken for auth
+  headers ([485fc73](https://github.com/gameguild-gg/gameguild/commit/485fc73cb35355c8d1437c53c7b84369d0c1ad75))
+* **apps/web:** WIP create project
+  form ([99f5d66](https://github.com/gameguild-gg/gameguild/commit/99f5d6670e28322ff6218d9b09743339faab5e22))
+* **auth:** Fix early return in permission checking
+  logic ([dc80726](https://github.com/gameguild-gg/gameguild/commit/dc807264ccb200287e505728e96c57771fca23cf))
+* **auth:** fix refresh
+  token ([a1840a6](https://github.com/gameguild-gg/gameguild/commit/a1840a6c3da5b81506abe51f2969a2f55f5e70c4))
+* **auth:** user
+  image ([df3d157](https://github.com/gameguild-gg/gameguild/commit/df3d1570c79bbc31bc37f10f788562542d6b75e3))
+* build api via
+  docker ([0288679](https://github.com/gameguild-gg/gameguild/commit/0288679f78104216bf600229d19ae1b30fbdd4b2))
+* build web via
+  docker ([171027d](https://github.com/gameguild-gg/gameguild/commit/171027dcbacddbe5f11acfa179310668bba5e11f))
+* build with
+  docker-compose ([501821d](https://github.com/gameguild-gg/gameguild/commit/501821d22ec404d7f0f9f6fe90108b1150ed730f))
+* **cf:** fix cloudflare
+  redirects ([9113b0c](https://github.com/gameguild-gg/gameguild/commit/9113b0cb2dc5a088911b46e0265ff49b813bced0))
+* **cf:** fix
+  redirect ([1c065bd](https://github.com/gameguild-gg/gameguild/commit/1c065bd86dcd5d44acdf543c6eeb14e3cd0ef525))
+* **cf:** fix
+  redirect ([c0248a4](https://github.com/gameguild-gg/gameguild/commit/c0248a4dfaed919998bb2e1dd565d1cc9296fc4c))
+* **cf:** redirect auth
+  issues ([0b3991c](https://github.com/gameguild-gg/gameguild/commit/0b3991cdc3f1f13db35a0c5961a629f1e5aa83bd))
+* **cloudflare:** add debug info to detect env vars
+  errors ([67467f6](https://github.com/gameguild-gg/gameguild/commit/67467f67cd5bb95dcbbe5bc899d83fdf44520ac4))
+* **cms:** Update slugify cache key
+  prefix ([dd1d5ed](https://github.com/gameguild-gg/gameguild/commit/dd1d5ed4b361d16d375f7cf21c4505e003ebb399))
+* **courses:** courses python now reads data from
+  markdown ([d5eb0b9](https://github.com/gameguild-gg/gameguild/commit/d5eb0b91c4128c5c6a20ea0fd0a90e4773f9c13a))
+* **courses:** finish adding mock
+  data ([6785bd7](https://github.com/gameguild-gg/gameguild/commit/6785bd780999309243831d1258d64d740089f343))
+* **courses:** markdown code and quiz
+  activity ([503f247](https://github.com/gameguild-gg/gameguild/commit/503f24707bd16e479da23d31123a7b291dbfd4f2))
+* **courses:** minor issues on rendering courses, only first python content is
+  there ([eadbb18](https://github.com/gameguild-gg/gameguild/commit/eadbb18844965d74cdc98f4ba2e1160feba17d18))
+* **courses:** placeholder
+  fixes ([d0f00c6](https://github.com/gameguild-gg/gameguild/commit/d0f00c6d4efb6a8e933ea1ef805921b040656a36))
+* **dashboard:** Update testing feedback
+  labels ([ec95b57](https://github.com/gameguild-gg/gameguild/commit/ec95b57e3c1e37e4da313564a86f5c55ef52abdf))
+* **dbml:** Fix formatting in program database schema
+  document ([04a3dd6](https://github.com/gameguild-gg/gameguild/commit/04a3dd6953ce9066ad208e101322d3befb5eebcc))
+* **editor:** add pyodide to
+  python-executor ([3d16cd7](https://github.com/gameguild-gg/gameguild/commit/3d16cd7181e0cd8c64eb6be4d63c858e7510d3a4))
+* **editor:** Bold and Italic
+  fix ([ce8d87d](https://github.com/gameguild-gg/gameguild/commit/ce8d87d5319793ef32d1c41c25ddda5b4f97b5f7))
+* **editor:** color palette fix
+  order ([3416185](https://github.com/gameguild-gg/gameguild/commit/341618518f2abb453f4e2e44618c17809f98e813))
+* **editor:** color palette fix
+  order ([96b118c](https://github.com/gameguild-gg/gameguild/commit/96b118cf01d7fb72ac7f0bbcd66a1e1ef664c0ef))
+* **editor:** fix
+  executors ([3e48cf8](https://github.com/gameguild-gg/gameguild/commit/3e48cf8e962178071248bc389d14afb2eebe6810))
+* **editor:** font
+  bold ([3639ee7](https://github.com/gameguild-gg/gameguild/commit/3639ee7aceac208e03f6504d8fd72ead8a470994))
+* **editor:** general
+  fixes ([ba2c86e](https://github.com/gameguild-gg/gameguild/commit/ba2c86e919ebca3ae90bb79ba6d41a62bdae8421))
+* **editor:**
+  imports ([ed051a2](https://github.com/gameguild-gg/gameguild/commit/ed051a263386df9c8d73f0c27334efc739899652))
+* **editor:** return python
+  executor ([8cc27da](https://github.com/gameguild-gg/gameguild/commit/8cc27da324f20c97ad2ba3938c0521a82764af7e))
+* **editor:** several
+  fixes ([ec4af81](https://github.com/gameguild-gg/gameguild/commit/ec4af8131090eef7f93c09245bd165340ba93e20))
+* **editor:** Translate /page.tsx to en-us
+  language ([1edd9ef](https://github.com/gameguild-gg/gameguild/commit/1edd9efc52b986e37b2fca7abcbe52ad8a9644f4))
+* **editor:** Translate page to en-us and update track
+  paths ([0b6ef47](https://github.com/gameguild-gg/gameguild/commit/0b6ef47b91dcab39f349af24c103c11831258586))
 * env vars ([7e871dc](https://github.com/gameguild-gg/gameguild/commit/7e871dcb86a3f6b8ccc8213142f66b3fe09819c4))
 * env vars ([17c28fb](https://github.com/gameguild-gg/gameguild/commit/17c28fb25a40696a9f091de5294cb313bc116b32))
 * env vars ([1826d20](https://github.com/gameguild-gg/gameguild/commit/1826d2005f0b72c3c046e54251114df891c180e1))
-* etc host patching ([ae6d5ac](https://github.com/gameguild-gg/gameguild/commit/ae6d5ac344c89e6b91e70b080c5512c829b90f6f))
-* github actions fix ([7a65086](https://github.com/gameguild-gg/gameguild/commit/7a6508658448c5efd90cfa734e7bf28ed3be3c83))
-* github actions fix ([6d08456](https://github.com/gameguild-gg/gameguild/commit/6d08456865e8b19127e898a7c060b6a32e73baaa))
-* **graphql:** add graphql to contents ([ad01f10](https://github.com/gameguild-gg/gameguild/commit/ad01f10e8ac646886b55ebe927ce07d81f0ebe82))
-* home by adding placeholders ([1507c8c](https://github.com/gameguild-gg/gameguild/commit/1507c8caac19227ac7dbeef10035ec1735a2d3e6))
-* ignore lint errors on build ([e4c0857](https://github.com/gameguild-gg/gameguild/commit/e4c0857d8535448010a51842ad3fa533d08016d7))
-* **jwt:** fix jwt compilation bug, it should have used the interface ref ([c21f542](https://github.com/gameguild-gg/gameguild/commit/c21f542dfde51d3a3d407d9517282733c97f30e9))
-* login tab navigation now works properly, and slugify is properly implemented ([a0f7a9a](https://github.com/gameguild-gg/gameguild/commit/a0f7a9a2bb1e1ee8c6eccce266e64733bf114739))
-* make domain name explicit and patch /etc/hosts ([6eee4c8](https://github.com/gameguild-gg/gameguild/commit/6eee4c8cb709611272d239d7d21bbb073c6339e0))
-* **mermaid:** I am tired of trying to fix the svg scaling issue. It will stay like that for now ([8ca50b7](https://github.com/gameguild-gg/gameguild/commit/8ca50b7e3c1018b18d79a3f07edeb7b214a27b81))
-* **migrations:** FIX MIGRATIONS ([75765d0](https://github.com/gameguild-gg/gameguild/commit/75765d068a1e0f1b4cad1d27215750940b985546))
-* **permission:** Reorder SoftDelete and Delete enum values with clarifying comments ([e819e4d](https://github.com/gameguild-gg/gameguild/commit/e819e4d6cf6396cfaf9ad7e15b2f96d3e6fe142d))
+* etc host
+  patching ([ae6d5ac](https://github.com/gameguild-gg/gameguild/commit/ae6d5ac344c89e6b91e70b080c5512c829b90f6f))
+* github actions
+  fix ([7a65086](https://github.com/gameguild-gg/gameguild/commit/7a6508658448c5efd90cfa734e7bf28ed3be3c83))
+* github actions
+  fix ([6d08456](https://github.com/gameguild-gg/gameguild/commit/6d08456865e8b19127e898a7c060b6a32e73baaa))
+* **graphql:** add graphql to
+  contents ([ad01f10](https://github.com/gameguild-gg/gameguild/commit/ad01f10e8ac646886b55ebe927ce07d81f0ebe82))
+* home by adding
+  placeholders ([1507c8c](https://github.com/gameguild-gg/gameguild/commit/1507c8caac19227ac7dbeef10035ec1735a2d3e6))
+* ignore lint errors on
+  build ([e4c0857](https://github.com/gameguild-gg/gameguild/commit/e4c0857d8535448010a51842ad3fa533d08016d7))
+* **jwt:** fix jwt compilation bug, it should have used the interface
+  ref ([c21f542](https://github.com/gameguild-gg/gameguild/commit/c21f542dfde51d3a3d407d9517282733c97f30e9))
+* login tab navigation now works properly, and slugify is properly
+  implemented ([a0f7a9a](https://github.com/gameguild-gg/gameguild/commit/a0f7a9a2bb1e1ee8c6eccce266e64733bf114739))
+* make domain name explicit and patch
+  /etc/hosts ([6eee4c8](https://github.com/gameguild-gg/gameguild/commit/6eee4c8cb709611272d239d7d21bbb073c6339e0))
+* **mermaid:** I am tired of trying to fix the svg scaling issue. It will stay like that for
+  now ([8ca50b7](https://github.com/gameguild-gg/gameguild/commit/8ca50b7e3c1018b18d79a3f07edeb7b214a27b81))
+* **migrations:** FIX
+  MIGRATIONS ([75765d0](https://github.com/gameguild-gg/gameguild/commit/75765d068a1e0f1b4cad1d27215750940b985546))
+* **permission:** Reorder SoftDelete and Delete enum values with clarifying
+  comments ([e819e4d](https://github.com/gameguild-gg/gameguild/commit/e819e4d6cf6396cfaf9ad7e15b2f96d3e6fe142d))
 * program dbml ([c60bf54](https://github.com/gameguild-gg/gameguild/commit/c60bf54c23d188bcc176fd4cfa853a3ed2d98e16))
-* **program:** add graphql initial support ([9ab18a3](https://github.com/gameguild-gg/gameguild/commit/9ab18a38505ecb5851ec6182c98bff09a183f3e0))
-* **program:** boilerplate for program management ([ac842e2](https://github.com/gameguild-gg/gameguild/commit/ac842e2ca6b1cf40849b034c85577aec72839cd8))
-* **program:** fix migration issues for the program ([e955bc4](https://github.com/gameguild-gg/gameguild/commit/e955bc4156b93abff91221c99310bef1179a10d8))
-* resolve CSS issues in footer component ([9ab4bc4](https://github.com/gameguild-gg/gameguild/commit/9ab4bc4e8d2f5dcd5416568ece34a4ae169601ef))
-* resolve ESLint configuration error for API generation ([c79412b](https://github.com/gameguild-gg/gameguild/commit/c79412b46222f87fc74c61ff2c1cf907bda19ab6))
-* server side auth redirect ([92c2ac5](https://github.com/gameguild-gg/gameguild/commit/92c2ac57f4b74a1171becf348794b700b7720084))
-* **setup:** Fix npm dependencies version mismatches ([0c44ec3](https://github.com/gameguild-gg/gameguild/commit/0c44ec3086747ed08931aa9adc6c20c2faef465b))
-* **setup:** format and fix dependency mess ([c266471](https://github.com/gameguild-gg/gameguild/commit/c266471a625e342be44f52a6052df5e43896f9a0))
-* **signin:** improve email hint sign in ([99f6265](https://github.com/gameguild-gg/gameguild/commit/99f6265e90ee4e16d95d8424d3d5403ca55d5764))
+* **program:** add graphql initial
+  support ([9ab18a3](https://github.com/gameguild-gg/gameguild/commit/9ab18a38505ecb5851ec6182c98bff09a183f3e0))
+* **program:** boilerplate for program
+  management ([ac842e2](https://github.com/gameguild-gg/gameguild/commit/ac842e2ca6b1cf40849b034c85577aec72839cd8))
+* **program:** fix migration issues for the
+  program ([e955bc4](https://github.com/gameguild-gg/gameguild/commit/e955bc4156b93abff91221c99310bef1179a10d8))
+* resolve CSS issues in footer
+  component ([9ab4bc4](https://github.com/gameguild-gg/gameguild/commit/9ab4bc4e8d2f5dcd5416568ece34a4ae169601ef))
+* resolve ESLint configuration error for API
+  generation ([c79412b](https://github.com/gameguild-gg/gameguild/commit/c79412b46222f87fc74c61ff2c1cf907bda19ab6))
+* server side auth
+  redirect ([92c2ac5](https://github.com/gameguild-gg/gameguild/commit/92c2ac57f4b74a1171becf348794b700b7720084))
+* **setup:** Fix npm dependencies version
+  mismatches ([0c44ec3](https://github.com/gameguild-gg/gameguild/commit/0c44ec3086747ed08931aa9adc6c20c2faef465b))
+* **setup:** format and fix dependency
+  mess ([c266471](https://github.com/gameguild-gg/gameguild/commit/c266471a625e342be44f52a6052df5e43896f9a0))
+* **signin:** improve email hint sign
+  in ([99f6265](https://github.com/gameguild-gg/gameguild/commit/99f6265e90ee4e16d95d8424d3d5403ca55d5764))
 * slug error ([b8d3a47](https://github.com/gameguild-gg/gameguild/commit/b8d3a47646ed0344cfcf4c8db24d7733abf313b8))
-* **slugify:** now uses speakingurl ([15df033](https://github.com/gameguild-gg/gameguild/commit/15df0330bea883211d1baa1b4db83d9d8030ec78))
-* **tenant:** Dispatch tenant payload and remove session token check ([3977f87](https://github.com/gameguild-gg/gameguild/commit/3977f87683227bdbfe03a14234e385f19afc69ae))
-* **testing-lab:** Fix navigation anchor and update admin section title ([09e2842](https://github.com/gameguild-gg/gameguild/commit/09e2842f96741be025a0316bed0db49e96f85135))
-* **tests/api:** Detach entity for fresh feedback retrieval ([99feb89](https://github.com/gameguild-gg/gameguild/commit/99feb89bb284c82ce02e8ea69d7eaf306c096e71))
-* **tests/api:** Update assembly info, category and factory usage ([8bed12f](https://github.com/gameguild-gg/gameguild/commit/8bed12fa53fb1441a67fcdfc787bddf0814f8cd2))
-* **tests/api:** Update product type and disposal ([ef8e5a2](https://github.com/gameguild-gg/gameguild/commit/ef8e5a2ce1c3d2d89b7223a9f00c842d9f0064b4))
-* web next health check ([4f1c60b](https://github.com/gameguild-gg/gameguild/commit/4f1c60bf6e576cdd8a8b6fdcefa5e50d96a57fb0))
-* **web:** add newrelic ([cd04727](https://github.com/gameguild-gg/gameguild/commit/cd047270ea4c2988341a4ad4337e5557b2345abe))
-* **web:** add newrelic ([57c2007](https://github.com/gameguild-gg/gameguild/commit/57c2007eddefa0cc0e944ab1903ee64aa04f891f))
-* **web:** adjust docker build on apps/web ([9910213](https://github.com/gameguild-gg/gameguild/commit/99102139c2e3f7925238f42bdda85dcb8cef83f7))
-* **web:** css docker build ([5dc0e18](https://github.com/gameguild-gg/gameguild/commit/5dc0e18a28ab19989698e1a51c41ccde378e249f))
-* **web:** fix next dockerfile ([eea13fc](https://github.com/gameguild-gg/gameguild/commit/eea13fc8f37d2d3797e82cbc09295154d339e134))
-* **web:** Fix type errors and resolve dependency issues ([c1bb88b](https://github.com/gameguild-gg/gameguild/commit/c1bb88b2e0e43bf899f6577c13d5e9f07d3710a0))
-* **web:** infinite redirect ([a165407](https://github.com/gameguild-gg/gameguild/commit/a16540782751f3df7f1017f5e7649179896d8b5b))
-* **web:** type generation for api ([17e01b1](https://github.com/gameguild-gg/gameguild/commit/17e01b1397432b8998b6d0ab533328de1fc2aa44))
-* **web:** type generation for api ([1575f1d](https://github.com/gameguild-gg/gameguild/commit/1575f1ddff74abeffb97d2e0a598b6d4e30fc138))
-* **web:** wrong health route ([e0bb150](https://github.com/gameguild-gg/gameguild/commit/e0bb15092fd833893231ebbee180e1e3a541b643))
-
+* **slugify:** now uses
+  speakingurl ([15df033](https://github.com/gameguild-gg/gameguild/commit/15df0330bea883211d1baa1b4db83d9d8030ec78))
+* **tenant:** Dispatch tenant payload and remove session token
+  check ([3977f87](https://github.com/gameguild-gg/gameguild/commit/3977f87683227bdbfe03a14234e385f19afc69ae))
+* **testing-lab:** Fix navigation anchor and update admin section
+  title ([09e2842](https://github.com/gameguild-gg/gameguild/commit/09e2842f96741be025a0316bed0db49e96f85135))
+* **tests/api:** Detach entity for fresh feedback
+  retrieval ([99feb89](https://github.com/gameguild-gg/gameguild/commit/99feb89bb284c82ce02e8ea69d7eaf306c096e71))
+* **tests/api:** Update assembly info, category and factory
+  usage ([8bed12f](https://github.com/gameguild-gg/gameguild/commit/8bed12fa53fb1441a67fcdfc787bddf0814f8cd2))
+* **tests/api:** Update product type and
+  disposal ([ef8e5a2](https://github.com/gameguild-gg/gameguild/commit/ef8e5a2ce1c3d2d89b7223a9f00c842d9f0064b4))
+* web next health
+  check ([4f1c60b](https://github.com/gameguild-gg/gameguild/commit/4f1c60bf6e576cdd8a8b6fdcefa5e50d96a57fb0))
+* **web:** add
+  newrelic ([cd04727](https://github.com/gameguild-gg/gameguild/commit/cd047270ea4c2988341a4ad4337e5557b2345abe))
+* **web:** add
+  newrelic ([57c2007](https://github.com/gameguild-gg/gameguild/commit/57c2007eddefa0cc0e944ab1903ee64aa04f891f))
+* **web:** adjust docker build on
+  apps/web ([9910213](https://github.com/gameguild-gg/gameguild/commit/99102139c2e3f7925238f42bdda85dcb8cef83f7))
+* **web:** css docker
+  build ([5dc0e18](https://github.com/gameguild-gg/gameguild/commit/5dc0e18a28ab19989698e1a51c41ccde378e249f))
+* **web:** fix next
+  dockerfile ([eea13fc](https://github.com/gameguild-gg/gameguild/commit/eea13fc8f37d2d3797e82cbc09295154d339e134))
+* **web:** Fix type errors and resolve dependency
+  issues ([c1bb88b](https://github.com/gameguild-gg/gameguild/commit/c1bb88b2e0e43bf899f6577c13d5e9f07d3710a0))
+* **web:** infinite
+  redirect ([a165407](https://github.com/gameguild-gg/gameguild/commit/a16540782751f3df7f1017f5e7649179896d8b5b))
+* **web:** type generation for
+  api ([17e01b1](https://github.com/gameguild-gg/gameguild/commit/17e01b1397432b8998b6d0ab533328de1fc2aa44))
+* **web:** type generation for
+  api ([1575f1d](https://github.com/gameguild-gg/gameguild/commit/1575f1ddff74abeffb97d2e0a598b6d4e30fc138))
+* **web:** wrong health
+  route ([e0bb150](https://github.com/gameguild-gg/gameguild/commit/e0bb15092fd833893231ebbee180e1e3a541b643))
 
 ### Code Refactoring
 
-* **api:** Remove chapter-related entities and references ([5204c51](https://github.com/gameguild-gg/gameguild/commit/5204c5148bc1778db4bfb0ccb9b0098984fb0f8e))
-
+* **api:** Remove chapter-related entities and
+  references ([5204c51](https://github.com/gameguild-gg/gameguild/commit/5204c5148bc1778db4bfb0ccb9b0098984fb0f8e))
 
 ### Features
 
-* **admin:** Add user management, roles and analytics features ([6c85f40](https://github.com/gameguild-gg/gameguild/commit/6c85f40c6b3ea1986383438691ebfe5efe5de548))
-* **analytics/web-vitals:** Enable sendBeacon and fetch reporting ([c1100f1](https://github.com/gameguild-gg/gameguild/commit/c1100f14366a6d878213d2d57bf1e140c6be5b75))
-* **api/payments:** Add comprehensive payment tests ([b52af26](https://github.com/gameguild-gg/gameguild/commit/b52af26472a7111578ddf2c6785a4826fab2c154))
-* **api/products:** Add publish and unpublish commands with role validation ([054a78c](https://github.com/gameguild-gg/gameguild/commit/054a78c7017873acf452c1e2f509c9a1365fcf51))
-* **api/swagger:** Add JWT authentication support to Swagger UI ([d7be8cd](https://github.com/gameguild-gg/gameguild/commit/d7be8cdbe4ca48cd65cb8a5d7e065850652e3845))
-* **api/web:** Add attendance endpoints and reporting features ([2a46f5e](https://github.com/gameguild-gg/gameguild/commit/2a46f5e0e3ab5a7381c30cdb1e43a00750caaf09))
-* **api/web:** Add GET /users/me endpoint and integrate with web app ([eace8e6](https://github.com/gameguild-gg/gameguild/commit/eace8e6d1ba3e0592a30e509f303a28b0831aaa6))
-* **api/web:** Add Google token auth and course enhancements ([4ec7e3f](https://github.com/gameguild-gg/gameguild/commit/4ec7e3f7d23fb5d939400358c03b64e5e77f754e))
-* **api/web:** Add UpdateAttendance DTO and explicit score type annotation ([ff858cd](https://github.com/gameguild-gg/gameguild/commit/ff858cd541eb79eec0b19912bbbd4546325344d5))
-* **api/web:** Enhance tenant management with global admin support ([172f721](https://github.com/gameguild-gg/gameguild/commit/172f7216b4514f77a7ee913571ca3b3db59f57de))
-* **api/web:** Update role template endpoints for id/name support ([daac91f](https://github.com/gameguild-gg/gameguild/commit/daac91fc9ae920fb7f52f1b27115f529b2c7ff21))
-* **api:** Add NameIdentifier claim and improve session tests ([29b46d8](https://github.com/gameguild-gg/gameguild/commit/29b46d85c143d0ad080bcfd2f7c3a1b04e31b39e))
-* **api:** Add optimized projects query & enforce DataLoader defaults ([6c859b9](https://github.com/gameguild-gg/gameguild/commit/6c859b9811ced06aa05aaaebafb86a54451cc315))
-* **api:** Add TestingSession permissions and seeder ([8ccbfeb](https://github.com/gameguild-gg/gameguild/commit/8ccbfeb18e851180f84c8dba3775f375cd6bf5eb))
-* **api:** Enhance logging and update GraphQL tests ([67df9fd](https://github.com/gameguild-gg/gameguild/commit/67df9fd8a435be131482ac8f411117912d6f9fad))
-* **api:** Enhance product queries with filters ([56bfc70](https://github.com/gameguild-gg/gameguild/commit/56bfc703f9371df1e65a2258b2aebb3ec4aa4efc))
-* **api:** Refine tenant permissions and auth tests ([89bb021](https://github.com/gameguild-gg/gameguild/commit/89bb0212701e06c23a9f175ee2053cddc01e6f56))
-* **apps/api,apps/web:** Add courses pages, notifications, header, and migration updates ([46841fa](https://github.com/gameguild-gg/gameguild/commit/46841fa3bd3af5437b72b3a23e1ce5f73dd758d7))
-* **apps/api,apps/web:** Integrate Google OAuth sign-in and profile creation ([ce7f427](https://github.com/gameguild-gg/gameguild/commit/ce7f427d76c87a002cd152e6648b57e42bb28d0b))
-* **apps/api,apps/web:** Update testing workflow and sidebar integration ([f8d408a](https://github.com/gameguild-gg/gameguild/commit/f8d408a2f64489db31babcb244eb913c95396853))
-* **apps/api/programs:** Add rating model and update enrollment status ([146ef7e](https://github.com/gameguild-gg/gameguild/commit/146ef7e1138afd54fb8dfdaeaf1fd8e437666759))
-* **apps/api/tenants:** Implement CQRS endpoints and validators ([5cb192c](https://github.com/gameguild-gg/gameguild/commit/5cb192c82caebc6a644db609cb9aae29e1414fb9))
-* **apps/api/tests:** Update GraphQL introspection config ([e1cd163](https://github.com/gameguild-gg/gameguild/commit/e1cd16387e702e3ee32aafae5c1e73e9db395a02))
-* **apps/api:** Add achievement configurations and default DataLoader options ([50f2784](https://github.com/gameguild-gg/gameguild/commit/50f27847e4dbf5be466777f31eec71742fcb03c5))
-* **apps/api:** Add ActivityGrade and ContentInteraction modules with permission inheritance ([b1815b1](https://github.com/gameguild-gg/gameguild/commit/b1815b10d7c60a9241e6384cd7e7f2d1b55876c3))
-* **apps/api:** Add ActivityGrade and ContentInteraction modules with permission inheritance ([1ced743](https://github.com/gameguild-gg/gameguild/commit/1ced7439e9bc5278bd9dcf25525178dd86b7ac19))
-* **apps/api:** Add auth, payment, and subscription modules ([160a8ee](https://github.com/gameguild-gg/gameguild/commit/160a8ee4364197ea9acd7c8bcf0398069574d935))
-* **apps/api:** Add auto-enrollment and program CQRS endpoints ([cc86f22](https://github.com/gameguild-gg/gameguild/commit/cc86f22eabb0d3bde7d8752df948926f3b945ead))
-* **apps/api:** Add bulk user profile commands and update migration names ([6c9dabe](https://github.com/gameguild-gg/gameguild/commit/6c9dabe1d1ef57acc34e12dbbfefa9d72ae7e6c9))
-* **apps/api:** Add cancel payment command handler ([23ecab5](https://github.com/gameguild-gg/gameguild/commit/23ecab5dad1e8fecf845a01e7be7303cfce21de0))
-* **apps/api:** Add comprehensive mock data seeding ([a56cfc9](https://github.com/gameguild-gg/gameguild/commit/a56cfc984f14a3f460267474c1d61ce0f498128d))
-* **apps/api:** Add DbContextFactory support for GraphQL DataLoaders ([73cc000](https://github.com/gameguild-gg/gameguild/commit/73cc000cba16755046acd161a55ebdc0006b2ff8))
-* **apps/api:** Add default CORS and conditional sample seeding ([2327a6d](https://github.com/gameguild-gg/gameguild/commit/2327a6dc2ef28395305c85efcd5ee428f9214717))
-* **apps/api:** Add domain events, resource config and user profiles handlers ([92e0f17](https://github.com/gameguild-gg/gameguild/commit/92e0f177687f1ecde690292cc58ab28ce196d9a3))
-* **apps/api:** Add email lookup and duplicate check in user service ([6c2e82b](https://github.com/gameguild-gg/gameguild/commit/6c2e82be7be7c6e9993330b55294a232068db6df))
-* **apps/api:** Add feedback reporting and rating endpoints ([830d6e6](https://github.com/gameguild-gg/gameguild/commit/830d6e627af353fe221e0ece7020558ef00bef83))
-* **apps/api:** Add GET user memberships endpoint and update tests ([faaf36a](https://github.com/gameguild-gg/gameguild/commit/faaf36a43f891e42270cf699936e3021233a5e88))
-* **apps/api:** Add ManagerId field to sessions ([14e8a67](https://github.com/gameguild-gg/gameguild/commit/14e8a674d6423ed5bb71645b83aee50134efadbf))
-* **apps/api:** Add payments, products, and programs modules ([14f40c1](https://github.com/gameguild-gg/gameguild/commit/14f40c18b698c55b07f5f6b3a285e77fa4624d10))
-* **apps/api:** Add product handlers and update status enum ([b39078b](https://github.com/gameguild-gg/gameguild/commit/b39078b4e014e0422b66b3edf49c9935a16b680f))
-* **apps/api:** Add product stats query and update deletion test threshold ([86eea2d](https://github.com/gameguild-gg/gameguild/commit/86eea2d570c62669ea0d2a5318f571db47470483))
-* **apps/api:** Add program flow documentation ([60af355](https://github.com/gameguild-gg/gameguild/commit/60af3553943679b5f74741cb41d37f2731ae17a3))
-* **apps/api:** Add tenant module commands, handlers, queries, and validators ([e345395](https://github.com/gameguild-gg/gameguild/commit/e3453958c66d71649ca0e291680ad90a0f9d6623))
-* **apps/api:** Add testing lab URL and achievements schema ([0a2471f](https://github.com/gameguild-gg/gameguild/commit/0a2471fe2adc82d994a839a45f71f3fa473ecdd0))
-* **apps/api:** Add TestingLab GraphQL types and test helper ([581b8b6](https://github.com/gameguild-gg/gameguild/commit/581b8b6ffb0cad2da1d84c979aca913fb1c79bd2))
-* **apps/api:** Add user and tenant context middleware and docs ([74e5005](https://github.com/gameguild-gg/gameguild/commit/74e50052f0cbde0ce8d6caa24dc7523b2f5438bf))
-* **apps/api:** Add user profiles, auth logging, program access checks and balance normalization ([9f722fe](https://github.com/gameguild-gg/gameguild/commit/9f722fe0ef951acc54ff5fdc7dbc63904d55727c))
-* **apps/api:** Adopt CQRS pattern and add test module support ([1e536ce](https://github.com/gameguild-gg/gameguild/commit/1e536ce21b80e757659f8ec4b8d9ffd33f1509af))
-* **apps/api:** Enhance DAC and module permission management ([4003284](https://github.com/gameguild-gg/gameguild/commit/4003284ca3bac197662a42a102beb5486bf93f6f))
-* **apps/api:** Enhance payments module and add user context ([78a67b3](https://github.com/gameguild-gg/gameguild/commit/78a67b39322b8b9a44dd0de1c58f11adf16e1612))
-* **apps/api:** Enhance user profiles with bulk ops and validators ([871fb0f](https://github.com/gameguild-gg/gameguild/commit/871fb0f641cabdcfcae639d0f733defb7973b50e))
-* **apps/api:** Exclude soft-deleted products from global statistics ([ec0e585](https://github.com/gameguild-gg/gameguild/commit/ec0e585084715c7a8acbe215587cd50253439893))
-* **apps/api:** Implement module-based permissions with testing lab support ([1bbb823](https://github.com/gameguild-gg/gameguild/commit/1bbb823b3af538725190989c74946cc02030c91a))
-* **apps/api:** Integrate MediatR CQRS and add GraphQL data loaders ([b7a09dd](https://github.com/gameguild-gg/gameguild/commit/b7a09dd752a5e0a2d6b69dac514f521fcd1701b8))
-* **apps/api:** Modernize authentication with CQRS & JWT support ([14cc316](https://github.com/gameguild-gg/gameguild/commit/14cc316bfd896a99eed721bb2085dc8fa66933b4))
-* **apps/api:** Pass logger to GraphQL config ([a6fbf47](https://github.com/gameguild-gg/gameguild/commit/a6fbf47792a08387a6813c97e31a1adaf90c2fc2))
-* **apps/api:** Refactor user GraphQL inputs and bulk handlers ([4356420](https://github.com/gameguild-gg/gameguild/commit/4356420ee237082c1290934b2dc40b9587594706))
-* **apps/api:** Replace Error with ErrorMessage for localized error handling ([a6a65df](https://github.com/gameguild-gg/gameguild/commit/a6a65df9a68626286215e4fd1e09c941d411d55b))
-* **apps/api:** Toggle mock seeding via env var ([76dcac6](https://github.com/gameguild-gg/gameguild/commit/76dcac6f2a87123cde45abf6f9bccf97499e0314))
-* **apps/api:** Update payment flow and API endpoints ([12a9109](https://github.com/gameguild-gg/gameguild/commit/12a9109642a1ef0981eea241b9cc84f0df433306))
-* **apps/api:** Update ratings schema and add new tables ([eda8402](https://github.com/gameguild-gg/gameguild/commit/eda8402ccb18ac48b1899c1c848753dfaa1abd33))
-* **apps/api:** Update test fixture and endpoint routes ([ea860d2](https://github.com/gameguild-gg/gameguild/commit/ea860d2a68276bb45e1ab3441cd8fc1ae169e939))
-* **apps/api:** Update to global project default permissions ([5b09eb2](https://github.com/gameguild-gg/gameguild/commit/5b09eb2f749a0f4acd4fc8764738d682043d4b2c))
-* **apps/cms/auth:** Integrate CQRS, JWT and refactor namespaces ([acc1494](https://github.com/gameguild-gg/gameguild/commit/acc149485aed28ddff4493d2e1edc7ae08be32bf))
-* **apps/cms:** Add bulk tenant permission and register HTTP context accessor ([44a6384](https://github.com/gameguild-gg/gameguild/commit/44a6384b5a346d82cafb428071d7cebc8540d700))
-* **apps/cms:** Add comment, follower, rating, vote, and project module entities ([48f5546](https://github.com/gameguild-gg/gameguild/commit/48f5546137fd575457bcbbe0458e87c8ed125dbf))
-* **apps/cms:** Add Jam, Reputation and UserProfile modules and refactor project and team models ([e91ceff](https://github.com/gameguild-gg/gameguild/commit/e91ceff434f38f1b9eb51e668a618a7cf70bd0bc))
-* **apps/cms:** Add localization and permission entities ([9ae9020](https://github.com/gameguild-gg/gameguild/commit/9ae9020aa857b42580a3cbc5ca9e3bc31b26fde4))
-* **apps/cms:** Add project module with permissions and GraphQL integration ([3316dcb](https://github.com/gameguild-gg/gameguild/commit/3316dcb3741fb3570e829703887ef3848796a80c))
-* **apps/cms:** Add testing lab module models ([5f0d49c](https://github.com/gameguild-gg/gameguild/commit/5f0d49ca0d9b3075c0356a30416115108ffc7aec))
-* **apps/cms:** Add TestingLab module with controllers, models, services and tests ([41cc19d](https://github.com/gameguild-gg/gameguild/commit/41cc19d1abfac3a0e1eb5f996a18167466ee8e56))
-* **apps/cms:** Enhance project models, permissions, and tests ([bacabd7](https://github.com/gameguild-gg/gameguild/commit/bacabd7e8071a31a8a4f2a5ef364471907a41941))
-* **apps/cms:** Implement BaseEntity and modular CMS architecture ([8cf4b33](https://github.com/gameguild-gg/gameguild/commit/8cf4b338c2d19bd85f36a9915b73687ddf8157c8))
-* **apps/cms:** Integrate project permissions and auto-generate slugs ([1cb6ed1](https://github.com/gameguild-gg/gameguild/commit/1cb6ed1b192d5f80c768917dfe634739e69a4ac5))
-* **apps/cms:** Integrate reputation system and remove legacy roles ([43c6836](https://github.com/gameguild-gg/gameguild/commit/43c683643bacf64fd78bd67e9c9153050d408ee8))
-* **apps/cms:** Integrate TestingLab GraphQL API, DTOs, and tests ([90b4667](https://github.com/gameguild-gg/gameguild/commit/90b4667e596f72ee1f546d5e65dbf7fdcb58551b))
-* **apps/cms:** Introduce three-layer permission system ([1107ad3](https://github.com/gameguild-gg/gameguild/commit/1107ad36102b57e636cf7969c2f2a569b11a9e9c))
-* **apps/cms:** Update project schema with slug validation and new tables ([0ae0bc5](https://github.com/gameguild-gg/gameguild/commit/0ae0bc5c0500e63c25d32a1057abc82e14c270af))
-* **apps/course-editor:** Add context, reducer, and server actions ([89fad5e](https://github.com/gameguild-gg/gameguild/commit/89fad5e4d2d41ab46655911a42f36d10c0ced899))
-* **apps/dashboard/testing-lab:** Add sidebar with calendar and quick stats ([145784f](https://github.com/gameguild-gg/gameguild/commit/145784fa801702adf58c7f22abb55510493722b2))
-* **apps/dashboard:** Add dashboard header and sidebar content components ([93746e2](https://github.com/gameguild-gg/gameguild/commit/93746e22a97379f0adc831b83fd10ca633da18e4))
-* **apps/dashboard:** Remove redundant analytics pages and add refresh button ([85922ee](https://github.com/gameguild-gg/gameguild/commit/85922eec16c03fcca6ffd9bb8c217f8383fb42b7))
-* **apps/testing-lab/management:** Add UI components for feedback, requests, and sessions ([965296a](https://github.com/gameguild-gg/gameguild/commit/965296a530f3857cc8d227711e03927954a4724d))
-* **apps/web-users:** Add SDK actions for users ([3f80b9b](https://github.com/gameguild-gg/gameguild/commit/3f80b9b4011839b90aff3b0a8f37d7a49bc08c48))
-* **apps/web/activity-grades:** Add API actions for activity grades ([d8939c2](https://github.com/gameguild-gg/gameguild/commit/d8939c2940f5e63ea1183a02fbcb78b23c81739c))
-* **apps/web/auth:** Revamp auth config and token management ([ccabe92](https://github.com/gameguild-gg/gameguild/commit/ccabe92f073e520f176b581876c96b04d08be172))
-* **apps/web/components/content/markdown:** Add markdown content component ([3527431](https://github.com/gameguild-gg/gameguild/commit/35274318e994fb1a89781555ba04950c43a476dd))
-* **apps/web/cookies:** Add enhanced consent and preferences UI ([72d78a0](https://github.com/gameguild-gg/gameguild/commit/72d78a0ed824ca11eb92a39d1ffc5d066d3ad747))
-* **apps/web/courses:** Add course list UI and filtering components ([7cb2f57](https://github.com/gameguild-gg/gameguild/commit/7cb2f576659e2cf667ee64bc6373988017e465bd))
-* **apps/web/dashboard:** Add fallback pages for subroutes and remove test page ([5375e01](https://github.com/gameguild-gg/gameguild/commit/5375e012a29d5e0d5c021d15d9a9ed338fafa2b0))
-* **apps/web/dashboard:** Add modular dashboard overview components ([cc332d6](https://github.com/gameguild-gg/gameguild/commit/cc332d60ddcd93e44016f5a17ca80c6044843733))
-* **apps/web/dashboard:** Revamp course editor pages ([f13fabc](https://github.com/gameguild-gg/gameguild/commit/f13fabce5dbc881543a6ce855b16c02b240e2782))
-* **apps/web/dashboard:** Revise error, loading and not found pages ([b9ba45e](https://github.com/gameguild-gg/gameguild/commit/b9ba45e2a7005ead80acccb23e3b179ac87b1f1f))
-* **apps/web/dashboard:** Update courses page with new API and course list wrapper ([c3ecaf3](https://github.com/gameguild-gg/gameguild/commit/c3ecaf3386ee87c26d26d1eace3fb9547bad63ed))
-* **apps/web/editor:** Implement enhanced editor page with autosave and IndexedDB support ([6f46cc9](https://github.com/gameguild-gg/gameguild/commit/6f46cc91796cbe1524dd6a1e10d1c0af9cc159c7))
-* **apps/web/feed:** Add recent activity and cache refresh actions ([9ec8474](https://github.com/gameguild-gg/gameguild/commit/9ec847499d17aa2342b8ade98a7f038c5420953e))
-* **apps/web/legal/licenses:** Implement dynamic license page ([a229aa8](https://github.com/gameguild-gg/gameguild/commit/a229aa82dfc47ce17e49aebc96fa154b10d95bd5))
-* **apps/web/posts:** Replace legacy actions with authenticated API calls ([54d9e32](https://github.com/gameguild-gg/gameguild/commit/54d9e32668f0ed42c329747a57b98a8e199e2571))
-* **apps/web/testing-lab:** Add session grid, row, and table views ([261d736](https://github.com/gameguild-gg/gameguild/commit/261d73628cfe0651008ac8bea6fe389ee7ea51ae))
-* **apps/web/testing-lab:** Add testing feedback list component ([e93a01e](https://github.com/gameguild-gg/gameguild/commit/e93a01e314b5500775b707ff2c66ded1742cf10b))
-* **apps/web/testing-lab:** Refactor components to use server data ([48652c1](https://github.com/gameguild-gg/gameguild/commit/48652c18265092b0a18b799082029fd709cd8e46))
-* **apps/web/testing-lab:** Revamp session pages and UI components ([ba7f2b4](https://github.com/gameguild-gg/gameguild/commit/ba7f2b42f64eb9aba719885e5ee555a00a3d3e94))
-* **apps/web/testing-lab:** Update UI components and add session form ([4bfcd57](https://github.com/gameguild-gg/gameguild/commit/4bfcd57f1b5fc319291c09897db82e23b764fef2))
-* **apps/web/users:** Add dynamic user detail and permissions pages ([ca76f8b](https://github.com/gameguild-gg/gameguild/commit/ca76f8bbc52e8a7c93504ae6dee6651bf954d061))
-* **apps/web:** Add activity grading, achievements, profiles, and users modules ([658b18f](https://github.com/gameguild-gg/gameguild/commit/658b18f1b8db68a11ece57f8480c28d1f1a85dfe))
-* **apps/web:** Add activity submission, reporting and peer review features ([4882207](https://github.com/gameguild-gg/gameguild/commit/4882207f9807aeb2b9938f552861f9d72c3539fd))
-* **apps/web:** Add animated floating icons to testing lab landing ([ff5c224](https://github.com/gameguild-gg/gameguild/commit/ff5c224cd38087a80d003c5fa781ce7e82f4fd17))
-* **apps/web:** Add attendance tracker component ([36056e4](https://github.com/gameguild-gg/gameguild/commit/36056e4910ed97e3b40b76d01035e084e44764bd))
-* **apps/web:** Add auth debug and refine session configuration ([15d0b58](https://github.com/gameguild-gg/gameguild/commit/15d0b588c751e2b61ded51c179b6d7c6f70c8268))
-* **apps/web:** Add auth error page and track context exports ([23482ed](https://github.com/gameguild-gg/gameguild/commit/23482ed8c7c4d87fc1b5f90e1545b6cc2820c1cb))
-* **apps/web:** Add authenticated client and generated API client ([e4655a4](https://github.com/gameguild-gg/gameguild/commit/e4655a42e7fca08433b5d22f99b0a00cce9994f7))
-* **apps/web:** Add certificate generation and progress tracker ([9eb03aa](https://github.com/gameguild-gg/gameguild/commit/9eb03aa61db10fac3a4181b11ee68845d1bb18b5))
-* **apps/web:** Add cn utility for merging Tailwind classes ([9e1831e](https://github.com/gameguild-gg/gameguild/commit/9e1831eb37e44660e60ba8a6d061346b38c1397b))
-* **apps/web:** Add community feed and improve sessions handling ([e02aff0](https://github.com/gameguild-gg/gameguild/commit/e02aff05a80323f13e2b9e41faa5ab8b347c3b44))
-* **apps/web:** Add comprehensive community feed system ([2def27d](https://github.com/gameguild-gg/gameguild/commit/2def27da3928aed5fdd72bb3207057865657b7c4))
-* **apps/web:** Add comprehensive component showcase and examples ([ade2720](https://github.com/gameguild-gg/gameguild/commit/ade272075cce2a37f6ad42ea489e15acb19fd2e0))
-* **apps/web:** Add comprehensive content interaction endpoints ([7a0b82f](https://github.com/gameguild-gg/gameguild/commit/7a0b82f63a4153a55981cb2d292e2c3b3d69d03b))
-* **apps/web:** Add comprehensive server actions across modules ([fa02cba](https://github.com/gameguild-gg/gameguild/commit/fa02cbaf28b5b89d8cba9f86c92aef0b5d01d8d2))
-* **apps/web:** Add content interaction SDK actions ([5c07ae9](https://github.com/gameguild-gg/gameguild/commit/5c07ae97e757005bb9fea59690be411ebe3cb48c))
-* **apps/web:** Add course catalog page and filtering components ([ced1c0a](https://github.com/gameguild-gg/gameguild/commit/ced1c0a2661490205b78a01be6bae46b7a607231))
-* **apps/web:** Add course detail, location selector and create form components ([3b41c50](https://github.com/gameguild-gg/gameguild/commit/3b41c505adfd05b354403704acd4451f75e64f3a))
-* **apps/web:** Add courses actions, context, and track hook ([48873b4](https://github.com/gameguild-gg/gameguild/commit/48873b4edbb9444daef699da23269859c99116c7))
-* **apps/web:** Add courses and tracks layouts, error and loading states ([d198d91](https://github.com/gameguild-gg/gameguild/commit/d198d9147969e6fdd0e38533535a126182799fcd))
-* **apps/web:** Add create project form and move version submission form ([0eb3d4e](https://github.com/gameguild-gg/gameguild/commit/0eb3d4e7c30d173a11806d16d8b3e17c90045419))
-* **apps/web:** Add credentials actions for CRUD operations ([6411f65](https://github.com/gameguild-gg/gameguild/commit/6411f659933583516932155c44a0ca3746c0ae1c))
-* **apps/web:** Add dashboard course editor pages ([35d01ce](https://github.com/gameguild-gg/gameguild/commit/35d01ce656c4a9fb7d6094653110505c619f6f40))
-* **apps/web:** Add default modal and support error children ([6d9a1b4](https://github.com/gameguild-gg/gameguild/commit/6d9a1b4301e551cf721ad6aa659161a43354bf4b))
-* **apps/web:** Add enhanced E2E tests for frontend-API integration ([bc4a9c8](https://github.com/gameguild-gg/gameguild/commit/bc4a9c8e86b3a9553c21e540fdea838ba9dfeacf))
-* **apps/web:** Add enhanced permission and notification types ([d2382ca](https://github.com/gameguild-gg/gameguild/commit/d2382caeb8dd9ba7224ed94ef9e848f1710aea93))
-* **apps/web:** Add enrollment and course detail pages ([f98187c](https://github.com/gameguild-gg/gameguild/commit/f98187c2fae870adb9db15e6e0b9ba2940f0a4da))
-* **apps/web:** Add GitHub license content retrieval function ([60b78d6](https://github.com/gameguild-gg/gameguild/commit/60b78d6c09130deab0ebb444cc4d8b1a83646e22))
-* **apps/web:** Add GraphQL, feed & tenant tabs ([cc80d95](https://github.com/gameguild-gg/gameguild/commit/cc80d959f0d357653c693ede27388360871510be))
-* **apps/web:** Add health and database status endpoints ([aa64591](https://github.com/gameguild-gg/gameguild/commit/aa645917317c05f936583c66b2191a7580148924))
-* **apps/web:** Add health check endpoint ([5d87723](https://github.com/gameguild-gg/gameguild/commit/5d8772388eafa2e17d2a7e6d4d873a2dd728a646))
-* **apps/web:** Add i18n module with en-US messages ([629b7a0](https://github.com/gameguild-gg/gameguild/commit/629b7a0847c9f73b52e57d00b9ce44099fbe0f26))
-* **apps/web:** Add instrumentation client for monitoring ([57f8ec3](https://github.com/gameguild-gg/gameguild/commit/57f8ec36f67da5709874fc9495865082a05ae39a))
-* **apps/web:** Add join session form component ([0ed37db](https://github.com/gameguild-gg/gameguild/commit/0ed37dbe7beb35d80317c3d255fdb052dac8b284))
-* **apps/web:** Add legal and social media links components ([cbc0156](https://github.com/gameguild-gg/gameguild/commit/cbc01568e59f68a75602bb0593dad14f87bbbf6b))
-* **apps/web:** Add Lexical dependencies and update Monaco editor ([021c838](https://github.com/gameguild-gg/gameguild/commit/021c838cf67e61f879897a3e3ddb54ae085eb2eb))
-* **apps/web:** Add local auth support and update endpoints ([364b45c](https://github.com/gameguild-gg/gameguild/commit/364b45c489792ac31227d1d48064f36d4bf64b22))
-* **apps/web:** Add manifest, robots, and sitemap endpoints ([507d7b2](https://github.com/gameguild-gg/gameguild/commit/507d7b291d0a6596d33fd05ba3d06fbb79055433))
-* **apps/web:** Add MarkdownContent and refactor feedback UI ([6db2d98](https://github.com/gameguild-gg/gameguild/commit/6db2d98521aba5a3ae906e416e4bf30c92684e74))
-* **apps/web:** Add metadata debug log and update layout imports ([f8dd6fc](https://github.com/gameguild-gg/gameguild/commit/f8dd6fc6dfcc65a8d7e9bae88feaaabf20a778d7))
-* **apps/web:** Add modular course editor pages ([f86fed2](https://github.com/gameguild-gg/gameguild/commit/f86fed2c5056e8091e695220743651e374ef913a))
-* **apps/web:** Add new editor and course sync ([8012576](https://github.com/gameguild-gg/gameguild/commit/8012576d7c8d6b281bc29e28558ed09f508c69cc))
-* **apps/web:** Add new subscription actions with API integration ([22b2791](https://github.com/gameguild-gg/gameguild/commit/22b2791de4b6fc80b0a668f7b7fc57cb56853a77))
-* **apps/web:** Add not-found page and update dashboard imports ([d6635bb](https://github.com/gameguild-gg/gameguild/commit/d6635bb0a16039b9b96f282d062772aff2bb1c2d))
-* **apps/web:** Add onRequestError logging function ([8349362](https://github.com/gameguild-gg/gameguild/commit/83493620dae72e5e84679c3d324a0923ed105152))
-* **apps/web:** Add payments SDK action endpoints ([657ce51](https://github.com/gameguild-gg/gameguild/commit/657ce51c3ebf64f68a6b26931cda88c518a729e0))
-* **apps/web:** Add posts actions endpoints ([e664479](https://github.com/gameguild-gg/gameguild/commit/e664479de2e244085a2121caf011bcdd91dcccef))
-* **apps/web:** Add program management suite ([d23b6ac](https://github.com/gameguild-gg/gameguild/commit/d23b6acf862e7671854553d41f81b0449e0f4758))
-* **apps/web:** Add programs SDK actions ([d892b2c](https://github.com/gameguild-gg/gameguild/commit/d892b2cdfcf4e30b1a4f536e3c02d4393221ef52))
-* **apps/web:** Add project and testing lab pages with server actions ([80a83c7](https://github.com/gameguild-gg/gameguild/commit/80a83c7b72a0144ce1c1b4fa6f30b99c3e1cd57e))
-* **apps/web:** Add refresh token debug info ([05cf649](https://github.com/gameguild-gg/gameguild/commit/05cf64999ed4935c91d4dd741457addf80e40071))
-* **apps/web:** Add roadmap, stats, and updated contribution UI ([4cac003](https://github.com/gameguild-gg/gameguild/commit/4cac003cbb3a29dd80b9b37193d113ad6433375d))
-* **apps/web:** Add slug generation and update course links ([aae436b](https://github.com/gameguild-gg/gameguild/commit/aae436b1bdb8d418890b2f6511436d30c6553dcf))
-* **apps/web:** Add sticky headers and collapsible sections to course pages ([07a51df](https://github.com/gameguild-gg/gameguild/commit/07a51dff75af9f0642dffde8d94ab4118e1378bb))
-* **apps/web:** Add support to themes ([78e9b7a](https://github.com/gameguild-gg/gameguild/commit/78e9b7a5fc03e4b9f700728e88dccae626b05009))
-* **apps/web:** Add system and database health actions ([7219cd7](https://github.com/gameguild-gg/gameguild/commit/7219cd7a169418c8ecc3daef9a051a029406a424))
-* **apps/web:** Add tenant domains actions and update token usage ([44c5e65](https://github.com/gameguild-gg/gameguild/commit/44c5e659122efe9a525ae5b94d80d3146833ff55))
-* **apps/web:** Add testing feedback list UI and update dependencies ([b515fb6](https://github.com/gameguild-gg/gameguild/commit/b515fb60c3158f369cee0bab0c9070567793ce0d))
-* **apps/web:** Add testing feedback SDK actions ([686df2e](https://github.com/gameguild-gg/gameguild/commit/686df2e9a0dbe28244658f88bcbcf2438d8157c7))
-* **apps/web:** Add testing lab auth layout and error/loading components ([e533028](https://github.com/gameguild-gg/gameguild/commit/e5330280ab54369890977c3ea8c0b026fa6ccf0b))
-* **apps/web:** Add Testing Lab functionality ([bb7a8e2](https://github.com/gameguild-gg/gameguild/commit/bb7a8e22fea342dae48afe92656d1493de0d28a7))
-* **apps/web:** Add testing lab page with overview ([9033f43](https://github.com/gameguild-gg/gameguild/commit/9033f43f3f4b5783f659e743f9d9dc37a134b354))
-* **apps/web:** Add testing lab pages and feed server actions ([f8d4476](https://github.com/gameguild-gg/gameguild/commit/f8d44767dfa7498989334d48b3a96379388b01f6))
-* **apps/web:** Add testing lab pages and progress tracker ([8be6661](https://github.com/gameguild-gg/gameguild/commit/8be66618434ac9cce56372c63b44ad4dee07103f))
-* **apps/web:** Add testing lab requests management UI ([49c1aaf](https://github.com/gameguild-gg/gameguild/commit/49c1aaff13b3817cebd64399b6ca29a7b7828fdf))
-* **apps/web:** Add testing lab roles actions and new dashboard header ([206cfa1](https://github.com/gameguild-gg/gameguild/commit/206cfa1b9f0b412e41d911ad51fe10897b54d60c))
-* **apps/web:** Add testing lab roles and user role endpoints ([65e294e](https://github.com/gameguild-gg/gameguild/commit/65e294e6a193b7d11744019fd750263cef172792))
-* **apps/web:** Add testing lab sessions UI components ([b87ab09](https://github.com/gameguild-gg/gameguild/commit/b87ab0997ad7400c031fd4baec0a161e4df98b3b))
-* **apps/web:** Add testing lab settings page ([4fa8ceb](https://github.com/gameguild-gg/gameguild/commit/4fa8ceb4f92e2cde3a8c568e7188eeb9ed179521))
-* **apps/web:** Add testing lab, courses, and peer review features ([f3c187d](https://github.com/gameguild-gg/gameguild/commit/f3c187d3ceeaf3fcd2c94d1c8019aa25678bbd8f))
-* **apps/web:** Add Toaster to layout ([26cd534](https://github.com/gameguild-gg/gameguild/commit/26cd534c2cf9a1e20551b0d493998d3d74da97ab))
-* **apps/web:** Add user form component ([5e1fc18](https://github.com/gameguild-gg/gameguild/commit/5e1fc186026ef5f7b880689c479ea7c0f2acb74b))
-* **apps/web:** Add user profile and not found pages ([5e31334](https://github.com/gameguild-gg/gameguild/commit/5e313348821713da073dd47da95548bd3ed9143d))
-* **apps/web:** Always fetch all tenants and add default tenant fallback ([4deb02b](https://github.com/gameguild-gg/gameguild/commit/4deb02b4c1fce0d2fed6b446c5ad62b31fcbf6d1))
-* **apps/web:** Create testing requests dashboard ([1b95f70](https://github.com/gameguild-gg/gameguild/commit/1b95f706f0c7e052f2a1e838de2bef0fd09f25af))
-* **apps/web:** Enable active link highlighting using current pathname ([7fcb6a9](https://github.com/gameguild-gg/gameguild/commit/7fcb6a9ffec02a70d7874d1f40c3332f13da682f))
-* **apps/web:** Enforce key existence and add value extractor ([7e04131](https://github.com/gameguild-gg/gameguild/commit/7e0413103a5e1618582b1473c89865009b116a98))
-* **apps/web:** Enhance auth callbacks for profile and tenant updates ([09bab5f](https://github.com/gameguild-gg/gameguild/commit/09bab5f98be0bfa34f8fa211997c7e672763c094))
-* **apps/web:** Enhance auth token refresh and add achievements actions ([cea92ef](https://github.com/gameguild-gg/gameguild/commit/cea92efa4f4a2cbaee4cd4154890c73bf56c3bae))
-* **apps/web:** Enhance authentication with tenant and session management ([6d91d87](https://github.com/gameguild-gg/gameguild/commit/6d91d875a6864ef1131f8f8f693b9f384b874394))
-* **apps/web:** Enhance contributors UI and stats layout ([afcf2b9](https://github.com/gameguild-gg/gameguild/commit/afcf2b9b4c5cbe8639b62ad49898539c4463224c))
-* **apps/web:** Enhance contributors UI with GitHub integration ([6a7e5c7](https://github.com/gameguild-gg/gameguild/commit/6a7e5c76663eaf024492dcc1ebfa8d7d40b321a3))
-* **apps/web:** Enhance header and notifications UI styles ([32d4d11](https://github.com/gameguild-gg/gameguild/commit/32d4d11a449a345fdce50d2881a26f4a5d1df744))
-* **apps/web:** Enhance intl and tenant middleware ([a0c6506](https://github.com/gameguild-gg/gameguild/commit/a0c65062e9b35d2a2d1593a65aa1db0bb4aa9470))
-* **apps/web:** Enhance period selector and sessions UI design ([1defe6e](https://github.com/gameguild-gg/gameguild/commit/1defe6e9588ea0ecb2f020a67eae482233a684f2))
-* **apps/web:** Enhance role editing with aggregated permissions ([6ef7b7b](https://github.com/gameguild-gg/gameguild/commit/6ef7b7b5a14128d17b10002fd40bfecc862c8b68))
-* **apps/web:** Enhance session UI and logging ([ab2cf79](https://github.com/gameguild-gg/gameguild/commit/ab2cf79765868d5372b00821cdbd341b6ef57da2))
-* **apps/web:** Enhance testing feedback list with filtering and UI components ([6eaacda](https://github.com/gameguild-gg/gameguild/commit/6eaacda59b7851960702dd0169346d15ffa66ffe))
-* **apps/web:** Enhance testing lab sessions with filters and view modes ([d7963f3](https://github.com/gameguild-gg/gameguild/commit/d7963f3b9ab6cbe8b7f783b09f8a2783a7e3aa4d))
-* **apps/web:** Enhance UI styling with gradients and tooltips ([9728df0](https://github.com/gameguild-gg/gameguild/commit/9728df0ff3094499b684f71218ce299cd465f6ea))
-* **apps/web:** Expand role permissions mapping conversion ([0e927c4](https://github.com/gameguild-gg/gameguild/commit/0e927c4b172b9f9a71730d5affea1902c334308e))
-* **apps/web:** Implement achievements API actions ([e37aa3c](https://github.com/gameguild-gg/gameguild/commit/e37aa3c8bfef267e337d0c6a4b6fafdbb92a4549))
-* **apps/web:** Implement course content viewer and learning modules ([1fc56f5](https://github.com/gameguild-gg/gameguild/commit/1fc56f5ef88a597cc6f031026cd9bd0d4e7bd52b))
-* **apps/web:** Implement session-based testing lab pages ([2d69106](https://github.com/gameguild-gg/gameguild/commit/2d691066da1455b16c63844ffb247557ddc8c86f))
-* **apps/web:** Implement testing lab dashboards ([3ab421a](https://github.com/gameguild-gg/gameguild/commit/3ab421ae0d6aa379790fc4df5672e9e61e2665e7))
-* **apps/web:** Implement testing session details page ([19f9e14](https://github.com/gameguild-gg/gameguild/commit/19f9e14714bb6d8e66a732e6acac81540cca304e))
-* **apps/web:** Implement unified course editor and enhanced listings ([0654ec6](https://github.com/gameguild-gg/gameguild/commit/0654ec64e4e26352c5ab0f2c3935943332a090ea))
-* **apps/web:** Import sidebar components ([a8a9329](https://github.com/gameguild-gg/gameguild/commit/a8a932969788a64d955f366b8a6adeebeb879402))
-* **apps/web:** Improve testing lab location management ([3459cb2](https://github.com/gameguild-gg/gameguild/commit/3459cb2501c757c407c6af58fc37d91acf00bc4c))
-* **apps/web:** Improve testing lab UI and session sorting ([7f6e615](https://github.com/gameguild-gg/gameguild/commit/7f6e61595457444b4ecd83a48f47fbdbc3008847))
-* **apps/web:** Improve testing sessions mapping and dynamic refresh ([a296fdb](https://github.com/gameguild-gg/gameguild/commit/a296fdbab5be0f297eef85eb916e85292c40b27b))
-* **apps/web:** Integrate API for testing lab components ([0034c37](https://github.com/gameguild-gg/gameguild/commit/0034c3777f6e0a560dcec11f2c143b848efe9f25))
-* **apps/web:** Integrate auth for user endpoints ([1449152](https://github.com/gameguild-gg/gameguild/commit/14491521f0e48d59665b43c73ae67278d603aeba))
-* **apps/web:** Integrate backend notifications and reorganize dashboard actions ([d3e9d58](https://github.com/gameguild-gg/gameguild/commit/d3e9d58b050861bcb3c8506f455c3183e37adcad))
-* **apps/web:** Integrate dashboard layout in feedback page ([8462a55](https://github.com/gameguild-gg/gameguild/commit/8462a5548cedcacb146af36f87d47897b6d185b2))
-* **apps/web:** Integrate GitHub data in stats and update navigation links ([17a2e69](https://github.com/gameguild-gg/gameguild/commit/17a2e6985a738352f118c1c6967f60e63e246a6d))
-* **apps/web:** Integrate session authentication ([3e537e1](https://github.com/gameguild-gg/gameguild/commit/3e537e184962a717bdcfaf7d6e10a3e1e6c716a6))
-* **apps/web:** Migrate editor page and update UI imports ([4a659aa](https://github.com/gameguild-gg/gameguild/commit/4a659aa18fa5988a3fe2b53cd3ee9f0e41dac92b))
-* **apps/web:** Migrate tenant management to client auth actions ([dd36412](https://github.com/gameguild-gg/gameguild/commit/dd36412b69253a4f3ca7e5dc648ed399b590419f))
-* **apps/web:** Modularize code structure and update imports ([69ffa43](https://github.com/gameguild-gg/gameguild/commit/69ffa43cfd08a71b4c2c75a1d6f701e0afcf9b8d))
-* **apps/web:** Normalize session status display in detail component ([c052c68](https://github.com/gameguild-gg/gameguild/commit/c052c683c707ec0ac393f2e1600a01e0df0f8a7c))
-* **apps/web:** Refactor footer into modular components ([0401f7a](https://github.com/gameguild-gg/gameguild/commit/0401f7a39f5d20bc7fcd10c2ad74b10243b293b8))
-* **apps/web:** Refactor GitHub integration and project stats enhancements ([d7932cf](https://github.com/gameguild-gg/gameguild/commit/d7932cfdb50db0704d30f7a8476c12f527675c32))
-* **apps/web:** Refactor project actions with centralized auth client ([67f3a35](https://github.com/gameguild-gg/gameguild/commit/67f3a35160ee44e646c058189a08842a606db801))
-* **apps/web:** Refactor testing lab overview and improve auth config ([0ff755c](https://github.com/gameguild-gg/gameguild/commit/0ff755c95de88f8234d10f41ecaca961668d2c60))
-* **apps/web:** Refactor testing lab pages to use dashboard layout ([2a45966](https://github.com/gameguild-gg/gameguild/commit/2a45966e4dd77a6b4110b6fe90eba32f02be9c8c))
-* **apps/web:** Refine Testing Lab UI Components ([342b272](https://github.com/gameguild-gg/gameguild/commit/342b2722c620f4fb079a084f8a6740ff0f250a79))
-* **apps/web:** Replace form action with custom submit handler ([ca9cbef](https://github.com/gameguild-gg/gameguild/commit/ca9cbef5c6c60688854ea384b0ff133bc497792a))
-* **apps/web:** Replace image banner with CSS gradient and drop shadow ([d7411a4](https://github.com/gameguild-gg/gameguild/commit/d7411a4f30b7f909d390a637deb81c1339c22dec))
-* **apps/web:** Replace legacy project list with enhanced overview ([ed2bdce](https://github.com/gameguild-gg/gameguild/commit/ed2bdce2f342ba450bca14d19cbd68ecb2e8f9dc))
-* **apps/web:** Restructure course catalog and add landing pages ([51598bd](https://github.com/gameguild-gg/gameguild/commit/51598bde414a2cacd2a0fd5d133c049bdb075a1d))
-* **apps/web:** Revamp auth and dashboard layouts ([09354dc](https://github.com/gameguild-gg/gameguild/commit/09354dc3ce504cadb19a6c1d79fd436d0a0afa0f))
-* **apps/web:** Revamp contributors UI layout and styling ([8fc0ae4](https://github.com/gameguild-gg/gameguild/commit/8fc0ae4ec0d4855e8a678657551a4536b0c2268c))
-* **apps/web:** Revamp tenant management and switching ([86629d1](https://github.com/gameguild-gg/gameguild/commit/86629d10b2bafc6213f735f47801a2cd8491d377))
-* **apps/web:** Revamp testing lab pages and filters ([9295f7a](https://github.com/gameguild-gg/gameguild/commit/9295f7ae5f4009ec4410ff6ca9b010a3d8d50ce1))
-* **apps/web:** Revamp testing lab pages and types ([2c4b943](https://github.com/gameguild-gg/gameguild/commit/2c4b94365b0b4f55d82a78c97ae265f97de652bc))
-* **apps/web:** Send Web Vitals to Goggle Analytics as custom metrics ([00dd2c0](https://github.com/gameguild-gg/gameguild/commit/00dd2c0049faba91b1460340cdae5f98d53c0511))
-* **apps/web:** Update auth errors, branding and community pages ([077da0b](https://github.com/gameguild-gg/gameguild/commit/077da0b115df765fc1ca20f40c766a9f0466c53b))
-* **apps/web:** Update auth redirects, i18n routing and middleware config ([5879a4e](https://github.com/gameguild-gg/gameguild/commit/5879a4ed6daeb1c46d158f49e4f0425b80db0440))
-* **apps/web:** Update contributors header and add contribution guide ([c65d14c](https://github.com/gameguild-gg/gameguild/commit/c65d14cf810753d97faa8eb02d6a46a93fd6177e))
-* **apps/web:** Update course actions and add course editor context ([d6e12e4](https://github.com/gameguild-gg/gameguild/commit/d6e12e4c3a4425556872c5f9faa4e65d88076e98))
-* **apps/web:** Update dashboard layout with auth and styling ([89c1d1f](https://github.com/gameguild-gg/gameguild/commit/89c1d1fbacf3a0b64c0ebea26f0b32ea4a8f5c35))
-* **apps/web:** Update testing lab feedback page with dashboard layout ([da4336e](https://github.com/gameguild-gg/gameguild/commit/da4336e2b570c03147b6268dbff8fd836a1061a3))
-* **apps/web:** Update testing lab pages with placeholders ([ef4ddcb](https://github.com/gameguild-gg/gameguild/commit/ef4ddcb9f771f2e361c8e0f3219f9a77117f3185))
-* **apps/web:** Update token refresh logic for update events ([58839d2](https://github.com/gameguild-gg/gameguild/commit/58839d26f9888e946b54b62ff8d7f55d55d5b5f8))
-* **apps/web:** Update user profile to use session and add tenant switcher ([3a16d9e](https://github.com/gameguild-gg/gameguild/commit/3a16d9eb661697775e0a04375c4e950d36045623))
-* **apps/web:** Use slugs for test session routes ([756d7e9](https://github.com/gameguild-gg/gameguild/commit/756d7e90d51dbf77b8bbe65a2d58c8ed52da160e))
-* **apps/web:** Wrap testing pages in dashboard layout ([5bd3ccc](https://github.com/gameguild-gg/gameguild/commit/5bd3ccc4d6842fdaa07c91ce5dfa41ec06ffc91b))
-* **apps:** Add DAC auth and tenant mutations with enhanced error handling ([97f19a8](https://github.com/gameguild-gg/gameguild/commit/97f19a89cbc4babe4eeaead409ac0b7aabea8963))
-* **apps:** Add DB seeding, refine auth and Next.js migration ([cd35a37](https://github.com/gameguild-gg/gameguild/commit/cd35a37c488d77f18a12b16c7f33e45468428f8f))
-* **apps:** Add learning tracks and course dashboards ([57ef341](https://github.com/gameguild-gg/gameguild/commit/57ef3415a579bdc347574ed79b3948d6a8de41d6))
-* **apps:** Add project version endpoints and UI improvements ([9eee0cd](https://github.com/gameguild-gg/gameguild/commit/9eee0cdbfff523cc8a2763f59a141cb94134ab14))
-* **apps:** Add tenant management, admin login and super admin seeding ([7950ee3](https://github.com/gameguild-gg/gameguild/commit/7950ee3c9840b173a50139fbd6cc0419f1313f25))
-* **apps:** Enhance logging, permissions and UI theme toggle ([d930ecd](https://github.com/gameguild-gg/gameguild/commit/d930ecdd115c11e01b5c9757ee22a879aea22e59))
-* **apps:** Enhance token expiry, tenant context, and UI ([10cd356](https://github.com/gameguild-gg/gameguild/commit/10cd3565e856bc6910e5e49511bd1fa26ce11fef))
-* **auth/integration:** Implement NextAuth authentication and tenant integration ([1523555](https://github.com/gameguild-gg/gameguild/commit/1523555d9e0cb0c1e729a5319779952f058e3110))
-* **auth:** Add permission-based authorization attributes ([bc9ef86](https://github.com/gameguild-gg/gameguild/commit/bc9ef8660d7e22c69d0593e427a5ecd9fd20d823))
-* **auth:** Add tenant support to auth and JWT tokens ([e5dbeac](https://github.com/gameguild-gg/gameguild/commit/e5dbeacfac644832dcd8b23a03828d8473aa054e))
-* **auth:** Convert auth actions and JWT utilities to async ([ecf32e3](https://github.com/gameguild-gg/gameguild/commit/ecf32e3c0a0b2202f348b53df1d7d25bf93c8af9))
-* **auth:** Enhance token refresh logging and debugging ([164d562](https://github.com/gameguild-gg/gameguild/commit/164d562bbec8d34e6aa32c8639b4f5c9959aea90))
-* **auth:** Improve authentication and token refresh integration ([eda7e4e](https://github.com/gameguild-gg/gameguild/commit/eda7e4e72fd0d5d8236bb58fe642300684156e25))
-* **auth:** Improve refresh token rotation, logging and DB schema ([0a7576c](https://github.com/gameguild-gg/gameguild/commit/0a7576ce21148648d7fd9aca49b51e36dba0d0c2))
-* **auth:** Improve token refresh and auth hooks integration ([63bd7eb](https://github.com/gameguild-gg/gameguild/commit/63bd7eb7faa0589449a6742d5981efff7e783d03))
-* **auth:** Set 5 min JWT clock skew and add JWT utils ([c31815e](https://github.com/gameguild-gg/gameguild/commit/c31815ee7bba4c9a2c4dd72f6b66288892584f61))
-* **auth:** Use server actions for backend authentication ([d8243fe](https://github.com/gameguild-gg/gameguild/commit/d8243fe2f9d9a5e2162bc017d028e837bfdcc809))
-* **cms/graphql:** Add GraphQL type annotations to permission entities ([c26bcfa](https://github.com/gameguild-gg/gameguild/commit/c26bcfab4f305353bd1e8f4297a6f316376376d2))
-* **cms/tenant:** Enhance auth, DTO mapping, and auto-assign endpoints ([737502a](https://github.com/gameguild-gg/gameguild/commit/737502a2e5d46a8410285a44dae06dd83f6c6c91))
-* **cms:** Add comment permissions system with DAC layer 3 support ([b13f635](https://github.com/gameguild-gg/gameguild/commit/b13f635be800b51937b294f6eb75d2868dfa1da3))
-* **cms:** Add ProductPermission model with full DAC integration ([9af1a87](https://github.com/gameguild-gg/gameguild/commit/9af1a87d6eaf655a9540a516a3f3d492cb3f78c4))
-* **cms:** Create CMS module with RESTful and GraphQL APIs ([2f6a774](https://github.com/gameguild-gg/gameguild/commit/2f6a774be7426822b952c6210c1daf6d4d0ad83b))
-* **cms:** Implement ContentType permissions layer with migration ([00b9a6b](https://github.com/gameguild-gg/gameguild/commit/00b9a6bece1604b4bfe1cb25ca55c938e369a874))
-* **cms:** Implement Discretionary Access Control permission system ([ccc41a8](https://github.com/gameguild-gg/gameguild/commit/ccc41a8d6e52dfffe6b435129e4e335a17d4709b))
-* **cms:** Remove ResourcePermission entity and references ([834764c](https://github.com/gameguild-gg/gameguild/commit/834764cdac0e9ad9d23155e92123074198994280))
-* **cms:** Remove role-based permission system and prepare for DAC ([528d271](https://github.com/gameguild-gg/gameguild/commit/528d2716a8a1ac3ce440be471e16e2a2cd8c5a73))
-* **common/filters:** Improve period selectors with type safety ([810c1ec](https://github.com/gameguild-gg/gameguild/commit/810c1ec902d178e7c2479e63529e42664b707eaf))
-* **common/header:** Add user profile dropdown and sign-in flow ([2c51ae2](https://github.com/gameguild-gg/gameguild/commit/2c51ae213b45d7ff3bcb5e670c45856f7a546b69))
-* **common:** Add string conversion utilities for snake_case and slugs ([b49e05e](https://github.com/gameguild-gg/gameguild/commit/b49e05eac86b0e87a6147b737e4184d053adcb0e))
-* complete course content integration and fix image loading issues ([b127462](https://github.com/gameguild-gg/gameguild/commit/b1274629e1899ef853e8d055a693d259514a6411))
-* **components/filters:** Enhance period selector with tooltips and dynamic quarters ([bb0e7f8](https://github.com/gameguild-gg/gameguild/commit/bb0e7f84c39afd0ea6598eaaf55daa1b1fc83f2a))
-* **components:** Add generic data views and enhanced filter system ([287940d](https://github.com/gameguild-gg/gameguild/commit/287940d322c971a0b668b6a0d55a92c347f96445))
-* **components:** Add reusable data display and filter components ([9c167a9](https://github.com/gameguild-gg/gameguild/commit/9c167a90963a09c46bee9f432188cd3f6e883556))
-* consolidate API generation and improve developer experience ([e445e21](https://github.com/gameguild-gg/gameguild/commit/e445e21fc810572db2ac78c46cca4af1ebf76bcd))
-* **content/coding:** Integrate clang/pyodide and restructure editor ([b12c867](https://github.com/gameguild-gg/gameguild/commit/b12c86744b0d0940278a022de8bfba457fb29a66))
-* **course-editor:** Add certificates, delivery, help, publish, SEO and content structure pages ([83d0b97](https://github.com/gameguild-gg/gameguild/commit/83d0b97fc588641fff11144c1e6f08c806aaf718))
-* **courses:** add some old courses content ([95cc111](https://github.com/gameguild-gg/gameguild/commit/95cc111afc3c0f945bce5ffdc2c32c10f5e9ac84))
-* **dashboard/layout:** Remove sidebar trigger and add sidebar component ([a818506](https://github.com/gameguild-gg/gameguild/commit/a8185069609379ccb9f86c3debdf1c54fe577d00))
-* **dashboard/sidebar:** Update icon containers and labels ([b478559](https://github.com/gameguild-gg/gameguild/commit/b478559d851fa14a4f2aac90ca491b355e1f176f))
-* **dashboard/tenant:** Reorganize UI components and add tenant utilities ([d578f74](https://github.com/gameguild-gg/gameguild/commit/d578f74257a0493b8daae3e1bd103fda3c3aeaa9))
-* **dashboard/testing-lab:** Add reports feedback page and remove submit page ([0001a9c](https://github.com/gameguild-gg/gameguild/commit/0001a9cfc7b617b473e142754cf03007c9df0e75))
-* **dashboard/testing-lab:** Enhance sessions UI with detailed list and table ([7eb8907](https://github.com/gameguild-gg/gameguild/commit/7eb8907fbafad6b232259158407ec6d35aa7f3ad))
-* **dashboard/testing-lab:** Pass testing requests data to list ([d96bceb](https://github.com/gameguild-gg/gameguild/commit/d96bceb3ed68996debc01d4786eb44b36e696954))
-* **dashboard:** Integrate API endpoints and SSR actions ([a6a3664](https://github.com/gameguild-gg/gameguild/commit/a6a366459b4cb5260b0bb965cba71f4a01be9a4e))
-* **dashboard:** Revamp courses, achievements, tenants and user detail pages ([111916a](https://github.com/gameguild-gg/gameguild/commit/111916a1e104509689a259fb12bb0f1b7c5b6f7d))
-* **dashboard:** Revamp tenant and user pages and remove legacy achievements ([92f0e8d](https://github.com/gameguild-gg/gameguild/commit/92f0e8dd5b5da7726637f6a02ec3e84b76476f8e))
-* **dashboard:** Revamp testing lab layouts and sidebar ([019cca7](https://github.com/gameguild-gg/gameguild/commit/019cca7e709db7257c4275a8fc94582c3ac0673a))
-* **dashboard:** Update analytics and overview pages ([bb95dac](https://github.com/gameguild-gg/gameguild/commit/bb95dac94b0b3224e10bc3478cb19a1556583e80))
-* **docker:** Add multi-stage Dockerfile and update docker-compose configuration ([ba2f7f2](https://github.com/gameguild-gg/gameguild/commit/ba2f7f2aae1a8575449abde202816ad3f0e3125a))
-* **editor:** API client and new GUI for editor ([3c44204](https://github.com/gameguild-gg/gameguild/commit/3c442047833a5727161b5bcf7a3a34ac0a010d80))
-* **graphql:** Add 3-layer DAC authorization for GraphQL APIs ([0fd472d](https://github.com/gameguild-gg/gameguild/commit/0fd472d40287a594aeb09a5a2a231927f3badcd6))
-* **lib/sync:** Implement multi-adapter sync system ([b3c727d](https://github.com/gameguild-gg/gameguild/commit/b3c727d2bf595147fd17e79a3da32627e6583b25))
-* **markdown:** add markdown renderer ([d7d7679](https://github.com/gameguild-gg/gameguild/commit/d7d76791a43716c16b63878abb806d3ea9de44c6))
-* **mods/programs:** Add progress and enrollment ([9c25f08](https://github.com/gameguild-gg/gameguild/commit/9c25f08464ad44db55743c3fe1ef19d2755ccafb))
-* **modules/auth:** Implement complete authentication module ([7481505](https://github.com/gameguild-gg/gameguild/commit/7481505285d581a150594384559820ef641dac19))
-* **modules/team:** Add team models and enums ([71a9086](https://github.com/gameguild-gg/gameguild/commit/71a9086a3ffe680a7196e5fd1e5e8cad6b92cd92))
-* **modules/tenant:** Add tenant domain and auto-assignment functionality ([bf1afc2](https://github.com/gameguild-gg/gameguild/commit/bf1afc24ed20a12da956b75589da73338cb26dec))
-* **modules/tenant:** Implement multi-tenancy and RBAC support ([c9622a8](https://github.com/gameguild-gg/gameguild/commit/c9622a8a02767637ffb8607449a04ecdefc1eb99))
-* **modules/user-achievements:** Add user achievements module ([c094cd0](https://github.com/gameguild-gg/gameguild/commit/c094cd003178a789408161b91672a1fbb880b14b))
-* **modules/userprofile:** Add user profile module ([10be4a8](https://github.com/gameguild-gg/gameguild/commit/10be4a80d09a4789fbfe5c162b494c58c4b27e3a))
-* **modules/users:** Revamp user commands, events, and GraphQL endpoints ([f9d8fce](https://github.com/gameguild-gg/gameguild/commit/f9d8fced3f3d97873d86a742593e4ae4437d3a10))
-* **modules/vote:** Add new vote model, type, and service interface ([943e70a](https://github.com/gameguild-gg/gameguild/commit/943e70a6078438d1a4b677864ad5f38c05633c96))
-* **modules:** Add certificate, feedback, kyc, payment, product, program, tag, subscription modules ([5d874a9](https://github.com/gameguild-gg/gameguild/commit/5d874a97c772bbb0cf4b9a0ec73dcb9b73954dee))
-* **payment-commerce:** Add payments, subscriptions and analytics modules ([2aa86f1](https://github.com/gameguild-gg/gameguild/commit/2aa86f1fa93d61e5f7e2ed74c3544421d3696092))
-* **payments:** Add payments actions API endpoints ([e992a93](https://github.com/gameguild-gg/gameguild/commit/e992a93f7b3ab8f4e5313ff6a46ebf90316bb2d3))
-* **permission:** Add Delete permission as alias for SoftDelete ([f2a8f09](https://github.com/gameguild-gg/gameguild/commit/f2a8f096dd1234594e81ddd74779ffe652e66d05))
-* **permission:** Implement modular permission architecture with capability-based DAC strategy ([02d29a2](https://github.com/gameguild-gg/gameguild/commit/02d29a20c086603a381d0efbcff2781198030e39))
-* **permission:** Implement modular permission system with enhanced granularity ([4a2ed87](https://github.com/gameguild-gg/gameguild/commit/4a2ed877abf378fcdfb09ee6ab3a12282a3bd865))
-* **permissions:** Add SimplePermissionService and default permission template handling ([82c47f3](https://github.com/gameguild-gg/gameguild/commit/82c47f32f52bf478c430a0756b45db55b11beb04))
-* **posts:** Add posts module with event-driven social features ([b67e041](https://github.com/gameguild-gg/gameguild/commit/b67e041d5a64179e80f60ccf71882deff23983fc))
-* **prettier-config:** Update config settings ([0f4c6e3](https://github.com/gameguild-gg/gameguild/commit/0f4c6e3b2c9c0126de15d75b0fa344c5e8792a6f))
-* **program:** Add Program module with DAC permissions ([f0c650c](https://github.com/gameguild-gg/gameguild/commit/f0c650c4831bd8336cada31b9ce962a148735f21))
-* **program:** Add ProgramContent module with permissions inheritance ([38baace](https://github.com/gameguild-gg/gameguild/commit/38baace804f03abd87a9e16b9f2a3115f969ce46))
-* **program:** Add verification, enrollment status and wishlist features ([cf272d9](https://github.com/gameguild-gg/gameguild/commit/cf272d90b979e9a89114a9cf3f3ae2f9416a08bb))
-* **projects/database:** Create comprehensive project platform schema ([a576f30](https://github.com/gameguild-gg/gameguild/commit/a576f30ad4c2ee154aef8bb3b228fa66b47191cd))
-* **projects:** Add comprehensive project platform database schema ([cbee521](https://github.com/gameguild-gg/gameguild/commit/cbee521e01adae7aa2158b86402b0f16d21e5bbd))
-* **projects:** Add onProjectCreated callback and update project UI styles ([c7a1153](https://github.com/gameguild-gg/gameguild/commit/c7a11530b50f21ce3f31a7e079e3afe1a86ed409))
-* remove USE_IN_MEMORY_DB and clean up database configuration ([59413ae](https://github.com/gameguild-gg/gameguild/commit/59413ae509df79b45f41e5b0580a8c19556a731c))
-* **server-actions:** Add comprehensive modules for activity tracking, commerce, communication and content management ([cf003d3](https://github.com/gameguild-gg/gameguild/commit/cf003d398a7eb27c36280930bf5b7b4ac62a6846))
-* **sync:** Add storage adapters, caching & sync provider ([bb48a19](https://github.com/gameguild-gg/gameguild/commit/bb48a19579423eff90892720059e7f991fc37772))
-* **system:** Integrate payment gateway and course completion UI ([d5618ad](https://github.com/gameguild-gg/gameguild/commit/d5618ad4b2e9b4ef0ffddc0f71a1499799ed9673))
-* **tenant:** Add tenant detail view, update auth token and remove legacy managers ([55db845](https://github.com/gameguild-gg/gameguild/commit/55db845a1927f6f4b3ca2b569672798e7ca90a61))
-* **tenant:** Replace UserTenant with TenantPermission for flexible permission system ([964b374](https://github.com/gameguild-gg/gameguild/commit/964b3748559cfa9ecaf16e5731999e5447a7d5d1))
-* **tenants:** Add tenant actions and update import paths ([5c3a8e8](https://github.com/gameguild-gg/gameguild/commit/5c3a8e8a85af90943d7010d2918565b59f6573e1))
-* **testing-lab/users:** Add comprehensive user testing actions ([bbf1e65](https://github.com/gameguild-gg/gameguild/commit/bbf1e65e51e9aba92a546ef2e0fd614b40793f57))
-* **testing-lab:** Add attendance endpoints and tracker props ([876bd17](https://github.com/gameguild-gg/gameguild/commit/876bd1733c9e6dfbacb2f161c56170feefb009f2))
-* **testing-lab:** Add comprehensive server actions and reorganize structure ([7b408d4](https://github.com/gameguild-gg/gameguild/commit/7b408d48052828204f6faf5deb7930fedc5a1a8c))
-* **testing-lab:** Add detail components for feedback and session ([a59e25e](https://github.com/gameguild-gg/gameguild/commit/a59e25e1d3ba65828658418bf3025a5dce8f1921))
-* **testing-lab:** Add manage permissions button ([b726bdc](https://github.com/gameguild-gg/gameguild/commit/b726bdc1c5cfc4c8419ee367ecf7d483b1b0f50a))
-* **testing-lab:** Add settings module with API endpoints and web integration ([1f95e3c](https://github.com/gameguild-gg/gameguild/commit/1f95e3c4163022944c7ddfa5b14e7eb4d0634eef))
-* **testing-lab:** Add simplified testing workflow endpoints and UI ([c5a3b14](https://github.com/gameguild-gg/gameguild/commit/c5a3b1472aefdfde80a95d68dfaa4e5e1fdc5c1c))
-* **testing-lab:** Replace role-based fetch with server actions ([3a47f71](https://github.com/gameguild-gg/gameguild/commit/3a47f7137701cdff34e066b4e58114c795a29739))
-* **testing-lab:** Replace todos with API-driven data fetching ([d2c9a92](https://github.com/gameguild-gg/gameguild/commit/d2c9a92fac79c3fa3a445f057f6da2e855534afb))
-* **testing-lab:** Update layout and UI styling ([60d5ba7](https://github.com/gameguild-gg/gameguild/commit/60d5ba758d13839281a0142508dbccfd3be8b7ae))
-* **testing-lab:** Update UI styling and layout ([6e755c5](https://github.com/gameguild-gg/gameguild/commit/6e755c59f6bf4a366cb37fb055e6bade7abfd11e))
-* **tests/api:** Add API tests project and reorganize solution structure ([b857d90](https://github.com/gameguild-gg/gameguild/commit/b857d90ba559aa3f31d35428cd8cac90ec36db99))
-* **tests:** Add integration tests & style config ([55a0ae6](https://github.com/gameguild-gg/gameguild/commit/55a0ae608d8cc71c93cc5243ac816f1d52ab00c0))
-* **ui:** Add comprehensive UI component library ([f79305b](https://github.com/gameguild-gg/gameguild/commit/f79305b8e51a2d0f3a798fc2e1ccc77a9f123f37))
-* **user-management:** Add comprehensive and enhanced user actions ([c37fe1d](https://github.com/gameguild-gg/gameguild/commit/c37fe1d36ce558f6365dd7352fc808e69b1d921c))
-* **users:** Add enhanced filtering and management UI ([ddda13f](https://github.com/gameguild-gg/gameguild/commit/ddda13fce6258060ef43d6885da6af7288f55df3))
-* **web:** Add API type generation and client integration ([2c36823](https://github.com/gameguild-gg/gameguild/commit/2c368239be368a290a9f1a5cfdeb7715b13a5cab))
-* **web:** Add auth page, improvements docs, and track data ([19654cc](https://github.com/gameguild-gg/gameguild/commit/19654cc80500df62b585f2f43af6bb2bc829d244))
-* **web:** New middleware for subdomain-aware i18n routing ([aa96982](https://github.com/gameguild-gg/gameguild/commit/aa969827c2e63d6f50eea72d1a3bd8e36e19d058))
-
+* **admin:** Add user management, roles and analytics
+  features ([6c85f40](https://github.com/gameguild-gg/gameguild/commit/6c85f40c6b3ea1986383438691ebfe5efe5de548))
+* **analytics/web-vitals:** Enable sendBeacon and fetch
+  reporting ([c1100f1](https://github.com/gameguild-gg/gameguild/commit/c1100f14366a6d878213d2d57bf1e140c6be5b75))
+* **api/payments:** Add comprehensive payment
+  tests ([b52af26](https://github.com/gameguild-gg/gameguild/commit/b52af26472a7111578ddf2c6785a4826fab2c154))
+* **api/products:** Add publish and unpublish commands with role
+  validation ([054a78c](https://github.com/gameguild-gg/gameguild/commit/054a78c7017873acf452c1e2f509c9a1365fcf51))
+* **api/swagger:** Add JWT authentication support to Swagger
+  UI ([d7be8cd](https://github.com/gameguild-gg/gameguild/commit/d7be8cdbe4ca48cd65cb8a5d7e065850652e3845))
+* **api/web:** Add attendance endpoints and reporting
+  features ([2a46f5e](https://github.com/gameguild-gg/gameguild/commit/2a46f5e0e3ab5a7381c30cdb1e43a00750caaf09))
+* **api/web:** Add GET /users/me endpoint and integrate with web
+  app ([eace8e6](https://github.com/gameguild-gg/gameguild/commit/eace8e6d1ba3e0592a30e509f303a28b0831aaa6))
+* **api/web:** Add Google token auth and course
+  enhancements ([4ec7e3f](https://github.com/gameguild-gg/gameguild/commit/4ec7e3f7d23fb5d939400358c03b64e5e77f754e))
+* **api/web:** Add UpdateAttendance DTO and explicit score type
+  annotation ([ff858cd](https://github.com/gameguild-gg/gameguild/commit/ff858cd541eb79eec0b19912bbbd4546325344d5))
+* **api/web:** Enhance tenant management with global admin
+  support ([172f721](https://github.com/gameguild-gg/gameguild/commit/172f7216b4514f77a7ee913571ca3b3db59f57de))
+* **api/web:** Update role template endpoints for id/name
+  support ([daac91f](https://github.com/gameguild-gg/gameguild/commit/daac91fc9ae920fb7f52f1b27115f529b2c7ff21))
+* **api:** Add NameIdentifier claim and improve session
+  tests ([29b46d8](https://github.com/gameguild-gg/gameguild/commit/29b46d85c143d0ad080bcfd2f7c3a1b04e31b39e))
+* **api:** Add optimized projects query & enforce DataLoader
+  defaults ([6c859b9](https://github.com/gameguild-gg/gameguild/commit/6c859b9811ced06aa05aaaebafb86a54451cc315))
+* **api:** Add TestingSession permissions and
+  seeder ([8ccbfeb](https://github.com/gameguild-gg/gameguild/commit/8ccbfeb18e851180f84c8dba3775f375cd6bf5eb))
+* **api:** Enhance logging and update GraphQL
+  tests ([67df9fd](https://github.com/gameguild-gg/gameguild/commit/67df9fd8a435be131482ac8f411117912d6f9fad))
+* **api:** Enhance product queries with
+  filters ([56bfc70](https://github.com/gameguild-gg/gameguild/commit/56bfc703f9371df1e65a2258b2aebb3ec4aa4efc))
+* **api:** Refine tenant permissions and auth
+  tests ([89bb021](https://github.com/gameguild-gg/gameguild/commit/89bb0212701e06c23a9f175ee2053cddc01e6f56))
+* **apps/api,apps/web:** Add courses pages, notifications, header, and migration
+  updates ([46841fa](https://github.com/gameguild-gg/gameguild/commit/46841fa3bd3af5437b72b3a23e1ce5f73dd758d7))
+* **apps/api,apps/web:** Integrate Google OAuth sign-in and profile
+  creation ([ce7f427](https://github.com/gameguild-gg/gameguild/commit/ce7f427d76c87a002cd152e6648b57e42bb28d0b))
+* **apps/api,apps/web:** Update testing workflow and sidebar
+  integration ([f8d408a](https://github.com/gameguild-gg/gameguild/commit/f8d408a2f64489db31babcb244eb913c95396853))
+* **apps/api/programs:** Add rating model and update enrollment
+  status ([146ef7e](https://github.com/gameguild-gg/gameguild/commit/146ef7e1138afd54fb8dfdaeaf1fd8e437666759))
+* **apps/api/tenants:** Implement CQRS endpoints and
+  validators ([5cb192c](https://github.com/gameguild-gg/gameguild/commit/5cb192c82caebc6a644db609cb9aae29e1414fb9))
+* **apps/api/tests:** Update GraphQL introspection
+  config ([e1cd163](https://github.com/gameguild-gg/gameguild/commit/e1cd16387e702e3ee32aafae5c1e73e9db395a02))
+* **apps/api:** Add achievement configurations and default DataLoader
+  options ([50f2784](https://github.com/gameguild-gg/gameguild/commit/50f27847e4dbf5be466777f31eec71742fcb03c5))
+* **apps/api:** Add ActivityGrade and ContentInteraction modules with permission
+  inheritance ([b1815b1](https://github.com/gameguild-gg/gameguild/commit/b1815b10d7c60a9241e6384cd7e7f2d1b55876c3))
+* **apps/api:** Add ActivityGrade and ContentInteraction modules with permission
+  inheritance ([1ced743](https://github.com/gameguild-gg/gameguild/commit/1ced7439e9bc5278bd9dcf25525178dd86b7ac19))
+* **apps/api:** Add auth, payment, and subscription
+  modules ([160a8ee](https://github.com/gameguild-gg/gameguild/commit/160a8ee4364197ea9acd7c8bcf0398069574d935))
+* **apps/api:** Add auto-enrollment and program CQRS
+  endpoints ([cc86f22](https://github.com/gameguild-gg/gameguild/commit/cc86f22eabb0d3bde7d8752df948926f3b945ead))
+* **apps/api:** Add bulk user profile commands and update migration
+  names ([6c9dabe](https://github.com/gameguild-gg/gameguild/commit/6c9dabe1d1ef57acc34e12dbbfefa9d72ae7e6c9))
+* **apps/api:** Add cancel payment command
+  handler ([23ecab5](https://github.com/gameguild-gg/gameguild/commit/23ecab5dad1e8fecf845a01e7be7303cfce21de0))
+* **apps/api:** Add comprehensive mock data
+  seeding ([a56cfc9](https://github.com/gameguild-gg/gameguild/commit/a56cfc984f14a3f460267474c1d61ce0f498128d))
+* **apps/api:** Add DbContextFactory support for GraphQL
+  DataLoaders ([73cc000](https://github.com/gameguild-gg/gameguild/commit/73cc000cba16755046acd161a55ebdc0006b2ff8))
+* **apps/api:** Add default CORS and conditional sample
+  seeding ([2327a6d](https://github.com/gameguild-gg/gameguild/commit/2327a6dc2ef28395305c85efcd5ee428f9214717))
+* **apps/api:** Add domain events, resource config and user profiles
+  handlers ([92e0f17](https://github.com/gameguild-gg/gameguild/commit/92e0f177687f1ecde690292cc58ab28ce196d9a3))
+* **apps/api:** Add email lookup and duplicate check in user
+  service ([6c2e82b](https://github.com/gameguild-gg/gameguild/commit/6c2e82be7be7c6e9993330b55294a232068db6df))
+* **apps/api:** Add feedback reporting and rating
+  endpoints ([830d6e6](https://github.com/gameguild-gg/gameguild/commit/830d6e627af353fe221e0ece7020558ef00bef83))
+* **apps/api:** Add GET user memberships endpoint and update
+  tests ([faaf36a](https://github.com/gameguild-gg/gameguild/commit/faaf36a43f891e42270cf699936e3021233a5e88))
+* **apps/api:** Add ManagerId field to
+  sessions ([14e8a67](https://github.com/gameguild-gg/gameguild/commit/14e8a674d6423ed5bb71645b83aee50134efadbf))
+* **apps/api:** Add payments, products, and programs
+  modules ([14f40c1](https://github.com/gameguild-gg/gameguild/commit/14f40c18b698c55b07f5f6b3a285e77fa4624d10))
+* **apps/api:** Add product handlers and update status
+  enum ([b39078b](https://github.com/gameguild-gg/gameguild/commit/b39078b4e014e0422b66b3edf49c9935a16b680f))
+* **apps/api:** Add product stats query and update deletion test
+  threshold ([86eea2d](https://github.com/gameguild-gg/gameguild/commit/86eea2d570c62669ea0d2a5318f571db47470483))
+* **apps/api:** Add program flow
+  documentation ([60af355](https://github.com/gameguild-gg/gameguild/commit/60af3553943679b5f74741cb41d37f2731ae17a3))
+* **apps/api:** Add tenant module commands, handlers, queries, and
+  validators ([e345395](https://github.com/gameguild-gg/gameguild/commit/e3453958c66d71649ca0e291680ad90a0f9d6623))
+* **apps/api:** Add testing lab URL and achievements
+  schema ([0a2471f](https://github.com/gameguild-gg/gameguild/commit/0a2471fe2adc82d994a839a45f71f3fa473ecdd0))
+* **apps/api:** Add TestingLab GraphQL types and test
+  helper ([581b8b6](https://github.com/gameguild-gg/gameguild/commit/581b8b6ffb0cad2da1d84c979aca913fb1c79bd2))
+* **apps/api:** Add user and tenant context middleware and
+  docs ([74e5005](https://github.com/gameguild-gg/gameguild/commit/74e50052f0cbde0ce8d6caa24dc7523b2f5438bf))
+* **apps/api:** Add user profiles, auth logging, program access checks and balance
+  normalization ([9f722fe](https://github.com/gameguild-gg/gameguild/commit/9f722fe0ef951acc54ff5fdc7dbc63904d55727c))
+* **apps/api:** Adopt CQRS pattern and add test module
+  support ([1e536ce](https://github.com/gameguild-gg/gameguild/commit/1e536ce21b80e757659f8ec4b8d9ffd33f1509af))
+* **apps/api:** Enhance DAC and module permission
+  management ([4003284](https://github.com/gameguild-gg/gameguild/commit/4003284ca3bac197662a42a102beb5486bf93f6f))
+* **apps/api:** Enhance payments module and add user
+  context ([78a67b3](https://github.com/gameguild-gg/gameguild/commit/78a67b39322b8b9a44dd0de1c58f11adf16e1612))
+* **apps/api:** Enhance user profiles with bulk ops and
+  validators ([871fb0f](https://github.com/gameguild-gg/gameguild/commit/871fb0f641cabdcfcae639d0f733defb7973b50e))
+* **apps/api:** Exclude soft-deleted products from global
+  statistics ([ec0e585](https://github.com/gameguild-gg/gameguild/commit/ec0e585084715c7a8acbe215587cd50253439893))
+* **apps/api:** Implement module-based permissions with testing lab
+  support ([1bbb823](https://github.com/gameguild-gg/gameguild/commit/1bbb823b3af538725190989c74946cc02030c91a))
+* **apps/api:** Integrate MediatR CQRS and add GraphQL data
+  loaders ([b7a09dd](https://github.com/gameguild-gg/gameguild/commit/b7a09dd752a5e0a2d6b69dac514f521fcd1701b8))
+* **apps/api:** Modernize authentication with CQRS & JWT
+  support ([14cc316](https://github.com/gameguild-gg/gameguild/commit/14cc316bfd896a99eed721bb2085dc8fa66933b4))
+* **apps/api:** Pass logger to GraphQL
+  config ([a6fbf47](https://github.com/gameguild-gg/gameguild/commit/a6fbf47792a08387a6813c97e31a1adaf90c2fc2))
+* **apps/api:** Refactor user GraphQL inputs and bulk
+  handlers ([4356420](https://github.com/gameguild-gg/gameguild/commit/4356420ee237082c1290934b2dc40b9587594706))
+* **apps/api:** Replace Error with ErrorMessage for localized error
+  handling ([a6a65df](https://github.com/gameguild-gg/gameguild/commit/a6a65df9a68626286215e4fd1e09c941d411d55b))
+* **apps/api:** Toggle mock seeding via env
+  var ([76dcac6](https://github.com/gameguild-gg/gameguild/commit/76dcac6f2a87123cde45abf6f9bccf97499e0314))
+* **apps/api:** Update payment flow and API
+  endpoints ([12a9109](https://github.com/gameguild-gg/gameguild/commit/12a9109642a1ef0981eea241b9cc84f0df433306))
+* **apps/api:** Update ratings schema and add new
+  tables ([eda8402](https://github.com/gameguild-gg/gameguild/commit/eda8402ccb18ac48b1899c1c848753dfaa1abd33))
+* **apps/api:** Update test fixture and endpoint
+  routes ([ea860d2](https://github.com/gameguild-gg/gameguild/commit/ea860d2a68276bb45e1ab3441cd8fc1ae169e939))
+* **apps/api:** Update to global project default
+  permissions ([5b09eb2](https://github.com/gameguild-gg/gameguild/commit/5b09eb2f749a0f4acd4fc8764738d682043d4b2c))
+* **apps/cms/auth:** Integrate CQRS, JWT and refactor
+  namespaces ([acc1494](https://github.com/gameguild-gg/gameguild/commit/acc149485aed28ddff4493d2e1edc7ae08be32bf))
+* **apps/cms:** Add bulk tenant permission and register HTTP context
+  accessor ([44a6384](https://github.com/gameguild-gg/gameguild/commit/44a6384b5a346d82cafb428071d7cebc8540d700))
+* **apps/cms:** Add comment, follower, rating, vote, and project module
+  entities ([48f5546](https://github.com/gameguild-gg/gameguild/commit/48f5546137fd575457bcbbe0458e87c8ed125dbf))
+* **apps/cms:** Add Jam, Reputation and UserProfile modules and refactor project and team
+  models ([e91ceff](https://github.com/gameguild-gg/gameguild/commit/e91ceff434f38f1b9eb51e668a618a7cf70bd0bc))
+* **apps/cms:** Add localization and permission
+  entities ([9ae9020](https://github.com/gameguild-gg/gameguild/commit/9ae9020aa857b42580a3cbc5ca9e3bc31b26fde4))
+* **apps/cms:** Add project module with permissions and GraphQL
+  integration ([3316dcb](https://github.com/gameguild-gg/gameguild/commit/3316dcb3741fb3570e829703887ef3848796a80c))
+* **apps/cms:** Add testing lab module
+  models ([5f0d49c](https://github.com/gameguild-gg/gameguild/commit/5f0d49ca0d9b3075c0356a30416115108ffc7aec))
+* **apps/cms:** Add TestingLab module with controllers, models, services and
+  tests ([41cc19d](https://github.com/gameguild-gg/gameguild/commit/41cc19d1abfac3a0e1eb5f996a18167466ee8e56))
+* **apps/cms:** Enhance project models, permissions, and
+  tests ([bacabd7](https://github.com/gameguild-gg/gameguild/commit/bacabd7e8071a31a8a4f2a5ef364471907a41941))
+* **apps/cms:** Implement BaseEntity and modular CMS
+  architecture ([8cf4b33](https://github.com/gameguild-gg/gameguild/commit/8cf4b338c2d19bd85f36a9915b73687ddf8157c8))
+* **apps/cms:** Integrate project permissions and auto-generate
+  slugs ([1cb6ed1](https://github.com/gameguild-gg/gameguild/commit/1cb6ed1b192d5f80c768917dfe634739e69a4ac5))
+* **apps/cms:** Integrate reputation system and remove legacy
+  roles ([43c6836](https://github.com/gameguild-gg/gameguild/commit/43c683643bacf64fd78bd67e9c9153050d408ee8))
+* **apps/cms:** Integrate TestingLab GraphQL API, DTOs, and
+  tests ([90b4667](https://github.com/gameguild-gg/gameguild/commit/90b4667e596f72ee1f546d5e65dbf7fdcb58551b))
+* **apps/cms:** Introduce three-layer permission
+  system ([1107ad3](https://github.com/gameguild-gg/gameguild/commit/1107ad36102b57e636cf7969c2f2a569b11a9e9c))
+* **apps/cms:** Update project schema with slug validation and new
+  tables ([0ae0bc5](https://github.com/gameguild-gg/gameguild/commit/0ae0bc5c0500e63c25d32a1057abc82e14c270af))
+* **apps/course-editor:** Add context, reducer, and server
+  actions ([89fad5e](https://github.com/gameguild-gg/gameguild/commit/89fad5e4d2d41ab46655911a42f36d10c0ced899))
+* **apps/dashboard/testing-lab:** Add sidebar with calendar and quick
+  stats ([145784f](https://github.com/gameguild-gg/gameguild/commit/145784fa801702adf58c7f22abb55510493722b2))
+* **apps/dashboard:** Add dashboard header and sidebar content
+  components ([93746e2](https://github.com/gameguild-gg/gameguild/commit/93746e22a97379f0adc831b83fd10ca633da18e4))
+* **apps/dashboard:** Remove redundant analytics pages and add refresh
+  button ([85922ee](https://github.com/gameguild-gg/gameguild/commit/85922eec16c03fcca6ffd9bb8c217f8383fb42b7))
+* **apps/testing-lab/management:** Add UI components for feedback, requests, and
+  sessions ([965296a](https://github.com/gameguild-gg/gameguild/commit/965296a530f3857cc8d227711e03927954a4724d))
+* **apps/web-users:** Add SDK actions for
+  users ([3f80b9b](https://github.com/gameguild-gg/gameguild/commit/3f80b9b4011839b90aff3b0a8f37d7a49bc08c48))
+* **apps/web/activity-grades:** Add API actions for activity
+  grades ([d8939c2](https://github.com/gameguild-gg/gameguild/commit/d8939c2940f5e63ea1183a02fbcb78b23c81739c))
+* **apps/web/auth:** Revamp auth config and token
+  management ([ccabe92](https://github.com/gameguild-gg/gameguild/commit/ccabe92f073e520f176b581876c96b04d08be172))
+* **apps/web/components/content/markdown:** Add markdown content
+  component ([3527431](https://github.com/gameguild-gg/gameguild/commit/35274318e994fb1a89781555ba04950c43a476dd))
+* **apps/web/cookies:** Add enhanced consent and preferences
+  UI ([72d78a0](https://github.com/gameguild-gg/gameguild/commit/72d78a0ed824ca11eb92a39d1ffc5d066d3ad747))
+* **apps/web/courses:** Add course list UI and filtering
+  components ([7cb2f57](https://github.com/gameguild-gg/gameguild/commit/7cb2f576659e2cf667ee64bc6373988017e465bd))
+* **apps/web/dashboard:** Add fallback pages for subroutes and remove test
+  page ([5375e01](https://github.com/gameguild-gg/gameguild/commit/5375e012a29d5e0d5c021d15d9a9ed338fafa2b0))
+* **apps/web/dashboard:** Add modular dashboard overview
+  components ([cc332d6](https://github.com/gameguild-gg/gameguild/commit/cc332d60ddcd93e44016f5a17ca80c6044843733))
+* **apps/web/dashboard:** Revamp course editor
+  pages ([f13fabc](https://github.com/gameguild-gg/gameguild/commit/f13fabce5dbc881543a6ce855b16c02b240e2782))
+* **apps/web/dashboard:** Revise error, loading and not found
+  pages ([b9ba45e](https://github.com/gameguild-gg/gameguild/commit/b9ba45e2a7005ead80acccb23e3b179ac87b1f1f))
+* **apps/web/dashboard:** Update courses page with new API and course list
+  wrapper ([c3ecaf3](https://github.com/gameguild-gg/gameguild/commit/c3ecaf3386ee87c26d26d1eace3fb9547bad63ed))
+* **apps/web/editor:** Implement enhanced editor page with autosave and IndexedDB
+  support ([6f46cc9](https://github.com/gameguild-gg/gameguild/commit/6f46cc91796cbe1524dd6a1e10d1c0af9cc159c7))
+* **apps/web/feed:** Add recent activity and cache refresh
+  actions ([9ec8474](https://github.com/gameguild-gg/gameguild/commit/9ec847499d17aa2342b8ade98a7f038c5420953e))
+* **apps/web/legal/licenses:** Implement dynamic license
+  page ([a229aa8](https://github.com/gameguild-gg/gameguild/commit/a229aa82dfc47ce17e49aebc96fa154b10d95bd5))
+* **apps/web/posts:** Replace legacy actions with authenticated API
+  calls ([54d9e32](https://github.com/gameguild-gg/gameguild/commit/54d9e32668f0ed42c329747a57b98a8e199e2571))
+* **apps/web/testing-lab:** Add session grid, row, and table
+  views ([261d736](https://github.com/gameguild-gg/gameguild/commit/261d73628cfe0651008ac8bea6fe389ee7ea51ae))
+* **apps/web/testing-lab:** Add testing feedback list
+  component ([e93a01e](https://github.com/gameguild-gg/gameguild/commit/e93a01e314b5500775b707ff2c66ded1742cf10b))
+* **apps/web/testing-lab:** Refactor components to use server
+  data ([48652c1](https://github.com/gameguild-gg/gameguild/commit/48652c18265092b0a18b799082029fd709cd8e46))
+* **apps/web/testing-lab:** Revamp session pages and UI
+  components ([ba7f2b4](https://github.com/gameguild-gg/gameguild/commit/ba7f2b42f64eb9aba719885e5ee555a00a3d3e94))
+* **apps/web/testing-lab:** Update UI components and add session
+  form ([4bfcd57](https://github.com/gameguild-gg/gameguild/commit/4bfcd57f1b5fc319291c09897db82e23b764fef2))
+* **apps/web/users:** Add dynamic user detail and permissions
+  pages ([ca76f8b](https://github.com/gameguild-gg/gameguild/commit/ca76f8bbc52e8a7c93504ae6dee6651bf954d061))
+* **apps/web:** Add activity grading, achievements, profiles, and users
+  modules ([658b18f](https://github.com/gameguild-gg/gameguild/commit/658b18f1b8db68a11ece57f8480c28d1f1a85dfe))
+* **apps/web:** Add activity submission, reporting and peer review
+  features ([4882207](https://github.com/gameguild-gg/gameguild/commit/4882207f9807aeb2b9938f552861f9d72c3539fd))
+* **apps/web:** Add animated floating icons to testing lab
+  landing ([ff5c224](https://github.com/gameguild-gg/gameguild/commit/ff5c224cd38087a80d003c5fa781ce7e82f4fd17))
+* **apps/web:** Add attendance tracker
+  component ([36056e4](https://github.com/gameguild-gg/gameguild/commit/36056e4910ed97e3b40b76d01035e084e44764bd))
+* **apps/web:** Add auth debug and refine session
+  configuration ([15d0b58](https://github.com/gameguild-gg/gameguild/commit/15d0b588c751e2b61ded51c179b6d7c6f70c8268))
+* **apps/web:** Add auth error page and track context
+  exports ([23482ed](https://github.com/gameguild-gg/gameguild/commit/23482ed8c7c4d87fc1b5f90e1545b6cc2820c1cb))
+* **apps/web:** Add authenticated client and generated API
+  client ([e4655a4](https://github.com/gameguild-gg/gameguild/commit/e4655a42e7fca08433b5d22f99b0a00cce9994f7))
+* **apps/web:** Add certificate generation and progress
+  tracker ([9eb03aa](https://github.com/gameguild-gg/gameguild/commit/9eb03aa61db10fac3a4181b11ee68845d1bb18b5))
+* **apps/web:** Add cn utility for merging Tailwind
+  classes ([9e1831e](https://github.com/gameguild-gg/gameguild/commit/9e1831eb37e44660e60ba8a6d061346b38c1397b))
+* **apps/web:** Add community feed and improve sessions
+  handling ([e02aff0](https://github.com/gameguild-gg/gameguild/commit/e02aff05a80323f13e2b9e41faa5ab8b347c3b44))
+* **apps/web:** Add comprehensive community feed
+  system ([2def27d](https://github.com/gameguild-gg/gameguild/commit/2def27da3928aed5fdd72bb3207057865657b7c4))
+* **apps/web:** Add comprehensive component showcase and
+  examples ([ade2720](https://github.com/gameguild-gg/gameguild/commit/ade272075cce2a37f6ad42ea489e15acb19fd2e0))
+* **apps/web:** Add comprehensive content interaction
+  endpoints ([7a0b82f](https://github.com/gameguild-gg/gameguild/commit/7a0b82f63a4153a55981cb2d292e2c3b3d69d03b))
+* **apps/web:** Add comprehensive server actions across
+  modules ([fa02cba](https://github.com/gameguild-gg/gameguild/commit/fa02cbaf28b5b89d8cba9f86c92aef0b5d01d8d2))
+* **apps/web:** Add content interaction SDK
+  actions ([5c07ae9](https://github.com/gameguild-gg/gameguild/commit/5c07ae97e757005bb9fea59690be411ebe3cb48c))
+* **apps/web:** Add course catalog page and filtering
+  components ([ced1c0a](https://github.com/gameguild-gg/gameguild/commit/ced1c0a2661490205b78a01be6bae46b7a607231))
+* **apps/web:** Add course detail, location selector and create form
+  components ([3b41c50](https://github.com/gameguild-gg/gameguild/commit/3b41c505adfd05b354403704acd4451f75e64f3a))
+* **apps/web:** Add courses actions, context, and track
+  hook ([48873b4](https://github.com/gameguild-gg/gameguild/commit/48873b4edbb9444daef699da23269859c99116c7))
+* **apps/web:** Add courses and tracks layouts, error and loading
+  states ([d198d91](https://github.com/gameguild-gg/gameguild/commit/d198d9147969e6fdd0e38533535a126182799fcd))
+* **apps/web:** Add create project form and move version submission
+  form ([0eb3d4e](https://github.com/gameguild-gg/gameguild/commit/0eb3d4e7c30d173a11806d16d8b3e17c90045419))
+* **apps/web:** Add credentials actions for CRUD
+  operations ([6411f65](https://github.com/gameguild-gg/gameguild/commit/6411f659933583516932155c44a0ca3746c0ae1c))
+* **apps/web:** Add dashboard course editor
+  pages ([35d01ce](https://github.com/gameguild-gg/gameguild/commit/35d01ce656c4a9fb7d6094653110505c619f6f40))
+* **apps/web:** Add default modal and support error
+  children ([6d9a1b4](https://github.com/gameguild-gg/gameguild/commit/6d9a1b4301e551cf721ad6aa659161a43354bf4b))
+* **apps/web:** Add enhanced E2E tests for frontend-API
+  integration ([bc4a9c8](https://github.com/gameguild-gg/gameguild/commit/bc4a9c8e86b3a9553c21e540fdea838ba9dfeacf))
+* **apps/web:** Add enhanced permission and notification
+  types ([d2382ca](https://github.com/gameguild-gg/gameguild/commit/d2382caeb8dd9ba7224ed94ef9e848f1710aea93))
+* **apps/web:** Add enrollment and course detail
+  pages ([f98187c](https://github.com/gameguild-gg/gameguild/commit/f98187c2fae870adb9db15e6e0b9ba2940f0a4da))
+* **apps/web:** Add GitHub license content retrieval
+  function ([60b78d6](https://github.com/gameguild-gg/gameguild/commit/60b78d6c09130deab0ebb444cc4d8b1a83646e22))
+* **apps/web:** Add GraphQL, feed & tenant
+  tabs ([cc80d95](https://github.com/gameguild-gg/gameguild/commit/cc80d959f0d357653c693ede27388360871510be))
+* **apps/web:** Add health and database status
+  endpoints ([aa64591](https://github.com/gameguild-gg/gameguild/commit/aa645917317c05f936583c66b2191a7580148924))
+* **apps/web:** Add health check
+  endpoint ([5d87723](https://github.com/gameguild-gg/gameguild/commit/5d8772388eafa2e17d2a7e6d4d873a2dd728a646))
+* **apps/web:** Add i18n module with en-US
+  messages ([629b7a0](https://github.com/gameguild-gg/gameguild/commit/629b7a0847c9f73b52e57d00b9ce44099fbe0f26))
+* **apps/web:** Add instrumentation client for
+  monitoring ([57f8ec3](https://github.com/gameguild-gg/gameguild/commit/57f8ec36f67da5709874fc9495865082a05ae39a))
+* **apps/web:** Add join session form
+  component ([0ed37db](https://github.com/gameguild-gg/gameguild/commit/0ed37dbe7beb35d80317c3d255fdb052dac8b284))
+* **apps/web:** Add legal and social media links
+  components ([cbc0156](https://github.com/gameguild-gg/gameguild/commit/cbc01568e59f68a75602bb0593dad14f87bbbf6b))
+* **apps/web:** Add Lexical dependencies and update Monaco
+  editor ([021c838](https://github.com/gameguild-gg/gameguild/commit/021c838cf67e61f879897a3e3ddb54ae085eb2eb))
+* **apps/web:** Add local auth support and update
+  endpoints ([364b45c](https://github.com/gameguild-gg/gameguild/commit/364b45c489792ac31227d1d48064f36d4bf64b22))
+* **apps/web:** Add manifest, robots, and sitemap
+  endpoints ([507d7b2](https://github.com/gameguild-gg/gameguild/commit/507d7b291d0a6596d33fd05ba3d06fbb79055433))
+* **apps/web:** Add MarkdownContent and refactor feedback
+  UI ([6db2d98](https://github.com/gameguild-gg/gameguild/commit/6db2d98521aba5a3ae906e416e4bf30c92684e74))
+* **apps/web:** Add metadata debug log and update layout
+  imports ([f8dd6fc](https://github.com/gameguild-gg/gameguild/commit/f8dd6fc6dfcc65a8d7e9bae88feaaabf20a778d7))
+* **apps/web:** Add modular course editor
+  pages ([f86fed2](https://github.com/gameguild-gg/gameguild/commit/f86fed2c5056e8091e695220743651e374ef913a))
+* **apps/web:** Add new editor and course
+  sync ([8012576](https://github.com/gameguild-gg/gameguild/commit/8012576d7c8d6b281bc29e28558ed09f508c69cc))
+* **apps/web:** Add new subscription actions with API
+  integration ([22b2791](https://github.com/gameguild-gg/gameguild/commit/22b2791de4b6fc80b0a668f7b7fc57cb56853a77))
+* **apps/web:** Add not-found page and update dashboard
+  imports ([d6635bb](https://github.com/gameguild-gg/gameguild/commit/d6635bb0a16039b9b96f282d062772aff2bb1c2d))
+* **apps/web:** Add onRequestError logging
+  function ([8349362](https://github.com/gameguild-gg/gameguild/commit/83493620dae72e5e84679c3d324a0923ed105152))
+* **apps/web:** Add payments SDK action
+  endpoints ([657ce51](https://github.com/gameguild-gg/gameguild/commit/657ce51c3ebf64f68a6b26931cda88c518a729e0))
+* **apps/web:** Add posts actions
+  endpoints ([e664479](https://github.com/gameguild-gg/gameguild/commit/e664479de2e244085a2121caf011bcdd91dcccef))
+* **apps/web:** Add program management
+  suite ([d23b6ac](https://github.com/gameguild-gg/gameguild/commit/d23b6acf862e7671854553d41f81b0449e0f4758))
+* **apps/web:** Add programs SDK
+  actions ([d892b2c](https://github.com/gameguild-gg/gameguild/commit/d892b2cdfcf4e30b1a4f536e3c02d4393221ef52))
+* **apps/web:** Add project and testing lab pages with server
+  actions ([80a83c7](https://github.com/gameguild-gg/gameguild/commit/80a83c7b72a0144ce1c1b4fa6f30b99c3e1cd57e))
+* **apps/web:** Add refresh token debug
+  info ([05cf649](https://github.com/gameguild-gg/gameguild/commit/05cf64999ed4935c91d4dd741457addf80e40071))
+* **apps/web:** Add roadmap, stats, and updated contribution
+  UI ([4cac003](https://github.com/gameguild-gg/gameguild/commit/4cac003cbb3a29dd80b9b37193d113ad6433375d))
+* **apps/web:** Add slug generation and update course
+  links ([aae436b](https://github.com/gameguild-gg/gameguild/commit/aae436b1bdb8d418890b2f6511436d30c6553dcf))
+* **apps/web:** Add sticky headers and collapsible sections to course
+  pages ([07a51df](https://github.com/gameguild-gg/gameguild/commit/07a51dff75af9f0642dffde8d94ab4118e1378bb))
+* **apps/web:** Add support to
+  themes ([78e9b7a](https://github.com/gameguild-gg/gameguild/commit/78e9b7a5fc03e4b9f700728e88dccae626b05009))
+* **apps/web:** Add system and database health
+  actions ([7219cd7](https://github.com/gameguild-gg/gameguild/commit/7219cd7a169418c8ecc3daef9a051a029406a424))
+* **apps/web:** Add tenant domains actions and update token
+  usage ([44c5e65](https://github.com/gameguild-gg/gameguild/commit/44c5e659122efe9a525ae5b94d80d3146833ff55))
+* **apps/web:** Add testing feedback list UI and update
+  dependencies ([b515fb6](https://github.com/gameguild-gg/gameguild/commit/b515fb60c3158f369cee0bab0c9070567793ce0d))
+* **apps/web:** Add testing feedback SDK
+  actions ([686df2e](https://github.com/gameguild-gg/gameguild/commit/686df2e9a0dbe28244658f88bcbcf2438d8157c7))
+* **apps/web:** Add testing lab auth layout and error/loading
+  components ([e533028](https://github.com/gameguild-gg/gameguild/commit/e5330280ab54369890977c3ea8c0b026fa6ccf0b))
+* **apps/web:** Add Testing Lab
+  functionality ([bb7a8e2](https://github.com/gameguild-gg/gameguild/commit/bb7a8e22fea342dae48afe92656d1493de0d28a7))
+* **apps/web:** Add testing lab page with
+  overview ([9033f43](https://github.com/gameguild-gg/gameguild/commit/9033f43f3f4b5783f659e743f9d9dc37a134b354))
+* **apps/web:** Add testing lab pages and feed server
+  actions ([f8d4476](https://github.com/gameguild-gg/gameguild/commit/f8d44767dfa7498989334d48b3a96379388b01f6))
+* **apps/web:** Add testing lab pages and progress
+  tracker ([8be6661](https://github.com/gameguild-gg/gameguild/commit/8be66618434ac9cce56372c63b44ad4dee07103f))
+* **apps/web:** Add testing lab requests management
+  UI ([49c1aaf](https://github.com/gameguild-gg/gameguild/commit/49c1aaff13b3817cebd64399b6ca29a7b7828fdf))
+* **apps/web:** Add testing lab roles actions and new dashboard
+  header ([206cfa1](https://github.com/gameguild-gg/gameguild/commit/206cfa1b9f0b412e41d911ad51fe10897b54d60c))
+* **apps/web:** Add testing lab roles and user role
+  endpoints ([65e294e](https://github.com/gameguild-gg/gameguild/commit/65e294e6a193b7d11744019fd750263cef172792))
+* **apps/web:** Add testing lab sessions UI
+  components ([b87ab09](https://github.com/gameguild-gg/gameguild/commit/b87ab0997ad7400c031fd4baec0a161e4df98b3b))
+* **apps/web:** Add testing lab settings
+  page ([4fa8ceb](https://github.com/gameguild-gg/gameguild/commit/4fa8ceb4f92e2cde3a8c568e7188eeb9ed179521))
+* **apps/web:** Add testing lab, courses, and peer review
+  features ([f3c187d](https://github.com/gameguild-gg/gameguild/commit/f3c187d3ceeaf3fcd2c94d1c8019aa25678bbd8f))
+* **apps/web:** Add Toaster to
+  layout ([26cd534](https://github.com/gameguild-gg/gameguild/commit/26cd534c2cf9a1e20551b0d493998d3d74da97ab))
+* **apps/web:** Add user form
+  component ([5e1fc18](https://github.com/gameguild-gg/gameguild/commit/5e1fc186026ef5f7b880689c479ea7c0f2acb74b))
+* **apps/web:** Add user profile and not found
+  pages ([5e31334](https://github.com/gameguild-gg/gameguild/commit/5e313348821713da073dd47da95548bd3ed9143d))
+* **apps/web:** Always fetch all tenants and add default tenant
+  fallback ([4deb02b](https://github.com/gameguild-gg/gameguild/commit/4deb02b4c1fce0d2fed6b446c5ad62b31fcbf6d1))
+* **apps/web:** Create testing requests
+  dashboard ([1b95f70](https://github.com/gameguild-gg/gameguild/commit/1b95f706f0c7e052f2a1e838de2bef0fd09f25af))
+* **apps/web:** Enable active link highlighting using current
+  pathname ([7fcb6a9](https://github.com/gameguild-gg/gameguild/commit/7fcb6a9ffec02a70d7874d1f40c3332f13da682f))
+* **apps/web:** Enforce key existence and add value
+  extractor ([7e04131](https://github.com/gameguild-gg/gameguild/commit/7e0413103a5e1618582b1473c89865009b116a98))
+* **apps/web:** Enhance auth callbacks for profile and tenant
+  updates ([09bab5f](https://github.com/gameguild-gg/gameguild/commit/09bab5f98be0bfa34f8fa211997c7e672763c094))
+* **apps/web:** Enhance auth token refresh and add achievements
+  actions ([cea92ef](https://github.com/gameguild-gg/gameguild/commit/cea92efa4f4a2cbaee4cd4154890c73bf56c3bae))
+* **apps/web:** Enhance authentication with tenant and session
+  management ([6d91d87](https://github.com/gameguild-gg/gameguild/commit/6d91d875a6864ef1131f8f8f693b9f384b874394))
+* **apps/web:** Enhance contributors UI and stats
+  layout ([afcf2b9](https://github.com/gameguild-gg/gameguild/commit/afcf2b9b4c5cbe8639b62ad49898539c4463224c))
+* **apps/web:** Enhance contributors UI with GitHub
+  integration ([6a7e5c7](https://github.com/gameguild-gg/gameguild/commit/6a7e5c76663eaf024492dcc1ebfa8d7d40b321a3))
+* **apps/web:** Enhance header and notifications UI
+  styles ([32d4d11](https://github.com/gameguild-gg/gameguild/commit/32d4d11a449a345fdce50d2881a26f4a5d1df744))
+* **apps/web:** Enhance intl and tenant
+  middleware ([a0c6506](https://github.com/gameguild-gg/gameguild/commit/a0c65062e9b35d2a2d1593a65aa1db0bb4aa9470))
+* **apps/web:** Enhance period selector and sessions UI
+  design ([1defe6e](https://github.com/gameguild-gg/gameguild/commit/1defe6e9588ea0ecb2f020a67eae482233a684f2))
+* **apps/web:** Enhance role editing with aggregated
+  permissions ([6ef7b7b](https://github.com/gameguild-gg/gameguild/commit/6ef7b7b5a14128d17b10002fd40bfecc862c8b68))
+* **apps/web:** Enhance session UI and
+  logging ([ab2cf79](https://github.com/gameguild-gg/gameguild/commit/ab2cf79765868d5372b00821cdbd341b6ef57da2))
+* **apps/web:** Enhance testing feedback list with filtering and UI
+  components ([6eaacda](https://github.com/gameguild-gg/gameguild/commit/6eaacda59b7851960702dd0169346d15ffa66ffe))
+* **apps/web:** Enhance testing lab sessions with filters and view
+  modes ([d7963f3](https://github.com/gameguild-gg/gameguild/commit/d7963f3b9ab6cbe8b7f783b09f8a2783a7e3aa4d))
+* **apps/web:** Enhance UI styling with gradients and
+  tooltips ([9728df0](https://github.com/gameguild-gg/gameguild/commit/9728df0ff3094499b684f71218ce299cd465f6ea))
+* **apps/web:** Expand role permissions mapping
+  conversion ([0e927c4](https://github.com/gameguild-gg/gameguild/commit/0e927c4b172b9f9a71730d5affea1902c334308e))
+* **apps/web:** Implement achievements API
+  actions ([e37aa3c](https://github.com/gameguild-gg/gameguild/commit/e37aa3c8bfef267e337d0c6a4b6fafdbb92a4549))
+* **apps/web:** Implement course content viewer and learning
+  modules ([1fc56f5](https://github.com/gameguild-gg/gameguild/commit/1fc56f5ef88a597cc6f031026cd9bd0d4e7bd52b))
+* **apps/web:** Implement session-based testing lab
+  pages ([2d69106](https://github.com/gameguild-gg/gameguild/commit/2d691066da1455b16c63844ffb247557ddc8c86f))
+* **apps/web:** Implement testing lab
+  dashboards ([3ab421a](https://github.com/gameguild-gg/gameguild/commit/3ab421ae0d6aa379790fc4df5672e9e61e2665e7))
+* **apps/web:** Implement testing session details
+  page ([19f9e14](https://github.com/gameguild-gg/gameguild/commit/19f9e14714bb6d8e66a732e6acac81540cca304e))
+* **apps/web:** Implement unified course editor and enhanced
+  listings ([0654ec6](https://github.com/gameguild-gg/gameguild/commit/0654ec64e4e26352c5ab0f2c3935943332a090ea))
+* **apps/web:** Import sidebar
+  components ([a8a9329](https://github.com/gameguild-gg/gameguild/commit/a8a932969788a64d955f366b8a6adeebeb879402))
+* **apps/web:** Improve testing lab location
+  management ([3459cb2](https://github.com/gameguild-gg/gameguild/commit/3459cb2501c757c407c6af58fc37d91acf00bc4c))
+* **apps/web:** Improve testing lab UI and session
+  sorting ([7f6e615](https://github.com/gameguild-gg/gameguild/commit/7f6e61595457444b4ecd83a48f47fbdbc3008847))
+* **apps/web:** Improve testing sessions mapping and dynamic
+  refresh ([a296fdb](https://github.com/gameguild-gg/gameguild/commit/a296fdbab5be0f297eef85eb916e85292c40b27b))
+* **apps/web:** Integrate API for testing lab
+  components ([0034c37](https://github.com/gameguild-gg/gameguild/commit/0034c3777f6e0a560dcec11f2c143b848efe9f25))
+* **apps/web:** Integrate auth for user
+  endpoints ([1449152](https://github.com/gameguild-gg/gameguild/commit/14491521f0e48d59665b43c73ae67278d603aeba))
+* **apps/web:** Integrate backend notifications and reorganize dashboard
+  actions ([d3e9d58](https://github.com/gameguild-gg/gameguild/commit/d3e9d58b050861bcb3c8506f455c3183e37adcad))
+* **apps/web:** Integrate dashboard layout in feedback
+  page ([8462a55](https://github.com/gameguild-gg/gameguild/commit/8462a5548cedcacb146af36f87d47897b6d185b2))
+* **apps/web:** Integrate GitHub data in stats and update navigation
+  links ([17a2e69](https://github.com/gameguild-gg/gameguild/commit/17a2e6985a738352f118c1c6967f60e63e246a6d))
+* **apps/web:** Integrate session
+  authentication ([3e537e1](https://github.com/gameguild-gg/gameguild/commit/3e537e184962a717bdcfaf7d6e10a3e1e6c716a6))
+* **apps/web:** Migrate editor page and update UI
+  imports ([4a659aa](https://github.com/gameguild-gg/gameguild/commit/4a659aa18fa5988a3fe2b53cd3ee9f0e41dac92b))
+* **apps/web:** Migrate tenant management to client auth
+  actions ([dd36412](https://github.com/gameguild-gg/gameguild/commit/dd36412b69253a4f3ca7e5dc648ed399b590419f))
+* **apps/web:** Modularize code structure and update
+  imports ([69ffa43](https://github.com/gameguild-gg/gameguild/commit/69ffa43cfd08a71b4c2c75a1d6f701e0afcf9b8d))
+* **apps/web:** Normalize session status display in detail
+  component ([c052c68](https://github.com/gameguild-gg/gameguild/commit/c052c683c707ec0ac393f2e1600a01e0df0f8a7c))
+* **apps/web:** Refactor footer into modular
+  components ([0401f7a](https://github.com/gameguild-gg/gameguild/commit/0401f7a39f5d20bc7fcd10c2ad74b10243b293b8))
+* **apps/web:** Refactor GitHub integration and project stats
+  enhancements ([d7932cf](https://github.com/gameguild-gg/gameguild/commit/d7932cfdb50db0704d30f7a8476c12f527675c32))
+* **apps/web:** Refactor project actions with centralized auth
+  client ([67f3a35](https://github.com/gameguild-gg/gameguild/commit/67f3a35160ee44e646c058189a08842a606db801))
+* **apps/web:** Refactor testing lab overview and improve auth
+  config ([0ff755c](https://github.com/gameguild-gg/gameguild/commit/0ff755c95de88f8234d10f41ecaca961668d2c60))
+* **apps/web:** Refactor testing lab pages to use dashboard
+  layout ([2a45966](https://github.com/gameguild-gg/gameguild/commit/2a45966e4dd77a6b4110b6fe90eba32f02be9c8c))
+* **apps/web:** Refine Testing Lab UI
+  Components ([342b272](https://github.com/gameguild-gg/gameguild/commit/342b2722c620f4fb079a084f8a6740ff0f250a79))
+* **apps/web:** Replace form action with custom submit
+  handler ([ca9cbef](https://github.com/gameguild-gg/gameguild/commit/ca9cbef5c6c60688854ea384b0ff133bc497792a))
+* **apps/web:** Replace image banner with CSS gradient and drop
+  shadow ([d7411a4](https://github.com/gameguild-gg/gameguild/commit/d7411a4f30b7f909d390a637deb81c1339c22dec))
+* **apps/web:** Replace legacy project list with enhanced
+  overview ([ed2bdce](https://github.com/gameguild-gg/gameguild/commit/ed2bdce2f342ba450bca14d19cbd68ecb2e8f9dc))
+* **apps/web:** Restructure course catalog and add landing
+  pages ([51598bd](https://github.com/gameguild-gg/gameguild/commit/51598bde414a2cacd2a0fd5d133c049bdb075a1d))
+* **apps/web:** Revamp auth and dashboard
+  layouts ([09354dc](https://github.com/gameguild-gg/gameguild/commit/09354dc3ce504cadb19a6c1d79fd436d0a0afa0f))
+* **apps/web:** Revamp contributors UI layout and
+  styling ([8fc0ae4](https://github.com/gameguild-gg/gameguild/commit/8fc0ae4ec0d4855e8a678657551a4536b0c2268c))
+* **apps/web:** Revamp tenant management and
+  switching ([86629d1](https://github.com/gameguild-gg/gameguild/commit/86629d10b2bafc6213f735f47801a2cd8491d377))
+* **apps/web:** Revamp testing lab pages and
+  filters ([9295f7a](https://github.com/gameguild-gg/gameguild/commit/9295f7ae5f4009ec4410ff6ca9b010a3d8d50ce1))
+* **apps/web:** Revamp testing lab pages and
+  types ([2c4b943](https://github.com/gameguild-gg/gameguild/commit/2c4b94365b0b4f55d82a78c97ae265f97de652bc))
+* **apps/web:** Send Web Vitals to Goggle Analytics as custom
+  metrics ([00dd2c0](https://github.com/gameguild-gg/gameguild/commit/00dd2c0049faba91b1460340cdae5f98d53c0511))
+* **apps/web:** Update auth errors, branding and community
+  pages ([077da0b](https://github.com/gameguild-gg/gameguild/commit/077da0b115df765fc1ca20f40c766a9f0466c53b))
+* **apps/web:** Update auth redirects, i18n routing and middleware
+  config ([5879a4e](https://github.com/gameguild-gg/gameguild/commit/5879a4ed6daeb1c46d158f49e4f0425b80db0440))
+* **apps/web:** Update contributors header and add contribution
+  guide ([c65d14c](https://github.com/gameguild-gg/gameguild/commit/c65d14cf810753d97faa8eb02d6a46a93fd6177e))
+* **apps/web:** Update course actions and add course editor
+  context ([d6e12e4](https://github.com/gameguild-gg/gameguild/commit/d6e12e4c3a4425556872c5f9faa4e65d88076e98))
+* **apps/web:** Update dashboard layout with auth and
+  styling ([89c1d1f](https://github.com/gameguild-gg/gameguild/commit/89c1d1fbacf3a0b64c0ebea26f0b32ea4a8f5c35))
+* **apps/web:** Update testing lab feedback page with dashboard
+  layout ([da4336e](https://github.com/gameguild-gg/gameguild/commit/da4336e2b570c03147b6268dbff8fd836a1061a3))
+* **apps/web:** Update testing lab pages with
+  placeholders ([ef4ddcb](https://github.com/gameguild-gg/gameguild/commit/ef4ddcb9f771f2e361c8e0f3219f9a77117f3185))
+* **apps/web:** Update token refresh logic for update
+  events ([58839d2](https://github.com/gameguild-gg/gameguild/commit/58839d26f9888e946b54b62ff8d7f55d55d5b5f8))
+* **apps/web:** Update user profile to use session and add tenant
+  switcher ([3a16d9e](https://github.com/gameguild-gg/gameguild/commit/3a16d9eb661697775e0a04375c4e950d36045623))
+* **apps/web:** Use slugs for test session
+  routes ([756d7e9](https://github.com/gameguild-gg/gameguild/commit/756d7e90d51dbf77b8bbe65a2d58c8ed52da160e))
+* **apps/web:** Wrap testing pages in dashboard
+  layout ([5bd3ccc](https://github.com/gameguild-gg/gameguild/commit/5bd3ccc4d6842fdaa07c91ce5dfa41ec06ffc91b))
+* **apps:** Add DAC auth and tenant mutations with enhanced error
+  handling ([97f19a8](https://github.com/gameguild-gg/gameguild/commit/97f19a89cbc4babe4eeaead409ac0b7aabea8963))
+* **apps:** Add DB seeding, refine auth and Next.js
+  migration ([cd35a37](https://github.com/gameguild-gg/gameguild/commit/cd35a37c488d77f18a12b16c7f33e45468428f8f))
+* **apps:** Add learning tracks and course
+  dashboards ([57ef341](https://github.com/gameguild-gg/gameguild/commit/57ef3415a579bdc347574ed79b3948d6a8de41d6))
+* **apps:** Add project version endpoints and UI
+  improvements ([9eee0cd](https://github.com/gameguild-gg/gameguild/commit/9eee0cdbfff523cc8a2763f59a141cb94134ab14))
+* **apps:** Add tenant management, admin login and super admin
+  seeding ([7950ee3](https://github.com/gameguild-gg/gameguild/commit/7950ee3c9840b173a50139fbd6cc0419f1313f25))
+* **apps:** Enhance logging, permissions and UI theme
+  toggle ([d930ecd](https://github.com/gameguild-gg/gameguild/commit/d930ecdd115c11e01b5c9757ee22a879aea22e59))
+* **apps:** Enhance token expiry, tenant context, and
+  UI ([10cd356](https://github.com/gameguild-gg/gameguild/commit/10cd3565e856bc6910e5e49511bd1fa26ce11fef))
+* **auth/integration:** Implement NextAuth authentication and tenant
+  integration ([1523555](https://github.com/gameguild-gg/gameguild/commit/1523555d9e0cb0c1e729a5319779952f058e3110))
+* **auth:** Add permission-based authorization
+  attributes ([bc9ef86](https://github.com/gameguild-gg/gameguild/commit/bc9ef8660d7e22c69d0593e427a5ecd9fd20d823))
+* **auth:** Add tenant support to auth and JWT
+  tokens ([e5dbeac](https://github.com/gameguild-gg/gameguild/commit/e5dbeacfac644832dcd8b23a03828d8473aa054e))
+* **auth:** Convert auth actions and JWT utilities to
+  async ([ecf32e3](https://github.com/gameguild-gg/gameguild/commit/ecf32e3c0a0b2202f348b53df1d7d25bf93c8af9))
+* **auth:** Enhance token refresh logging and
+  debugging ([164d562](https://github.com/gameguild-gg/gameguild/commit/164d562bbec8d34e6aa32c8639b4f5c9959aea90))
+* **auth:** Improve authentication and token refresh
+  integration ([eda7e4e](https://github.com/gameguild-gg/gameguild/commit/eda7e4e72fd0d5d8236bb58fe642300684156e25))
+* **auth:** Improve refresh token rotation, logging and DB
+  schema ([0a7576c](https://github.com/gameguild-gg/gameguild/commit/0a7576ce21148648d7fd9aca49b51e36dba0d0c2))
+* **auth:** Improve token refresh and auth hooks
+  integration ([63bd7eb](https://github.com/gameguild-gg/gameguild/commit/63bd7eb7faa0589449a6742d5981efff7e783d03))
+* **auth:** Set 5 min JWT clock skew and add JWT
+  utils ([c31815e](https://github.com/gameguild-gg/gameguild/commit/c31815ee7bba4c9a2c4dd72f6b66288892584f61))
+* **auth:** Use server actions for backend
+  authentication ([d8243fe](https://github.com/gameguild-gg/gameguild/commit/d8243fe2f9d9a5e2162bc017d028e837bfdcc809))
+* **cms/graphql:** Add GraphQL type annotations to permission
+  entities ([c26bcfa](https://github.com/gameguild-gg/gameguild/commit/c26bcfab4f305353bd1e8f4297a6f316376376d2))
+* **cms/tenant:** Enhance auth, DTO mapping, and auto-assign
+  endpoints ([737502a](https://github.com/gameguild-gg/gameguild/commit/737502a2e5d46a8410285a44dae06dd83f6c6c91))
+* **cms:** Add comment permissions system with DAC layer 3
+  support ([b13f635](https://github.com/gameguild-gg/gameguild/commit/b13f635be800b51937b294f6eb75d2868dfa1da3))
+* **cms:** Add ProductPermission model with full DAC
+  integration ([9af1a87](https://github.com/gameguild-gg/gameguild/commit/9af1a87d6eaf655a9540a516a3f3d492cb3f78c4))
+* **cms:** Create CMS module with RESTful and GraphQL
+  APIs ([2f6a774](https://github.com/gameguild-gg/gameguild/commit/2f6a774be7426822b952c6210c1daf6d4d0ad83b))
+* **cms:** Implement ContentType permissions layer with
+  migration ([00b9a6b](https://github.com/gameguild-gg/gameguild/commit/00b9a6bece1604b4bfe1cb25ca55c938e369a874))
+* **cms:** Implement Discretionary Access Control permission
+  system ([ccc41a8](https://github.com/gameguild-gg/gameguild/commit/ccc41a8d6e52dfffe6b435129e4e335a17d4709b))
+* **cms:** Remove ResourcePermission entity and
+  references ([834764c](https://github.com/gameguild-gg/gameguild/commit/834764cdac0e9ad9d23155e92123074198994280))
+* **cms:** Remove role-based permission system and prepare for
+  DAC ([528d271](https://github.com/gameguild-gg/gameguild/commit/528d2716a8a1ac3ce440be471e16e2a2cd8c5a73))
+* **common/filters:** Improve period selectors with type
+  safety ([810c1ec](https://github.com/gameguild-gg/gameguild/commit/810c1ec902d178e7c2479e63529e42664b707eaf))
+* **common/header:** Add user profile dropdown and sign-in
+  flow ([2c51ae2](https://github.com/gameguild-gg/gameguild/commit/2c51ae213b45d7ff3bcb5e670c45856f7a546b69))
+* **common:** Add string conversion utilities for snake_case and
+  slugs ([b49e05e](https://github.com/gameguild-gg/gameguild/commit/b49e05eac86b0e87a6147b737e4184d053adcb0e))
+* complete course content integration and fix image loading
+  issues ([b127462](https://github.com/gameguild-gg/gameguild/commit/b1274629e1899ef853e8d055a693d259514a6411))
+* **components/filters:** Enhance period selector with tooltips and dynamic
+  quarters ([bb0e7f8](https://github.com/gameguild-gg/gameguild/commit/bb0e7f84c39afd0ea6598eaaf55daa1b1fc83f2a))
+* **components:** Add generic data views and enhanced filter
+  system ([287940d](https://github.com/gameguild-gg/gameguild/commit/287940d322c971a0b668b6a0d55a92c347f96445))
+* **components:** Add reusable data display and filter
+  components ([9c167a9](https://github.com/gameguild-gg/gameguild/commit/9c167a90963a09c46bee9f432188cd3f6e883556))
+* consolidate API generation and improve developer
+  experience ([e445e21](https://github.com/gameguild-gg/gameguild/commit/e445e21fc810572db2ac78c46cca4af1ebf76bcd))
+* **content/coding:** Integrate clang/pyodide and restructure
+  editor ([b12c867](https://github.com/gameguild-gg/gameguild/commit/b12c86744b0d0940278a022de8bfba457fb29a66))
+* **course-editor:** Add certificates, delivery, help, publish, SEO and content structure
+  pages ([83d0b97](https://github.com/gameguild-gg/gameguild/commit/83d0b97fc588641fff11144c1e6f08c806aaf718))
+* **courses:** add some old courses
+  content ([95cc111](https://github.com/gameguild-gg/gameguild/commit/95cc111afc3c0f945bce5ffdc2c32c10f5e9ac84))
+* **dashboard/layout:** Remove sidebar trigger and add sidebar
+  component ([a818506](https://github.com/gameguild-gg/gameguild/commit/a8185069609379ccb9f86c3debdf1c54fe577d00))
+* **dashboard/sidebar:** Update icon containers and
+  labels ([b478559](https://github.com/gameguild-gg/gameguild/commit/b478559d851fa14a4f2aac90ca491b355e1f176f))
+* **dashboard/tenant:** Reorganize UI components and add tenant
+  utilities ([d578f74](https://github.com/gameguild-gg/gameguild/commit/d578f74257a0493b8daae3e1bd103fda3c3aeaa9))
+* **dashboard/testing-lab:** Add reports feedback page and remove submit
+  page ([0001a9c](https://github.com/gameguild-gg/gameguild/commit/0001a9cfc7b617b473e142754cf03007c9df0e75))
+* **dashboard/testing-lab:** Enhance sessions UI with detailed list and
+  table ([7eb8907](https://github.com/gameguild-gg/gameguild/commit/7eb8907fbafad6b232259158407ec6d35aa7f3ad))
+* **dashboard/testing-lab:** Pass testing requests data to
+  list ([d96bceb](https://github.com/gameguild-gg/gameguild/commit/d96bceb3ed68996debc01d4786eb44b36e696954))
+* **dashboard:** Integrate API endpoints and SSR
+  actions ([a6a3664](https://github.com/gameguild-gg/gameguild/commit/a6a366459b4cb5260b0bb965cba71f4a01be9a4e))
+* **dashboard:** Revamp courses, achievements, tenants and user detail
+  pages ([111916a](https://github.com/gameguild-gg/gameguild/commit/111916a1e104509689a259fb12bb0f1b7c5b6f7d))
+* **dashboard:** Revamp tenant and user pages and remove legacy
+  achievements ([92f0e8d](https://github.com/gameguild-gg/gameguild/commit/92f0e8dd5b5da7726637f6a02ec3e84b76476f8e))
+* **dashboard:** Revamp testing lab layouts and
+  sidebar ([019cca7](https://github.com/gameguild-gg/gameguild/commit/019cca7e709db7257c4275a8fc94582c3ac0673a))
+* **dashboard:** Update analytics and overview
+  pages ([bb95dac](https://github.com/gameguild-gg/gameguild/commit/bb95dac94b0b3224e10bc3478cb19a1556583e80))
+* **docker:** Add multi-stage Dockerfile and update docker-compose
+  configuration ([ba2f7f2](https://github.com/gameguild-gg/gameguild/commit/ba2f7f2aae1a8575449abde202816ad3f0e3125a))
+* **editor:** API client and new GUI for
+  editor ([3c44204](https://github.com/gameguild-gg/gameguild/commit/3c442047833a5727161b5bcf7a3a34ac0a010d80))
+* **graphql:** Add 3-layer DAC authorization for GraphQL
+  APIs ([0fd472d](https://github.com/gameguild-gg/gameguild/commit/0fd472d40287a594aeb09a5a2a231927f3badcd6))
+* **lib/sync:** Implement multi-adapter sync
+  system ([b3c727d](https://github.com/gameguild-gg/gameguild/commit/b3c727d2bf595147fd17e79a3da32627e6583b25))
+* **markdown:** add markdown
+  renderer ([d7d7679](https://github.com/gameguild-gg/gameguild/commit/d7d76791a43716c16b63878abb806d3ea9de44c6))
+* **mods/programs:** Add progress and
+  enrollment ([9c25f08](https://github.com/gameguild-gg/gameguild/commit/9c25f08464ad44db55743c3fe1ef19d2755ccafb))
+* **modules/auth:** Implement complete authentication
+  module ([7481505](https://github.com/gameguild-gg/gameguild/commit/7481505285d581a150594384559820ef641dac19))
+* **modules/team:** Add team models and
+  enums ([71a9086](https://github.com/gameguild-gg/gameguild/commit/71a9086a3ffe680a7196e5fd1e5e8cad6b92cd92))
+* **modules/tenant:** Add tenant domain and auto-assignment
+  functionality ([bf1afc2](https://github.com/gameguild-gg/gameguild/commit/bf1afc24ed20a12da956b75589da73338cb26dec))
+* **modules/tenant:** Implement multi-tenancy and RBAC
+  support ([c9622a8](https://github.com/gameguild-gg/gameguild/commit/c9622a8a02767637ffb8607449a04ecdefc1eb99))
+* **modules/user-achievements:** Add user achievements
+  module ([c094cd0](https://github.com/gameguild-gg/gameguild/commit/c094cd003178a789408161b91672a1fbb880b14b))
+* **modules/userprofile:** Add user profile
+  module ([10be4a8](https://github.com/gameguild-gg/gameguild/commit/10be4a80d09a4789fbfe5c162b494c58c4b27e3a))
+* **modules/users:** Revamp user commands, events, and GraphQL
+  endpoints ([f9d8fce](https://github.com/gameguild-gg/gameguild/commit/f9d8fced3f3d97873d86a742593e4ae4437d3a10))
+* **modules/vote:** Add new vote model, type, and service
+  interface ([943e70a](https://github.com/gameguild-gg/gameguild/commit/943e70a6078438d1a4b677864ad5f38c05633c96))
+* **modules:** Add certificate, feedback, kyc, payment, product, program, tag, subscription
+  modules ([5d874a9](https://github.com/gameguild-gg/gameguild/commit/5d874a97c772bbb0cf4b9a0ec73dcb9b73954dee))
+* **payment-commerce:** Add payments, subscriptions and analytics
+  modules ([2aa86f1](https://github.com/gameguild-gg/gameguild/commit/2aa86f1fa93d61e5f7e2ed74c3544421d3696092))
+* **payments:** Add payments actions API
+  endpoints ([e992a93](https://github.com/gameguild-gg/gameguild/commit/e992a93f7b3ab8f4e5313ff6a46ebf90316bb2d3))
+* **permission:** Add Delete permission as alias for
+  SoftDelete ([f2a8f09](https://github.com/gameguild-gg/gameguild/commit/f2a8f096dd1234594e81ddd74779ffe652e66d05))
+* **permission:** Implement modular permission architecture with capability-based DAC
+  strategy ([02d29a2](https://github.com/gameguild-gg/gameguild/commit/02d29a20c086603a381d0efbcff2781198030e39))
+* **permission:** Implement modular permission system with enhanced
+  granularity ([4a2ed87](https://github.com/gameguild-gg/gameguild/commit/4a2ed877abf378fcdfb09ee6ab3a12282a3bd865))
+* **permissions:** Add SimplePermissionService and default permission template
+  handling ([82c47f3](https://github.com/gameguild-gg/gameguild/commit/82c47f32f52bf478c430a0756b45db55b11beb04))
+* **posts:** Add posts module with event-driven social
+  features ([b67e041](https://github.com/gameguild-gg/gameguild/commit/b67e041d5a64179e80f60ccf71882deff23983fc))
+* **prettier-config:** Update config
+  settings ([0f4c6e3](https://github.com/gameguild-gg/gameguild/commit/0f4c6e3b2c9c0126de15d75b0fa344c5e8792a6f))
+* **program:** Add Program module with DAC
+  permissions ([f0c650c](https://github.com/gameguild-gg/gameguild/commit/f0c650c4831bd8336cada31b9ce962a148735f21))
+* **program:** Add ProgramContent module with permissions
+  inheritance ([38baace](https://github.com/gameguild-gg/gameguild/commit/38baace804f03abd87a9e16b9f2a3115f969ce46))
+* **program:** Add verification, enrollment status and wishlist
+  features ([cf272d9](https://github.com/gameguild-gg/gameguild/commit/cf272d90b979e9a89114a9cf3f3ae2f9416a08bb))
+* **projects/database:** Create comprehensive project platform
+  schema ([a576f30](https://github.com/gameguild-gg/gameguild/commit/a576f30ad4c2ee154aef8bb3b228fa66b47191cd))
+* **projects:** Add comprehensive project platform database
+  schema ([cbee521](https://github.com/gameguild-gg/gameguild/commit/cbee521e01adae7aa2158b86402b0f16d21e5bbd))
+* **projects:** Add onProjectCreated callback and update project UI
+  styles ([c7a1153](https://github.com/gameguild-gg/gameguild/commit/c7a11530b50f21ce3f31a7e079e3afe1a86ed409))
+* remove USE_IN_MEMORY_DB and clean up database
+  configuration ([59413ae](https://github.com/gameguild-gg/gameguild/commit/59413ae509df79b45f41e5b0580a8c19556a731c))
+* **server-actions:** Add comprehensive modules for activity tracking, commerce, communication and content
+  management ([cf003d3](https://github.com/gameguild-gg/gameguild/commit/cf003d398a7eb27c36280930bf5b7b4ac62a6846))
+* **sync:** Add storage adapters, caching & sync
+  provider ([bb48a19](https://github.com/gameguild-gg/gameguild/commit/bb48a19579423eff90892720059e7f991fc37772))
+* **system:** Integrate payment gateway and course completion
+  UI ([d5618ad](https://github.com/gameguild-gg/gameguild/commit/d5618ad4b2e9b4ef0ffddc0f71a1499799ed9673))
+* **tenant:** Add tenant detail view, update auth token and remove legacy
+  managers ([55db845](https://github.com/gameguild-gg/gameguild/commit/55db845a1927f6f4b3ca2b569672798e7ca90a61))
+* **tenant:** Replace UserTenant with TenantPermission for flexible permission
+  system ([964b374](https://github.com/gameguild-gg/gameguild/commit/964b3748559cfa9ecaf16e5731999e5447a7d5d1))
+* **tenants:** Add tenant actions and update import
+  paths ([5c3a8e8](https://github.com/gameguild-gg/gameguild/commit/5c3a8e8a85af90943d7010d2918565b59f6573e1))
+* **testing-lab/users:** Add comprehensive user testing
+  actions ([bbf1e65](https://github.com/gameguild-gg/gameguild/commit/bbf1e65e51e9aba92a546ef2e0fd614b40793f57))
+* **testing-lab:** Add attendance endpoints and tracker
+  props ([876bd17](https://github.com/gameguild-gg/gameguild/commit/876bd1733c9e6dfbacb2f161c56170feefb009f2))
+* **testing-lab:** Add comprehensive server actions and reorganize
+  structure ([7b408d4](https://github.com/gameguild-gg/gameguild/commit/7b408d48052828204f6faf5deb7930fedc5a1a8c))
+* **testing-lab:** Add detail components for feedback and
+  session ([a59e25e](https://github.com/gameguild-gg/gameguild/commit/a59e25e1d3ba65828658418bf3025a5dce8f1921))
+* **testing-lab:** Add manage permissions
+  button ([b726bdc](https://github.com/gameguild-gg/gameguild/commit/b726bdc1c5cfc4c8419ee367ecf7d483b1b0f50a))
+* **testing-lab:** Add settings module with API endpoints and web
+  integration ([1f95e3c](https://github.com/gameguild-gg/gameguild/commit/1f95e3c4163022944c7ddfa5b14e7eb4d0634eef))
+* **testing-lab:** Add simplified testing workflow endpoints and
+  UI ([c5a3b14](https://github.com/gameguild-gg/gameguild/commit/c5a3b1472aefdfde80a95d68dfaa4e5e1fdc5c1c))
+* **testing-lab:** Replace role-based fetch with server
+  actions ([3a47f71](https://github.com/gameguild-gg/gameguild/commit/3a47f7137701cdff34e066b4e58114c795a29739))
+* **testing-lab:** Replace todos with API-driven data
+  fetching ([d2c9a92](https://github.com/gameguild-gg/gameguild/commit/d2c9a92fac79c3fa3a445f057f6da2e855534afb))
+* **testing-lab:** Update layout and UI
+  styling ([60d5ba7](https://github.com/gameguild-gg/gameguild/commit/60d5ba758d13839281a0142508dbccfd3be8b7ae))
+* **testing-lab:** Update UI styling and
+  layout ([6e755c5](https://github.com/gameguild-gg/gameguild/commit/6e755c59f6bf4a366cb37fb055e6bade7abfd11e))
+* **tests/api:** Add API tests project and reorganize solution
+  structure ([b857d90](https://github.com/gameguild-gg/gameguild/commit/b857d90ba559aa3f31d35428cd8cac90ec36db99))
+* **tests:** Add integration tests & style
+  config ([55a0ae6](https://github.com/gameguild-gg/gameguild/commit/55a0ae608d8cc71c93cc5243ac816f1d52ab00c0))
+* **ui:** Add comprehensive UI component
+  library ([f79305b](https://github.com/gameguild-gg/gameguild/commit/f79305b8e51a2d0f3a798fc2e1ccc77a9f123f37))
+* **user-management:** Add comprehensive and enhanced user
+  actions ([c37fe1d](https://github.com/gameguild-gg/gameguild/commit/c37fe1d36ce558f6365dd7352fc808e69b1d921c))
+* **users:** Add enhanced filtering and management
+  UI ([ddda13f](https://github.com/gameguild-gg/gameguild/commit/ddda13fce6258060ef43d6885da6af7288f55df3))
+* **web:** Add API type generation and client
+  integration ([2c36823](https://github.com/gameguild-gg/gameguild/commit/2c368239be368a290a9f1a5cfdeb7715b13a5cab))
+* **web:** Add auth page, improvements docs, and track
+  data ([19654cc](https://github.com/gameguild-gg/gameguild/commit/19654cc80500df62b585f2f43af6bb2bc829d244))
+* **web:** New middleware for subdomain-aware i18n
+  routing ([aa96982](https://github.com/gameguild-gg/gameguild/commit/aa969827c2e63d6f50eea72d1a3bd8e36e19d058))
 
 ### Performance Improvements
 
-* **tests/performance:** Optimize batch test data and update thresholds ([d04b49f](https://github.com/gameguild-gg/gameguild/commit/d04b49f1ab23182c7b37f51254e062a143df7ce0))
-* **web:** improvement on the middleware ([17bc112](https://github.com/gameguild-gg/gameguild/commit/17bc112aa5d7947614f70653fe795deb6bc3ef39))
-
+* **tests/performance:** Optimize batch test data and update
+  thresholds ([d04b49f](https://github.com/gameguild-gg/gameguild/commit/d04b49f1ab23182c7b37f51254e062a143df7ce0))
+* **web:** improvement on the
+  middleware ([17bc112](https://github.com/gameguild-gg/gameguild/commit/17bc112aa5d7947614f70653fe795deb6bc3ef39))
 
 ### BREAKING CHANGES
 
@@ -3087,4 +4220,5 @@
 ### Performance Improvements
 
 *
+
 create-project.dto ([d0f1afd](https://github.com/gameguild-gg/website/commit/d0f1afd178274a7c573abbae302109da4fbec1bf))

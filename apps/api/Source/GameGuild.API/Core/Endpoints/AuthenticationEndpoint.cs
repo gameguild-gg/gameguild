@@ -1,0 +1,279 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using GameGuild.API.Data;
+using GameGuild.Authentication.Abstractions;
+using GameGuild.Authentication.Entities;
+using GameGuild.Authentication.Models.Requests;
+using GameGuild.Authentication.Models.Responses;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
+namespace GameGuild.API.Endpoints;
+
+/// <summary>
+///     Authentication endpoints for sign-up, sign-in, and token refresh
+/// </summary>
+public static class AuthenticationEndpoint
+{
+    public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
+    {
+        var authGroup = app.MapGroup("/auth").WithTags("Authentication").WithOpenApi();
+
+        authGroup.MapPost("/sign-up", SignUp)
+            .WithName("SignUp")
+            .Produces<SignInResponseDto>(StatusCodes.Status201Created)
+            .Produces<ProblemDetails>(StatusCodes.Status400BadRequest)
+            .Produces<ProblemDetails>(StatusCodes.Status409Conflict);
+
+        authGroup.MapPost("/sign-in", SignIn).WithName("SignIn").Produces<SignInResponseDto>().Produces<ProblemDetails>(StatusCodes.Status400BadRequest).Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
+
+        authGroup.MapPost("/refresh", RefreshToken).WithName("RefreshToken").Produces<RefreshTokenResponseDto>().Produces<ProblemDetails>(StatusCodes.Status401Unauthorized);
+
+        authGroup.MapPost("/google", GoogleSignIn).WithName("GoogleSignIn").Produces<SignInResponseDto>().Produces<ProblemDetails>(StatusCodes.Status400BadRequest);
+    }
+
+    private static async Task<IResult> SignUp(SignUpRequest request, IAuthService authService, HttpContext httpContext, ILogger<Program> logger, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Validate request
+            if (string.IsNullOrWhiteSpace(request.Email) || !request.Email.Contains('@'))
+            {
+                return Results.BadRequest(new ProblemDetails { Title = "Validation Error", Detail = "Invalid email address", Status = StatusCodes.Status400BadRequest });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
+            {
+                return Results.BadRequest(new ProblemDetails { Title = "Validation Error", Detail = "Password must be at least 6 characters long", Status = StatusCodes.Status400BadRequest });
+            }
+
+            // Create LocalSignUpRequest for the Authentication module
+            var signUpRequest = new LocalSignUpRequest
+            {
+                Email = request.Email,
+                Password = request.Password,
+                ConfirmPassword = request.Password, // Required by the module
+                Username = request.Username ?? request.Email.Split('@')[0],
+                // DeviceInfo fields
+                IpAddress = httpContext.Connection.RemoteIpAddress?.ToString(),
+                UserAgent = httpContext.Request.Headers.UserAgent.ToString()
+            };
+
+            // Call the Authentication module's service
+            var response = await authService.LocalSignUpAsync(signUpRequest, cancellationToken);
+
+            logger.LogInformation("User signed up successfully: {Email}, Response.Email: {ResponseEmail}, Response.UserId: {UserId}", request.Email, response.Email, response.UserId);
+
+            // TEMPORARY DEBUG: Force email to see if it's a mapping issue
+            var debugEmail = response.Email ?? request.Email;
+            logger.LogInformation("[DEBUG ENDPOINT] response.Email is '{ResponseEmail}', using '{DebugEmail}'", response.Email, debugEmail);
+
+            // Map to the API's response DTO
+            return Results.Created(
+                $"/users/{response.UserId}",
+                new SignInResponseDto
+                {
+                    AccessToken = response.AccessToken,
+                    RefreshToken = response.RefreshToken,
+                    AccessTokenExpiresAt = response.ExpiresAt,
+                    RefreshTokenExpiresAt = response.ExpiresAt.AddDays(7), // Assuming 7 day refresh token
+                    ExpiresAt = response.ExpiresAt,
+                    User = new AuthenticatedUserDto
+                    {
+                        Id = response.UserId,
+                        Email = debugEmail, // Using debug email to test
+                        Username = request.Username ?? debugEmail.Split('@')[0]
+                    }
+                }
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during sign-up");
+
+            return Results.Problem("An error occurred during sign-up");
+        }
+    }
+
+    private static async Task<IResult> SignIn(SignInRequest request, ApplicationDbContext dbContext, IPasswordHasher<AuthUser> passwordHasher, IConfiguration configuration, ILogger<Program> logger)
+    {
+        try
+        {
+            // Find user
+            var user = await dbContext.Set<AuthUser>().FirstOrDefaultAsync(u => u.Email == request.Email);
+
+            if (user == null) { return Results.Unauthorized(); }
+
+            // Verify password
+            var verificationResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
+
+            if (verificationResult == PasswordVerificationResult.Failed) { return Results.Unauthorized(); }
+
+            // Generate tokens
+            var tokens = GenerateTokens(user, configuration);
+
+            logger.LogInformation("User signed in successfully: {Email}", request.Email);
+
+            return Results.Ok(
+                new SignInResponseDto
+                {
+                    AccessToken = tokens.AccessToken,
+                    RefreshToken = tokens.RefreshToken,
+                    AccessTokenExpiresAt = tokens.AccessTokenExpiresAt,
+                    RefreshTokenExpiresAt = tokens.RefreshTokenExpiresAt,
+                    ExpiresAt = tokens.AccessTokenExpiresAt,
+                    User = new AuthenticatedUserDto { Id = user.Id, Email = user.Email, Username = user.Username }
+                }
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during sign-in");
+
+            return Results.Problem("An error occurred during sign-in");
+        }
+    }
+
+    private static Task<IResult> RefreshToken(RefreshTokenRequest request, IConfiguration configuration, ILogger<Program> logger)
+    {
+        // Simple refresh token implementation for testing
+        // In production, this would validate the refresh token and issue new tokens
+        logger.LogInformation("Token refresh requested");
+
+        return Task.FromResult(
+            Results.Ok(
+                new RefreshTokenResponseDto { AccessToken = "new-access-token", RefreshToken = "new-refresh-token", AccessTokenExpiresAt = DateTime.UtcNow.AddHours(1), RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7) }
+            )
+        );
+    }
+
+    private static Task<IResult> GoogleSignIn(GoogleSignInRequest request, ILogger<Program> logger)
+    {
+        // Placeholder for Google OAuth implementation
+        logger.LogInformation("Google sign-in requested");
+
+        return Task.FromResult(
+            Results.Ok(
+                new SignInResponseDto
+                {
+                    AccessToken = "google-access-token",
+                    RefreshToken = "google-refresh-token",
+                    AccessTokenExpiresAt = DateTime.UtcNow.AddHours(1),
+                    RefreshTokenExpiresAt = DateTime.UtcNow.AddDays(7),
+                    ExpiresAt = DateTime.UtcNow.AddHours(1),
+                    User = new AuthenticatedUserDto { Id = Guid.NewGuid(), Email = "google-user@example.com", Username = "googleuser" }
+                }
+            )
+        );
+    }
+
+    private static TokenResponse GenerateTokens(AuthUser user, IConfiguration configuration)
+    {
+        var jwtSecret = configuration["Jwt:Secret"] ?? "default-secret-key-for-development-only-min-32-chars";
+        var jwtIssuer = configuration["Jwt:Issuer"] ?? "GameGuild";
+        var jwtAudience = configuration["Jwt:Audience"] ?? "GameGuild";
+        var expirationMinutes = int.Parse(configuration["Jwt:ExpirationMinutes"] ?? "60");
+
+        Console.WriteLine($"[Token Gen] JWT Secret length: {jwtSecret.Length}, Issuer: {jwtIssuer}, Audience: {jwtAudience}");
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)) { KeyId = "GameGuild-jwt-key" };
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        var accessTokenExpiry = DateTime.UtcNow.AddMinutes(expirationMinutes);
+        var refreshTokenExpiry = DateTime.UtcNow.AddDays(7);
+
+        var claims = new[]
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim("username", user.Username ?? user.Email)
+        };
+
+        var token = new JwtSecurityToken(jwtIssuer, jwtAudience, claims, expires: accessTokenExpiry, signingCredentials: credentials);
+
+        var accessToken = new JwtSecurityTokenHandler().WriteToken(token);
+        var refreshToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+
+        return new TokenResponse { AccessToken = accessToken, RefreshToken = refreshToken, AccessTokenExpiresAt = accessTokenExpiry, RefreshTokenExpiresAt = refreshTokenExpiry };
+    }
+}
+
+// Request/Response DTOs
+public record SignUpRequest(string Email, string Password, string? Username);
+
+public record SignInRequest(string Email, string Password);
+
+public record RefreshTokenRequest(string RefreshToken);
+
+public record GoogleSignInRequest(string IdToken);
+
+public record SignInResponseDto
+{
+    public required string AccessToken { get; init; }
+
+    public required string RefreshToken { get; init; }
+
+    public required DateTime ExpiresAt { get; init; }
+
+    public required DateTime AccessTokenExpiresAt { get; init; }
+
+    public required DateTime RefreshTokenExpiresAt { get; init; }
+
+    public required AuthenticatedUserDto User { get; init; }
+
+    public Guid? TenantId { get; init; }
+}
+
+public record RefreshTokenResponseDto
+{
+    public required string AccessToken { get; init; }
+
+    public required string RefreshToken { get; init; }
+
+    public required DateTime AccessTokenExpiresAt { get; init; }
+
+    public required DateTime RefreshTokenExpiresAt { get; init; }
+}
+
+public record AuthenticatedUserDto
+{
+    public required Guid Id { get; init; }
+
+    public required string Email { get; init; }
+
+    public string? Username { get; init; }
+
+    public string? FirstName { get; init; }
+
+    public string? LastName { get; init; }
+}
+
+public record TokenResponse
+{
+    public required string AccessToken { get; init; }
+
+    public required string RefreshToken { get; init; }
+
+    public required DateTime AccessTokenExpiresAt { get; init; }
+
+    public required DateTime RefreshTokenExpiresAt { get; init; }
+}
+
+// Simple User entity for testing
+public class User
+{
+    public Guid Id { get; set; }
+
+    public required string Email { get; set; }
+
+    public string? Username { get; set; }
+
+    public required string PasswordHash { get; set; }
+
+    public DateTime CreatedAt { get; set; }
+
+    public DateTime UpdatedAt { get; set; }
+}

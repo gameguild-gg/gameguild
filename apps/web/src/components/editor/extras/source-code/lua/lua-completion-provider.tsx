@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect } from "react"
 import type { editor } from "monaco-editor"
+import { useEffect } from "react"
 
 interface LuaCompletionProviderProps {
   monaco: typeof import("monaco-editor") | null
@@ -189,37 +189,37 @@ export function LuaCompletionProvider({ monaco, editor }: LuaCompletionProviderP
           // Check which library we're accessing
           if (textUntilPosition.endsWith("string.")) {
             suggestions = stringLib.map((method) => ({
-              label: method.split(".")[1],
+              label: method.split(".")[1]!,
               kind: monaco.languages.CompletionItemKind.Method,
-              insertText: method.split(".")[1],
+              insertText: method.split(".")[1]!,
               range,
             }))
           } else if (textUntilPosition.endsWith("table.")) {
             suggestions = tableLib.map((method) => ({
-              label: method.split(".")[1],
+              label: method.split(".")[1]!,
               kind: monaco.languages.CompletionItemKind.Method,
-              insertText: method.split(".")[1],
+              insertText: method.split(".")[1]!,
               range,
             }))
           } else if (textUntilPosition.endsWith("math.")) {
             suggestions = mathLib.map((method) => ({
-              label: method.split(".")[1],
+              label: method.split(".")[1]!,
               kind: monaco.languages.CompletionItemKind.Method,
-              insertText: method.split(".")[1],
+              insertText: method.split(".")[1]!,
               range,
             }))
           } else if (textUntilPosition.endsWith("io.")) {
             suggestions = ioLib.map((method) => ({
-              label: method.split(".")[1],
+              label: method.split(".")[1]!,
               kind: monaco.languages.CompletionItemKind.Method,
-              insertText: method.split(".")[1],
+              insertText: method.split(".")[1]!,
               range,
             }))
           } else if (textUntilPosition.endsWith("os.")) {
             suggestions = osLib.map((method) => ({
-              label: method.split(".")[1],
+              label: method.split(".")[1]!,
               kind: monaco.languages.CompletionItemKind.Method,
-              insertText: method.split(".")[1],
+              insertText: method.split(".")[1]!,
               range,
             }))
           } else {

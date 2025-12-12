@@ -2,13 +2,14 @@
 
 import type React from "react"
 
-import { useMemo, useCallback } from "react"
 import type { CodeFile } from "@/components/editor/extras/source-code/types"
+import { useCallback, useMemo } from "react"
 
 interface UseFileContentProps {
   files: CodeFile[]
   setFiles: React.Dispatch<React.SetStateAction<CodeFile[]>>
   activeFileId: string
+  selectedLanguage?: string
 }
 
 interface UseFileContentReturn {

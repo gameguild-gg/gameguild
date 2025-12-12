@@ -7,8 +7,8 @@ import {
   postApiAdminPermissionsUsersByUserIdRoles,
   deleteApiAdminPermissionsUsersByUserIdRolesByRoleName,
   getApiAdminPermissionsUsersByUserIdCheck
-} from '@/lib/api/generated/sdk.gen';
-import type { UserPermission } from '@/lib/api/generated/types.gen';
+} from '@/lib/api/generated';
+import type { UserPermission } from '@/lib/api/generated';
 
 export type PermissionType = 'Create' | 'Read' | 'Edit' | 'Delete' | 'Publish' | 'Approve' | 'Review' | 'Comment' | 'Vote' | 'Share' | 'Follow' | 'Bookmark';
 

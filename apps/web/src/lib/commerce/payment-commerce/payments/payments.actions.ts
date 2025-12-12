@@ -1,349 +1,73 @@
 'use server';
 
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import {
-  getApiPaymentById,
-  getApiPaymentMethodsMe,
-  getApiPaymentsById,
-  getApiPaymentsMyPayments,
-  getApiPaymentsProductsByProductId,
-  getApiPaymentsRevenueReport,
-  getApiPaymentsStats,
-  getApiPaymentStats,
-  getApiPaymentsUsersByUserId,
-  getApiPaymentUserByUserId,
-  postApiPaymentByIdProcess,
-  postApiPaymentByIdRefund,
-  postApiPaymentIntent,
-  postApiPayments,
-  postApiPaymentsByIdCancel,
-  postApiPaymentsByIdProcess,
-  postApiPaymentsByIdRefund,
-} from '@/lib/api/generated/sdk.gen';
-import type { PaymentStatus } from '@/lib/api/generated/types.gen';
-import { revalidateTag } from 'next/cache';
+// STUB: Payment actions are stubbed; endpoints are unavailable in current SDK.
 
-/**
- * Get user's payment methods
- */
-export async function getUserPaymentMethods() {
-  await configureAuthenticatedClient();
+export type PaymentStatus = any;
 
-  try {
-    const response = await getApiPaymentMethodsMe();
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching payment methods:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch payment methods');
-  }
+export async function getUserPaymentMethods(): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserPaymentMethods');
 }
 
-/**
- * Create a payment intent
- */
-export async function createPaymentIntent(paymentData: { amount: number; currency: string; productId?: string; subscriptionId?: string; metadata?: Record<string, unknown> }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiPaymentIntent({
-      body: paymentData,
-    });
-    revalidateTag('payments');
-    return response.data;
-  } catch (error) {
-    console.error('Error creating payment intent:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to create payment intent');
-  }
+export async function createPaymentIntent(_paymentData: any): Promise<any> {
+  throw new Error('Not implemented (STUB): createPaymentIntent');
 }
 
-/**
- * Get payment statistics
- */
-export async function getPaymentStatistics() {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiPaymentStats();
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching payment statistics:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch payment statistics');
-  }
+export async function getPaymentStatistics(): Promise<any> {
+  throw new Error('Not implemented (STUB): getPaymentStatistics');
 }
 
-/**
- * Get current user's payments
- */
-export async function getMyPayments(params?: { skip?: number; take?: number; status?: PaymentStatus; fromDate?: string; toDate?: string }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiPaymentsMyPayments({
-      query: {
-        skip: params?.skip,
-        take: params?.take,
-        status: params?.status,
-        fromDate: params?.fromDate,
-        toDate: params?.toDate,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching my payments:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch my payments');
-  }
+export async function getMyPayments(_params?: { skip?: number; take?: number; status?: PaymentStatus; fromDate?: string; toDate?: string }): Promise<any> {
+  throw new Error('Not implemented (STUB): getMyPayments');
 }
 
-/**
- * Process a payment by ID
- */
-export async function processPayment(paymentId: string, paymentData: { providerTransactionId?: string; providerMetadata?: Record<string, unknown> }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiPaymentByIdProcess({
-      path: { id: paymentId },
-      body: paymentData,
-    });
-
-    revalidateTag('payments');
-    revalidateTag('payment-analytics');
-    return response.data;
-  } catch (error) {
-    console.error('Error processing payment:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to process payment');
-  }
+export async function processPayment(_paymentId: string, _paymentData: any): Promise<any> {
+  throw new Error('Not implemented (STUB): processPayment');
 }
 
-/**
- * Refund a payment by ID
- */
-export async function refundPayment(paymentId: string, refundData: { amount?: number; reason?: string }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiPaymentByIdRefund({
-      path: { id: paymentId },
-      body: refundData,
-    });
-
-    revalidateTag('payments');
-    revalidateTag('payment-analytics');
-    return response.data;
-  } catch (error) {
-    console.error('Error refunding payment:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to refund payment');
-  }
+export async function refundPayment(_paymentId: string, _refundData: any): Promise<any> {
+  throw new Error('Not implemented (STUB): refundPayment');
 }
 
-/**
- * Get payment by ID
- */
-export async function getPaymentById(paymentId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiPaymentById({
-      path: { id: paymentId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching payment by ID:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch payment');
-  }
+export async function getPaymentById(_paymentId: string): Promise<any> {
+  throw new Error('Not implemented (STUB): getPaymentById');
 }
 
-/**
- * Get payments by user ID
- */
-export async function getPaymentsByUserId(userId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiPaymentUserByUserId({
-      path: { userId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching payments by user ID:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch user payments');
-  }
+export async function getPaymentsByUserId(_userId: string): Promise<any> {
+  throw new Error('Not implemented (STUB): getPaymentsByUserId');
 }
 
-/**
- * Create a new payment
- */
-export async function createPayment(paymentData: { amount: number; currency: string; productId?: string; subscriptionId?: string; paymentMethodId?: string; metadata?: Record<string, unknown> }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiPayments({
-      body: paymentData,
-    });
-
-    revalidateTag('payments');
-    revalidateTag('payment-analytics');
-    return response.data;
-  } catch (error) {
-    console.error('Error creating payment:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to create payment');
-  }
+export async function createPayment(_paymentData: any): Promise<any> {
+  throw new Error('Not implemented (STUB): createPayment');
 }
 
-/**
- * Get payment details by ID (alternative endpoint)
- */
-export async function getPaymentDetails(paymentId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiPaymentsById({
-      path: { id: paymentId },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching payment details:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch payment details');
-  }
+export async function getPaymentDetails(_paymentId: string): Promise<any> {
+  throw new Error('Not implemented (STUB): getPaymentDetails');
 }
 
-/**
- * Get all payments by user ID with filters
- */
-export async function getAllPaymentsByUserId(userId: string, params?: { skip?: number; take?: number; status?: PaymentStatus }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiPaymentsUsersByUserId({
-      path: { userId },
-      query: {
-        skip: params?.skip,
-        take: params?.take,
-        status: params?.status,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching user payments:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch user payments');
-  }
+export async function getAllPaymentsByUserId(_userId: string, _params?: { skip?: number; take?: number; status?: PaymentStatus }): Promise<any> {
+  throw new Error('Not implemented (STUB): getAllPaymentsByUserId');
 }
 
-/**
- * Get payments by product ID
- */
-export async function getPaymentsByProductId(productId: string, params?: { skip?: number; take?: number; status?: PaymentStatus }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiPaymentsProductsByProductId({
-      path: { productId },
-      query: {
-        skip: params?.skip,
-        take: params?.take,
-        status: params?.status,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching product payments:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch product payments');
-  }
+export async function getPaymentsByProductId(_productId: string, _params?: { skip?: number; take?: number; status?: PaymentStatus }): Promise<any> {
+  throw new Error('Not implemented (STUB): getPaymentsByProductId');
 }
 
-/**
- * Process payment (alternative endpoint)
- */
-export async function processPaymentAlternative(paymentId: string, paymentData: { providerTransactionId?: string; providerMetadata?: Record<string, unknown> }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiPaymentsByIdProcess({
-      path: { id: paymentId },
-      body: paymentData,
-    });
-
-    revalidateTag('payments');
-    revalidateTag('payment-analytics');
-    return response.data;
-  } catch (error) {
-    console.error('Error processing payment:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to process payment');
-  }
+export async function processPaymentAlternative(_paymentId: string, _paymentData: any): Promise<any> {
+  throw new Error('Not implemented (STUB): processPaymentAlternative');
 }
 
-/**
- * Refund payment (alternative endpoint)
- */
-export async function refundPaymentAlternative(paymentId: string, refundData: { amount?: number; reason?: string }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiPaymentsByIdRefund({
-      path: { id: paymentId },
-      body: refundData,
-    });
-
-    revalidateTag('payments');
-    revalidateTag('payment-analytics');
-    return response.data;
-  } catch (error) {
-    console.error('Error refunding payment:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to refund payment');
-  }
+export async function refundPaymentAlternative(_paymentId: string, _refundData: any): Promise<any> {
+  throw new Error('Not implemented (STUB): refundPaymentAlternative');
 }
 
-/**
- * Cancel a payment
- */
-export async function cancelPayment(paymentId: string) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await postApiPaymentsByIdCancel({
-      path: { id: paymentId },
-    });
-
-    revalidateTag('payments');
-    revalidateTag('payment-analytics');
-    return response.data;
-  } catch (error) {
-    console.error('Error canceling payment:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to cancel payment');
-  }
+export async function cancelPayment(_paymentId: string): Promise<any> {
+  throw new Error('Not implemented (STUB): cancelPayment');
 }
 
-/**
- * Get comprehensive payment statistics
- */
-export async function getComprehensivePaymentStats() {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiPaymentsStats();
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching comprehensive payment stats:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch payment statistics');
-  }
+export async function getComprehensivePaymentStats(): Promise<any> {
+  throw new Error('Not implemented (STUB): getComprehensivePaymentStats');
 }
 
-/**
- * Get revenue report
- */
-export async function getRevenueReport(params?: { fromDate?: string; toDate?: string }) {
-  await configureAuthenticatedClient();
-
-  try {
-    const response = await getApiPaymentsRevenueReport({
-      query: {
-        fromDate: params?.fromDate,
-        toDate: params?.toDate,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching revenue report:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to fetch revenue report');
-  }
+export async function getRevenueReport(_params?: { fromDate?: string; toDate?: string }): Promise<any> {
+  throw new Error('Not implemented (STUB): getRevenueReport');
 }

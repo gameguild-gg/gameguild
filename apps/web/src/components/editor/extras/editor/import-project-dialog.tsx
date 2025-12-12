@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Upload, FileText, Archive, X } from "lucide-react"
-import JSZip from "jszip"
+import { ProjectImporter, type ImportedProjectData } from "@/lib/interopAdapter/project-importer"
 
 interface ProjectData {
   id: string
@@ -31,19 +31,12 @@ interface ImportProjectDialogProps {
   onOpenChange: (open: boolean) => void
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
-  availableTags: Array<{ name: string; usageCount: number }>
+  availableTags: Array<{ name: string }>
   onProjectCreate: (projectData: { id: string; name: string; tags: string[] }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
   generateProjectId: () => string
   onOpenProject?: (projectData: { id: string; name: string; tags: string[] }) => void
-}
-
-interface ImportedProject {
-  name: string
-  data: string
-  tags: string[]
-  metadata?: any
 }
 
 export function ImportProjectDialog({
@@ -62,7 +55,7 @@ export function ImportProjectDialog({
   const [projectTags, setProjectTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
-  const [importedProject, setImportedProject] = useState<ImportedProject | null>(null)
+  const [importedProject, setImportedProject] = useState<ImportedProjectData | null>(null)
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -92,79 +85,26 @@ export function ImportProjectDialog({
 
   const handleFileUpload = async (file: File) => {
     try {
-      const fileName = file.name
-      const fileExtension = fileName.split(".").pop()?.toLowerCase()
-
-      let projectData: ImportedProject
-
-      if (fileExtension === "zip") {
-        // Handle ZIP file
-        const zip = new JSZip()
-        const zipContent = await zip.loadAsync(file)
-
-        let lexicalFile: JSZip.JSZipObject | null = null
-        let indexFile: JSZip.JSZipObject | null = null
-
-        // Find .gglexical or .lexical file and index.json
-        Object.keys(zipContent.files).forEach((filename) => {
-          const file = zipContent.files[filename]
-          if (file && !file.dir) {
-            if (filename.endsWith(".gglexical") || filename.endsWith(".lexical")) {
-              lexicalFile = file
-            } else if (filename === "index.json") {
-              indexFile = file
-            }
-          }
-        })
-
-        if (!lexicalFile) {
-          throw new Error("No .gglexical or .lexical file found in ZIP")
-        }
-
-        const lexicalData = await lexicalFile.async("text")
-        let metadata = null
-
-        if (indexFile) {
-          const indexData = await indexFile.async("text")
-          metadata = JSON.parse(indexData)
-        }
-
-        // Extract name from filename or metadata
-        const baseName = lexicalFile.name.replace(/\.(gglexical|lexical)$/, "")
-
-        projectData = {
-          name: metadata?.name || baseName || "Imported Project",
-          data: lexicalData,
-          tags: metadata?.tags || [],
-          metadata,
-        }
-      } else if (fileExtension === "gglexical" || fileExtension === "lexical") {
-        // Handle single lexical file
-        const content = await file.text()
-        const baseName = fileName.replace(/\.(gglexical|lexical)$/, "")
-
-        projectData = {
-          name: baseName || "Imported Project",
-          data: content,
-          tags: [],
-        }
-      } else {
-        throw new Error("Unsupported file format. Please upload a .zip, .gglexical, or .lexical file.")
+      // Validate file type first
+      if (!ProjectImporter.isSupportedFile(file.name)) {
+        const supportedExtensions = ProjectImporter.getSupportedExtensions()
+        throw new Error(`Unsupported file format. Supported formats: ${supportedExtensions.join(', ')}`)
       }
 
-      // Validate lexical data
-      try {
-        JSON.parse(projectData.data)
-      } catch {
-        throw new Error("Invalid lexical data format")
+      // Use ProjectImporter to handle the file
+      const importedData = await ProjectImporter.importFromFile(file)
+
+      // Validate imported data
+      if (!ProjectImporter.validateImportedData(importedData)) {
+        throw new Error('Invalid project data format')
       }
 
-      setImportedProject(projectData)
-      setProjectName(projectData.name)
-      setProjectTags(projectData.tags)
+      setImportedProject(importedData)
+      setProjectName(importedData.name)
+      setProjectTags(importedData.tags)
 
       toast.success("File imported successfully", {
-        description: `Loaded project: ${projectData.name}`,
+        description: `Loaded project: ${importedData.name}`,
         duration: 3000,
         icon: "📁",
       })
@@ -184,7 +124,7 @@ export function ImportProjectDialog({
 
     const files = Array.from(e.dataTransfer.files)
     if (files.length > 0) {
-      handleFileUpload(files[0])
+      handleFileUpload(files[0] as File)
     }
   }
 
@@ -201,7 +141,7 @@ export function ImportProjectDialog({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (files && files.length > 0) {
-      handleFileUpload(files[0])
+      handleFileUpload(files[0] as File)
     }
   }
 
@@ -323,7 +263,7 @@ export function ImportProjectDialog({
                 Drag and drop your project file here, or click to browse
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
-                Supports: .zip (with .gglexical + index.json), .gglexical, .lexical
+                Supports: .zip (projeto-* folders), .gglexical files
               </p>
               <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="mx-auto">
                 <FileText className="w-4 h-4 mr-2" />
@@ -332,7 +272,7 @@ export function ImportProjectDialog({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".zip,.gglexical,.lexical"
+                accept=".zip,.gglexical"
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -451,9 +391,6 @@ export function ImportProjectDialog({
                                     className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
                                   >
                                     <span className="text-sm">{tag.name}</span>
-                                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                                      ({tag.usageCount} uses)
-                                    </span>
                                   </button>
                                 ))}
                                 {tagInput.trim() &&

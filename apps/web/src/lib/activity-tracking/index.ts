@@ -1,5 +1,5 @@
 // Activity Tracking Module Exports
-export * from './achievements/achievements.actions';
+export * from '../admin/achievements/achievements.actions';
 
 // Activity Grades (API wrapper functions)
 export {

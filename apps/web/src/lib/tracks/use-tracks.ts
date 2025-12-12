@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export interface Track {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   area: string;
-  level: number;
+  level: number | string;
   tools: string[];
-  estimatedHours: number;
-  coursesCount: number;
+  estimatedHours?: number;
+  coursesCount?: number;
   image?: string;
   slug: string;
+  knowledges: string[];
+  obtained?: string;
+  progress?: number;
 }
 
 export interface TrackFilters {
@@ -48,6 +51,7 @@ export function useTrackFilters() {
           estimatedHours: 120,
           coursesCount: 8,
           slug: 'game-programming-fundamentals',
+          knowledges: ['Programming Basics', 'Object-Oriented Programming', 'Game Loop'],
         },
         {
           id: 2,
@@ -59,6 +63,7 @@ export function useTrackFilters() {
           estimatedHours: 80,
           coursesCount: 6,
           slug: 'digital-art-for-games',
+          knowledges: ['Digital Painting', '3D Modeling', 'Texturing'],
         },
         {
           id: 3,
@@ -70,6 +75,7 @@ export function useTrackFilters() {
           estimatedHours: 60,
           coursesCount: 5,
           slug: 'game-design-principles',
+          knowledges: ['Game Mechanics', 'Level Design', 'Player Experience'],
         },
       ];
 
