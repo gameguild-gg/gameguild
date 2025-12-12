@@ -531,7 +531,7 @@ export function MediaUploadDialog({
                   variant="ghost"
                   size="sm"
                   onClick={() => onOpenChange(false)}
-                  className="h-8 w-8 p-0 hover:bg-gray-100"
+                  className="h-8 w-8 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   <X className="h-4 w-4" />
                   <span className="sr-only">Close</span>
@@ -614,7 +614,7 @@ export function MediaUploadDialog({
                         />
                       </div>
 
-                      <div className="border-2 border-gray-200 rounded-xl p-3 flex-1 overflow-y-auto min-h-0 mt-2">
+                      <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 flex-1 overflow-y-auto min-h-0 mt-2 dark:bg-gray-900/50">
                           {isLoadingAssets ? (
                             <div className="text-center py-12 text-muted-foreground">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
@@ -639,11 +639,11 @@ export function MediaUploadDialog({
                                   onClick={() => toggleLocalAssetSelection(asset.id)}
                                   className={`relative cursor-pointer rounded-lg border-2 transition-all hover:shadow-md ${
                                     selectedLocalAssets.has(asset.id)
-                                      ? 'border-blue-500 bg-blue-50'
-                                      : 'border-gray-200 hover:border-gray-300'
+                                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-blue-400'
+                                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                                   }`}
                                 >
-                                  <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
+                                  <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-t-lg overflow-hidden">
                                     {asset.type.startsWith('image/') ? (
                                       <img
                                         src={asset.dataUrl}
@@ -656,7 +656,7 @@ export function MediaUploadDialog({
                                       </div>
                                     )}
                                   </div>
-                                  <div className="p-2">
+                                  <div className="p-2 bg-white dark:bg-gray-950 rounded-b-lg">
                                     <p className="text-xs font-medium truncate" title={asset.name}>
                                       {asset.name}
                                     </p>
@@ -801,7 +801,7 @@ export function MediaUploadDialog({
               )}
             </div>
 
-            <div className="w-80 border-l pl-6 flex flex-col min-h-0">
+            <div className="w-80 border-l dark:border-gray-700 pl-6 flex flex-col min-h-0">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Review Files</h3>
                 <span className="text-sm text-muted-foreground">
@@ -818,7 +818,7 @@ export function MediaUploadDialog({
                   </div>
                 ) : (
                   pendingUploads.map((upload) => (
-                    <div key={upload.id} className="p-3 bg-gray-50 rounded-lg space-y-2">
+                    <div key={upload.id} className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg space-y-2 border border-gray-200 dark:border-gray-700">
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate" title={upload.name}>
@@ -826,7 +826,7 @@ export function MediaUploadDialog({
                           </p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${upload.type === "file" ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700"
+                              className={`px-2 py-1 rounded text-xs ${upload.type === "file" ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400" : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
                                 }`}
                             >
                               {upload.type === "file" ? "File" : "URL"}
@@ -838,7 +838,7 @@ export function MediaUploadDialog({
                           variant="ghost"
                           size="sm"
                           onClick={() => removeFromStaging(upload.id)}
-                          className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600"
+                          className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -892,7 +892,7 @@ export function MediaUploadDialog({
                 )}
               </div>
 
-              <div className="mt-6 pt-4 border-t">
+              <div className="mt-6 pt-4 border-t dark:border-gray-700">
                 <Button
                   onClick={handleSubmitAll}
                   className="w-full h-12 text-base"
