@@ -89,6 +89,7 @@ export function MediaUploadDialog({
   const [localAssets, setLocalAssets] = useState<Array<{ id: string; name: string; type: string; size: number; dataUrl: string }>>([])
   const [selectedLocalAssets, setSelectedLocalAssets] = useState<Set<string>>(new Set())
   const [isLoadingAssets, setIsLoadingAssets] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([])
   const [compressionEnabled, setCompressionEnabled] = useState(compress)
@@ -481,6 +482,7 @@ export function MediaUploadDialog({
       setGlobalCompressionSettings(null)
       setSelectedLocalAssets(new Set())
       setLocalAssets([])
+      setSearchQuery("")
     }
     onOpenChange(newOpen)
   }
@@ -501,11 +503,15 @@ export function MediaUploadDialog({
     return ` (Max: ${maxSizeKB} KB)`
   }
 
+  const filteredAssets = localAssets.filter(asset => 
+    asset.name.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden">
-          <DialogHeader className="pb-4 border-b">
+        <DialogContent className="sm:max-w-6xl h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader className="pb-2 border-b shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
               <div className="flex items-center gap-3">
@@ -534,17 +540,17 @@ export function MediaUploadDialog({
             </div>
           </DialogHeader>
 
-          <div className="py-6 flex gap-6 h-[70vh]">
-            <div className="flex-1">
+          <div className="py-3 flex gap-6 flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 flex flex-col min-h-0">
               {error && (
-                <Alert variant="destructive" className="mb-6">
+                <Alert variant="destructive" className="mb-3">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
               {compressionEnabled && (
-                <Alert className="mb-6">
+                <Alert className="mb-3">
                   <Zap className="h-4 w-4" />
                   <AlertDescription>
                     Image compression is enabled. Large images will be automatically optimized to WebP format for better
@@ -554,8 +560,8 @@ export function MediaUploadDialog({
               )}
 
               {Object.values(enabledSources).filter(Boolean).length > 1 ? (
-                <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full">
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
+                <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1 min-h-0">
+                  <TabsList className="grid w-full grid-cols-2 mb-3">
                     {enabledSources.files && (
                       <TabsTrigger value="files" className="flex items-center gap-2">
                         <HardDrive className="h-4 w-4" />
@@ -571,10 +577,10 @@ export function MediaUploadDialog({
                   </TabsList>
 
                   {enabledSources.files && (
-                    <TabsContent value="files" className="mt-0">
-                      <div className="space-y-4">
+                    <TabsContent value="files" className="mt-0 flex flex-col flex-1 min-h-0">
+                      <div className="space-y-2 shrink-0">
                         <div className="flex items-center justify-between">
-                          <Label className="text-base font-medium">Select from your files</Label>
+                          <Label className="text-sm font-medium">Select from your files</Label>
                           <Button
                             variant="outline"
                             size="sm"
@@ -585,6 +591,13 @@ export function MediaUploadDialog({
                             Upload New
                           </Button>
                         </div>
+
+                        <Input
+                          placeholder="Search by name..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="h-9"
+                        />
 
                         <input
                           ref={fileInputRef}
@@ -599,22 +612,28 @@ export function MediaUploadDialog({
                             }
                           }}
                         />
+                      </div>
 
-                        <div className="border-2 border-gray-200 rounded-xl p-4 max-h-[400px] overflow-y-auto">
+                      <div className="border-2 border-gray-200 rounded-xl p-3 flex-1 overflow-y-auto min-h-0 mt-2">
                           {isLoadingAssets ? (
                             <div className="text-center py-12 text-muted-foreground">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
                               <p className="text-sm">Loading files...</p>
                             </div>
-                          ) : localAssets.length === 0 ? (
+                          ) : filteredAssets.length === 0 && localAssets.length === 0 ? (
                             <div className="text-center py-12 text-muted-foreground">
                               <HardDrive className="h-8 w-8 mx-auto mb-2 opacity-50" />
                               <p className="text-sm font-medium">No files yet</p>
                               <p className="text-xs mt-1">Click "Upload New" to add your first file</p>
                             </div>
+                          ) : filteredAssets.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground">
+                              <p className="text-sm font-medium">No files match your search</p>
+                              <p className="text-xs mt-1">Try a different search term</p>
+                            </div>
                           ) : (
-                            <div className="grid grid-cols-2 gap-3">
-                              {localAssets.map(asset => (
+                            <div className="grid grid-cols-4 gap-3">
+                              {filteredAssets.map(asset => (
                                 <div
                                   key={asset.id}
                                   onClick={() => toggleLocalAssetSelection(asset.id)}
@@ -656,18 +675,19 @@ export function MediaUploadDialog({
                               ))}
                             </div>
                           )}
-                        </div>
+                      </div>
 
-                        {selectedLocalAssets.size > 0 && (
+                      {selectedLocalAssets.size > 0 && (
+                        <div className="pt-2 shrink-0">
                           <Button
                             onClick={handleAddSelectedAssets}
-                            className="w-full h-12 text-base"
+                            className="w-full h-10 text-sm"
                           >
                             <Plus className="h-4 w-4 mr-2" />
                             Add {selectedLocalAssets.size} Selected File{selectedLocalAssets.size !== 1 ? 's' : ''}
                           </Button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </TabsContent>
                   )}
 
@@ -781,7 +801,7 @@ export function MediaUploadDialog({
               )}
             </div>
 
-            <div className="w-80 border-l pl-6">
+            <div className="w-80 border-l pl-6 flex flex-col min-h-0">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Review Files</h3>
                 <span className="text-sm text-muted-foreground">
@@ -789,7 +809,7 @@ export function MediaUploadDialog({
                 </span>
               </div>
 
-              <div className="space-y-3 max-h-[50vh] overflow-y-auto">
+              <div className="space-y-3 flex-1 overflow-y-auto min-h-0">
                 {pendingUploads.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
