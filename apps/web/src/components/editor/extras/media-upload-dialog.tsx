@@ -1,9 +1,11 @@
 "use client"
 
 import { useRef, useState, useContext, useEffect } from "react"
-import { AlertCircle, Upload, X, Trash2, Plus, Send, Settings, Zap, ImageIcon, HardDrive } from "lucide-react"
+import { AlertCircle, X, Plus, Zap, HardDrive, Upload } from "lucide-react"
 
 import { CompressionSettingsDialog, type CompressionSettings } from "@/components/editor/extras/compressor/compression-settings-dialog"
+import { LocalAssetGrid } from "./media-upload-dialog/local-asset-grid"
+import { ReviewPanel } from "./media-upload-dialog/review-panel"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -615,66 +617,15 @@ export function MediaUploadDialog({
                       </div>
 
                       <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 flex-1 overflow-y-auto min-h-0 mt-2 dark:bg-gray-900/50">
-                          {isLoadingAssets ? (
-                            <div className="text-center py-12 text-muted-foreground">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                              <p className="text-sm">Loading files...</p>
-                            </div>
-                          ) : filteredAssets.length === 0 && localAssets.length === 0 ? (
-                            <div className="text-center py-12 text-muted-foreground">
-                              <HardDrive className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                              <p className="text-sm font-medium">No files yet</p>
-                              <p className="text-xs mt-1">Click "Upload New" to add your first file</p>
-                            </div>
-                          ) : filteredAssets.length === 0 ? (
-                            <div className="text-center py-12 text-muted-foreground">
-                              <p className="text-sm font-medium">No files match your search</p>
-                              <p className="text-xs mt-1">Try a different search term</p>
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-4 gap-3">
-                              {filteredAssets.map(asset => (
-                                <div
-                                  key={asset.id}
-                                  onClick={() => toggleLocalAssetSelection(asset.id)}
-                                  className={`relative cursor-pointer rounded-lg border-2 transition-all hover:shadow-md ${
-                                    selectedLocalAssets.has(asset.id)
-                                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-blue-400'
-                                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                                  }`}
-                                >
-                                  <div className="aspect-video bg-gray-100 dark:bg-gray-800 rounded-t-lg overflow-hidden">
-                                    {asset.type.startsWith('image/') ? (
-                                      <img
-                                        src={asset.dataUrl}
-                                        alt={asset.name}
-                                        className="w-full h-full object-cover"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center">
-                                        <ImageIcon className="h-8 w-8 text-gray-400" />
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="p-2 bg-white dark:bg-gray-950 rounded-b-lg">
-                                    <p className="text-xs font-medium truncate" title={asset.name}>
-                                      {asset.name}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {formatFileSize(asset.size)}
-                                    </p>
-                                  </div>
-                                  {selectedLocalAssets.has(asset.id) && (
-                                    <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
-                                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                        <LocalAssetGrid
+                          assets={filteredAssets}
+                          selectedAssets={selectedLocalAssets}
+                          isLoading={isLoadingAssets}
+                          hasNoAssets={filteredAssets.length === 0 && localAssets.length === 0}
+                          noSearchResults={filteredAssets.length === 0 && localAssets.length > 0}
+                          onToggleSelection={toggleLocalAssetSelection}
+                          formatFileSize={formatFileSize}
+                        />
                       </div>
 
                       {selectedLocalAssets.size > 0 && (
@@ -801,111 +752,14 @@ export function MediaUploadDialog({
               )}
             </div>
 
-            <div className="w-80 border-l dark:border-gray-700 pl-6 flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Review Files</h3>
-                <span className="text-sm text-muted-foreground">
-                  {pendingUploads.length} item{pendingUploads.length !== 1 ? "s" : ""}
-                </span>
-              </div>
-
-              <div className="space-y-3 flex-1 overflow-y-auto min-h-0">
-                {pendingUploads.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No files added yet</p>
-                    <p className="text-xs">Add files to review them here</p>
-                  </div>
-                ) : (
-                  pendingUploads.map((upload) => (
-                    <div key={upload.id} className="p-3 bg-gray-50 dark:bg-gray-900 rounded-lg space-y-2 border border-gray-200 dark:border-gray-700">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate" title={upload.name}>
-                            {upload.name || "Unnamed file"}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span
-                              className={`px-2 py-1 rounded text-xs ${upload.type === "file" ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400" : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
-                                }`}
-                            >
-                              {upload.type === "file" ? "File" : "URL"}
-                            </span>
-                            {upload.size && <span>{formatFileSize(upload.size)}</span>}
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFromStaging(upload.id)}
-                          className="h-8 w-8 p-0 hover:bg-red-100 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      {upload.type === "file" && upload.file && isImageFile(upload.file) && (
-                        <div className="space-y-2">
-                          {upload.compressed && (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="text-xs">
-                                <Zap className="h-3 w-3 mr-1" />
-                                Compressed -{Math.round(upload.compressionRatio || 0)}%
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                {formatFileSize(upload.originalSize)} → {formatFileSize(upload.size)}
-                              </span>
-                            </div>
-                          )}
-
-                          {upload.needsCompression && (
-                            <div className="space-y-2">
-                              <Badge variant="outline" className="text-xs">
-                                <ImageIcon className="h-3 w-3 mr-1" />
-                                Compression Recommended
-                              </Badge>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => upload.file && handleCompressionSettings(upload.file)}
-                                className="w-full h-7 text-xs"
-                                disabled={upload.isCompressing}
-                              >
-                                {upload.isCompressing ? (
-                                  <>
-                                    <div className="animate-spin rounded-full h-3 w-3 border-b border-current mr-1" />
-                                    Compressing...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Settings className="h-3 w-3 mr-1" />
-                                    Configure Compression
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <div className="mt-6 pt-4 border-t dark:border-gray-700">
-                <Button
-                  onClick={handleSubmitAll}
-                  className="w-full h-12 text-base"
-                  disabled={pendingUploads.length === 0}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Send{" "}
-                  {pendingUploads.length > 0
-                    ? `${pendingUploads.length} item${pendingUploads.length !== 1 ? "s" : ""}`
-                    : "Files"}
-                </Button>
-              </div>
-            </div>
+            <ReviewPanel
+              pendingUploads={pendingUploads}
+              onRemove={removeFromStaging}
+              onCompressionSettings={handleCompressionSettings}
+              onSubmit={handleSubmitAll}
+              formatFileSize={formatFileSize}
+              isImageFile={isImageFile}
+            />
           </div>
         </DialogContent>
       </Dialog>
