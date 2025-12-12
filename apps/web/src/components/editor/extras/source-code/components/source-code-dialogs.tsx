@@ -1,12 +1,12 @@
 "use client"
 
 import type React from "react"
-import type { CodeFile, LanguageType, ProgrammingLanguage } from "../types"
-import { NewFileDialog } from "../dialogs/new-file-dialog"
-import { ImportFileDialog } from "../dialogs/import-file-dialog"
 import { ConfirmDialog } from "../dialogs/confirm-dialog"
-import { RenameFileDialog } from "../dialogs/rename-file-dialog"
+import { ImportFileDialog } from "../dialogs/import-file-dialog"
 import { LanguageSettingsDialog } from "../dialogs/language-settings-dialog"
+import { NewFileDialog } from "../dialogs/new-file-dialog"
+import { RenameFileDialog } from "../dialogs/rename-file-dialog"
+import type { CodeFile, LanguageType, ProgrammingLanguage } from "../types"
 
 interface SourceCodeDialogsProps {
   // File dialog props
@@ -18,20 +18,23 @@ interface SourceCodeDialogsProps {
   setNewFileLanguage: (lang: LanguageType) => void
   addNewFile: () => void
   getAllowedLanguageTypes: () => LanguageType[]
-  getLanguageLabel: (lang: LanguageType) => string
+  getLanguageLabel: (lang: LanguageType | string) => string
 
   // Import dialog props
   showImportDialog: boolean
   setShowImportDialog: (show: boolean) => void
   importFileNames: string[]
   importContents: { name: string; content: string }[]
+  importFileHasStates?: boolean
+  setImportFileHasStates?: (hasStates: boolean) => void
   handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
   importFile: () => void
-  fileInputRef: React.RefObject<HTMLInputElement>
+  fileInputRef: React.RefObject<HTMLInputElement | null>
 
   // Confirm dialog props
   showConfirmDialog: boolean
   setShowConfirmDialog: (show: boolean) => void
+  toggleFileStates?: (fileId: string) => void
   activeFileId: string
 
   // Rename dialog props
@@ -49,16 +52,16 @@ interface SourceCodeDialogsProps {
   showLanguagesDialog: boolean
   setShowLanguagesDialog: (show: boolean) => void
   allowedLanguages: Record<LanguageType, boolean>
-  setAllowedLanguages: (langs: Record<LanguageType, boolean>) => void
+  setAllowedLanguages: (langs: Record<LanguageType, boolean> | Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void
   selectedLanguage: ProgrammingLanguage
-  setSelectedLanguage: (lang: ProgrammingLanguage) => void
+  setSelectedLanguage: (lang: ProgrammingLanguage | string) => void
   updateSourceCode: (data: any) => void
   isAutocompleteEnabled: boolean
   setIsAutocompleteEnabled: (enabled: boolean) => void
   hasConfiguredSettings: boolean
   setHasConfiguredSettings: (configured: boolean) => void
   activeEnvironments: Record<string, boolean>
-  setActiveEnvironments: (envs: Record<string, boolean>) => void
+  setActiveEnvironments: (envs: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void
 
   // Common props
   isPreview?: boolean
@@ -81,6 +84,8 @@ export function SourceCodeDialogs({
   setShowImportDialog,
   importFileNames,
   importContents,
+  importFileHasStates,
+  setImportFileHasStates,
   handleFileUpload,
   importFile,
   fileInputRef,
@@ -88,6 +93,7 @@ export function SourceCodeDialogs({
   // Confirm dialog
   showConfirmDialog,
   setShowConfirmDialog,
+  toggleFileStates,
   activeFileId,
 
   // Rename dialog
@@ -139,15 +145,18 @@ export function SourceCodeDialogs({
         setShowImportDialog={setShowImportDialog}
         importFileNames={importFileNames}
         importContents={importContents}
+        importFileHasStates={importFileHasStates ?? false}
+        setImportFileHasStates={setImportFileHasStates ?? (() => { })}
         handleFileUpload={handleFileUpload}
         importFile={importFile}
-        fileInputRef={fileInputRef}
+        fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
         isPreview={isPreview}
       />
 
       <ConfirmDialog
         showConfirmDialog={showConfirmDialog}
         setShowConfirmDialog={setShowConfirmDialog}
+        toggleFileStates={toggleFileStates ?? (() => { })}
         activeFileId={activeFileId}
         isPreview={isPreview}
       />

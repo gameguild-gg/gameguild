@@ -1,280 +1,121 @@
 'use server';
 
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import {
-  getApiPaymentById,
-  getApiPaymentMethodsMe,
-  getApiPaymentsById,
-  getApiPaymentsMyPayments,
-  getApiPaymentsProductsByProductId,
-  getApiPaymentsRevenueReport,
-  getApiPaymentsStats,
-  getApiPaymentStats,
-  getApiPaymentsUsersByUserId,
-  getApiPaymentUserByUserId,
-  postApiPaymentByIdProcess,
-  postApiPaymentByIdRefund,
-  postApiPaymentIntent,
-  postApiPayments,
-  postApiPaymentsByIdCancel,
-  postApiPaymentsByIdProcess,
-  postApiPaymentsByIdRefund,
-} from '@/lib/api/generated/sdk.gen';
-import type {
-  GetApiPaymentByIdData,
-  GetApiPaymentMethodsMeData,
-  GetApiPaymentsByIdData,
-  GetApiPaymentsMyPaymentsData,
-  GetApiPaymentsProductsByProductIdData,
-  GetApiPaymentsRevenueReportData,
-  GetApiPaymentsStatsData,
-  GetApiPaymentStatsData,
-  GetApiPaymentsUsersByUserIdData,
-  GetApiPaymentUserByUserIdData,
-  PostApiPaymentByIdProcessData,
-  PostApiPaymentByIdRefundData,
-  PostApiPaymentIntentData,
-  PostApiPaymentsByIdCancelData,
-  PostApiPaymentsByIdProcessData,
-  PostApiPaymentsByIdRefundData,
-  PostApiPaymentsData,
-} from '@/lib/api/generated/types.gen';
-import { revalidateTag } from 'next/cache';
+/**
+ * Payment actions - STUB implementations.
+ * The Commerce/Payments module is disabled in GameGuild.Production.sln
+ */
+
+// Type stubs for payment data
+type PaymentMethodData = { query?: Record<string, unknown> };
+type PaymentIntentData = { body?: Record<string, unknown> };
+type PaymentProcessData = { path: { id: string }; body?: Record<string, unknown> };
+type PaymentRefundData = { path: { id: string }; body?: Record<string, unknown> };
+type PaymentCreateData = { body?: Record<string, unknown> };
+type PaymentCancelData = { path: { id: string }; body?: Record<string, unknown> };
+type PaymentByIdData = { path: { id: string } };
+type PaymentByUserData = { path: { userId: string } };
+type PaymentByProductData = { path: { productId: string } };
+type PaymentStatsData = { query?: Record<string, unknown> };
+type PaymentReportData = { query?: Record<string, unknown> };
+type PaymentsMyData = { query?: Record<string, unknown> };
+
+// Standard stub response
+const stubResponse = <T>(data?: T) => ({ data, error: undefined });
+const stubError = (message: string) => ({ data: undefined, error: { message } });
 
 // =============================================================================
 // PAYMENT METHODS & SETUP
 // =============================================================================
 
-/**
- * Get user's payment methods
- */
-export async function getMyPaymentMethods(data?: GetApiPaymentMethodsMeData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentMethodsMe({
-    query: data?.query,
-  });
+export async function getMyPaymentMethods(_data?: PaymentMethodData) {
+  return stubResponse({ paymentMethods: [] });
 }
 
-/**
- * Create payment intent
- */
-export async function createPaymentIntent(data?: PostApiPaymentIntentData) {
-  await configureAuthenticatedClient();
-
-  return postApiPaymentIntent({
-    body: data?.body,
-  });
+export async function createPaymentIntent(_data?: PaymentIntentData) {
+  return stubError('Payment processing is disabled');
 }
 
 // =============================================================================
 // PAYMENT PROCESSING
 // =============================================================================
 
-/**
- * Process a payment
- */
-export async function processPayment(data: PostApiPaymentByIdProcessData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiPaymentByIdProcess({
-    path: data.path,
-    body: data.body,
-  });
-
-  // Revalidate payments cache
-  revalidateTag('payments');
-
-  return result;
+export async function processPayment(_data: PaymentProcessData) {
+  return stubError('Payment processing is disabled');
 }
 
-/**
- * Refund a payment
- */
-export async function refundPayment(data: PostApiPaymentByIdRefundData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiPaymentByIdRefund({
-    path: data.path,
-    body: data.body,
-  });
-
-  // Revalidate payments cache
-  revalidateTag('payments');
-
-  return result;
+export async function refundPayment(_data: PaymentRefundData) {
+  return stubError('Payment refunds are disabled');
 }
 
-/**
- * Create a new payment
- */
-export async function createPayment(data?: PostApiPaymentsData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiPayments({
-    body: data?.body,
-  });
-
-  // Revalidate payments cache
-  revalidateTag('payments');
-
-  return result;
+export async function createPayment(_data?: PaymentCreateData) {
+  return stubError('Payment creation is disabled');
 }
 
-/**
- * Process payment (alternative API)
- */
-export async function processPaymentById(data: PostApiPaymentsByIdProcessData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiPaymentsByIdProcess({
-    path: data.path,
-    body: data.body,
-  });
-
-  // Revalidate payments cache
-  revalidateTag('payments');
-
-  return result;
+export async function processPaymentById(_data: PaymentProcessData) {
+  return stubError('Payment processing is disabled');
 }
 
-/**
- * Refund payment (alternative API)
- */
-export async function refundPaymentById(data: PostApiPaymentsByIdRefundData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiPaymentsByIdRefund({
-    path: data.path,
-    body: data.body,
-  });
-
-  // Revalidate payments cache
-  revalidateTag('payments');
-
-  return result;
+export async function refundPaymentById(_data: PaymentRefundData) {
+  return stubError('Payment refunds are disabled');
 }
 
-/**
- * Cancel a payment
- */
-export async function cancelPayment(data: PostApiPaymentsByIdCancelData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiPaymentsByIdCancel({
-    path: data.path,
-    body: data.body,
-  });
-
-  // Revalidate payments cache
-  revalidateTag('payments');
-
-  return result;
+export async function cancelPayment(_data: PaymentCancelData) {
+  return stubError('Payment cancellation is disabled');
 }
 
 // =============================================================================
 // PAYMENT RETRIEVAL
 // =============================================================================
 
-/**
- * Get a specific payment by ID
- */
-export async function getPaymentById(data: GetApiPaymentByIdData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentById({
-    path: data.path,
-  });
+export async function getPaymentById(_data: PaymentByIdData) {
+  return stubResponse(null);
 }
 
-/**
- * Get payments by payment ID (alternative API)
- */
-export async function getPaymentsById(data: GetApiPaymentsByIdData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentsById({
-    path: data.path,
-  });
+export async function getPaymentsById(_data: PaymentByIdData) {
+  return stubResponse(null);
 }
 
-/**
- * Get current user's payments
- */
-export async function getMyPayments(data?: GetApiPaymentsMyPaymentsData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentsMyPayments({
-    query: data?.query,
-  });
+export async function getMyPayments(_data?: PaymentsMyData) {
+  return stubResponse({ payments: [], total: 0 });
 }
 
-/**
- * Get payments for a specific user
- */
-export async function getPaymentsByUser(data: GetApiPaymentUserByUserIdData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentUserByUserId({
-    path: data.path,
-  });
+export async function getPaymentsByUser(_data: PaymentByUserData) {
+  return stubResponse({ payments: [], total: 0 });
 }
 
-/**
- * Get payments for a user (alternative API)
- */
-export async function getPaymentsByUserId(data: GetApiPaymentsUsersByUserIdData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentsUsersByUserId({
-    path: data.path,
-  });
+export async function getPaymentsByUserId(_data: PaymentByUserData) {
+  return stubResponse({ payments: [], total: 0 });
 }
 
-/**
- * Get payments for a specific product
- */
-export async function getPaymentsByProduct(data: GetApiPaymentsProductsByProductIdData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentsProductsByProductId({
-    path: data.path,
-  });
+export async function getPaymentsByProduct(_data: PaymentByProductData) {
+  return stubResponse({ payments: [], total: 0 });
 }
 
 // =============================================================================
 // PAYMENT ANALYTICS & REPORTING
 // =============================================================================
 
-/**
- * Get payment statistics
- */
-export async function getPaymentStatistics(data?: GetApiPaymentStatsData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentStats({
-    query: data?.query,
+export async function getPaymentStatistics(_data?: PaymentStatsData) {
+  return stubResponse({
+    totalRevenue: 0,
+    totalPayments: 0,
+    averagePayment: 0,
+    revenueByMonth: [],
   });
 }
 
-/**
- * Get detailed payment statistics
- */
-export async function getDetailedPaymentStats(data?: GetApiPaymentsStatsData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentsStats({
-    query: data?.query,
+export async function getDetailedPaymentStats(_data?: PaymentStatsData) {
+  return stubResponse({
+    totalRevenue: 0,
+    totalPayments: 0,
+    averagePayment: 0,
+    revenueByMonth: [],
   });
 }
 
-/**
- * Get revenue report
- */
-export async function getRevenueReport(data?: GetApiPaymentsRevenueReportData) {
-  await configureAuthenticatedClient();
-
-  return getApiPaymentsRevenueReport({
-    query: data?.query,
+export async function getRevenueReport(_data?: PaymentReportData) {
+  return stubResponse({
+    totalRevenue: 0,
+    periods: [],
   });
 }

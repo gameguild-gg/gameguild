@@ -1,14 +1,14 @@
-import React from 'react';
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { ProjectVersion } from '@/lib/api/generated/types.gen';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { ProjectVersion } from '@/lib/api/generated/stub-types';
 import { getProjectBySlug } from '@/lib/content-management/projects/projects.actions';
+import Link from 'next/link';
+import React from 'react';
 
-export default async function VersionsPage({ params }: { params: { slug: string } }): Promise<React.JSX.Element> {
-  const slug = params.slug;
+export default async function VersionsPage({ params }: { params: Promise<{ slug: string }> }): Promise<React.JSX.Element> {
+  const { slug } = await params;
 
   const projectResp = await getProjectBySlug({ path: { slug }, query: { includeCollaborators: false, includeReleases: true, includeTeam: false } });
   const project = (projectResp as any)?.data as { title?: string; versions?: ProjectVersion[] } | undefined;

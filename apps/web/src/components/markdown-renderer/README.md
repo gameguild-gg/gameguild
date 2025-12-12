@@ -136,7 +136,7 @@ A test route is available at `/markdown-test` that demonstrates all the features
 
 This implementation was migrated from the old `gameguild-main/services/web` project with the following changes:
 
-1. Removed dependency on `@game-guild/apiclient`
+1. Removed dependency on `@gameguild/apiclient`
 2. Simplified the renderer prop to use string literals instead of enum
 3. Simplified code execution functionality for demo purposes
 4. Updated import paths to match the new project structure

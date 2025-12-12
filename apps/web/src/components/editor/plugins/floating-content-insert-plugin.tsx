@@ -5,40 +5,30 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { $getSelection, $isRangeSelection, SELECTION_CHANGE_COMMAND, createCommand } from "lexical"
 import {
   AlertCircle,
-  BookMarkedIcon as MarkdownIcon,
-  Bookmark,
-  BookOpen,
   BoxIcon as ButtonIcon,
   ClipboardList,
-  Code2,
-  CodeIcon,
   CodepenIcon,
   Eye,
-  FileIcon,
-  Heading,
   ImageIcon,
   Images,
-  LayoutTemplateIcon as LayoutPresentationIcon,
-  Mail,
   MoreHorizontal,
-  MousePointerClick,
   Music,
   Music2,
   Music3,
+  FileText,
   Plus,
   SeparatorHorizontal,
-  ShoppingBag,
-  ToggleLeft,
   Twitter,
   UserPlus,
   Video,
   Youtube,
   GitBranch,
+  Table,
+  BarChart3,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Separator } from "@/components/ui/separator"
 import { MediaUploadDialog, type MediaUploadResult } from "@/components/editor/extras/media-upload-dialog"
 import type { ImageData } from "../nodes/image-node"
 import type { VideoData } from "../nodes/video-node"
@@ -63,6 +53,10 @@ import { extractYouTubeVideoId } from "../nodes/youtube-node"
 import type { SpotifyData } from "../nodes/spotify-node"
 import { extractSpotifyInfo } from "../nodes/spotify-node"
 import type { MermaidData } from "../nodes/mermaid-node"
+import type { VegaLiteData } from "../nodes/vega-lite-node"
+import type { TableData } from "../nodes/table-node"
+import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
+import type { CodeStudioMode } from "../extras/code-studio/types"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
 const IMAGE_INSERTION_MODE = 0
@@ -99,7 +93,10 @@ export const INSERT_SOURCE_COMMAND = createCommand("INSERT_SOURCE_COMMAND")
 export const INSERT_YOUTUBE_COMMAND = createCommand<YouTubeData>("INSERT_YOUTUBE_COMMAND")
 export const INSERT_SPOTIFY_COMMAND = createCommand<SpotifyData>("INSERT_SPOTIFY_COMMAND")
 export const INSERT_SOURCE_CODE_COMMAND = createCommand("INSERT_SOURCE_CODE_COMMAND")
+export const INSERT_CODE_STUDIO_COMMAND = createCommand<CodeStudioMode>("INSERT_CODE_STUDIO_COMMAND")
 export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID_COMMAND")
+export const INSERT_VEGA_LITE_COMMAND = createCommand<VegaLiteData>("INSERT_VEGA_LITE_COMMAND")
+export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TABLE_COMMAND")
 
 export function FloatingContentInsertPlugin() {
   const [editor] = useLexicalComposerContext()
@@ -120,9 +117,11 @@ export function FloatingContentInsertPlugin() {
   const [spotifyUrl, setSpotifyUrl] = useState("")
   const [spotifyShowTheme, setSpotifyShowTheme] = useState(true)
   const [spotifyError, setSpotifyError] = useState("")
+  const [showModeSelectionDialog, setShowModeSelectionDialog] = useState(false)
 
   const menuRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const popoverContentRef = useRef<HTMLDivElement>(null)
 
   const updateMenuPosition = useCallback(() => {
     editor.getEditorState().read(() => {
@@ -157,9 +156,15 @@ export function FloatingContentInsertPlugin() {
       const isTopLevel = node.getTopLevelElement() === node
       const isEmpty = node.getTextContent().trim() === ""
       const isAtStart = selection.anchor.offset === 0
+      const isCollapsed = selection.isCollapsed()
 
-      setShow(isEmpty && isTopLevel && isAtStart)
-      if (isEmpty && isAtStart) {
+      // Mostrar o botão se:
+      // 1. A linha está vazia E o cursor está no início
+      // 2. OU se o cursor está em uma linha (mesmo com texto) e a seleção está colapsada (sem texto selecionado)
+      const shouldShow = (isEmpty && isTopLevel && isAtStart) || (isTopLevel && isCollapsed)
+      
+      setShow(shouldShow)
+      if (shouldShow) {
         updateMenuPosition()
       }
     })
@@ -183,6 +188,42 @@ export function FloatingContentInsertPlugin() {
       1,
     )
   }, [editor, checkEmpty])
+
+  // Block body scroll when popover menu is open
+  useEffect(() => {
+    if (showMenu) {
+      // Store original overflow value
+      const originalOverflow = document.body.style.overflow
+      
+      // Disable scroll on body
+      document.body.style.overflow = 'hidden'
+      
+      // Cleanup on unmount or when menu closes
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [showMenu])
+
+  // Prevent scroll events inside popover from propagating
+  useEffect(() => {
+    const popoverElement = popoverContentRef.current
+    if (!popoverElement) return
+
+    const handlePopoverScroll = (event: Event) => {
+      event.stopPropagation()
+    }
+
+    popoverElement.addEventListener("scroll", handlePopoverScroll, true)
+    popoverElement.addEventListener("wheel", handlePopoverScroll, { passive: false, capture: true })
+    popoverElement.addEventListener("touchmove", handlePopoverScroll, { passive: false, capture: true })
+    
+    return () => {
+      popoverElement.removeEventListener("scroll", handlePopoverScroll, true)
+      popoverElement.removeEventListener("wheel", handlePopoverScroll, { capture: true } as any)
+      popoverElement.removeEventListener("touchmove", handlePopoverScroll, { capture: true } as any)
+    }
+  }, [showMenu])
 
   const handleImageSelected = (result: MediaUploadResult | MediaUploadResult[]) => {
     const results = Array.isArray(result) ? result : [result]
@@ -215,8 +256,7 @@ export function FloatingContentInsertPlugin() {
     results.forEach((item) => {
       editor.dispatchCommand(INSERT_AUDIO_COMMAND, {
         src: item.data,
-        title: item.name || "Audio",
-        caption: "",
+        caption: item.name || "Audio",
         size: 100,
       })
     })
@@ -264,7 +304,7 @@ export function FloatingContentInsertPlugin() {
       } else {
         // Try to parse as MM:SS format
         const timeMatch = youtubeStartAt.match(/^(\d+):(\d+)$/)
-        if (timeMatch) {
+        if (timeMatch && timeMatch[1] && timeMatch[2]) {
           const minutes = Number.parseInt(timeMatch[1], 10)
           const seconds = Number.parseInt(timeMatch[2], 10)
           if (!isNaN(minutes) && !isNaN(seconds) && seconds < 60) {
@@ -328,6 +368,7 @@ export function FloatingContentInsertPlugin() {
   }
 
   const primaryOptions = [
+    /*
     {
       icon: Heading,
       label: "Header",
@@ -340,6 +381,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
     {
       icon: ImageIcon,
       label: "Image",
@@ -358,11 +400,13 @@ export function FloatingContentInsertPlugin() {
       label: "Video",
       action: handleVideoOption,
     },
+    /*
     {
       icon: Youtube,
       label: "YouTube",
       action: handleYouTubeOption,
     },
+    */
     {
       icon: Music,
       label: "Audio",
@@ -377,13 +421,14 @@ export function FloatingContentInsertPlugin() {
       },
     },
     {
-      icon: MarkdownIcon,
+      icon: FileText,
       label: "Markdown",
       action: () => {
-        editor.dispatchCommand(INSERT_MARKDOWN_COMMAND, undefined)
+        editor.dispatchCommand(INSERT_MARKDOWN_COMMAND, { content: "" })
         setShowMenu(false)
       },
     },
+    /*
     {
       icon: Code2,
       label: "HTML",
@@ -392,6 +437,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
     {
       icon: SeparatorHorizontal,
       label: "Divider",
@@ -416,6 +462,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    /*
     {
       icon: LayoutPresentationIcon,
       label: "Presentation",
@@ -424,6 +471,8 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
+   /*
     {
       icon: BookOpen,
       label: "Sources & References",
@@ -432,6 +481,8 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
+   /*
     {
       icon: CodeIcon,
       label: "Source Code",
@@ -440,6 +491,7 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    */
     {
       icon: GitBranch,
       label: "Mermaid Diagram",
@@ -454,6 +506,46 @@ export function FloatingContentInsertPlugin() {
         setShowMenu(false)
       },
     },
+    {
+      icon: CodepenIcon,
+      label: "Code Studio",
+      action: () => {
+        setShowModeSelectionDialog(true)
+        setShowMenu(false)
+      },
+    },
+    {
+      icon: BarChart3,
+      label: "Vega-Lite Chart",
+      action: () => {
+        editor.dispatchCommand(INSERT_VEGA_LITE_COMMAND, {
+          spec: "",
+          title: "",
+          caption: "",
+          size: 100,
+          theme: "default",
+          layout: "rectangular",
+        })
+        setShowMenu(false)
+      },
+    },
+    {
+      icon: Table,
+      label: "Table",
+      action: () => {
+        editor.dispatchCommand(INSERT_TABLE_COMMAND, {
+          rows: 3,
+          columns: 3,
+          style: "default",
+          showHeader: true,
+          showBorders: true,
+          cells: [],
+          isNew: true,
+        })
+        setShowMenu(false)
+      },
+    },
+    /*
     { icon: Bookmark, label: "Bookmark", action: () => console.log("Bookmark clicked") },
     { icon: Mail, label: "Email content", action: () => console.log("Email content clicked") },
     { icon: MousePointerClick, label: "Email call to action", action: () => console.log("Email CTA clicked") },
@@ -462,6 +554,7 @@ export function FloatingContentInsertPlugin() {
     { icon: FileIcon, label: "File", action: () => console.log("File clicked") },
     { icon: ShoppingBag, label: "Product", action: () => console.log("Product clicked") },
     { icon: UserPlus, label: "Signup", action: () => console.log("Signup clicked") },
+     */
   ]
 
   const embedOptions = [
@@ -494,23 +587,41 @@ export function FloatingContentInsertPlugin() {
           position: "fixed",
           left: `${position.x}px`,
           top: `${position.y}px`,
-          zIndex: 100,
+          zIndex: 5,
         }}
       >
         <Popover open={showMenu} onOpenChange={setShowMenu}>
           <PopoverTrigger asChild>
-            <Button ref={buttonRef} variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-muted">
-              <Plus className="h-6 w-6" />
+            <Button 
+              ref={buttonRef} 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 shadow-sm"
+            >
+              <Plus className="h-6 w-6 text-gray-700 dark:text-gray-300" />
             </Button>
           </PopoverTrigger>
           <PopoverContent
+            ref={popoverContentRef}
             side="left"
-            className="w-80 p-0 max-h-[500px] overflow-y-auto shadow-lg border-0 bg-background/95 backdrop-blur-sm"
+            className="w-80 p-0 max-h-[440px] overflow-y-auto shadow-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900"
+            onWheel={(e) => {
+              e.stopPropagation()
+            }}
+            onTouchMove={(e) => {
+              e.stopPropagation()
+            }}
+            onScroll={(e) => {
+              e.stopPropagation()
+            }}
           >
+            {/*
             <div className="px-2 py-1.5">
               <h4 className="text-xs font-medium text-muted-foreground">PRIMARY</h4>
             </div>
+            */}
             <div className="grid gap-1 p-2">
+              {/*
               {primaryOptions.slice(0, 8).map((option) => (
                 <button
                   key={option.label}
@@ -525,32 +636,34 @@ export function FloatingContentInsertPlugin() {
                   <span className="font-medium">{option.label}</span>
                 </button>
               ))}
+              */}
 
-              {primaryOptions.length > 8 && (
+              {primaryOptions.length > 0 && (
                 <>
-                  <Separator className="my-2" />
+                  {/*<Separator className="my-2" />*/}
                   <div className="px-2 py-1">
-                    <h4 className="text-xs font-medium text-muted-foreground">MORE OPTIONS</h4>
+                    <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400">PLUGINS</h4>
                   </div>
                   <div className="grid grid-cols-2 gap-1">
-                    {primaryOptions.slice(8).map((option) => (
+                    {primaryOptions.slice(0).map((option) => (
                       <button
                         key={option.label}
                         onClick={() => {
                           option.action()
                         }}
-                        className="flex flex-col items-center gap-2 rounded-md px-2 py-3 text-xs hover:bg-accent hover:text-accent-foreground transition-colors duration-150 group"
+                        className="flex flex-col items-center gap-2 px-2 py-3 text-xs hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150 group border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                       >
-                        <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-muted group-hover:bg-background transition-colors duration-150">
-                          <option.icon className="h-3 w-3" />
+                        <div className="flex h-6 w-6 items-center justify-center bg-gray-100 dark:bg-gray-800 group-hover:bg-gray-200 dark:group-hover:bg-gray-700 transition-colors duration-150">
+                          <option.icon className="h-3 w-3 text-gray-700 dark:text-gray-300" />
                         </div>
-                        <span className="text-center leading-tight">{option.label}</span>
+                        <span className="text-center leading-tight text-gray-700 dark:text-gray-300">{option.label}</span>
                       </button>
                     ))}
                   </div>
                 </>
               )}
             </div>
+            {/*
             <Separator className="my-1" />
             <div className="px-2 py-1.5">
               <h4 className="text-xs font-medium text-muted-foreground">EMBEDS</h4>
@@ -572,6 +685,7 @@ export function FloatingContentInsertPlugin() {
                 </button>
               ))}
             </div>
+            */}
           </PopoverContent>
         </Popover>
       </div>
@@ -739,7 +853,7 @@ export function FloatingContentInsertPlugin() {
             {youtubeError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-red-800">Invalid URL</p>
                     <p className="text-sm text-red-700 mt-1">{youtubeError}</p>
@@ -860,7 +974,7 @@ export function FloatingContentInsertPlugin() {
             {spotifyError && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-red-800">Invalid URL</p>
                     <p className="text-sm text-red-700 mt-1">{spotifyError}</p>
@@ -908,6 +1022,17 @@ export function FloatingContentInsertPlugin() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Mode Selection Dialog for Code Studio */}
+      {showModeSelectionDialog && (
+        <ModeSelectionDialog
+          onSelect={(mode) => {
+            editor.dispatchCommand(INSERT_CODE_STUDIO_COMMAND, mode)
+            setShowModeSelectionDialog(false)
+          }}
+          onCancel={() => setShowModeSelectionDialog(false)}
+        />
+      )}
     </>
   )
 }

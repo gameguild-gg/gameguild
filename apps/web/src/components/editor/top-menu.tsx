@@ -25,7 +25,7 @@ export function TopMenu() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/gglexical" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 dark:bg-blue-500 rounded-lg flex items-center justify-center">
               <Menu className="w-4 h-4 text-white" />
             </div>
@@ -47,10 +47,10 @@ export function TopMenu() {
               Studio
             </Link>
             <Link
-              href="/gglexical/view"
+              href="/gglexical/viewer"
               className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             >
-              View
+              Viewer
             </Link>
           </nav>
 

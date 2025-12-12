@@ -1,10 +1,10 @@
+import { CourseContentLayoutClient } from '@/components/courses/course-content-layout';
+import { SidebarProvider } from '@/components/courses/sidebar-context';
 import { getProgramBySlug } from '@/data/courses/mock-data';
 import { ProgramContent } from '@/lib/api/generated/types.gen';
 import { getTopLevelProgramContent } from '@/lib/content-management/programs/programs.actions';
 import { getProgramBySlugService } from '@/lib/content-management/programs/programs.service';
 import { notFound } from 'next/navigation';
-import { CourseContentLayoutClient } from '@/components/courses/course-content-layout';
-import { SidebarProvider } from '@/components/courses/sidebar-context';
 
 interface CourseContentLayoutProps {
   children: React.ReactNode;
@@ -39,13 +39,14 @@ export default async function CourseContentLayout({ children, params }: CourseCo
     const topLevel = await getTopLevelProgramContent({
       path: { programId: programData.id! }
     });
-    contentItems = (topLevel?.data as any) ?? [];
+    contentItems = (topLevel?.data as ProgramContent[]) ?? [];
 
     // If API returns empty data, fallback to mock data
     if (contentItems.length === 0 && programData.programContents) {
       contentItems = programData.programContents;
     }
-  } catch (error) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     // Fallback to mock data content
     if (programData.programContents) {
       contentItems = programData.programContents;

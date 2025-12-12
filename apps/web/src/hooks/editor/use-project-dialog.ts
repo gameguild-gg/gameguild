@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { ProjectExporter, type ProjectData as ExportProjectData } from "@/lib/interopAdapter/project-exporter"
+import { HashManager } from "@/lib/sync/editor/hash-manager"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
-import JSZip from "jszip"
 
 interface ProjectData {
   id: string
@@ -12,13 +13,15 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
 }
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete?: (id: string) => Promise<void>
-  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any") => Promise<ProjectData[]>
+  searchProjects: (searchTerm: string, tags: string[], filterMode: "all" | "any", storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive") => Promise<ProjectData[]>
 }
 
 interface UseProjectDialogProps {
@@ -29,16 +32,37 @@ interface UseProjectDialogProps {
 export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProjectDialogProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [storageTypeFilter, setStorageTypeFilter] = useState<"local" | "gameguild-cloud" | "google-drive" | undefined>(undefined)
   const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(12) // Changed initial itemsPerPage from 10 to 12 to match available options in selector
+  const [itemsPerPage, setItemsPerPage] = useState(16) // Changed initial itemsPerPage from 10 to 12 to match available options in selector
   const [filteredProjects, setFilteredProjects] = useState<ProjectData[]>([])
   const [totalProjects, setTotalProjects] = useState(0)
   const [tagFilterMode, setTagFilterMode] = useState<"all" | "any">("any")
 
+  // Function to refresh projects list
+  const refreshProjects = useCallback(async () => {
+    if (!isDbInitialized) return
+
+    try {
+      let projects: ProjectData[]
+
+      if (searchTerm || selectedTags.length > 0 || storageTypeFilter) {
+        projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode, storageTypeFilter)
+      } else {
+        projects = await storageAdapter.list()
+      }
+
+      setTotalProjects(projects.length)
+      setFilteredProjects(projects)
+    } catch (error) {
+      console.error("Failed to refresh projects:", error)
+    }
+  }, [isDbInitialized, searchTerm, selectedTags, storageTypeFilter, tagFilterMode, storageAdapter])
+
   // Reset pagination only when filter criteria actually change
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, selectedTags, tagFilterMode])
+  }, [searchTerm, selectedTags, tagFilterMode, storageTypeFilter])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -46,27 +70,8 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
 
   // Filter projects based on search and tags
   useEffect(() => {
-    const filterProjects = async () => {
-      if (!isDbInitialized) return
-
-      try {
-        let projects: ProjectData[]
-
-        if (searchTerm || selectedTags.length > 0) {
-          projects = await storageAdapter.searchProjects(searchTerm, selectedTags, tagFilterMode)
-        } else {
-          projects = await storageAdapter.list()
-        }
-
-        setTotalProjects(projects.length)
-        setFilteredProjects(projects)
-      } catch (error) {
-        console.error("Failed to filter projects:", error)
-      }
-    }
-
-    filterProjects()
-  }, [searchTerm, selectedTags, isDbInitialized, tagFilterMode, storageAdapter])
+    refreshProjects()
+  }, [refreshProjects])
 
   const handleDownload = async (
     projectId: string,
@@ -77,33 +82,30 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     updatedAt: string,
   ) => {
     try {
-      const zip = new JSZip()
+      // Generate hash for the project
+      const hash = await HashManager.generateHash(projectData)
 
-      // Add the lexical file with .gglexical extension
-      zip.file(`${projectName}.gglexical`, projectData)
-
-      // Create index.json with project metadata
-      const metadata = {
+      // Prepare project data for export using ProjectExporter
+      const exportProjectData: ExportProjectData = {
         id: projectId,
         name: projectName,
+        data: projectData,
         tags: projectTags,
         size: new Blob([projectData]).size,
         createdAt: createdAt,
         updatedAt: updatedAt,
-        version: "1.0",
-        type: "gg-lexical-project",
+        hash: hash,
+        storageType: "local"
       }
 
-      zip.file("index.json", JSON.stringify(metadata, null, 2))
-
-      // Generate zip file
-      const zipBlob = await zip.generateAsync({ type: "blob" })
-      const url = URL.createObjectURL(zipBlob)
+      // Use ProjectExporter to create the ZIP file
+      const zipBlob = await ProjectExporter.createZipFile(exportProjectData, hash)
 
       // Create download link
+      const url = URL.createObjectURL(zipBlob)
       const link = document.createElement("a")
       link.href = url
-      link.download = `gg-lexical-editor-${projectName}.zip`
+      link.download = ProjectExporter.getDownloadFilename(exportProjectData)
       document.body.appendChild(link)
       link.click()
 
@@ -111,15 +113,15 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
       document.body.removeChild(link)
       URL.revokeObjectURL(url)
 
-      toast.success("Download started", {
-        description: `Folder "gg-lexical-editor-${projectName}.zip" is being downloaded`,
+      toast.success("Export completed", {
+        description: `Project "${projectName}" exported successfully`,
         duration: 2500,
         icon: "📥",
       })
     } catch (error) {
-      console.error("Download error:", error)
-      toast.error("Download error", {
-        description: "Could not download the project folder. Please try again.",
+      console.error("Export failed:", error)
+      toast.error("Export failed", {
+        description: "Could not export the project. Please try again.",
         duration: 4000,
         icon: "❌",
       })
@@ -137,6 +139,29 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
         })
         return null
       }
+
+      // Additional validation for project data structure
+      if (!projectData.data) {
+        console.error("Project data missing 'data' field:", projectData)
+        toast.error("Project data incomplete", {
+          description: "The project file appears to be missing content data",
+          duration: 4000,
+          icon: "⚠️",
+        })
+        return null
+      }
+
+      // Validate that data is a non-empty string
+      if (typeof projectData.data !== 'string' || projectData.data.trim() === '') {
+        console.error("Project data is not a valid string:", typeof projectData.data, projectData.data?.length)
+        toast.error("Project data invalid", {
+          description: "The project content is not in the expected format",
+          duration: 4000,
+          icon: "⚠️",
+        })
+        return null
+      }
+
       return projectData
     } catch (error) {
       console.error("Load error:", error)
@@ -155,6 +180,8 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     setSearchTerm,
     selectedTags,
     setSelectedTags,
+    storageTypeFilter,
+    setStorageTypeFilter,
     currentPage,
     setCurrentPage,
     itemsPerPage,
@@ -167,5 +194,6 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     // Functions
     handleDownload,
     loadProject,
+    refreshProjects,
   }
 }

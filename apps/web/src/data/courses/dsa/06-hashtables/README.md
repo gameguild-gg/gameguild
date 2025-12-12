@@ -346,17 +346,18 @@ In this implementation below, I have implemented a strategy to resize the table 
 
 ```c++
 #include <iostream>
+#include <type_traits>
 
 // key should not be modifiable
-// implements hash function and implements == operator
+// template concept to require the custom data to implement hash function and == operator
+// or use standard library hash and == operators
 template <typename T>
 concept HasHashFunction =
 requires(T t, T u) {
   { t.hash() } -> std::convertible_to<std::size_t>;
   { t == u } -> std::convertible_to<bool>;
-  std::is_const_v<T>;
 } || requires(T t, T u) {
-  { std::hash<T>{}(t) } -> std::convertible_to<std::size_t>;
+  { std::hash<std::remove_const_t<T>>{}(t) } -> std::convertible_to<std::size_t>;
   { t == u } -> std::convertible_to<bool>;
 };
 
@@ -364,78 +365,182 @@ requires(T t, T u) {
 template <HasHashFunction K, typename V>
 struct Hashtable {
 private:
-  // key pair
+  // key pair internal data structure. should never be used outside the hashtable
+  // the key should not be modifiable
   struct KeyValuePair {
+    friend class Hashtable;
+    // the slot can be empty, occupied or deleted
+    enum class State : uint8_t {
+      empty,
+      occupied,
+      deleted
+    };
+  private:
+    State state = State::empty;
+    // the pair key value - store without const for assignment
     K key;
     V value;
-    KeyValuePair(K key, V value) : key(key), value(value) {}
+
+    // to be used only on initialization
+    void clear() { state = State::empty; }
+
+  public:
+    [[nodiscard]] const State& GetState() const { return state;}
+    void SetDeleted() { state = State::deleted; }
+    void Set(const K& k, const V& v) {
+      key = k;
+      value = v;
+      state = State::occupied;
+    }
+
+    // const because once is set, the key should not be modifiable
+    [[nodiscard]] const K& Key() const {
+      if (state == State::occupied)
+        return key;
+      throw std::invalid_argument("Cannot get key from empty or deleted KeyValuePair");
+    }
+    V& Value() {
+      if (state == State::occupied)
+        return value;
+      throw std::invalid_argument("Cannot get value from empty or deleted KeyValuePair");
+    }
+
+    // constructors
+    KeyValuePair(const K& key, const V& value) : key(key), value(value), state(State::occupied) {}
+    KeyValuePair(): state(State::empty), key(), value() {}
   };
 
-  // array of linked lists
-  KeyValuePair** table;
-  int size;
-  int capacity;
+private:
+  // array of key value pairs
+  KeyValuePair* table;
+  // how many deleted elements are in the table
+  size_t deletedCount = 0;
+  // how many elements are in the table
+  size_t size=0;
+  // initial capacity of the table as 4 to avoid too many grow calls
+  size_t capacity = 4;
+  // when resizing, multiply capacity by growthFactor
+  float growthFactor = 2.0;
+  // load factor is size/capacity
+  // grow when the load factor is greater than 0.75
+  const float growThreshold = 0.75;
+  // shrink when the load factor is less than 0.25
+  const float shrinkThreshold = 0.25;
+  // rehash when the deleted elements are more than 25% of the capacity
+  const float deletedThreshold = 0.25;
+
 public:
-  // a good size is something 2x bigger than the number of elements you are going to store
-  explicit Hashtable(size_t capacity=1) {
-    if(capacity == 0)
-      throw std::invalid_argument("Capacity must be greater than 0");
-    // you could make it automatically resize and increase the complexity of the implementation
-    // for the sake of simplicity I will not do that
+  explicit Hashtable(size_t capacity=4) {
+    if(capacity < 4)
+      throw std::invalid_argument("Capacity must be greater than 4");
+
     this->size = 0;
     this->capacity = capacity;
-    table = new KeyValuePair*[capacity];
+    table = new KeyValuePair[capacity];
     for (size_t i = 0; i < capacity; i++)
-      table[i] = nullptr;
+      table[i].clear();
   }
+
+  [[nodiscard]] float LoadFactor(const bool countDeleted=false) const {
+    return (float)(size + (countDeleted?deletedCount:0)) / (float)capacity;
+  }
+
+  [[nodiscard]] size_t Size() const { return size; }
+  [[nodiscard]] size_t Capacity() const { return capacity; }
+
 private:
-  inline size_t convertKeyToIndex(K t) {
-    return t.hash() % capacity;
+  inline size_t convertKeyToIndex(const K& t) {
+    if constexpr (requires { t.hash(); }) {
+      // Type has custom hash() method
+      return t.hash() % capacity;
+    } else {
+      // Use std::hash for standard types
+      return std::hash<std::remove_const_t<K>>{}(t) % capacity;
+    }
   }
+
+  void resizeIfNeeded() {
+    // case where we have too many deleted elements but the load factor is still acceptable
+    bool shouldRehashForDeleted = ((float)deletedCount / (float)capacity) >= deletedThreshold;
+
+    // decide new capacity
+    auto newCapacity = capacity;
+
+    // grow or shrink
+    if (LoadFactor(true) >= growThreshold)
+      newCapacity *= growthFactor;
+    else if (LoadFactor(false) <= shrinkThreshold && capacity > 4)
+      newCapacity = std::max((size_t)4, (size_t)(newCapacity/growthFactor));
+
+    // Rehash if capacity changes OR if we have too many deleted elements
+    if (newCapacity != capacity || shouldRehashForDeleted) {
+      auto oldTable = table;
+      auto oldCapacity = capacity;
+      table = new KeyValuePair[newCapacity];
+      capacity = newCapacity;
+      for (size_t i = 0; i < capacity; i++)
+        table[i].clear();
+      size = 0;
+      deletedCount = 0;
+      // insert all elements again
+      for (size_t i = 0; i < oldCapacity; i++)
+        if (oldTable[i].GetState() == KeyValuePair::State::occupied)
+          _insert(oldTable[i].Key(), oldTable[i].Value());
+      delete[] oldTable;
+    }
+  }
+
+private:
+  void _insert(const K& key, const V& value) {
+    size_t index = convertKeyToIndex(key);
+
+    // Check if key already exists and update instead
+    while (table[index].GetState() != KeyValuePair::State::empty) {
+      if (table[index].GetState() == KeyValuePair::State::occupied && table[index].Key() == key) {
+        table[index].Set(key, value); // Update existing
+        return;
+      }
+      index = (index + 1) % capacity;
+    }
+
+    // Key doesn't exist, find next available slot (empty or deleted)
+    index = convertKeyToIndex(key); // Reset index to start position
+    while (table[index].GetState() == KeyValuePair::State::occupied) {
+      index = (index + 1) % capacity;
+    }
+
+    // If we're reusing a deleted slot, decrease deleted count
+    if (table[index].GetState() == KeyValuePair::State::deleted) {
+      deletedCount--;
+    }
+    table[index].Set(key, value);
+    size++;
+  }
+
 public:
   // inserts a new key value pair
   // this implementation uses open addressing and resize the table when it is half full
-  void insert(K key, V value) {
-    size_t index = convertKeyToIndex(key);
+  void insert(const K& key, const V& value) {
+    // insert the new element
+    _insert(key, value);
+
     // resize if necessary
     // in open addressing, it is common to resize when the table is half full
-    // this help mitigate O(n) search time when we have a lot of collisions
+    // this help mitigate O(n) search time when we have a lot of collisions or deletions
     // but on each resize, we have to rehash all elements: O(n)
-    if (size >= capacity/2) {
-      auto oldTable = table;
-      table = new KeyValuePair*[capacity*2];
-      capacity *= 2;
-      for (size_t i = 0; i < capacity; i++)
-        table[i] = nullptr;
-      size_t oldSize = size;
-      size = 0;
-      // insert all elements again
-      for (size_t i = 0; i < oldSize; i++) {
-        if (oldTable[i] != nullptr) {
-          insert(oldTable[i]->key, oldTable[i]->value);
-          delete oldTable[i];
-        }
-      }
-      delete[] oldTable;
-    }
-    // insert the new element
-    KeyValuePair* newElement = new KeyValuePair(key, value);
-    while (table[index] != nullptr) // find the next open index
-      index = (index + 1) % capacity;
-    table[index] = newElement;
-    size++;
+    resizeIfNeeded();
   }
 
   // contains the key
   bool contains(K key) {
+    // probable location
     size_t index = convertKeyToIndex(key);
-    KeyValuePair* current = table[index];
-    while (current != nullptr) {
-      if (current->key == key) {
+    // linear search until we find the key or an empty slot
+    while (table[index].GetState() != KeyValuePair::State::empty) {
+      if (table[index].GetState() == KeyValuePair::State::occupied && table[index].Key() == key) {
         return true;
       }
       index = (index + 1) % capacity;
-      current = table[index];
     }
 
     return false;
@@ -445,13 +550,11 @@ public:
   // fails if the key is not found
   V& operator[](K key) {
     size_t index = convertKeyToIndex(key);
-    KeyValuePair* current = table[index];
-    while (current != nullptr) {
-      if (current->key == key) {
-        return current->value;
+    while (table[index].GetState() != KeyValuePair::State::empty) {
+      if (table[index].GetState() == KeyValuePair::State::occupied && table[index].Key() == key) {
+        return table[index].Value();
       }
       index = (index + 1) % capacity;
-      current = table[index];
     }
     throw std::out_of_range("Key not found");
   }
@@ -459,65 +562,76 @@ public:
   // deletes the key
   // fails if the key is not found
   void remove(K key) {
-    // ideal index
-    const size_t idealIndex = convertKeyToIndex(key);
-    size_t currentIndex = idealIndex;
-    // store the last index with the same hash so we move it to the position of the removed element
-    size_t lastIndexWithSameIdealIndex = idealIndex;
-    size_t indexOfTheRemovedElement = idealIndex;
-    // iterate until we find the element, or we find an empty slot
-    while (table[currentIndex] != nullptr) {
-      if (table[currentIndex]->key == key)
-        indexOfTheRemovedElement = currentIndex;
-      if (convertKeyToIndex(table[currentIndex]->key) == idealIndex)
-        lastIndexWithSameIdealIndex = currentIndex;
-      currentIndex = (currentIndex + 1) % capacity;
+    size_t index = convertKeyToIndex(key);
+    while (table[index].GetState() != KeyValuePair::State::empty) {
+      if (table[index].GetState() == KeyValuePair::State::occupied && table[index].Key() == key) {
+        table[index].SetDeleted();
+        size--;
+        deletedCount++;
+        resizeIfNeeded();
+        return;
+      }
+      index = (index + 1) % capacity;
     }
-    if(table[indexOfTheRemovedElement] == nullptr || table[indexOfTheRemovedElement]->key != key)
-      throw std::out_of_range("Key not found");
-    // mave the last element with the same key to the position of the removed element
-    delete table[indexOfTheRemovedElement];
-    table[indexOfTheRemovedElement] = table[lastIndexWithSameIdealIndex];
-    table[lastIndexWithSameIdealIndex] = nullptr;
-
-    // todo: shrink the table if it is too empty
+    throw std::out_of_range("Key not found");
   }
 
   ~Hashtable() {
-    for (size_t i = 0; i < capacity; i++) {
-      if (table[i] != nullptr)
-        delete table[i];
-    }
     delete[] table;
   }
 };
 
-struct MyHashableType {
-  int value;
-  size_t hash() const {
-    return value;
+struct MyCustomHashableType {
+  int x, y;
+  [[nodiscard]] size_t hash() const {
+    return std::hash<int>()(x) ^ (std::hash<int>()(y));
   }
-  bool operator==(const MyHashableType& other) const {
-    return value == other.value;
+  bool operator==(const MyCustomHashableType& other) const {
+    return x == other.x && y == other.y;
   }
 };
 
 int main() {
-  // keys shouldn't be modifiable, implement hash function and == operator
-  Hashtable<const MyHashableType, int> hashtable(5);
-  hashtable.insert(MyHashableType{0}, 0);
-  hashtable.insert(MyHashableType{1}, 1);
-  hashtable.insert(MyHashableType{2}, 2); // triggers resize
-  hashtable.insert(MyHashableType{10}, 10); // should be inserted in the same index as 1
+  // Test with standard integer keys (uses std::hash<int>)
+  Hashtable<int, std::string> intHashtable;
+  intHashtable.insert(1, "one"); // load factor 0.25 (1/4)
+  intHashtable.insert(2, "two"); // load factor 0.5 (2/4)
+  // after the insertion, it should resize
+  intHashtable.insert(3, "three"); // load factor 0.375 (3/8)
+  intHashtable.insert(4, "four"); // load factor 0.5 (4/8)
+  intHashtable.remove(3); // load factor 0.375 (3/8) with 1 deleted
+  // after the removal, it should resize
+  intHashtable.remove(4); // load factor 0.5 (2/4) with 0 deleted
 
-  std::cout << hashtable[MyHashableType{0}] << std::endl;
-  std::cout << hashtable[MyHashableType{1}] << std::endl;
-  std::cout << hashtable[MyHashableType{2}] << std::endl;
-  std::cout << hashtable[MyHashableType{10}] << std::endl; // should trigger linear search
+  std::cout << "Integer hashtable:" << std::endl;
+  std::cout << "Key 1: " << intHashtable[1] << std::endl;
+  std::cout << "Key 2: " << intHashtable[2] << std::endl;
 
-  hashtable.remove(MyHashableType{0}); // should trigger swap
+  // Test with string keys (uses std::hash<std::string>)
+  Hashtable<std::string, int> stringHashtable;
+  stringHashtable.insert("hello", 42);
+  stringHashtable.insert("world", 99);
 
-  std::cout << hashtable[MyHashableType{10}] << std::endl; // shauld not trigger linear search
+  std::cout << "\nString hashtable:" << std::endl;
+  std::cout << "Key 'hello': " << stringHashtable["hello"] << std::endl;
+  std::cout << "Key 'world': " << stringHashtable["world"] << std::endl;
+
+  // Test with custom type (uses custom hash() method)
+  Hashtable<MyCustomHashableType, std::string> customHashtable;
+  MyCustomHashableType key1{1, 2};
+  MyCustomHashableType key2{2, 3};
+  MyCustomHashableType key3{3,8};
+
+  customHashtable.insert(key1, "custom one");
+  customHashtable.insert(key2, "custom two");
+  customHashtable.insert(key3, "custom three");
+
+  std::cout << "\nCustom type hashtable:" << std::endl;
+  std::cout << "Key {" << key1.x << ", " << key1.y << "}: " << customHashtable[key1] << std::endl;
+  std::cout << "Key {" << key2.x << ", " << key2.y << "}: " << customHashtable[key2] << std::endl;
+  std::cout << "Key {" << key3.x << ", " << key3.y << "}: " << customHashtable[key3] << std::endl;
+
   return 0;
+}
 }
 ```

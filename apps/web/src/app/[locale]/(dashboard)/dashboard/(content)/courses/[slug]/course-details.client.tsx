@@ -1,15 +1,14 @@
 'use client';
 
-import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Clock, Eye, FileText, Star, Users, Edit, Settings, Archive } from 'lucide-react';
-import type { Program } from '@/lib/api/generated/types.gen';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Archive, BookOpen, Clock, Edit, Eye, FileText, Settings, Star, Users } from 'lucide-react';
+// Relax type to avoid dependency on disabled OpenAPI types
 import Link from 'next/link';
 
 interface CourseDetailsProps {
-  course: Program;
+  course: any;
 }
 
 export function CourseDetails({ course }: CourseDetailsProps) {
@@ -70,8 +69,8 @@ export function CourseDetails({ course }: CourseDetailsProps) {
       <div className="flex items-start justify-between">
         <div className="flex-1 space-y-4">
           <div className="flex items-center gap-3">
-            <Badge 
-              variant="outline" 
+            <Badge
+              variant="outline"
               className={`flex items-center gap-1 ${getStatusColor(course.status)}`}
             >
               {getStatusIcon(course.status)}
@@ -83,7 +82,7 @@ export function CourseDetails({ course }: CourseDetailsProps) {
               </Badge>
             )}
           </div>
-          
+
           <div className="prose prose-sm dark:prose-invert max-w-none">
             <p className="text-muted-foreground">{course.description}</p>
           </div>

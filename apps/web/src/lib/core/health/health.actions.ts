@@ -1,34 +1,14 @@
 'use server';
 
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import { getHealth, getHealthDatabase } from '@/lib/api/generated/sdk.gen';
+// STUB: Health actions are stubbed; endpoints are unavailable in current SDK.
 
-import type { GetHealthData, GetHealthDatabaseData } from '@/lib/api/generated/types.gen';
-import { revalidateTag } from 'next/cache';
+export type GetHealthData = any;
+export type GetHealthDatabaseData = any;
 
-/**
- * Get overall system health status
- */
-export async function getSystemHealthAction(params?: GetHealthData) {
-  await configureAuthenticatedClient();
-  const result = await getHealth({
-    ...params,
-  });
-
-  revalidateTag('system-health');
-  return result;
+export async function getSystemHealthAction(_params?: GetHealthData): Promise<any> {
+  throw new Error('Not implemented (STUB): getSystemHealthAction');
 }
 
-/**
- * Get database health status
- */
-export async function getDatabaseHealthAction(params?: GetHealthDatabaseData) {
-  await configureAuthenticatedClient();
-  const result = await getHealthDatabase({
-    ...params,
-  });
-
-  revalidateTag('system-health');
-  revalidateTag('database-health');
-  return result;
+export async function getDatabaseHealthAction(_params?: GetHealthDatabaseData): Promise<any> {
+  throw new Error('Not implemented (STUB): getDatabaseHealthAction');
 }

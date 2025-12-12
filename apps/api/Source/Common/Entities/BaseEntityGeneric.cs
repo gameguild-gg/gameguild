@@ -1,4 +1,0 @@
-
-
-
-namespace GameGuild.Common.Entities;

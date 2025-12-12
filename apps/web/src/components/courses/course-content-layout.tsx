@@ -1,10 +1,10 @@
 'use client';
 
 import { ProgramContent } from '@/lib/api/generated/types.gen';
+import { cn } from '@/lib/utils';
 import { CourseContentSidebar } from './course-content-sidebar';
 import { useSidebar } from './sidebar-context';
 import { SidebarToggle } from './sidebar-toggle';
-import { cn } from '@/lib/utils';
 
 interface CourseContentLayoutClientProps {
     courseSlug: string;
@@ -24,7 +24,7 @@ export function CourseContentLayoutClient({ courseSlug, courseTitle, content, ch
                 courseTitle={courseTitle}
                 content={content}
             />
-            
+
             {/* Main Content Area */}
             <main className={cn(
                 "flex-1 transition-all duration-300 ease-in-out",
@@ -37,7 +37,7 @@ export function CourseContentLayoutClient({ courseSlug, courseTitle, content, ch
             )}>
                 {/* Sidebar Toggle Button */}
                 <SidebarToggle />
-                
+
                 {/* Content Container */}
                 <div className="h-full overflow-auto min-w-0">
                     {children}

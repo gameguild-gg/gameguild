@@ -1,130 +1,51 @@
 'use server';
 
-import { createTenantAction, deleteTenantAction, updateTenantAction } from './tenants.actions';
-import type { CreateTenantDto, UpdateTenantDto, Tenant } from '@/lib/api/generated/types.gen';
-
-interface ActionResult {
-  success: boolean;
-  error?: string;
-  data?: Tenant;
-}
-
 /**
- * Create a new tenant - client action wrapper
+ * Stub implementations for tenant client actions.
+ * These are admin-specific actions for tenant management.
  */
-export async function createTenantClient(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
-  try {
-    const name = formData.get('name') as string;
-    const description = formData.get('description') as string;
-    const isActive = formData.get('isActive') === 'on';
 
-    if (!name?.trim()) {
-      return { success: false, error: 'Tenant name is required' };
-    }
-
-    // Generate slug from name
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-
-    const createData: CreateTenantDto = {
-      name: name.trim(),
-      description: description?.trim() || undefined,
-      isActive,
-      slug,
-    };
-
-    const result = await createTenantAction({
-      body: createData,
-    });
-
-    if (result.error) {
-      return { success: false, error: String(result.error) || 'Failed to create tenant' };
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Create tenant error:', error);
-    return { success: false, error: 'An unexpected error occurred' };
-  }
+export async function getTenantById(_id: string) {
+    return { data: null, error: null };
 }
 
-/**
- * Update an existing tenant - client action wrapper
- */
-export async function updateTenantClient(tenantId: string, prevState: ActionResult, formData: FormData): Promise<ActionResult> {
-  try {
-    if (!tenantId) {
-      return { success: false, error: 'Tenant ID is required' };
-    }
-
-    const name = formData.get('name') as string;
-    const description = formData.get('description') as string;
-    const isActive = formData.get('isActive') === 'on';
-
-    if (!name?.trim()) {
-      return { success: false, error: 'Tenant name is required' };
-    }
-
-    // Generate slug from name
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-
-    const updateData: UpdateTenantDto = {
-      name: name.trim(),
-      description: description?.trim() || undefined,
-      isActive,
-      slug,
-    };
-
-    const result = await updateTenantAction({
-      path: { id: tenantId },
-      body: updateData,
-    });
-
-    if (result.error) {
-      return { success: false, error: String(result.error) || 'Failed to update tenant' };
-    }
-
-    return { success: true, data: result.data };
-  } catch (error) {
-    console.error('Update tenant error:', error);
-    return { success: false, error: 'An unexpected error occurred' };
-  }
+export async function getTenantStatistics(_id: string) {
+    return { data: {}, error: null };
 }
 
-/**
- * Update tenant via form submission without needing to bind the tenant ID at hook init.
- * This avoids the stale parameter issue when using useActionState with a dynamic tenant.
- */
-export async function updateTenantFormClient(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
-  const tenantId = (formData.get('tenantId') as string) || '';
-  return updateTenantClient(tenantId, prevState, formData);
+export async function updateTenant(_id: string, _data: any) {
+    return { success: false, error: 'Tenant management is disabled' };
 }
 
-/**
- * Delete a tenant - client action wrapper
- */
-export async function deleteTenantClient(tenantId: string): Promise<ActionResult> {
-  try {
-    if (!tenantId) {
-      return { success: false, error: 'Tenant ID is required' };
-    }
-
-    const result = await deleteTenantAction({
-      path: { id: tenantId },
-    });
-
-    if (result.error) {
-      return { success: false, error: String(result.error) || 'Failed to delete tenant' };
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error('Delete tenant error:', error);
-    return { success: false, error: 'An unexpected error occurred' };
-  }
+export async function updateTenantClient(_id: string, _prevState: any, _formData?: FormData) {
+    return { success: false, error: 'Tenant management is disabled' };
 }
+
+export async function updateTenantFormClient(_prevState: { success: boolean; error: string }, _formData?: FormData) {
+    return { success: false, error: 'Tenant management is disabled' };
+}
+
+export async function createTenantClient(_prevState: { success: boolean; error: string }, _formData?: FormData) {
+    return { success: false, error: 'Tenant management is disabled' };
+}
+
+export async function activateTenant(_id: string) {
+    return { success: false, error: 'Tenant management is disabled' };
+}
+
+export async function deactivateTenant(_id: string) {
+    return { success: false, error: 'Tenant management is disabled' };
+}
+
+export async function deleteTenant(_id: string) {
+    return { success: false, error: 'Tenant management is disabled' };
+}
+
+export async function deleteTenantClient(_id: string) {
+    return { success: false, error: 'Tenant management is disabled' };
+}
+
+// Also export action functions with 'Action' suffix for compatibility
+export const getTenantStatisticsAction = getTenantStatistics;
+export const activateTenantAction = activateTenant;
+export const deactivateTenantAction = deactivateTenant;

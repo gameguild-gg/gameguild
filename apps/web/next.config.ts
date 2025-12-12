@@ -1,5 +1,6 @@
 import { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import webpack from 'webpack';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
@@ -9,7 +10,7 @@ const nextConfig: NextConfig = {
   // Force the app to use the correct base URL
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
     ignoreDuringBuilds: true,
@@ -34,12 +35,188 @@ const nextConfig: NextConfig = {
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  webpack: (config) => {
+  // Rewrite requests for non-.gz files to .gz versions
+  async rewrites() {
+    return [
+      // WASM files
+      {
+        source: '/langs/:file*.wasm',
+        destination: '/langs/:file*.wasm.gz',
+      },
+      // WASM directory JS files (pyodide.asm.js)
+      {
+        source: '/langs/:file*.js',
+        destination: '/langs/:file*.js.gz',
+      },
+      // WASM directory JSON files (pyodide-lock.json)
+      {
+        source: '/langs/:file*.json',
+        destination: '/langs/:file*.json.gz',
+      },
+      // Pyodide loader JS (kept in /pyodide/)
+      {
+        source: '/pyodide/:file*.js',
+        destination: '/pyodide/:file*.js.gz',
+      },
+    ];
+  },
+  // Set headers for compressed files
+  async headers() {
+    return [
+      // Enable SharedArrayBuffer for @runno/runtime (required for WASM threads)
+      // Using 'credentialless' for COEP allows external images while still enabling SharedArrayBuffer
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'credentialless',
+          },
+        ],
+      },
+      {
+        source: '/wasm/:path*.wasm',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/wasm',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/langs/:path*.wasm',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/wasm',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/langs/:path*.js',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/langs/:path*.json',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/json',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/langs/:path*.zip',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/zip',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+      {
+        source: '/pyodide/:path*.js',
+        headers: [
+          {
+            key: 'Content-Encoding',
+            value: 'gzip',
+          },
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'cross-origin',
+          },
+        ],
+      },
+    ];
+  },
+  webpack: (config, { isServer }) => {
     // Allow importing .js files from TypeScript files
     // the api client generation requires this
     config.resolve.extensionAlias = {
       '.js': ['.js', '.ts'],
       '.jsx': ['.jsx', '.tsx'],
+    };
+
+    // Add fallbacks for Node.js modules used by wasmoon
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      module: false,
+      fs: false,
+      path: false,
+      canvas: false, // vega-canvas uses canvas which is Node.js only
     };
 
     // Add rule to handle markdown files as raw text
@@ -48,9 +225,20 @@ const nextConfig: NextConfig = {
       type: 'asset/source',
     });
 
+    // Fix for "self is not defined" error in server-side rendering
+    if (typeof isServer !== 'undefined' && isServer) {
+      // Define self for server-side to prevent ReferenceError
+      config.plugins = config.plugins || [];
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          self: 'globalThis',
+        })
+      );
+    }
+
     return config;
   },
 };
 
 // Export config with next-intl plugin
-export default withNextIntl(nextConfig);
+export default withNextIntl(nextConfig as any);

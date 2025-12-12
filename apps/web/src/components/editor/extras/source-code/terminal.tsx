@@ -3,22 +3,6 @@
 import type React from "react"
 import type { ProgrammingLanguage } from "./types"
 
-import {
-  Play,
-  X,
-  Plus,
-  CheckSquare,
-  Square,
-  TerminalIcon,
-  AlertTriangle,
-  MessageSquare,
-  HelpCircle,
-} from "lucide-react"
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
-import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -28,6 +12,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
+import {
+  AlertTriangle,
+  CheckSquare,
+  HelpCircle,
+  MessageSquare,
+  Play,
+  Plus,
+  Square,
+  TerminalIcon,
+  X,
+} from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import {
   DEFAULT_FIRST_CODE_TEMPLATES,
   DEFAULT_SECOND_CODE_TEMPLATES,
@@ -74,7 +74,7 @@ interface TerminalProps {
   clearTerminalOnRun: boolean
   setClearTerminalOnRun: (clear: boolean) => void
   updateSourceCode: (data: any) => void
-  terminalInputRef: React.RefObject<HTMLInputElement>
+  terminalInputRef: React.RefObject<HTMLInputElement | null>
   isCompiled?: boolean
   activeTab: "terminal" | "tests"
   setActiveTab: (tab: "terminal" | "tests") => void
@@ -154,10 +154,9 @@ function TestTypeDialog({
             type="button"
             className={`flex flex-col items-center justify-center p-6 rounded-md border transition-all min-h-[120px]
               ${!hasCustomTest ? "hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20" : "opacity-50 cursor-not-allowed"}
-              ${
-                defaultValue === "custom"
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                  : "border-gray-200 dark:border-gray-700"
+              ${defaultValue === "custom"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                : "border-gray-200 dark:border-gray-700"
               }`}
             onClick={() => {
               if (!hasCustomTest) onSelect("custom")
@@ -175,10 +174,9 @@ function TestTypeDialog({
             type="button"
             className={`flex flex-col items-center justify-center p-6 rounded-md border transition-all min-h-[120px]
               ${!hasFunctionTest ? "hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20" : "opacity-50 cursor-not-allowed"}
-              ${
-                defaultValue === "function"
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                  : "border-gray-200 dark:border-gray-700"
+              ${defaultValue === "function"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                : "border-gray-200 dark:border-gray-700"
               }`}
             onClick={() => {
               if (!hasFunctionTest) onSelect("function")
@@ -196,10 +194,9 @@ function TestTypeDialog({
             type="button"
             className={`flex flex-col items-center justify-center p-6 rounded-md border transition-all min-h-[120px]
               ${!hasConsoleTest ? "hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20" : "opacity-50 cursor-not-allowed"}
-              ${
-                defaultValue === "console"
-                  ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                  : "border-gray-200 dark:border-gray-700"
+              ${defaultValue === "console"
+                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                : "border-gray-200 dark:border-gray-700"
               }`}
             onClick={() => {
               if (!hasConsoleTest) onSelect("console")
@@ -408,18 +405,20 @@ export function Terminal({
   // Auto-insert test input when prompt is waiting
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null // Define timer outside the if block
+    const fileCases = testCases[activeFileId]
 
-    if (isTestMode && window.__awaitingPromptInput && testCases[activeFileId]?.length > 0) {
+    if (isTestMode && window.__awaitingPromptInput && fileCases && fileCases.length > 0) {
       // Use the current test index from the test runner if available, otherwise use the selected index
       const testIndex = window.__currentTestIndex >= 0 ? window.__currentTestIndex : selectedTestIndex
 
       // Only respond if this is a new prompt or a different test
       if (testIndex !== lastRespondedPrompt) {
-        const currentTest = testCases[activeFileId][testIndex]
+        const currentTest = fileCases[testIndex]
 
         if (currentTest && Array.isArray(currentTest.args) && currentTest.args.length > 0) {
+          const firstArg = currentTest.args[0]
           const testInput =
-            typeof currentTest.args[0] === "string" ? currentTest.args[0] : JSON.stringify(currentTest.args[0])
+            typeof firstArg === "string" ? firstArg : JSON.stringify(firstArg)
 
           // Set the input value silently
           setInput(testInput)
@@ -430,8 +429,8 @@ export function Terminal({
               // Call the handler directly
               handleTerminalInput({
                 key: "Enter",
-                preventDefault: () => {},
-                stopPropagation: () => {},
+                preventDefault: () => { },
+                stopPropagation: () => { },
               } as React.KeyboardEvent<HTMLInputElement>)
 
               // Track that we've responded to this prompt
@@ -546,7 +545,7 @@ export function Terminal({
       // Process the command
       handleTerminalInput({
         key: "Enter",
-        preventDefault: () => {},
+        preventDefault: () => { },
       } as React.KeyboardEvent<HTMLInputElement>)
     }
   }
@@ -577,7 +576,7 @@ export function Terminal({
     isDarkTheme
       ? "bg-green-900 hover:bg-green-800 border-green-800"
       : "bg-green-100 hover:bg-green-200 border-green-200",
-    (isExecuting || !(showTests && testCases[activeFileId]?.length > 0)) && "opacity-50 cursor-not-allowed",
+    (isExecuting || !(showTests && (testCases[activeFileId]?.length ?? 0) > 0)) && "opacity-50 cursor-not-allowed",
   )
 
   const stopButtonClass = cn(
@@ -756,8 +755,9 @@ export function Terminal({
     setAvailableLanguages(langs)
 
     // Set the selected language to the first available language
-    if (langs.length > 0 && !langs.includes(selectedLanguage)) {
-      setSelectedLanguage(langs[0])
+    const firstLang = langs[0]
+    if (langs.length > 0 && firstLang && !langs.includes(selectedLanguage)) {
+      setSelectedLanguage(firstLang)
     }
   }, [activeFileId, selectedLanguage])
 
@@ -871,7 +871,6 @@ export function Terminal({
                           id="clear-on-run"
                           checked={clearTerminalOnRun}
                           onCheckedChange={setClearTerminalOnRun}
-                          size="sm"
                           className="scale-75"
                         />
                         <Label htmlFor="clear-on-run" className="text-xs cursor-pointer">
@@ -1008,7 +1007,8 @@ export function Terminal({
                             }
 
                             // Use the same type as existing tests
-                            const existingType = testCases[activeFileId][0].type || "custom"
+                            const firstTest = testCases[activeFileId]?.[0]
+                            const existingType = firstTest?.type || "custom"
                             addTestCase(activeFileId, existingType)
                           }
                         }}
@@ -1218,8 +1218,8 @@ export function Terminal({
                               <input
                                 value={
                                   testCase.expectedReturn &&
-                                  Array.isArray(testCase.expectedReturn) &&
-                                  testCase.expectedReturn.length > 0
+                                    Array.isArray(testCase.expectedReturn) &&
+                                    testCase.expectedReturn.length > 0
                                     ? typeof testCase.expectedReturn[0] === "string"
                                       ? testCase.expectedReturn[0]
                                       : JSON.stringify(testCase.expectedReturn[0])

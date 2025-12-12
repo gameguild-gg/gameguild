@@ -1,12 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { Play, Settings, Pencil } from "lucide-react"
 import type { EditMenuOption } from "@/components/editor/extras/content-edit-menu"
-import type { ReactElement } from "react"
 import type { CodeFile, ProgrammingLanguage, SourceCodeData } from "@/components/editor/extras/source-code/types"
+import { Pencil, Play, Settings } from "lucide-react"
+import React, { useState } from "react"
 import { useCodeExecution } from "./use-code-execution"
-import React from "react"
 
 interface UseSourceCodeEditorProps {
   data: SourceCodeData & { hasConfiguredSettings?: boolean; activeEnvironments?: Record<string, boolean> }
@@ -21,7 +19,7 @@ interface UseSourceCodeEditorProps {
   showExecution: boolean
   setShowExecution: (show: boolean) => void
   output: string[]
-  setOutput: (output: string[] | ((prev: string[]) => string[])) => string[]
+  setOutput: (output: string[] | ((prev: string[]) => string[])) => void
   isDarkTheme: boolean
   setIsDarkTheme: (dark: boolean) => void
   selectedLanguage: ProgrammingLanguage
@@ -37,7 +35,7 @@ interface UseSourceCodeEditorProps {
   testCases: Record<
     string,
     {
-      type: "simple" | "inout"
+      type: "custom" | "function" | "console"
       input?: string
       expectedOutput?: string
       args?: any[]
@@ -114,20 +112,20 @@ export function useSourceCodeEditor({
           data.files
             ? JSON.parse(JSON.stringify(data.files))
             : [
-                {
-                  id: crypto.randomUUID(),
-                  name: "index.js",
-                  content: "",
-                  language: "javascript",
-                  isMain: true,
-                  isVisible: true,
-                },
-              ],
+              {
+                id: crypto.randomUUID(),
+                name: "index.js",
+                content: "",
+                language: "javascript",
+                isMain: true,
+                isVisible: true,
+              },
+            ],
         )
         setActiveFileId(
           data.activeFileId ??
-            data.files?.[0]?.id ??
-            crypto.randomUUID()
+          data.files?.[0]?.id ??
+          crypto.randomUUID()
         )
         setReadonly(data.readonly ?? false)
         setShowExecution(data.showExecution ?? false)
@@ -184,14 +182,12 @@ export function useSourceCodeEditor({
     handleExecute: executeCode,
     handleStopExecution: stopCodeExecution,
     handleTerminalCommand,
-    runTests: executeTests,
   } = useCodeExecution({
     files,
     selectedLanguage,
     clearTerminalOnRun,
     addOutput,
     clearTerminal,
-    testCases,
     setTestResults,
   })
 
@@ -227,7 +223,6 @@ export function useSourceCodeEditor({
     setCodeIsExecuting,
     executeCode,
     stopCodeExecution,
-    executeTests,
 
     // Handlers
     handleEditorMount,

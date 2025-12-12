@@ -1,5 +1,10 @@
 import { redirect } from "next/navigation"
 
-export default function LegacyAchievementsRedirect({ params }: { params: { slug: string } }) {
-  redirect(`/dashboard/projects/${params.slug}/achievements`)
+export default async function LegacyAchievementsRedirect({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
+  redirect(`/dashboard/projects/${slug}/achievements`)
 }

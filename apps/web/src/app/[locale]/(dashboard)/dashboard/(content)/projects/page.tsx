@@ -1,18 +1,15 @@
 "use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { Search, Filter, Grid3X3, List, Plus, Star, Users, Tag, Gamepad2 } from 'lucide-react';
+import { ProjectCard } from '@/components/project-card';
+import { ProjectCreateDrawer } from '@/components/projects/project-create-drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { getAllProjectsService } from '@/lib/content-management/projects/projects.service';
 import { transformProjectToGameProject } from '@/lib/content-management/projects/projects.utils';
-import { ProjectCreateDrawer } from '@/components/projects/project-create-drawer';
-import { ProjectCard } from '@/components/project-card';
 import type { GameProject } from '@/lib/types';
+import { Filter, Gamepad2, Grid3X3, List, Search } from 'lucide-react';
+import React from 'react';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = React.useState<GameProject[]>([]);
@@ -34,7 +31,7 @@ export default function ProjectsPage() {
         const result = await getAllProjectsService();
 
         if (result.success && result.data) {
-          const transformedProjects = result.data.map(project => transformProjectToGameProject(project));
+          const transformedProjects = result.data.map((project: any) => transformProjectToGameProject(project));
           setProjects(transformedProjects);
         } else {
           setError(result.error || 'Failed to load projects');
@@ -52,11 +49,11 @@ export default function ProjectsPage() {
 
   const filteredProjects = React.useMemo(() => {
     return projects.filter((project) => {
-      const matchesSearch = searchQuery === "" || 
+      const matchesSearch = searchQuery === "" ||
         project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.tagline?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       const matchesStatus = statusFilter === 'all' || project.releaseStatus === statusFilter;
       const matchesVisibility = visibilityFilter === 'all' || project.visibility === visibilityFilter;
       const matchesGenre = genreFilter === 'all' || project.genre === genreFilter;

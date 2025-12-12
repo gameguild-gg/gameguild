@@ -1,28 +1,28 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, RefreshCw, Search, Filter, Eye, Edit, Trash2, Archive, Upload } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from 'sonner';
+import { Archive, Edit, Plus, RefreshCw, Search, Trash2, Upload } from 'lucide-react';
+import { useState } from 'react';
+
+import type { Project } from '@/lib/api/generated/stub-types';
 import {
-  getProjectsData,
+  archiveProject,
   createProject,
-  updateProject,
   deleteProject,
+  getProjectsData,
   publishProject,
   unpublishProject,
-  archiveProject,
+  updateProject,
 } from '@/lib/projects/projects.actions';
-import type { Project } from '@/lib/api/generated/types.gen';
+import { toast } from 'sonner';
 
 interface ProjectManagementContentProps {
   initialProjects: Project[];
@@ -176,7 +176,8 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
     }
   };
 
-  const handleArchive = async (project: Project) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _handleArchive = async (project: Project) => {
     try {
       setLoading(true);
       await archiveProject(project.id!);
@@ -219,7 +220,7 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
     return matchesSearch && matchesStatus && matchesType;
   });
 
-  const getStatusBadge = (status: any) => {
+  const getStatusBadge = (status: string | number | undefined) => {
     const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
       '0': { label: 'Draft', variant: 'outline' },
       '1': { label: 'Published', variant: 'default' },
@@ -227,7 +228,8 @@ export function ProjectManagementContent({ initialProjects }: ProjectManagementC
       '3': { label: 'Deleted', variant: 'destructive' },
     };
 
-    const statusInfo = statusMap[status?.toString()] || { label: 'Unknown', variant: 'outline' as const };
+    const statusKey = status?.toString() || '';
+    const statusInfo = statusMap[statusKey] || { label: 'Unknown', variant: 'outline' as const };
     return <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>;
   };
 

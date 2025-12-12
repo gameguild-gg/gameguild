@@ -1,265 +1,84 @@
 'use server';
 
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import {
-  deleteApiProjectsById,
-  getApiProjects,
-  getApiProjectsById,
-  getApiProjectsByIdStatistics,
-  getApiProjectsCategoryByCategoryId,
-  getApiProjectsCreatorByCreatorId,
-  getApiProjectsFeatured,
-  getApiProjectsPopular,
-  getApiProjectsRecent,
-  getApiProjectsSearch,
-  getApiProjectsSlugBySlug,
-  postApiProjects,
-  postApiProjectsByIdArchive,
-  postApiProjectsByIdPublish,
-  postApiProjectsByIdUnpublish,
-  putApiProjectsById,
-} from '@/lib/api/generated/sdk.gen';
-import type {
-  DeleteApiProjectsByIdData,
-  GetApiProjectsByIdData,
-  GetApiProjectsByIdStatisticsData,
-  GetApiProjectsCategoryByCategoryIdData,
-  GetApiProjectsCreatorByCreatorIdData,
-  GetApiProjectsData,
-  GetApiProjectsFeaturedData,
-  GetApiProjectsPopularData,
-  GetApiProjectsRecentData,
-  GetApiProjectsSearchData,
-  GetApiProjectsSlugBySlugData,
-  PostApiProjectsByIdArchiveData,
-  PostApiProjectsByIdPublishData,
-  PostApiProjectsByIdUnpublishData,
-  PostApiProjectsData,
-  PutApiProjectsByIdData,
-} from '@/lib/api/generated/types.gen';
-import { revalidateTag } from 'next/cache';
+// STUB: Projects content-management actions are stubbed; endpoints unavailable in current SDK.
 
-// =============================================================================
-// PROJECT CRUD OPERATIONS
-// =============================================================================
+export type GetApiProjectsData = any;
+export type PostApiProjectsData = any;
+export type DeleteApiProjectsByIdData = any;
+export type GetApiProjectsByIdData = any;
+export type PutApiProjectsByIdData = any;
+export type GetApiProjectsSlugBySlugData = any;
+export type PostApiProjectsByIdPublishData = any;
+export type PostApiProjectsByIdUnpublishData = any;
+export type PostApiProjectsByIdArchiveData = any;
+export type GetApiProjectsSearchData = any;
+export type GetApiProjectsPopularData = any;
+export type GetApiProjectsRecentData = any;
+export type GetApiProjectsFeaturedData = any;
+export type GetApiProjectsCategoryByCategoryIdData = any;
+export type GetApiProjectsCreatorByCreatorIdData = any;
+export type GetApiProjectsByIdStatisticsData = any;
 
-/**
- * Get all projects with optional filtering
- */
-export async function getProjects(data?: GetApiProjectsData) {
-  await configureAuthenticatedClient();
-
-  return getApiProjects({
-    query: data?.query,
-  });
+export async function getProjects(_data?: GetApiProjectsData): Promise<any> {
+  throw new Error('Not implemented (STUB): getProjects');
 }
 
-/**
- * Create a new project
- */
-export async function createProject(data?: PostApiProjectsData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiProjects({
-    body: data?.body,
-  });
-
-  // Revalidate projects cache
-  revalidateTag('projects');
-
-  return result;
+export async function createProject(_data?: PostApiProjectsData): Promise<any> {
+  throw new Error('Not implemented (STUB): createProject');
 }
 
-/**
- * Delete a project by ID
- */
-export async function deleteProject(data: DeleteApiProjectsByIdData) {
-  await configureAuthenticatedClient();
-
-  const result = await deleteApiProjectsById({
-    path: data.path,
-  });
-
-  // Revalidate projects cache
-  revalidateTag('projects');
-
-  return result;
+export async function deleteProject(_data: DeleteApiProjectsByIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): deleteProject');
 }
 
-/**
- * Get a specific project by ID
- */
-export async function getProjectById(data: GetApiProjectsByIdData) {
-  await configureAuthenticatedClient();
-
-  return getApiProjectsById({
-    path: data.path,
-  });
+export async function getProjectById(_data: GetApiProjectsByIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): getProjectById');
 }
 
-/**
- * Update a project by ID
- */
-export async function updateProject(data: PutApiProjectsByIdData) {
-  await configureAuthenticatedClient();
-
-  const result = await putApiProjectsById({
-    path: data.path,
-    body: data.body,
-  });
-
-  // Revalidate projects cache
-  revalidateTag('projects');
-
-  return result;
+export async function updateProject(_data: PutApiProjectsByIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): updateProject');
 }
 
-/**
- * Get a project by slug
- */
-export async function getProjectBySlug(data: Omit<GetApiProjectsSlugBySlugData, 'url'>) {
-  await configureAuthenticatedClient();
-
-  return getApiProjectsSlugBySlug({
-    path: data.path,
-  });
+export async function getProjectBySlug(_data: any): Promise<any> {
+  throw new Error('Not implemented (STUB): getProjectBySlug');
 }
 
-// =============================================================================
-// PROJECT LIFECYCLE MANAGEMENT
-// =============================================================================
-
-/**
- * Publish a project
- */
-export async function publishProject(data: PostApiProjectsByIdPublishData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiProjectsByIdPublish({
-    path: data.path,
-  });
-
-  // Revalidate projects cache
-  revalidateTag('projects');
-
-  return result;
+export async function publishProject(_data: PostApiProjectsByIdPublishData): Promise<any> {
+  throw new Error('Not implemented (STUB): publishProject');
 }
 
-/**
- * Unpublish a project
- */
-export async function unpublishProject(data: PostApiProjectsByIdUnpublishData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiProjectsByIdUnpublish({
-    path: data.path,
-  });
-
-  // Revalidate projects cache
-  revalidateTag('projects');
-
-  return result;
+export async function unpublishProject(_data: PostApiProjectsByIdUnpublishData): Promise<any> {
+  throw new Error('Not implemented (STUB): unpublishProject');
 }
 
-/**
- * Archive a project
- */
-export async function archiveProject(data: PostApiProjectsByIdArchiveData) {
-  await configureAuthenticatedClient();
-
-  const result = await postApiProjectsByIdArchive({
-    path: data.path,
-  });
-
-  // Revalidate projects cache
-  revalidateTag('projects');
-
-  return result;
+export async function archiveProject(_data: PostApiProjectsByIdArchiveData): Promise<any> {
+  throw new Error('Not implemented (STUB): archiveProject');
 }
 
-// =============================================================================
-// PROJECT DISCOVERY & SEARCH
-// =============================================================================
-
-/**
- * Search projects
- */
-export async function searchProjects(data?: GetApiProjectsSearchData) {
-  await configureAuthenticatedClient();
-
-  return getApiProjectsSearch({
-    query: data?.query,
-  });
+export async function searchProjects(_data?: GetApiProjectsSearchData): Promise<any> {
+  throw new Error('Not implemented (STUB): searchProjects');
 }
 
-/**
- * Get popular projects
- */
-export async function getPopularProjects(data?: GetApiProjectsPopularData) {
-  await configureAuthenticatedClient();
-
-  return getApiProjectsPopular({
-    query: data?.query,
-  });
+export async function getPopularProjects(_data?: GetApiProjectsPopularData): Promise<any> {
+  throw new Error('Not implemented (STUB): getPopularProjects');
 }
 
-/**
- * Get recent projects
- */
-export async function getRecentProjects(data?: GetApiProjectsRecentData) {
-  await configureAuthenticatedClient();
-
-  return getApiProjectsRecent({
-    query: data?.query,
-  });
+export async function getRecentProjects(_data?: GetApiProjectsRecentData): Promise<any> {
+  throw new Error('Not implemented (STUB): getRecentProjects');
 }
 
-/**
- * Get featured projects
- */
-export async function getFeaturedProjects(data?: GetApiProjectsFeaturedData) {
-  await configureAuthenticatedClient();
-
-  return getApiProjectsFeatured({
-    query: data?.query,
-  });
+export async function getFeaturedProjects(_data?: GetApiProjectsFeaturedData): Promise<any> {
+  throw new Error('Not implemented (STUB): getFeaturedProjects');
 }
 
-/**
- * Get projects by category
- */
-export async function getProjectsByCategory(data: GetApiProjectsCategoryByCategoryIdData) {
-  await configureAuthenticatedClient();
-
-  return getApiProjectsCategoryByCategoryId({
-    path: data.path,
-    query: data.query,
-  });
+export async function getProjectsByCategory(_data: GetApiProjectsCategoryByCategoryIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): getProjectsByCategory');
 }
 
-/**
- * Get projects by creator
- */
-export async function getProjectsByCreator(data: GetApiProjectsCreatorByCreatorIdData) {
-  await configureAuthenticatedClient();
-
-  return getApiProjectsCreatorByCreatorId({
-    path: data.path,
-    query: data.query,
-  });
+export async function getProjectsByCreator(_data: GetApiProjectsCreatorByCreatorIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): getProjectsByCreator');
 }
 
-// =============================================================================
-// PROJECT ANALYTICS
-// =============================================================================
-
-/**
- * Get project statistics
- */
-export async function getProjectStatistics(data: GetApiProjectsByIdStatisticsData) {
-  await configureAuthenticatedClient();
-
-  return getApiProjectsByIdStatistics({
-    path: data.path,
-  });
+export async function getProjectStatistics(_data: GetApiProjectsByIdStatisticsData): Promise<any> {
+  throw new Error('Not implemented (STUB): getProjectStatistics');
 }

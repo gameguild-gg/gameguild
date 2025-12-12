@@ -1,6 +1,5 @@
 'use client';
 
-import { useCourseEditor } from '@/components/courses/editor/context/course-editor-provider';
 import { CourseLevel } from '@/components/legacy/types/courses';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,21 +17,40 @@ const DIFFICULTY_LEVELS = [
 ];
 
 export function GeneralDetailsSection() {
-  const { state, updateTitle, updateSlug, updateSummary, updateDescription, updateCategory, updateDifficulty } = useCourseEditor();
+  // TODO: Implement these update functions with proper state management
+  const stubState = {
+    title: '',
+    slug: '',
+    summary: '',
+    description: '',
+    category: '',
+    difficulty: 1,
+    manualSlugEdit: false,
+    errors: {}
+  };
+  const state = stubState as any;
+
+  const updateTitle = (..._args: any[]) => console.log('updateTitle not implemented');
+  const updateSlug = (..._args: any[]) => console.log('updateSlug not implemented');
+  const updateSummary = (..._args: any[]) => console.log('updateSummary not implemented');
+  const updateDescription = (..._args: any[]) => console.log('updateDescription not implemented');
+  const updateCategory = (..._args: any[]) => console.log('updateCategory not implemented');
+  const updateDifficulty = (..._args: any[]) => console.log('updateDifficulty not implemented');
 
   const handleTitleChange = (value: string) => {
-    updateTitle(value);
+    updateTitle();
 
+    // TODO: Auto-generate slug from title when proper state management is implemented
     // Auto-generate slug from title if it hasn't been manually set
-    if (!state.manualSlugEdit) {
-      const autoSlug = value
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .replace(/-+/g, '-')
-        .trim();
-      updateSlug(autoSlug);
-    }
+    // if (!state.manualSlugEdit) {
+    //   const autoSlug = value
+    //     .toLowerCase()
+    //     .replace(/[^a-z0-9\s-]/g, '')
+    //     .replace(/\s+/g, '-')
+    //     .replace(/-+/g, '-')
+    //     .trim();
+    //   updateSlug(autoSlug);
+    // }
   };
 
   const handleSlugChange = (value: string) => {

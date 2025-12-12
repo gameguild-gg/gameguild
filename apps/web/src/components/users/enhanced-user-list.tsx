@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -43,7 +42,7 @@ import {
   Columns
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { UserResponseDto } from '@/lib/api/generated/types.gen';
+import type { UserResponseDto } from '@/lib/api/generated';
 import { cn } from '@/lib/utils';
 
 // Enhanced types for user management

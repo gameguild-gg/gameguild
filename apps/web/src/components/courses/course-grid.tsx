@@ -1,4 +1,3 @@
-import React from 'react';
 import { CourseCard } from './course-card';
 
 interface CourseGridCourse {
@@ -7,7 +6,7 @@ interface CourseGridCourse {
   description: string;
   category: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
-  duration: string;
+  duration: number; // Changed from string to number to match CourseCardCourse
   enrolledStudents: number;
   rating: number;
   price: number;
@@ -71,6 +70,6 @@ export function CourseGrid({ courses, variant = 'default', columns = 3, loading 
       {courses.map((course) => (
         <CourseCard key={course.id} course={course} />
       ))}
-     </div>
-   );
+    </div>
+  );
 }

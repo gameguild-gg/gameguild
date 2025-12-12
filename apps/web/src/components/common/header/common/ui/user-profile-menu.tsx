@@ -31,9 +31,9 @@ export const UserProfileMenu = ({ session, menuItems = [] }: UserProfileMenuProp
   };
 
   // Generate display name and avatar fallback
-  const displayName = session.user.username || 'User';
+  const displayName = session.user.username || session.user.name || 'User';
   const avatarFallback = displayName?.charAt(0).toUpperCase() || session.user.email?.charAt(0).toUpperCase() || 'U';
-  const userImage = session.user.profilePictureUrl;
+  const userImage = session.user.image;
   const shouldShowImage = userImage && !imageError;
 
   return (

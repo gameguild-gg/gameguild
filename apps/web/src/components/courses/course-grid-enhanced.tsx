@@ -1,8 +1,25 @@
 'use client';
 
-import { CourseGrid } from './course-grid';
-import { Program, ProgramDifficulty, EnrollmentStatus } from '@/lib/api/generated';
+import { Program } from '@/lib/api/generated';
 import { useCourseContext } from '@/lib/courses';
+import { CourseGrid } from './course-grid';
+
+// ProgramDifficulty enum values (from backend)
+const ProgramDifficulty = {
+  Beginner: 0,
+  Intermediate: 1,
+  Advanced: 2,
+  Expert: 3,
+} as const;
+
+// EnrollmentStatus enum values (from backend)
+const EnrollmentStatus = {
+  Pending: 0,
+  Active: 1,
+  Completed: 2,
+  Cancelled: 3,
+  Expired: 4,
+} as const;
 
 // Transform Program to CourseGridCourse format
 function transformProgramToCourse(program: Program, index: number) {
@@ -11,9 +28,9 @@ function transformProgramToCourse(program: Program, index: number) {
     title: program.title,
     description: program.description || '',
     category: String(program.category || 'General'),
-    level: (program.difficulty === ProgramDifficulty.BEGINNER ? 'Beginner' : 
-           program.difficulty === ProgramDifficulty.INTERMEDIATE ? 'Intermediate' : 'Advanced') as 'Beginner' | 'Intermediate' | 'Advanced',
-    duration: `${program.estimatedHours || 0}`,
+    level: (program.difficulty === ProgramDifficulty.Beginner ? 'Beginner' :
+      program.difficulty === ProgramDifficulty.Intermediate ? 'Intermediate' : 'Advanced') as 'Beginner' | 'Intermediate' | 'Advanced',
+    duration: Number(program.estimatedHours || 0), // Changed to number to match CourseGridCourse
     enrolledStudents: program.currentEnrollments || 0,
     rating: program.averageRating || 0,
     price: 0, // No pricing info in Program type
@@ -23,7 +40,7 @@ function transformProgramToCourse(program: Program, index: number) {
       name: 'Instructor', // No instructor info in Program type
       avatar: ''
     },
-    isEnrolled: program.enrollmentStatus === EnrollmentStatus.ACTIVE || false,
+    isEnrolled: program.enrollmentStatus === EnrollmentStatus.Active || false,
     progress: 0,
     certification: false
   };

@@ -1,13 +1,14 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { TRACK_LEVEL_COLORS, TRACK_LEVELS } from '@/components/legacy/types/tracks';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Book, Code, Paintbrush } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import type { Track } from '@/lib/tracks/use-tracks';
+import { Book, Code, Paintbrush } from 'lucide-react';
 import Image from 'next/image';
-import { Track, TRACK_LEVEL_COLORS, TRACK_LEVELS } from '@/components/legacy/types/tracks';
+import { useRouter } from 'next/navigation';
 
 const areaIcons = {
   programming: Code,
@@ -72,9 +73,8 @@ export function TrackCard({ track, onClick }: TrackCardProps) {
 
   return (
     <Card
-      className={`cursor-pointer hover:shadow-lg transition-shadow bg-white dark:bg-gray-950 ${areaColorClass} ${
-        track.obtained && track.obtained !== '0' ? `border-2 ${bannerStyle.border} dark:${bannerStyle.border}` : ''
-      } transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl relative overflow-hidden`}
+      className={`cursor-pointer hover:shadow-lg transition-shadow bg-white dark:bg-gray-950 ${areaColorClass} ${track.obtained && track.obtained !== '0' ? `border-2 ${bannerStyle.border} dark:${bannerStyle.border}` : ''
+        } transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-xl relative overflow-hidden`}
       onClick={handleClick}
     >
       {track.obtained && track.obtained !== '0' && (
@@ -97,10 +97,10 @@ export function TrackCard({ track, onClick }: TrackCardProps) {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            {getLevelBadge(track.level)}
+            {getLevelBadge(String(track.level))}
           </div>
           <div className="relative w-full h-48 mb-4">
-            <Image src={track.image || '/placeholder.svg'} alt={track.title} fill className="object-cover rounded-lg" />
+            <Image src={typeof track.image === 'string' ? track.image : '/placeholder.svg'} alt={track.title} fill className="object-cover rounded-lg" />
           </div>
           <CardTitle className={`text-xl font-semibold ${areaColorClass}`}>{track.title}</CardTitle>
         </CardHeader>
@@ -108,7 +108,7 @@ export function TrackCard({ track, onClick }: TrackCardProps) {
           <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{track.description}</p>
           <div className="flex flex-wrap gap-2 mb-4">
             {track.tools.map((tool, index) => (
-              <Badge key={`${track.id}-${tool}-${index}`} variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
+              <Badge key={`${String(track.id)}-${tool}-${index}`} variant="secondary" className="text-xs bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-200">
                 {tool}
               </Badge>
             ))}

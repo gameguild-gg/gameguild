@@ -2,11 +2,8 @@
 // Comprehensive server actions for user lifecycle, profiles, and achievements
 
 // Users Module - Core user management operations
+export { createUserAction, deleteUserAction, revalidateUsersDataAction, toggleUserStatusAction, updateUserAction } from './users/users';
 export * from './users/users.actions';
-export { createUserAction, updateUserAction, deleteUserAction, toggleUserStatusAction, revalidateUsersDataAction } from './users/users';
-
-// Users Context - React context for user management state
-export * from './users/users.context';
 
 // Profiles Module - User profile management and customization
 export * from './profiles/profiles.actions';
