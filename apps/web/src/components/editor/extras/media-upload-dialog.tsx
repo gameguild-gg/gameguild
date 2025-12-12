@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useContext, useEffect } from "react"
-import { AlertCircle, Upload, X, Trash2, Plus, Send, Settings, Zap, ImageIcon } from "lucide-react"
+import { AlertCircle, Upload, X, Trash2, Plus, Send, Settings, Zap, ImageIcon, HardDrive } from "lucide-react"
 
 import { CompressionSettingsDialog, type CompressionSettings } from "@/components/editor/extras/compressor/compression-settings-dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -27,12 +27,17 @@ export interface MediaUploadResult {
   assetId?: string // Asset ID (SHA1 hash) for file uploads
 }
 
+interface MediaSourceConfig {
+  files?: boolean // Allow file upload and local asset selection
+  url?: boolean // Allow URL input
+}
+
 interface MediaUploadDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onMediaSelected: (result: MediaUploadResult | MediaUploadResult[]) => void
   title?: string
-  mode?: 0 | 1 | 2 // 0 = both upload and URL, 1 = only upload, 2 = only URL
+  sources?: MediaSourceConfig // Configure which sources are available (default: all enabled)
   acceptTypes?: string // e.g. "image/*" or "image/png,image/jpeg"
   urlPlaceholder?: string
   uploadLabel?: string
@@ -55,7 +60,7 @@ export function MediaUploadDialog({
   onOpenChange,
   onMediaSelected,
   title = "Upload Media",
-  mode = 0,
+  sources = { files: true, url: true },
   acceptTypes = "image/*",
   urlPlaceholder = "https://example.com/image.jpg",
   uploadLabel = "Select a file from your device",
@@ -67,8 +72,23 @@ export function MediaUploadDialog({
 }: MediaUploadDialogProps) {
   const projectIdFromContext = useContext(ProjectIdContext)
   const projectId = projectIdFromContext && typeof projectIdFromContext === 'string' ? projectIdFromContext : undefined
+  
+  const enabledSources = {
+    files: sources.files !== false,
+    url: sources.url !== false,
+  }
+  
+  const getDefaultTab = () => {
+    if (enabledSources.files) return "files"
+    if (enabledSources.url) return "url"
+    return "files"
+  }
+  
   const [mediaUrl, setMediaUrl] = useState("")
-  const [activeTab, setActiveTab] = useState<string>(mode === 2 ? "url" : "upload")
+  const [activeTab, setActiveTab] = useState<string>(getDefaultTab())
+  const [localAssets, setLocalAssets] = useState<Array<{ id: string; name: string; type: string; size: number; dataUrl: string }>>([])
+  const [selectedLocalAssets, setSelectedLocalAssets] = useState<Set<string>>(new Set())
+  const [isLoadingAssets, setIsLoadingAssets] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pendingUploads, setPendingUploads] = useState<PendingUpload[]>([])
   const [compressionEnabled, setCompressionEnabled] = useState(compress)
@@ -83,6 +103,47 @@ export function MediaUploadDialog({
       console.log("MediaUploadDialog: projectId =", projectId)
     }
   }, [open, projectId])
+
+  // Load all assets when dialog opens
+  useEffect(() => {
+    async function loadLocalAssets() {
+      if (open && enabledSources.files) {
+        setIsLoadingAssets(true)
+        try {
+          // Get ALL assets, not just from current project
+          const assetMetadataList = await assetManager.listAssets()
+          
+          const allAssets = await Promise.all(
+            assetMetadataList.map(async (metadata) => {
+              try {
+                const assetData = await assetManager.getAsset(metadata.id)
+                if (assetData && assetData.data) {
+                  return {
+                    id: metadata.id,
+                    name: metadata.name || metadata.id,
+                    type: metadata.mimeType,
+                    size: metadata.size || 0,
+                    dataUrl: assetData.data,
+                  }
+                }
+                return null
+              } catch (error) {
+                console.error(`Failed to load asset ${metadata.id}:`, error)
+                return null
+              }
+            })
+          )
+          
+          setLocalAssets(allAssets.filter((asset): asset is NonNullable<typeof asset> => asset !== null))
+        } catch (error) {
+          console.error('Failed to load local assets:', error)
+        } finally {
+          setIsLoadingAssets(false)
+        }
+      }
+    }
+    loadLocalAssets()
+  }, [open, enabledSources.files])
 
   const isImageFile = (file: File): boolean => {
     return file.type.startsWith("image/")
@@ -280,6 +341,35 @@ export function MediaUploadDialog({
     }
   }
 
+  const toggleLocalAssetSelection = (assetId: string) => {
+    setSelectedLocalAssets(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(assetId)) {
+        newSet.delete(assetId)
+      } else {
+        newSet.add(assetId)
+      }
+      return newSet
+    })
+  }
+
+  const handleAddSelectedAssets = () => {
+    const newUploads: PendingUpload[] = localAssets
+      .filter(asset => selectedLocalAssets.has(asset.id))
+      .map(asset => ({
+        id: `local-${asset.id}-${Date.now()}`,
+        type: "file" as const,
+        data: asset.dataUrl,
+        name: asset.name,
+        size: asset.size,
+        assetId: asset.id,
+      }))
+    
+    setPendingUploads(prev => [...prev, ...newUploads])
+    setSelectedLocalAssets(new Set())
+    setError(null)
+  }
+
   const removeFromStaging = (id: string) => {
     setPendingUploads((prev) => prev.filter((upload) => upload.id !== id))
   }
@@ -389,6 +479,8 @@ export function MediaUploadDialog({
       setPendingUploads([])
       setMediaUrl("")
       setGlobalCompressionSettings(null)
+      setSelectedLocalAssets(new Set())
+      setLocalAssets([])
     }
     onOpenChange(newOpen)
   }
@@ -461,63 +553,38 @@ export function MediaUploadDialog({
                 </Alert>
               )}
 
-              {mode === 0 ? (
+              {Object.values(enabledSources).filter(Boolean).length > 1 ? (
                 <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="upload" className="flex items-center gap-2">
-                      <Upload className="h-4 w-4" />
-                      Upload Files
-                    </TabsTrigger>
-                    <TabsTrigger value="url" className="flex items-center gap-2">
-                      <span className="text-sm">🔗</span>
-                      From URL
-                    </TabsTrigger>
+                    {enabledSources.files && (
+                      <TabsTrigger value="files" className="flex items-center gap-2">
+                        <HardDrive className="h-4 w-4" />
+                        Files
+                      </TabsTrigger>
+                    )}
+                    {enabledSources.url && (
+                      <TabsTrigger value="url" className="flex items-center gap-2">
+                        <span className="text-sm">🔗</span>
+                        URL
+                      </TabsTrigger>
+                    )}
                   </TabsList>
 
-                  <TabsContent value="upload" className="mt-0">
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <Label className="text-base font-medium">
-                          {uploadLabel}
-                          {formatMaxSize() && (
-                            <span className="text-sm text-muted-foreground ml-1">{formatMaxSize()}</span>
-                          )}
-                        </Label>
-                      </div>
-
-                      <div
-                        className="relative flex flex-col items-center justify-center gap-6 border-2 border-dashed border-gray-300 rounded-xl p-12 transition-colors hover:border-gray-400 hover:bg-gray-50/50"
-                        onDragOver={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                            handleFileUpload(e.dataTransfer.files)
-                          }
-                        }}
-                      >
-                        <div className="flex flex-col items-center gap-4">
-                          <div className="p-4 bg-blue-50 rounded-full">
-                            <Upload className="h-8 w-8 text-blue-600" />
-                          </div>
-                          <div className="text-center space-y-2">
-                            <p className="text-lg font-medium text-gray-900">Drop your files here</p>
-                            <p className="text-sm text-muted-foreground">or click to browse from your device</p>
-                          </div>
+                  {enabledSources.files && (
+                    <TabsContent value="files" className="mt-0">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-base font-medium">Select from your files</Label>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="h-9"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Upload New
+                          </Button>
                         </div>
-
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="mt-2"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Files
-                        </Button>
 
                         <input
                           ref={fileInputRef}
@@ -532,11 +599,80 @@ export function MediaUploadDialog({
                             }
                           }}
                         />
-                      </div>
-                    </div>
-                  </TabsContent>
 
-                  <TabsContent value="url" className="mt-0">
+                        <div className="border-2 border-gray-200 rounded-xl p-4 max-h-[400px] overflow-y-auto">
+                          {isLoadingAssets ? (
+                            <div className="text-center py-12 text-muted-foreground">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                              <p className="text-sm">Loading files...</p>
+                            </div>
+                          ) : localAssets.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground">
+                              <HardDrive className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm font-medium">No files yet</p>
+                              <p className="text-xs mt-1">Click "Upload New" to add your first file</p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-2 gap-3">
+                              {localAssets.map(asset => (
+                                <div
+                                  key={asset.id}
+                                  onClick={() => toggleLocalAssetSelection(asset.id)}
+                                  className={`relative cursor-pointer rounded-lg border-2 transition-all hover:shadow-md ${
+                                    selectedLocalAssets.has(asset.id)
+                                      ? 'border-blue-500 bg-blue-50'
+                                      : 'border-gray-200 hover:border-gray-300'
+                                  }`}
+                                >
+                                  <div className="aspect-video bg-gray-100 rounded-t-lg overflow-hidden">
+                                    {asset.type.startsWith('image/') ? (
+                                      <img
+                                        src={asset.dataUrl}
+                                        alt={asset.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center">
+                                        <ImageIcon className="h-8 w-8 text-gray-400" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="p-2">
+                                    <p className="text-xs font-medium truncate" title={asset.name}>
+                                      {asset.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatFileSize(asset.size)}
+                                    </p>
+                                  </div>
+                                  {selectedLocalAssets.has(asset.id) && (
+                                    <div className="absolute top-2 right-2 bg-blue-500 text-white rounded-full p-1">
+                                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {selectedLocalAssets.size > 0 && (
+                          <Button
+                            onClick={handleAddSelectedAssets}
+                            className="w-full h-12 text-base"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add {selectedLocalAssets.size} Selected File{selectedLocalAssets.size !== 1 ? 's' : ''}
+                          </Button>
+                        )}
+                      </div>
+                    </TabsContent>
+                  )}
+
+                  {enabledSources.url && (
+                    <TabsContent value="url" className="mt-0">
                     <div className="space-y-6">
                       <div className="text-center">
                         <Label className="text-base font-medium">{urlLabel}</Label>
@@ -561,9 +697,10 @@ export function MediaUploadDialog({
                         </Button>
                       </div>
                     </div>
-                  </TabsContent>
+                    </TabsContent>
+                  )}
                 </Tabs>
-              ) : mode === 1 ? (
+              ) : enabledSources.files ? (
                 <div className="space-y-4">
                   <div className="text-center">
                     <Label className="text-base font-medium">
@@ -687,7 +824,7 @@ export function MediaUploadDialog({
                         </Button>
                       </div>
 
-                      {upload.type === "file" && isImageFile(upload.file!) && (
+                      {upload.type === "file" && upload.file && isImageFile(upload.file) && (
                         <div className="space-y-2">
                           {upload.compressed && (
                             <div className="flex items-center gap-2">
