@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef, useCallback } from "react"
+import { useCallback, useRef, useState } from "react"
 
 interface UseTerminalOptions {
   onCommand?: (command: string) => boolean
@@ -49,7 +49,8 @@ export function useTerminal(options: UseTerminalOptions = {}) {
         if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
           const newIndex = historyIndex + 1
           setHistoryIndex(newIndex)
-          setInput(commandHistory[commandHistory.length - 1 - newIndex])
+          const historyItem = commandHistory[commandHistory.length - 1 - newIndex]
+          setInput(historyItem ?? "")
         }
         return
       }
@@ -59,7 +60,8 @@ export function useTerminal(options: UseTerminalOptions = {}) {
         if (historyIndex > 0) {
           const newIndex = historyIndex - 1
           setHistoryIndex(newIndex)
-          setInput(commandHistory[commandHistory.length - 1 - newIndex])
+          const historyItem = commandHistory[commandHistory.length - 1 - newIndex]
+          setInput(historyItem ?? "")
         } else if (historyIndex === 0) {
           setHistoryIndex(-1)
           setInput("")
@@ -85,7 +87,7 @@ export function useTerminal(options: UseTerminalOptions = {}) {
           const callback = window.promptCallback
 
           // Clear the callback and reset waiting state
-          window.promptCallback = null
+          window.promptCallback = () => { }
           setWaitingForInput(false)
 
           // Call the callback with the user input
@@ -101,7 +103,7 @@ export function useTerminal(options: UseTerminalOptions = {}) {
           const callback = window.confirmCallback
 
           // Clear the callback and reset waiting state
-          window.confirmCallback = null
+          window.confirmCallback = () => { }
           setWaitingForInput(false)
 
           // Call the callback with the user input

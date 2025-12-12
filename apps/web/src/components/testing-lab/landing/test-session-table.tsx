@@ -1,13 +1,13 @@
 'use client';
 
+import { LocationChip } from '@/components/testing-lab/common/ui/location-chip';
+import { RewardChip } from '@/components/testing-lab/common/ui/reward-chip';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, Gamepad2, Monitor, Star, Trophy, Users } from 'lucide-react';
-import { format } from 'date-fns';
 import { Link, useRouter } from '@/i18n/navigation';
-import { RewardChip } from '@/components/testing-lab/common/ui/reward-chip';
-import { LocationChip } from '@/components/testing-lab/common/ui/location-chip';
-import { TestSession, adaptTestingSessionForComponent, SESSION_STATUS } from '@/lib/admin';
+import { adaptTestingSessionForComponent, SESSION_STATUS, TestSession } from '@/lib/admin';
+import { format } from 'date-fns';
+import { Calendar, Clock, Gamepad2, Monitor, Star, Trophy, Users } from 'lucide-react';
 
 interface TestSessionTableProps {
   sessions: TestSession[];
@@ -68,18 +68,39 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
             {sessions.map((session) => {
               // Adapt the API session data to component-friendly format
               const adaptedSession = adaptTestingSessionForComponent(session);
-              const sessionDate = new Date(adaptedSession.sessionDate);
+              const sessionDate = new Date(adaptedSession.sessionDate || new Date());
 
-              // Helper function to convert numeric status to string
-              const getStatusString = (status: number): 'open' | 'full' | 'in-progress' | 'closed' => {
-                switch (status) {
-                  case SESSION_STATUS.SCHEDULED:
+              // Helper function to convert SessionStatus enum to display string
+              const getStatusString = (status: string | number | undefined): 'open' | 'full' | 'in-progress' | 'closed' => {
+                // Handle numeric status (SESSION_STATUS constants)
+                if (typeof status === 'number') {
+                  switch (status) {
+                    case SESSION_STATUS.SCHEDULED:
+                      return 'open';
+                    case SESSION_STATUS.ACTIVE:
+                      return 'in-progress';
+                    case SESSION_STATUS.COMPLETED:
+                      return 'closed';
+                    case SESSION_STATUS.CANCELLED:
+                      return 'closed';
+                    default:
+                      return 'closed';
+                  }
+                }
+                // Handle string status (SessionStatus enum)
+                const statusStr = String(status ?? '').toLowerCase();
+                switch (statusStr) {
+                  case 'scheduled':
+                  case 'pending':
                     return 'open';
-                  case SESSION_STATUS.ACTIVE:
+                  case 'active':
+                  case 'inprogress':
                     return 'in-progress';
-                  case SESSION_STATUS.COMPLETED:
-                    return 'closed';
-                  case SESSION_STATUS.CANCELLED:
+                  case 'completed':
+                  case 'full':
+                    return 'full';
+                  case 'cancelled':
+                  case 'failed':
                     return 'closed';
                   default:
                     return 'closed';
@@ -164,7 +185,7 @@ export function TestSessionTable({ sessions }: TestSessionTableProps) {
                           size="sm"
                           className="bg-gradient-to-r from-blue-600/30 to-blue-500/30 backdrop-blur-md border border-blue-400/40 text-white hover:from-blue-600/90 hover:to-blue-500/90 hover:border-blue-300/90 font-semibold transition-all duration-200 text-xs"
                         >
-                          <Link href={`/testing-lab/sessions/${adaptedSession.slug}/join`}>Join Session</Link>
+                          <Link href={`/testing-lab/sessions/${adaptedSession.slug}`}>View Details</Link>
                         </Button>
                       ) : getStatusString(adaptedSession.status) === 'full' ? (
                         <Button disabled size="sm" variant="outline" className="text-xs">

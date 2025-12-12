@@ -6,10 +6,16 @@
 export * from './types';
 
 // Testing Requests
-export * from './requests/requests.actions';
+export * from './requests/testing-requests.actions';
 
-// Testing Sessions
-export * from './sessions/sessions.actions';
+// Testing Feedbacks
+export * from './feedbacks/testing-feedbacks.actions';
+
+// Testing Sessions (selective to avoid export name conflicts)
+export {
+    createTestingSessionAction,
+    deleteTestingSessionAction, getAvailableTestSessions, getSessionEnrollmentRequestsAction, getTestingLocationsAction, getTestingSessionByIdAction, getTestingSessionBySlug, getTestingSessionsAction, getTestSessionBySlug, processEnrollmentDecisionAction, searchTestingSessionsAction
+} from './sessions/sessions.actions';
 
 // Participant Management
 export * from './participants/participants.actions';
@@ -26,3 +32,4 @@ export * from './analytics/testing-analytics.actions';
 
 // Attendance Management
 export * from './attendance/attendance.actions';
+

@@ -1,0 +1,14 @@
+using GameGuild.Authentication.Models.Responses;
+using GameGuild.CQRS;
+
+namespace GameGuild.Authentication.Commands;
+
+/// <summary>
+///     Command to generate a Web3 challenge for wallet authentication
+/// </summary>
+public class GenerateWeb3ChallengeCommand : IRequest<Web3ChallengeResponse>
+{
+    public string WalletAddress { get; set; } = string.Empty;
+
+    public string ChainId { get; set; } = string.Empty;
+}

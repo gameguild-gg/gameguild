@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
+import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
 
 interface ProjectData {
   id: string
@@ -19,7 +20,7 @@ interface ProjectData {
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[]) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive") => Promise<void>
 }
 
 interface CreateProjectDialogProps {
@@ -27,8 +28,8 @@ interface CreateProjectDialogProps {
   onOpenChange: (open: boolean) => void
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
-  availableTags: Array<{ name: string; usageCount: number }>
-  onProjectCreate: (projectData: { id: string; name: string; tags: string[] }) => void
+  availableTags: Array<{ name: string }>
+  onProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive" }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
   generateProjectId: () => string
@@ -49,6 +50,7 @@ export function CreateProjectDialog({
   const [projectTags, setProjectTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
+  const [storageOption, setStorageOption] = useState<StorageOption>("local")
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -84,6 +86,15 @@ export function CreateProjectDialog({
       return
     }
 
+    if (!storageOption) {
+      toast.error("Opção de armazenamento obrigatória", {
+        description: "Por favor, selecione uma opção de armazenamento",
+        duration: 3000,
+        icon: "💾",
+      })
+      return
+    }
+
 
 
     // Check if project with same name already exists
@@ -113,13 +124,14 @@ export function CreateProjectDialog({
 
     try {
       const newProjectId = generateProjectId()
-      await storageAdapter.save(newProjectId, newCreateProjectName, emptyState, projectTags)
+      await storageAdapter.save(newProjectId, newCreateProjectName, emptyState, projectTags, storageOption)
 
       // Call the callback to update parent state
       onProjectCreate({
         id: newProjectId,
         name: newCreateProjectName,
         tags: projectTags,
+        storageType: storageOption,
       })
 
       // Reset form state
@@ -127,6 +139,7 @@ export function CreateProjectDialog({
       setProjectTags([])
       setTagInput("")
       setShowTagDropdown(false)
+      setStorageOption("local")
       onOpenChange(false)
 
       // Update lists
@@ -153,6 +166,7 @@ export function CreateProjectDialog({
     setProjectTags([])
     setTagInput("")
     setShowTagDropdown(false)
+    setStorageOption("local")
     onOpenChange(false)
   }
 
@@ -252,9 +266,6 @@ export function CreateProjectDialog({
                                 className="w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-between"
                               >
                                 <span className="text-sm">{tag.name}</span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  ({tag.usageCount} uses)
-                                </span>
                               </button>
                             ))}
                             {/* Show separator if there are existing tags and we can create new */}
@@ -371,13 +382,19 @@ export function CreateProjectDialog({
                       onClick={() => setProjectTags((prev) => [...prev, tag.name])}
                       className="px-2 py-1 text-xs rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
-                      {tag.name} ({tag.usageCount})
+                      {tag.name}
                     </button>
                   ))}
                 </div>
               </div>
             )}
           </div>
+
+          {/* Storage Options Section */}
+          <StorageOptionSelector
+            selectedOption={storageOption}
+            onSelectionChange={setStorageOption}
+          />
 
           <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
             <div className="flex items-center gap-2 mb-2">
@@ -404,7 +421,7 @@ export function CreateProjectDialog({
             <Button variant="outline" onClick={handleCancel}>
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={projectTags.length === 0}>
+            <Button onClick={handleCreate} disabled={projectTags.length === 0 || !storageOption}>
               Create Project
             </Button>
           </div>

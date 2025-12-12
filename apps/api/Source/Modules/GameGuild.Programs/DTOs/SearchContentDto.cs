@@ -1,0 +1,20 @@
+using GameGuild.SharedKernel.Enums;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.Modules.Programs.Entities;
+using System.ComponentModel.DataAnnotations;
+﻿namespace GameGuild.Modules.Programs;
+
+/// <summary> DTO for content search operations </summary>
+public class SearchContentDto {
+  [Required] public Guid ProgramId { get; set; }
+
+  [Required][StringLength(255)] public string SearchTerm { get; set; } = string.Empty;
+
+  public ProgramContentType? Type { get; set; }
+
+  public Visibility? Visibility { get; set; }
+
+  public bool? IsRequired { get; set; }
+
+  public Guid? ParentId { get; set; }
+}

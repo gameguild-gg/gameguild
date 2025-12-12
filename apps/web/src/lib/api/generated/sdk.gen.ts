@@ -2,26 +2,92 @@
 
 import type { Options as ClientOptions, TDataShape, Client } from './client';
 import type {
-  GetApiAchievementsLeaderboardData,
-  GetApiAchievementsLeaderboardResponses,
-  GetApiAchievementsData,
-  GetApiAchievementsResponses,
-  PostApiAchievementsData,
-  PostApiAchievementsResponses,
-  DeleteApiAchievementsByAchievementIdData,
-  DeleteApiAchievementsByAchievementIdResponses,
-  GetApiAchievementsByAchievementIdData,
-  GetApiAchievementsByAchievementIdResponses,
-  PutApiAchievementsByAchievementIdData,
-  PutApiAchievementsByAchievementIdResponses,
-  PostApiAchievementsByAchievementIdAwardData,
-  PostApiAchievementsByAchievementIdAwardResponses,
-  PostApiAchievementsByAchievementIdBulkAwardData,
-  PostApiAchievementsByAchievementIdBulkAwardResponses,
-  GetApiAchievementsByAchievementIdStatisticsData,
-  GetApiAchievementsByAchievementIdStatisticsResponses,
-  GetApiAchievementsStatisticsData,
-  GetApiAchievementsStatisticsResponses,
+  GetApiV1AbacPoliciesData,
+  GetApiV1AbacPoliciesResponses,
+  PostApiV1AbacPoliciesData,
+  PostApiV1AbacPoliciesResponses,
+  DeleteApiV1AbacPoliciesByIdData,
+  DeleteApiV1AbacPoliciesByIdResponses,
+  GetApiV1AbacPoliciesByIdData,
+  GetApiV1AbacPoliciesByIdResponses,
+  PutApiV1AbacPoliciesByIdData,
+  PutApiV1AbacPoliciesByIdResponses,
+  PostApiV1AbacPoliciesEvaluateData,
+  PostApiV1AbacPoliciesEvaluateResponses,
+  PostApiV1AbacPoliciesEvaluateBulkData,
+  PostApiV1AbacPoliciesEvaluateBulkResponses,
+  PostApiV1AbacPoliciesTestExpressionData,
+  PostApiV1AbacPoliciesTestExpressionResponses,
+  PostApiV1AbacPoliciesByIdActivateData,
+  PostApiV1AbacPoliciesByIdActivateResponses,
+  PostApiV1AbacPoliciesByIdDeactivateData,
+  PostApiV1AbacPoliciesByIdDeactivateResponses,
+  PostApiV1AbacPoliciesByIdCloneData,
+  PostApiV1AbacPoliciesByIdCloneResponses,
+  GetApiV1AbacPoliciesStatisticsData,
+  GetApiV1AbacPoliciesStatisticsResponses,
+  GetApiV1AbacPoliciesByIdUsageData,
+  GetApiV1AbacPoliciesByIdUsageResponses,
+  GetApiV1AbacPoliciesByIdAuditTrailData,
+  GetApiV1AbacPoliciesByIdAuditTrailResponses,
+  PostApiV1AbacPoliciesValidateData,
+  PostApiV1AbacPoliciesValidateResponses,
+  GetApiV1AbacPoliciesConflictsData,
+  GetApiV1AbacPoliciesConflictsResponses,
+  GetApiV1AbacPoliciesTemplatesData,
+  GetApiV1AbacPoliciesTemplatesResponses,
+  PostApiV1AbacPoliciesTemplatesByTemplateIdCreateData,
+  PostApiV1AbacPoliciesTemplatesByTemplateIdCreateResponses,
+  GetApiV1AccessReviewsCampaignsData,
+  GetApiV1AccessReviewsCampaignsResponses,
+  PostApiV1AccessReviewsCampaignsData,
+  PostApiV1AccessReviewsCampaignsResponses,
+  DeleteApiV1AccessReviewsCampaignsByIdData,
+  DeleteApiV1AccessReviewsCampaignsByIdResponses,
+  GetApiV1AccessReviewsCampaignsByIdData,
+  GetApiV1AccessReviewsCampaignsByIdResponses,
+  PutApiV1AccessReviewsCampaignsByIdData,
+  PutApiV1AccessReviewsCampaignsByIdResponses,
+  PostApiV1AccessReviewsCampaignsByIdStartData,
+  PostApiV1AccessReviewsCampaignsByIdStartResponses,
+  PostApiV1AccessReviewsCampaignsByIdCompleteData,
+  PostApiV1AccessReviewsCampaignsByIdCompleteResponses,
+  GetApiV1AccessReviewsCampaignsByCampaignIdItemsData,
+  GetApiV1AccessReviewsCampaignsByCampaignIdItemsResponses,
+  PostApiV1AccessReviewsItemsByItemIdReviewData,
+  PostApiV1AccessReviewsItemsByItemIdReviewResponses,
+  PostApiV1AccessReviewsItemsBulkReviewData,
+  PostApiV1AccessReviewsItemsBulkReviewResponses,
+  GetApiV1AccessReviewsItemsByItemIdData,
+  GetApiV1AccessReviewsItemsByItemIdResponses,
+  GetApiV1AccessReviewsPeriodicData,
+  GetApiV1AccessReviewsPeriodicResponses,
+  PostApiV1AccessReviewsPeriodicData,
+  PostApiV1AccessReviewsPeriodicResponses,
+  GetApiV1AccessReviewsPeriodicByIdData,
+  GetApiV1AccessReviewsPeriodicByIdResponses,
+  PostApiV1AccessReviewsPeriodicByIdTriggerData,
+  PostApiV1AccessReviewsPeriodicByIdTriggerResponses,
+  PostApiV1AccessReviewsRevokeAccessData,
+  PostApiV1AccessReviewsRevokeAccessResponses,
+  PostApiV1AccessReviewsBulkRevokeAccessData,
+  PostApiV1AccessReviewsBulkRevokeAccessResponses,
+  GetApiV1AccessReviewsRevocationHistoryData,
+  GetApiV1AccessReviewsRevocationHistoryResponses,
+  GetApiV1AccessReviewsAnalyticsData,
+  GetApiV1AccessReviewsAnalyticsResponses,
+  GetApiV1AccessReviewsComplianceStatusData,
+  GetApiV1AccessReviewsComplianceStatusResponses,
+  PostApiV1AccessReviewsGenerateReportData,
+  PostApiV1AccessReviewsGenerateReportResponses,
+  PostApiV1AccessReviewsCampaignsByCampaignIdSendRemindersData,
+  PostApiV1AccessReviewsCampaignsByCampaignIdSendRemindersResponses,
+  PostApiV1AccessReviewsReminderSettingsData,
+  PostApiV1AccessReviewsReminderSettingsResponses,
+  GetApiV1AccessReviewsTemplatesData,
+  GetApiV1AccessReviewsTemplatesResponses,
+  PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignData,
+  PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignResponses,
   PostApiProgramsByProgramIdActivityGradesData,
   PostApiProgramsByProgramIdActivityGradesResponses,
   GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData,
@@ -40,358 +106,349 @@ import type {
   GetApiProgramsByProgramIdActivityGradesStatisticsResponses,
   GetApiProgramsByProgramIdActivityGradesContentByContentIdData,
   GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses,
-  PostApiAuthSignUpData,
-  PostApiAuthSignUpResponses,
-  PostApiAuthSignUpErrors,
-  PostApiAuthSignupData,
-  PostApiAuthSignupResponses,
-  PostApiAuthSignupErrors,
-  PostApiAuthSignInData,
-  PostApiAuthSignInResponses,
-  PostApiAuthSignInErrors,
-  PostApiAuthSigninData,
-  PostApiAuthSigninResponses,
-  PostApiAuthSigninErrors,
-  PostApiAuthGoogleData,
-  PostApiAuthGoogleResponses,
-  PostApiAuthGoogleErrors,
-  PostApiAuthRefreshData,
-  PostApiAuthRefreshResponses,
-  PostApiAuthRefreshErrors,
-  PostApiAuthRevokeData,
-  PostApiAuthRevokeResponses,
-  PostApiAuthRevokeErrors,
-  GetApiAuthProfileData,
-  GetApiAuthProfileResponses,
-  GetApiAuthProfileErrors,
-  GetApiCloudflareStatusData,
-  GetApiCloudflareStatusResponses,
-  PostApiCloudflareUpdateData,
-  PostApiCloudflareUpdateResponses,
-  GetApiCloudflareExternalIpData,
-  GetApiCloudflareExternalIpResponses,
-  PostApiContentinteractionStartData,
-  PostApiContentinteractionStartResponses,
-  PutApiContentinteractionByInteractionIdProgressData,
-  PutApiContentinteractionByInteractionIdProgressResponses,
-  PostApiContentinteractionByInteractionIdSubmitData,
-  PostApiContentinteractionByInteractionIdSubmitResponses,
-  PostApiContentinteractionByInteractionIdCompleteData,
-  PostApiContentinteractionByInteractionIdCompleteResponses,
-  GetApiContentinteractionUserByProgramUserIdContentByContentIdData,
-  GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses,
-  GetApiContentinteractionUserByProgramUserIdData,
-  GetApiContentinteractionUserByProgramUserIdResponses,
-  PutApiContentinteractionByInteractionIdTimeSpentData,
-  PutApiContentinteractionByInteractionIdTimeSpentResponses,
-  GetCredentialsData,
-  GetCredentialsResponses,
-  PostCredentialsData,
-  PostCredentialsResponses,
-  GetCredentialsUserByUserIdData,
-  GetCredentialsUserByUserIdResponses,
-  DeleteCredentialsByIdData,
-  DeleteCredentialsByIdResponses,
-  GetCredentialsByIdData,
-  GetCredentialsByIdResponses,
-  PutCredentialsByIdData,
-  PutCredentialsByIdResponses,
-  GetCredentialsUserByUserIdTypeByTypeData,
-  GetCredentialsUserByUserIdTypeByTypeResponses,
-  PostCredentialsByIdRestoreData,
-  PostCredentialsByIdRestoreResponses,
-  DeleteCredentialsByIdHardData,
-  DeleteCredentialsByIdHardResponses,
-  PostCredentialsByIdMarkUsedData,
-  PostCredentialsByIdMarkUsedResponses,
-  PostCredentialsByIdDeactivateData,
-  PostCredentialsByIdDeactivateResponses,
-  PostCredentialsByIdActivateData,
-  PostCredentialsByIdActivateResponses,
-  GetCredentialsDeletedData,
-  GetCredentialsDeletedResponses,
-  GetHealthData,
-  GetHealthResponses,
-  GetHealthDatabaseData,
-  GetHealthDatabaseResponses,
-  GetHealthDynamicDnsData,
-  GetHealthDynamicDnsResponses,
-  GetApiModulePermissionsCheckData,
-  GetApiModulePermissionsCheckResponses,
-  GetApiModulePermissionsMyPermissionsData,
-  GetApiModulePermissionsMyPermissionsResponses,
-  GetApiModulePermissionsUsersByUserIdPermissionsData,
-  GetApiModulePermissionsUsersByUserIdPermissionsResponses,
-  GetApiModulePermissionsUsersWithPermissionData,
-  GetApiModulePermissionsUsersWithPermissionResponses,
-  PostApiModulePermissionsAssignRoleData,
-  PostApiModulePermissionsAssignRoleResponses,
-  DeleteApiModulePermissionsRevokeRoleData,
-  DeleteApiModulePermissionsRevokeRoleResponses,
-  GetApiModulePermissionsUsersByUserIdRolesData,
-  GetApiModulePermissionsUsersByUserIdRolesResponses,
-  GetApiModulePermissionsRolesByRoleNameUsersData,
-  GetApiModulePermissionsRolesByRoleNameUsersResponses,
-  GetApiModulePermissionsTestingLabMyPermissionsData,
-  GetApiModulePermissionsTestingLabMyPermissionsResponses,
-  GetApiModulePermissionsTestingLabUsersByUserIdPermissionsData,
-  GetApiModulePermissionsTestingLabUsersByUserIdPermissionsResponses,
-  GetApiModulePermissionsTestingLabCanCreateSessionsData,
-  GetApiModulePermissionsTestingLabCanCreateSessionsResponses,
-  GetApiModulePermissionsTestingLabCanDeleteSessionsData,
-  GetApiModulePermissionsTestingLabCanDeleteSessionsResponses,
-  GetApiModulePermissionsTestingLabCanManageTestersData,
-  GetApiModulePermissionsTestingLabCanManageTestersResponses,
-  GetApiModulePermissionsTestingLabCanViewReportsData,
-  GetApiModulePermissionsTestingLabCanViewReportsResponses,
-  GetApiModulePermissionsTestingLabCanExportDataData,
-  GetApiModulePermissionsTestingLabCanExportDataResponses,
-  GetApiModulePermissionsModulesByModuleRolesData,
-  GetApiModulePermissionsModulesByModuleRolesResponses,
-  PostApiModulePermissionsModulesByModuleRolesData,
-  PostApiModulePermissionsModulesByModuleRolesResponses,
-  DeleteApiModulePermissionsModulesByModuleRolesByRoleNameData,
-  DeleteApiModulePermissionsModulesByModuleRolesByRoleNameResponses,
-  PutApiModulePermissionsModulesByModuleRolesByRoleNameData,
-  PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses,
-  GetApiPaymentMethodsMeData,
-  GetApiPaymentMethodsMeResponses,
-  PostApiPaymentIntentData,
-  PostApiPaymentIntentResponses,
-  PostApiPaymentByIdProcessData,
-  PostApiPaymentByIdProcessResponses,
-  PostApiPaymentByIdRefundData,
-  PostApiPaymentByIdRefundResponses,
-  GetApiPaymentByIdData,
-  GetApiPaymentByIdResponses,
-  GetApiPaymentUserByUserIdData,
-  GetApiPaymentUserByUserIdResponses,
-  GetApiPaymentStatsData,
-  GetApiPaymentStatsResponses,
-  PostApiPaymentsData,
-  PostApiPaymentsResponses,
-  GetApiPaymentsByIdData,
-  GetApiPaymentsByIdResponses,
-  GetApiPaymentsMyPaymentsData,
-  GetApiPaymentsMyPaymentsResponses,
-  GetApiPaymentsUsersByUserIdData,
-  GetApiPaymentsUsersByUserIdResponses,
-  GetApiPaymentsProductsByProductIdData,
-  GetApiPaymentsProductsByProductIdResponses,
-  PostApiPaymentsByIdProcessData,
-  PostApiPaymentsByIdProcessResponses,
-  PostApiPaymentsByIdRefundData,
-  PostApiPaymentsByIdRefundResponses,
-  PostApiPaymentsByIdCancelData,
-  PostApiPaymentsByIdCancelResponses,
-  GetApiPaymentsStatsData,
-  GetApiPaymentsStatsResponses,
-  GetApiPaymentsRevenueReportData,
-  GetApiPaymentsRevenueReportResponses,
-  GetApiAdminPermissionsRoleTemplatesData,
-  GetApiAdminPermissionsRoleTemplatesResponses,
-  PostApiAdminPermissionsRoleTemplatesData,
-  PostApiAdminPermissionsRoleTemplatesResponses,
-  DeleteApiAdminPermissionsRoleTemplatesByNameData,
-  DeleteApiAdminPermissionsRoleTemplatesByNameResponses,
-  GetApiAdminPermissionsRoleTemplatesByNameData,
-  GetApiAdminPermissionsRoleTemplatesByNameResponses,
-  PutApiAdminPermissionsRoleTemplatesByNameData,
-  PutApiAdminPermissionsRoleTemplatesByNameResponses,
-  GetApiAdminPermissionsUsersByUserIdRolesData,
-  GetApiAdminPermissionsUsersByUserIdRolesResponses,
-  PostApiAdminPermissionsUsersByUserIdRolesData,
-  PostApiAdminPermissionsUsersByUserIdRolesResponses,
-  DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameData,
-  DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameResponses,
-  DeleteApiAdminPermissionsUsersByUserIdPermissionsData,
-  DeleteApiAdminPermissionsUsersByUserIdPermissionsResponses,
-  GetApiAdminPermissionsUsersByUserIdPermissionsData,
-  GetApiAdminPermissionsUsersByUserIdPermissionsResponses,
-  PostApiAdminPermissionsUsersByUserIdPermissionsData,
-  PostApiAdminPermissionsUsersByUserIdPermissionsResponses,
-  GetApiAdminPermissionsUsersByUserIdCheckData,
-  GetApiAdminPermissionsUsersByUserIdCheckResponses,
-  GetApiAdminPermissionsDefaultRoleData,
-  GetApiAdminPermissionsDefaultRoleResponses,
-  PutApiAdminPermissionsDefaultRoleData,
-  PutApiAdminPermissionsDefaultRoleResponses,
-  GetApiPostsData,
-  GetApiPostsResponses,
-  PostApiPostsData,
-  PostApiPostsResponses,
-  GetApiPostsByPostIdData,
-  GetApiPostsByPostIdResponses,
-  GetApiProductData,
-  GetApiProductResponses,
-  PostApiProductData,
-  PostApiProductResponses,
-  DeleteApiProductByIdData,
-  DeleteApiProductByIdResponses,
-  GetApiProductByIdData,
-  GetApiProductByIdResponses,
-  PutApiProductByIdData,
-  PutApiProductByIdResponses,
-  GetApiProductTypeByTypeData,
-  GetApiProductTypeByTypeResponses,
-  GetApiProductPublishedData,
-  GetApiProductPublishedResponses,
-  GetApiProductSearchData,
-  GetApiProductSearchResponses,
-  GetApiProductCreatorByCreatorIdData,
-  GetApiProductCreatorByCreatorIdResponses,
-  GetApiProductPriceRangeData,
-  GetApiProductPriceRangeResponses,
-  GetApiProductPopularData,
-  GetApiProductPopularResponses,
-  GetApiProductRecentData,
-  GetApiProductRecentResponses,
-  PostApiProductByIdPublishData,
-  PostApiProductByIdPublishResponses,
-  PostApiProductByIdUnpublishData,
-  PostApiProductByIdUnpublishResponses,
-  PostApiProductByIdArchiveData,
-  PostApiProductByIdArchiveResponses,
-  PutApiProductByIdVisibilityData,
-  PutApiProductByIdVisibilityResponses,
-  GetApiProductByIdBundleItemsData,
-  GetApiProductByIdBundleItemsResponses,
-  DeleteApiProductByBundleIdBundleItemsByProductIdData,
-  DeleteApiProductByBundleIdBundleItemsByProductIdResponses,
-  PostApiProductByBundleIdBundleItemsByProductIdData,
-  PostApiProductByBundleIdBundleItemsByProductIdResponses,
-  GetApiProductByIdPricingCurrentData,
-  GetApiProductByIdPricingCurrentResponses,
-  GetApiProductByIdPricingHistoryData,
-  GetApiProductByIdPricingHistoryResponses,
-  PostApiProductByIdPricingData,
-  PostApiProductByIdPricingResponses,
-  GetApiProductByIdSubscriptionPlansData,
-  GetApiProductByIdSubscriptionPlansResponses,
-  PostApiProductByIdSubscriptionPlansData,
-  PostApiProductByIdSubscriptionPlansResponses,
-  GetApiProductSubscriptionPlansByPlanIdData,
-  GetApiProductSubscriptionPlansByPlanIdResponses,
-  DeleteApiProductByIdAccessByUserIdData,
-  DeleteApiProductByIdAccessByUserIdResponses,
-  GetApiProductByIdAccessByUserIdData,
-  GetApiProductByIdAccessByUserIdResponses,
-  PostApiProductByIdAccessByUserIdData,
-  PostApiProductByIdAccessByUserIdResponses,
-  GetApiProductByIdUserProductByUserIdData,
-  GetApiProductByIdUserProductByUserIdResponses,
-  GetApiProductAnalyticsCountData,
-  GetApiProductAnalyticsCountResponses,
-  GetApiProductByIdAnalyticsUserCountData,
-  GetApiProductByIdAnalyticsUserCountResponses,
-  GetApiProductByIdAnalyticsRevenueData,
-  GetApiProductByIdAnalyticsRevenueResponses,
-  GetApiProgramData,
-  GetApiProgramResponses,
-  PostApiProgramData,
-  PostApiProgramResponses,
-  GetApiProgramPublishedData,
-  GetApiProgramPublishedResponses,
-  GetApiProgramCategoryByCategoryData,
-  GetApiProgramCategoryByCategoryResponses,
-  GetApiProgramDifficultyByDifficultyData,
-  GetApiProgramDifficultyByDifficultyResponses,
-  GetApiProgramSearchData,
-  GetApiProgramSearchResponses,
-  GetApiProgramCreatorByCreatorIdData,
-  GetApiProgramCreatorByCreatorIdResponses,
-  GetApiProgramPopularData,
-  GetApiProgramPopularResponses,
-  GetApiProgramRecentData,
-  GetApiProgramRecentResponses,
-  DeleteApiProgramByIdData,
-  DeleteApiProgramByIdResponses,
-  GetApiProgramByIdData,
-  GetApiProgramByIdResponses,
-  PutApiProgramByIdData,
-  PutApiProgramByIdResponses,
-  GetApiProgramByIdWithContentData,
-  GetApiProgramByIdWithContentResponses,
-  PostApiProgramByIdCloneData,
-  PostApiProgramByIdCloneResponses,
-  GetApiProgramSlugBySlugData,
-  GetApiProgramSlugBySlugResponses,
-  PostApiProgramByIdContentData,
-  PostApiProgramByIdContentResponses,
-  DeleteApiProgramByIdContentByContentIdData,
-  DeleteApiProgramByIdContentByContentIdResponses,
-  PutApiProgramByIdContentByContentIdData,
-  PutApiProgramByIdContentByContentIdResponses,
-  PostApiProgramByIdContentReorderData,
-  PostApiProgramByIdContentReorderResponses,
-  DeleteApiProgramByIdUsersByUserIdData,
-  DeleteApiProgramByIdUsersByUserIdResponses,
-  PostApiProgramByIdUsersByUserIdData,
-  PostApiProgramByIdUsersByUserIdResponses,
-  GetApiProgramByIdUsersData,
-  GetApiProgramByIdUsersResponses,
-  GetApiProgramByIdUsersByUserIdProgressData,
-  GetApiProgramByIdUsersByUserIdProgressResponses,
-  PutApiProgramByIdUsersByUserIdProgressData,
-  PutApiProgramByIdUsersByUserIdProgressResponses,
-  PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData,
-  PostApiProgramByIdUsersByUserIdContentByContentIdCompleteResponses,
-  PostApiProgramByIdUsersByUserIdResetData,
-  PostApiProgramByIdUsersByUserIdResetResponses,
-  PostApiProgramByIdSubmitData,
-  PostApiProgramByIdSubmitResponses,
-  PostApiProgramByIdApproveData,
-  PostApiProgramByIdApproveResponses,
-  PostApiProgramByIdRejectData,
-  PostApiProgramByIdRejectResponses,
-  PostApiProgramByIdWithdrawData,
-  PostApiProgramByIdWithdrawResponses,
-  PostApiProgramByIdArchiveData,
-  PostApiProgramByIdArchiveResponses,
-  PostApiProgramByIdRestoreData,
-  PostApiProgramByIdRestoreResponses,
-  PostApiProgramByIdPublishData,
-  PostApiProgramByIdPublishResponses,
-  PostApiProgramByIdUnpublishData,
-  PostApiProgramByIdUnpublishResponses,
-  PostApiProgramByIdScheduleData,
-  PostApiProgramByIdScheduleResponses,
-  PostApiProgramByIdMonetizeData,
-  PostApiProgramByIdMonetizeResponses,
-  PostApiProgramByIdDisableMonetizationData,
-  PostApiProgramByIdDisableMonetizationResponses,
-  GetApiProgramByIdPricingData,
-  GetApiProgramByIdPricingResponses,
-  PutApiProgramByIdPricingData,
-  PutApiProgramByIdPricingResponses,
-  GetApiProgramByIdAnalyticsData,
-  GetApiProgramByIdAnalyticsResponses,
-  GetApiProgramByIdAnalyticsCompletionRatesData,
-  GetApiProgramByIdAnalyticsCompletionRatesResponses,
-  GetApiProgramByIdAnalyticsEngagementData,
-  GetApiProgramByIdAnalyticsEngagementResponses,
-  GetApiProgramByIdAnalyticsRevenueData,
-  GetApiProgramByIdAnalyticsRevenueResponses,
-  PostApiProgramByIdCreateProductData,
-  PostApiProgramByIdCreateProductResponses,
-  DeleteApiProgramByIdLinkProductByProductIdData,
-  DeleteApiProgramByIdLinkProductByProductIdResponses,
-  PostApiProgramByIdLinkProductByProductIdData,
-  PostApiProgramByIdLinkProductByProductIdResponses,
-  GetApiProgramByIdProductsData,
-  GetApiProgramByIdProductsResponses,
-  GetApiProgramsByProgramIdCertificatesData,
-  GetApiProgramsByProgramIdCertificatesResponses,
-  PostApiProgramsByProgramIdCertificatesData,
-  PostApiProgramsByProgramIdCertificatesResponses,
-  DeleteApiProgramsByProgramIdCertificatesByCertificateIdData,
-  DeleteApiProgramsByProgramIdCertificatesByCertificateIdResponses,
-  PutApiProgramsByProgramIdCertificatesByCertificateIdData,
-  PutApiProgramsByProgramIdCertificatesByCertificateIdResponses,
-  PostApiProgramsByProgramIdCertificatesByCertificateIdTagsData,
-  PostApiProgramsByProgramIdCertificatesByCertificateIdTagsResponses,
-  DeleteApiProgramsByProgramIdCertificatesByCertificateIdTagsByTagIdData,
-  DeleteApiProgramsByProgramIdCertificatesByCertificateIdTagsByTagIdResponses,
+  GetApiAdminAuditData,
+  GetApiAdminAuditResponses,
+  GetApiAdminAuditStatisticsData,
+  GetApiAdminAuditStatisticsResponses,
+  PostApiAdminAuditExportData,
+  PostApiAdminAuditExportResponses,
+  PostApiV1AuthSignUpData,
+  PostApiV1AuthSignUpResponses,
+  PostApiV1AuthSignUpErrors,
+  PostApiV1AuthSignInData,
+  PostApiV1AuthSignInResponses,
+  PostApiV1AuthSignInErrors,
+  PostApiV1AuthGoogleData,
+  PostApiV1AuthGoogleResponses,
+  PostApiV1AuthGoogleErrors,
+  PostApiV1AuthRefreshData,
+  PostApiV1AuthRefreshResponses,
+  PostApiV1AuthRefreshErrors,
+  PostApiV1AuthRevokeData,
+  PostApiV1AuthRevokeResponses,
+  PostApiV1AuthRevokeErrors,
+  PostApiV1AuthWeb3ChallengeData,
+  PostApiV1AuthWeb3ChallengeResponses,
+  PostApiV1AuthWeb3ChallengeErrors,
+  PostApiV1AuthSendEmailVerificationData,
+  PostApiV1AuthSendEmailVerificationResponses,
+  PostApiV1AuthSendEmailVerificationErrors,
+  GetApiV1AuthGithubSigninData,
+  GetApiV1AuthGithubSigninResponses,
+  GetApiV1AuthGithubSigninErrors,
+  GetApiV1AuthMfaConfigurationData,
+  GetApiV1AuthMfaConfigurationResponses,
+  PostApiV1AuthMfaSetupTotpData,
+  PostApiV1AuthMfaSetupTotpResponses,
+  PostApiV1AuthMfaSetupTotpCompleteData,
+  PostApiV1AuthMfaSetupTotpCompleteResponses,
+  PostApiV1AuthMfaVerifyData,
+  PostApiV1AuthMfaVerifyResponses,
+  PostApiV1AuthMfaBackupCodesRegenerateData,
+  PostApiV1AuthMfaBackupCodesRegenerateResponses,
+  PostApiV1AuthMfaDisableData,
+  PostApiV1AuthMfaDisableResponses,
+  GetApiV1AuthSessionsData,
+  GetApiV1AuthSessionsResponses,
+  GetApiV1AuthSessionsSecurityAnalysisData,
+  GetApiV1AuthSessionsSecurityAnalysisResponses,
+  DeleteApiV1AuthSessionsBySessionIdData,
+  DeleteApiV1AuthSessionsBySessionIdResponses,
+  DeleteApiV1AuthSessionsOthersData,
+  DeleteApiV1AuthSessionsOthersResponses,
+  DeleteApiV1AuthSessionsAllData,
+  DeleteApiV1AuthSessionsAllResponses,
+  GetApiV1AuthSessionsTrustedDevicesData,
+  GetApiV1AuthSessionsTrustedDevicesResponses,
+  PostApiV1AuthSessionsTrustDeviceData,
+  PostApiV1AuthSessionsTrustDeviceResponses,
+  DeleteApiV1AuthSessionsTrustedDevicesByDeviceIdData,
+  DeleteApiV1AuthSessionsTrustedDevicesByDeviceIdResponses,
+  PostApiV1AuthSessionsRefreshData,
+  PostApiV1AuthSessionsRefreshResponses,
+  PostApiV1BillingWebhooksGooglePayData,
+  PostApiV1BillingWebhooksGooglePayResponses,
+  PostApiV1BillingWebhooksGooglePayErrors,
+  PostApiV1BillingWebhooksApplePayData,
+  PostApiV1BillingWebhooksApplePayResponses,
+  PostApiV1BillingWebhooksApplePayErrors,
+  PostApiV1BillingWebhooksStripeData,
+  PostApiV1BillingWebhooksStripeResponses,
+  PostApiV1BillingWebhooksStripeErrors,
+  PostApiV1BillingWebhooksPaypalData,
+  PostApiV1BillingWebhooksPaypalResponses,
+  PostApiV1BillingWebhooksPaypalErrors,
+  GetApiV1BillingWebhooksEventsByEventIdData,
+  GetApiV1BillingWebhooksEventsByEventIdResponses,
+  GetApiV1BillingWebhooksEventsByEventIdErrors,
+  PatchApiV1BillingWebhooksEventsByEventIdRetryData,
+  PatchApiV1BillingWebhooksEventsByEventIdRetryResponses,
+  PatchApiV1BillingWebhooksEventsByEventIdRetryErrors,
+  GetApiV1ConditionalPoliciesData,
+  GetApiV1ConditionalPoliciesResponses,
+  PostApiV1ConditionalPoliciesData,
+  PostApiV1ConditionalPoliciesResponses,
+  DeleteApiV1ConditionalPoliciesByIdData,
+  DeleteApiV1ConditionalPoliciesByIdResponses,
+  GetApiV1ConditionalPoliciesByIdData,
+  GetApiV1ConditionalPoliciesByIdResponses,
+  PutApiV1ConditionalPoliciesByIdData,
+  PutApiV1ConditionalPoliciesByIdResponses,
+  PostApiV1ConditionalPoliciesEvaluateData,
+  PostApiV1ConditionalPoliciesEvaluateResponses,
+  PostApiV1ConditionalPoliciesEvaluateBulkData,
+  PostApiV1ConditionalPoliciesEvaluateBulkResponses,
+  PostApiV1ConditionalPoliciesTestRuleData,
+  PostApiV1ConditionalPoliciesTestRuleResponses,
+  PostApiV1ConditionalPoliciesByIdActivateData,
+  PostApiV1ConditionalPoliciesByIdActivateResponses,
+  PostApiV1ConditionalPoliciesByIdDeactivateData,
+  PostApiV1ConditionalPoliciesByIdDeactivateResponses,
+  PostApiV1ConditionalPoliciesByIdCloneData,
+  PostApiV1ConditionalPoliciesByIdCloneResponses,
+  PutApiV1ConditionalPoliciesByIdPriorityData,
+  PutApiV1ConditionalPoliciesByIdPriorityResponses,
+  GetApiV1ConditionalPoliciesStatisticsData,
+  GetApiV1ConditionalPoliciesStatisticsResponses,
+  GetApiV1ConditionalPoliciesByIdUsageData,
+  GetApiV1ConditionalPoliciesByIdUsageResponses,
+  GetApiV1ConditionalPoliciesByIdEvaluationHistoryData,
+  GetApiV1ConditionalPoliciesByIdEvaluationHistoryResponses,
+  PostApiV1ConditionalPoliciesValidateData,
+  PostApiV1ConditionalPoliciesValidateResponses,
+  GetApiV1ConditionalPoliciesConflictsData,
+  GetApiV1ConditionalPoliciesConflictsResponses,
+  PostApiV1ConditionalPoliciesSimulateData,
+  PostApiV1ConditionalPoliciesSimulateResponses,
+  GetApiV1ConditionalPoliciesTemplatesData,
+  GetApiV1ConditionalPoliciesTemplatesResponses,
+  PostApiV1ConditionalPoliciesTemplatesByTemplateIdCreateData,
+  PostApiV1ConditionalPoliciesTemplatesByTemplateIdCreateResponses,
+  GetApiV1ConditionalPoliciesConditionTypesData,
+  GetApiV1ConditionalPoliciesConditionTypesResponses,
+  PostApiV1ConditionalPoliciesValidateConditionData,
+  PostApiV1ConditionalPoliciesValidateConditionResponses,
+  PostContentInteractionStartData,
+  PostContentInteractionStartResponses,
+  PutContentInteractionByInteractionIdProgressData,
+  PutContentInteractionByInteractionIdProgressResponses,
+  PostContentInteractionByInteractionIdSubmitData,
+  PostContentInteractionByInteractionIdSubmitResponses,
+  PostContentInteractionByInteractionIdCompleteData,
+  PostContentInteractionByInteractionIdCompleteResponses,
+  GetContentInteractionUserByProgramUserIdContentByContentIdData,
+  GetContentInteractionUserByProgramUserIdContentByContentIdResponses,
+  GetContentInteractionUserByProgramUserIdData,
+  GetContentInteractionUserByProgramUserIdResponses,
+  PutContentInteractionByInteractionIdTimeSpentData,
+  PutContentInteractionByInteractionIdTimeSpentResponses,
+  PostApiV1FeaturesEvaluateData,
+  PostApiV1FeaturesEvaluateResponses,
+  GetApiV1FeaturesByKeyValueData,
+  GetApiV1FeaturesByKeyValueResponses,
+  PostApiV1FeaturesEvaluateBulkData,
+  PostApiV1FeaturesEvaluateBulkResponses,
+  GetApiV1FeaturesEnabledData,
+  GetApiV1FeaturesEnabledResponses,
+  GetApiV1FeaturesData,
+  GetApiV1FeaturesResponses,
+  PostApiV1FeaturesData,
+  PostApiV1FeaturesResponses,
+  PostApiV1FeaturesErrors,
+  DeleteApiV1FeaturesByKeyData,
+  DeleteApiV1FeaturesByKeyResponses,
+  DeleteApiV1FeaturesByKeyErrors,
+  GetFeatureByKeyData,
+  GetFeatureByKeyErrors,
+  PutApiV1FeaturesByKeyData,
+  PutApiV1FeaturesByKeyResponses,
+  PutApiV1FeaturesByKeyErrors,
+  GetApiV1FeaturesByKeyExistsData,
+  GetApiV1FeaturesByKeyExistsResponses,
+  PostApiV1FeaturesByIdEnableData,
+  PostApiV1FeaturesByIdEnableResponses,
+  PostApiV1FeaturesByIdDisableData,
+  PostApiV1FeaturesByIdDisableResponses,
+  PostApiV1FeaturesByIdToggleData,
+  PostApiV1FeaturesByIdToggleResponses,
+  PostApiV1PermissionsTenantGrantData,
+  PostApiV1PermissionsTenantGrantResponses,
+  PostApiV1PermissionsTenantRevokeData,
+  PostApiV1PermissionsTenantRevokeResponses,
+  PostApiV1PermissionsTenantCheckData,
+  PostApiV1PermissionsTenantCheckResponses,
+  PostApiV1PermissionsTenantListData,
+  PostApiV1PermissionsTenantListResponses,
+  PostApiV1PermissionsTenantBulkGrantData,
+  PostApiV1PermissionsTenantBulkGrantResponses,
+  PostApiV1PermissionsTenantBulkRevokeData,
+  PostApiV1PermissionsTenantBulkRevokeResponses,
+  PostApiV1PermissionsContentTypeGrantData,
+  PostApiV1PermissionsContentTypeGrantResponses,
+  PostApiV1PermissionsContentTypeRevokeData,
+  PostApiV1PermissionsContentTypeRevokeResponses,
+  PostApiV1PermissionsContentTypeCheckData,
+  PostApiV1PermissionsContentTypeCheckResponses,
+  PostApiV1PermissionsContentTypeListData,
+  PostApiV1PermissionsContentTypeListResponses,
+  PostApiV1PermissionsResourceGrantData,
+  PostApiV1PermissionsResourceGrantResponses,
+  PostApiV1PermissionsResourceRevokeData,
+  PostApiV1PermissionsResourceRevokeResponses,
+  PostApiV1PermissionsResourceCheckData,
+  PostApiV1PermissionsResourceCheckResponses,
+  PostApiV1PermissionsResourceListData,
+  PostApiV1PermissionsResourceListResponses,
+  PostApiV1PermissionsResourceBulkGrantData,
+  PostApiV1PermissionsResourceBulkGrantResponses,
+  PostApiV1PermissionsUserAllData,
+  PostApiV1PermissionsUserAllResponses,
+  PostApiV1PermissionsUserEffectiveData,
+  PostApiV1PermissionsUserEffectiveResponses,
+  PostApiV1PermissionsHierarchyResolveData,
+  PostApiV1PermissionsHierarchyResolveResponses,
+  GetApiV1PermissionsAnalyticsByTenantIdData,
+  GetApiV1PermissionsAnalyticsByTenantIdResponses,
+  PostApiV1PermissionsAuditTrailData,
+  PostApiV1PermissionsAuditTrailResponses,
+  GetApiV1PermissionsCacheStatsData,
+  GetApiV1PermissionsCacheStatsResponses,
+  DeleteApiV1PermissionsCacheClearData,
+  DeleteApiV1PermissionsCacheClearResponses,
+  GetApiV1PermissionsTemplatesData,
+  GetApiV1PermissionsTemplatesResponses,
+  PostApiV1PermissionsTemplatesApplyData,
+  PostApiV1PermissionsTemplatesApplyResponses,
+  GetApiHealthData,
+  GetApiHealthResponses,
+  GetApiHealthErrors,
+  GetApiHealthReadyData,
+  GetApiHealthReadyResponses,
+  GetApiHealthReadyErrors,
+  GetApiHealthLiveData,
+  GetApiHealthLiveResponses,
+  GetApiV1PaymentsData,
+  GetApiV1PaymentsResponses,
+  GetApiV1PaymentsErrors,
+  PostApiV1PaymentsData,
+  PostApiV1PaymentsResponses,
+  PostApiV1PaymentsErrors,
+  GetApiV1PaymentsCanceledData,
+  GetApiV1PaymentsCanceledResponses,
+  GetApiV1PaymentsFailedData,
+  GetApiV1PaymentsFailedResponses,
+  GetApiV1PaymentsOverdueData,
+  GetApiV1PaymentsOverdueResponses,
+  GetApiV1PaymentsRefundedData,
+  GetApiV1PaymentsRefundedResponses,
+  GetApiV1PaymentsScheduledData,
+  GetApiV1PaymentsScheduledResponses,
+  GetPaymentByIdData,
+  GetPaymentByIdResponses,
+  GetPaymentByIdErrors,
+  PatchApiV1PaymentsByPaymentIdCancelData,
+  PatchApiV1PaymentsByPaymentIdCancelResponses,
+  PatchApiV1PaymentsByPaymentIdCancelErrors,
+  PatchApiV1PaymentsByPaymentIdRefundData,
+  PatchApiV1PaymentsByPaymentIdRefundResponses,
+  PatchApiV1PaymentsByPaymentIdRefundErrors,
+  PatchApiV1PaymentsByPaymentIdRetryData,
+  PatchApiV1PaymentsByPaymentIdRetryResponses,
+  PatchApiV1PaymentsByPaymentIdRetryErrors,
+  GetProgramData,
+  GetProgramResponses,
+  PostProgramData,
+  PostProgramResponses,
+  GetProgramPublishedData,
+  GetProgramPublishedResponses,
+  GetProgramCategoryByCategoryData,
+  GetProgramCategoryByCategoryResponses,
+  GetProgramDifficultyByDifficultyData,
+  GetProgramDifficultyByDifficultyResponses,
+  GetProgramSearchData,
+  GetProgramSearchResponses,
+  GetProgramCreatorByCreatorIdData,
+  GetProgramCreatorByCreatorIdResponses,
+  GetProgramPopularData,
+  GetProgramPopularResponses,
+  GetProgramRecentData,
+  GetProgramRecentResponses,
+  DeleteProgramByIdData,
+  DeleteProgramByIdResponses,
+  GetProgramByIdData,
+  GetProgramByIdResponses,
+  PutProgramByIdData,
+  PutProgramByIdResponses,
+  GetProgramByIdWithContentData,
+  GetProgramByIdWithContentResponses,
+  PostProgramByIdCloneData,
+  PostProgramByIdCloneResponses,
+  GetProgramSlugBySlugData,
+  GetProgramSlugBySlugResponses,
+  PostProgramByIdContentData,
+  PostProgramByIdContentResponses,
+  DeleteProgramByIdContentByContentIdData,
+  DeleteProgramByIdContentByContentIdResponses,
+  PutProgramByIdContentByContentIdData,
+  PutProgramByIdContentByContentIdResponses,
+  PostProgramByIdContentReorderData,
+  PostProgramByIdContentReorderResponses,
+  DeleteProgramByIdUsersByUserIdData,
+  DeleteProgramByIdUsersByUserIdResponses,
+  PostProgramByIdUsersByUserIdData,
+  PostProgramByIdUsersByUserIdResponses,
+  GetProgramByIdUsersData,
+  GetProgramByIdUsersResponses,
+  GetProgramByIdUsersByUserIdProgressData,
+  GetProgramByIdUsersByUserIdProgressResponses,
+  PutProgramByIdUsersByUserIdProgressData,
+  PutProgramByIdUsersByUserIdProgressResponses,
+  PostProgramByIdUsersByUserIdContentByContentIdCompleteData,
+  PostProgramByIdUsersByUserIdContentByContentIdCompleteResponses,
+  PostProgramByIdUsersByUserIdResetData,
+  PostProgramByIdUsersByUserIdResetResponses,
+  PostProgramByIdSubmitData,
+  PostProgramByIdSubmitResponses,
+  PostProgramByIdApproveData,
+  PostProgramByIdApproveResponses,
+  PostProgramByIdRejectData,
+  PostProgramByIdRejectResponses,
+  PostProgramByIdWithdrawData,
+  PostProgramByIdWithdrawResponses,
+  PostProgramByIdArchiveData,
+  PostProgramByIdArchiveResponses,
+  PostProgramByIdRestoreData,
+  PostProgramByIdRestoreResponses,
+  PostProgramByIdPublishData,
+  PostProgramByIdPublishResponses,
+  PostProgramByIdUnpublishData,
+  PostProgramByIdUnpublishResponses,
+  PostProgramByIdScheduleData,
+  PostProgramByIdScheduleResponses,
+  PostProgramByIdMonetizeData,
+  PostProgramByIdMonetizeResponses,
+  PostProgramByIdDisableMonetizationData,
+  PostProgramByIdDisableMonetizationResponses,
+  GetProgramByIdPricingData,
+  GetProgramByIdPricingResponses,
+  PutProgramByIdPricingData,
+  PutProgramByIdPricingResponses,
+  GetProgramByIdAnalyticsData,
+  GetProgramByIdAnalyticsResponses,
+  GetProgramByIdAnalyticsCompletionRatesData,
+  GetProgramByIdAnalyticsCompletionRatesResponses,
+  GetProgramByIdAnalyticsEngagementData,
+  GetProgramByIdAnalyticsEngagementResponses,
+  GetProgramByIdAnalyticsRevenueData,
+  GetProgramByIdAnalyticsRevenueResponses,
+  PostProgramByIdCreateProductData,
+  PostProgramByIdCreateProductResponses,
+  DeleteProgramByIdLinkProductByProductIdData,
+  DeleteProgramByIdLinkProductByProductIdResponses,
+  PostProgramByIdLinkProductByProductIdData,
+  PostProgramByIdLinkProductByProductIdResponses,
+  GetProgramByIdProductsData,
+  GetProgramByIdProductsResponses,
   GetApiProgramsByProgramIdContentData,
   GetApiProgramsByProgramIdContentResponses,
   PostApiProgramsByProgramIdContentData,
@@ -420,366 +477,588 @@ import type {
   PostApiProgramsByProgramIdContentSearchResponses,
   GetApiProgramsByProgramIdContentStatsData,
   GetApiProgramsByProgramIdContentStatsResponses,
-  GetApiProjectsByProjectIdPermissionsMyPermissionsData,
-  GetApiProjectsByProjectIdPermissionsMyPermissionsResponses,
-  GetApiProjectsByProjectIdPermissionsCollaboratorsData,
-  GetApiProjectsByProjectIdPermissionsCollaboratorsResponses,
-  PostApiProjectsByProjectIdPermissionsCollaboratorsData,
-  PostApiProjectsByProjectIdPermissionsCollaboratorsResponses,
-  DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData,
-  DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses,
-  PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData,
-  PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses,
-  GetApiProjectsByProjectIdPermissionsRoleTemplatesData,
-  GetApiProjectsByProjectIdPermissionsRoleTemplatesResponses,
-  PostApiProjectsByProjectIdPermissionsShareWithRoleData,
-  PostApiProjectsByProjectIdPermissionsShareWithRoleResponses,
-  GetApiProjectsData,
-  GetApiProjectsResponses,
-  PostApiProjectsData,
-  PostApiProjectsResponses,
-  DeleteApiProjectsByIdData,
-  DeleteApiProjectsByIdResponses,
-  GetApiProjectsByIdData,
-  GetApiProjectsByIdResponses,
-  PutApiProjectsByIdData,
-  PutApiProjectsByIdResponses,
-  GetApiProjectsSlugBySlugData,
-  GetApiProjectsSlugBySlugResponses,
-  PostApiProjectsByIdPublishData,
-  PostApiProjectsByIdPublishResponses,
-  PostApiProjectsByIdUnpublishData,
-  PostApiProjectsByIdUnpublishResponses,
-  PostApiProjectsByIdArchiveData,
-  PostApiProjectsByIdArchiveResponses,
-  GetApiProjectsSearchData,
-  GetApiProjectsSearchResponses,
-  GetApiProjectsPopularData,
-  GetApiProjectsPopularResponses,
-  GetApiProjectsRecentData,
-  GetApiProjectsRecentResponses,
-  GetApiProjectsFeaturedData,
-  GetApiProjectsFeaturedResponses,
-  GetApiProjectsByIdStatisticsData,
-  GetApiProjectsByIdStatisticsResponses,
-  GetApiProjectsCategoryByCategoryIdData,
-  GetApiProjectsCategoryByCategoryIdResponses,
-  GetApiProjectsCreatorByCreatorIdData,
-  GetApiProjectsCreatorByCreatorIdResponses,
-  GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsData,
-  GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsResponses,
-  GetApiResourcesByResourceTypeByResourceIdPermissionsUsersData,
-  GetApiResourcesByResourceTypeByResourceIdPermissionsUsersResponses,
-  PostApiResourcesByResourceTypeByResourceIdPermissionsShareData,
-  PostApiResourcesByResourceTypeByResourceIdPermissionsShareResponses,
-  DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData,
-  DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses,
-  PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData,
-  PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses,
-  PostApiResourcesByResourceTypeByResourceIdPermissionsInviteData,
-  PostApiResourcesByResourceTypeByResourceIdPermissionsInviteResponses,
-  GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsData,
-  GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsResponses,
-  GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyData,
-  GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponses,
-  GetApiSubscriptionMeData,
-  GetApiSubscriptionMeResponses,
-  GetApiSubscriptionMeActiveData,
-  GetApiSubscriptionMeActiveResponses,
-  GetApiSubscriptionByIdData,
-  GetApiSubscriptionByIdResponses,
-  GetApiSubscriptionData,
-  GetApiSubscriptionResponses,
-  PostApiSubscriptionData,
-  PostApiSubscriptionResponses,
-  PostApiSubscriptionByIdCancelData,
-  PostApiSubscriptionByIdCancelResponses,
-  PostApiSubscriptionByIdResumeData,
-  PostApiSubscriptionByIdResumeResponses,
-  PutApiSubscriptionByIdPaymentMethodData,
-  PutApiSubscriptionByIdPaymentMethodResponses,
-  GetApiTenantDomainsData,
-  GetApiTenantDomainsResponses,
-  PostApiTenantDomainsData,
-  PostApiTenantDomainsResponses,
-  DeleteApiTenantDomainsByIdData,
-  DeleteApiTenantDomainsByIdResponses,
-  GetApiTenantDomainsByIdData,
-  GetApiTenantDomainsByIdResponses,
-  PutApiTenantDomainsByIdData,
-  PutApiTenantDomainsByIdResponses,
-  PostApiTenantDomainsByTenantIdSetMainByDomainIdData,
-  PostApiTenantDomainsByTenantIdSetMainByDomainIdResponses,
-  GetApiTenantDomainsUserGroupsData,
-  GetApiTenantDomainsUserGroupsResponses,
-  PostApiTenantDomainsUserGroupsData,
-  PostApiTenantDomainsUserGroupsResponses,
-  DeleteApiTenantDomainsUserGroupsByIdData,
-  DeleteApiTenantDomainsUserGroupsByIdResponses,
-  GetApiTenantDomainsUserGroupsByIdData,
-  GetApiTenantDomainsUserGroupsByIdResponses,
-  PutApiTenantDomainsUserGroupsByIdData,
-  PutApiTenantDomainsUserGroupsByIdResponses,
-  GetApiTenantDomainsMembershipsUserByUserIdData,
-  GetApiTenantDomainsMembershipsUserByUserIdResponses,
-  DeleteApiTenantDomainsUserGroupsMembershipsData,
-  DeleteApiTenantDomainsUserGroupsMembershipsResponses,
-  PostApiTenantDomainsUserGroupsMembershipsData,
-  PostApiTenantDomainsUserGroupsMembershipsResponses,
-  GetApiTenantDomainsUserGroupsByGroupIdMembersData,
-  GetApiTenantDomainsUserGroupsByGroupIdMembersResponses,
-  GetApiTenantDomainsUsersByUserIdGroupsData,
-  GetApiTenantDomainsUsersByUserIdGroupsResponses,
-  GetApiTenantDomainsGroupsByGroupIdUsersData,
-  GetApiTenantDomainsGroupsByGroupIdUsersResponses,
-  PostApiTenantDomainsAutoAssignData,
-  PostApiTenantDomainsAutoAssignResponses,
-  PostApiTenantDomainsAutoAssignBulkData,
-  PostApiTenantDomainsAutoAssignBulkResponses,
-  GetApiTenantDomainsDomainMatchData,
-  GetApiTenantDomainsDomainMatchResponses,
-  PostApiTenantDomainsMembershipsData,
-  PostApiTenantDomainsMembershipsResponses,
-  GetApiTenantsData,
-  GetApiTenantsResponses,
-  PostApiTenantsData,
-  PostApiTenantsResponses,
-  DeleteApiTenantsByIdData,
-  DeleteApiTenantsByIdResponses,
-  GetApiTenantsByIdData,
-  GetApiTenantsByIdResponses,
-  PutApiTenantsByIdData,
-  PutApiTenantsByIdResponses,
-  GetApiTenantsByNameByNameData,
-  GetApiTenantsByNameByNameResponses,
-  GetApiTenantsBySlugBySlugData,
-  GetApiTenantsBySlugBySlugResponses,
-  GetApiTenantsDeletedData,
-  GetApiTenantsDeletedResponses,
-  GetApiTenantsActiveData,
-  GetApiTenantsActiveResponses,
-  GetApiTenantsSearchData,
-  GetApiTenantsSearchResponses,
-  GetApiTenantsStatisticsData,
-  GetApiTenantsStatisticsResponses,
-  PostApiTenantsByIdRestoreData,
-  PostApiTenantsByIdRestoreResponses,
-  DeleteApiTenantsByIdPermanentData,
-  DeleteApiTenantsByIdPermanentResponses,
-  PostApiTenantsByIdActivateData,
-  PostApiTenantsByIdActivateResponses,
-  PostApiTenantsByIdDeactivateData,
-  PostApiTenantsByIdDeactivateResponses,
-  PostApiTenantsBulkDeleteData,
-  PostApiTenantsBulkDeleteResponses,
-  PostApiTenantsBulkRestoreData,
-  PostApiTenantsBulkRestoreResponses,
-  GetTestingRequestsData,
-  GetTestingRequestsResponses,
-  PostTestingRequestsData,
-  PostTestingRequestsResponses,
-  DeleteTestingRequestsByIdData,
-  DeleteTestingRequestsByIdResponses,
-  GetTestingRequestsByIdData,
-  GetTestingRequestsByIdResponses,
-  PutTestingRequestsByIdData,
-  PutTestingRequestsByIdResponses,
-  GetTestingRequestsByIdDetailsData,
-  GetTestingRequestsByIdDetailsResponses,
-  PostTestingRequestsByIdRestoreData,
-  PostTestingRequestsByIdRestoreResponses,
-  GetTestingSessionsData,
-  GetTestingSessionsResponses,
-  PostTestingSessionsData,
-  PostTestingSessionsResponses,
-  DeleteTestingSessionsByIdData,
-  DeleteTestingSessionsByIdResponses,
-  GetTestingSessionsByIdData,
-  GetTestingSessionsByIdResponses,
-  PutTestingSessionsByIdData,
-  PutTestingSessionsByIdResponses,
-  GetTestingSessionsByIdDetailsData,
-  GetTestingSessionsByIdDetailsResponses,
-  PostTestingSessionsByIdRestoreData,
-  PostTestingSessionsByIdRestoreResponses,
-  GetTestingRequestsByProjectVersionByProjectVersionIdData,
-  GetTestingRequestsByProjectVersionByProjectVersionIdResponses,
-  GetTestingRequestsByCreatorByCreatorIdData,
-  GetTestingRequestsByCreatorByCreatorIdResponses,
-  GetTestingRequestsByStatusByStatusData,
-  GetTestingRequestsByStatusByStatusResponses,
-  GetTestingSessionsByRequestByTestingRequestIdData,
-  GetTestingSessionsByRequestByTestingRequestIdResponses,
-  GetTestingSessionsByLocationByLocationIdData,
-  GetTestingSessionsByLocationByLocationIdResponses,
-  GetTestingSessionsByStatusByStatusData,
-  GetTestingSessionsByStatusByStatusResponses,
-  GetTestingSessionsByManagerByManagerIdData,
-  GetTestingSessionsByManagerByManagerIdResponses,
-  GetTestingRequestsSearchData,
-  GetTestingRequestsSearchResponses,
-  GetTestingSessionsSearchData,
-  GetTestingSessionsSearchResponses,
-  DeleteTestingRequestsByRequestIdParticipantsByUserIdData,
-  DeleteTestingRequestsByRequestIdParticipantsByUserIdResponses,
-  PostTestingRequestsByRequestIdParticipantsByUserIdData,
-  PostTestingRequestsByRequestIdParticipantsByUserIdResponses,
-  GetTestingRequestsByRequestIdParticipantsData,
-  GetTestingRequestsByRequestIdParticipantsResponses,
-  GetTestingRequestsByRequestIdParticipantsByUserIdCheckData,
-  GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses,
-  DeleteTestingSessionsBySessionIdRegisterData,
-  DeleteTestingSessionsBySessionIdRegisterResponses,
-  PostTestingSessionsBySessionIdRegisterData,
-  PostTestingSessionsBySessionIdRegisterResponses,
-  GetTestingSessionsBySessionIdRegistrationsData,
-  GetTestingSessionsBySessionIdRegistrationsResponses,
-  DeleteTestingSessionsBySessionIdWaitlistData,
-  DeleteTestingSessionsBySessionIdWaitlistResponses,
-  GetTestingSessionsBySessionIdWaitlistData,
-  GetTestingSessionsBySessionIdWaitlistResponses,
-  PostTestingSessionsBySessionIdWaitlistData,
-  PostTestingSessionsBySessionIdWaitlistResponses,
-  GetTestingRequestsByRequestIdFeedbackData,
-  GetTestingRequestsByRequestIdFeedbackResponses,
-  PostTestingRequestsByRequestIdFeedbackData,
-  PostTestingRequestsByRequestIdFeedbackResponses,
-  GetTestingFeedbackByUserByUserIdData,
-  GetTestingFeedbackByUserByUserIdResponses,
-  GetTestingRequestsByRequestIdStatisticsData,
-  GetTestingRequestsByRequestIdStatisticsResponses,
-  GetTestingSessionsBySessionIdStatisticsData,
-  GetTestingSessionsBySessionIdStatisticsResponses,
-  GetTestingUsersByUserIdActivityData,
-  GetTestingUsersByUserIdActivityResponses,
-  PostTestingSubmitSimpleData,
-  PostTestingSubmitSimpleResponses,
-  PostTestingFeedbackData,
-  PostTestingFeedbackResponses,
-  GetTestingMyRequestsData,
-  GetTestingMyRequestsResponses,
-  GetTestingAvailableForTestingData,
-  GetTestingAvailableForTestingResponses,
-  GetTestingAttendanceStudentsData,
-  GetTestingAttendanceStudentsResponses,
-  GetTestingAttendanceSessionsData,
-  GetTestingAttendanceSessionsResponses,
-  PostTestingSessionsBySessionIdAttendanceData,
-  PostTestingSessionsBySessionIdAttendanceResponses,
-  PostTestingFeedbackByFeedbackIdReportData,
-  PostTestingFeedbackByFeedbackIdReportResponses,
-  PostTestingFeedbackByFeedbackIdQualityData,
-  PostTestingFeedbackByFeedbackIdQualityResponses,
-  GetTestingLocationsData,
-  GetTestingLocationsResponses,
-  PostTestingLocationsData,
-  PostTestingLocationsResponses,
-  DeleteTestingLocationsByIdData,
-  DeleteTestingLocationsByIdResponses,
-  GetTestingLocationsByIdData,
-  GetTestingLocationsByIdResponses,
-  PutTestingLocationsByIdData,
-  PutTestingLocationsByIdResponses,
-  PostTestingLocationsByIdRestoreData,
-  PostTestingLocationsByIdRestoreResponses,
-  GetTestingPermissionsCheckData,
-  GetTestingPermissionsCheckResponses,
-  GetTestingPermissionsMyPermissionsData,
-  GetTestingPermissionsMyPermissionsResponses,
-  PostTestingPermissionsAssignRoleData,
-  PostTestingPermissionsAssignRoleResponses,
-  PostTestingSessionsCreateWithPermissionsData,
-  PostTestingSessionsCreateWithPermissionsResponses,
-  DeleteTestingSessionsByIdDeleteWithPermissionsData,
-  DeleteTestingSessionsByIdDeleteWithPermissionsResponses,
-  GetTestingPermissionsUsersWithRoleByRoleNameData,
-  GetTestingPermissionsUsersWithRoleByRoleNameResponses,
-  GetApiTestingLabPermissionsRoleTemplatesData,
-  GetApiTestingLabPermissionsRoleTemplatesResponses,
-  PostApiTestingLabPermissionsRoleTemplatesData,
-  PostApiTestingLabPermissionsRoleTemplatesResponses,
-  DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameData,
-  DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses,
-  PutApiTestingLabPermissionsRoleTemplatesByIdOrNameData,
-  PutApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses,
-  DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameData,
-  DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameResponses,
-  GetApiTestingLabPermissionsUsersByUserIdData,
-  GetApiTestingLabPermissionsUsersByUserIdResponses,
-  PostApiTestingLabPermissionsUsersByUserIdRolesData,
-  PostApiTestingLabPermissionsUsersByUserIdRolesResponses,
-  DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameData,
-  DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameResponses,
-  DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData,
-  DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses,
-  PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData,
-  PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses,
-  GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeData,
-  GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses,
-  GetApiTestingLabSettingsData,
-  GetApiTestingLabSettingsResponses,
-  PatchApiTestingLabSettingsData,
-  PatchApiTestingLabSettingsResponses,
-  PutApiTestingLabSettingsData,
-  PutApiTestingLabSettingsResponses,
-  PostApiTestingLabSettingsResetData,
-  PostApiTestingLabSettingsResetResponses,
-  GetApiTestingLabSettingsExistsData,
-  GetApiTestingLabSettingsExistsResponses,
-  GetApiUsersByUserIdAchievementsData,
-  GetApiUsersByUserIdAchievementsResponses,
-  GetApiUsersByUserIdAchievementsProgressData,
-  GetApiUsersByUserIdAchievementsProgressResponses,
-  GetApiUsersByUserIdAchievementsSummaryData,
-  GetApiUsersByUserIdAchievementsSummaryResponses,
-  GetApiUsersByUserIdAchievementsAvailableData,
-  GetApiUsersByUserIdAchievementsAvailableResponses,
-  PostApiUsersByUserIdAchievementsByAchievementIdProgressData,
-  PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses,
-  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData,
-  GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses,
-  PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedData,
-  PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedResponses,
-  DeleteApiUsersByUserIdAchievementsByUserAchievementIdData,
-  DeleteApiUsersByUserIdAchievementsByUserAchievementIdResponses,
-  GetApiUserprofilesData,
-  GetApiUserprofilesResponses,
-  PostApiUserprofilesData,
-  PostApiUserprofilesResponses,
-  DeleteApiUserprofilesByIdData,
-  DeleteApiUserprofilesByIdResponses,
-  GetApiUserprofilesByIdData,
-  GetApiUserprofilesByIdResponses,
-  PutApiUserprofilesByIdData,
-  PutApiUserprofilesByIdResponses,
-  GetApiUserprofilesUserByUserIdData,
-  GetApiUserprofilesUserByUserIdResponses,
-  PostApiUserprofilesByIdRestoreData,
-  PostApiUserprofilesByIdRestoreResponses,
-  GetApiUsersData,
-  GetApiUsersResponses,
-  PostApiUsersData,
-  PostApiUsersResponses,
-  DeleteApiUsersByIdData,
-  DeleteApiUsersByIdResponses,
-  GetApiUsersByIdData,
-  GetApiUsersByIdResponses,
-  PutApiUsersByIdData,
-  PutApiUsersByIdResponses,
-  PostApiUsersByIdRestoreData,
-  PostApiUsersByIdRestoreResponses,
-  PutApiUsersByIdBalanceData,
-  PutApiUsersByIdBalanceResponses,
-  GetApiUsersStatisticsData,
-  GetApiUsersStatisticsResponses,
-  GetApiUsersSearchData,
-  GetApiUsersSearchResponses,
-  PostApiUsersBulkData,
-  PostApiUsersBulkResponses,
-  PatchApiUsersBulkActivateData,
-  PatchApiUsersBulkActivateResponses,
-  PatchApiUsersBulkDeactivateData,
-  PatchApiUsersBulkDeactivateResponses,
+  GetApiV1TenantsByTenantIdQuotasData,
+  GetApiV1TenantsByTenantIdQuotasResponses,
+  DeleteApiV1TenantsByTenantIdQuotasByTypeData,
+  DeleteApiV1TenantsByTenantIdQuotasByTypeResponses,
+  GetApiV1TenantsByTenantIdQuotasByTypeData,
+  GetApiV1TenantsByTenantIdQuotasByTypeResponses,
+  PutApiV1TenantsByTenantIdQuotasByTypeData,
+  PutApiV1TenantsByTenantIdQuotasByTypeResponses,
+  PostApiV1TenantsByTenantIdQuotasByTypeResetData,
+  PostApiV1TenantsByTenantIdQuotasByTypeResetResponses,
+  PatchApiV1TenantsByTenantIdQuotasByTypeToggleData,
+  PatchApiV1TenantsByTenantIdQuotasByTypeToggleResponses,
+  PostApiV1TenantsByTenantIdQuotasByTypeCheckData,
+  PostApiV1TenantsByTenantIdQuotasByTypeCheckResponses,
+  PostApiV1PermissionsResourcesShareData,
+  PostApiV1PermissionsResourcesShareResponses,
+  PostApiV1PermissionsResourcesShareErrors,
+  PutApiV1PermissionsResourcesUsersPermissionsData,
+  PutApiV1PermissionsResourcesUsersPermissionsResponses,
+  PutApiV1PermissionsResourcesUsersPermissionsErrors,
+  DeleteApiV1PermissionsResourcesUsersAccessData,
+  DeleteApiV1PermissionsResourcesUsersAccessResponses,
+  DeleteApiV1PermissionsResourcesUsersAccessErrors,
+  GetApiV1PermissionsResourcesByResourceTypeByResourceIdPermissionsData,
+  GetApiV1PermissionsResourcesByResourceTypeByResourceIdPermissionsResponses,
+  GetApiV1PermissionsResourcesByResourceTypeByResourceIdPermissionsErrors,
+  GetApiV1PermissionsResourcesByResourceTypeByResourceIdHasPermissionData,
+  GetApiV1PermissionsResourcesByResourceTypeByResourceIdHasPermissionResponses,
+  GetApiV1PermissionsResourcesByResourceTypeByResourceIdHasPermissionErrors,
+  GetApiV1PermissionsResourcesByResourceTypeByResourceIdUsersData,
+  GetApiV1PermissionsResourcesByResourceTypeByResourceIdUsersResponses,
+  GetApiV1PermissionsResourcesByResourceTypeByResourceIdUsersErrors,
+  GetApiV1ResourcesTenantByTenantIdUsageRecordsData,
+  GetApiV1ResourcesTenantByTenantIdUsageRecordsResponses,
+  GetApiV1ResourcesTenantByTenantIdUsageSummaryData,
+  GetApiV1ResourcesTenantByTenantIdUsageSummaryResponses,
+  GetApiV1ResourcesTenantByTenantIdLimitsData,
+  GetApiV1ResourcesTenantByTenantIdLimitsResponses,
+  PostQuotasData,
+  PostQuotasResponses,
+  PostQuotasErrors,
+  GetApiV1ResourcesTenantByTenantIdQuotaData,
+  GetApiV1ResourcesTenantByTenantIdQuotaResponses,
+  GetApiV1ResourcesTenantByTenantIdQuotaErrors,
+  GetApiV1ResourcesUsageByTypeByUsageTypeData,
+  GetApiV1ResourcesUsageByTypeByUsageTypeResponses,
+  PostApiV1ResourcesRecordData,
+  PostApiV1ResourcesRecordResponses,
+  PostApiV1ResourcesRecordWithQuotaCheckData,
+  PostApiV1ResourcesRecordWithQuotaCheckResponses,
+  PostApiV1ResourcesRecordWithQuotaCheckErrors,
+  PostApiV1ResourcesResetData,
+  PostApiV1ResourcesResetResponses,
+  PostApiV1ResourcesArchiveData,
+  PostApiV1ResourcesArchiveResponses,
+  GetApiV1RolesData,
+  GetApiV1RolesResponses,
+  GetApiV1RolesErrors,
+  PostApiV1RolesData,
+  PostApiV1RolesResponses,
+  PostApiV1RolesErrors,
+  DeleteApiV1RolesByIdData,
+  DeleteApiV1RolesByIdResponses,
+  DeleteApiV1RolesByIdErrors,
+  GetApiV1RolesByIdData,
+  GetApiV1RolesByIdResponses,
+  GetApiV1RolesByIdErrors,
+  PutApiV1RolesByIdData,
+  PutApiV1RolesByIdResponses,
+  PutApiV1RolesByIdErrors,
+  GetApiV1RolesUserByUserIdData,
+  GetApiV1RolesUserByUserIdResponses,
+  GetApiV1RolesUserByUserIdErrors,
+  PostApiV1RolesAssignData,
+  PostApiV1RolesAssignResponses,
+  PostApiV1RolesAssignErrors,
+  PostApiV1RolesRemoveData,
+  PostApiV1RolesRemoveResponses,
+  PostApiV1RolesRemoveErrors,
+  GetApiV1SlaSlosData,
+  GetApiV1SlaSlosResponses,
+  PostApiV1SlaSlosData,
+  PostApiV1SlaSlosResponses,
+  PostApiV1SlaSlosErrors,
+  DeleteApiV1SlaSlosByIdData,
+  DeleteApiV1SlaSlosByIdResponses,
+  DeleteApiV1SlaSlosByIdErrors,
+  GetApiV1SlaSlosByIdData,
+  GetApiV1SlaSlosByIdResponses,
+  GetApiV1SlaSlosByIdErrors,
+  PutApiV1SlaSlosByIdData,
+  PutApiV1SlaSlosByIdResponses,
+  PutApiV1SlaSlosByIdErrors,
+  PostApiV1SlaSlisData,
+  PostApiV1SlaSlisResponses,
+  PostApiV1SlaSlisErrors,
+  GetApiV1SlaSlosByIdComplianceData,
+  GetApiV1SlaSlosByIdComplianceResponses,
+  GetApiV1SlaSlosByIdComplianceErrors,
+  GetApiV1SlaSlosByIdErrorBudgetData,
+  GetApiV1SlaSlosByIdErrorBudgetResponses,
+  GetApiV1SlaSlosByIdErrorBudgetErrors,
+  GetApiV1SlaViolationsData,
+  GetApiV1SlaViolationsResponses,
+  PostApiV1SlaViolationsByIdResolveData,
+  PostApiV1SlaViolationsByIdResolveResponses,
+  PostApiV1SlaViolationsByIdResolveErrors,
+  GetV1SubscriptionPlansData,
+  GetV1SubscriptionPlansResponses,
+  PostV1SubscriptionPlansData,
+  PostV1SubscriptionPlansResponses,
+  PostV1SubscriptionPlansErrors,
+  GetV1SubscriptionPlansFeaturedData,
+  GetV1SubscriptionPlansFeaturedResponses,
+  GetV1SubscriptionPlansSearchData,
+  GetV1SubscriptionPlansSearchResponses,
+  GetV1SubscriptionPlansPriceRangeData,
+  GetV1SubscriptionPlansPriceRangeResponses,
+  GetV1SubscriptionPlansCompareData,
+  GetV1SubscriptionPlansCompareResponses,
+  DeleteV1SubscriptionPlansByPlanIdData,
+  DeleteV1SubscriptionPlansByPlanIdResponses,
+  DeleteV1SubscriptionPlansByPlanIdErrors,
+  GetV1SubscriptionPlansByPlanIdData,
+  GetV1SubscriptionPlansByPlanIdResponses,
+  GetV1SubscriptionPlansByPlanIdErrors,
+  HeadV1SubscriptionPlansByPlanIdData,
+  HeadV1SubscriptionPlansByPlanIdResponses,
+  HeadV1SubscriptionPlansByPlanIdErrors,
+  GetV1SubscriptionPlansSlugBySlugData,
+  GetV1SubscriptionPlansSlugBySlugResponses,
+  GetV1SubscriptionPlansSlugBySlugErrors,
+  GetV1SubscriptionPlansByPlanIdUsageData,
+  GetV1SubscriptionPlansByPlanIdUsageResponses,
+  GetV1SubscriptionPlansByPlanIdSuggestUpgradesData,
+  GetV1SubscriptionPlansByPlanIdSuggestUpgradesResponses,
+  GetV1SubscriptionPlansByPlanIdPricingData,
+  GetV1SubscriptionPlansByPlanIdPricingResponses,
+  GetV1SubscriptionPlansByPlanIdPricingErrors,
+  PatchV1SubscriptionPlansByPlanIdPricingData,
+  PatchV1SubscriptionPlansByPlanIdPricingResponses,
+  PatchV1SubscriptionPlansByPlanIdPricingErrors,
+  GetV1SubscriptionPlansByPlanIdValidateLimitsData,
+  GetV1SubscriptionPlansByPlanIdValidateLimitsResponses,
+  PatchV1SubscriptionPlansByPlanIdDetailsData,
+  PatchV1SubscriptionPlansByPlanIdDetailsResponses,
+  PatchV1SubscriptionPlansByPlanIdDetailsErrors,
+  PatchV1SubscriptionPlansByPlanIdLimitsData,
+  PatchV1SubscriptionPlansByPlanIdLimitsResponses,
+  PatchV1SubscriptionPlansByPlanIdLimitsErrors,
+  PatchV1SubscriptionPlansByPlanIdFeaturesData,
+  PatchV1SubscriptionPlansByPlanIdFeaturesResponses,
+  PatchV1SubscriptionPlansByPlanIdFeaturesErrors,
+  PostV1SubscriptionPlansByPlanIdActivateData,
+  PostV1SubscriptionPlansByPlanIdActivateResponses,
+  PostV1SubscriptionPlansByPlanIdActivateErrors,
+  PostV1SubscriptionPlansByPlanIdDeactivateData,
+  PostV1SubscriptionPlansByPlanIdDeactivateResponses,
+  PostV1SubscriptionPlansByPlanIdDeactivateErrors,
+  PostV1SubscriptionPlansByPlanIdFeaturedData,
+  PostV1SubscriptionPlansByPlanIdFeaturedResponses,
+  PostV1SubscriptionPlansByPlanIdFeaturedErrors,
+  PostV1SubscriptionPlansByPlanIdExternalIdData,
+  PostV1SubscriptionPlansByPlanIdExternalIdResponses,
+  PostV1SubscriptionPlansByPlanIdExternalIdErrors,
+  GetApiV1SubscriptionsData,
+  GetApiV1SubscriptionsResponses,
+  PostApiV1SubscriptionsData,
+  PostApiV1SubscriptionsResponses,
+  PostApiV1SubscriptionsErrors,
+  GetApiV1SubscriptionsTenantByTenantIdData,
+  GetApiV1SubscriptionsTenantByTenantIdResponses,
+  GetApiV1SubscriptionsTenantByTenantIdActiveData,
+  GetApiV1SubscriptionsTenantByTenantIdActiveResponses,
+  GetApiV1SubscriptionsTenantByTenantIdActiveErrors,
+  GetApiV1SubscriptionsPlanByPlanIdData,
+  GetApiV1SubscriptionsPlanByPlanIdResponses,
+  GetApiV1SubscriptionsStatusByStatusData,
+  GetApiV1SubscriptionsStatusByStatusResponses,
+  GetApiV1SubscriptionsMetricsData,
+  GetApiV1SubscriptionsMetricsResponses,
+  GetApiV1SubscriptionsExpiringData,
+  GetApiV1SubscriptionsExpiringResponses,
+  GetApiV1SubscriptionsBySubscriptionIdData,
+  GetApiV1SubscriptionsBySubscriptionIdResponses,
+  GetApiV1SubscriptionsBySubscriptionIdErrors,
+  HeadApiV1SubscriptionsBySubscriptionIdData,
+  HeadApiV1SubscriptionsBySubscriptionIdResponses,
+  HeadApiV1SubscriptionsBySubscriptionIdErrors,
+  GetApiV1SubscriptionsBySubscriptionIdUsageData,
+  GetApiV1SubscriptionsBySubscriptionIdUsageResponses,
+  GetApiV1SubscriptionsBySubscriptionIdUsageErrors,
+  GetApiV1SubscriptionsBySubscriptionIdBillingHistoryData,
+  GetApiV1SubscriptionsBySubscriptionIdBillingHistoryResponses,
+  PostApiV1SubscriptionsBySubscriptionIdActivateData,
+  PostApiV1SubscriptionsBySubscriptionIdActivateResponses,
+  PostApiV1SubscriptionsBySubscriptionIdActivateErrors,
+  PostApiV1SubscriptionsBySubscriptionIdStartTrialData,
+  PostApiV1SubscriptionsBySubscriptionIdStartTrialResponses,
+  PostApiV1SubscriptionsBySubscriptionIdStartTrialErrors,
+  PostApiV1SubscriptionsBySubscriptionIdEndTrialData,
+  PostApiV1SubscriptionsBySubscriptionIdEndTrialResponses,
+  PostApiV1SubscriptionsBySubscriptionIdEndTrialErrors,
+  PostApiV1SubscriptionsBySubscriptionIdCancelData,
+  PostApiV1SubscriptionsBySubscriptionIdCancelResponses,
+  PostApiV1SubscriptionsBySubscriptionIdCancelErrors,
+  PostApiV1SubscriptionsBySubscriptionIdSuspendData,
+  PostApiV1SubscriptionsBySubscriptionIdSuspendResponses,
+  PostApiV1SubscriptionsBySubscriptionIdSuspendErrors,
+  PostApiV1SubscriptionsBySubscriptionIdReactivateData,
+  PostApiV1SubscriptionsBySubscriptionIdReactivateResponses,
+  PostApiV1SubscriptionsBySubscriptionIdReactivateErrors,
+  PostApiV1SubscriptionsBySubscriptionIdUpgradeData,
+  PostApiV1SubscriptionsBySubscriptionIdUpgradeResponses,
+  PostApiV1SubscriptionsBySubscriptionIdUpgradeErrors,
+  PostApiV1SubscriptionsBySubscriptionIdDowngradeData,
+  PostApiV1SubscriptionsBySubscriptionIdDowngradeResponses,
+  PostApiV1SubscriptionsBySubscriptionIdDowngradeErrors,
+  PostApiV1SubscriptionsBySubscriptionIdRenewData,
+  PostApiV1SubscriptionsBySubscriptionIdRenewResponses,
+  PostApiV1SubscriptionsBySubscriptionIdRenewErrors,
+  PostApiV1SubscriptionsBySubscriptionIdAutoRenewData,
+  PostApiV1SubscriptionsBySubscriptionIdAutoRenewResponses,
+  PostApiV1SubscriptionsBySubscriptionIdAutoRenewErrors,
+  PostApiV1SubscriptionsBySubscriptionIdExternalIdsData,
+  PostApiV1SubscriptionsBySubscriptionIdExternalIdsResponses,
+  PostApiV1SubscriptionsBySubscriptionIdExternalIdsErrors,
+  PostApiV1TaxCalculateData,
+  PostApiV1TaxCalculateResponses,
+  PostApiV1TaxCalculateErrors,
+  GetApiV1TaxJurisdictionsData,
+  GetApiV1TaxJurisdictionsResponses,
+  GetApiV1TaxRulesData,
+  GetApiV1TaxRulesResponses,
+  GetApiV1TaxRulesErrors,
+  GetApiV1TenantsByIdMetadataData,
+  GetApiV1TenantsByIdMetadataResponses,
+  GetApiV1TenantsByIdMetadataErrors,
+  PatchApiV1TenantsByIdMetadataData,
+  PatchApiV1TenantsByIdMetadataResponses,
+  PatchApiV1TenantsByIdMetadataErrors,
+  PutApiV1TenantsByIdMetadataData,
+  PutApiV1TenantsByIdMetadataResponses,
+  PutApiV1TenantsByIdMetadataErrors,
+  GetApiV1TenantsByIdMetadataCustomFieldsData,
+  GetApiV1TenantsByIdMetadataCustomFieldsResponses,
+  GetApiV1TenantsByIdMetadataCustomFieldsErrors,
+  PatchApiV1TenantsByIdMetadataCustomFieldsData,
+  PatchApiV1TenantsByIdMetadataCustomFieldsResponses,
+  PatchApiV1TenantsByIdMetadataCustomFieldsErrors,
+  GetApiV1TenantsByIdMetadataTagsData,
+  GetApiV1TenantsByIdMetadataTagsResponses,
+  GetApiV1TenantsByIdMetadataTagsErrors,
+  PatchApiV1TenantsByIdMetadataTagsData,
+  PatchApiV1TenantsByIdMetadataTagsResponses,
+  PatchApiV1TenantsByIdMetadataTagsErrors,
+  PutApiV1TenantsByIdMetadataTagsData,
+  PutApiV1TenantsByIdMetadataTagsResponses,
+  PutApiV1TenantsByIdMetadataTagsErrors,
+  GetApiV1TenantsByIdSettingsData,
+  GetApiV1TenantsByIdSettingsResponses,
+  GetApiV1TenantsByIdSettingsErrors,
+  PatchApiV1TenantsByIdSettingsData,
+  PatchApiV1TenantsByIdSettingsResponses,
+  PatchApiV1TenantsByIdSettingsErrors,
+  PutApiV1TenantsByIdSettingsData,
+  PutApiV1TenantsByIdSettingsResponses,
+  PutApiV1TenantsByIdSettingsErrors,
+  GetApiV1TenantsByIdSettingsFeatureFlagsData,
+  GetApiV1TenantsByIdSettingsFeatureFlagsResponses,
+  GetApiV1TenantsByIdSettingsFeatureFlagsErrors,
+  PatchApiV1TenantsByIdSettingsFeatureFlagsData,
+  PatchApiV1TenantsByIdSettingsFeatureFlagsResponses,
+  PatchApiV1TenantsByIdSettingsFeatureFlagsErrors,
+  GetApiV1TenantsByIdSettingsSystemLimitsData,
+  GetApiV1TenantsByIdSettingsSystemLimitsResponses,
+  GetApiV1TenantsByIdSettingsSystemLimitsErrors,
+  PatchApiV1TenantsByIdSettingsSystemLimitsData,
+  PatchApiV1TenantsByIdSettingsSystemLimitsResponses,
+  PatchApiV1TenantsByIdSettingsSystemLimitsErrors,
+  GetApiV1TenantsByIdSettingsIntegrationSettingsData,
+  GetApiV1TenantsByIdSettingsIntegrationSettingsResponses,
+  GetApiV1TenantsByIdSettingsIntegrationSettingsErrors,
+  PatchApiV1TenantsByIdSettingsIntegrationSettingsData,
+  PatchApiV1TenantsByIdSettingsIntegrationSettingsResponses,
+  PatchApiV1TenantsByIdSettingsIntegrationSettingsErrors,
+  PostApiV1PermissionsTenantsGrantData,
+  PostApiV1PermissionsTenantsGrantResponses,
+  PostApiV1PermissionsTenantsGrantErrors,
+  PostApiV1PermissionsTenantsRevokeData,
+  PostApiV1PermissionsTenantsRevokeResponses,
+  PostApiV1PermissionsTenantsRevokeErrors,
+  GetApiV1PermissionsTenantsByTenantIdPermissionsData,
+  GetApiV1PermissionsTenantsByTenantIdPermissionsResponses,
+  GetApiV1PermissionsTenantsByTenantIdPermissionsErrors,
+  GetApiV1PermissionsTenantsByTenantIdHasPermissionData,
+  GetApiV1PermissionsTenantsByTenantIdHasPermissionResponses,
+  GetApiV1PermissionsTenantsByTenantIdHasPermissionErrors,
+  GetV1TenantsData,
+  GetV1TenantsResponses,
+  GetV1TenantsErrors,
+  PostV1TenantsData,
+  PostV1TenantsResponses,
+  PostV1TenantsErrors,
+  GetV1TenantsByTenantIdPaymentsData,
+  GetV1TenantsByTenantIdPaymentsResponses,
+  PostV1TenantsCreateData,
+  PostV1TenantsCreateResponses,
+  PostV1TenantsCreateErrors,
+  PostV1TenantsUpdateData,
+  PostV1TenantsUpdateResponses,
+  PostV1TenantsUpdateErrors,
+  PostV1TenantsReplaceData,
+  PostV1TenantsReplaceResponses,
+  PostV1TenantsReplaceErrors,
+  PostV1TenantsDeleteData,
+  PostV1TenantsDeleteResponses,
+  PostV1TenantsDeleteErrors,
+  PostV1TenantsActivateData,
+  PostV1TenantsActivateResponses,
+  PostV1TenantsActivateErrors,
+  PostV1TenantsDeactivateData,
+  PostV1TenantsDeactivateResponses,
+  PostV1TenantsDeactivateErrors,
+  PostV1TenantsArchiveData,
+  PostV1TenantsArchiveResponses,
+  PostV1TenantsArchiveErrors,
+  PostV1TenantsUndeleteData,
+  PostV1TenantsUndeleteResponses,
+  PostV1TenantsUndeleteErrors,
+  PostV1TenantsPurgeData,
+  PostV1TenantsPurgeResponses,
+  PostV1TenantsPurgeErrors,
+  DeleteV1TenantsByTenantIdData,
+  DeleteV1TenantsByTenantIdResponses,
+  DeleteV1TenantsByTenantIdErrors,
+  GetV1TenantsByTenantIdData,
+  GetV1TenantsByTenantIdResponses,
+  GetV1TenantsByTenantIdErrors,
+  HeadV1TenantsByTenantIdData,
+  HeadV1TenantsByTenantIdResponses,
+  HeadV1TenantsByTenantIdErrors,
+  PatchV1TenantsByTenantIdData,
+  PatchV1TenantsByTenantIdResponses,
+  PatchV1TenantsByTenantIdErrors,
+  PutV1TenantsByTenantIdData,
+  PutV1TenantsByTenantIdResponses,
+  PutV1TenantsByTenantIdErrors,
+  PostV1TenantsByTenantIdActivateData,
+  PostV1TenantsByTenantIdActivateResponses,
+  PostV1TenantsByTenantIdActivateErrors,
+  PostV1TenantsByTenantIdDeactivateData,
+  PostV1TenantsByTenantIdDeactivateResponses,
+  PostV1TenantsByTenantIdDeactivateErrors,
+  PostV1TenantsByTenantIdArchiveData,
+  PostV1TenantsByTenantIdArchiveResponses,
+  PostV1TenantsByTenantIdArchiveErrors,
+  PostV1TenantsByTenantIdUndeleteData,
+  PostV1TenantsByTenantIdUndeleteResponses,
+  PostV1TenantsByTenantIdUndeleteErrors,
+  PostV1TenantsByTenantIdPurgeData,
+  PostV1TenantsByTenantIdPurgeResponses,
+  PostV1TenantsByTenantIdPurgeErrors,
+  GetV1UsersByUserIdMetadataData,
+  GetV1UsersByUserIdMetadataResponses,
+  GetV1UsersByUserIdMetadataErrors,
+  PatchV1UsersByUserIdMetadataData,
+  PatchV1UsersByUserIdMetadataResponses,
+  PatchV1UsersByUserIdMetadataErrors,
+  PutV1UsersByUserIdMetadataData,
+  PutV1UsersByUserIdMetadataResponses,
+  PutV1UsersByUserIdMetadataErrors,
+  GetV1UsersByUserIdNotificationsData,
+  GetV1UsersByUserIdNotificationsResponses,
+  GetV1UsersByUserIdNotificationsErrors,
+  PostV1UsersByUserIdNotificationsMarkAsReadData,
+  PostV1UsersByUserIdNotificationsMarkAsReadResponses,
+  PostV1UsersByUserIdNotificationsMarkAsReadErrors,
+  PostV1UsersByUserIdNotificationsMarkAsUnreadData,
+  PostV1UsersByUserIdNotificationsMarkAsUnreadResponses,
+  PostV1UsersByUserIdNotificationsMarkAsUnreadErrors,
+  PostV1UsersByUserIdNotificationsArchiveData,
+  PostV1UsersByUserIdNotificationsArchiveResponses,
+  PostV1UsersByUserIdNotificationsArchiveErrors,
+  PostV1UsersByUserIdNotificationsUnarchiveData,
+  PostV1UsersByUserIdNotificationsUnarchiveResponses,
+  PostV1UsersByUserIdNotificationsUnarchiveErrors,
+  GetV1UsersByUserIdNotificationsByNotificationIdData,
+  GetV1UsersByUserIdNotificationsByNotificationIdResponses,
+  GetV1UsersByUserIdNotificationsByNotificationIdErrors,
+  HeadV1UsersByUserIdNotificationsByNotificationIdData,
+  HeadV1UsersByUserIdNotificationsByNotificationIdResponses,
+  HeadV1UsersByUserIdNotificationsByNotificationIdErrors,
+  PostV1UsersByUserIdNotificationsByNotificationIdMarkAsReadData,
+  PostV1UsersByUserIdNotificationsByNotificationIdMarkAsReadResponses,
+  PostV1UsersByUserIdNotificationsByNotificationIdMarkAsReadErrors,
+  PostV1UsersByUserIdNotificationsByNotificationIdMarkAsUnreadData,
+  PostV1UsersByUserIdNotificationsByNotificationIdMarkAsUnreadResponses,
+  PostV1UsersByUserIdNotificationsByNotificationIdMarkAsUnreadErrors,
+  PostV1UsersByUserIdNotificationsByNotificationIdArchiveData,
+  PostV1UsersByUserIdNotificationsByNotificationIdArchiveResponses,
+  PostV1UsersByUserIdNotificationsByNotificationIdArchiveErrors,
+  PostV1UsersByUserIdNotificationsByNotificationIdUnarchiveData,
+  PostV1UsersByUserIdNotificationsByNotificationIdUnarchiveResponses,
+  PostV1UsersByUserIdNotificationsByNotificationIdUnarchiveErrors,
+  GetV1UsersByUserIdPreferencesData,
+  GetV1UsersByUserIdPreferencesResponses,
+  GetV1UsersByUserIdPreferencesErrors,
+  PatchV1UsersByUserIdPreferencesData,
+  PatchV1UsersByUserIdPreferencesResponses,
+  PatchV1UsersByUserIdPreferencesErrors,
+  PutV1UsersByUserIdPreferencesData,
+  PutV1UsersByUserIdPreferencesResponses,
+  PutV1UsersByUserIdPreferencesErrors,
+  PostV1UsersByUserIdPreferencesResetData,
+  PostV1UsersByUserIdPreferencesResetResponses,
+  PostV1UsersByUserIdPreferencesResetErrors,
+  GetV1UsersByUserIdPreferencesNotificationsData,
+  GetV1UsersByUserIdPreferencesNotificationsResponses,
+  GetV1UsersByUserIdPreferencesNotificationsErrors,
+  HeadV1UsersByUserIdPreferencesNotificationsData,
+  HeadV1UsersByUserIdPreferencesNotificationsResponses,
+  HeadV1UsersByUserIdPreferencesNotificationsErrors,
+  PatchV1UsersByUserIdPreferencesNotificationsData,
+  PatchV1UsersByUserIdPreferencesNotificationsResponses,
+  PatchV1UsersByUserIdPreferencesNotificationsErrors,
+  PutV1UsersByUserIdPreferencesNotificationsData,
+  PutV1UsersByUserIdPreferencesNotificationsResponses,
+  PutV1UsersByUserIdPreferencesNotificationsErrors,
+  PostV1UsersByUserIdPreferencesNotificationsResetData,
+  PostV1UsersByUserIdPreferencesNotificationsResetResponses,
+  PostV1UsersByUserIdPreferencesNotificationsResetErrors,
+  GetV1UsersByUserIdPreferencesAccessibilityData,
+  GetV1UsersByUserIdPreferencesAccessibilityResponses,
+  GetV1UsersByUserIdPreferencesAccessibilityErrors,
+  HeadV1UsersByUserIdPreferencesAccessibilityData,
+  HeadV1UsersByUserIdPreferencesAccessibilityResponses,
+  HeadV1UsersByUserIdPreferencesAccessibilityErrors,
+  PatchV1UsersByUserIdPreferencesAccessibilityData,
+  PatchV1UsersByUserIdPreferencesAccessibilityResponses,
+  PatchV1UsersByUserIdPreferencesAccessibilityErrors,
+  PutV1UsersByUserIdPreferencesAccessibilityData,
+  PutV1UsersByUserIdPreferencesAccessibilityResponses,
+  PutV1UsersByUserIdPreferencesAccessibilityErrors,
+  PostV1UsersByUserIdPreferencesAccessibilityResetData,
+  PostV1UsersByUserIdPreferencesAccessibilityResetResponses,
+  PostV1UsersByUserIdPreferencesAccessibilityResetErrors,
+  GetV1UsersByUserIdPreferencesPrivacyData,
+  GetV1UsersByUserIdPreferencesPrivacyResponses,
+  GetV1UsersByUserIdPreferencesPrivacyErrors,
+  HeadV1UsersByUserIdPreferencesPrivacyData,
+  HeadV1UsersByUserIdPreferencesPrivacyResponses,
+  HeadV1UsersByUserIdPreferencesPrivacyErrors,
+  PatchV1UsersByUserIdPreferencesPrivacyData,
+  PatchV1UsersByUserIdPreferencesPrivacyResponses,
+  PatchV1UsersByUserIdPreferencesPrivacyErrors,
+  PutV1UsersByUserIdPreferencesPrivacyData,
+  PutV1UsersByUserIdPreferencesPrivacyResponses,
+  PutV1UsersByUserIdPreferencesPrivacyErrors,
+  PostV1UsersByUserIdPreferencesPrivacyResetData,
+  PostV1UsersByUserIdPreferencesPrivacyResetResponses,
+  PostV1UsersByUserIdPreferencesPrivacyResetErrors,
+  GetV1UsersByUserIdPreferencesLocalizationData,
+  GetV1UsersByUserIdPreferencesLocalizationResponses,
+  GetV1UsersByUserIdPreferencesLocalizationErrors,
+  HeadV1UsersByUserIdPreferencesLocalizationData,
+  HeadV1UsersByUserIdPreferencesLocalizationResponses,
+  HeadV1UsersByUserIdPreferencesLocalizationErrors,
+  PatchV1UsersByUserIdPreferencesLocalizationData,
+  PatchV1UsersByUserIdPreferencesLocalizationResponses,
+  PatchV1UsersByUserIdPreferencesLocalizationErrors,
+  PutV1UsersByUserIdPreferencesLocalizationData,
+  PutV1UsersByUserIdPreferencesLocalizationResponses,
+  PutV1UsersByUserIdPreferencesLocalizationErrors,
+  PostV1UsersByUserIdPreferencesLocalizationResetData,
+  PostV1UsersByUserIdPreferencesLocalizationResetResponses,
+  PostV1UsersByUserIdPreferencesLocalizationResetErrors,
+  GetV1UsersProfilesData,
+  GetV1UsersProfilesResponses,
+  GetV1UsersProfilesErrors,
+  GetV1UsersByUserIdProfileData,
+  GetV1UsersByUserIdProfileResponses,
+  GetV1UsersByUserIdProfileErrors,
+  PatchV1UsersByUserIdProfileData,
+  PatchV1UsersByUserIdProfileResponses,
+  PatchV1UsersByUserIdProfileErrors,
+  PutV1UsersByUserIdProfileData,
+  PutV1UsersByUserIdProfileResponses,
+  PutV1UsersByUserIdProfileErrors,
+  GetV1UsersData,
+  GetV1UsersResponses,
+  PostV1UsersData,
+  PostV1UsersResponses,
+  PostV1UsersErrors,
+  PostV1UsersCreateData,
+  PostV1UsersCreateResponses,
+  PostV1UsersCreateErrors,
+  PostV1UsersUpdateData,
+  PostV1UsersUpdateResponses,
+  PostV1UsersUpdateErrors,
+  PostV1UsersReplaceData,
+  PostV1UsersReplaceResponses,
+  PostV1UsersReplaceErrors,
+  PostV1UsersDeleteData,
+  PostV1UsersDeleteResponses,
+  PostV1UsersDeleteErrors,
+  PostV1UsersActivateData,
+  PostV1UsersActivateResponses,
+  PostV1UsersActivateErrors,
+  PostV1UsersDeactivateData,
+  PostV1UsersDeactivateResponses,
+  PostV1UsersDeactivateErrors,
+  PostV1UsersSuspendData,
+  PostV1UsersSuspendResponses,
+  PostV1UsersSuspendErrors,
+  PostV1UsersUnsuspendData,
+  PostV1UsersUnsuspendResponses,
+  PostV1UsersUnsuspendErrors,
+  PostV1UsersUndeleteData,
+  PostV1UsersUndeleteResponses,
+  PostV1UsersUndeleteErrors,
+  PostV1UsersPurgeData,
+  PostV1UsersPurgeResponses,
+  PostV1UsersPurgeErrors,
+  DeleteV1UsersByUserIdData,
+  DeleteV1UsersByUserIdResponses,
+  DeleteV1UsersByUserIdErrors,
+  GetV1UsersByUserIdData,
+  GetV1UsersByUserIdResponses,
+  GetV1UsersByUserIdErrors,
+  HeadV1UsersByUserIdData,
+  HeadV1UsersByUserIdResponses,
+  HeadV1UsersByUserIdErrors,
+  PatchV1UsersByUserIdData,
+  PatchV1UsersByUserIdResponses,
+  PatchV1UsersByUserIdErrors,
+  PutV1UsersByUserIdData,
+  PutV1UsersByUserIdResponses,
+  PutV1UsersByUserIdErrors,
+  PostV1UsersByUserIdActivateData,
+  PostV1UsersByUserIdActivateResponses,
+  PostV1UsersByUserIdActivateErrors,
+  PostV1UsersByUserIdDeactivateData,
+  PostV1UsersByUserIdDeactivateResponses,
+  PostV1UsersByUserIdDeactivateErrors,
+  PostV1UsersByUserIdSuspendData,
+  PostV1UsersByUserIdSuspendResponses,
+  PostV1UsersByUserIdSuspendErrors,
+  PostV1UsersByUserIdUnsuspendData,
+  PostV1UsersByUserIdUnsuspendResponses,
+  PostV1UsersByUserIdUnsuspendErrors,
+  PostV1UsersByUserIdUndeleteData,
+  PostV1UsersByUserIdUndeleteResponses,
+  PostV1UsersByUserIdUndeleteErrors,
+  PostV1UsersByUserIdPurgeData,
+  PostV1UsersByUserIdPurgeResponses,
+  PostV1UsersByUserIdPurgeErrors,
+  PostApiV1WalletCreateData,
+  PostApiV1WalletCreateResponses,
+  PostApiV1WalletCreateErrors,
+  GetApiV1WalletByUserIdData,
+  GetApiV1WalletByUserIdResponses,
+  GetApiV1WalletByUserIdErrors,
+  GetApiV1WalletByUserIdBalanceData,
+  GetApiV1WalletByUserIdBalanceResponses,
+  PostApiV1WalletAddFundsData,
+  PostApiV1WalletAddFundsResponses,
+  PostApiV1WalletAddFundsErrors,
+  PostApiV1WalletDeductFundsData,
+  PostApiV1WalletDeductFundsResponses,
+  PostApiV1WalletDeductFundsErrors,
+  PostApiV1WalletTransferData,
+  PostApiV1WalletTransferResponses,
+  PostApiV1WalletTransferErrors,
+  PostApiV1WalletByUserIdLockData,
+  PostApiV1WalletByUserIdLockResponses,
+  PostApiV1WalletByUserIdLockErrors,
+  PostApiV1WalletByUserIdUnlockData,
+  PostApiV1WalletByUserIdUnlockResponses,
+  PostApiV1WalletByUserIdUnlockErrors,
+  GetApiV1WalletByUserIdTransactionsData,
+  GetApiV1WalletByUserIdTransactionsResponses,
 } from './types.gen';
 import { client as _heyApiClient } from './client.gen';
 
@@ -797,23 +1076,28 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
   meta?: Record<string, unknown>;
 };
 
-export const getApiAchievementsLeaderboard = <ThrowOnError extends boolean = false>(options?: Options<GetApiAchievementsLeaderboardData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiAchievementsLeaderboardResponses, unknown, ThrowOnError>({
-    url: '/api/achievements/leaderboard',
+export const getApiV1AbacPolicies = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AbacPoliciesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AbacPoliciesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies',
     ...options,
   });
 };
 
-export const getApiAchievements = <ThrowOnError extends boolean = false>(options?: Options<GetApiAchievementsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiAchievementsResponses, unknown, ThrowOnError>({
-    url: '/api/achievements',
-    ...options,
-  });
-};
-
-export const postApiAchievements = <ThrowOnError extends boolean = false>(options?: Options<PostApiAchievementsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAchievementsResponses, unknown, ThrowOnError>({
-    url: '/api/achievements',
+export const postApiV1AbacPolicies = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AbacPoliciesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AbacPoliciesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -822,29 +1106,41 @@ export const postApiAchievements = <ThrowOnError extends boolean = false>(option
   });
 };
 
-export const deleteApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiAchievementsByAchievementIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiAchievementsByAchievementIdResponses, unknown, ThrowOnError>({
-    url: '/api/achievements/{achievementId}',
+export const deleteApiV1AbacPoliciesById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiV1AbacPoliciesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiV1AbacPoliciesByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/{id}',
     ...options,
   });
 };
 
-export const getApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiAchievementsByAchievementIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiAchievementsByAchievementIdResponses, unknown, ThrowOnError>({
-    url: '/api/achievements/{achievementId}',
+export const getApiV1AbacPoliciesById = <ThrowOnError extends boolean = false>(options: Options<GetApiV1AbacPoliciesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1AbacPoliciesByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/{id}',
     ...options,
   });
 };
 
-export const putApiAchievementsByAchievementId = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiAchievementsByAchievementIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiAchievementsByAchievementIdResponses, unknown, ThrowOnError>({
-    url: '/api/achievements/{achievementId}',
+export const putApiV1AbacPoliciesById = <ThrowOnError extends boolean = false>(options: Options<PutApiV1AbacPoliciesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1AbacPoliciesByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -853,11 +1149,100 @@ export const putApiAchievementsByAchievementId = <ThrowOnError extends boolean =
   });
 };
 
-export const postApiAchievementsByAchievementIdAward = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiAchievementsByAchievementIdAwardData, ThrowOnError>,
+export const postApiV1AbacPoliciesEvaluate = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AbacPoliciesEvaluateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AbacPoliciesEvaluateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/evaluate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1AbacPoliciesEvaluateBulk = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AbacPoliciesEvaluateBulkData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiAchievementsByAchievementIdAwardResponses, unknown, ThrowOnError>({
-    url: '/api/achievements/{achievementId}/award',
+  return (options?.client ?? _heyApiClient).post<PostApiV1AbacPoliciesEvaluateBulkResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/evaluate/bulk',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1AbacPoliciesTestExpression = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AbacPoliciesTestExpressionData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AbacPoliciesTestExpressionResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/test-expression',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1AbacPoliciesByIdActivate = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1AbacPoliciesByIdActivateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AbacPoliciesByIdActivateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/{id}/activate',
+    ...options,
+  });
+};
+
+export const postApiV1AbacPoliciesByIdDeactivate = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1AbacPoliciesByIdDeactivateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AbacPoliciesByIdDeactivateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/{id}/deactivate',
+    ...options,
+  });
+};
+
+export const postApiV1AbacPoliciesByIdClone = <ThrowOnError extends boolean = false>(options: Options<PostApiV1AbacPoliciesByIdCloneData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AbacPoliciesByIdCloneResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/{id}/clone',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -866,11 +1251,101 @@ export const postApiAchievementsByAchievementIdAward = <ThrowOnError extends boo
   });
 };
 
-export const postApiAchievementsByAchievementIdBulkAward = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiAchievementsByAchievementIdBulkAwardData, ThrowOnError>,
+export const getApiV1AbacPoliciesStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AbacPoliciesStatisticsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AbacPoliciesStatisticsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/statistics',
+    ...options,
+  });
+};
+
+export const getApiV1AbacPoliciesByIdUsage = <ThrowOnError extends boolean = false>(options: Options<GetApiV1AbacPoliciesByIdUsageData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1AbacPoliciesByIdUsageResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/{id}/usage',
+    ...options,
+  });
+};
+
+export const getApiV1AbacPoliciesByIdAuditTrail = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1AbacPoliciesByIdAuditTrailData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiAchievementsByAchievementIdBulkAwardResponses, unknown, ThrowOnError>({
-    url: '/api/achievements/{achievementId}/bulk-award',
+  return (options.client ?? _heyApiClient).get<GetApiV1AbacPoliciesByIdAuditTrailResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/{id}/audit-trail',
+    ...options,
+  });
+};
+
+export const postApiV1AbacPoliciesValidate = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AbacPoliciesValidateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AbacPoliciesValidateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/validate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1AbacPoliciesConflicts = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AbacPoliciesConflictsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AbacPoliciesConflictsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/conflicts',
+    ...options,
+  });
+};
+
+export const getApiV1AbacPoliciesTemplates = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AbacPoliciesTemplatesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AbacPoliciesTemplatesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/templates',
+    ...options,
+  });
+};
+
+export const postApiV1AbacPoliciesTemplatesByTemplateIdCreate = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1AbacPoliciesTemplatesByTemplateIdCreateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AbacPoliciesTemplatesByTemplateIdCreateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/abac-policies/templates/{templateId}/create',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -879,19 +1354,406 @@ export const postApiAchievementsByAchievementIdBulkAward = <ThrowOnError extends
   });
 };
 
-export const getApiAchievementsByAchievementIdStatistics = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiAchievementsByAchievementIdStatisticsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiAchievementsByAchievementIdStatisticsResponses, unknown, ThrowOnError>({
-    url: '/api/achievements/{achievementId}/statistics',
+export const getApiV1AccessReviewsCampaigns = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AccessReviewsCampaignsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AccessReviewsCampaignsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/campaigns',
     ...options,
   });
 };
 
-export const getApiAchievementsStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetApiAchievementsStatisticsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiAchievementsStatisticsResponses, unknown, ThrowOnError>({
-    url: '/api/achievements/statistics',
+export const postApiV1AccessReviewsCampaigns = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AccessReviewsCampaignsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AccessReviewsCampaignsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/campaigns',
     ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiV1AccessReviewsCampaignsById = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiV1AccessReviewsCampaignsByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiV1AccessReviewsCampaignsByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/campaigns/{id}',
+    ...options,
+  });
+};
+
+export const getApiV1AccessReviewsCampaignsById = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1AccessReviewsCampaignsByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1AccessReviewsCampaignsByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/campaigns/{id}',
+    ...options,
+  });
+};
+
+export const putApiV1AccessReviewsCampaignsById = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiV1AccessReviewsCampaignsByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1AccessReviewsCampaignsByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/campaigns/{id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiV1AccessReviewsCampaignsByIdStart = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1AccessReviewsCampaignsByIdStartData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AccessReviewsCampaignsByIdStartResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/campaigns/{id}/start',
+    ...options,
+  });
+};
+
+export const postApiV1AccessReviewsCampaignsByIdComplete = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1AccessReviewsCampaignsByIdCompleteData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AccessReviewsCampaignsByIdCompleteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/campaigns/{id}/complete',
+    ...options,
+  });
+};
+
+export const getApiV1AccessReviewsCampaignsByCampaignIdItems = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1AccessReviewsCampaignsByCampaignIdItemsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1AccessReviewsCampaignsByCampaignIdItemsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/campaigns/{campaignId}/items',
+    ...options,
+  });
+};
+
+export const postApiV1AccessReviewsItemsByItemIdReview = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1AccessReviewsItemsByItemIdReviewData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AccessReviewsItemsByItemIdReviewResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/items/{itemId}/review',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiV1AccessReviewsItemsBulkReview = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AccessReviewsItemsBulkReviewData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AccessReviewsItemsBulkReviewResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/items/bulk-review',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1AccessReviewsItemsByItemId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1AccessReviewsItemsByItemIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1AccessReviewsItemsByItemIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/items/{itemId}',
+    ...options,
+  });
+};
+
+export const getApiV1AccessReviewsPeriodic = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AccessReviewsPeriodicData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AccessReviewsPeriodicResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/periodic',
+    ...options,
+  });
+};
+
+export const postApiV1AccessReviewsPeriodic = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AccessReviewsPeriodicData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AccessReviewsPeriodicResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/periodic',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1AccessReviewsPeriodicById = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1AccessReviewsPeriodicByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1AccessReviewsPeriodicByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/periodic/{id}',
+    ...options,
+  });
+};
+
+export const postApiV1AccessReviewsPeriodicByIdTrigger = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1AccessReviewsPeriodicByIdTriggerData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AccessReviewsPeriodicByIdTriggerResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/periodic/{id}/trigger',
+    ...options,
+  });
+};
+
+export const postApiV1AccessReviewsRevokeAccess = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AccessReviewsRevokeAccessData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AccessReviewsRevokeAccessResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/revoke-access',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1AccessReviewsBulkRevokeAccess = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AccessReviewsBulkRevokeAccessData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AccessReviewsBulkRevokeAccessResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/bulk-revoke-access',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1AccessReviewsRevocationHistory = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1AccessReviewsRevocationHistoryData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AccessReviewsRevocationHistoryResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/revocation-history',
+    ...options,
+  });
+};
+
+export const getApiV1AccessReviewsAnalytics = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AccessReviewsAnalyticsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AccessReviewsAnalyticsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/analytics',
+    ...options,
+  });
+};
+
+export const getApiV1AccessReviewsComplianceStatus = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1AccessReviewsComplianceStatusData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AccessReviewsComplianceStatusResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/compliance-status',
+    ...options,
+  });
+};
+
+export const postApiV1AccessReviewsGenerateReport = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AccessReviewsGenerateReportData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AccessReviewsGenerateReportResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/generate-report',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1AccessReviewsCampaignsByCampaignIdSendReminders = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1AccessReviewsCampaignsByCampaignIdSendRemindersData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AccessReviewsCampaignsByCampaignIdSendRemindersResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/campaigns/{campaignId}/send-reminders',
+    ...options,
+  });
+};
+
+export const postApiV1AccessReviewsReminderSettings = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AccessReviewsReminderSettingsData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AccessReviewsReminderSettingsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/reminder-settings',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1AccessReviewsTemplates = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AccessReviewsTemplatesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AccessReviewsTemplatesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/templates',
+    ...options,
+  });
+};
+
+export const postApiV1AccessReviewsTemplatesByTemplateIdCreateCampaign = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1AccessReviewsTemplatesByTemplateIdCreateCampaignResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/access-reviews/templates/{templateId}/create-campaign',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
   });
 };
 
@@ -899,6 +1761,12 @@ export const postApiProgramsByProgramIdActivityGrades = <ThrowOnError extends bo
   options: Options<PostApiProgramsByProgramIdActivityGradesData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdActivityGradesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/activity-grades',
     ...options,
     headers: {
@@ -912,6 +1780,12 @@ export const getApiProgramsByProgramIdActivityGradesInteractionByContentInteract
   options: Options<GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesInteractionByContentInteractionIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/activity-grades/interaction/{contentInteractionId}',
     ...options,
   });
@@ -921,6 +1795,12 @@ export const getApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserId 
   options: Options<GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesGraderByGraderProgramUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/activity-grades/grader/{graderProgramUserId}',
     ...options,
   });
@@ -930,6 +1810,12 @@ export const getApiProgramsByProgramIdActivityGradesStudentByProgramUserId = <Th
   options: Options<GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesStudentByProgramUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/activity-grades/student/{programUserId}',
     ...options,
   });
@@ -939,6 +1825,12 @@ export const deleteApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError
   options: Options<DeleteApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdActivityGradesByGradeIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/activity-grades/{gradeId}',
     ...options,
   });
@@ -948,6 +1840,12 @@ export const putApiProgramsByProgramIdActivityGradesByGradeId = <ThrowOnError ex
   options: Options<PutApiProgramsByProgramIdActivityGradesByGradeIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramsByProgramIdActivityGradesByGradeIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/activity-grades/{gradeId}',
     ...options,
     headers: {
@@ -961,6 +1859,12 @@ export const getApiProgramsByProgramIdActivityGradesPending = <ThrowOnError exte
   options: Options<GetApiProgramsByProgramIdActivityGradesPendingData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesPendingResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/activity-grades/pending',
     ...options,
   });
@@ -970,6 +1874,12 @@ export const getApiProgramsByProgramIdActivityGradesStatistics = <ThrowOnError e
   options: Options<GetApiProgramsByProgramIdActivityGradesStatisticsData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesStatisticsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/activity-grades/statistics',
     ...options,
   });
@@ -979,14 +1889,52 @@ export const getApiProgramsByProgramIdActivityGradesContentByContentId = <ThrowO
   options: Options<GetApiProgramsByProgramIdActivityGradesContentByContentIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdActivityGradesContentByContentIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/activity-grades/content/{contentId}',
     ...options,
   });
 };
 
-export const postApiAuthSignUp = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSignUpData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthSignUpResponses, PostApiAuthSignUpErrors, ThrowOnError>({
-    url: '/api/auth/sign-up',
+export const getApiAdminAudit = <ThrowOnError extends boolean = false>(options?: Options<GetApiAdminAuditData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiAdminAuditResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/admin/audit',
+    ...options,
+  });
+};
+
+export const getApiAdminAuditStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetApiAdminAuditStatisticsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiAdminAuditStatisticsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/admin/audit/statistics',
+    ...options,
+  });
+};
+
+export const postApiAdminAuditExport = <ThrowOnError extends boolean = false>(options?: Options<PostApiAdminAuditExportData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiAdminAuditExportResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/admin/audit/export',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -995,9 +1943,15 @@ export const postApiAuthSignUp = <ThrowOnError extends boolean = false>(options?
   });
 };
 
-export const postApiAuthSignup = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSignupData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthSignupResponses, PostApiAuthSignupErrors, ThrowOnError>({
-    url: '/api/auth/signup',
+export const postApiV1AuthSignUp = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthSignUpData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthSignUpResponses, PostApiV1AuthSignUpErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sign-up',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1006,9 +1960,15 @@ export const postApiAuthSignup = <ThrowOnError extends boolean = false>(options?
   });
 };
 
-export const postApiAuthSignIn = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSignInData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthSignInResponses, PostApiAuthSignInErrors, ThrowOnError>({
-    url: '/api/auth/sign-in',
+export const postApiV1AuthSignIn = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthSignInData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthSignInResponses, PostApiV1AuthSignInErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sign-in',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1017,9 +1977,15 @@ export const postApiAuthSignIn = <ThrowOnError extends boolean = false>(options?
   });
 };
 
-export const postApiAuthSignin = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthSigninData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthSigninResponses, PostApiAuthSigninErrors, ThrowOnError>({
-    url: '/api/auth/signin',
+export const postApiV1AuthGoogle = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthGoogleData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthGoogleResponses, PostApiV1AuthGoogleErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/google',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1028,9 +1994,15 @@ export const postApiAuthSignin = <ThrowOnError extends boolean = false>(options?
   });
 };
 
-export const postApiAuthGoogle = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthGoogleData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthGoogleResponses, PostApiAuthGoogleErrors, ThrowOnError>({
-    url: '/api/auth/google',
+export const postApiV1AuthRefresh = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthRefreshData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthRefreshResponses, PostApiV1AuthRefreshErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/refresh',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1039,9 +2011,15 @@ export const postApiAuthGoogle = <ThrowOnError extends boolean = false>(options?
   });
 };
 
-export const postApiAuthRefresh = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthRefreshData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthRefreshResponses, PostApiAuthRefreshErrors, ThrowOnError>({
-    url: '/api/auth/refresh',
+export const postApiV1AuthRevoke = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthRevokeData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthRevokeResponses, PostApiV1AuthRevokeErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/revoke',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1050,9 +2028,15 @@ export const postApiAuthRefresh = <ThrowOnError extends boolean = false>(options
   });
 };
 
-export const postApiAuthRevoke = <ThrowOnError extends boolean = false>(options?: Options<PostApiAuthRevokeData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAuthRevokeResponses, PostApiAuthRevokeErrors, ThrowOnError>({
-    url: '/api/auth/revoke',
+export const postApiV1AuthWeb3Challenge = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthWeb3ChallengeData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthWeb3ChallengeResponses, PostApiV1AuthWeb3ChallengeErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/web3/challenge',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1061,37 +2045,17 @@ export const postApiAuthRevoke = <ThrowOnError extends boolean = false>(options?
   });
 };
 
-export const getApiAuthProfile = <ThrowOnError extends boolean = false>(options?: Options<GetApiAuthProfileData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiAuthProfileResponses, GetApiAuthProfileErrors, ThrowOnError>({
-    url: '/api/auth/profile',
-    ...options,
-  });
-};
-
-export const getApiCloudflareStatus = <ThrowOnError extends boolean = false>(options?: Options<GetApiCloudflareStatusData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiCloudflareStatusResponses, unknown, ThrowOnError>({
-    url: '/api/cloudflare/status',
-    ...options,
-  });
-};
-
-export const postApiCloudflareUpdate = <ThrowOnError extends boolean = false>(options?: Options<PostApiCloudflareUpdateData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiCloudflareUpdateResponses, unknown, ThrowOnError>({
-    url: '/api/cloudflare/update',
-    ...options,
-  });
-};
-
-export const getApiCloudflareExternalIp = <ThrowOnError extends boolean = false>(options?: Options<GetApiCloudflareExternalIpData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiCloudflareExternalIpResponses, unknown, ThrowOnError>({
-    url: '/api/cloudflare/external-ip',
-    ...options,
-  });
-};
-
-export const postApiContentinteractionStart = <ThrowOnError extends boolean = false>(options?: Options<PostApiContentinteractionStartData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiContentinteractionStartResponses, unknown, ThrowOnError>({
-    url: '/api/contentinteraction/start',
+export const postApiV1AuthSendEmailVerification = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AuthSendEmailVerificationData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthSendEmailVerificationResponses, PostApiV1AuthSendEmailVerificationErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/send-email-verification',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1100,86 +2064,56 @@ export const postApiContentinteractionStart = <ThrowOnError extends boolean = fa
   });
 };
 
-export const putApiContentinteractionByInteractionIdProgress = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiContentinteractionByInteractionIdProgressData, ThrowOnError>,
+export const getApiV1AuthGithubSignin = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AuthGithubSigninData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AuthGithubSigninResponses, GetApiV1AuthGithubSigninErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/github/signin',
+    ...options,
+  });
+};
+
+export const getApiV1AuthMfaConfiguration = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AuthMfaConfigurationData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AuthMfaConfigurationResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/mfa/configuration',
+    ...options,
+  });
+};
+
+export const postApiV1AuthMfaSetupTotp = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthMfaSetupTotpData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthMfaSetupTotpResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/mfa/setup/totp',
+    ...options,
+  });
+};
+
+export const postApiV1AuthMfaSetupTotpComplete = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AuthMfaSetupTotpCompleteData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).put<PutApiContentinteractionByInteractionIdProgressResponses, unknown, ThrowOnError>({
-    url: '/api/contentinteraction/{interactionId}/progress',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postApiContentinteractionByInteractionIdSubmit = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiContentinteractionByInteractionIdSubmitData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiContentinteractionByInteractionIdSubmitResponses, unknown, ThrowOnError>({
-    url: '/api/contentinteraction/{interactionId}/submit',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postApiContentinteractionByInteractionIdComplete = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiContentinteractionByInteractionIdCompleteData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiContentinteractionByInteractionIdCompleteResponses, unknown, ThrowOnError>({
-    url: '/api/contentinteraction/{interactionId}/complete',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiContentinteractionUserByProgramUserIdContentByContentId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiContentinteractionUserByProgramUserIdContentByContentIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiContentinteractionUserByProgramUserIdContentByContentIdResponses, unknown, ThrowOnError>({
-    url: '/api/contentinteraction/user/{programUserId}/content/{contentId}',
-    ...options,
-  });
-};
-
-export const getApiContentinteractionUserByProgramUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiContentinteractionUserByProgramUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiContentinteractionUserByProgramUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/contentinteraction/user/{programUserId}',
-    ...options,
-  });
-};
-
-export const putApiContentinteractionByInteractionIdTimeSpent = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiContentinteractionByInteractionIdTimeSpentData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiContentinteractionByInteractionIdTimeSpentResponses, unknown, ThrowOnError>({
-    url: '/api/contentinteraction/{interactionId}/time-spent',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getCredentials = <ThrowOnError extends boolean = false>(options?: Options<GetCredentialsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetCredentialsResponses, unknown, ThrowOnError>({
-    url: '/credentials',
-    ...options,
-  });
-};
-
-export const postCredentials = <ThrowOnError extends boolean = false>(options?: Options<PostCredentialsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostCredentialsResponses, unknown, ThrowOnError>({
-    url: '/credentials',
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthMfaSetupTotpCompleteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/mfa/setup/totp/complete',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1188,149 +2122,15 @@ export const postCredentials = <ThrowOnError extends boolean = false>(options?: 
   });
 };
 
-export const getCredentialsUserByUserId = <ThrowOnError extends boolean = false>(options: Options<GetCredentialsUserByUserIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetCredentialsUserByUserIdResponses, unknown, ThrowOnError>({
-    url: '/credentials/user/{userId}',
-    ...options,
-  });
-};
-
-export const deleteCredentialsById = <ThrowOnError extends boolean = false>(options: Options<DeleteCredentialsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteCredentialsByIdResponses, unknown, ThrowOnError>({
-    url: '/credentials/{id}',
-    ...options,
-  });
-};
-
-export const getCredentialsById = <ThrowOnError extends boolean = false>(options: Options<GetCredentialsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetCredentialsByIdResponses, unknown, ThrowOnError>({
-    url: '/credentials/{id}',
-    ...options,
-  });
-};
-
-export const putCredentialsById = <ThrowOnError extends boolean = false>(options: Options<PutCredentialsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutCredentialsByIdResponses, unknown, ThrowOnError>({
-    url: '/credentials/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getCredentialsUserByUserIdTypeByType = <ThrowOnError extends boolean = false>(
-  options: Options<GetCredentialsUserByUserIdTypeByTypeData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetCredentialsUserByUserIdTypeByTypeResponses, unknown, ThrowOnError>({
-    url: '/credentials/user/{userId}/type/{type}',
-    ...options,
-  });
-};
-
-export const postCredentialsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostCredentialsByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostCredentialsByIdRestoreResponses, unknown, ThrowOnError>({
-    url: '/credentials/{id}/restore',
-    ...options,
-  });
-};
-
-export const deleteCredentialsByIdHard = <ThrowOnError extends boolean = false>(options: Options<DeleteCredentialsByIdHardData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteCredentialsByIdHardResponses, unknown, ThrowOnError>({
-    url: '/credentials/{id}/hard',
-    ...options,
-  });
-};
-
-export const postCredentialsByIdMarkUsed = <ThrowOnError extends boolean = false>(options: Options<PostCredentialsByIdMarkUsedData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostCredentialsByIdMarkUsedResponses, unknown, ThrowOnError>({
-    url: '/credentials/{id}/mark-used',
-    ...options,
-  });
-};
-
-export const postCredentialsByIdDeactivate = <ThrowOnError extends boolean = false>(options: Options<PostCredentialsByIdDeactivateData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostCredentialsByIdDeactivateResponses, unknown, ThrowOnError>({
-    url: '/credentials/{id}/deactivate',
-    ...options,
-  });
-};
-
-export const postCredentialsByIdActivate = <ThrowOnError extends boolean = false>(options: Options<PostCredentialsByIdActivateData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostCredentialsByIdActivateResponses, unknown, ThrowOnError>({
-    url: '/credentials/{id}/activate',
-    ...options,
-  });
-};
-
-export const getCredentialsDeleted = <ThrowOnError extends boolean = false>(options?: Options<GetCredentialsDeletedData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetCredentialsDeletedResponses, unknown, ThrowOnError>({
-    url: '/credentials/deleted',
-    ...options,
-  });
-};
-
-export const getHealth = <ThrowOnError extends boolean = false>(options?: Options<GetHealthData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetHealthResponses, unknown, ThrowOnError>({
-    url: '/health',
-    ...options,
-  });
-};
-
-export const getHealthDatabase = <ThrowOnError extends boolean = false>(options?: Options<GetHealthDatabaseData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetHealthDatabaseResponses, unknown, ThrowOnError>({
-    url: '/health/database',
-    ...options,
-  });
-};
-
-export const getHealthDynamicDns = <ThrowOnError extends boolean = false>(options?: Options<GetHealthDynamicDnsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetHealthDynamicDnsResponses, unknown, ThrowOnError>({
-    url: '/health/dynamic-dns',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsCheck = <ThrowOnError extends boolean = false>(options?: Options<GetApiModulePermissionsCheckData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsCheckResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/check',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsMyPermissions = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiModulePermissionsMyPermissionsData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsMyPermissionsResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/my-permissions',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiModulePermissionsUsersByUserIdPermissionsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/users/{userId}/permissions',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsUsersWithPermission = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiModulePermissionsUsersWithPermissionData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsUsersWithPermissionResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/users-with-permission',
-    ...options,
-  });
-};
-
-export const postApiModulePermissionsAssignRole = <ThrowOnError extends boolean = false>(
-  options?: Options<PostApiModulePermissionsAssignRoleData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).post<PostApiModulePermissionsAssignRoleResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/assign-role',
+export const postApiV1AuthMfaVerify = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthMfaVerifyData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthMfaVerifyResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/mfa/verify',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1339,11 +2139,30 @@ export const postApiModulePermissionsAssignRole = <ThrowOnError extends boolean 
   });
 };
 
-export const deleteApiModulePermissionsRevokeRole = <ThrowOnError extends boolean = false>(
-  options?: Options<DeleteApiModulePermissionsRevokeRoleData, ThrowOnError>,
+export const postApiV1AuthMfaBackupCodesRegenerate = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AuthMfaBackupCodesRegenerateData, ThrowOnError>,
 ) => {
-  return (options?.client ?? _heyApiClient).delete<DeleteApiModulePermissionsRevokeRoleResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/revoke-role',
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthMfaBackupCodesRegenerateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/mfa/backup-codes/regenerate',
+    ...options,
+  });
+};
+
+export const postApiV1AuthMfaDisable = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthMfaDisableData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthMfaDisableResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/mfa/disable',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1352,141 +2171,101 @@ export const deleteApiModulePermissionsRevokeRole = <ThrowOnError extends boolea
   });
 };
 
-export const getApiModulePermissionsUsersByUserIdRoles = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiModulePermissionsUsersByUserIdRolesData, ThrowOnError>,
+export const getApiV1AuthSessions = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1AuthSessionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1AuthSessionsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sessions',
+    ...options,
+  });
+};
+
+export const getApiV1AuthSessionsSecurityAnalysis = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1AuthSessionsSecurityAnalysisData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsUsersByUserIdRolesResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/users/{userId}/roles',
+  return (options?.client ?? _heyApiClient).get<GetApiV1AuthSessionsSecurityAnalysisResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sessions/security-analysis',
     ...options,
   });
 };
 
-export const getApiModulePermissionsRolesByRoleNameUsers = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiModulePermissionsRolesByRoleNameUsersData, ThrowOnError>,
+export const deleteApiV1AuthSessionsBySessionId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiV1AuthSessionsBySessionIdData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsRolesByRoleNameUsersResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/roles/{roleName}/users',
+  return (options.client ?? _heyApiClient).delete<DeleteApiV1AuthSessionsBySessionIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sessions/{sessionId}',
     ...options,
   });
 };
 
-export const getApiModulePermissionsTestingLabMyPermissions = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiModulePermissionsTestingLabMyPermissionsData, ThrowOnError>,
+export const deleteApiV1AuthSessionsOthers = <ThrowOnError extends boolean = false>(options?: Options<DeleteApiV1AuthSessionsOthersData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).delete<DeleteApiV1AuthSessionsOthersResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sessions/others',
+    ...options,
+  });
+};
+
+export const deleteApiV1AuthSessionsAll = <ThrowOnError extends boolean = false>(options?: Options<DeleteApiV1AuthSessionsAllData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).delete<DeleteApiV1AuthSessionsAllResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sessions/all',
+    ...options,
+  });
+};
+
+export const getApiV1AuthSessionsTrustedDevices = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1AuthSessionsTrustedDevicesData, ThrowOnError>,
 ) => {
-  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabMyPermissionsResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/testing-lab/my-permissions',
+  return (options?.client ?? _heyApiClient).get<GetApiV1AuthSessionsTrustedDevicesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sessions/trusted-devices',
     ...options,
   });
 };
 
-export const getApiModulePermissionsTestingLabUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiModulePermissionsTestingLabUsersByUserIdPermissionsData, ThrowOnError>,
+export const postApiV1AuthSessionsTrustDevice = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1AuthSessionsTrustDeviceData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/testing-lab/users/{userId}/permissions',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsTestingLabCanCreateSessions = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiModulePermissionsTestingLabCanCreateSessionsData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanCreateSessionsResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/testing-lab/can-create-sessions',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsTestingLabCanDeleteSessions = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiModulePermissionsTestingLabCanDeleteSessionsData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanDeleteSessionsResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/testing-lab/can-delete-sessions',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsTestingLabCanManageTesters = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiModulePermissionsTestingLabCanManageTestersData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanManageTestersResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/testing-lab/can-manage-testers',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsTestingLabCanViewReports = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiModulePermissionsTestingLabCanViewReportsData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanViewReportsResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/testing-lab/can-view-reports',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsTestingLabCanExportData = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiModulePermissionsTestingLabCanExportDataData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetApiModulePermissionsTestingLabCanExportDataResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/testing-lab/can-export-data',
-    ...options,
-  });
-};
-
-export const getApiModulePermissionsModulesByModuleRoles = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiModulePermissionsModulesByModuleRolesData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiModulePermissionsModulesByModuleRolesResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/modules/{module}/roles',
-    ...options,
-  });
-};
-
-export const postApiModulePermissionsModulesByModuleRoles = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiModulePermissionsModulesByModuleRolesData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiModulePermissionsModulesByModuleRolesResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/modules/{module}/roles',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const deleteApiModulePermissionsModulesByModuleRolesByRoleName = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiModulePermissionsModulesByModuleRolesByRoleNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiModulePermissionsModulesByModuleRolesByRoleNameResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/modules/{module}/roles/{roleName}',
-    ...options,
-  });
-};
-
-export const putApiModulePermissionsModulesByModuleRolesByRoleName = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiModulePermissionsModulesByModuleRolesByRoleNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiModulePermissionsModulesByModuleRolesByRoleNameResponses, unknown, ThrowOnError>({
-    url: '/api/module-permissions/modules/{module}/roles/{roleName}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiPaymentMethodsMe = <ThrowOnError extends boolean = false>(options?: Options<GetApiPaymentMethodsMeData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiPaymentMethodsMeResponses, unknown, ThrowOnError>({
-    url: '/api/payment/methods/me',
-    ...options,
-  });
-};
-
-export const postApiPaymentIntent = <ThrowOnError extends boolean = false>(options?: Options<PostApiPaymentIntentData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiPaymentIntentResponses, unknown, ThrowOnError>({
-    url: '/api/payment/intent',
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthSessionsTrustDeviceResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sessions/trust-device',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1495,279 +2274,170 @@ export const postApiPaymentIntent = <ThrowOnError extends boolean = false>(optio
   });
 };
 
-export const postApiPaymentByIdProcess = <ThrowOnError extends boolean = false>(options: Options<PostApiPaymentByIdProcessData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiPaymentByIdProcessResponses, unknown, ThrowOnError>({
-    url: '/api/payment/{id}/process',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postApiPaymentByIdRefund = <ThrowOnError extends boolean = false>(options: Options<PostApiPaymentByIdRefundData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiPaymentByIdRefundResponses, unknown, ThrowOnError>({
-    url: '/api/payment/{id}/refund',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiPaymentById = <ThrowOnError extends boolean = false>(options: Options<GetApiPaymentByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiPaymentByIdResponses, unknown, ThrowOnError>({
-    url: '/api/payment/{id}',
-    ...options,
-  });
-};
-
-export const getApiPaymentUserByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiPaymentUserByUserIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiPaymentUserByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/payment/user/{userId}',
-    ...options,
-  });
-};
-
-export const getApiPaymentStats = <ThrowOnError extends boolean = false>(options?: Options<GetApiPaymentStatsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiPaymentStatsResponses, unknown, ThrowOnError>({
-    url: '/api/payment/stats',
-    ...options,
-  });
-};
-
-export const postApiPayments = <ThrowOnError extends boolean = false>(options?: Options<PostApiPaymentsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiPaymentsResponses, unknown, ThrowOnError>({
-    url: '/api/payments',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const getApiPaymentsById = <ThrowOnError extends boolean = false>(options: Options<GetApiPaymentsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiPaymentsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/payments/{id}',
-    ...options,
-  });
-};
-
-export const getApiPaymentsMyPayments = <ThrowOnError extends boolean = false>(options?: Options<GetApiPaymentsMyPaymentsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiPaymentsMyPaymentsResponses, unknown, ThrowOnError>({
-    url: '/api/payments/my-payments',
-    ...options,
-  });
-};
-
-export const getApiPaymentsUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiPaymentsUsersByUserIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiPaymentsUsersByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/payments/users/{userId}',
-    ...options,
-  });
-};
-
-export const getApiPaymentsProductsByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiPaymentsProductsByProductIdData, ThrowOnError>,
+export const deleteApiV1AuthSessionsTrustedDevicesByDeviceId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiV1AuthSessionsTrustedDevicesByDeviceIdData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiPaymentsProductsByProductIdResponses, unknown, ThrowOnError>({
-    url: '/api/payments/products/{productId}',
+  return (options.client ?? _heyApiClient).delete<DeleteApiV1AuthSessionsTrustedDevicesByDeviceIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sessions/trusted-devices/{deviceId}',
     ...options,
   });
 };
 
-export const postApiPaymentsByIdProcess = <ThrowOnError extends boolean = false>(options: Options<PostApiPaymentsByIdProcessData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiPaymentsByIdProcessResponses, unknown, ThrowOnError>({
-    url: '/api/payments/{id}/process',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postApiPaymentsByIdRefund = <ThrowOnError extends boolean = false>(options: Options<PostApiPaymentsByIdRefundData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiPaymentsByIdRefundResponses, unknown, ThrowOnError>({
-    url: '/api/payments/{id}/refund',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postApiPaymentsByIdCancel = <ThrowOnError extends boolean = false>(options: Options<PostApiPaymentsByIdCancelData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiPaymentsByIdCancelResponses, unknown, ThrowOnError>({
-    url: '/api/payments/{id}/cancel',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiPaymentsStats = <ThrowOnError extends boolean = false>(options?: Options<GetApiPaymentsStatsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiPaymentsStatsResponses, unknown, ThrowOnError>({
-    url: '/api/payments/stats',
+export const postApiV1AuthSessionsRefresh = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1AuthSessionsRefreshData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1AuthSessionsRefreshResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/auth/sessions/refresh',
     ...options,
   });
 };
 
-export const getApiPaymentsRevenueReport = <ThrowOnError extends boolean = false>(options?: Options<GetApiPaymentsRevenueReportData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiPaymentsRevenueReportResponses, unknown, ThrowOnError>({
-    url: '/api/payments/revenue-report',
-    ...options,
-  });
-};
-
-export const getApiAdminPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiAdminPermissionsRoleTemplatesData, ThrowOnError>,
+/**
+ * Handle Google Pay webhook events for transaction notifications
+ * Processes Google Pay webhook notifications for payment processing, subscription billing, and transaction status updates. Google Pay webhooks provide real-time notifications for payment completions, failures, refunds, and subscription lifecycle events.
+ */
+export const postApiV1BillingWebhooksGooglePay = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1BillingWebhooksGooglePayData, ThrowOnError>,
 ) => {
-  return (options?.client ?? _heyApiClient).get<GetApiAdminPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/role-templates',
+  return (options?.client ?? _heyApiClient).post<PostApiV1BillingWebhooksGooglePayResponses, PostApiV1BillingWebhooksGooglePayErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/billing/webhooks/google-pay',
     ...options,
   });
 };
 
-export const postApiAdminPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(
-  options?: Options<PostApiAdminPermissionsRoleTemplatesData, ThrowOnError>,
+/**
+ * Handle Apple Pay webhook events for transaction notifications
+ * Processes Apple Pay webhook notifications for payment completions and transaction status updates.
+ */
+export const postApiV1BillingWebhooksApplePay = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1BillingWebhooksApplePayData, ThrowOnError>,
 ) => {
-  return (options?.client ?? _heyApiClient).post<PostApiAdminPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/role-templates',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteApiAdminPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiAdminPermissionsRoleTemplatesByNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiAdminPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/role-templates/{name}',
+  return (options?.client ?? _heyApiClient).post<PostApiV1BillingWebhooksApplePayResponses, PostApiV1BillingWebhooksApplePayErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/billing/webhooks/apple-pay',
     ...options,
   });
 };
 
-export const getApiAdminPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiAdminPermissionsRoleTemplatesByNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiAdminPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/role-templates/{name}',
+/**
+ * Handle Stripe webhook events with signature verification
+ * Processes Stripe webhook notifications with enhanced security through signature verification. Handles subscription lifecycle events, payment confirmations, invoice updates, and customer changes. Stripe signatures are verified using the webhook signing secret to ensure event authenticity.
+ */
+export const postApiV1BillingWebhooksStripe = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1BillingWebhooksStripeData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1BillingWebhooksStripeResponses, PostApiV1BillingWebhooksStripeErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/billing/webhooks/stripe',
     ...options,
   });
 };
 
-export const putApiAdminPermissionsRoleTemplatesByName = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiAdminPermissionsRoleTemplatesByNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiAdminPermissionsRoleTemplatesByNameResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/role-templates/{name}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiAdminPermissionsUsersByUserIdRoles = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiAdminPermissionsUsersByUserIdRolesData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiAdminPermissionsUsersByUserIdRolesResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/users/{userId}/roles',
+/**
+ * Handle PayPal IPN (Instant Payment Notification) webhook events
+ * Processes PayPal Instant Payment Notification (IPN) webhook events for subscription billing, payment confirmations, and account updates. PayPal IPN provides real-time transaction status updates and subscription lifecycle management for PayPal-based billing integrations.
+ */
+export const postApiV1BillingWebhooksPaypal = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1BillingWebhooksPaypalData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1BillingWebhooksPaypalResponses, PostApiV1BillingWebhooksPaypalErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/billing/webhooks/paypal',
     ...options,
   });
 };
 
-export const postApiAdminPermissionsUsersByUserIdRoles = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiAdminPermissionsUsersByUserIdRolesData, ThrowOnError>,
+/**
+ * Retrieve webhook event details by event ID
+ * Retrieves detailed information about a specific webhook event for debugging and monitoring purposes. Shows event payload, processing status, timestamps, and any error messages. Useful for troubleshooting webhook processing issues and verifying event delivery.
+ */
+export const getApiV1BillingWebhooksEventsByEventId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1BillingWebhooksEventsByEventIdData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiAdminPermissionsUsersByUserIdRolesResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/users/{userId}/roles',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const deleteApiAdminPermissionsUsersByUserIdRolesByRoleName = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiAdminPermissionsUsersByUserIdRolesByRoleNameResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/users/{userId}/roles/{roleName}',
+  return (options.client ?? _heyApiClient).get<GetApiV1BillingWebhooksEventsByEventIdResponses, GetApiV1BillingWebhooksEventsByEventIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/billing/webhooks/events/{eventId}',
     ...options,
   });
 };
 
-export const deleteApiAdminPermissionsUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiAdminPermissionsUsersByUserIdPermissionsData, ThrowOnError>,
+/**
+ * Retry failed webhook event processing
+ * Manually retries processing of a previously failed webhook event. Useful for handling temporary failures such as downstream service unavailability, network timeouts, or transient processing errors. The retry operation uses the original event payload and applies current business logic.
+ */
+export const patchApiV1BillingWebhooksEventsByEventIdRetry = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1BillingWebhooksEventsByEventIdRetryData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiAdminPermissionsUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/users/{userId}/permissions',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiAdminPermissionsUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiAdminPermissionsUsersByUserIdPermissionsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiAdminPermissionsUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/users/{userId}/permissions',
-    ...options,
-  });
-};
-
-export const postApiAdminPermissionsUsersByUserIdPermissions = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiAdminPermissionsUsersByUserIdPermissionsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiAdminPermissionsUsersByUserIdPermissionsResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/users/{userId}/permissions',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiAdminPermissionsUsersByUserIdCheck = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiAdminPermissionsUsersByUserIdCheckData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiAdminPermissionsUsersByUserIdCheckResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/users/{userId}/check',
+  return (options.client ?? _heyApiClient).patch<
+    PatchApiV1BillingWebhooksEventsByEventIdRetryResponses,
+    PatchApiV1BillingWebhooksEventsByEventIdRetryErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/billing/webhooks/events/{eventId}/retry',
     ...options,
   });
 };
 
-export const getApiAdminPermissionsDefaultRole = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiAdminPermissionsDefaultRoleData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetApiAdminPermissionsDefaultRoleResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/default-role',
+export const getApiV1ConditionalPolicies = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1ConditionalPoliciesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1ConditionalPoliciesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies',
     ...options,
   });
 };
 
-export const putApiAdminPermissionsDefaultRole = <ThrowOnError extends boolean = false>(
-  options?: Options<PutApiAdminPermissionsDefaultRoleData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).put<PutApiAdminPermissionsDefaultRoleResponses, unknown, ThrowOnError>({
-    url: '/api/admin/permissions/default-role',
+export const postApiV1ConditionalPolicies = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1ConditionalPoliciesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1776,16 +2446,62 @@ export const putApiAdminPermissionsDefaultRole = <ThrowOnError extends boolean =
   });
 };
 
-export const getApiPosts = <ThrowOnError extends boolean = false>(options?: Options<GetApiPostsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiPostsResponses, unknown, ThrowOnError>({
-    url: '/api/posts',
+export const deleteApiV1ConditionalPoliciesById = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiV1ConditionalPoliciesByIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiV1ConditionalPoliciesByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/{id}',
     ...options,
   });
 };
 
-export const postApiPosts = <ThrowOnError extends boolean = false>(options?: Options<PostApiPostsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiPostsResponses, unknown, ThrowOnError>({
-    url: '/api/posts',
+export const getApiV1ConditionalPoliciesById = <ThrowOnError extends boolean = false>(options: Options<GetApiV1ConditionalPoliciesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1ConditionalPoliciesByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/{id}',
+    ...options,
+  });
+};
+
+export const putApiV1ConditionalPoliciesById = <ThrowOnError extends boolean = false>(options: Options<PutApiV1ConditionalPoliciesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1ConditionalPoliciesByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/{id}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiV1ConditionalPoliciesEvaluate = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1ConditionalPoliciesEvaluateData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesEvaluateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/evaluate',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1794,23 +2510,17 @@ export const postApiPosts = <ThrowOnError extends boolean = false>(options?: Opt
   });
 };
 
-export const getApiPostsByPostId = <ThrowOnError extends boolean = false>(options: Options<GetApiPostsByPostIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiPostsByPostIdResponses, unknown, ThrowOnError>({
-    url: '/api/posts/{postId}',
-    ...options,
-  });
-};
-
-export const getApiProduct = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProductResponses, unknown, ThrowOnError>({
-    url: '/api/product',
-    ...options,
-  });
-};
-
-export const postApiProduct = <ThrowOnError extends boolean = false>(options?: Options<PostApiProductData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiProductResponses, unknown, ThrowOnError>({
-    url: '/api/product',
+export const postApiV1ConditionalPoliciesEvaluateBulk = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1ConditionalPoliciesEvaluateBulkData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesEvaluateBulkResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/evaluate/bulk',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1819,266 +2529,17 @@ export const postApiProduct = <ThrowOnError extends boolean = false>(options?: O
   });
 };
 
-export const deleteApiProductById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProductByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProductByIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}',
-    ...options,
-  });
-};
-
-export const getApiProductById = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductByIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}',
-    ...options,
-  });
-};
-
-export const putApiProductById = <ThrowOnError extends boolean = false>(options: Options<PutApiProductByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiProductByIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiProductTypeByType = <ThrowOnError extends boolean = false>(options: Options<GetApiProductTypeByTypeData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductTypeByTypeResponses, unknown, ThrowOnError>({
-    url: '/api/product/type/{type}',
-    ...options,
-  });
-};
-
-export const getApiProductPublished = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductPublishedData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProductPublishedResponses, unknown, ThrowOnError>({
-    url: '/api/product/published',
-    ...options,
-  });
-};
-
-export const getApiProductSearch = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductSearchData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProductSearchResponses, unknown, ThrowOnError>({
-    url: '/api/product/search',
-    ...options,
-  });
-};
-
-export const getApiProductCreatorByCreatorId = <ThrowOnError extends boolean = false>(options: Options<GetApiProductCreatorByCreatorIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductCreatorByCreatorIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/creator/{creatorId}',
-    ...options,
-  });
-};
-
-export const getApiProductPriceRange = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductPriceRangeData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProductPriceRangeResponses, unknown, ThrowOnError>({
-    url: '/api/product/price-range',
-    ...options,
-  });
-};
-
-export const getApiProductPopular = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductPopularData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProductPopularResponses, unknown, ThrowOnError>({
-    url: '/api/product/popular',
-    ...options,
-  });
-};
-
-export const getApiProductRecent = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductRecentData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProductRecentResponses, unknown, ThrowOnError>({
-    url: '/api/product/recent',
-    ...options,
-  });
-};
-
-export const postApiProductByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdPublishData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProductByIdPublishResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/publish',
-    ...options,
-  });
-};
-
-export const postApiProductByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdUnpublishData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProductByIdUnpublishResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/unpublish',
-    ...options,
-  });
-};
-
-export const postApiProductByIdArchive = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdArchiveData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProductByIdArchiveResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/archive',
-    ...options,
-  });
-};
-
-export const putApiProductByIdVisibility = <ThrowOnError extends boolean = false>(options: Options<PutApiProductByIdVisibilityData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiProductByIdVisibilityResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/visibility',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiProductByIdBundleItems = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdBundleItemsData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductByIdBundleItemsResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/bundle-items',
-    ...options,
-  });
-};
-
-export const deleteApiProductByBundleIdBundleItemsByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProductByBundleIdBundleItemsByProductIdData, ThrowOnError>,
+export const postApiV1ConditionalPoliciesTestRule = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1ConditionalPoliciesTestRuleData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProductByBundleIdBundleItemsByProductIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/{bundleId}/bundle-items/{productId}',
-    ...options,
-  });
-};
-
-export const postApiProductByBundleIdBundleItemsByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProductByBundleIdBundleItemsByProductIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiProductByBundleIdBundleItemsByProductIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/{bundleId}/bundle-items/{productId}',
-    ...options,
-  });
-};
-
-export const getApiProductByIdPricingCurrent = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdPricingCurrentData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductByIdPricingCurrentResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/pricing/current',
-    ...options,
-  });
-};
-
-export const getApiProductByIdPricingHistory = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdPricingHistoryData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductByIdPricingHistoryResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/pricing/history',
-    ...options,
-  });
-};
-
-export const postApiProductByIdPricing = <ThrowOnError extends boolean = false>(options: Options<PostApiProductByIdPricingData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProductByIdPricingResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/pricing',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiProductByIdSubscriptionPlans = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductByIdSubscriptionPlansData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductByIdSubscriptionPlansResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/subscription-plans',
-    ...options,
-  });
-};
-
-export const postApiProductByIdSubscriptionPlans = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProductByIdSubscriptionPlansData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiProductByIdSubscriptionPlansResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/subscription-plans',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiProductSubscriptionPlansByPlanId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductSubscriptionPlansByPlanIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductSubscriptionPlansByPlanIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/subscription-plans/{planId}',
-    ...options,
-  });
-};
-
-export const deleteApiProductByIdAccessByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProductByIdAccessByUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProductByIdAccessByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/access/{userId}',
-    ...options,
-  });
-};
-
-export const getApiProductByIdAccessByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiProductByIdAccessByUserIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductByIdAccessByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/access/{userId}',
-    ...options,
-  });
-};
-
-export const postApiProductByIdAccessByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProductByIdAccessByUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiProductByIdAccessByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/access/{userId}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiProductByIdUserProductByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductByIdUserProductByUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductByIdUserProductByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/user-product/{userId}',
-    ...options,
-  });
-};
-
-export const getApiProductAnalyticsCount = <ThrowOnError extends boolean = false>(options?: Options<GetApiProductAnalyticsCountData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProductAnalyticsCountResponses, unknown, ThrowOnError>({
-    url: '/api/product/analytics/count',
-    ...options,
-  });
-};
-
-export const getApiProductByIdAnalyticsUserCount = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductByIdAnalyticsUserCountData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductByIdAnalyticsUserCountResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/analytics/user-count',
-    ...options,
-  });
-};
-
-export const getApiProductByIdAnalyticsRevenue = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProductByIdAnalyticsRevenueData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProductByIdAnalyticsRevenueResponses, unknown, ThrowOnError>({
-    url: '/api/product/{id}/analytics/revenue',
-    ...options,
-  });
-};
-
-export const getApiProgram = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProgramResponses, unknown, ThrowOnError>({
-    url: '/api/program',
-    ...options,
-  });
-};
-
-export const postApiProgram = <ThrowOnError extends boolean = false>(options?: Options<PostApiProgramData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiProgramResponses, unknown, ThrowOnError>({
-    url: '/api/program',
+  return (options?.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesTestRuleResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/test-rule',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2087,74 +2548,47 @@ export const postApiProgram = <ThrowOnError extends boolean = false>(options?: O
   });
 };
 
-export const getApiProgramPublished = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramPublishedData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProgramPublishedResponses, unknown, ThrowOnError>({
-    url: '/api/program/published',
-    ...options,
-  });
-};
-
-export const getApiProgramCategoryByCategory = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramCategoryByCategoryData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramCategoryByCategoryResponses, unknown, ThrowOnError>({
-    url: '/api/program/category/{category}',
-    ...options,
-  });
-};
-
-export const getApiProgramDifficultyByDifficulty = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramDifficultyByDifficultyData, ThrowOnError>,
+export const postApiV1ConditionalPoliciesByIdActivate = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1ConditionalPoliciesByIdActivateData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramDifficultyByDifficultyResponses, unknown, ThrowOnError>({
-    url: '/api/program/difficulty/{difficulty}',
+  return (options.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesByIdActivateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/{id}/activate',
     ...options,
   });
 };
 
-export const getApiProgramSearch = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramSearchData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProgramSearchResponses, unknown, ThrowOnError>({
-    url: '/api/program/search',
+export const postApiV1ConditionalPoliciesByIdDeactivate = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1ConditionalPoliciesByIdDeactivateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesByIdDeactivateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/{id}/deactivate',
     ...options,
   });
 };
 
-export const getApiProgramCreatorByCreatorId = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramCreatorByCreatorIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramCreatorByCreatorIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/creator/{creatorId}',
-    ...options,
-  });
-};
-
-export const getApiProgramPopular = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramPopularData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProgramPopularResponses, unknown, ThrowOnError>({
-    url: '/api/program/popular',
-    ...options,
-  });
-};
-
-export const getApiProgramRecent = <ThrowOnError extends boolean = false>(options?: Options<GetApiProgramRecentData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProgramRecentResponses, unknown, ThrowOnError>({
-    url: '/api/program/recent',
-    ...options,
-  });
-};
-
-export const deleteApiProgramById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProgramByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}',
-    ...options,
-  });
-};
-
-export const getApiProgramById = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}',
-    ...options,
-  });
-};
-
-export const putApiProgramById = <ThrowOnError extends boolean = false>(options: Options<PutApiProgramByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiProgramByIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}',
+export const postApiV1ConditionalPoliciesByIdClone = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1ConditionalPoliciesByIdCloneData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesByIdCloneResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/{id}/clone',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2163,16 +2597,17 @@ export const putApiProgramById = <ThrowOnError extends boolean = false>(options:
   });
 };
 
-export const getApiProgramByIdWithContent = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdWithContentData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdWithContentResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/with-content',
-    ...options,
-  });
-};
-
-export const postApiProgramByIdClone = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdCloneData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdCloneResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/clone',
+export const putApiV1ConditionalPoliciesByIdPriority = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiV1ConditionalPoliciesByIdPriorityData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1ConditionalPoliciesByIdPriorityResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/{id}/priority',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2181,16 +2616,130 @@ export const postApiProgramByIdClone = <ThrowOnError extends boolean = false>(op
   });
 };
 
-export const getApiProgramSlugBySlug = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramSlugBySlugData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramSlugBySlugResponses, unknown, ThrowOnError>({
-    url: '/api/program/slug/{slug}',
+export const getApiV1ConditionalPoliciesStatistics = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1ConditionalPoliciesStatisticsData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1ConditionalPoliciesStatisticsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/statistics',
     ...options,
   });
 };
 
-export const postApiProgramByIdContent = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdContentData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdContentResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/content',
+export const getApiV1ConditionalPoliciesByIdUsage = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1ConditionalPoliciesByIdUsageData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1ConditionalPoliciesByIdUsageResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/{id}/usage',
+    ...options,
+  });
+};
+
+export const getApiV1ConditionalPoliciesByIdEvaluationHistory = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1ConditionalPoliciesByIdEvaluationHistoryData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1ConditionalPoliciesByIdEvaluationHistoryResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/{id}/evaluation-history',
+    ...options,
+  });
+};
+
+export const postApiV1ConditionalPoliciesValidate = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1ConditionalPoliciesValidateData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesValidateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/validate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1ConditionalPoliciesConflicts = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1ConditionalPoliciesConflictsData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1ConditionalPoliciesConflictsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/conflicts',
+    ...options,
+  });
+};
+
+export const postApiV1ConditionalPoliciesSimulate = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1ConditionalPoliciesSimulateData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesSimulateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/simulate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1ConditionalPoliciesTemplates = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1ConditionalPoliciesTemplatesData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1ConditionalPoliciesTemplatesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/templates',
+    ...options,
+  });
+};
+
+export const postApiV1ConditionalPoliciesTemplatesByTemplateIdCreate = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1ConditionalPoliciesTemplatesByTemplateIdCreateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesTemplatesByTemplateIdCreateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/templates/{templateId}/create',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2199,20 +2748,68 @@ export const postApiProgramByIdContent = <ThrowOnError extends boolean = false>(
   });
 };
 
-export const deleteApiProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramByIdContentByContentIdData, ThrowOnError>,
+export const getApiV1ConditionalPoliciesConditionTypes = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1ConditionalPoliciesConditionTypesData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/content/{contentId}',
+  return (options?.client ?? _heyApiClient).get<GetApiV1ConditionalPoliciesConditionTypesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/condition-types',
     ...options,
   });
 };
 
-export const putApiProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiProgramByIdContentByContentIdData, ThrowOnError>,
+export const postApiV1ConditionalPoliciesValidateCondition = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1ConditionalPoliciesValidateConditionData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).put<PutApiProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/content/{contentId}',
+  return (options?.client ?? _heyApiClient).post<PostApiV1ConditionalPoliciesValidateConditionResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/conditional-policies/validate-condition',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postContentInteractionStart = <ThrowOnError extends boolean = false>(options?: Options<PostContentInteractionStartData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostContentInteractionStartResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/start',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const putContentInteractionByInteractionIdProgress = <ThrowOnError extends boolean = false>(
+  options: Options<PutContentInteractionByInteractionIdProgressData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutContentInteractionByInteractionIdProgressResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/{interactionId}/progress',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2221,11 +2818,17 @@ export const putApiProgramByIdContentByContentId = <ThrowOnError extends boolean
   });
 };
 
-export const postApiProgramByIdContentReorder = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdContentReorderData, ThrowOnError>,
+export const postContentInteractionByInteractionIdSubmit = <ThrowOnError extends boolean = false>(
+  options: Options<PostContentInteractionByInteractionIdSubmitData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdContentReorderResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/content/reorder',
+  return (options.client ?? _heyApiClient).post<PostContentInteractionByInteractionIdSubmitResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/{interactionId}/submit',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2234,43 +2837,17 @@ export const postApiProgramByIdContentReorder = <ThrowOnError extends boolean = 
   });
 };
 
-export const deleteApiProgramByIdUsersByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramByIdUsersByUserIdData, ThrowOnError>,
+export const postContentInteractionByInteractionIdComplete = <ThrowOnError extends boolean = false>(
+  options: Options<PostContentInteractionByInteractionIdCompleteData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdUsersByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/users/{userId}',
-    ...options,
-  });
-};
-
-export const postApiProgramByIdUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdUsersByUserIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdUsersByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/users/{userId}',
-    ...options,
-  });
-};
-
-export const getApiProgramByIdUsers = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdUsersData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdUsersResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/users',
-    ...options,
-  });
-};
-
-export const getApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramByIdUsersByUserIdProgressData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/users/{userId}/progress',
-    ...options,
-  });
-};
-
-export const putApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiProgramByIdUsersByUserIdProgressData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/users/{userId}/progress',
+  return (options.client ?? _heyApiClient).post<PostContentInteractionByInteractionIdCompleteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/{interactionId}/complete',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2279,41 +2856,47 @@ export const putApiProgramByIdUsersByUserIdProgress = <ThrowOnError extends bool
   });
 };
 
-export const postApiProgramByIdUsersByUserIdContentByContentIdComplete = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdUsersByUserIdContentByContentIdCompleteData, ThrowOnError>,
+export const getContentInteractionUserByProgramUserIdContentByContentId = <ThrowOnError extends boolean = false>(
+  options: Options<GetContentInteractionUserByProgramUserIdContentByContentIdData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdUsersByUserIdContentByContentIdCompleteResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/users/{userId}/content/{contentId}/complete',
+  return (options.client ?? _heyApiClient).get<GetContentInteractionUserByProgramUserIdContentByContentIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/user/{programUserId}/content/{contentId}',
     ...options,
   });
 };
 
-export const postApiProgramByIdUsersByUserIdReset = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdUsersByUserIdResetData, ThrowOnError>,
+export const getContentInteractionUserByProgramUserId = <ThrowOnError extends boolean = false>(
+  options: Options<GetContentInteractionUserByProgramUserIdData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdUsersByUserIdResetResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/users/{userId}/reset',
+  return (options.client ?? _heyApiClient).get<GetContentInteractionUserByProgramUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/user/{programUserId}',
     ...options,
   });
 };
 
-export const postApiProgramByIdSubmit = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdSubmitData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdSubmitResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/submit',
-    ...options,
-  });
-};
-
-export const postApiProgramByIdApprove = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdApproveData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdApproveResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/approve',
-    ...options,
-  });
-};
-
-export const postApiProgramByIdReject = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdRejectData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdRejectResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/reject',
+export const putContentInteractionByInteractionIdTimeSpent = <ThrowOnError extends boolean = false>(
+  options: Options<PutContentInteractionByInteractionIdTimeSpentData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutContentInteractionByInteractionIdTimeSpentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/content-interaction/{interactionId}/time-spent',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2322,44 +2905,131 @@ export const postApiProgramByIdReject = <ThrowOnError extends boolean = false>(o
   });
 };
 
-export const postApiProgramByIdWithdraw = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdWithdrawData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdWithdrawResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/withdraw',
+export const postApiV1FeaturesEvaluate = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1FeaturesEvaluateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1FeaturesEvaluateResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/evaluate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1FeaturesByKeyValue = <ThrowOnError extends boolean = false>(options: Options<GetApiV1FeaturesByKeyValueData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1FeaturesByKeyValueResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/{key}/value',
     ...options,
   });
 };
 
-export const postApiProgramByIdArchive = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdArchiveData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdArchiveResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/archive',
+export const postApiV1FeaturesEvaluateBulk = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1FeaturesEvaluateBulkData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1FeaturesEvaluateBulkResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/evaluate/bulk',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1FeaturesEnabled = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1FeaturesEnabledData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1FeaturesEnabledResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/enabled',
     ...options,
   });
 };
 
-export const postApiProgramByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdRestoreResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/restore',
+export const getApiV1Features = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1FeaturesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1FeaturesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features',
     ...options,
   });
 };
 
-export const postApiProgramByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdPublishData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdPublishResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/publish',
+export const postApiV1Features = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1FeaturesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1FeaturesResponses, PostApiV1FeaturesErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiV1FeaturesByKey = <ThrowOnError extends boolean = false>(options: Options<DeleteApiV1FeaturesByKeyData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiV1FeaturesByKeyResponses, DeleteApiV1FeaturesByKeyErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/{key}',
     ...options,
   });
 };
 
-export const postApiProgramByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdUnpublishData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdUnpublishResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/unpublish',
+export const getFeatureByKey = <ThrowOnError extends boolean = false>(options: Options<GetFeatureByKeyData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<unknown, GetFeatureByKeyErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/{key}',
     ...options,
   });
 };
 
-export const postApiProgramByIdSchedule = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdScheduleData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdScheduleResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/schedule',
+export const putApiV1FeaturesByKey = <ThrowOnError extends boolean = false>(options: Options<PutApiV1FeaturesByKeyData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1FeaturesByKeyResponses, PutApiV1FeaturesByKeyErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/{key}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2368,9 +3038,54 @@ export const postApiProgramByIdSchedule = <ThrowOnError extends boolean = false>
   });
 };
 
-export const postApiProgramByIdMonetize = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdMonetizeData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdMonetizeResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/monetize',
+export const getApiV1FeaturesByKeyExists = <ThrowOnError extends boolean = false>(options: Options<GetApiV1FeaturesByKeyExistsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1FeaturesByKeyExistsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/{key}/exists',
+    ...options,
+  });
+};
+
+export const postApiV1FeaturesByIdEnable = <ThrowOnError extends boolean = false>(options: Options<PostApiV1FeaturesByIdEnableData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1FeaturesByIdEnableResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/{id}/enable',
+    ...options,
+  });
+};
+
+export const postApiV1FeaturesByIdDisable = <ThrowOnError extends boolean = false>(options: Options<PostApiV1FeaturesByIdDisableData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1FeaturesByIdDisableResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/{id}/disable',
+    ...options,
+  });
+};
+
+export const postApiV1FeaturesByIdToggle = <ThrowOnError extends boolean = false>(options: Options<PostApiV1FeaturesByIdToggleData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1FeaturesByIdToggleResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/features/{id}/toggle',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2379,25 +3094,638 @@ export const postApiProgramByIdMonetize = <ThrowOnError extends boolean = false>
   });
 };
 
-export const postApiProgramByIdDisableMonetization = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdDisableMonetizationData, ThrowOnError>,
+export const postApiV1PermissionsTenantGrant = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1PermissionsTenantGrantData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsTenantGrantResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenant/grant',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsTenantRevoke = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsTenantRevokeData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdDisableMonetizationResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/disable-monetization',
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsTenantRevokeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenant/revoke',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsTenantCheck = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1PermissionsTenantCheckData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsTenantCheckResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenant/check',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsTenantList = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1PermissionsTenantListData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsTenantListResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenant/list',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsTenantBulkGrant = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsTenantBulkGrantData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsTenantBulkGrantResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenant/bulk-grant',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsTenantBulkRevoke = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsTenantBulkRevokeData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsTenantBulkRevokeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenant/bulk-revoke',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsContentTypeGrant = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsContentTypeGrantData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsContentTypeGrantResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/content-type/grant',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsContentTypeRevoke = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsContentTypeRevokeData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsContentTypeRevokeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/content-type/revoke',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsContentTypeCheck = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsContentTypeCheckData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsContentTypeCheckResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/content-type/check',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsContentTypeList = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsContentTypeListData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsContentTypeListResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/content-type/list',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsResourceGrant = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsResourceGrantData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsResourceGrantResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resource/grant',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsResourceRevoke = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsResourceRevokeData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsResourceRevokeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resource/revoke',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsResourceCheck = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsResourceCheckData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsResourceCheckResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resource/check',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsResourceList = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsResourceListData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsResourceListResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resource/list',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsResourceBulkGrant = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsResourceBulkGrantData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsResourceBulkGrantResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resource/bulk-grant',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsUserAll = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1PermissionsUserAllData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsUserAllResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/user/all',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsUserEffective = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsUserEffectiveData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsUserEffectiveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/user/effective',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsHierarchyResolve = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsHierarchyResolveData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsHierarchyResolveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/hierarchy/resolve',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1PermissionsAnalyticsByTenantId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1PermissionsAnalyticsByTenantIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1PermissionsAnalyticsByTenantIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/analytics/{tenantId}',
     ...options,
   });
 };
 
-export const getApiProgramByIdPricing = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdPricingData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdPricingResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/pricing',
+export const postApiV1PermissionsAuditTrail = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1PermissionsAuditTrailData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsAuditTrailResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/audit/trail',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1PermissionsCacheStats = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1PermissionsCacheStatsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1PermissionsCacheStatsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/cache/stats',
     ...options,
   });
 };
 
-export const putApiProgramByIdPricing = <ThrowOnError extends boolean = false>(options: Options<PutApiProgramByIdPricingData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiProgramByIdPricingResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/pricing',
+export const deleteApiV1PermissionsCacheClear = <ThrowOnError extends boolean = false>(
+  options?: Options<DeleteApiV1PermissionsCacheClearData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).delete<DeleteApiV1PermissionsCacheClearResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/cache/clear',
+    ...options,
+  });
+};
+
+export const getApiV1PermissionsTemplates = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1PermissionsTemplatesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1PermissionsTemplatesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/templates',
+    ...options,
+  });
+};
+
+export const postApiV1PermissionsTemplatesApply = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsTemplatesApplyData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsTemplatesApplyResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/templates/apply',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Comprehensive application health check
+ * Performs a comprehensive health check of all registered services and dependencies. Returns detailed status information for monitoring systems, load balancers, and orchestration platforms.
+ */
+export const getApiHealth = <ThrowOnError extends boolean = false>(options?: Options<GetApiHealthData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiHealthResponses, GetApiHealthErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/health',
+    ...options,
+  });
+};
+
+/**
+ * Readiness probe for traffic routing decisions
+ * Kubernetes-style readiness probe that determines whether the application is ready to serve traffic. Checks all dependencies and services required for proper request handling.
+ */
+export const getApiHealthReady = <ThrowOnError extends boolean = false>(options?: Options<GetApiHealthReadyData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiHealthReadyResponses, GetApiHealthReadyErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/health/ready',
+    ...options,
+  });
+};
+
+/**
+ * Liveness probe for container restart decisions
+ * Kubernetes-style liveness probe that indicates whether the application process is running correctly. Used by orchestration platforms to determine if containers should be restarted.
+ */
+export const getApiHealthLive = <ThrowOnError extends boolean = false>(options?: Options<GetApiHealthLiveData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiHealthLiveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/health/live',
+    ...options,
+  });
+};
+
+/**
+ * Retrieve all payment transactions with optional filtering
+ * Retrieves a paginated list of all payment transactions with support for filtering by tenant, status, and date range. This is the primary endpoint for payment administration and reporting.
+ */
+export const getApiV1Payments = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1PaymentsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1PaymentsResponses, GetApiV1PaymentsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments',
+    ...options,
+  });
+};
+
+/**
+ * Process a new payment transaction
+ * Initiates a new payment transaction for a subscription. This endpoint handles the complete payment processing workflow including payment method validation, amount verification, and transaction execution. Returns the payment result immediately with a transaction ID that can be used to track payment status.
+ */
+export const postApiV1Payments = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1PaymentsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PaymentsResponses, PostApiV1PaymentsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Retrieve all canceled payment transactions
+ * Retrieves all payment transactions that have been canceled before completion. This includes payments canceled by users, automatic cancellations due to expired sessions, or administrative cancellations. Provides comprehensive cancellation information for audit and analysis purposes.
+ */
+export const getApiV1PaymentsCanceled = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1PaymentsCanceledData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1PaymentsCanceledResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments/canceled',
+    ...options,
+  });
+};
+
+/**
+ * Retrieve all failed payment transactions
+ * Retrieves all payment transactions that have failed processing. Includes payments declined by banks, insufficient funds, technical errors, and fraud detection triggers. Optionally filter by tenant for focused troubleshooting.
+ */
+export const getApiV1PaymentsFailed = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1PaymentsFailedData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1PaymentsFailedResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments/failed',
+    ...options,
+  });
+};
+
+/**
+ * Retrieve all overdue payment transactions
+ * Retrieves all payment transactions that are overdue, meaning they have passed their expected completion date without successful payment. This includes subscription renewals, scheduled payments, and invoice payments that have exceeded their grace periods or due dates.
+ */
+export const getApiV1PaymentsOverdue = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1PaymentsOverdueData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1PaymentsOverdueResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments/overdue',
+    ...options,
+  });
+};
+
+/**
+ * Retrieve all refunded payment transactions
+ * Retrieves all payment transactions that have been refunded, either partially or in full. Provides comprehensive refund information including original payment details, refund amounts, processing dates, and refund reasons for audit and reconciliation purposes.
+ */
+export const getApiV1PaymentsRefunded = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1PaymentsRefundedData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1PaymentsRefundedResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments/refunded',
+    ...options,
+  });
+};
+
+/**
+ * Retrieve all scheduled payment transactions
+ * Retrieves all payment transactions that are scheduled for future execution. This includes recurring subscription payments, delayed payments, and retry attempts scheduled for later processing. Optionally filter by tenant or specific scheduled date.
+ */
+export const getApiV1PaymentsScheduled = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1PaymentsScheduledData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1PaymentsScheduledResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments/scheduled',
+    ...options,
+  });
+};
+
+/**
+ * Retrieve a specific payment by its unique identifier
+ * Retrieves detailed information about a specific payment transaction, including its current status, amount, payment method, and processing details. Use this endpoint to track payment progress and verify transaction completion.
+ */
+export const getPaymentById = <ThrowOnError extends boolean = false>(options: Options<GetPaymentByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetPaymentByIdResponses, GetPaymentByIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments/{paymentId}',
+    ...options,
+  });
+};
+
+/**
+ * Cancel a payment transaction
+ * Cancels a payment transaction that is in progress or pending. This endpoint can be used to cancel payments before they are processed, or to handle user-initiated cancellations during checkout. Once canceled, a payment cannot be processed and may require a new payment attempt.
+ */
+export const patchApiV1PaymentsByPaymentIdCancel = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1PaymentsByPaymentIdCancelData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<PatchApiV1PaymentsByPaymentIdCancelResponses, PatchApiV1PaymentsByPaymentIdCancelErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments/{paymentId}/cancel',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2406,43 +3734,21 @@ export const putApiProgramByIdPricing = <ThrowOnError extends boolean = false>(o
   });
 };
 
-export const getApiProgramByIdAnalytics = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdAnalyticsData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/analytics',
-    ...options,
-  });
-};
-
-export const getApiProgramByIdAnalyticsCompletionRates = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramByIdAnalyticsCompletionRatesData, ThrowOnError>,
+/**
+ * Process a refund for a completed payment
+ * Processes a full or partial refund for a previously completed payment transaction. If no amount is specified, a full refund will be processed. The refund reason is optional but recommended for record keeping and customer service purposes. Refunds are processed back to the original payment method and may take several business days to appear.
+ */
+export const patchApiV1PaymentsByPaymentIdRefund = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1PaymentsByPaymentIdRefundData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsCompletionRatesResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/analytics/completion-rates',
-    ...options,
-  });
-};
-
-export const getApiProgramByIdAnalyticsEngagement = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramByIdAnalyticsEngagementData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsEngagementResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/analytics/engagement',
-    ...options,
-  });
-};
-
-export const getApiProgramByIdAnalyticsRevenue = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramByIdAnalyticsRevenueData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdAnalyticsRevenueResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/analytics/revenue',
-    ...options,
-  });
-};
-
-export const postApiProgramByIdCreateProduct = <ThrowOnError extends boolean = false>(options: Options<PostApiProgramByIdCreateProductData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdCreateProductResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/create-product',
+  return (options.client ?? _heyApiClient).patch<PatchApiV1PaymentsByPaymentIdRefundResponses, PatchApiV1PaymentsByPaymentIdRefundErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments/{paymentId}/refund',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2451,45 +3757,183 @@ export const postApiProgramByIdCreateProduct = <ThrowOnError extends boolean = f
   });
 };
 
-export const deleteApiProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramByIdLinkProductByProductIdData, ThrowOnError>,
+/**
+ * Retry a failed payment transaction
+ * Attempts to reprocess a previously failed payment transaction using the same payment method and amount. This is useful when payments fail due to temporary issues like network problems or insufficient funds that have since been resolved. The retry operation creates a new transaction attempt while maintaining the link to the original payment record.
+ */
+export const patchApiV1PaymentsByPaymentIdRetry = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1PaymentsByPaymentIdRetryData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/link-product/{productId}',
+  return (options.client ?? _heyApiClient).patch<PatchApiV1PaymentsByPaymentIdRetryResponses, PatchApiV1PaymentsByPaymentIdRetryErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/payments/{paymentId}/retry',
     ...options,
   });
 };
 
-export const postApiProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramByIdLinkProductByProductIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/link-product/{productId}',
+export const getProgram = <ThrowOnError extends boolean = false>(options?: Options<GetProgramData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program',
     ...options,
   });
 };
 
-export const getApiProgramByIdProducts = <ThrowOnError extends boolean = false>(options: Options<GetApiProgramByIdProductsData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramByIdProductsResponses, unknown, ThrowOnError>({
-    url: '/api/program/{id}/products',
+export const postProgram = <ThrowOnError extends boolean = false>(options?: Options<PostProgramData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostProgramResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getProgramPublished = <ThrowOnError extends boolean = false>(options?: Options<GetProgramPublishedData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramPublishedResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/published',
     ...options,
   });
 };
 
-export const getApiProgramsByProgramIdCertificates = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProgramsByProgramIdCertificatesData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdCertificatesResponses, unknown, ThrowOnError>({
-    url: '/api/programs/{programId}/certificates',
+export const getProgramCategoryByCategory = <ThrowOnError extends boolean = false>(options: Options<GetProgramCategoryByCategoryData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramCategoryByCategoryResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/category/{category}',
     ...options,
   });
 };
 
-export const postApiProgramsByProgramIdCertificates = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramsByProgramIdCertificatesData, ThrowOnError>,
+export const getProgramDifficultyByDifficulty = <ThrowOnError extends boolean = false>(
+  options: Options<GetProgramDifficultyByDifficultyData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdCertificatesResponses, unknown, ThrowOnError>({
-    url: '/api/programs/{programId}/certificates',
+  return (options.client ?? _heyApiClient).get<GetProgramDifficultyByDifficultyResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/difficulty/{difficulty}',
+    ...options,
+  });
+};
+
+export const getProgramSearch = <ThrowOnError extends boolean = false>(options?: Options<GetProgramSearchData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramSearchResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/search',
+    ...options,
+  });
+};
+
+export const getProgramCreatorByCreatorId = <ThrowOnError extends boolean = false>(options: Options<GetProgramCreatorByCreatorIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramCreatorByCreatorIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/creator/{creatorId}',
+    ...options,
+  });
+};
+
+export const getProgramPopular = <ThrowOnError extends boolean = false>(options?: Options<GetProgramPopularData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramPopularResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/popular',
+    ...options,
+  });
+};
+
+export const getProgramRecent = <ThrowOnError extends boolean = false>(options?: Options<GetProgramRecentData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetProgramRecentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/recent',
+    ...options,
+  });
+};
+
+export const deleteProgramById = <ThrowOnError extends boolean = false>(options: Options<DeleteProgramByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteProgramByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}',
+    ...options,
+  });
+};
+
+export const getProgramById = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}',
+    ...options,
+  });
+};
+
+export const putProgramById = <ThrowOnError extends boolean = false>(options: Options<PutProgramByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutProgramByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2498,33 +3942,28 @@ export const postApiProgramsByProgramIdCertificates = <ThrowOnError extends bool
   });
 };
 
-export const deleteApiProgramsByProgramIdCertificatesByCertificateId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramsByProgramIdCertificatesByCertificateIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdCertificatesByCertificateIdResponses, unknown, ThrowOnError>({
-    url: '/api/programs/{programId}/certificates/{certificateId}',
+export const getProgramByIdWithContent = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdWithContentData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdWithContentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/with-content',
     ...options,
   });
 };
 
-export const putApiProgramsByProgramIdCertificatesByCertificateId = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiProgramsByProgramIdCertificatesByCertificateIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiProgramsByProgramIdCertificatesByCertificateIdResponses, unknown, ThrowOnError>({
-    url: '/api/programs/{programId}/certificates/{certificateId}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postApiProgramsByProgramIdCertificatesByCertificateIdTags = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProgramsByProgramIdCertificatesByCertificateIdTagsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdCertificatesByCertificateIdTagsResponses, unknown, ThrowOnError>({
-    url: '/api/programs/{programId}/certificates/{certificateId}/tags',
+export const postProgramByIdClone = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdCloneData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdCloneResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/clone',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2533,11 +3972,489 @@ export const postApiProgramsByProgramIdCertificatesByCertificateIdTags = <ThrowO
   });
 };
 
-export const deleteApiProgramsByProgramIdCertificatesByCertificateIdTagsByTagId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProgramsByProgramIdCertificatesByCertificateIdTagsByTagIdData, ThrowOnError>,
+export const getProgramSlugBySlug = <ThrowOnError extends boolean = false>(options: Options<GetProgramSlugBySlugData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramSlugBySlugResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/slug/{slug}',
+    ...options,
+  });
+};
+
+export const postProgramByIdContent = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdContentData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdContentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/content',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteProgramByIdContentByContentIdData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdCertificatesByCertificateIdTagsByTagIdResponses, unknown, ThrowOnError>({
-    url: '/api/programs/{programId}/certificates/{certificateId}/tags/{tagId}',
+  return (options.client ?? _heyApiClient).delete<DeleteProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/content/{contentId}',
+    ...options,
+  });
+};
+
+export const putProgramByIdContentByContentId = <ThrowOnError extends boolean = false>(
+  options: Options<PutProgramByIdContentByContentIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutProgramByIdContentByContentIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/content/{contentId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdContentReorder = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdContentReorderData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdContentReorderResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/content/reorder',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteProgramByIdUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<DeleteProgramByIdUsersByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteProgramByIdUsersByUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}',
+    ...options,
+  });
+};
+
+export const postProgramByIdUsersByUserId = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdUsersByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdUsersByUserIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}',
+    ...options,
+  });
+};
+
+export const getProgramByIdUsers = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdUsersData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdUsersResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users',
+    ...options,
+  });
+};
+
+export const getProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(
+  options: Options<GetProgramByIdUsersByUserIdProgressData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}/progress',
+    ...options,
+  });
+};
+
+export const putProgramByIdUsersByUserIdProgress = <ThrowOnError extends boolean = false>(
+  options: Options<PutProgramByIdUsersByUserIdProgressData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutProgramByIdUsersByUserIdProgressResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}/progress',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdUsersByUserIdContentByContentIdComplete = <ThrowOnError extends boolean = false>(
+  options: Options<PostProgramByIdUsersByUserIdContentByContentIdCompleteData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdUsersByUserIdContentByContentIdCompleteResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}/content/{contentId}/complete',
+    ...options,
+  });
+};
+
+export const postProgramByIdUsersByUserIdReset = <ThrowOnError extends boolean = false>(
+  options: Options<PostProgramByIdUsersByUserIdResetData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdUsersByUserIdResetResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/users/{userId}/reset',
+    ...options,
+  });
+};
+
+export const postProgramByIdSubmit = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdSubmitData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdSubmitResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/submit',
+    ...options,
+  });
+};
+
+export const postProgramByIdApprove = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdApproveData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdApproveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/approve',
+    ...options,
+  });
+};
+
+export const postProgramByIdReject = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdRejectData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdRejectResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/reject',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdWithdraw = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdWithdrawData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdWithdrawResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/withdraw',
+    ...options,
+  });
+};
+
+export const postProgramByIdArchive = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdArchiveData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdArchiveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/archive',
+    ...options,
+  });
+};
+
+export const postProgramByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdRestoreData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdRestoreResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/restore',
+    ...options,
+  });
+};
+
+export const postProgramByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdPublishData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdPublishResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/publish',
+    ...options,
+  });
+};
+
+export const postProgramByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdUnpublishData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdUnpublishResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/unpublish',
+    ...options,
+  });
+};
+
+export const postProgramByIdSchedule = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdScheduleData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdScheduleResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/schedule',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdMonetize = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdMonetizeData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdMonetizeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/monetize',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postProgramByIdDisableMonetization = <ThrowOnError extends boolean = false>(
+  options: Options<PostProgramByIdDisableMonetizationData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdDisableMonetizationResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/disable-monetization',
+    ...options,
+  });
+};
+
+export const getProgramByIdPricing = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdPricingData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdPricingResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/pricing',
+    ...options,
+  });
+};
+
+export const putProgramByIdPricing = <ThrowOnError extends boolean = false>(options: Options<PutProgramByIdPricingData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutProgramByIdPricingResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/pricing',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const getProgramByIdAnalytics = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdAnalyticsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdAnalyticsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/analytics',
+    ...options,
+  });
+};
+
+export const getProgramByIdAnalyticsCompletionRates = <ThrowOnError extends boolean = false>(
+  options: Options<GetProgramByIdAnalyticsCompletionRatesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdAnalyticsCompletionRatesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/analytics/completion-rates',
+    ...options,
+  });
+};
+
+export const getProgramByIdAnalyticsEngagement = <ThrowOnError extends boolean = false>(
+  options: Options<GetProgramByIdAnalyticsEngagementData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdAnalyticsEngagementResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/analytics/engagement',
+    ...options,
+  });
+};
+
+export const getProgramByIdAnalyticsRevenue = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdAnalyticsRevenueData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdAnalyticsRevenueResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/analytics/revenue',
+    ...options,
+  });
+};
+
+export const postProgramByIdCreateProduct = <ThrowOnError extends boolean = false>(options: Options<PostProgramByIdCreateProductData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdCreateProductResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/create-product',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const deleteProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteProgramByIdLinkProductByProductIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).delete<DeleteProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/link-product/{productId}',
+    ...options,
+  });
+};
+
+export const postProgramByIdLinkProductByProductId = <ThrowOnError extends boolean = false>(
+  options: Options<PostProgramByIdLinkProductByProductIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostProgramByIdLinkProductByProductIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/link-product/{productId}',
+    ...options,
+  });
+};
+
+export const getProgramByIdProducts = <ThrowOnError extends boolean = false>(options: Options<GetProgramByIdProductsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetProgramByIdProductsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/program/{id}/products',
     ...options,
   });
 };
@@ -2546,6 +4463,12 @@ export const getApiProgramsByProgramIdContent = <ThrowOnError extends boolean = 
   options: Options<GetApiProgramsByProgramIdContentData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content',
     ...options,
   });
@@ -2555,6 +4478,12 @@ export const postApiProgramsByProgramIdContent = <ThrowOnError extends boolean =
   options: Options<PostApiProgramsByProgramIdContentData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content',
     ...options,
     headers: {
@@ -2568,6 +4497,12 @@ export const getApiProgramsByProgramIdContentTopLevel = <ThrowOnError extends bo
   options: Options<GetApiProgramsByProgramIdContentTopLevelData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentTopLevelResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/top-level',
     ...options,
   });
@@ -2577,6 +4512,12 @@ export const deleteApiProgramsByProgramIdContentById = <ThrowOnError extends boo
   options: Options<DeleteApiProgramsByProgramIdContentByIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).delete<DeleteApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/{id}',
     ...options,
   });
@@ -2586,6 +4527,12 @@ export const getApiProgramsByProgramIdContentById = <ThrowOnError extends boolea
   options: Options<GetApiProgramsByProgramIdContentByIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/{id}',
     ...options,
   });
@@ -2595,6 +4542,12 @@ export const putApiProgramsByProgramIdContentById = <ThrowOnError extends boolea
   options: Options<PutApiProgramsByProgramIdContentByIdData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).put<PutApiProgramsByProgramIdContentByIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/{id}',
     ...options,
     headers: {
@@ -2608,6 +4561,12 @@ export const getApiProgramsByProgramIdContentByParentIdChildren = <ThrowOnError 
   options: Options<GetApiProgramsByProgramIdContentByParentIdChildrenData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByParentIdChildrenResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/{parentId}/children',
     ...options,
   });
@@ -2617,6 +4576,12 @@ export const postApiProgramsByProgramIdContentReorder = <ThrowOnError extends bo
   options: Options<PostApiProgramsByProgramIdContentReorderData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentReorderResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/reorder',
     ...options,
     headers: {
@@ -2630,6 +4595,12 @@ export const postApiProgramsByProgramIdContentByIdMove = <ThrowOnError extends b
   options: Options<PostApiProgramsByProgramIdContentByIdMoveData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentByIdMoveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/{id}/move',
     ...options,
     headers: {
@@ -2643,6 +4614,12 @@ export const getApiProgramsByProgramIdContentRequired = <ThrowOnError extends bo
   options: Options<GetApiProgramsByProgramIdContentRequiredData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentRequiredResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/required',
     ...options,
   });
@@ -2652,6 +4629,12 @@ export const getApiProgramsByProgramIdContentByTypeByType = <ThrowOnError extend
   options: Options<GetApiProgramsByProgramIdContentByTypeByTypeData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByTypeByTypeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/by-type/{type}',
     ...options,
   });
@@ -2661,6 +4644,12 @@ export const getApiProgramsByProgramIdContentByVisibilityByVisibility = <ThrowOn
   options: Options<GetApiProgramsByProgramIdContentByVisibilityByVisibilityData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentByVisibilityByVisibilityResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/by-visibility/{visibility}',
     ...options,
   });
@@ -2670,6 +4659,12 @@ export const postApiProgramsByProgramIdContentSearch = <ThrowOnError extends boo
   options: Options<PostApiProgramsByProgramIdContentSearchData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).post<PostApiProgramsByProgramIdContentSearchResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/search',
     ...options,
     headers: {
@@ -2683,34 +4678,71 @@ export const getApiProgramsByProgramIdContentStats = <ThrowOnError extends boole
   options: Options<GetApiProgramsByProgramIdContentStatsData, ThrowOnError>,
 ) => {
   return (options.client ?? _heyApiClient).get<GetApiProgramsByProgramIdContentStatsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
     url: '/api/programs/{programId}/content/stats',
     ...options,
   });
 };
 
-export const getApiProjectsByProjectIdPermissionsMyPermissions = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProjectsByProjectIdPermissionsMyPermissionsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProjectsByProjectIdPermissionsMyPermissionsResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{projectId}/permissions/my-permissions',
+export const getApiV1TenantsByTenantIdQuotas = <ThrowOnError extends boolean = false>(options: Options<GetApiV1TenantsByTenantIdQuotasData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1TenantsByTenantIdQuotasResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{tenantId}/quotas',
     ...options,
   });
 };
 
-export const getApiProjectsByProjectIdPermissionsCollaborators = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProjectsByProjectIdPermissionsCollaboratorsData, ThrowOnError>,
+export const deleteApiV1TenantsByTenantIdQuotasByType = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteApiV1TenantsByTenantIdQuotasByTypeData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiProjectsByProjectIdPermissionsCollaboratorsResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{projectId}/permissions/collaborators',
+  return (options.client ?? _heyApiClient).delete<DeleteApiV1TenantsByTenantIdQuotasByTypeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{tenantId}/quotas/{type}',
     ...options,
   });
 };
 
-export const postApiProjectsByProjectIdPermissionsCollaborators = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProjectsByProjectIdPermissionsCollaboratorsData, ThrowOnError>,
+export const getApiV1TenantsByTenantIdQuotasByType = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1TenantsByTenantIdQuotasByTypeData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiProjectsByProjectIdPermissionsCollaboratorsResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{projectId}/permissions/collaborators',
+  return (options.client ?? _heyApiClient).get<GetApiV1TenantsByTenantIdQuotasByTypeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{tenantId}/quotas/{type}',
+    ...options,
+  });
+};
+
+export const putApiV1TenantsByTenantIdQuotasByType = <ThrowOnError extends boolean = false>(
+  options: Options<PutApiV1TenantsByTenantIdQuotasByTypeData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1TenantsByTenantIdQuotasByTypeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{tenantId}/quotas/{type}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2719,20 +4751,32 @@ export const postApiProjectsByProjectIdPermissionsCollaborators = <ThrowOnError 
   });
 };
 
-export const deleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData, ThrowOnError>,
+export const postApiV1TenantsByTenantIdQuotasByTypeReset = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1TenantsByTenantIdQuotasByTypeResetData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{projectId}/permissions/collaborators/{collaboratorUserId}',
+  return (options.client ?? _heyApiClient).post<PostApiV1TenantsByTenantIdQuotasByTypeResetResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{tenantId}/quotas/{type}/reset',
     ...options,
   });
 };
 
-export const putApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserId = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdData, ThrowOnError>,
+export const patchApiV1TenantsByTenantIdQuotasByTypeToggle = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1TenantsByTenantIdQuotasByTypeToggleData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).put<PutApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{projectId}/permissions/collaborators/{collaboratorUserId}',
+  return (options.client ?? _heyApiClient).patch<PatchApiV1TenantsByTenantIdQuotasByTypeToggleResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{tenantId}/quotas/{type}/toggle',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2741,20 +4785,17 @@ export const putApiProjectsByProjectIdPermissionsCollaboratorsByCollaboratorUser
   });
 };
 
-export const getApiProjectsByProjectIdPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProjectsByProjectIdPermissionsRoleTemplatesData, ThrowOnError>,
+export const postApiV1TenantsByTenantIdQuotasByTypeCheck = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1TenantsByTenantIdQuotasByTypeCheckData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiProjectsByProjectIdPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{projectId}/permissions/role-templates',
-    ...options,
-  });
-};
-
-export const postApiProjectsByProjectIdPermissionsShareWithRole = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiProjectsByProjectIdPermissionsShareWithRoleData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiProjectsByProjectIdPermissionsShareWithRoleResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{projectId}/permissions/share-with-role',
+  return (options.client ?? _heyApiClient).post<PostApiV1TenantsByTenantIdQuotasByTypeCheckResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{tenantId}/quotas/{type}/check',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2763,16 +4804,17 @@ export const postApiProjectsByProjectIdPermissionsShareWithRole = <ThrowOnError 
   });
 };
 
-export const getApiProjects = <ThrowOnError extends boolean = false>(options?: Options<GetApiProjectsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProjectsResponses, unknown, ThrowOnError>({
-    url: '/api/projects',
-    ...options,
-  });
-};
-
-export const postApiProjects = <ThrowOnError extends boolean = false>(options?: Options<PostApiProjectsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiProjectsResponses, unknown, ThrowOnError>({
-    url: '/api/projects',
+export const postApiV1PermissionsResourcesShare = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsResourcesShareData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsResourcesShareResponses, PostApiV1PermissionsResourcesShareErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resources/share',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -2781,1244 +4823,336 @@ export const postApiProjects = <ThrowOnError extends boolean = false>(options?: 
   });
 };
 
-export const deleteApiProjectsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiProjectsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiProjectsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{id}',
-    ...options,
-  });
-};
-
-export const getApiProjectsById = <ThrowOnError extends boolean = false>(options: Options<GetApiProjectsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProjectsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{id}',
-    ...options,
-  });
-};
-
-export const putApiProjectsById = <ThrowOnError extends boolean = false>(options: Options<PutApiProjectsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiProjectsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiProjectsSlugBySlug = <ThrowOnError extends boolean = false>(options: Options<GetApiProjectsSlugBySlugData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProjectsSlugBySlugResponses, unknown, ThrowOnError>({
-    url: '/api/projects/slug/{slug}',
-    ...options,
-  });
-};
-
-export const postApiProjectsByIdPublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProjectsByIdPublishData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProjectsByIdPublishResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{id}/publish',
-    ...options,
-  });
-};
-
-export const postApiProjectsByIdUnpublish = <ThrowOnError extends boolean = false>(options: Options<PostApiProjectsByIdUnpublishData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProjectsByIdUnpublishResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{id}/unpublish',
-    ...options,
-  });
-};
-
-export const postApiProjectsByIdArchive = <ThrowOnError extends boolean = false>(options: Options<PostApiProjectsByIdArchiveData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiProjectsByIdArchiveResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{id}/archive',
-    ...options,
-  });
-};
-
-export const getApiProjectsSearch = <ThrowOnError extends boolean = false>(options?: Options<GetApiProjectsSearchData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProjectsSearchResponses, unknown, ThrowOnError>({
-    url: '/api/projects/search',
-    ...options,
-  });
-};
-
-export const getApiProjectsPopular = <ThrowOnError extends boolean = false>(options?: Options<GetApiProjectsPopularData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProjectsPopularResponses, unknown, ThrowOnError>({
-    url: '/api/projects/popular',
-    ...options,
-  });
-};
-
-export const getApiProjectsRecent = <ThrowOnError extends boolean = false>(options?: Options<GetApiProjectsRecentData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProjectsRecentResponses, unknown, ThrowOnError>({
-    url: '/api/projects/recent',
-    ...options,
-  });
-};
-
-export const getApiProjectsFeatured = <ThrowOnError extends boolean = false>(options?: Options<GetApiProjectsFeaturedData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiProjectsFeaturedResponses, unknown, ThrowOnError>({
-    url: '/api/projects/featured',
-    ...options,
-  });
-};
-
-export const getApiProjectsByIdStatistics = <ThrowOnError extends boolean = false>(options: Options<GetApiProjectsByIdStatisticsData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiProjectsByIdStatisticsResponses, unknown, ThrowOnError>({
-    url: '/api/projects/{id}/statistics',
-    ...options,
-  });
-};
-
-export const getApiProjectsCategoryByCategoryId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProjectsCategoryByCategoryIdData, ThrowOnError>,
+export const putApiV1PermissionsResourcesUsersPermissions = <ThrowOnError extends boolean = false>(
+  options?: Options<PutApiV1PermissionsResourcesUsersPermissionsData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiProjectsCategoryByCategoryIdResponses, unknown, ThrowOnError>({
-    url: '/api/projects/category/{categoryId}',
-    ...options,
-  });
-};
-
-export const getApiProjectsCreatorByCreatorId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiProjectsCreatorByCreatorIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiProjectsCreatorByCreatorIdResponses, unknown, ThrowOnError>({
-    url: '/api/projects/creator/{creatorId}',
-    ...options,
-  });
-};
-
-export const getApiResourcesByResourceTypeByResourceIdPermissionsMyPermissions = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiResourcesByResourceTypeByResourceIdPermissionsMyPermissionsResponses, unknown, ThrowOnError>({
-    url: '/api/resources/{resourceType}/{resourceId}/permissions/my-permissions',
-    ...options,
-  });
-};
-
-export const getApiResourcesByResourceTypeByResourceIdPermissionsUsers = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiResourcesByResourceTypeByResourceIdPermissionsUsersData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiResourcesByResourceTypeByResourceIdPermissionsUsersResponses, unknown, ThrowOnError>({
-    url: '/api/resources/{resourceType}/{resourceId}/permissions/users',
-    ...options,
-  });
-};
-
-export const postApiResourcesByResourceTypeByResourceIdPermissionsShare = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiResourcesByResourceTypeByResourceIdPermissionsShareData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiResourcesByResourceTypeByResourceIdPermissionsShareResponses, unknown, ThrowOnError>({
-    url: '/api/resources/{resourceType}/{resourceId}/permissions/share',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const deleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/resources/{resourceType}/{resourceId}/permissions/users/{targetUserId}',
-    ...options,
-  });
-};
-
-export const putApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserId = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiResourcesByResourceTypeByResourceIdPermissionsUsersByTargetUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/resources/{resourceType}/{resourceId}/permissions/users/{targetUserId}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postApiResourcesByResourceTypeByResourceIdPermissionsInvite = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiResourcesByResourceTypeByResourceIdPermissionsInviteData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiResourcesByResourceTypeByResourceIdPermissionsInviteResponses, unknown, ThrowOnError>({
-    url: '/api/resources/{resourceType}/{resourceId}/permissions/invite',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiResourcesByResourceTypeByResourceIdPermissionsInvitations = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiResourcesByResourceTypeByResourceIdPermissionsInvitationsResponses, unknown, ThrowOnError>({
-    url: '/api/resources/{resourceType}/{resourceId}/permissions/invitations',
-    ...options,
-  });
-};
-
-export const getApiResourcesByResourceTypeByResourceIdPermissionsHierarchy = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiResourcesByResourceTypeByResourceIdPermissionsHierarchyResponses, unknown, ThrowOnError>({
-    url: '/api/resources/{resourceType}/{resourceId}/permissions/hierarchy',
-    ...options,
-  });
-};
-
-export const getApiSubscriptionMe = <ThrowOnError extends boolean = false>(options?: Options<GetApiSubscriptionMeData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiSubscriptionMeResponses, unknown, ThrowOnError>({
-    url: '/api/subscription/me',
-    ...options,
-  });
-};
-
-export const getApiSubscriptionMeActive = <ThrowOnError extends boolean = false>(options?: Options<GetApiSubscriptionMeActiveData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiSubscriptionMeActiveResponses, unknown, ThrowOnError>({
-    url: '/api/subscription/me/active',
-    ...options,
-  });
-};
-
-export const getApiSubscriptionById = <ThrowOnError extends boolean = false>(options: Options<GetApiSubscriptionByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiSubscriptionByIdResponses, unknown, ThrowOnError>({
-    url: '/api/subscription/{id}',
-    ...options,
-  });
-};
-
-export const getApiSubscription = <ThrowOnError extends boolean = false>(options?: Options<GetApiSubscriptionData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiSubscriptionResponses, unknown, ThrowOnError>({
-    url: '/api/subscription',
-    ...options,
-  });
-};
-
-export const postApiSubscription = <ThrowOnError extends boolean = false>(options?: Options<PostApiSubscriptionData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiSubscriptionResponses, unknown, ThrowOnError>({
-    url: '/api/subscription',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postApiSubscriptionByIdCancel = <ThrowOnError extends boolean = false>(options: Options<PostApiSubscriptionByIdCancelData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiSubscriptionByIdCancelResponses, unknown, ThrowOnError>({
-    url: '/api/subscription/{id}/cancel',
-    ...options,
-  });
-};
-
-export const postApiSubscriptionByIdResume = <ThrowOnError extends boolean = false>(options: Options<PostApiSubscriptionByIdResumeData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiSubscriptionByIdResumeResponses, unknown, ThrowOnError>({
-    url: '/api/subscription/{id}/resume',
-    ...options,
-  });
-};
-
-export const putApiSubscriptionByIdPaymentMethod = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiSubscriptionByIdPaymentMethodData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiSubscriptionByIdPaymentMethodResponses, unknown, ThrowOnError>({
-    url: '/api/subscription/{id}/payment-method',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiTenantDomains = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantDomainsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTenantDomainsResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains',
-    ...options,
-  });
-};
-
-export const postApiTenantDomains = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteApiTenantDomainsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiTenantDomainsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiTenantDomainsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/{id}',
-    ...options,
-  });
-};
-
-export const getApiTenantDomainsById = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantDomainsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiTenantDomainsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/{id}',
-    ...options,
-  });
-};
-
-export const putApiTenantDomainsById = <ThrowOnError extends boolean = false>(options: Options<PutApiTenantDomainsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiTenantDomainsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postApiTenantDomainsByTenantIdSetMainByDomainId = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiTenantDomainsByTenantIdSetMainByDomainIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiTenantDomainsByTenantIdSetMainByDomainIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/{tenantId}/set-main/{domainId}',
-    ...options,
-  });
-};
-
-export const getApiTenantDomainsUserGroups = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantDomainsUserGroupsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTenantDomainsUserGroupsResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/user-groups',
-    ...options,
-  });
-};
-
-export const postApiTenantDomainsUserGroups = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsUserGroupsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsUserGroupsResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/user-groups',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiTenantDomainsUserGroupsByIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiTenantDomainsUserGroupsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/user-groups/{id}',
-    ...options,
-  });
-};
-
-export const getApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsUserGroupsByIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiTenantDomainsUserGroupsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/user-groups/{id}',
-    ...options,
-  });
-};
-
-export const putApiTenantDomainsUserGroupsById = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiTenantDomainsUserGroupsByIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiTenantDomainsUserGroupsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/user-groups/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiTenantDomainsMembershipsUserByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsMembershipsUserByUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiTenantDomainsMembershipsUserByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/memberships/user/{userId}',
-    ...options,
-  });
-};
-
-export const deleteApiTenantDomainsUserGroupsMemberships = <ThrowOnError extends boolean = false>(
-  options?: Options<DeleteApiTenantDomainsUserGroupsMembershipsData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).delete<DeleteApiTenantDomainsUserGroupsMembershipsResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/user-groups/memberships',
-    ...options,
-  });
-};
-
-export const postApiTenantDomainsUserGroupsMemberships = <ThrowOnError extends boolean = false>(
-  options?: Options<PostApiTenantDomainsUserGroupsMembershipsData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsUserGroupsMembershipsResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/user-groups/memberships',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const getApiTenantDomainsUserGroupsByGroupIdMembers = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsUserGroupsByGroupIdMembersData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiTenantDomainsUserGroupsByGroupIdMembersResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/user-groups/{groupId}/members',
-    ...options,
-  });
-};
-
-export const getApiTenantDomainsUsersByUserIdGroups = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsUsersByUserIdGroupsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiTenantDomainsUsersByUserIdGroupsResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/users/{userId}/groups',
-    ...options,
-  });
-};
-
-export const getApiTenantDomainsGroupsByGroupIdUsers = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTenantDomainsGroupsByGroupIdUsersData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiTenantDomainsGroupsByGroupIdUsersResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/groups/{groupId}/users',
-    ...options,
-  });
-};
-
-export const postApiTenantDomainsAutoAssign = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsAutoAssignData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsAutoAssignResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/auto-assign',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postApiTenantDomainsAutoAssignBulk = <ThrowOnError extends boolean = false>(
-  options?: Options<PostApiTenantDomainsAutoAssignBulkData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsAutoAssignBulkResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/auto-assign-bulk',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const getApiTenantDomainsDomainMatch = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantDomainsDomainMatchData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTenantDomainsDomainMatchResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/domain-match',
-    ...options,
-  });
-};
-
-export const postApiTenantDomainsMemberships = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantDomainsMembershipsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTenantDomainsMembershipsResponses, unknown, ThrowOnError>({
-    url: '/api/tenant-domains/memberships',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const getApiTenants = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTenantsResponses, unknown, ThrowOnError>({
-    url: '/api/tenants',
-    ...options,
-  });
-};
-
-export const postApiTenants = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTenantsResponses, unknown, ThrowOnError>({
-    url: '/api/tenants',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteApiTenantsById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiTenantsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiTenantsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/{id}',
-    ...options,
-  });
-};
-
-export const getApiTenantsById = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiTenantsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/{id}',
-    ...options,
-  });
-};
-
-export const putApiTenantsById = <ThrowOnError extends boolean = false>(options: Options<PutApiTenantsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiTenantsByIdResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getApiTenantsByNameByName = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantsByNameByNameData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiTenantsByNameByNameResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/by-name/{name}',
-    ...options,
-  });
-};
-
-export const getApiTenantsBySlugBySlug = <ThrowOnError extends boolean = false>(options: Options<GetApiTenantsBySlugBySlugData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiTenantsBySlugBySlugResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/by-slug/{slug}',
-    ...options,
-  });
-};
-
-export const getApiTenantsDeleted = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsDeletedData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTenantsDeletedResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/deleted',
-    ...options,
-  });
-};
-
-export const getApiTenantsActive = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsActiveData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTenantsActiveResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/active',
-    ...options,
-  });
-};
-
-export const getApiTenantsSearch = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsSearchData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTenantsSearchResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/search',
-    ...options,
-  });
-};
-
-export const getApiTenantsStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetApiTenantsStatisticsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTenantsStatisticsResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/statistics',
-    ...options,
-  });
-};
-
-export const postApiTenantsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostApiTenantsByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiTenantsByIdRestoreResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/{id}/restore',
-    ...options,
-  });
-};
-
-export const deleteApiTenantsByIdPermanent = <ThrowOnError extends boolean = false>(options: Options<DeleteApiTenantsByIdPermanentData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiTenantsByIdPermanentResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/{id}/permanent',
-    ...options,
-  });
-};
-
-export const postApiTenantsByIdActivate = <ThrowOnError extends boolean = false>(options: Options<PostApiTenantsByIdActivateData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiTenantsByIdActivateResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/{id}/activate',
-    ...options,
-  });
-};
-
-export const postApiTenantsByIdDeactivate = <ThrowOnError extends boolean = false>(options: Options<PostApiTenantsByIdDeactivateData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiTenantsByIdDeactivateResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/{id}/deactivate',
-    ...options,
-  });
-};
-
-export const postApiTenantsBulkDelete = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantsBulkDeleteData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTenantsBulkDeleteResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/bulk-delete',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postApiTenantsBulkRestore = <ThrowOnError extends boolean = false>(options?: Options<PostApiTenantsBulkRestoreData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTenantsBulkRestoreResponses, unknown, ThrowOnError>({
-    url: '/api/tenants/bulk-restore',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const getTestingRequests = <ThrowOnError extends boolean = false>(options?: Options<GetTestingRequestsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingRequestsResponses, unknown, ThrowOnError>({
-    url: '/testing/requests',
-    ...options,
-  });
-};
-
-export const postTestingRequests = <ThrowOnError extends boolean = false>(options?: Options<PostTestingRequestsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostTestingRequestsResponses, unknown, ThrowOnError>({
-    url: '/testing/requests',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteTestingRequestsById = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingRequestsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTestingRequestsByIdResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{id}',
-    ...options,
-  });
-};
-
-export const getTestingRequestsById = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetTestingRequestsByIdResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{id}',
-    ...options,
-  });
-};
-
-export const putTestingRequestsById = <ThrowOnError extends boolean = false>(options: Options<PutTestingRequestsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutTestingRequestsByIdResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getTestingRequestsByIdDetails = <ThrowOnError extends boolean = false>(options: Options<GetTestingRequestsByIdDetailsData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetTestingRequestsByIdDetailsResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{id}/details',
-    ...options,
-  });
-};
-
-export const postTestingRequestsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostTestingRequestsByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostTestingRequestsByIdRestoreResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{id}/restore',
-    ...options,
-  });
-};
-
-export const getTestingSessions = <ThrowOnError extends boolean = false>(options?: Options<GetTestingSessionsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingSessionsResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions',
-    ...options,
-  });
-};
-
-export const postTestingSessions = <ThrowOnError extends boolean = false>(options?: Options<PostTestingSessionsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostTestingSessionsResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteTestingSessionsById = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingSessionsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsByIdResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{id}',
-    ...options,
-  });
-};
-
-export const getTestingSessionsById = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetTestingSessionsByIdResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{id}',
-    ...options,
-  });
-};
-
-export const putTestingSessionsById = <ThrowOnError extends boolean = false>(options: Options<PutTestingSessionsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutTestingSessionsByIdResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getTestingSessionsByIdDetails = <ThrowOnError extends boolean = false>(options: Options<GetTestingSessionsByIdDetailsData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetTestingSessionsByIdDetailsResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{id}/details',
-    ...options,
-  });
-};
-
-export const postTestingSessionsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostTestingSessionsByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostTestingSessionsByIdRestoreResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{id}/restore',
-    ...options,
-  });
-};
-
-export const getTestingRequestsByProjectVersionByProjectVersionId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByProjectVersionByProjectVersionIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingRequestsByProjectVersionByProjectVersionIdResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/by-project-version/{projectVersionId}',
-    ...options,
-  });
-};
-
-export const getTestingRequestsByCreatorByCreatorId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByCreatorByCreatorIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingRequestsByCreatorByCreatorIdResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/by-creator/{creatorId}',
-    ...options,
-  });
-};
-
-export const getTestingRequestsByStatusByStatus = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByStatusByStatusData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingRequestsByStatusByStatusResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/by-status/{status}',
-    ...options,
-  });
-};
-
-export const getTestingSessionsByRequestByTestingRequestId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsByRequestByTestingRequestIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingSessionsByRequestByTestingRequestIdResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/by-request/{testingRequestId}',
-    ...options,
-  });
-};
-
-export const getTestingSessionsByLocationByLocationId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsByLocationByLocationIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingSessionsByLocationByLocationIdResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/by-location/{locationId}',
-    ...options,
-  });
-};
-
-export const getTestingSessionsByStatusByStatus = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsByStatusByStatusData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingSessionsByStatusByStatusResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/by-status/{status}',
-    ...options,
-  });
-};
-
-export const getTestingSessionsByManagerByManagerId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsByManagerByManagerIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingSessionsByManagerByManagerIdResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/by-manager/{managerId}',
-    ...options,
-  });
-};
-
-export const getTestingRequestsSearch = <ThrowOnError extends boolean = false>(options?: Options<GetTestingRequestsSearchData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingRequestsSearchResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/search',
-    ...options,
-  });
-};
-
-export const getTestingSessionsSearch = <ThrowOnError extends boolean = false>(options?: Options<GetTestingSessionsSearchData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingSessionsSearchResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/search',
-    ...options,
-  });
-};
-
-export const deleteTestingRequestsByRequestIdParticipantsByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteTestingRequestsByRequestIdParticipantsByUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTestingRequestsByRequestIdParticipantsByUserIdResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{requestId}/participants/{userId}',
-    ...options,
-  });
-};
-
-export const postTestingRequestsByRequestIdParticipantsByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingRequestsByRequestIdParticipantsByUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostTestingRequestsByRequestIdParticipantsByUserIdResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{requestId}/participants/{userId}',
-    ...options,
-  });
-};
-
-export const getTestingRequestsByRequestIdParticipants = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByRequestIdParticipantsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdParticipantsResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{requestId}/participants',
-    ...options,
-  });
-};
-
-export const getTestingRequestsByRequestIdParticipantsByUserIdCheck = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByRequestIdParticipantsByUserIdCheckData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdParticipantsByUserIdCheckResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{requestId}/participants/{userId}/check',
-    ...options,
-  });
-};
-
-export const deleteTestingSessionsBySessionIdRegister = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteTestingSessionsBySessionIdRegisterData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsBySessionIdRegisterResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{sessionId}/register',
-    ...options,
-  });
-};
-
-export const postTestingSessionsBySessionIdRegister = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingSessionsBySessionIdRegisterData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostTestingSessionsBySessionIdRegisterResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{sessionId}/register',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getTestingSessionsBySessionIdRegistrations = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsBySessionIdRegistrationsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingSessionsBySessionIdRegistrationsResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{sessionId}/registrations',
-    ...options,
-  });
-};
-
-export const deleteTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteTestingSessionsBySessionIdWaitlistData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsBySessionIdWaitlistResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{sessionId}/waitlist',
-    ...options,
-  });
-};
-
-export const getTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsBySessionIdWaitlistData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingSessionsBySessionIdWaitlistResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{sessionId}/waitlist',
-    ...options,
-  });
-};
-
-export const postTestingSessionsBySessionIdWaitlist = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingSessionsBySessionIdWaitlistData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostTestingSessionsBySessionIdWaitlistResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{sessionId}/waitlist',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getTestingRequestsByRequestIdFeedback = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByRequestIdFeedbackData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdFeedbackResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{requestId}/feedback',
-    ...options,
-  });
-};
-
-export const postTestingRequestsByRequestIdFeedback = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingRequestsByRequestIdFeedbackData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostTestingRequestsByRequestIdFeedbackResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{requestId}/feedback',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getTestingFeedbackByUserByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingFeedbackByUserByUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingFeedbackByUserByUserIdResponses, unknown, ThrowOnError>({
-    url: '/testing/feedback/by-user/{userId}',
-    ...options,
-  });
-};
-
-export const getTestingRequestsByRequestIdStatistics = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingRequestsByRequestIdStatisticsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingRequestsByRequestIdStatisticsResponses, unknown, ThrowOnError>({
-    url: '/testing/requests/{requestId}/statistics',
-    ...options,
-  });
-};
-
-export const getTestingSessionsBySessionIdStatistics = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingSessionsBySessionIdStatisticsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingSessionsBySessionIdStatisticsResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{sessionId}/statistics',
-    ...options,
-  });
-};
-
-export const getTestingUsersByUserIdActivity = <ThrowOnError extends boolean = false>(options: Options<GetTestingUsersByUserIdActivityData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetTestingUsersByUserIdActivityResponses, unknown, ThrowOnError>({
-    url: '/testing/users/{userId}/activity',
-    ...options,
-  });
-};
-
-export const postTestingSubmitSimple = <ThrowOnError extends boolean = false>(options?: Options<PostTestingSubmitSimpleData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostTestingSubmitSimpleResponses, unknown, ThrowOnError>({
-    url: '/testing/submit-simple',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postTestingFeedback = <ThrowOnError extends boolean = false>(options?: Options<PostTestingFeedbackData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostTestingFeedbackResponses, unknown, ThrowOnError>({
-    url: '/testing/feedback',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const getTestingMyRequests = <ThrowOnError extends boolean = false>(options?: Options<GetTestingMyRequestsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingMyRequestsResponses, unknown, ThrowOnError>({
-    url: '/testing/my-requests',
-    ...options,
-  });
-};
-
-export const getTestingAvailableForTesting = <ThrowOnError extends boolean = false>(options?: Options<GetTestingAvailableForTestingData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingAvailableForTestingResponses, unknown, ThrowOnError>({
-    url: '/testing/available-for-testing',
-    ...options,
-  });
-};
-
-export const getTestingAttendanceStudents = <ThrowOnError extends boolean = false>(options?: Options<GetTestingAttendanceStudentsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingAttendanceStudentsResponses, unknown, ThrowOnError>({
-    url: '/testing/attendance/students',
-    ...options,
-  });
-};
-
-export const getTestingAttendanceSessions = <ThrowOnError extends boolean = false>(options?: Options<GetTestingAttendanceSessionsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingAttendanceSessionsResponses, unknown, ThrowOnError>({
-    url: '/testing/attendance/sessions',
-    ...options,
-  });
-};
-
-export const postTestingSessionsBySessionIdAttendance = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingSessionsBySessionIdAttendanceData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostTestingSessionsBySessionIdAttendanceResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{sessionId}/attendance',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postTestingFeedbackByFeedbackIdReport = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingFeedbackByFeedbackIdReportData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostTestingFeedbackByFeedbackIdReportResponses, unknown, ThrowOnError>({
-    url: '/testing/feedback/{feedbackId}/report',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postTestingFeedbackByFeedbackIdQuality = <ThrowOnError extends boolean = false>(
-  options: Options<PostTestingFeedbackByFeedbackIdQualityData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostTestingFeedbackByFeedbackIdQualityResponses, unknown, ThrowOnError>({
-    url: '/testing/feedback/{feedbackId}/quality',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const getTestingLocations = <ThrowOnError extends boolean = false>(options?: Options<GetTestingLocationsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingLocationsResponses, unknown, ThrowOnError>({
-    url: '/testing/locations',
-    ...options,
-  });
-};
-
-export const postTestingLocations = <ThrowOnError extends boolean = false>(options?: Options<PostTestingLocationsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostTestingLocationsResponses, unknown, ThrowOnError>({
-    url: '/testing/locations',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteTestingLocationsById = <ThrowOnError extends boolean = false>(options: Options<DeleteTestingLocationsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTestingLocationsByIdResponses, unknown, ThrowOnError>({
-    url: '/testing/locations/{id}',
-    ...options,
-  });
-};
-
-export const getTestingLocationsById = <ThrowOnError extends boolean = false>(options: Options<GetTestingLocationsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetTestingLocationsByIdResponses, unknown, ThrowOnError>({
-    url: '/testing/locations/{id}',
-    ...options,
-  });
-};
-
-export const putTestingLocationsById = <ThrowOnError extends boolean = false>(options: Options<PutTestingLocationsByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutTestingLocationsByIdResponses, unknown, ThrowOnError>({
-    url: '/testing/locations/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postTestingLocationsByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostTestingLocationsByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostTestingLocationsByIdRestoreResponses, unknown, ThrowOnError>({
-    url: '/testing/locations/{id}/restore',
-    ...options,
-  });
-};
-
-export const getTestingPermissionsCheck = <ThrowOnError extends boolean = false>(options?: Options<GetTestingPermissionsCheckData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingPermissionsCheckResponses, unknown, ThrowOnError>({
-    url: '/testing/permissions/check',
-    ...options,
-  });
-};
-
-export const getTestingPermissionsMyPermissions = <ThrowOnError extends boolean = false>(
-  options?: Options<GetTestingPermissionsMyPermissionsData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetTestingPermissionsMyPermissionsResponses, unknown, ThrowOnError>({
-    url: '/testing/permissions/my-permissions',
-    ...options,
-  });
-};
-
-export const postTestingPermissionsAssignRole = <ThrowOnError extends boolean = false>(
-  options?: Options<PostTestingPermissionsAssignRoleData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).post<PostTestingPermissionsAssignRoleResponses, unknown, ThrowOnError>({
-    url: '/testing/permissions/assign-role',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const postTestingSessionsCreateWithPermissions = <ThrowOnError extends boolean = false>(
-  options?: Options<PostTestingSessionsCreateWithPermissionsData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).post<PostTestingSessionsCreateWithPermissionsResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/create-with-permissions',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteTestingSessionsByIdDeleteWithPermissions = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteTestingSessionsByIdDeleteWithPermissionsData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteTestingSessionsByIdDeleteWithPermissionsResponses, unknown, ThrowOnError>({
-    url: '/testing/sessions/{id}/delete-with-permissions',
-    ...options,
-  });
-};
-
-export const getTestingPermissionsUsersWithRoleByRoleName = <ThrowOnError extends boolean = false>(
-  options: Options<GetTestingPermissionsUsersWithRoleByRoleNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetTestingPermissionsUsersWithRoleByRoleNameResponses, unknown, ThrowOnError>({
-    url: '/testing/permissions/users-with-role/{roleName}',
-    ...options,
-  });
-};
-
-export const getApiTestingLabPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(
-  options?: Options<GetApiTestingLabPermissionsRoleTemplatesData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTestingLabPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/role-templates',
-    ...options,
-  });
-};
-
-export const postApiTestingLabPermissionsRoleTemplates = <ThrowOnError extends boolean = false>(
-  options?: Options<PostApiTestingLabPermissionsRoleTemplatesData, ThrowOnError>,
-) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTestingLabPermissionsRoleTemplatesResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/role-templates',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteApiTestingLabPermissionsRoleTemplatesByIdOrName = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/role-templates/{idOrName}',
-    ...options,
-  });
-};
-
-export const putApiTestingLabPermissionsRoleTemplatesByIdOrName = <ThrowOnError extends boolean = false>(
-  options: Options<PutApiTestingLabPermissionsRoleTemplatesByIdOrNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).put<PutApiTestingLabPermissionsRoleTemplatesByIdOrNameResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/role-templates/{idOrName}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const deleteApiTestingLabPermissionsRoleTemplatesByNameByName = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsRoleTemplatesByNameByNameResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/role-templates/by-name/{name}',
-    ...options,
-  });
-};
-
-export const getApiTestingLabPermissionsUsersByUserId = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTestingLabPermissionsUsersByUserIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiTestingLabPermissionsUsersByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/users/{userId}',
-    ...options,
-  });
-};
-
-export const postApiTestingLabPermissionsUsersByUserIdRoles = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiTestingLabPermissionsUsersByUserIdRolesData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiTestingLabPermissionsUsersByUserIdRolesResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/users/{userId}/roles',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const deleteApiTestingLabPermissionsUsersByUserIdRolesByRoleName = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiTestingLabPermissionsUsersByUserIdRolesByRoleNameResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/users/{userId}/roles/{roleName}',
-    ...options,
-  });
-};
-
-export const deleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).delete<
-    DeleteApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses,
-    unknown,
+  return (options?.client ?? _heyApiClient).put<
+    PutApiV1PermissionsResourcesUsersPermissionsResponses,
+    PutApiV1PermissionsResourcesUsersPermissionsErrors,
     ThrowOnError
   >({
-    url: '/api/testing-lab/permissions/users/{userId}/resources/{resourceType}/{resourceId}',
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resources/users/permissions',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiV1PermissionsResourcesUsersAccess = <ThrowOnError extends boolean = false>(
+  options?: Options<DeleteApiV1PermissionsResourcesUsersAccessData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).delete<
+    DeleteApiV1PermissionsResourcesUsersAccessResponses,
+    DeleteApiV1PermissionsResourcesUsersAccessErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resources/users/access',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1PermissionsResourcesByResourceTypeByResourceIdPermissions = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1PermissionsResourcesByResourceTypeByResourceIdPermissionsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1PermissionsResourcesByResourceTypeByResourceIdPermissionsResponses,
+    GetApiV1PermissionsResourcesByResourceTypeByResourceIdPermissionsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resources/{resourceType}/{resourceId}/permissions',
     ...options,
   });
 };
 
-export const postApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceId = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdData, ThrowOnError>,
+export const getApiV1PermissionsResourcesByResourceTypeByResourceIdHasPermission = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1PermissionsResourcesByResourceTypeByResourceIdHasPermissionData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByResourceIdResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/users/{userId}/resources/{resourceType}/{resourceId}',
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1PermissionsResourcesByResourceTypeByResourceIdHasPermissionResponses,
+    GetApiV1PermissionsResourcesByResourceTypeByResourceIdHasPermissionErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resources/{resourceType}/{resourceId}/has-permission',
+    ...options,
+  });
+};
+
+export const getApiV1PermissionsResourcesByResourceTypeByResourceIdUsers = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1PermissionsResourcesByResourceTypeByResourceIdUsersData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1PermissionsResourcesByResourceTypeByResourceIdUsersResponses,
+    GetApiV1PermissionsResourcesByResourceTypeByResourceIdUsersErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/resources/{resourceType}/{resourceId}/users',
+    ...options,
+  });
+};
+
+export const getApiV1ResourcesTenantByTenantIdUsageRecords = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1ResourcesTenantByTenantIdUsageRecordsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1ResourcesTenantByTenantIdUsageRecordsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/resources/tenant/{tenantId}/usage-records',
+    ...options,
+  });
+};
+
+export const getApiV1ResourcesTenantByTenantIdUsageSummary = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1ResourcesTenantByTenantIdUsageSummaryData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1ResourcesTenantByTenantIdUsageSummaryResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/resources/tenant/{tenantId}/usage-summary',
+    ...options,
+  });
+};
+
+export const getApiV1ResourcesTenantByTenantIdLimits = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1ResourcesTenantByTenantIdLimitsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1ResourcesTenantByTenantIdLimitsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/resources/tenant/{tenantId}/limits',
+    ...options,
+  });
+};
+
+export const postQuotas = <ThrowOnError extends boolean = false>(options?: Options<PostQuotasData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostQuotasResponses, PostQuotasErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/quotas',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1ResourcesTenantByTenantIdQuota = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1ResourcesTenantByTenantIdQuotaData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1ResourcesTenantByTenantIdQuotaResponses, GetApiV1ResourcesTenantByTenantIdQuotaErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/resources/tenant/{tenantId}/quota',
+    ...options,
+  });
+};
+
+export const getApiV1ResourcesUsageByTypeByUsageType = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1ResourcesUsageByTypeByUsageTypeData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1ResourcesUsageByTypeByUsageTypeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/resources/usage-by-type/{usageType}',
+    ...options,
+  });
+};
+
+export const postApiV1ResourcesRecord = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1ResourcesRecordData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1ResourcesRecordResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/resources/record',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1ResourcesRecordWithQuotaCheck = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1ResourcesRecordWithQuotaCheckData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1ResourcesRecordWithQuotaCheckResponses, PostApiV1ResourcesRecordWithQuotaCheckErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/resources/record-with-quota-check',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1ResourcesReset = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1ResourcesResetData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1ResourcesResetResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/resources/reset',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1ResourcesArchive = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1ResourcesArchiveData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1ResourcesArchiveResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/resources/archive',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1Roles = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1RolesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1RolesResponses, GetApiV1RolesErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/roles',
+    ...options,
+  });
+};
+
+export const postApiV1Roles = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1RolesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1RolesResponses, PostApiV1RolesErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/roles',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiV1RolesById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiV1RolesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiV1RolesByIdResponses, DeleteApiV1RolesByIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/roles/{id}',
+    ...options,
+  });
+};
+
+export const getApiV1RolesById = <ThrowOnError extends boolean = false>(options: Options<GetApiV1RolesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1RolesByIdResponses, GetApiV1RolesByIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/roles/{id}',
+    ...options,
+  });
+};
+
+export const putApiV1RolesById = <ThrowOnError extends boolean = false>(options: Options<PutApiV1RolesByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1RolesByIdResponses, PutApiV1RolesByIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/roles/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -4027,36 +5161,28 @@ export const postApiTestingLabPermissionsUsersByUserIdResourcesByResourceTypeByR
   });
 };
 
-export const getApiTestingLabPermissionsUsersByUserIdCheckByResourceType = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiTestingLabPermissionsUsersByUserIdCheckByResourceTypeResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/permissions/users/{userId}/check/{resourceType}',
+export const getApiV1RolesUserByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiV1RolesUserByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1RolesUserByUserIdResponses, GetApiV1RolesUserByUserIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/roles/user/{userId}',
     ...options,
   });
 };
 
-export const getApiTestingLabSettings = <ThrowOnError extends boolean = false>(options?: Options<GetApiTestingLabSettingsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTestingLabSettingsResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings',
-    ...options,
-  });
-};
-
-export const patchApiTestingLabSettings = <ThrowOnError extends boolean = false>(options?: Options<PatchApiTestingLabSettingsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).patch<PatchApiTestingLabSettingsResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const putApiTestingLabSettings = <ThrowOnError extends boolean = false>(options?: Options<PutApiTestingLabSettingsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).put<PutApiTestingLabSettingsResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings',
+export const postApiV1RolesAssign = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1RolesAssignData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1RolesAssignResponses, PostApiV1RolesAssignErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/roles/assign',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -4065,59 +5191,88 @@ export const putApiTestingLabSettings = <ThrowOnError extends boolean = false>(o
   });
 };
 
-export const postApiTestingLabSettingsReset = <ThrowOnError extends boolean = false>(options?: Options<PostApiTestingLabSettingsResetData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiTestingLabSettingsResetResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings/reset',
+export const postApiV1RolesRemove = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1RolesRemoveData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1RolesRemoveResponses, PostApiV1RolesRemoveErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/roles/remove',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1SlaSlos = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1SlaSlosData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1SlaSlosResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/slos',
     ...options,
   });
 };
 
-export const getApiTestingLabSettingsExists = <ThrowOnError extends boolean = false>(options?: Options<GetApiTestingLabSettingsExistsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiTestingLabSettingsExistsResponses, unknown, ThrowOnError>({
-    url: '/api/testing-lab/settings/exists',
+export const postApiV1SlaSlos = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1SlaSlosData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1SlaSlosResponses, PostApiV1SlaSlosErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/slos',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const deleteApiV1SlaSlosById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiV1SlaSlosByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteApiV1SlaSlosByIdResponses, DeleteApiV1SlaSlosByIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/slos/{id}',
     ...options,
   });
 };
 
-export const getApiUsersByUserIdAchievements = <ThrowOnError extends boolean = false>(options: Options<GetApiUsersByUserIdAchievementsData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsResponses, unknown, ThrowOnError>({
-    url: '/api/users/{userId}/achievements',
+export const getApiV1SlaSlosById = <ThrowOnError extends boolean = false>(options: Options<GetApiV1SlaSlosByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1SlaSlosByIdResponses, GetApiV1SlaSlosByIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/slos/{id}',
     ...options,
   });
 };
 
-export const getApiUsersByUserIdAchievementsProgress = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiUsersByUserIdAchievementsProgressData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsProgressResponses, unknown, ThrowOnError>({
-    url: '/api/users/{userId}/achievements/progress',
-    ...options,
-  });
-};
-
-export const getApiUsersByUserIdAchievementsSummary = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiUsersByUserIdAchievementsSummaryData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsSummaryResponses, unknown, ThrowOnError>({
-    url: '/api/users/{userId}/achievements/summary',
-    ...options,
-  });
-};
-
-export const getApiUsersByUserIdAchievementsAvailable = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiUsersByUserIdAchievementsAvailableData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsAvailableResponses, unknown, ThrowOnError>({
-    url: '/api/users/{userId}/achievements/available',
-    ...options,
-  });
-};
-
-export const postApiUsersByUserIdAchievementsByAchievementIdProgress = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiUsersByUserIdAchievementsByAchievementIdProgressData, ThrowOnError>,
-) => {
-  return (options.client ?? _heyApiClient).post<PostApiUsersByUserIdAchievementsByAchievementIdProgressResponses, unknown, ThrowOnError>({
-    url: '/api/users/{userId}/achievements/{achievementId}/progress',
+export const putApiV1SlaSlosById = <ThrowOnError extends boolean = false>(options: Options<PutApiV1SlaSlosByIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1SlaSlosByIdResponses, PutApiV1SlaSlosByIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/slos/{id}',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -4126,29 +5281,402 @@ export const postApiUsersByUserIdAchievementsByAchievementIdProgress = <ThrowOnE
   });
 };
 
-export const getApiUsersByUserIdAchievementsByAchievementIdPrerequisites = <ThrowOnError extends boolean = false>(
-  options: Options<GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesData, ThrowOnError>,
+export const postApiV1SlaSlis = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1SlaSlisData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1SlaSlisResponses, PostApiV1SlaSlisErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/slis',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1SlaSlosByIdCompliance = <ThrowOnError extends boolean = false>(options: Options<GetApiV1SlaSlosByIdComplianceData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1SlaSlosByIdComplianceResponses, GetApiV1SlaSlosByIdComplianceErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/slos/{id}/compliance',
+    ...options,
+  });
+};
+
+export const getApiV1SlaSlosByIdErrorBudget = <ThrowOnError extends boolean = false>(options: Options<GetApiV1SlaSlosByIdErrorBudgetData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1SlaSlosByIdErrorBudgetResponses, GetApiV1SlaSlosByIdErrorBudgetErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/slos/{id}/error-budget',
+    ...options,
+  });
+};
+
+export const getApiV1SlaViolations = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1SlaViolationsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1SlaViolationsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/violations',
+    ...options,
+  });
+};
+
+export const postApiV1SlaViolationsByIdResolve = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SlaViolationsByIdResolveData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).get<GetApiUsersByUserIdAchievementsByAchievementIdPrerequisitesResponses, unknown, ThrowOnError>({
-    url: '/api/users/{userId}/achievements/{achievementId}/prerequisites',
+  return (options.client ?? _heyApiClient).post<PostApiV1SlaViolationsByIdResolveResponses, PostApiV1SlaViolationsByIdResolveErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/sla/violations/{id}/resolve',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get subscription plans with pagination and filtering
+ * Retrieves a paginated list of subscription plans with optional filtering.
+ */
+export const getV1SubscriptionPlans = <ThrowOnError extends boolean = false>(options?: Options<GetV1SubscriptionPlansData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetV1SubscriptionPlansResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans',
     ...options,
   });
 };
 
-export const postApiUsersByUserIdAchievementsByUserAchievementIdMarkNotified = <ThrowOnError extends boolean = false>(
-  options: Options<PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedData, ThrowOnError>,
+/**
+ * Create a new subscription plan
+ * Creates a new subscription plan with the provided information.
+ */
+export const postV1SubscriptionPlans = <ThrowOnError extends boolean = false>(options?: Options<PostV1SubscriptionPlansData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1SubscriptionPlansResponses, PostV1SubscriptionPlansErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Get featured subscription plans
+ * Retrieves all featured subscription plans.
+ */
+export const getV1SubscriptionPlansFeatured = <ThrowOnError extends boolean = false>(options?: Options<GetV1SubscriptionPlansFeaturedData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetV1SubscriptionPlansFeaturedResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/featured',
+    ...options,
+  });
+};
+
+/**
+ * Search subscription plans
+ * Searches subscription plans by name, description, or features.
+ */
+export const getV1SubscriptionPlansSearch = <ThrowOnError extends boolean = false>(options?: Options<GetV1SubscriptionPlansSearchData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetV1SubscriptionPlansSearchResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/search',
+    ...options,
+  });
+};
+
+/**
+ * Get subscription plans by price range
+ * Retrieves subscription plans within a specified price range.
+ */
+export const getV1SubscriptionPlansPriceRange = <ThrowOnError extends boolean = false>(
+  options?: Options<GetV1SubscriptionPlansPriceRangeData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).post<PostApiUsersByUserIdAchievementsByUserAchievementIdMarkNotifiedResponses, unknown, ThrowOnError>({
-    url: '/api/users/{userId}/achievements/{userAchievementId}/mark-notified',
+  return (options?.client ?? _heyApiClient).get<GetV1SubscriptionPlansPriceRangeResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/price-range',
     ...options,
   });
 };
 
-export const deleteApiUsersByUserIdAchievementsByUserAchievementId = <ThrowOnError extends boolean = false>(
-  options: Options<DeleteApiUsersByUserIdAchievementsByUserAchievementIdData, ThrowOnError>,
+/**
+ * Compare subscription plans
+ * Compares multiple subscription plans side by side.
+ */
+export const getV1SubscriptionPlansCompare = <ThrowOnError extends boolean = false>(options?: Options<GetV1SubscriptionPlansCompareData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetV1SubscriptionPlansCompareResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/compare',
+    ...options,
+  });
+};
+
+/**
+ * Delete subscription plan
+ * Deletes a subscription plan by ID.
+ */
+export const deleteV1SubscriptionPlansByPlanId = <ThrowOnError extends boolean = false>(
+  options: Options<DeleteV1SubscriptionPlansByPlanIdData, ThrowOnError>,
 ) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiUsersByUserIdAchievementsByUserAchievementIdResponses, unknown, ThrowOnError>({
-    url: '/api/users/{userId}/achievements/{userAchievementId}',
+  return (options.client ?? _heyApiClient).delete<DeleteV1SubscriptionPlansByPlanIdResponses, DeleteV1SubscriptionPlansByPlanIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}',
+    ...options,
+  });
+};
+
+/**
+ * Get subscription plan by ID
+ * Retrieves detailed information for a specific subscription plan.
+ */
+export const getV1SubscriptionPlansByPlanId = <ThrowOnError extends boolean = false>(options: Options<GetV1SubscriptionPlansByPlanIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetV1SubscriptionPlansByPlanIdResponses, GetV1SubscriptionPlansByPlanIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}',
+    ...options,
+  });
+};
+
+/**
+ * Check if subscription plan exists by ID
+ * Checks if a subscription plan exists by ID without returning the body.
+ */
+export const headV1SubscriptionPlansByPlanId = <ThrowOnError extends boolean = false>(options: Options<HeadV1SubscriptionPlansByPlanIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).head<HeadV1SubscriptionPlansByPlanIdResponses, HeadV1SubscriptionPlansByPlanIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}',
+    ...options,
+  });
+};
+
+/**
+ * Get subscription plan by slug
+ * Retrieves detailed information for a specific subscription plan by slug.
+ */
+export const getV1SubscriptionPlansSlugBySlug = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1SubscriptionPlansSlugBySlugData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetV1SubscriptionPlansSlugBySlugResponses, GetV1SubscriptionPlansSlugBySlugErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/slug/{slug}',
+    ...options,
+  });
+};
+
+/**
+ * Get subscription plan usage statistics
+ * Retrieves usage statistics for a specific subscription plan.
+ */
+export const getV1SubscriptionPlansByPlanIdUsage = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1SubscriptionPlansByPlanIdUsageData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetV1SubscriptionPlansByPlanIdUsageResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}/usage',
+    ...options,
+  });
+};
+
+/**
+ * Get suggested plan upgrades
+ * Suggests upgrade plans based on current usage requirements.
+ */
+export const getV1SubscriptionPlansByPlanIdSuggestUpgrades = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1SubscriptionPlansByPlanIdSuggestUpgradesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetV1SubscriptionPlansByPlanIdSuggestUpgradesResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}/suggest-upgrades',
+    ...options,
+  });
+};
+
+/**
+ * Calculate pricing for a subscription plan
+ * Calculates the total cost for a subscription plan including all applicable taxes, fees, and discounts.
+ */
+export const getV1SubscriptionPlansByPlanIdPricing = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1SubscriptionPlansByPlanIdPricingData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetV1SubscriptionPlansByPlanIdPricingResponses, GetV1SubscriptionPlansByPlanIdPricingErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}/pricing',
+    ...options,
+  });
+};
+
+/**
+ * Update subscription plan pricing
+ * Updates the pricing for a subscription plan.
+ */
+export const patchV1SubscriptionPlansByPlanIdPricing = <ThrowOnError extends boolean = false>(
+  options: Options<PatchV1SubscriptionPlansByPlanIdPricingData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<PatchV1SubscriptionPlansByPlanIdPricingResponses, PatchV1SubscriptionPlansByPlanIdPricingErrors, ThrowOnError>(
+    {
+      security: [
+        {
+          name: 'Authorization',
+          type: 'apiKey',
+        },
+      ],
+      url: '/v1/subscription-plans/{planId}/pricing',
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    },
+  );
+};
+
+/**
+ * Validate subscription plan limits
+ * Validates whether the specified usage fits within the plan limits.
+ */
+export const getV1SubscriptionPlansByPlanIdValidateLimits = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1SubscriptionPlansByPlanIdValidateLimitsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetV1SubscriptionPlansByPlanIdValidateLimitsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}/validate-limits',
+    ...options,
+  });
+};
+
+/**
+ * Partially update subscription plan details
+ * Updates specific fields of a subscription plan's details.
+ */
+export const patchV1SubscriptionPlansByPlanIdDetails = <ThrowOnError extends boolean = false>(
+  options: Options<PatchV1SubscriptionPlansByPlanIdDetailsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<PatchV1SubscriptionPlansByPlanIdDetailsResponses, PatchV1SubscriptionPlansByPlanIdDetailsErrors, ThrowOnError>(
+    {
+      security: [
+        {
+          name: 'Authorization',
+          type: 'apiKey',
+        },
+      ],
+      url: '/v1/subscription-plans/{planId}/details',
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    },
+  );
+};
+
+/**
+ * Update subscription plan limits
+ * Updates the limits for a subscription plan.
+ */
+export const patchV1SubscriptionPlansByPlanIdLimits = <ThrowOnError extends boolean = false>(
+  options: Options<PatchV1SubscriptionPlansByPlanIdLimitsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<PatchV1SubscriptionPlansByPlanIdLimitsResponses, PatchV1SubscriptionPlansByPlanIdLimitsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}/limits',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -4157,41 +5685,25 @@ export const deleteApiUsersByUserIdAchievementsByUserAchievementId = <ThrowOnErr
   });
 };
 
-export const getApiUserprofiles = <ThrowOnError extends boolean = false>(options?: Options<GetApiUserprofilesData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiUserprofilesResponses, unknown, ThrowOnError>({
-    url: '/api/userprofiles',
-    ...options,
-  });
-};
-
-export const postApiUserprofiles = <ThrowOnError extends boolean = false>(options?: Options<PostApiUserprofilesData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiUserprofilesResponses, unknown, ThrowOnError>({
-    url: '/api/userprofiles',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteApiUserprofilesById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiUserprofilesByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiUserprofilesByIdResponses, unknown, ThrowOnError>({
-    url: '/api/userprofiles/{id}',
-    ...options,
-  });
-};
-
-export const getApiUserprofilesById = <ThrowOnError extends boolean = false>(options: Options<GetApiUserprofilesByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiUserprofilesByIdResponses, unknown, ThrowOnError>({
-    url: '/api/userprofiles/{id}',
-    ...options,
-  });
-};
-
-export const putApiUserprofilesById = <ThrowOnError extends boolean = false>(options: Options<PutApiUserprofilesByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiUserprofilesByIdResponses, unknown, ThrowOnError>({
-    url: '/api/userprofiles/{id}',
+/**
+ * Update subscription plan features
+ * Updates the features for a subscription plan.
+ */
+export const patchV1SubscriptionPlansByPlanIdFeatures = <ThrowOnError extends boolean = false>(
+  options: Options<PatchV1SubscriptionPlansByPlanIdFeaturesData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    PatchV1SubscriptionPlansByPlanIdFeaturesResponses,
+    PatchV1SubscriptionPlansByPlanIdFeaturesErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}/features',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -4200,73 +5712,63 @@ export const putApiUserprofilesById = <ThrowOnError extends boolean = false>(opt
   });
 };
 
-export const getApiUserprofilesUserByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiUserprofilesUserByUserIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiUserprofilesUserByUserIdResponses, unknown, ThrowOnError>({
-    url: '/api/userprofiles/user/{userId}',
+/**
+ * Activate subscription plan
+ * Activates a subscription plan by ID.
+ */
+export const postV1SubscriptionPlansByPlanIdActivate = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1SubscriptionPlansByPlanIdActivateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostV1SubscriptionPlansByPlanIdActivateResponses, PostV1SubscriptionPlansByPlanIdActivateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}:activate',
     ...options,
   });
 };
 
-export const postApiUserprofilesByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostApiUserprofilesByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiUserprofilesByIdRestoreResponses, unknown, ThrowOnError>({
-    url: '/api/userprofiles/{id}/restore',
+/**
+ * Deactivate subscription plan
+ * Deactivates a subscription plan by ID.
+ */
+export const postV1SubscriptionPlansByPlanIdDeactivate = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1SubscriptionPlansByPlanIdDeactivateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1SubscriptionPlansByPlanIdDeactivateResponses,
+    PostV1SubscriptionPlansByPlanIdDeactivateErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}:deactivate',
     ...options,
   });
 };
 
-export const getApiUsers = <ThrowOnError extends boolean = false>(options?: Options<GetApiUsersData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiUsersResponses, unknown, ThrowOnError>({
-    url: '/api/users',
-    ...options,
-  });
-};
-
-export const postApiUsers = <ThrowOnError extends boolean = false>(options?: Options<PostApiUsersData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiUsersResponses, unknown, ThrowOnError>({
-    url: '/api/users',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  });
-};
-
-export const deleteApiUsersById = <ThrowOnError extends boolean = false>(options: Options<DeleteApiUsersByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).delete<DeleteApiUsersByIdResponses, unknown, ThrowOnError>({
-    url: '/api/users/{id}',
-    ...options,
-  });
-};
-
-export const getApiUsersById = <ThrowOnError extends boolean = false>(options: Options<GetApiUsersByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).get<GetApiUsersByIdResponses, unknown, ThrowOnError>({
-    url: '/api/users/{id}',
-    ...options,
-  });
-};
-
-export const putApiUsersById = <ThrowOnError extends boolean = false>(options: Options<PutApiUsersByIdData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiUsersByIdResponses, unknown, ThrowOnError>({
-    url: '/api/users/{id}',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-};
-
-export const postApiUsersByIdRestore = <ThrowOnError extends boolean = false>(options: Options<PostApiUsersByIdRestoreData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).post<PostApiUsersByIdRestoreResponses, unknown, ThrowOnError>({
-    url: '/api/users/{id}/restore',
-    ...options,
-  });
-};
-
-export const putApiUsersByIdBalance = <ThrowOnError extends boolean = false>(options: Options<PutApiUsersByIdBalanceData, ThrowOnError>) => {
-  return (options.client ?? _heyApiClient).put<PutApiUsersByIdBalanceResponses, unknown, ThrowOnError>({
-    url: '/api/users/{id}/balance',
+/**
+ * Set subscription plan featured status
+ * Sets whether a subscription plan is featured or not.
+ */
+export const postV1SubscriptionPlansByPlanIdFeatured = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1SubscriptionPlansByPlanIdFeaturedData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostV1SubscriptionPlansByPlanIdFeaturedResponses, PostV1SubscriptionPlansByPlanIdFeaturedErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}:featured',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -4275,23 +5777,63 @@ export const putApiUsersByIdBalance = <ThrowOnError extends boolean = false>(opt
   });
 };
 
-export const getApiUsersStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetApiUsersStatisticsData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiUsersStatisticsResponses, unknown, ThrowOnError>({
-    url: '/api/users/statistics',
+/**
+ * Set subscription plan external ID
+ * Sets the external system ID for subscription plan integration.
+ */
+export const postV1SubscriptionPlansByPlanIdExternalId = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1SubscriptionPlansByPlanIdExternalIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1SubscriptionPlansByPlanIdExternalIdResponses,
+    PostV1SubscriptionPlansByPlanIdExternalIdErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/subscription-plans/{planId}:external-id',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get subscriptions with pagination, search, and filtering
+ * Retrieves a paginated list of subscriptions with optional filtering.
+ */
+export const getApiV1Subscriptions = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1SubscriptionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1SubscriptionsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions',
     ...options,
   });
 };
 
-export const getApiUsersSearch = <ThrowOnError extends boolean = false>(options?: Options<GetApiUsersSearchData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).get<GetApiUsersSearchResponses, unknown, ThrowOnError>({
-    url: '/api/users/search',
-    ...options,
-  });
-};
-
-export const postApiUsersBulk = <ThrowOnError extends boolean = false>(options?: Options<PostApiUsersBulkData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).post<PostApiUsersBulkResponses, unknown, ThrowOnError>({
-    url: '/api/users/bulk',
+/**
+ * Create a new subscription
+ * Creates a new subscription with the provided information.
+ */
+export const postApiV1Subscriptions = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1SubscriptionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1SubscriptionsResponses, PostApiV1SubscriptionsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -4300,9 +5842,494 @@ export const postApiUsersBulk = <ThrowOnError extends boolean = false>(options?:
   });
 };
 
-export const patchApiUsersBulkActivate = <ThrowOnError extends boolean = false>(options?: Options<PatchApiUsersBulkActivateData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).patch<PatchApiUsersBulkActivateResponses, unknown, ThrowOnError>({
-    url: '/api/users/bulk/activate',
+/**
+ * Get subscriptions by tenant
+ * Retrieves all subscriptions for a specific tenant.
+ */
+export const getApiV1SubscriptionsTenantByTenantId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1SubscriptionsTenantByTenantIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1SubscriptionsTenantByTenantIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/tenant/{tenantId}',
+    ...options,
+  });
+};
+
+/**
+ * Get active subscription for tenant
+ * Retrieves the active subscription for a specific tenant.
+ */
+export const getApiV1SubscriptionsTenantByTenantIdActive = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1SubscriptionsTenantByTenantIdActiveData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1SubscriptionsTenantByTenantIdActiveResponses,
+    GetApiV1SubscriptionsTenantByTenantIdActiveErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/tenant/{tenantId}/active',
+    ...options,
+  });
+};
+
+/**
+ * Get subscriptions by plan
+ * Retrieves all subscriptions for a specific plan.
+ */
+export const getApiV1SubscriptionsPlanByPlanId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1SubscriptionsPlanByPlanIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1SubscriptionsPlanByPlanIdResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/plan/{planId}',
+    ...options,
+  });
+};
+
+/**
+ * Get subscriptions by status
+ * Retrieves all subscriptions with a specific status.
+ */
+export const getApiV1SubscriptionsStatusByStatus = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1SubscriptionsStatusByStatusData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1SubscriptionsStatusByStatusResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/status/{status}',
+    ...options,
+  });
+};
+
+/**
+ * Get subscription metrics
+ * Retrieves subscription metrics and analytics.
+ */
+export const getApiV1SubscriptionsMetrics = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1SubscriptionsMetricsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1SubscriptionsMetricsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/metrics',
+    ...options,
+  });
+};
+
+/**
+ * Get expiring subscriptions
+ * Retrieves subscriptions that are expiring within the specified number of days.
+ */
+export const getApiV1SubscriptionsExpiring = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1SubscriptionsExpiringData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1SubscriptionsExpiringResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/expiring',
+    ...options,
+  });
+};
+
+/**
+ * Get subscription by ID
+ * Retrieves detailed information for a specific subscription.
+ */
+export const getApiV1SubscriptionsBySubscriptionId = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1SubscriptionsBySubscriptionIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1SubscriptionsBySubscriptionIdResponses, GetApiV1SubscriptionsBySubscriptionIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}',
+    ...options,
+  });
+};
+
+/**
+ * Check if subscription exists by ID
+ * Checks if a subscription exists by ID without returning the body.
+ */
+export const headApiV1SubscriptionsBySubscriptionId = <ThrowOnError extends boolean = false>(
+  options: Options<HeadApiV1SubscriptionsBySubscriptionIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).head<HeadApiV1SubscriptionsBySubscriptionIdResponses, HeadApiV1SubscriptionsBySubscriptionIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}',
+    ...options,
+  });
+};
+
+/**
+ * Get subscription usage and limits
+ * Retrieves usage information and limits for a specific subscription.
+ */
+export const getApiV1SubscriptionsBySubscriptionIdUsage = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1SubscriptionsBySubscriptionIdUsageData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1SubscriptionsBySubscriptionIdUsageResponses,
+    GetApiV1SubscriptionsBySubscriptionIdUsageErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}/usage',
+    ...options,
+  });
+};
+
+/**
+ * Get subscription billing history
+ * Retrieves billing history for a specific subscription.
+ */
+export const getApiV1SubscriptionsBySubscriptionIdBillingHistory = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1SubscriptionsBySubscriptionIdBillingHistoryData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1SubscriptionsBySubscriptionIdBillingHistoryResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}/billing-history',
+    ...options,
+  });
+};
+
+/**
+ * Activate subscription
+ * Activates a subscription by ID.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdActivate = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdActivateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdActivateResponses,
+    PostApiV1SubscriptionsBySubscriptionIdActivateErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:activate',
+    ...options,
+  });
+};
+
+/**
+ * Start subscription trial
+ * Starts a trial period for a subscription.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdStartTrial = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdStartTrialData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdStartTrialResponses,
+    PostApiV1SubscriptionsBySubscriptionIdStartTrialErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:start-trial',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * End subscription trial
+ * Ends a trial period for a subscription.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdEndTrial = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdEndTrialData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdEndTrialResponses,
+    PostApiV1SubscriptionsBySubscriptionIdEndTrialErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:end-trial',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Cancel subscription
+ * Cancels a subscription with specified reason and effective date.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdCancel = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdCancelData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdCancelResponses,
+    PostApiV1SubscriptionsBySubscriptionIdCancelErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:cancel',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Suspend subscription
+ * Suspends a subscription temporarily.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdSuspend = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdSuspendData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdSuspendResponses,
+    PostApiV1SubscriptionsBySubscriptionIdSuspendErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:suspend',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Reactivate subscription
+ * Reactivates a suspended or cancelled subscription.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdReactivate = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdReactivateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdReactivateResponses,
+    PostApiV1SubscriptionsBySubscriptionIdReactivateErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:reactivate',
+    ...options,
+  });
+};
+
+/**
+ * Upgrade subscription plan
+ * Upgrades a subscription to a higher-tier plan.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdUpgrade = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdUpgradeData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdUpgradeResponses,
+    PostApiV1SubscriptionsBySubscriptionIdUpgradeErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:upgrade',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Downgrade subscription plan
+ * Downgrades a subscription to a lower-tier plan.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdDowngrade = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdDowngradeData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdDowngradeResponses,
+    PostApiV1SubscriptionsBySubscriptionIdDowngradeErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:downgrade',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Renew subscription
+ * Manually renews a subscription for another billing cycle.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdRenew = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdRenewData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdRenewResponses,
+    PostApiV1SubscriptionsBySubscriptionIdRenewErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:renew',
+    ...options,
+  });
+};
+
+/**
+ * Set subscription auto-renew
+ * Enables or disables auto-renewal for a subscription.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdAutoRenew = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdAutoRenewData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdAutoRenewResponses,
+    PostApiV1SubscriptionsBySubscriptionIdAutoRenewErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:auto-renew',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Set subscription external IDs
+ * Sets external system IDs for subscription integration.
+ */
+export const postApiV1SubscriptionsBySubscriptionIdExternalIds = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1SubscriptionsBySubscriptionIdExternalIdsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostApiV1SubscriptionsBySubscriptionIdExternalIdsResponses,
+    PostApiV1SubscriptionsBySubscriptionIdExternalIdsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/subscriptions/{subscriptionId}:external-ids',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiV1TaxCalculate = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1TaxCalculateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1TaxCalculateResponses, PostApiV1TaxCalculateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tax/calculate',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -4311,13 +6338,2395 @@ export const patchApiUsersBulkActivate = <ThrowOnError extends boolean = false>(
   });
 };
 
-export const patchApiUsersBulkDeactivate = <ThrowOnError extends boolean = false>(options?: Options<PatchApiUsersBulkDeactivateData, ThrowOnError>) => {
-  return (options?.client ?? _heyApiClient).patch<PatchApiUsersBulkDeactivateResponses, unknown, ThrowOnError>({
-    url: '/api/users/bulk/deactivate',
+export const getApiV1TaxJurisdictions = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1TaxJurisdictionsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1TaxJurisdictionsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tax/jurisdictions',
+    ...options,
+  });
+};
+
+export const getApiV1TaxRules = <ThrowOnError extends boolean = false>(options?: Options<GetApiV1TaxRulesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetApiV1TaxRulesResponses, GetApiV1TaxRulesErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tax/rules',
+    ...options,
+  });
+};
+
+/**
+ * Get tenant metadata by tenant ID
+ * Retrieves comprehensive tenant metadata including custom fields, tags, external references, and business information.
+ */
+export const getApiV1TenantsByIdMetadata = <ThrowOnError extends boolean = false>(options: Options<GetApiV1TenantsByIdMetadataData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1TenantsByIdMetadataResponses, GetApiV1TenantsByIdMetadataErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/metadata',
+    ...options,
+  });
+};
+
+/**
+ * Partially update tenant metadata by tenant ID
+ * Updates specific tenant metadata fields without affecting other metadata. Only the provided metadata keys are modified.
+ */
+export const patchApiV1TenantsByIdMetadata = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1TenantsByIdMetadataData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).patch<PatchApiV1TenantsByIdMetadataResponses, PatchApiV1TenantsByIdMetadataErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/metadata',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace all tenant metadata by tenant ID
+ * Replaces all tenant metadata with new values. All existing metadata is replaced with the provided data.
+ */
+export const putApiV1TenantsByIdMetadata = <ThrowOnError extends boolean = false>(options: Options<PutApiV1TenantsByIdMetadataData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1TenantsByIdMetadataResponses, PutApiV1TenantsByIdMetadataErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/metadata',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get tenant custom fields
+ * Retrieves all custom fields configured for the tenant as a key-value dictionary for storing tenant-specific data.
+ */
+export const getApiV1TenantsByIdMetadataCustomFields = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1TenantsByIdMetadataCustomFieldsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1TenantsByIdMetadataCustomFieldsResponses, GetApiV1TenantsByIdMetadataCustomFieldsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/metadata/custom-fields',
+    ...options,
+  });
+};
+
+/**
+ * Update tenant custom fields
+ * Updates specific custom fields for the tenant. Existing fields not specified are preserved.
+ */
+export const patchApiV1TenantsByIdMetadataCustomFields = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1TenantsByIdMetadataCustomFieldsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    PatchApiV1TenantsByIdMetadataCustomFieldsResponses,
+    PatchApiV1TenantsByIdMetadataCustomFieldsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/metadata/custom-fields',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get tenant tags
+ * Retrieves all tags configured for the tenant for categorization and filtering purposes.
+ */
+export const getApiV1TenantsByIdMetadataTags = <ThrowOnError extends boolean = false>(options: Options<GetApiV1TenantsByIdMetadataTagsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1TenantsByIdMetadataTagsResponses, GetApiV1TenantsByIdMetadataTagsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/metadata/tags',
+    ...options,
+  });
+};
+
+/**
+ * Update tenant tags
+ * Updates the tags for the tenant. Existing tags are merged with the new tags.
+ */
+export const patchApiV1TenantsByIdMetadataTags = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1TenantsByIdMetadataTagsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<PatchApiV1TenantsByIdMetadataTagsResponses, PatchApiV1TenantsByIdMetadataTagsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/metadata/tags',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace all tenant tags
+ * Replaces all existing tags with the provided list of tags.
+ */
+export const putApiV1TenantsByIdMetadataTags = <ThrowOnError extends boolean = false>(options: Options<PutApiV1TenantsByIdMetadataTagsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1TenantsByIdMetadataTagsResponses, PutApiV1TenantsByIdMetadataTagsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/metadata/tags',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get tenant settings by tenant ID
+ * Retrieves comprehensive tenant settings including system configuration, feature toggles, business rules, and operational preferences.
+ */
+export const getApiV1TenantsByIdSettings = <ThrowOnError extends boolean = false>(options: Options<GetApiV1TenantsByIdSettingsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1TenantsByIdSettingsResponses, GetApiV1TenantsByIdSettingsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/settings',
+    ...options,
+  });
+};
+
+/**
+ * Partially update tenant settings by tenant ID
+ * Updates specific tenant settings fields without affecting other settings. Only the provided settings are modified.
+ */
+export const patchApiV1TenantsByIdSettings = <ThrowOnError extends boolean = false>(options: Options<PatchApiV1TenantsByIdSettingsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).patch<PatchApiV1TenantsByIdSettingsResponses, PatchApiV1TenantsByIdSettingsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/settings',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace all tenant settings by tenant ID
+ * Replaces all tenant settings with new values. All existing settings are replaced with the provided data.
+ */
+export const putApiV1TenantsByIdSettings = <ThrowOnError extends boolean = false>(options: Options<PutApiV1TenantsByIdSettingsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutApiV1TenantsByIdSettingsResponses, PutApiV1TenantsByIdSettingsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/settings',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get tenant feature flags
+ * Retrieves all feature flags configured for the tenant for experimental features and A/B testing.
+ */
+export const getApiV1TenantsByIdSettingsFeatureFlags = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1TenantsByIdSettingsFeatureFlagsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1TenantsByIdSettingsFeatureFlagsResponses, GetApiV1TenantsByIdSettingsFeatureFlagsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/settings/feature-flags',
+    ...options,
+  });
+};
+
+/**
+ * Update tenant feature flags
+ * Updates specific feature flags for the tenant. Existing flags not specified are preserved.
+ */
+export const patchApiV1TenantsByIdSettingsFeatureFlags = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1TenantsByIdSettingsFeatureFlagsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    PatchApiV1TenantsByIdSettingsFeatureFlagsResponses,
+    PatchApiV1TenantsByIdSettingsFeatureFlagsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/settings/feature-flags',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get tenant system limits
+ * Retrieves system limits and resource constraints configured for the tenant.
+ */
+export const getApiV1TenantsByIdSettingsSystemLimits = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1TenantsByIdSettingsSystemLimitsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1TenantsByIdSettingsSystemLimitsResponses, GetApiV1TenantsByIdSettingsSystemLimitsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/settings/system-limits',
+    ...options,
+  });
+};
+
+/**
+ * Update tenant system limits
+ * Updates system limits and resource constraints for the tenant.
+ */
+export const patchApiV1TenantsByIdSettingsSystemLimits = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1TenantsByIdSettingsSystemLimitsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    PatchApiV1TenantsByIdSettingsSystemLimitsResponses,
+    PatchApiV1TenantsByIdSettingsSystemLimitsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/settings/system-limits',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get tenant integration settings
+ * Retrieves third-party integration configurations for the tenant.
+ */
+export const getApiV1TenantsByIdSettingsIntegrationSettings = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1TenantsByIdSettingsIntegrationSettingsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1TenantsByIdSettingsIntegrationSettingsResponses,
+    GetApiV1TenantsByIdSettingsIntegrationSettingsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/settings/integration-settings',
+    ...options,
+  });
+};
+
+/**
+ * Update tenant integration settings
+ * Updates third-party integration configurations for the tenant.
+ */
+export const patchApiV1TenantsByIdSettingsIntegrationSettings = <ThrowOnError extends boolean = false>(
+  options: Options<PatchApiV1TenantsByIdSettingsIntegrationSettingsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    PatchApiV1TenantsByIdSettingsIntegrationSettingsResponses,
+    PatchApiV1TenantsByIdSettingsIntegrationSettingsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/tenants/{id}/settings/integration-settings',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiV1PermissionsTenantsGrant = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsTenantsGrantData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsTenantsGrantResponses, PostApiV1PermissionsTenantsGrantErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenants/grant',
     ...options,
     headers: {
       'Content-Type': 'application/json',
       ...options?.headers,
     },
+  });
+};
+
+export const postApiV1PermissionsTenantsRevoke = <ThrowOnError extends boolean = false>(
+  options?: Options<PostApiV1PermissionsTenantsRevokeData, ThrowOnError>,
+) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1PermissionsTenantsRevokeResponses, PostApiV1PermissionsTenantsRevokeErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenants/revoke',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1PermissionsTenantsByTenantIdPermissions = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1PermissionsTenantsByTenantIdPermissionsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1PermissionsTenantsByTenantIdPermissionsResponses,
+    GetApiV1PermissionsTenantsByTenantIdPermissionsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenants/{tenantId}/permissions',
+    ...options,
+  });
+};
+
+export const getApiV1PermissionsTenantsByTenantIdHasPermission = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1PermissionsTenantsByTenantIdHasPermissionData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetApiV1PermissionsTenantsByTenantIdHasPermissionResponses,
+    GetApiV1PermissionsTenantsByTenantIdHasPermissionErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/permissions/tenants/{tenantId}/has-permission',
+    ...options,
+  });
+};
+
+/**
+ * Get tenants with pagination, search, and sorting
+ * Retrieves a paginated list of all tenant organizations accessible to the requesting user.
+ */
+export const getV1Tenants = <ThrowOnError extends boolean = false>(options?: Options<GetV1TenantsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetV1TenantsResponses, GetV1TenantsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants',
+    ...options,
+  });
+};
+
+/**
+ * Create a new tenant organization
+ * Creates a new tenant organization within the GameGuild platform.
+ */
+export const postV1Tenants = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsResponses, PostV1TenantsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Get payment history for tenant
+ * Retrieves payment history for a specific tenant with optional date filtering.
+ */
+export const getV1TenantsByTenantIdPayments = <ThrowOnError extends boolean = false>(options: Options<GetV1TenantsByTenantIdPaymentsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetV1TenantsByTenantIdPaymentsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}/payments',
+    ...options,
+  });
+};
+
+/**
+ * Bulk create tenants
+ * Creates multiple tenant organizations at once.
+ */
+export const postV1TenantsCreate = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsCreateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsCreateResponses, PostV1TenantsCreateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants:create',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk partial update tenants
+ * Updates multiple tenants with partial data.
+ */
+export const postV1TenantsUpdate = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsUpdateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsUpdateResponses, PostV1TenantsUpdateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants:update',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk full update tenants
+ * Updates multiple tenants with complete data.
+ */
+export const postV1TenantsReplace = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsReplaceData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsReplaceResponses, PostV1TenantsReplaceErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants:replace',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk soft delete tenants
+ * Soft deletes multiple tenants at once.
+ */
+export const postV1TenantsDelete = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsDeleteData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsDeleteResponses, PostV1TenantsDeleteErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants:delete',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk activate tenant accounts
+ * Activates multiple tenant accounts at once.
+ */
+export const postV1TenantsActivate = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsActivateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsActivateResponses, PostV1TenantsActivateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants:activate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk deactivate tenant accounts
+ * Deactivates multiple tenant accounts at once.
+ */
+export const postV1TenantsDeactivate = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsDeactivateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsDeactivateResponses, PostV1TenantsDeactivateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants:deactivate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk archive tenant accounts
+ * Archives multiple tenant accounts at once.
+ */
+export const postV1TenantsArchive = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsArchiveData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsArchiveResponses, PostV1TenantsArchiveErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants:archive',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk undelete soft-deleted tenants
+ * Restores multiple soft-deleted tenants at once.
+ */
+export const postV1TenantsUndelete = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsUndeleteData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsUndeleteResponses, PostV1TenantsUndeleteErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants:undelete',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk hard delete tenants (irreversible purge)
+ * Permanently deletes multiple tenants. Admin operation requiring proper authorization.
+ */
+export const postV1TenantsPurge = <ThrowOnError extends boolean = false>(options?: Options<PostV1TenantsPurgeData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1TenantsPurgeResponses, PostV1TenantsPurgeErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants:purge',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Soft delete tenant by ID
+ * Soft deletes a tenant by ID (can be restored).
+ */
+export const deleteV1TenantsByTenantId = <ThrowOnError extends boolean = false>(options: Options<DeleteV1TenantsByTenantIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteV1TenantsByTenantIdResponses, DeleteV1TenantsByTenantIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get tenant by ID
+ * Retrieves detailed information for a specific tenant by their unique identifier.
+ */
+export const getV1TenantsByTenantId = <ThrowOnError extends boolean = false>(options: Options<GetV1TenantsByTenantIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetV1TenantsByTenantIdResponses, GetV1TenantsByTenantIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}',
+    ...options,
+  });
+};
+
+/**
+ * Check if tenant exists by ID
+ * Checks if a tenant exists by ID without returning the body.
+ */
+export const headV1TenantsByTenantId = <ThrowOnError extends boolean = false>(options: Options<HeadV1TenantsByTenantIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).head<HeadV1TenantsByTenantIdResponses, HeadV1TenantsByTenantIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}',
+    ...options,
+  });
+};
+
+/**
+ * Partially update tenant by ID
+ * Updates specific fields of a tenant by ID.
+ */
+export const patchV1TenantsByTenantId = <ThrowOnError extends boolean = false>(options: Options<PatchV1TenantsByTenantIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).patch<PatchV1TenantsByTenantIdResponses, PatchV1TenantsByTenantIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Update tenant by ID
+ * Fully updates a tenant by ID with complete tenant data.
+ */
+export const putV1TenantsByTenantId = <ThrowOnError extends boolean = false>(options: Options<PutV1TenantsByTenantIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutV1TenantsByTenantIdResponses, PutV1TenantsByTenantIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Activate tenant account
+ * Activates a tenant organization by ID.
+ */
+export const postV1TenantsByTenantIdActivate = <ThrowOnError extends boolean = false>(options: Options<PostV1TenantsByTenantIdActivateData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1TenantsByTenantIdActivateResponses, PostV1TenantsByTenantIdActivateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}:activate',
+    ...options,
+  });
+};
+
+/**
+ * Deactivate tenant account
+ * Deactivates a tenant organization by ID.
+ */
+export const postV1TenantsByTenantIdDeactivate = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1TenantsByTenantIdDeactivateData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostV1TenantsByTenantIdDeactivateResponses, PostV1TenantsByTenantIdDeactivateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}:deactivate',
+    ...options,
+  });
+};
+
+/**
+ * Archive (soft delete) tenant account
+ * Archives a tenant organization by ID.
+ */
+export const postV1TenantsByTenantIdArchive = <ThrowOnError extends boolean = false>(options: Options<PostV1TenantsByTenantIdArchiveData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1TenantsByTenantIdArchiveResponses, PostV1TenantsByTenantIdArchiveErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}:archive',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Undelete a soft-deleted tenant account
+ * Undeletes a previously soft-deleted (archived) tenant organization.
+ */
+export const postV1TenantsByTenantIdUndelete = <ThrowOnError extends boolean = false>(options: Options<PostV1TenantsByTenantIdUndeleteData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1TenantsByTenantIdUndeleteResponses, PostV1TenantsByTenantIdUndeleteErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}:undelete',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Permanently delete (hard delete) tenant account
+ * Permanently and irreversibly deletes a tenant organization. Admin operation requiring proper authorization.
+ */
+export const postV1TenantsByTenantIdPurge = <ThrowOnError extends boolean = false>(options: Options<PostV1TenantsByTenantIdPurgeData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1TenantsByTenantIdPurgeResponses, PostV1TenantsByTenantIdPurgeErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/tenants/{tenantId}:purge',
+    ...options,
+  });
+};
+
+/**
+ * Get user metadata by user ID
+ */
+export const getV1UsersByUserIdMetadata = <ThrowOnError extends boolean = false>(options: Options<GetV1UsersByUserIdMetadataData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetV1UsersByUserIdMetadataResponses, GetV1UsersByUserIdMetadataErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/metadata',
+    ...options,
+  });
+};
+
+/**
+ * Partially update user metadata by user ID
+ */
+export const patchV1UsersByUserIdMetadata = <ThrowOnError extends boolean = false>(options: Options<PatchV1UsersByUserIdMetadataData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).patch<PatchV1UsersByUserIdMetadataResponses, PatchV1UsersByUserIdMetadataErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/metadata',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace user metadata by user ID
+ */
+export const putV1UsersByUserIdMetadata = <ThrowOnError extends boolean = false>(options: Options<PutV1UsersByUserIdMetadataData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutV1UsersByUserIdMetadataResponses, PutV1UsersByUserIdMetadataErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/metadata',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get user notifications with pagination, search, and sorting
+ */
+export const getV1UsersByUserIdNotifications = <ThrowOnError extends boolean = false>(options: Options<GetV1UsersByUserIdNotificationsData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetV1UsersByUserIdNotificationsResponses, GetV1UsersByUserIdNotificationsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications',
+    ...options,
+  });
+};
+
+/**
+ * Mark multiple notifications as read for a user
+ */
+export const postV1UsersByUserIdNotificationsMarkAsRead = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdNotificationsMarkAsReadData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdNotificationsMarkAsReadResponses,
+    PostV1UsersByUserIdNotificationsMarkAsReadErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications:mark-as-read',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Mark multiple notifications as unread for a user
+ */
+export const postV1UsersByUserIdNotificationsMarkAsUnread = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdNotificationsMarkAsUnreadData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdNotificationsMarkAsUnreadResponses,
+    PostV1UsersByUserIdNotificationsMarkAsUnreadErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications:mark-as-unread',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Archive multiple notifications for a user
+ */
+export const postV1UsersByUserIdNotificationsArchive = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdNotificationsArchiveData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostV1UsersByUserIdNotificationsArchiveResponses, PostV1UsersByUserIdNotificationsArchiveErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications:archive',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Unarchive multiple notifications for a user
+ */
+export const postV1UsersByUserIdNotificationsUnarchive = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdNotificationsUnarchiveData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdNotificationsUnarchiveResponses,
+    PostV1UsersByUserIdNotificationsUnarchiveErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications:unarchive',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get detailed notification by ID
+ */
+export const getV1UsersByUserIdNotificationsByNotificationId = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1UsersByUserIdNotificationsByNotificationIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetV1UsersByUserIdNotificationsByNotificationIdResponses,
+    GetV1UsersByUserIdNotificationsByNotificationIdErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications/{notificationId}',
+    ...options,
+  });
+};
+
+/**
+ * Check if user notification exists
+ */
+export const headV1UsersByUserIdNotificationsByNotificationId = <ThrowOnError extends boolean = false>(
+  options: Options<HeadV1UsersByUserIdNotificationsByNotificationIdData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).head<
+    HeadV1UsersByUserIdNotificationsByNotificationIdResponses,
+    HeadV1UsersByUserIdNotificationsByNotificationIdErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications/{notificationId}',
+    ...options,
+  });
+};
+
+/**
+ * Mark notification as read
+ */
+export const postV1UsersByUserIdNotificationsByNotificationIdMarkAsRead = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdNotificationsByNotificationIdMarkAsReadData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdNotificationsByNotificationIdMarkAsReadResponses,
+    PostV1UsersByUserIdNotificationsByNotificationIdMarkAsReadErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications/{notificationId}:mark-as-read',
+    ...options,
+  });
+};
+
+/**
+ * Mark notification as unread
+ */
+export const postV1UsersByUserIdNotificationsByNotificationIdMarkAsUnread = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdNotificationsByNotificationIdMarkAsUnreadData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdNotificationsByNotificationIdMarkAsUnreadResponses,
+    PostV1UsersByUserIdNotificationsByNotificationIdMarkAsUnreadErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications/{notificationId}:mark-as-unread',
+    ...options,
+  });
+};
+
+/**
+ * Archive notification
+ */
+export const postV1UsersByUserIdNotificationsByNotificationIdArchive = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdNotificationsByNotificationIdArchiveData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdNotificationsByNotificationIdArchiveResponses,
+    PostV1UsersByUserIdNotificationsByNotificationIdArchiveErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications/{notificationId}:archive',
+    ...options,
+  });
+};
+
+/**
+ * Unarchive notification
+ */
+export const postV1UsersByUserIdNotificationsByNotificationIdUnarchive = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdNotificationsByNotificationIdUnarchiveData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdNotificationsByNotificationIdUnarchiveResponses,
+    PostV1UsersByUserIdNotificationsByNotificationIdUnarchiveErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/notifications/{notificationId}:unarchive',
+    ...options,
+  });
+};
+
+/**
+ * Get user preferences
+ */
+export const getV1UsersByUserIdPreferences = <ThrowOnError extends boolean = false>(options: Options<GetV1UsersByUserIdPreferencesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetV1UsersByUserIdPreferencesResponses, GetV1UsersByUserIdPreferencesErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences',
+    ...options,
+  });
+};
+
+/**
+ * Partially update user preferences by user ID
+ */
+export const patchV1UsersByUserIdPreferences = <ThrowOnError extends boolean = false>(options: Options<PatchV1UsersByUserIdPreferencesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).patch<PatchV1UsersByUserIdPreferencesResponses, PatchV1UsersByUserIdPreferencesErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace user preferences by user ID
+ */
+export const putV1UsersByUserIdPreferences = <ThrowOnError extends boolean = false>(options: Options<PutV1UsersByUserIdPreferencesData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutV1UsersByUserIdPreferencesResponses, PutV1UsersByUserIdPreferencesErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Reset user preferences to defaults
+ */
+export const postV1UsersByUserIdPreferencesReset = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdPreferencesResetData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<PostV1UsersByUserIdPreferencesResetResponses, PostV1UsersByUserIdPreferencesResetErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences:reset',
+    ...options,
+  });
+};
+
+/**
+ * Get notification settings for user
+ */
+export const getV1UsersByUserIdPreferencesNotifications = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1UsersByUserIdPreferencesNotificationsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetV1UsersByUserIdPreferencesNotificationsResponses,
+    GetV1UsersByUserIdPreferencesNotificationsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/notifications',
+    ...options,
+  });
+};
+
+/**
+ * Check if notification preferences exist
+ */
+export const headV1UsersByUserIdPreferencesNotifications = <ThrowOnError extends boolean = false>(
+  options: Options<HeadV1UsersByUserIdPreferencesNotificationsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).head<
+    HeadV1UsersByUserIdPreferencesNotificationsResponses,
+    HeadV1UsersByUserIdPreferencesNotificationsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/notifications',
+    ...options,
+  });
+};
+
+/**
+ * Partially update notification preferences for user
+ */
+export const patchV1UsersByUserIdPreferencesNotifications = <ThrowOnError extends boolean = false>(
+  options: Options<PatchV1UsersByUserIdPreferencesNotificationsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    PatchV1UsersByUserIdPreferencesNotificationsResponses,
+    PatchV1UsersByUserIdPreferencesNotificationsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/notifications',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace notification preferences for user (full update)
+ */
+export const putV1UsersByUserIdPreferencesNotifications = <ThrowOnError extends boolean = false>(
+  options: Options<PutV1UsersByUserIdPreferencesNotificationsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<
+    PutV1UsersByUserIdPreferencesNotificationsResponses,
+    PutV1UsersByUserIdPreferencesNotificationsErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/notifications',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Reset notification preferences to defaults
+ */
+export const postV1UsersByUserIdPreferencesNotificationsReset = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdPreferencesNotificationsResetData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdPreferencesNotificationsResetResponses,
+    PostV1UsersByUserIdPreferencesNotificationsResetErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/notifications:reset',
+    ...options,
+  });
+};
+
+/**
+ * Get accessibility settings for user
+ */
+export const getV1UsersByUserIdPreferencesAccessibility = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1UsersByUserIdPreferencesAccessibilityData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetV1UsersByUserIdPreferencesAccessibilityResponses,
+    GetV1UsersByUserIdPreferencesAccessibilityErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/accessibility',
+    ...options,
+  });
+};
+
+/**
+ * Check if accessibility preferences exist
+ */
+export const headV1UsersByUserIdPreferencesAccessibility = <ThrowOnError extends boolean = false>(
+  options: Options<HeadV1UsersByUserIdPreferencesAccessibilityData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).head<
+    HeadV1UsersByUserIdPreferencesAccessibilityResponses,
+    HeadV1UsersByUserIdPreferencesAccessibilityErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/accessibility',
+    ...options,
+  });
+};
+
+/**
+ * Partially update accessibility preferences for user
+ */
+export const patchV1UsersByUserIdPreferencesAccessibility = <ThrowOnError extends boolean = false>(
+  options: Options<PatchV1UsersByUserIdPreferencesAccessibilityData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    PatchV1UsersByUserIdPreferencesAccessibilityResponses,
+    PatchV1UsersByUserIdPreferencesAccessibilityErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/accessibility',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace accessibility preferences for user (full update)
+ */
+export const putV1UsersByUserIdPreferencesAccessibility = <ThrowOnError extends boolean = false>(
+  options: Options<PutV1UsersByUserIdPreferencesAccessibilityData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<
+    PutV1UsersByUserIdPreferencesAccessibilityResponses,
+    PutV1UsersByUserIdPreferencesAccessibilityErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/accessibility',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Reset accessibility preferences to defaults
+ */
+export const postV1UsersByUserIdPreferencesAccessibilityReset = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdPreferencesAccessibilityResetData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdPreferencesAccessibilityResetResponses,
+    PostV1UsersByUserIdPreferencesAccessibilityResetErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/accessibility:reset',
+    ...options,
+  });
+};
+
+/**
+ * Get privacy settings for user
+ */
+export const getV1UsersByUserIdPreferencesPrivacy = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1UsersByUserIdPreferencesPrivacyData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetV1UsersByUserIdPreferencesPrivacyResponses, GetV1UsersByUserIdPreferencesPrivacyErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/privacy',
+    ...options,
+  });
+};
+
+/**
+ * Check if privacy preferences exist
+ */
+export const headV1UsersByUserIdPreferencesPrivacy = <ThrowOnError extends boolean = false>(
+  options: Options<HeadV1UsersByUserIdPreferencesPrivacyData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).head<HeadV1UsersByUserIdPreferencesPrivacyResponses, HeadV1UsersByUserIdPreferencesPrivacyErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/privacy',
+    ...options,
+  });
+};
+
+/**
+ * Partially update privacy preferences for user
+ */
+export const patchV1UsersByUserIdPreferencesPrivacy = <ThrowOnError extends boolean = false>(
+  options: Options<PatchV1UsersByUserIdPreferencesPrivacyData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<PatchV1UsersByUserIdPreferencesPrivacyResponses, PatchV1UsersByUserIdPreferencesPrivacyErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/privacy',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace privacy preferences for user (full update)
+ */
+export const putV1UsersByUserIdPreferencesPrivacy = <ThrowOnError extends boolean = false>(
+  options: Options<PutV1UsersByUserIdPreferencesPrivacyData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<PutV1UsersByUserIdPreferencesPrivacyResponses, PutV1UsersByUserIdPreferencesPrivacyErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/privacy',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Reset privacy preferences to defaults
+ */
+export const postV1UsersByUserIdPreferencesPrivacyReset = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdPreferencesPrivacyResetData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdPreferencesPrivacyResetResponses,
+    PostV1UsersByUserIdPreferencesPrivacyResetErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/privacy:reset',
+    ...options,
+  });
+};
+
+/**
+ * Get localization settings for user
+ */
+export const getV1UsersByUserIdPreferencesLocalization = <ThrowOnError extends boolean = false>(
+  options: Options<GetV1UsersByUserIdPreferencesLocalizationData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<
+    GetV1UsersByUserIdPreferencesLocalizationResponses,
+    GetV1UsersByUserIdPreferencesLocalizationErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/localization',
+    ...options,
+  });
+};
+
+/**
+ * Check if localization preferences exist
+ */
+export const headV1UsersByUserIdPreferencesLocalization = <ThrowOnError extends boolean = false>(
+  options: Options<HeadV1UsersByUserIdPreferencesLocalizationData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).head<
+    HeadV1UsersByUserIdPreferencesLocalizationResponses,
+    HeadV1UsersByUserIdPreferencesLocalizationErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/localization',
+    ...options,
+  });
+};
+
+/**
+ * Partially update localization preferences for user
+ */
+export const patchV1UsersByUserIdPreferencesLocalization = <ThrowOnError extends boolean = false>(
+  options: Options<PatchV1UsersByUserIdPreferencesLocalizationData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).patch<
+    PatchV1UsersByUserIdPreferencesLocalizationResponses,
+    PatchV1UsersByUserIdPreferencesLocalizationErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/localization',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace localization preferences for user (full update)
+ */
+export const putV1UsersByUserIdPreferencesLocalization = <ThrowOnError extends boolean = false>(
+  options: Options<PutV1UsersByUserIdPreferencesLocalizationData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).put<
+    PutV1UsersByUserIdPreferencesLocalizationResponses,
+    PutV1UsersByUserIdPreferencesLocalizationErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/localization',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Reset localization preferences to defaults
+ */
+export const postV1UsersByUserIdPreferencesLocalizationReset = <ThrowOnError extends boolean = false>(
+  options: Options<PostV1UsersByUserIdPreferencesLocalizationResetData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).post<
+    PostV1UsersByUserIdPreferencesLocalizationResetResponses,
+    PostV1UsersByUserIdPreferencesLocalizationResetErrors,
+    ThrowOnError
+  >({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/preferences/localization:reset',
+    ...options,
+  });
+};
+
+/**
+ * Find all user profiles with pagination, search, and sorting
+ */
+export const getV1UsersProfiles = <ThrowOnError extends boolean = false>(options?: Options<GetV1UsersProfilesData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetV1UsersProfilesResponses, GetV1UsersProfilesErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/profiles',
+    ...options,
+  });
+};
+
+/**
+ * Get user profile by user ID
+ */
+export const getV1UsersByUserIdProfile = <ThrowOnError extends boolean = false>(options: Options<GetV1UsersByUserIdProfileData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetV1UsersByUserIdProfileResponses, GetV1UsersByUserIdProfileErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/profile',
+    ...options,
+  });
+};
+
+/**
+ * Update user profile (partial update)
+ */
+export const patchV1UsersByUserIdProfile = <ThrowOnError extends boolean = false>(options: Options<PatchV1UsersByUserIdProfileData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).patch<PatchV1UsersByUserIdProfileResponses, PatchV1UsersByUserIdProfileErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/profile',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Replace user profile (full update)
+ */
+export const putV1UsersByUserIdProfile = <ThrowOnError extends boolean = false>(options: Options<PutV1UsersByUserIdProfileData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutV1UsersByUserIdProfileResponses, PutV1UsersByUserIdProfileErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}/profile',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Get users with pagination, search, and sorting
+ * Retrieves a paginated list of users with optional filtering by email, status, and text search.
+ */
+export const getV1Users = <ThrowOnError extends boolean = false>(options?: Options<GetV1UsersData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).get<GetV1UsersResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users',
+    ...options,
+  });
+};
+
+/**
+ * Create a new user
+ * Creates a new user account with the provided information.
+ */
+export const postV1Users = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersResponses, PostV1UsersErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk create users
+ * Creates multiple user accounts at once.
+ */
+export const postV1UsersCreate = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersCreateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersCreateResponses, PostV1UsersCreateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:create',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk partial update users
+ * Updates multiple users with partial data.
+ */
+export const postV1UsersUpdate = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersUpdateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersUpdateResponses, PostV1UsersUpdateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:update',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk full update users
+ * Updates multiple users with complete data.
+ */
+export const postV1UsersReplace = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersReplaceData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersReplaceResponses, PostV1UsersReplaceErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:replace',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk soft delete users
+ * Soft deletes multiple users at once.
+ */
+export const postV1UsersDelete = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersDeleteData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersDeleteResponses, PostV1UsersDeleteErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:delete',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk activate user accounts
+ * Activates multiple user accounts at once.
+ */
+export const postV1UsersActivate = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersActivateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersActivateResponses, PostV1UsersActivateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:activate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk deactivate user accounts
+ * Deactivates multiple user accounts at once.
+ */
+export const postV1UsersDeactivate = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersDeactivateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersDeactivateResponses, PostV1UsersDeactivateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:deactivate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk suspend user accounts
+ * Suspends multiple user accounts at once.
+ */
+export const postV1UsersSuspend = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersSuspendData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersSuspendResponses, PostV1UsersSuspendErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:suspend',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk unsuspend user accounts
+ * Unsuspends multiple user accounts at once.
+ */
+export const postV1UsersUnsuspend = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersUnsuspendData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersUnsuspendResponses, PostV1UsersUnsuspendErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:unsuspend',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk undelete soft-deleted users
+ * Restores multiple soft-deleted users at once.
+ */
+export const postV1UsersUndelete = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersUndeleteData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersUndeleteResponses, PostV1UsersUndeleteErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:undelete',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Bulk hard delete users (irreversible purge)
+ * Permanently deletes multiple users. Admin operation requiring proper authorization.
+ */
+export const postV1UsersPurge = <ThrowOnError extends boolean = false>(options?: Options<PostV1UsersPurgeData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostV1UsersPurgeResponses, PostV1UsersPurgeErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users:purge',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+/**
+ * Soft delete user by ID
+ * Soft deletes a user by ID (can be restored).
+ */
+export const deleteV1UsersByUserId = <ThrowOnError extends boolean = false>(options: Options<DeleteV1UsersByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).delete<DeleteV1UsersByUserIdResponses, DeleteV1UsersByUserIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}',
+    ...options,
+  });
+};
+
+/**
+ * Get user by ID
+ * Retrieves detailed information for a specific user by their unique identifier.
+ */
+export const getV1UsersByUserId = <ThrowOnError extends boolean = false>(options: Options<GetV1UsersByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetV1UsersByUserIdResponses, GetV1UsersByUserIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}',
+    ...options,
+  });
+};
+
+/**
+ * Check if user exists by ID
+ * Checks if a user exists by ID without returning the body.
+ */
+export const headV1UsersByUserId = <ThrowOnError extends boolean = false>(options: Options<HeadV1UsersByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).head<HeadV1UsersByUserIdResponses, HeadV1UsersByUserIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}',
+    ...options,
+  });
+};
+
+/**
+ * Partially update user by ID
+ * Updates specific fields of a user by ID.
+ */
+export const patchV1UsersByUserId = <ThrowOnError extends boolean = false>(options: Options<PatchV1UsersByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).patch<PatchV1UsersByUserIdResponses, PatchV1UsersByUserIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Update user by ID
+ * Fully updates a user by ID with complete user data.
+ */
+export const putV1UsersByUserId = <ThrowOnError extends boolean = false>(options: Options<PutV1UsersByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).put<PutV1UsersByUserIdResponses, PutV1UsersByUserIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+/**
+ * Activate user account
+ * Activates a user account by ID.
+ */
+export const postV1UsersByUserIdActivate = <ThrowOnError extends boolean = false>(options: Options<PostV1UsersByUserIdActivateData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1UsersByUserIdActivateResponses, PostV1UsersByUserIdActivateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}:activate',
+    ...options,
+  });
+};
+
+/**
+ * Deactivate user account
+ * Deactivates a user account by ID.
+ */
+export const postV1UsersByUserIdDeactivate = <ThrowOnError extends boolean = false>(options: Options<PostV1UsersByUserIdDeactivateData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1UsersByUserIdDeactivateResponses, PostV1UsersByUserIdDeactivateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}:deactivate',
+    ...options,
+  });
+};
+
+/**
+ * Suspend user account
+ * Suspends a user account by ID.
+ */
+export const postV1UsersByUserIdSuspend = <ThrowOnError extends boolean = false>(options: Options<PostV1UsersByUserIdSuspendData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1UsersByUserIdSuspendResponses, PostV1UsersByUserIdSuspendErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}:suspend',
+    ...options,
+  });
+};
+
+/**
+ * Unsuspend user account
+ * Unsuspends a user account by ID.
+ */
+export const postV1UsersByUserIdUnsuspend = <ThrowOnError extends boolean = false>(options: Options<PostV1UsersByUserIdUnsuspendData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1UsersByUserIdUnsuspendResponses, PostV1UsersByUserIdUnsuspendErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}:unsuspend',
+    ...options,
+  });
+};
+
+/**
+ * Undelete soft-deleted user by ID
+ * Restores a soft-deleted user by ID.
+ */
+export const postV1UsersByUserIdUndelete = <ThrowOnError extends boolean = false>(options: Options<PostV1UsersByUserIdUndeleteData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1UsersByUserIdUndeleteResponses, PostV1UsersByUserIdUndeleteErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}:undelete',
+    ...options,
+  });
+};
+
+/**
+ * Hard delete user by ID (irreversible purge)
+ * Permanently deletes a user by ID (irreversible).
+ */
+export const postV1UsersByUserIdPurge = <ThrowOnError extends boolean = false>(options: Options<PostV1UsersByUserIdPurgeData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostV1UsersByUserIdPurgeResponses, PostV1UsersByUserIdPurgeErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/v1/users/{userId}:purge',
+    ...options,
+  });
+};
+
+export const postApiV1WalletCreate = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1WalletCreateData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1WalletCreateResponses, PostApiV1WalletCreateErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/wallet/create',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const getApiV1WalletByUserId = <ThrowOnError extends boolean = false>(options: Options<GetApiV1WalletByUserIdData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1WalletByUserIdResponses, GetApiV1WalletByUserIdErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/wallet/{userId}',
+    ...options,
+  });
+};
+
+export const getApiV1WalletByUserIdBalance = <ThrowOnError extends boolean = false>(options: Options<GetApiV1WalletByUserIdBalanceData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1WalletByUserIdBalanceResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/wallet/{userId}/balance',
+    ...options,
+  });
+};
+
+export const postApiV1WalletAddFunds = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1WalletAddFundsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1WalletAddFundsResponses, PostApiV1WalletAddFundsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/wallet/add-funds',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1WalletDeductFunds = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1WalletDeductFundsData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1WalletDeductFundsResponses, PostApiV1WalletDeductFundsErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/wallet/deduct-funds',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1WalletTransfer = <ThrowOnError extends boolean = false>(options?: Options<PostApiV1WalletTransferData, ThrowOnError>) => {
+  return (options?.client ?? _heyApiClient).post<PostApiV1WalletTransferResponses, PostApiV1WalletTransferErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/wallet/transfer',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+};
+
+export const postApiV1WalletByUserIdLock = <ThrowOnError extends boolean = false>(options: Options<PostApiV1WalletByUserIdLockData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1WalletByUserIdLockResponses, PostApiV1WalletByUserIdLockErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/wallet/{userId}/lock',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+};
+
+export const postApiV1WalletByUserIdUnlock = <ThrowOnError extends boolean = false>(options: Options<PostApiV1WalletByUserIdUnlockData, ThrowOnError>) => {
+  return (options.client ?? _heyApiClient).post<PostApiV1WalletByUserIdUnlockResponses, PostApiV1WalletByUserIdUnlockErrors, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/wallet/{userId}/unlock',
+    ...options,
+  });
+};
+
+export const getApiV1WalletByUserIdTransactions = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1WalletByUserIdTransactionsData, ThrowOnError>,
+) => {
+  return (options.client ?? _heyApiClient).get<GetApiV1WalletByUserIdTransactionsResponses, unknown, ThrowOnError>({
+    security: [
+      {
+        name: 'Authorization',
+        type: 'apiKey',
+      },
+    ],
+    url: '/api/v1/wallet/{userId}/transactions',
+    ...options,
   });
 };

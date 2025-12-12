@@ -24,6 +24,9 @@ interface BaseConfirmDialogProps {
   cancelText?: string
   confirmButtonClass?: string
   icon?: ReactNode
+  showSaveAndExit?: boolean
+  onSaveAndExit?: () => void
+  saveAndExitText?: string
 }
 
 export function BaseConfirmDialog({
@@ -37,6 +40,9 @@ export function BaseConfirmDialog({
   cancelText = "Cancel",
   confirmButtonClass = "bg-primary text-primary-foreground hover:bg-primary/90",
   icon,
+  showSaveAndExit = false,
+  onSaveAndExit,
+  saveAndExitText = "Save and Exit",
 }: BaseConfirmDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -49,6 +55,11 @@ export function BaseConfirmDialog({
         </AlertDialogHeader>
         <AlertDialogFooter className="flex gap-2 justify-center">
           <AlertDialogCancel className="flex-1">{cancelText}</AlertDialogCancel>
+          {showSaveAndExit && onSaveAndExit && (
+            <AlertDialogAction onClick={onSaveAndExit} className="flex-1 bg-blue-600 text-white hover:bg-blue-700">
+              {saveAndExitText}
+            </AlertDialogAction>
+          )}
           <AlertDialogAction onClick={onConfirm} className={`flex-1 ${confirmButtonClass}`}>
             {confirmText}
           </AlertDialogAction>

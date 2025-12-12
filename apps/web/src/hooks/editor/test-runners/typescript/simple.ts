@@ -1,6 +1,6 @@
-import type { TestRunner, TestRunnerOptions } from "../types"
 import { getExecutor } from "../../executors/executor-factory"
 import type { ExecutionContext } from "../../executors/types"
+import type { TestRunner, TestRunnerOptions } from "../types"
 
 /**
  * Run simple output-based tests for TypeScript
@@ -64,7 +64,7 @@ export const runSimpleTestsTypeScript: TestRunner = async (options: TestRunnerOp
 
     // Normalize both outputs for comparison (trim whitespace, etc.)
     const normalizedActual = normalizeOutput(actualOutput)
-    const normalizedExpected = normalizeOutput(testCase.expectedOutput || "")
+    const normalizedExpected = normalizeOutput(testCase?.expectedOutput || "")
 
     // Compare output with expected output
     const passed = normalizedActual === normalizedExpected
@@ -75,7 +75,7 @@ export const runSimpleTestsTypeScript: TestRunner = async (options: TestRunnerOp
       fileResults[i] = {
         passed,
         actual: actualOutput,
-        expected: testCase.expectedOutput || "",
+        expected: testCase?.expectedOutput || "",
       }
       return {
         ...prev,

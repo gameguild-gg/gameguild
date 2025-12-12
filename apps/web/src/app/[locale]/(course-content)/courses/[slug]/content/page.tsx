@@ -1,9 +1,9 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { getProgramBySlug } from '@/data/courses/mock-data';
-import { Program, ProgramContent } from '@/lib/api/generated';
+import { Program } from '@/lib/api/generated/types.gen';
 import { BookOpen } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -30,14 +30,14 @@ export default function CourseContentPage() {
     if (program && program.programContents && program.programContents.length > 0) {
       const firstContent = program.programContents[0];
       if (firstContent) {
-        const firstContentSlug = firstContent.slug;
+        const firstContentSlug = (firstContent as any).slug ?? firstContent.id;
         router.replace(`/courses/${slug}/content/${firstContentSlug}`);
       }
     }
   }, [program, slug, router]);
 
   const totalContent = program?.programContents?.length || 0;
-  const completedContent = program?.programContents?.filter(content => content.isRequired)?.length || 0;
+  const completedContent = program?.programContents?.filter((content: any) => content.isRequired)?.length || 0;
   const progressPercentage = totalContent > 0 ? (completedContent / totalContent) * 100 : 0;
 
   if (!program) {

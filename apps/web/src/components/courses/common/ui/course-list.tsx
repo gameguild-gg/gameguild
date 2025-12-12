@@ -1,17 +1,19 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import { PeriodType } from '@/components/common/filters/filter-context';
 import { CourseFilterControls } from '@/components/courses/common';
-import { CourseCard } from './course-card';
 import { Button } from '@/components/ui/button';
+import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty } from '@/lib/api/generated/stub-types';
+import { ProgramCategory } from '@/lib/api/generated/types.gen';
 import { Plus } from 'lucide-react';
-import { Program, ContentStatus, ProgramCategory, ProgramDifficulty } from '@/lib/api/generated/types.gen';
+import React, { useMemo, useState } from 'react';
+import { CourseCard, CourseCardCourse } from './course-card';
 
 // Type aliases to maintain existing naming
-type Course = Program;
-type CourseStatus = ContentStatus;
+type Course = CourseCardCourse;
+type CourseStatus = ModulesContentsContentStatus;
 type CourseArea = ProgramCategory;
-type CourseLevel = ProgramDifficulty;
+type CourseLevel = ModulesProgramsProgramDifficulty;
 
 interface CourseListProps {
   courses: Course[];
@@ -29,8 +31,28 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
   const [selectedStatuses, setSelectedStatuses] = useState<CourseStatus[]>([]);
   const [selectedAreas, setSelectedAreas] = useState<CourseArea[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<CourseLevel[]>([]);
-  const [selectedPeriod, setSelectedPeriod] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState<PeriodType>('week');
   const [viewMode, setViewMode] = useState<'cards' | 'row' | 'table'>(initialViewMode);
+
+  const normalizeStatus = (status: Course['status']): CourseStatus | undefined => {
+    if (status === undefined || status === null) return undefined;
+    const value = typeof status === 'number' ? status : String(status).toLowerCase();
+    if (value === 0 || value === '0' || value === 'draft') return ModulesContentsContentStatus.DRAFT;
+    if (value === 1 || value === '1' || value === 'under-review' || value === 'review') return ModulesContentsContentStatus.UNDER_REVIEW;
+    if (value === 2 || value === '2' || value === 'published') return ModulesContentsContentStatus.PUBLISHED;
+    if (value === 3 || value === '3' || value === 'archived') return ModulesContentsContentStatus.ARCHIVED;
+    return undefined;
+  };
+
+  const normalizeLevel = (level: Course['difficulty'] | Course['level']): CourseLevel | undefined => {
+    if (level === undefined || level === null) return undefined;
+    const value = typeof level === 'number' ? level : String(level).toLowerCase();
+    if (value === 0 || value === '0' || value === 'beginner') return ModulesProgramsProgramDifficulty.BEGINNER;
+    if (value === 1 || value === '1' || value === 'intermediate') return ModulesProgramsProgramDifficulty.INTERMEDIATE;
+    if (value === 2 || value === '2' || value === 'advanced') return ModulesProgramsProgramDifficulty.ADVANCED;
+    if (value === 3 || value === '3' || value === 'expert') return ModulesProgramsProgramDifficulty.EXPERT;
+    return undefined;
+  };
 
   // Filter handlers
   const handleToggleStatus = (status: CourseStatus) => {
@@ -51,24 +73,34 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
       // Search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        if (!course.title.toLowerCase().includes(searchLower) && !(course.description && course.description.toLowerCase().includes(searchLower))) {
+        const title = (course.title || '').toLowerCase();
+        const description = (course.description || '').toLowerCase();
+        if (!title.includes(searchLower) && !description.includes(searchLower)) {
           return false;
         }
       }
 
       // Status filter
-      if (selectedStatuses.length > 0 && !selectedStatuses.includes(course.status || 0)) {
-        return false;
+      const normalizedStatus = normalizeStatus(course.status);
+      if (selectedStatuses.length > 0 && normalizedStatus) {
+        if (!selectedStatuses.includes(normalizedStatus)) {
+          return false;
+        }
       }
 
       // Area filter (category)
-      if (selectedAreas.length > 0 && course.category && !selectedAreas.includes(course.category)) {
-        return false;
+      if (selectedAreas.length > 0 && course.category) {
+        if (!selectedAreas.includes(course.category as CourseArea)) {
+          return false;
+        }
       }
 
       // Level filter (difficulty)
-      if (selectedLevels.length > 0 && course.difficulty && !selectedLevels.includes(course.difficulty)) {
-        return false;
+      const normalizedLevel = normalizeLevel(course.difficulty ?? course.level);
+      if (selectedLevels.length > 0 && normalizedLevel) {
+        if (!selectedLevels.includes(normalizedLevel)) {
+          return false;
+        }
       }
 
       return true;
@@ -162,7 +194,7 @@ export const CourseList = ({ courses, onEdit, onView, onEnroll, onCreate, initia
                 setSelectedStatuses([]);
                 setSelectedAreas([]);
                 setSelectedLevels([]);
-                setSelectedPeriod('all');
+                setSelectedPeriod('month');
               }}
               className="text-blue-400 hover:text-blue-300 transition-colors"
             >

@@ -1,11 +1,42 @@
 'use server';
 
+import { environment } from '@/configs/environment';
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
 import { client } from '@/lib/api/generated/client.gen';
-import type { TestingLocation, LocationStatus, TestingSession, CreateTestingLocationDto, UpdateTestingLocationDto } from '@/lib/api/generated/types.gen';
+// TODO: Testing Lab SDK functions not found in generated API - API generation may not have included TestingLab module
+// import { getTestingPublicSessions, postTestingSessions, getTestingSessions as sdkGetTestingSessions } from '@/lib/api/generated';
+// TODO: Testing Lab types not found in generated API types - API generation may not have included TestingLab module
+// import type { CreateTestingLocationDto, TestingLocation, TestingSession, UpdateTestingLocationRequest } from '@/lib/api/generated';
 
-// Re-export the generated types for convenience
-export type { CreateTestingLocationDto as CreateTestingLocationRequest, UpdateTestingLocationDto as UpdateTestingLocationRequest } from '@/lib/api/generated/types.gen';
+// Re-export the generated types for convenience (commented out until types are available)
+// export type { CreateTestingLocationDto as CreateTestingLocationRequest, UpdateTestingLocationRequest as UpdateTestingLocationRequest } from '@/lib/api/generated';
+
+// Temporary type definitions until API generation includes TestingLab module
+export interface CreateTestingLocationRequest {
+  name: string;
+  address?: string;
+  capacity?: number;
+}
+
+export interface UpdateTestingLocationRequest extends Partial<CreateTestingLocationRequest> { }
+
+export interface TestingLocation extends CreateTestingLocationRequest {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TestingSession {
+  id: string;
+  sessionName: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  locationId: string;
+  maxTesters?: number;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface TestingLabManager {
   id: string;
@@ -69,8 +100,8 @@ export async function getTestingLocations(skip = 0, take = 50): Promise<TestingL
 
     if (response.error) {
       // Handle different error types
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to fetch testing locations: ${errorMessage}`);
     }
@@ -109,7 +140,7 @@ export async function getTestingLocation(id: string): Promise<TestingLocation | 
 /**
  * Create a new testing location
  */
-export async function createTestingLocation(locationData: CreateTestingLocationDto): Promise<TestingLocation> {
+export async function createTestingLocation(locationData: CreateTestingLocationRequest): Promise<TestingLocation> {
   try {
     await configureAuthenticatedClient();
 
@@ -120,8 +151,8 @@ export async function createTestingLocation(locationData: CreateTestingLocationD
 
     if (response.error) {
       // Handle different error types
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to create testing location: ${errorMessage}`);
     }
@@ -139,7 +170,7 @@ export async function createTestingLocation(locationData: CreateTestingLocationD
 /**
  * Update an existing testing location
  */
-export async function updateTestingLocation(id: string, locationData: UpdateTestingLocationDto): Promise<TestingLocation> {
+export async function updateTestingLocation(id: string, locationData: UpdateTestingLocationRequest): Promise<TestingLocation> {
   try {
     await configureAuthenticatedClient();
 
@@ -150,8 +181,8 @@ export async function updateTestingLocation(id: string, locationData: UpdateTest
 
     if (response.error) {
       // Handle different error types
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to update testing location: ${errorMessage}`);
     }
@@ -179,8 +210,8 @@ export async function deleteTestingLocation(id: string): Promise<void> {
 
     if (response.error) {
       // Handle different error types
-      const errorMessage = typeof response.error === 'object' 
-        ? JSON.stringify(response.error) 
+      const errorMessage = typeof response.error === 'object'
+        ? JSON.stringify(response.error)
         : String(response.error);
       throw new Error(`Failed to delete testing location: ${errorMessage}`);
     }
@@ -298,66 +329,64 @@ export interface CreateTestingSessionRequest {
   managerId?: string;
 }
 
-export async function getTestingSessions(): Promise<TestingSession[]> {
-  // Mock implementation - replace with actual API call
+export async function getTestingSessions(params?: { skip?: number; take?: number; status?: number; tenantId?: string }): Promise<TestingSession[]> {
+  const skip = params?.skip ?? 0;
+  const take = params?.take ?? 50;
   await configureAuthenticatedClient();
+  const query: Record<string, string> = { skip: skip.toString(), take: take.toString() };
+  if (typeof params?.status === 'number') query.status = params.status.toString();
+  if (params?.tenantId) query.tenantId = params.tenantId;
+  // TODO: Testing Lab SDK functions not found in generated API
+  // const response = await sdkGetTestingSessions({ query });
+  // For now, return empty array as stub
+  console.warn('[STUB] getTestingSessions called - API not yet generated');
+  return [];
+}
 
-  // Return mock data for now
-  return [
-    {
-      id: '1',
-      sessionName: 'Morning Testing Session',
-      sessionDate: '2024-01-20',
-      startTime: '09:00',
-      endTime: '12:00',
-      maxTesters: 10,
-      registeredTesterCount: 5,
-      registeredProjectMemberCount: 2,
-      registeredProjectCount: 3,
-      status: 1, // Scheduled
-      locationId: '1',
-      createdAt: '2024-01-15T10:00:00Z',
-      updatedAt: '2024-01-15T10:00:00Z',
-    },
-    {
-      id: '2',
-      sessionName: 'Afternoon Testing Session',
-      sessionDate: '2024-01-20',
-      startTime: '14:00',
-      endTime: '17:00',
-      maxTesters: 8,
-      registeredTesterCount: 3,
-      registeredProjectMemberCount: 1,
-      registeredProjectCount: 2,
-      status: 0, // Draft
-      locationId: '2',
-      createdAt: '2024-01-15T11:00:00Z',
-      updatedAt: '2024-01-15T11:00:00Z',
-    },
-  ];
+/**
+ * Public sessions (unauthenticated) helper, no auth client configuration.
+ */
+export async function getPublicTestingSessions(take = 100): Promise<TestingSession[]> {
+  try {
+    // Ensure baseUrl configured (idempotent)
+    client.setConfig({ baseUrl: environment.apiBaseUrl });
+    // TODO: Testing Lab SDK functions not found in generated API
+    // const response = await getTestingPublicSessions({ query: { take } });
+    // For now, return empty array as stub
+    console.warn('[STUB] getPublicTestingSessions called - API not yet generated');
+    return [];
+  } catch (e) {
+    console.error('Failed to load public testing sessions via SDK:', e instanceof Error ? e.message : e);
+    return [];
+  }
 }
 
 export async function createTestingSession(sessionData: CreateTestingSessionRequest): Promise<TestingSession> {
-  // Mock implementation - replace with actual API call
   await configureAuthenticatedClient();
-
-  const newSession: TestingSession = {
-    id: Date.now().toString(),
+  // TODO: Testing Lab SDK functions not found in generated API
+  // const response = await postTestingSessions({
+  //   body: {
+  //     sessionName: sessionData.sessionName,
+  //     sessionDate: sessionData.sessionDate,
+  //     startTime: sessionData.startTime,
+  //     endTime: sessionData.endTime,
+  //     locationId: sessionData.locationId,
+  //     maxTesters: sessionData.maxTesters,
+  //     testingRequestId: sessionData.testingRequestId,
+  //     managerId: sessionData.managerId,
+  //   } as any
+  // });
+  // For now, return a stub session
+  console.warn('[STUB] createTestingSession called - API not yet generated');
+  return {
+    id: crypto.randomUUID(),
     sessionName: sessionData.sessionName,
     sessionDate: sessionData.sessionDate,
     startTime: sessionData.startTime,
     endTime: sessionData.endTime,
     locationId: sessionData.locationId,
     maxTesters: sessionData.maxTesters,
-    registeredTesterCount: 0,
-    registeredProjectMemberCount: 0,
-    registeredProjectCount: 0,
-    status: 0, // Draft
-    testingRequestId: sessionData.testingRequestId,
-    managerId: sessionData.managerId,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-
-  return newSession;
 }

@@ -1,3 +1,9 @@
+/**
+ * DISABLED: This file contains examples for Testing Lab module which is not enabled in production
+ * All code commented out to avoid compilation errors
+ */
+
+/*
 'use server';
 
 import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
@@ -73,7 +79,11 @@ export async function deleteTestingRequest(prevState: { success?: boolean; error
     console.error('Error deleting testing request:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
+      message: 'Failed to delete testing request',
     };
   }
 }
+*/
+
+export { }; // Make this a module
+

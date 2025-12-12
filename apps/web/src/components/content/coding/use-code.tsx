@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
 import { useClang } from '@/components/content/coding/clang/use-clang';
 import { usePyodide } from '@/components/content/coding/pyodide/use-pyodide';
 import { CodingTestEnum, CodingTestParamsWithLanguage, CompileAndRunParams, FileMap, RunnerStatus, RunResult, SimpleCodingTests } from '@/components/content/coding/types';
+import { useCallback, useEffect, useState } from 'react';
 
 // Define structure for output stages to better organize output from different engines
 export type StageOutput = {
@@ -249,13 +249,11 @@ export function useCode() {
 
         // For now, just return the first result
         // A more complete implementation would run all tests and aggregate results
-        return publicResults.length > 0
-          ? publicResults[0]
-          : {
-              success: false,
-              output: 'No tests were executed',
-              error: null,
-            };
+        if (publicResults.length > 0) {
+          const first = publicResults[0];
+          return first ?? { success: false, output: 'No tests were executed', error: null };
+        }
+        return { success: false, output: 'No tests were executed', error: null };
       }
 
       // Function and custom tests would be implemented here

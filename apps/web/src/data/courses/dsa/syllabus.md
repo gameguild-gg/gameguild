@@ -76,10 +76,9 @@ College dates for the Fall 2025 semester:
 - Week 06. 2025/09/29 - 2025/10/03
     - Hash Tables
 - Week 07. 2025/10/06 - 2025/10/10
-    - Stacks
-    - Queues
-- Week 08. 2025/10/13 - 2025/10/17
     - Midterms
+- Week 08. 2025/10/13 - 2025/10/17
+    - Stacks and Queues
 - Week 09. 2025/10/20 - 2025/10/24
     - Graphs
 - Week 10. 2025/10/27 - 2025/10/31

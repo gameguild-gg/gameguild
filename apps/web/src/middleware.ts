@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const locale = request.cookies.get('NEXT_LOCALE')?.value || 'en';
+  const pathname = request.nextUrl.pathname;
 
   // Debug logging
   console.log('Middleware processing:', {
@@ -14,11 +15,11 @@ export function middleware(request: NextRequest) {
     hostname: hostname,
     locale: locale
   });
-  
+
   // Check if this is a subdomain (has more than one dot, excluding localhost/127.0.0.1)
   // Examples: dev.gameguild.gg (subdomain), gameguild.gg (main domain), localhost:3000 (not subdomain)
   const isSubdomain = hostname.split('.').length > 2 && !hostname.startsWith('localhost') && !hostname.startsWith('127.0.0.1');
-  
+
   // Subdomain handling for any subdomain (dev, staging, prod, etc.)
   if (isSubdomain) {
     const url = request.nextUrl.clone();
@@ -37,7 +38,6 @@ export function middleware(request: NextRequest) {
 
   // Custom rewrites: support legacy paths like /projects and /projects/:slug
   // Map them to the dashboard route while preserving locale prefix semantics
-  const pathname = request.nextUrl.pathname;
   const localePattern = '(?:en|pt-BR)';
   // Match: /projects or /:locale/projects
   const projectsIndexRegex = new RegExp(`^\/(?:${localePattern}\/)?projects\/?$`);
@@ -64,8 +64,8 @@ export function middleware(request: NextRequest) {
   // Handle internationalization routing
   // The next-intl middleware will automatically pick up any basePath from next.config.js
   const handleI18nRouting = createMiddleware(routing);
-  const response = handleI18nRouting(request);
-  
+  const response = handleI18nRouting(request as any);
+
   return response;
 }
 
@@ -77,6 +77,6 @@ export const config = {
     // Match all other pathnames except for
     // - … if they start with `/api`, `/_next` or `/_vercel`
     // - … the ones containing a dot (e.g. `favicon.ico`)
-    '/((?!api|_next|_vercel|.*\\..*).*)' 
+    '/((?!api|_next|_vercel|.*\\..*).*)'
   ],
 };

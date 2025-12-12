@@ -1,50 +1,15 @@
 "use client"
-import { DecoratorNode, type SerializedLexicalNode } from "lexical"
-import { $getNodeByKey } from "lexical"
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import type { JSX } from "react/jsx-runtime" // Import JSX to fix the undeclared variable error
-import { useContext } from "react"
-import { EditorLoadingContext } from "../lexical-editor"
+import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from "lexical";
+import { useContext } from "react";
+import type { JSX } from "react/jsx-runtime"; // Import JSX to fix the undeclared variable error
+import { EditorLoadingContext } from "../lexical-editor";
 
 // Import types
-import type { CodeFile, LanguageType, ProgrammingLanguage } from "../extras/source-code/types"
-import { SourceCodeCore } from "./source-code-core"
+import { SourceCodeCore, type SourceCodeNodeData } from "./source-code-core";
 
-// Add global type declarations
-declare global {
-  interface Window {
-    promptCallback: ((value: string) => void) | null
-    confirmCallback: ((value: string) => void) | null
-  }
-}
-
-// Update the SourceCodeNodeData interface to include the predicate test type
-export interface SourceCodeNodeData {
-  files: CodeFile[]
-  readonly: boolean
-  showExecution: boolean
-  isDarkTheme?: boolean
-  isNew?: boolean
-  activeFileId?: string
-  selectedLanguage?: ProgrammingLanguage
-  clearTerminalOnRun?: boolean
-  allowedLanguages?: Record<LanguageType, boolean>
-  showBasicFileActionsInReadMode?: boolean
-  showFilePropertiesInReadMode?: boolean
-  showTests?: boolean
-  testCases?: Record<
-    string,
-    {
-      type: "simple" | "inout" | "predicate"
-      input?: string
-      expectedOutput?: string
-      args?: any[]
-      expectedReturn?: any[]
-      predicate?: string
-    }[]
-  >
-  activeTab?: "terminal" | "tests"
-}
+// Re-export SourceCodeNodeData to ensure type consistency
+export type { SourceCodeNodeData } from "./source-code-core";
 
 export interface SerializedSourceCodeNode extends SerializedLexicalNode {
   type: "source-code"

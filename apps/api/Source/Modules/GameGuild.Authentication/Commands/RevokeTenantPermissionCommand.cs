@@ -1,0 +1,17 @@
+﻿using GameGuild.Authentication.Enums;
+using GameGuild.CQRS;
+
+namespace GameGuild.Authentication.Commands;
+
+public record RevokeTenantPermissionCommand : ICommand
+{
+    public Guid UserId { get; init; }
+
+    public Guid TenantId { get; init; }
+
+    public List<PermissionType> Permissions { get; init; } = new List<PermissionType>();
+
+    public string? RevokedBy { get; init; }
+
+    public string? Reason { get; init; }
+}

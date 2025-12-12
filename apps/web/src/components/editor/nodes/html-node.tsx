@@ -1,17 +1,17 @@
 "use client"
 
-import { useEffect, useRef, useState, useContext } from "react"
-import { DecoratorNode, type SerializedLexicalNode, type JSX } from "lexical"
-import { Code2, CornerDownLeft } from "lucide-react"
-import { $getNodeByKey } from "lexical"
+import { cn } from "@/lib/utils"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import DOMPurify from "dompurify"
-import { cn } from "@/lib/utils"
+import { $getNodeByKey, DecoratorNode, type SerializedLexicalNode } from "lexical"
+import { Code2, CornerDownLeft } from "lucide-react"
+import { useContext, useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import type React from "react" // Import React
+import { Textarea } from "@/components/ui/textarea"
+import type React from "react"; // Import React
+import type { JSX } from "react"
 import { EditorLoadingContext } from "../lexical-editor"
 
 export interface HTMLData {
@@ -99,7 +99,7 @@ function autoCloseTag(content: string, position: number): { text: string; newPos
   if (!match) return null
 
   const tagName = match[1]
-  if (selfClosingTags.has(tagName.toLowerCase())) return null
+  if (!tagName || selfClosingTags.has(tagName.toLowerCase())) return null
 
   const closingTag = `</${tagName}>`
   return {

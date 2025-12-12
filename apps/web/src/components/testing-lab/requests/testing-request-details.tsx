@@ -1,22 +1,21 @@
 'use client';
 
-import { useState } from 'react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { toast } from 'sonner';
-import { Calendar, Clock, Download, FileText, Send, Users, Star, MessageSquare, BarChart3, CheckCircle, XCircle, AlertTriangle, TestTube } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Textarea } from '@/components/ui/textarea';
+import type { SessionStatus, TestingRequest } from '@/lib/api/generated';
+import { joinTestingRequest, leaveTestingRequest, submitTestingRequestFeedback } from '@/lib/testing-lab/testing-lab.actions';
+import { BarChart3, Calendar, Download, FileText, MessageSquare, Send, Star, TestTube, Users } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import type { TestingRequest } from '@/lib/api/generated/types.gen';
-import { joinTestingRequest, leaveTestingRequest, checkTestingRequestParticipation, submitTestingRequestFeedback } from '@/lib/testing-lab/testing-lab.actions';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface TestingRequestDetailsProps {
   data: TestingRequest;
@@ -43,20 +42,20 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
   const [loading, setLoading] = useState(false);
   const [hasJoined, setHasJoined] = useState(false);
 
-  const getStatusBadge = (status: number) => {
+  const getStatusBadge = (status: SessionStatus | undefined) => {
     switch (status) {
-      case 0:
+      case 'Pending':
         return <Badge variant="outline">Draft</Badge>;
-      case 1:
-        return <Badge className="bg-green-500">Open</Badge>;
-      case 2:
+      case 'InProgress':
         return <Badge className="bg-blue-500">In Progress</Badge>;
-      case 3:
+      case 'Completed':
         return <Badge className="bg-gray-500">Completed</Badge>;
-      case 4:
+      case 'Cancelled':
         return <Badge variant="destructive">Cancelled</Badge>;
+      case 'Failed':
+        return <Badge variant="destructive">Failed</Badge>;
       default:
-        return <Badge variant="outline">Unknown</Badge>;
+        return <Badge className="bg-green-500">Open</Badge>;
     }
   };
 
@@ -131,7 +130,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
           <p className="text-gray-600 dark:text-gray-400">{request.description}</p>
         </div>
         <div className="flex gap-2">
-          {request.status === 1 && session?.user && !hasJoined && (
+          {(!request.status || request.status === 'Pending') && session?.user && !hasJoined && (
             <Button onClick={handleJoinRequest} disabled={loading}>
               <TestTube className="h-4 w-4 mr-2" />
               Join Testing
@@ -150,7 +149,7 @@ export function TestingRequestDetails({ data: request, participants = [], feedba
               </Link>
             </Button>
           )}
-          {request.status === 3 && hasJoined && (
+          {request.status === 'Completed' && hasJoined && (
             <Dialog open={showFeedbackDialog} onOpenChange={setShowFeedbackDialog}>
               <DialogTrigger asChild>
                 <Button>

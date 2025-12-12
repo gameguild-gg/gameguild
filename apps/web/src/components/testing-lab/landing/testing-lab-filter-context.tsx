@@ -1,6 +1,6 @@
-import { createContext, ReactNode, useContext } from 'react';
-import { BaseFilterState, FilterProvider, useFilterContext } from '@/components/common/filters/filter-context';
+import { BaseFilterState, FilterProvider, PeriodType, useFilterContext } from '@/components/common/filters/filter-context';
 import { adaptTestingSessionForComponent, SESSION_STATUS, TestSession } from '@/lib/admin';
+import { createContext, ReactNode, useContext, useEffect } from 'react';
 
 // Testing Lab specific filter state
 export type TestingLabFilterState = BaseFilterState;
@@ -11,7 +11,7 @@ interface TestingLabFilterContextType {
   setSearchTerm: (term: string) => void;
   toggleStatus: (status: string) => void;
   toggleType: (type: string) => void;
-  setPeriod: (period: string) => void;
+  setPeriod: (period: PeriodType) => void;
   setViewMode: (mode: 'cards' | 'row' | 'table') => void;
   clearSearch: () => void;
   clearFilters: () => void;
@@ -36,8 +36,11 @@ function filterAndSortSessions(sessions: TestSession[], filters: TestingLabFilte
       const adapted = adaptTestingSessionForComponent(session);
       const matchesSearch = adapted.title.toLowerCase().includes(filters.searchTerm.toLowerCase()) || adapted.description.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
-      // Convert numeric status to string for comparison
-      const statusString = adapted.status === SESSION_STATUS.SCHEDULED ? 'open' : adapted.status === SESSION_STATUS.ACTIVE ? 'active' : adapted.status === SESSION_STATUS.COMPLETED ? 'completed' : 'cancelled';
+      // Convert status to string for comparison
+      const statusString = String(adapted.status).toLowerCase() === 'scheduled' || adapted.status === SESSION_STATUS.SCHEDULED as any ? 'open'
+        : String(adapted.status).toLowerCase() === 'active' || adapted.status === SESSION_STATUS.ACTIVE as any ? 'active'
+          : String(adapted.status).toLowerCase() === 'completed' || adapted.status === SESSION_STATUS.COMPLETED as any ? 'completed'
+            : 'cancelled';
 
       const matchesStatus = filters.selectedStatuses.length === 0 || filters.selectedStatuses.includes(statusString);
       const matchesType = filters.selectedTypes.length === 0 || filters.selectedTypes.includes(adapted.sessionType);
@@ -57,7 +60,9 @@ function filterAndSortSessions(sessions: TestSession[], filters: TestingLabFilte
       };
 
       // First sort by status priority
-      const statusComparison = (statusPriority[a.status] ?? 999) - (statusPriority[b.status] ?? 999);
+      const statusA = String(a.status ?? '').toLowerCase();
+      const statusB = String(b.status ?? '').toLowerCase();
+      const statusComparison = (statusPriority[statusA] ?? 999) - (statusPriority[statusB] ?? 999);
       if (statusComparison !== 0) {
         return statusComparison;
       }
@@ -78,11 +83,10 @@ interface TestingLabFilterProviderProps {
   initialViewMode?: 'cards' | 'row' | 'table';
 }
 
-// Get default view mode based on screen size
+// NOTE: For SSR we must use a deterministic default to avoid hydration mismatches.
+// We previously derived this from window.innerWidth which differs between server and client.
+// We now always return a stable value and (optionally) adjust after mount in an effect.
 function getDefaultViewMode(): 'cards' | 'row' | 'table' {
-  if (typeof window !== 'undefined') {
-    return window.innerWidth < 1024 ? 'row' : 'cards';
-  }
   return 'cards';
 }
 
@@ -103,6 +107,18 @@ function TestingLabFilterProviderInner({ children, sessions }: { children: React
 
   const state = filterContext.state as TestingLabFilterState;
   const filteredSessions = filterAndSortSessions(sessions, state);
+
+  // After first client mount, adjust view mode responsively (non-blocking) to avoid hydration diff.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const preferred: 'cards' | 'row' | 'table' = window.innerWidth < 1024 ? 'row' : 'cards';
+      if (preferred !== state.viewMode) {
+        filterContext.setViewMode(preferred);
+      }
+    }
+    // We intentionally run only once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value: TestingLabFilterContextType = {
     state,

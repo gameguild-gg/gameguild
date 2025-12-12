@@ -315,7 +315,8 @@ export function SlidePlayer({
     }
   }
 
-  const getSlideInfo = (slide: Slide) => {
+  const getSlideInfo = (slide: Slide | undefined) => {
+    if (!slide) return []
     const info = []
     if (slide.images && slide.images.length > 0) {
       info.push(`${slide.images.length} image${slide.images.length > 1 ? "s" : ""}`)
@@ -369,7 +370,7 @@ export function SlidePlayer({
     )
   }
 
-  const currentSlide = slides[currentSlideIndex] || slides[0]
+  const currentSlide = slides[currentSlideIndex] ?? slides[0]
   const slideInfo = getSlideInfo(currentSlide)
 
   return (
@@ -435,7 +436,7 @@ export function SlidePlayer({
             )}
           >
             <div
-              key={currentSlide.id}
+              key={currentSlide?.id ?? `slide-${currentSlideIndex}`}
               className={cn(
                 "w-full h-full",
                 transitionEffect === "fade"
@@ -447,7 +448,7 @@ export function SlidePlayer({
                       : "",
               )}
             >
-              <SlideRenderer slide={currentSlide} customThemeColor={customThemeColor} />
+              <SlideRenderer slide={currentSlide as Slide} customThemeColor={customThemeColor} />
             </div>
 
             {showControls && slides.length > 1 && !isPresenting && (
@@ -576,7 +577,7 @@ export function SlidePlayer({
             </Button>
 
             <div className="flex-1 flex items-center justify-center relative">
-              <SlideRenderer slide={currentSlide} customThemeColor={customThemeColor} />
+              <SlideRenderer slide={currentSlide as Slide} customThemeColor={customThemeColor} />
 
               {showControls && slides.length > 1 && (
                 <>

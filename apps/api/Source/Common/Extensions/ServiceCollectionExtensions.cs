@@ -167,6 +167,14 @@ public static class ServiceCollectionExtensions {
     // Register TestingLab module services
     services.AddScoped<ITestService, TestService>();
     services.AddScoped<ITestingLabSettingsService, TestingLabSettingsService>();
+    
+    // Register adapter services
+    services.AddScoped<ITestingRequestService, TestingRequestService>();
+    services.AddScoped<ITestingSessionService, TestingSessionService>();
+    
+    // Register repositories
+    services.AddScoped<ITestingRequestRepository, TestingRequestRepository>();
+    services.AddScoped<ITestingLocationRepository, TestingLocationRepository>();
 
     return services;
   }

@@ -1,10 +1,10 @@
-import React from 'react';
 import { auth } from '@/auth';
-import { getProjectsData, createProject as createProjectLegacy } from '@/lib/projects/projects.actions';
-import type { Project } from '@/lib/api/generated/types.gen';
-import { ProjectsListClient } from './projects-list.client';
 import { DashboardPage, DashboardPageContent, DashboardPageDescription, DashboardPageHeader, DashboardPageTitle } from '@/components/dashboard';
+import type { Project } from '@/lib/api/generated/stub-types';
+import { createProject as createProjectLegacy, getProjectsData } from '@/lib/projects/projects.actions';
 import { Loader2 } from 'lucide-react';
+import React from 'react';
+import { ProjectsListClient } from './projects-list.client';
 
 export default async function ProjectsPage(): Promise<React.JSX.Element> {
   const session = await auth();

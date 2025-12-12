@@ -1,6 +1,8 @@
-import { redirect } from 'next/navigation'
+import { redirect } from 'next/navigation';
 
-export default function ProjectsSlugRedirect({ params }: { params: { slug: string; locale: string } }) {
+// STUB FIX: Next.js 15 requires async page with Promise-based params
+export default async function ProjectsSlugRedirect({ params }: { params: Promise<{ slug: string; locale: string }> }) {
+  const awaited = await params
   // Preserve locale via next-intl middleware by omitting explicit locale in the target
-  return redirect(`/dashboard/projects/${params.slug}`)
+  return redirect(`/dashboard/projects/${awaited.slug}`)
 }

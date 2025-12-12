@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, CheckCircle, FileDown, Filter, Search, Users, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, FileDown, Search, Users, XCircle } from 'lucide-react';
 
 interface AttendanceRecord {
   id: string;
@@ -44,7 +44,7 @@ interface StudentProgress {
   };
   totalSessionsAttended: number;
   totalSessionsScheduled: number;
-  totalGamesTermd: number;
+  totalGamesTerm: number;
   totalFeedbackSubmitted: number;
   currentBlock: number;
   attendanceRate: number;
@@ -124,7 +124,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
           totalSessionsScheduled: studentRecord.totalSessions,
           totalSessionsAttended: studentRecord.totalSessions,
           attendanceRate: Math.round((studentRecord.totalSessions / Math.max(studentRecord.totalSessions, 1)) * 100),
-          totalGamesTermd: studentRecord.gamesTested,
+          totalGamesTerm: studentRecord.gamesTested,
           totalFeedbackSubmitted: studentRecord.gamesTested,
           currentBlock: 3, // Default to current block
           isOnTrack: studentRecord.status === 'onTrack',
@@ -418,7 +418,7 @@ export function AttendanceTracker({ studentData = [], sessionData = [], sessionI
                     <TableCell>
                       {student.totalSessionsAttended}/{student.totalSessionsScheduled}
                     </TableCell>
-                    <TableCell>{student.totalGamesTermd}</TableCell>
+                    <TableCell>{student.totalGamesTerm}</TableCell>
                     <TableCell>{student.totalFeedbackSubmitted}</TableCell>
                     <TableCell>
                       <Badge variant={student.isOnTrack ? 'default' : 'destructive'}>{student.isOnTrack ? 'On Track' : 'At Risk'}</Badge>

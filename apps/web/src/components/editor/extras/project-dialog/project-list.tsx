@@ -3,9 +3,10 @@
 import type React from "react"
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
-import { FolderOpen, Trash2, Download } from "lucide-react"
+import { FolderOpen } from "lucide-react"
 import { DownloadConfirmDialog } from "@/components/editor/extras/dialogs/download-confirm-dialog"
+import { ProjectGridView } from "./project-grid-view"
+import { ProjectListView } from "./project-list-view"
 
 interface ProjectData {
   id: string
@@ -15,6 +16,8 @@ interface ProjectData {
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
 }
 
 interface ProjectListProps {
@@ -23,8 +26,11 @@ interface ProjectListProps {
   itemsPerPage: number
   searchTerm: string
   selectedTags: string[]
-  onOpen: (projectId: string) => void
+  viewMode?: 'grid' | 'list'
+  onOpen: (projectId: string, event?: React.MouseEvent) => void
+  onView?: (projectId: string, event?: React.MouseEvent) => void
   onDelete?: (projectId: string, projectName: string) => void
+  onInfo?: (project: ProjectData) => void
   onDownload?: (
     projectId: string,
     projectName: string,
@@ -34,6 +40,7 @@ interface ProjectListProps {
     updatedAt: string,
   ) => void
   showDeleteButton?: boolean
+  showStudioViewerButtons?: boolean
   openButtonText?: string
   openButtonIcon?: React.ReactNode
 }
@@ -44,10 +51,14 @@ export function ProjectList({
   itemsPerPage,
   searchTerm,
   selectedTags,
+  viewMode = 'grid',
   onOpen,
+  onView,
   onDelete,
+  onInfo,
   onDownload,
   showDeleteButton = true,
+  showStudioViewerButtons = false,
   openButtonText = "Open",
   openButtonIcon,
 }: ProjectListProps) {
@@ -69,16 +80,61 @@ export function ProjectList({
     setDownloadDialog({ open: true, project })
   }
 
-  const handleDownloadConfirm = () => {
-    if (downloadDialog.project && onDownload) {
-      onDownload(
-        downloadDialog.project.id,
-        downloadDialog.project.name,
-        downloadDialog.project.data,
-        downloadDialog.project.tags,
-        downloadDialog.project.createdAt,
-        downloadDialog.project.updatedAt,
-      )
+  const handleDownloadConfirm = async () => {
+    if (downloadDialog.project) {
+      if (onDownload) {
+        // Call the provided onDownload function
+        onDownload(
+          downloadDialog.project.id,
+          downloadDialog.project.name,
+          downloadDialog.project.data,
+          downloadDialog.project.tags,
+          downloadDialog.project.createdAt,
+          downloadDialog.project.updatedAt,
+        )
+      } else {
+        // If no onDownload provided, implement download locally
+        try {
+          // Dynamic imports to avoid issues if these aren't available
+          const [{ HashManager }, { ProjectExporter }] = await Promise.all([
+            import("@/lib/sync/editor/hash-manager"),
+            import("@/lib/interopAdapter/project-exporter")
+          ])
+
+          // Generate hash for the project
+          const hash = await HashManager.generateHash(downloadDialog.project.data)
+
+          // Prepare project data for export using ProjectExporter
+          const exportProjectData = {
+            id: downloadDialog.project.id,
+            name: downloadDialog.project.name,
+            data: downloadDialog.project.data,
+            tags: downloadDialog.project.tags,
+            size: new Blob([downloadDialog.project.data]).size,
+            createdAt: downloadDialog.project.createdAt,
+            updatedAt: downloadDialog.project.updatedAt,
+            hash: hash,
+            storageType: "local" as const
+          }
+
+          // Use ProjectExporter to create the ZIP file
+          const zipBlob = await ProjectExporter.createZipFile(exportProjectData, hash)
+
+          // Create download link
+          const url = URL.createObjectURL(zipBlob)
+          const link = document.createElement("a")
+          link.href = url
+          link.download = ProjectExporter.getDownloadFilename(exportProjectData)
+          document.body.appendChild(link)
+          link.click()
+
+          // Cleanup
+          document.body.removeChild(link)
+          URL.revokeObjectURL(url)
+        } catch (error) {
+          console.error("Download error:", error)
+        }
+      }
     }
     setDownloadDialog({ open: false, project: null })
   }
@@ -107,83 +163,41 @@ export function ProjectList({
     )
   }
 
+  const handleProjectDownload = (project: ProjectData) => {
+    // Always show confirmation dialog first
+    handleDownloadClick(project)
+  }
+
   return (
     <>
-      <div className="max-h-[30vh] overflow-y-auto">
-        <div className="space-y-2">
-          {paginatedProjects.map((project) => (
-            <div
-              key={project.id}
-              className="flex items-center justify-between p-3 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              <div className="flex flex-col flex-1 min-w-0 max-w-[calc(100%-120px)]">
-                <div className="flex items-start gap-2 mb-1">
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-full block">
-                    {project.name}
-                  </span>
-                </div>
-                {project.tags && project.tags.length > 0 && (
-                  <div className="flex gap-1 mb-1 flex-wrap">
-                    {project.tags.slice(0, 2).map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 truncate max-w-20"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                    {project.tags.length > 2 && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">
-                        +{project.tags.length - 2}
-                      </span>
-                    )}
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 flex-wrap">
-                  <span className="flex-shrink-0">{formatSize(project.size)}</span>
-                  <span className="flex-shrink-0">•</span>
-                  <span className="flex-shrink-0">Updated {new Date(project.updatedAt).toLocaleDateString()}</span>
-                  <span className="flex-shrink-0">•</span>
-                  <span className="text-gray-400 dark:text-gray-500 font-mono text-xs truncate max-w-20">
-                    ID: {project.id.slice(0, 8)}...
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-1 ml-3 flex-shrink-0">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onOpen(project.id)}
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 gap-1 px-2"
-                >
-                  {openButtonIcon}
-                  <span className="hidden sm:inline">{openButtonText}</span>
-                </Button>
-                {onDownload && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDownloadClick(project)}
-                    className="text-green-600 hover:text-green-700 dark:text-green-400 dark:hover:text-green-300 px-2"
-                    title="Download project folder"
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                )}
-                {showDeleteButton && onDelete && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(project.id, project.name)}
-                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 px-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="flex-1 min-h-0 overflow-y-auto p-1">
+        {viewMode === 'grid' ? (
+          <ProjectGridView
+            projects={paginatedProjects}
+            onOpen={onOpen}
+            onView={onView}
+            onDelete={onDelete}
+            onInfo={onInfo}
+            onDownload={handleProjectDownload}
+            showDeleteButton={showDeleteButton}
+            showStudioViewerButtons={showStudioViewerButtons}
+            openButtonText={openButtonText}
+            openButtonIcon={openButtonIcon}
+          />
+        ) : (
+          <ProjectListView
+            projects={paginatedProjects}
+            onOpen={onOpen}
+            onView={onView}
+            onDelete={onDelete}
+            onInfo={onInfo}
+            onDownload={handleProjectDownload}
+            showDeleteButton={showDeleteButton}
+            showStudioViewerButtons={showStudioViewerButtons}
+            openButtonText={openButtonText}
+            openButtonIcon={openButtonIcon}
+          />
+        )}
       </div>
 
       <DownloadConfirmDialog

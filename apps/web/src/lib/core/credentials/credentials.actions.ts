@@ -1,220 +1,69 @@
 'use server';
 
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import {
-  deleteCredentialsById,
-  deleteCredentialsByIdHard,
-  getCredentials,
-  getCredentialsById,
-  getCredentialsDeleted,
-  getCredentialsUserByUserId,
-  getCredentialsUserByUserIdTypeByType,
-  postCredentials,
-  postCredentialsByIdActivate,
-  postCredentialsByIdDeactivate,
-  postCredentialsByIdMarkUsed,
-  postCredentialsByIdRestore,
-  putCredentialsById,
-} from '@/lib/api/generated/sdk.gen';
+// STUB: Credentials actions are stubbed; endpoints are unavailable in current SDK.
 
-import type {
-  DeleteCredentialsByIdData,
-  DeleteCredentialsByIdHardData,
-  GetCredentialsByIdData,
-  GetCredentialsData,
-  GetCredentialsDeletedData,
-  GetCredentialsUserByUserIdData,
-  GetCredentialsUserByUserIdTypeByTypeData,
-  PostCredentialsByIdActivateData,
-  PostCredentialsByIdDeactivateData,
-  PostCredentialsByIdMarkUsedData,
-  PostCredentialsByIdRestoreData,
-  PostCredentialsData,
-  PutCredentialsByIdData,
-} from '@/lib/api/generated/types.gen';
-import { revalidateTag } from 'next/cache';
+export type GetCredentialsData = any;
+export type PostCredentialsData = any;
+export type GetCredentialsUserByUserIdData = any;
+export type DeleteCredentialsByIdData = any;
+export type GetCredentialsByIdData = any;
+export type PutCredentialsByIdData = any;
+export type GetCredentialsUserByUserIdTypeByTypeData = any;
+export type PostCredentialsByIdRestoreData = any;
+export type DeleteCredentialsByIdHardData = any;
+export type PostCredentialsByIdMarkUsedData = any;
+export type PostCredentialsByIdDeactivateData = any;
+export type PostCredentialsByIdActivateData = any;
+export type GetCredentialsDeletedData = any;
 
-/**
- * Get all credentials
- */
-export async function getCredentialsAction(params?: GetCredentialsData) {
-  await configureAuthenticatedClient();
-  const result = await getCredentials({
-    ...params,
-  });
-
-  revalidateTag('credentials');
-  return result;
+export async function getCredentialsAction(_params?: GetCredentialsData): Promise<any> {
+  throw new Error('Not implemented (STUB): getCredentialsAction');
 }
 
-/**
- * Create a new credential
- */
-export async function createCredentialAction(data: PostCredentialsData) {
-  await configureAuthenticatedClient();
-  const result = await postCredentials({
-    body: data.body,
-  });
-
-  revalidateTag('credentials');
-  return result;
+export async function createCredentialAction(_data: PostCredentialsData): Promise<any> {
+  throw new Error('Not implemented (STUB): createCredentialAction');
 }
 
-/**
- * Get credentials for a specific user
- */
-export async function getUserCredentialsAction(data: GetCredentialsUserByUserIdData) {
-  await configureAuthenticatedClient();
-  const result = await getCredentialsUserByUserId({
-    path: { userId: data.path.userId },
-  });
-
-  revalidateTag('credentials');
-  revalidateTag(`user-credentials-${data.path.userId}`);
-  return result;
+export async function getUserCredentialsAction(_data: GetCredentialsUserByUserIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserCredentialsAction');
 }
 
-/**
- * Delete a credential by ID
- */
-export async function deleteCredentialAction(data: DeleteCredentialsByIdData) {
-  await configureAuthenticatedClient();
-  const result = await deleteCredentialsById({
-    path: { id: data.path.id },
-  });
-
-  revalidateTag('credentials');
-  revalidateTag(`credential-${data.path.id}`);
-  return result;
+export async function deleteCredentialAction(_data: DeleteCredentialsByIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): deleteCredentialAction');
 }
 
-/**
- * Get a credential by ID
- */
-export async function getCredentialByIdAction(data: GetCredentialsByIdData) {
-  await configureAuthenticatedClient();
-  const result = await getCredentialsById({
-    path: { id: data.path.id },
-  });
-
-  revalidateTag(`credential-${data.path.id}`);
-  return result;
+export async function getCredentialByIdAction(_data: GetCredentialsByIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): getCredentialByIdAction');
 }
 
-/**
- * Update a credential by ID
- */
-export async function updateCredentialAction(data: PutCredentialsByIdData) {
-  await configureAuthenticatedClient();
-  const result = await putCredentialsById({
-    path: { id: data.path.id },
-    body: data.body,
-  });
-
-  revalidateTag('credentials');
-  revalidateTag(`credential-${data.path.id}`);
-  return result;
+export async function updateCredentialAction(_data: PutCredentialsByIdData): Promise<any> {
+  throw new Error('Not implemented (STUB): updateCredentialAction');
 }
 
-/**
- * Get credentials for a user by type
- */
-export async function getUserCredentialsByTypeAction(data: GetCredentialsUserByUserIdTypeByTypeData) {
-  await configureAuthenticatedClient();
-  const result = await getCredentialsUserByUserIdTypeByType({
-    path: {
-      userId: data.path.userId,
-      type: data.path.type,
-    },
-  });
-
-  revalidateTag('credentials');
-  revalidateTag(`user-credentials-${data.path.userId}`);
-  revalidateTag(`user-credentials-${data.path.userId}-${data.path.type}`);
-  return result;
+export async function getUserCredentialsByTypeAction(_data: GetCredentialsUserByUserIdTypeByTypeData): Promise<any> {
+  throw new Error('Not implemented (STUB): getUserCredentialsByTypeAction');
 }
 
-/**
- * Restore a deleted credential
- */
-export async function restoreCredentialAction(data: PostCredentialsByIdRestoreData) {
-  await configureAuthenticatedClient();
-  const result = await postCredentialsByIdRestore({
-    path: { id: data.path.id },
-  });
-
-  revalidateTag('credentials');
-  revalidateTag('credentials-deleted');
-  revalidateTag(`credential-${data.path.id}`);
-  return result;
+export async function restoreCredentialAction(_data: PostCredentialsByIdRestoreData): Promise<any> {
+  throw new Error('Not implemented (STUB): restoreCredentialAction');
 }
 
-/**
- * Permanently delete a credential (hard delete)
- */
-export async function hardDeleteCredentialAction(data: DeleteCredentialsByIdHardData) {
-  await configureAuthenticatedClient();
-  const result = await deleteCredentialsByIdHard({
-    path: { id: data.path.id },
-  });
-
-  revalidateTag('credentials');
-  revalidateTag('credentials-deleted');
-  revalidateTag(`credential-${data.path.id}`);
-  return result;
+export async function hardDeleteCredentialAction(_data: DeleteCredentialsByIdHardData): Promise<any> {
+  throw new Error('Not implemented (STUB): hardDeleteCredentialAction');
 }
 
-/**
- * Mark a credential as used
- */
-export async function markCredentialUsedAction(data: PostCredentialsByIdMarkUsedData) {
-  await configureAuthenticatedClient();
-  const result = await postCredentialsByIdMarkUsed({
-    path: { id: data.path.id },
-  });
-
-  revalidateTag('credentials');
-  revalidateTag(`credential-${data.path.id}`);
-  return result;
+export async function markCredentialUsedAction(_data: PostCredentialsByIdMarkUsedData): Promise<any> {
+  throw new Error('Not implemented (STUB): markCredentialUsedAction');
 }
 
-/**
- * Deactivate a credential
- */
-export async function deactivateCredentialAction(data: PostCredentialsByIdDeactivateData) {
-  await configureAuthenticatedClient();
-  const result = await postCredentialsByIdDeactivate({
-    path: { id: data.path.id },
-  });
-
-  revalidateTag('credentials');
-  revalidateTag(`credential-${data.path.id}`);
-  return result;
+export async function deactivateCredentialAction(_data: PostCredentialsByIdDeactivateData): Promise<any> {
+  throw new Error('Not implemented (STUB): deactivateCredentialAction');
 }
 
-/**
- * Activate a credential
- */
-export async function activateCredentialAction(data: PostCredentialsByIdActivateData) {
-  await configureAuthenticatedClient();
-  const result = await postCredentialsByIdActivate({
-    path: { id: data.path.id },
-  });
-
-  revalidateTag('credentials');
-  revalidateTag(`credential-${data.path.id}`);
-  return result;
+export async function activateCredentialAction(_data: PostCredentialsByIdActivateData): Promise<any> {
+  throw new Error('Not implemented (STUB): activateCredentialAction');
 }
 
-/**
- * Get all deleted credentials
- */
-export async function getDeletedCredentialsAction(params?: GetCredentialsDeletedData) {
-  await configureAuthenticatedClient();
-  const result = await getCredentialsDeleted({
-    ...params,
-  });
-
-  revalidateTag('credentials-deleted');
-  return result;
+export async function getDeletedCredentialsAction(_params?: GetCredentialsDeletedData): Promise<any> {
+  throw new Error('Not implemented (STUB): getDeletedCredentialsAction');
 }

@@ -1,141 +1,68 @@
 'use server';
 
-import { configureAuthenticatedClient } from '@/lib/api/authenticated-client';
-import {
-  getApiSubscription,
-  getApiSubscriptionById,
-  getApiSubscriptionMe,
-  getApiSubscriptionMeActive,
-  postApiSubscription,
-  postApiSubscriptionByIdCancel,
-  postApiSubscriptionByIdResume,
-  putApiSubscriptionByIdPaymentMethod,
-} from '@/lib/api/generated/sdk.gen';
-
-import type {
-  GetApiSubscriptionByIdData,
-  GetApiSubscriptionData,
-  GetApiSubscriptionMeActiveData,
-  GetApiSubscriptionMeData,
-  PostApiSubscriptionByIdCancelData,
-  PostApiSubscriptionByIdResumeData,
-  PostApiSubscriptionData,
-  PutApiSubscriptionByIdPaymentMethodData,
-} from '@/lib/api/generated/types.gen';
-import { revalidateTag } from 'next/cache';
-
 /**
- * Get current user's subscriptions
+ * Subscription actions - STUB implementations.
+ * The Commerce/Subscriptions module is disabled in GameGuild.Production.sln
  */
-export async function getMySubscriptionsAction(params?: GetApiSubscriptionMeData) {
-  await configureAuthenticatedClient();
-  const result = await getApiSubscriptionMe({
-    ...params,
-  });
 
-  revalidateTag('my-subscriptions');
-  return result;
+// Type stubs
+type SubscriptionData = { query?: Record<string, unknown> };
+type SubscriptionByIdData = { path: { id: string } };
+type CreateSubscriptionData = { body?: Record<string, unknown> };
+type UpdateSubscriptionData = { path: { id: string }; body?: Record<string, unknown> };
+
+// Standard stub response
+const stubResponse = <T>(data?: T) => ({ data, error: undefined });
+const stubError = (message: string) => ({ data: undefined, error: { message } });
+
+// =============================================================================
+// SUBSCRIPTION CRUD
+// =============================================================================
+
+export async function getSubscriptions(_data?: SubscriptionData) {
+  return stubResponse({ subscriptions: [], total: 0 });
 }
 
-/**
- * Get current user's active subscriptions
- */
-export async function getMyActiveSubscriptionsAction(params?: GetApiSubscriptionMeActiveData) {
-  await configureAuthenticatedClient();
-  const result = await getApiSubscriptionMeActive({
-    ...params,
-  });
-
-  revalidateTag('my-subscriptions');
-  revalidateTag('my-active-subscriptions');
-  return result;
+export async function getSubscriptionById(_data: SubscriptionByIdData) {
+  return stubResponse(null);
 }
 
-/**
- * Get a subscription by ID
- */
-export async function getSubscriptionByIdAction(data: GetApiSubscriptionByIdData) {
-  await configureAuthenticatedClient();
-  const result = await getApiSubscriptionById({
-    path: { id: data.path.id },
-  });
-
-  revalidateTag(`subscription-${data.path.id}`);
-  return result;
+export async function createSubscription(_data?: CreateSubscriptionData) {
+  return stubError('Subscription creation is disabled');
 }
 
-/**
- * Get all subscriptions
- */
-export async function getSubscriptionsAction(params?: GetApiSubscriptionData) {
-  await configureAuthenticatedClient();
-  const result = await getApiSubscription({
-    ...params,
-  });
-
-  revalidateTag('subscriptions');
-  return result;
+export async function updateSubscription(_data: UpdateSubscriptionData) {
+  return stubError('Subscription updates are disabled');
 }
 
-/**
- * Create a new subscription
- */
-export async function createSubscriptionAction(data: PostApiSubscriptionData) {
-  await configureAuthenticatedClient();
-  const result = await postApiSubscription({
-    body: data.body,
-  });
-
-  revalidateTag('subscriptions');
-  revalidateTag('my-subscriptions');
-  return result;
+export async function cancelSubscription(_data: SubscriptionByIdData) {
+  return stubError('Subscription cancellation is disabled');
 }
 
-/**
- * Cancel a subscription
- */
-export async function cancelSubscriptionAction(data: PostApiSubscriptionByIdCancelData) {
-  await configureAuthenticatedClient();
-  const result = await postApiSubscriptionByIdCancel({
-    path: { id: data.path.id },
-    body: data.body,
-  });
-
-  revalidateTag('subscriptions');
-  revalidateTag('my-subscriptions');
-  revalidateTag('my-active-subscriptions');
-  revalidateTag(`subscription-${data.path.id}`);
-  return result;
+export async function renewSubscription(_data: SubscriptionByIdData) {
+  return stubError('Subscription renewal is disabled');
 }
 
-/**
- * Resume a cancelled subscription
- */
-export async function resumeSubscriptionAction(data: PostApiSubscriptionByIdResumeData) {
-  await configureAuthenticatedClient();
-  const result = await postApiSubscriptionByIdResume({
-    path: { id: data.path.id },
-  });
+// =============================================================================
+// USER SUBSCRIPTIONS
+// =============================================================================
 
-  revalidateTag('subscriptions');
-  revalidateTag('my-subscriptions');
-  revalidateTag('my-active-subscriptions');
-  revalidateTag(`subscription-${data.path.id}`);
-  return result;
+export async function getMySubscriptions(_data?: SubscriptionData) {
+  return stubResponse({ subscriptions: [], total: 0 });
 }
 
-/**
- * Update payment method for a subscription
- */
-export async function updateSubscriptionPaymentMethodAction(data: PutApiSubscriptionByIdPaymentMethodData) {
-  await configureAuthenticatedClient();
-  const result = await putApiSubscriptionByIdPaymentMethod({
-    path: { id: data.path.id },
-    body: data.body,
-  });
+export async function getMyActiveSubscription(_data?: SubscriptionData) {
+  return stubResponse(null);
+}
 
-  revalidateTag('subscriptions');
-  revalidateTag('my-subscriptions');
-  revalidateTag(`subscription-${data.path.id}`);
-  return result;
+// =============================================================================
+// SUBSCRIPTION PLANS
+// =============================================================================
+
+export async function getSubscriptionPlans(_data?: SubscriptionData) {
+  return stubResponse({ plans: [], total: 0 });
+}
+
+export async function getSubscriptionPlanById(_data: SubscriptionByIdData) {
+  return stubResponse(null);
 }

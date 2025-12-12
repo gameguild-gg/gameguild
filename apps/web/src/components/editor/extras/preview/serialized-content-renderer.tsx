@@ -26,6 +26,9 @@ import { PreviewList } from "@/components/editor/plugins/preview-components/prev
 import { PreviewListItem } from "@/components/editor/plugins/preview-components/preview-list-item"
 import { PreviewLink } from "@/components/editor/plugins/preview-components/preview-link"
 import { PreviewHeading } from "@/components/editor/plugins/preview-components/preview-heading"
+import { PreviewVegaLite } from "@/components/editor/plugins/preview-components/preview-vega-lite"
+import { PreviewTable } from "@/components/editor/plugins/preview-components/preview-table"
+import { PreviewCodeStudio } from "@/components/editor/plugins/preview-components/preview-code-studio"
 
 interface SerializedContentRendererProps {
   serializedState: SerializedEditorState
@@ -132,6 +135,21 @@ export function SerializedContentRenderer({
       return <PreviewMermaid key={uniqueKey} data={node.data} />
     }
 
+    // For Vega-Lite charts
+    if (node.type === "vega-lite") {
+      return <PreviewVegaLite key={uniqueKey} node={node} />
+    }
+
+    // For table nodes
+    if (node.type === "table") {
+      return <PreviewTable key={uniqueKey} node={node} />
+    }
+
+    // For CodeStudio nodes
+    if (node.type === "code-studio") {
+      return <PreviewCodeStudio key={uniqueKey} data={node.data} />
+    }
+
     if (node.children) {
       const children = node.children.map((child: any, childIndex: number) => renderNode(child, childIndex, uniqueKey))
 
@@ -149,6 +167,7 @@ export function SerializedContentRenderer({
             </PreviewQuote>
           )
         case "list":
+        case "custom-list":
           return (
             <PreviewList key={uniqueKey} node={node}>
               {children}

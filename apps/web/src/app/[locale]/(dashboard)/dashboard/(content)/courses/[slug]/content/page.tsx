@@ -103,7 +103,7 @@ export default async function CourseContentPage({ params }: PageProps) {
               {items.length === 0 && <div className="text-muted-foreground">No content yet.</div>}
               {items.map((c, idx) => {
                 // Generate content slug for navigation
-                const contentSlug = c.slug || c.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || c.id;
+                const contentSlug = (c as any).slug || c.title?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || c.id;
 
                 return (
                   <div key={c.id} className="flex items-center justify-between border rounded p-3">

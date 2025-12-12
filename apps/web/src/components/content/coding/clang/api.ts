@@ -78,7 +78,9 @@ export class API {
     this.hostWrite('Running Clang compiler...\n');
     this.hostWrite(`${args.join(' ')}\n`);
 
-    return await this.run(clang, ...args);
+    const [first, ...rest] = args;
+    if (!first) throw new Error('Missing command name for run');
+    return await this.run(clang, first, ...rest);
   }
 
   async link(obj: string, wasm: string): Promise<App | null> {
@@ -94,11 +96,13 @@ export class API {
     this.hostWrite('Running linker...\n');
     this.hostWrite(`${args.join(' ')}\n`);
 
-    return await this.run(lld, ...args);
+    const [first, ...rest] = args;
+    if (!first) throw new Error('Missing command name for run');
+    return await this.run(lld, first, ...rest);
   }
 
-  async run(module: WebAssembly.Module, ...args: string[]): Promise<App | null> {
-    const app = new App(module, this.memfs, args[0], ...args.slice(1));
+  async run(module: WebAssembly.Module, firstArg: string, ...args: string[]): Promise<App | null> {
+    const app = new App(module, this.memfs, firstArg, ...args);
     const stillRunning = await app.run();
     return stillRunning ? app : null;
   }

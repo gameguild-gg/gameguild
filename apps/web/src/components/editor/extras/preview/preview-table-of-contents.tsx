@@ -2,8 +2,9 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
-import { List, ChevronRight, ChevronDown, Settings } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { ChevronDown, ChevronRight, List, Settings } from "lucide-react"
+import { useEffect, useState } from "react"
 
 interface HeadingItem {
   id: string
@@ -159,7 +160,7 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
   if (headings.length === 0) {
     return (
       <div
-        className={`bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm ${className}`}
+        className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm max-h-[calc(100vh-7rem)] flex flex-col ${className}`}
       >
         <div className="p-6">
           <div className="flex items-center gap-2 mb-4">
@@ -174,9 +175,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
 
   return (
     <div
-      className={`bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 shadow-sm ${className}`}
+      className={`bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm max-h-[calc(100vh-7rem)] flex flex-col ${className}`}
     >
-      <div className="p-6">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700 shrink-0 bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <List className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -186,14 +188,14 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
           <div className="relative">
             <button
               onClick={() => setShowModeSelector(!showModeSelector)}
-              className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
               title="Display options"
             >
               <Settings className="w-4 h-4 text-gray-500 dark:text-gray-400" />
             </button>
 
             {showModeSelector && (
-              <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-48">
+              <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg z-10 min-w-48">
                 <div className="p-2 space-y-1">
                   <button
                     onClick={() => {
@@ -201,11 +203,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                       setShowModeSelector(false)
                       setExpandedHeadings(new Set())
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      displayMode === "h1h2"
+                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${displayMode === "h1h2"
                         ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                         : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    }`}
+                      }`}
                   >
                     H1 & H2 only
                   </button>
@@ -215,11 +216,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                       setShowModeSelector(false)
                       setExpandedHeadings(new Set())
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      displayMode === "h1h2h3"
+                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${displayMode === "h1h2h3"
                         ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                         : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    }`}
+                      }`}
                   >
                     H1, H2 & H3
                   </button>
@@ -229,11 +229,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                       setShowModeSelector(false)
                       setExpandedHeadings(new Set())
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      displayMode === "all"
+                    className={`w-full text-left px-3 py-2 text-sm transition-colors ${displayMode === "all"
                         ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                         : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
-                    }`}
+                      }`}
                   >
                     Show all
                   </button>
@@ -242,7 +241,10 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
             )}
           </div>
         </div>
+      </div>
 
+      {/* Scrollable Navigation */}
+      <ScrollArea className="flex-1 p-6 overflow-auto">
         <nav className="space-y-1">
           {headings.map((heading, index) => {
             if (!shouldShowHeading(heading, index)) return null
@@ -257,10 +259,9 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                   className={`
                     w-full text-left px-3 py-2 rounded-lg text-sm transition-colors
                     hover:bg-gray-100 dark:hover:bg-gray-800
-                    ${
-                      activeHeading === heading.id
-                        ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-2 border-blue-500"
-                        : "text-gray-700 dark:text-gray-300"
+                    ${activeHeading === heading.id
+                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-2 border-blue-500"
+                      : "text-gray-700 dark:text-gray-300"
                     }
                   `}
                   style={{
@@ -281,7 +282,7 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
                         )}
                       </div>
                     ) : heading.level > 1 ? (
-                      <ChevronRight className="w-3 h-3 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                      <ChevronRight className="w-3 h-3 text-gray-400 dark:text-gray-500 shrink-0" />
                     ) : null}
                     <span className="truncate">{heading.text}</span>
                   </div>
@@ -290,7 +291,7 @@ export function PreviewTableOfContents({ serializedState, className = "" }: Prev
             )
           })}
         </nav>
-      </div>
+      </ScrollArea>
     </div>
   )
 }

@@ -1,14 +1,14 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { z } from 'zod';
+import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { z } from 'zod';
 
 // Lightweight IANA timezone list (can be expanded or dynamically loaded later)
 const TIMEZONES = [
@@ -20,14 +20,14 @@ export const generalSettingsSchema = z.object({
   labName: z.string().trim().min(3, 'Name must be at least 3 characters').max(80, 'Name must be at most 80 characters'),
   description: z.string().trim().max(500, 'Description must be at most 500 characters').optional().default(''),
   timezone: z.enum(TIMEZONES, { message: 'Select a valid timezone' }),
-  defaultSessionDuration: z.number({ invalid_type_error: 'Duration must be a number' })
+  defaultSessionDuration: z.number({ error: 'Duration must be a number' })
     .int('Must be an integer')
     .min(15, 'Minimum 15 minutes')
     .max(480, 'Maximum 480 minutes'),
   allowPublicSignups: z.boolean(),
   requireApproval: z.boolean(),
   enableNotifications: z.boolean(),
-  maxSimultaneousSessions: z.number({ invalid_type_error: 'Max sessions must be a number' })
+  maxSimultaneousSessions: z.number({ error: 'Max sessions must be a number' })
     .int('Must be an integer').min(1, 'At least 1').max(100, 'Too large (max 100)'),
 });
 
@@ -124,10 +124,10 @@ export function GeneralSettings({ generalSettings, setGeneralSettings, saveGener
           Configure the core operational settings for your Testing Lab.
         </p>
         <div className="mt-2 flex items-center gap-3 text-sm">
-          <span className={ cn('px-2 py-0.5 rounded-md border text-xs', isDirty ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-muted text-muted-foreground') }>
-            { isDirty ? 'Unsaved changes' : 'All changes saved' }
+          <span className={cn('px-2 py-0.5 rounded-md border text-xs', isDirty ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-muted text-muted-foreground')}>
+            {isDirty ? 'Unsaved changes' : 'All changes saved'}
           </span>
-          { isSaving && <span className="text-xs text-muted-foreground animate-pulse">Saving…</span> }
+          {isSaving && <span className="text-xs text-muted-foreground animate-pulse">Saving…</span>}
         </div>
         <div ref={liveRegionRef} aria-live="polite" className="sr-only" />
       </div>
@@ -154,9 +154,9 @@ export function GeneralSettings({ generalSettings, setGeneralSettings, saveGener
                   onChange={(e) => handleChange('labName', e.target.value)}
                   onBlur={() => setTouched(p => ({ ...p, labName: true }))}
                 />
-                { touched.labName && hasError('labName') && (
-                  <p id="labName-error" className="text-xs text-destructive">{ errors.labName }</p>
-                ) }
+                {touched.labName && hasError('labName') && (
+                  <p id="labName-error" className="text-xs text-destructive">{errors.labName}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="timezone">Timezone</Label>
@@ -168,12 +168,12 @@ export function GeneralSettings({ generalSettings, setGeneralSettings, saveGener
                     <SelectValue placeholder="Select timezone" />
                   </SelectTrigger>
                   <SelectContent className="max-h-64">
-                    { TIMEZONES.map(tz => <SelectItem key={tz} value={tz}>{tz}</SelectItem>) }
+                    {TIMEZONES.map(tz => <SelectItem key={tz} value={tz}>{tz}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                { touched.timezone && hasError('timezone') && (
-                  <p id="timezone-error" className="text-xs text-destructive">{ errors.timezone }</p>
-                ) }
+                {touched.timezone && hasError('timezone') && (
+                  <p id="timezone-error" className="text-xs text-destructive">{errors.timezone}</p>
+                )}
               </div>
             </div>
             <div className="space-y-2">
@@ -186,9 +186,9 @@ export function GeneralSettings({ generalSettings, setGeneralSettings, saveGener
                 onChange={(e) => handleChange('description', e.target.value)}
                 placeholder="Describe your testing lab..."
               />
-              { touched.description && hasError('description') && (
-                <p id="description-error" className="text-xs text-destructive">{ errors.description }</p>
-              ) }
+              {touched.description && hasError('description') && (
+                <p id="description-error" className="text-xs text-destructive">{errors.description}</p>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -213,9 +213,9 @@ export function GeneralSettings({ generalSettings, setGeneralSettings, saveGener
                   onChange={(e) => handleChange('defaultSessionDuration', Number(e.target.value))}
                   onBlur={() => setTouched(p => ({ ...p, defaultSessionDuration: true }))}
                 />
-                { touched.defaultSessionDuration && hasError('defaultSessionDuration') && (
-                  <p id="defaultSessionDuration-error" className="text-xs text-destructive">{ errors.defaultSessionDuration }</p>
-                ) }
+                {touched.defaultSessionDuration && hasError('defaultSessionDuration') && (
+                  <p id="defaultSessionDuration-error" className="text-xs text-destructive">{errors.defaultSessionDuration}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="maxSessions">Max Simultaneous Sessions</Label>
@@ -228,9 +228,9 @@ export function GeneralSettings({ generalSettings, setGeneralSettings, saveGener
                   onChange={(e) => handleChange('maxSimultaneousSessions', Number(e.target.value))}
                   onBlur={() => setTouched(p => ({ ...p, maxSimultaneousSessions: true }))}
                 />
-                { touched.maxSimultaneousSessions && hasError('maxSimultaneousSessions') && (
-                  <p id="maxSimultaneousSessions-error" className="text-xs text-destructive">{ errors.maxSimultaneousSessions }</p>
-                ) }
+                {touched.maxSimultaneousSessions && hasError('maxSimultaneousSessions') && (
+                  <p id="maxSimultaneousSessions-error" className="text-xs text-destructive">{errors.maxSimultaneousSessions}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -291,7 +291,7 @@ export function GeneralSettings({ generalSettings, setGeneralSettings, saveGener
             onClick={() => void handleSave(generalSettings)}
             disabled={Object.keys(errors).length > 0 || isSaving || !isDirty}
           >
-            { isSaving ? 'Saving…' : 'Save Settings' }
+            {isSaving ? 'Saving…' : 'Save Settings'}
           </Button>
         </div>
       </div>

@@ -2,7 +2,7 @@ import type { languages } from "monaco-editor"
 
 // Detect diagram type from code
 function detectDiagramType(code: string): string {
-  const firstLine = code.split("\n")[0].trim().toLowerCase()
+  const firstLine = code.split("\n")[0]?.trim().toLowerCase() || ""
 
   if (firstLine.startsWith("flowchart") || firstLine.startsWith("graph")) return "flowchart"
   if (firstLine.startsWith("sequencediagram")) return "sequence"

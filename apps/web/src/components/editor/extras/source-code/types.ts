@@ -28,6 +28,7 @@ export interface CodeFile {
   isMain: boolean
   isVisible: boolean
   readOnlyState?: "always" | "never" | "hidden" | null
+  languageContent?: Record<string, string>
 }
 
 export interface SourceCodeData {
@@ -41,6 +42,10 @@ export interface SourceCodeData {
   showBasicFileActionsInReadMode?: boolean
   showFilePropertiesInReadMode?: boolean
 }
+
+// JSON-serializable value types for test cases
+export type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[]
+export type JsonArray = JsonValue[]
 
 // Update the TerminalProps interface to include the new predicate test type
 export interface TerminalProps {
@@ -63,8 +68,8 @@ export interface TerminalProps {
       type: "custom" | "function" | "console"
       input?: string
       expectedOutput?: string
-      args?: any[]
-      expectedReturn?: any[]
+      args?: JsonArray
+      expectedReturn?: JsonArray
       predicate?: string
       customCode?: string
       customCodeFirst?: string | Record<ProgrammingLanguage, string>
@@ -78,8 +83,8 @@ export interface TerminalProps {
         type: "custom" | "function" | "console"
         input?: string
         expectedOutput?: string
-        args?: any[]
-        expectedReturn?: any[]
+        args?: JsonArray
+        expectedReturn?: JsonArray
         predicate?: string
         customCode?: string
         customCodeFirst?: string | Record<ProgrammingLanguage, string>
@@ -110,12 +115,12 @@ export interface CodeEditorProps {
 export interface LanguageSettingsDialogProps {
   showLanguagesDialog: boolean
   setShowLanguagesDialog: (show: boolean) => void
-  allowedLanguages: Record<LanguageType, boolean>
-  setAllowedLanguages: React.Dispatch<React.SetStateAction<Record<LanguageType, boolean>>>
+  allowedLanguages: Record<string, boolean>
+  setAllowedLanguages: (value: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => void
   selectedLanguage: ProgrammingLanguage
-  setSelectedLanguage: (lang: ProgrammingLanguage) => void
-  getLanguageLabel: (lang: string) => string
-  updateSourceCode?: (data: any) => void
+  setSelectedLanguage: (lang: ProgrammingLanguage | string) => void
+  getLanguageLabel: (lang: LanguageType | string) => string
+  updateSourceCode?: (data: Partial<SourceCodeData>) => void
   isAutocompleteEnabled?: boolean
   setIsAutocompleteEnabled?: (enabled: boolean) => void
 }
@@ -123,26 +128,95 @@ export interface LanguageSettingsDialogProps {
 export interface FileTabsProps {
   files: CodeFile[]
   activeFileId: string
-  onFileSelect: (fileId: string) => void
+  setActiveFileId?: (id: string) => void
+  isDarkTheme?: boolean
+  setIsDarkTheme?: (dark: boolean) => void
+  isEditing?: boolean
+  showFileDialog?: () => void
+  showRenameDialog?: (fileId?: string) => void
+  showImportDialog?: () => void
+  showConfirmDialog?: () => void
+  showLanguagesDialog?: () => void
+  toggleFileVisibility?: (fileId: string) => void
+  setMainFile?: (fileId: string) => void
+  deleteFile?: (fileId: string) => void
+  getBaseName?: (name: string) => string
+  getExtensionForSelectedLanguage?: () => string
+  draggedFileId?: string | null
+  setDraggedFileId?: (id: string | null) => void
+  dragOverFileId?: string | null
+  setDragOverFileId?: (id: string | null) => void
+  reorderFiles?: (draggedId: string, targetId: string) => void
+  getFileIcon?: (file: CodeFile) => React.ReactNode
+  getStateIcon?: (file: CodeFile) => React.ReactNode
+  setFileReadOnlyState?: (fileId: string, state: "always" | "never" | "hidden" | null) => void
+  showBasicFileActionsInReadMode?: boolean
+  showFilePropertiesInReadMode?: boolean
+  setShowBasicFileActionsInReadMode?: (show: boolean) => void
+  setShowFilePropertiesInReadMode?: (show: boolean) => void
+  showDeleteConfirmDialog?: boolean
+  setShowDeleteConfirmDialog?: (show: boolean) => void
+  // Legacy support
+  onFileSelect?: (fileId: string) => void
   onFileClose?: (fileId: string) => void
   onFileRename?: (fileId: string, newName: string) => void
   readonly?: boolean
-  isDarkTheme?: boolean
+  selectedLanguage?: ProgrammingLanguage
+  setSelectedLanguage?: (lang: ProgrammingLanguage | string) => void
+  getAllowedProgrammingLanguages?: () => ProgrammingLanguage[]
+  getLanguageLabel?: (lang: string) => string
+  isFileReadOnly?: (file: CodeFile) => boolean
 }
 
 export interface NewFileDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: (fileName: string, language: LanguageType) => void
-  existingFileNames: string[]
+  showFileDialog: boolean
+  setShowFileDialog: (show: boolean) => void
+  newFileName: string
+  setNewFileName: (name: string) => void
+  newFileLanguage: LanguageType
+  setNewFileLanguage: (lang: LanguageType) => void
+  newFileHasStates?: boolean
+  setNewFileHasStates?: (hasStates: boolean) => void
+  addNewFile: () => void
+  getAllowedLanguageTypes: () => LanguageType[]
+  getLanguageLabel: (lang: LanguageType) => string
+  isPreview?: boolean
 }
 
 export interface RenameFileDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: (newName: string) => void
-  currentName: string
-  existingFileNames: string[]
+  showRenameDialog: boolean
+  setShowRenameDialog: (show: boolean) => void
+  renameFileName: string
+  setRenameFileName: (name: string) => void
+  renameFileLanguage: LanguageType
+  setRenameFileLanguage: (lang: LanguageType) => void
+  fileToRename: string | null
+  renameFile: () => void
+  files: CodeFile[]
+  getAllowedLanguageTypes: () => LanguageType[]
+  getLanguageLabel: (lang: LanguageType | string) => string
+  isPreview?: boolean
+}
+
+export interface ImportFileDialogProps {
+  showImportDialog: boolean
+  setShowImportDialog: (show: boolean) => void
+  importFileNames: string[]
+  importContents: { name: string; content: string }[]
+  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void
+  importFile: () => void
+  fileInputRef: React.RefObject<HTMLInputElement | null>
+  isPreview?: boolean
+  importFileHasStates?: boolean
+  setImportFileHasStates?: (hasStates: boolean) => void
+}
+
+export interface ConfirmDialogProps {
+  showConfirmDialog: boolean
+  setShowConfirmDialog: (show: boolean) => void
+  activeFileId: string
+  isPreview?: boolean
+  toggleFileStates: () => void
 }
 
 export interface LanguageConfig {

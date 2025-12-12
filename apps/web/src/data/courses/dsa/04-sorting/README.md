@@ -1,8 +1,14 @@
 # Sorting algorithms
 
+Sorting argorthims are a sequence of steps that are used to sort a list of elements in a particular order.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/kPRA0W1kECg?si=m80vTaP3rxdJxvQ0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
 ## Swap function
 
-```c++
+It is vital to the sorting algorithms that you have a swap function. It is used to swap two elements in the array.
+
+``` c++
 void swap(int &a, int &b) {
   int temp = a;
   a = b;
@@ -10,9 +16,15 @@ void swap(int &a, int &b) {
 }
 ```
 
+::: note
+
+Pay attention that in the swap, you need to use a third variable to swap them! If you don't, you will lose the value of the first variable.
+
+:::
+
 ## Bubble sort
 
-```c++
+``` c++
 void bubble_sort(int arr[], int n) {
   for (int i = 0; i < n; i++) { // n passes
     for (int j = 0; j < n - 1; j++) { // linear pass
@@ -39,7 +51,7 @@ Is it possible to optimize the bubble sort algorithm?
 
 ## Selection sort
 
-```c++
+``` c++
 void selection_sort(int arr[], int n) {
   for (int i = 0; i < n - 1; i++) { // n - 1 passes
     int min_index = i; // the minimum element in the unsorted part of the array
@@ -67,14 +79,19 @@ void selection_sort(int arr[], int n) {
 
 ```c++
 void insertion_sort(int arr[], int n) {
-  for (int i = 1; i < n; i++) { // n - 1 passes
-    int key = arr[i]; // the key element to be inserted in the sorted part of the array
-    int j = i - 1; // the last element of the sorted part of the array
-    while (j >= 0 && arr[j] > key) { // shift the elements to the right to make space for the key
-      arr[j + 1] = arr[j];
-      j--;
+    // nothing to do here
+    if (n <=1)
+      return;
+    // outer loop goes from the left to the right. it marks the end of the sorted subarray
+    for (size_t lastSortedIdx = 1; lastSortedIdx<n; lastSortedIdx++) {
+      // inner loop starts from the last sorted index to 0, swapping to find the best place to stay
+      for (size_t i = lastSortedIdx; i>0; i--) {
+        if (arr[i-1] > arr[i])
+          swap(arr[i-1], arr[i]); // we swap until we find the best spot
+        else
+          break; // that's why it is faster! we break early
+      }
     }
-    arr[j + 1] = key; // insert the key in the right position
   }
 }
 ```
@@ -100,6 +117,6 @@ Table of differences between the sorting algorithms:
 
 | Algorithm | Best case | Worst case | Time complexity | Space complexity | Swaps |
 |-----------|-----------|------------|-----------------|------------------|-------|
-| Bubble    | O(n)      | O(n^2)     | O(N^2)          | O(1)             | O(n^2)|
-| Selection | O(n^2)    | O(n^2)     | O(N^2)          | O(1)             | O(n)  |
-| Insertion | O(n)      | O(n^2)     | O(N^2)          | O(1)             | O(n^2)|
+| Bubble    | O(n)      | O(n^2)     | O(n^2)          | O(1)             | O(n^2)|
+| Selection | O(n^2)    | O(n^2)     | O(n^2)          | O(1)             | O(n)  |
+| Insertion | O(n)      | O(n^2)     | O(n^2)          | O(1)             | O(n^2)|

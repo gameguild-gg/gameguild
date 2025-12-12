@@ -137,3 +137,15 @@ export function getLocationStatusLabel(status: LocationStatus): string {
       return 'Unknown';
   }
 }
+
+export type TestingFeedback = {
+  id: string;
+  content: string;
+  rating: number;
+  sessionTitle: string;
+  submittedBy: {
+    id: string;
+    name: string;
+  };
+  submittedAt: string;
+};

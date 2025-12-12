@@ -10,7 +10,7 @@ export async function getCourseBySlugAction(slug: string): Promise<Course | null
     // Mock implementation - replace with actual API call
     console.log(`Server action: Getting course by slug: ${slug}`);
     return {
-      id: 1,
+      id: '1',
       title: 'Sample Course',
       description: 'A sample course description',
       category: 'Programming',

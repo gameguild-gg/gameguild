@@ -35,7 +35,7 @@ Day 2:
 
 TLDR: Be nice to each other, and don't copy code from the internet.
 
-- [Notes on Submissions and Plagiarism](../ai4games/submissions) (todo for alex: move this to a general page)
+- [Notes on Submissions and Plagiarism](/academic-honesty)
 
 Some assignments can be hard, and you may feel tempted to copy code from the internet. **Don't do it**. You will only hurt yourself. You will learn nothing, and you will be caught. Once you get caught, you will be reported to the Dean of Students for academic dishonesty.
 
@@ -45,13 +45,46 @@ If you are struggling with an assignment, please contact me in my office-hours, 
 
 ::: danger "FERPA WAIVER"
 
-If you are willing to share your final project publicly, you MUST SIGN [this FERPA waiver](../ai4games/ferpa).
+In order for me and you to be protected, about using external tools and publishing your work, you MUST SIGN [this FERPA waiver](/ferpa-waiver) stating if you consent or dissent.
 
 :::
 
 <iframe src="https://giphy.com/embed/e7yNPQmGUozyU" width="480" height="336" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/facebook-posts-privacy-e7yNPQmGUozyU">via GIPHY</a></p>
 
 This class will use github extensively, in order to keep you safe, we will use private repositories. This means that only you and me will be able to see your code. In your final project, you must share it with your pair partner, and with me.
+
+## Definitions
+
+- **Data Structure** - A way of organizing data in memory for efficient access and modification.
+- **Abstract Data Type** - A higher-level interface to use data conveniently from the end-programmer’s point of view.
+    - Built out of data structures.
+    - Provides a way to use data without knowing how it is implemented.
+- **Algorithm** - A formula, process, or set of steps to solve a problem.
+
+## Data Structures
+
+- Array, Dynamic Arrays (aka. Vector)
+- Linked List
+- Hash Table
+- Trees
+- Graph
+- Heap
+
+## Abstract Data Types
+
+- Stacks, Queues -> Linked Lists
+- Map, Sets, Dictionary, Association Arrays, Unordered Set/Map -> Hash Tables
+- Binary Trees, Binary Search Trees, AVL Trees -> Trees
+- Graph -> Based on Dynamic arrays
+- Priority Queues -> Heaps
+
+## Algorithms
+
+- Sorting: Selection, Insertion, Bubble, Merge, Quick
+- Search: Binary, Breadth-First, Depth-First
+- Graph: Dijkstra, Prims(Jarnik), Bellman-Ford
+- Hash tables: Collision avoidance via chaining and linear probing
+- Heap: A* algorithm
 
 ## Activities
 

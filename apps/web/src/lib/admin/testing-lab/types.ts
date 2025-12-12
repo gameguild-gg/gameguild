@@ -3,10 +3,10 @@
 // =============================================================================
 
 // Re-export types from the generated API
-export type { TestingSession, TestingRequest, TestingFeedback, SessionStatus } from '@/lib/api/generated/types.gen';
+export type { TestingSession, TestingRequest, TestingFeedback, SessionStatus } from '@/lib/api/generated';
 
 // Import for local use
-import type { TestingSession } from '@/lib/api/generated/types.gen';
+import type { TestingSession } from '@/lib/api/generated';
 
 // Alias for backward compatibility
 export type TestSession = TestingSession;

@@ -1,17 +1,19 @@
 'use client';
 
-import { CourseSearchBar } from './course-search-bar';
-import { CourseStatusFilter } from './course-status-filter';
+import { PeriodType } from '@/components/common/filters/filter-context';
+import { PeriodSelector } from '@/components/common/filters/period-selector';
+import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
+import { ProgramCategory } from '@/lib/api/generated';
+import { ModulesContentsContentStatus, ModulesProgramsProgramDifficulty } from '@/lib/api/generated/stub-types';
 import { CourseAreaFilter } from './course-area-filter';
 import { CourseLevelFilter } from './course-level-filter';
-import { ViewModeToggle } from '@/components/common/filters/view-mode-toggle';
-import { PeriodSelector } from '@/components/common/filters/period-selector';
-import { ContentStatus, ProgramCategory, ProgramDifficulty } from '@/lib/api/generated/types.gen';
+import { CourseSearchBar } from './course-search-bar';
+import { CourseStatusFilter } from './course-status-filter';
 
 // Type aliases to maintain existing naming
-type CourseStatus = ContentStatus;
+type CourseStatus = ModulesContentsContentStatus;
 type CourseArea = ProgramCategory;
-type CourseLevel = ProgramDifficulty;
+type CourseLevel = ModulesProgramsProgramDifficulty;
 
 interface CourseFilterControlsProps {
   searchTerm: string;
@@ -22,8 +24,8 @@ interface CourseFilterControlsProps {
   onToggleArea: (area: CourseArea) => void;
   selectedLevels: CourseLevel[];
   onToggleLevel: (level: CourseLevel) => void;
-  selectedPeriod: string;
-  onPeriodChange: (period: string) => void;
+  selectedPeriod: PeriodType;
+  onPeriodChange: (period: PeriodType) => void;
   viewMode: 'cards' | 'row' | 'table';
   onViewModeChange: (mode: 'cards' | 'row' | 'table') => void;
   hideViewToggle?: boolean;

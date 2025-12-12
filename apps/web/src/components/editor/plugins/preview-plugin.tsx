@@ -23,13 +23,18 @@ export function PreviewPlugin() {
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={onClick} className="flex items-center gap-2 bg-transparent">
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={onClick} 
+        className="flex items-center gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 bg-white dark:bg-gray-900"
+      >
         <Eye className="h-4 w-4" />
         Preview
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
+        <DialogContent className="max-w-screen-3xl sm:max-w-3xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
             <DialogDescription>Preview of your content as it would appear to readers</DialogDescription>

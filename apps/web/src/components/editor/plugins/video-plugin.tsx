@@ -17,10 +17,9 @@ export function VideoPlugin() {
       INSERT_VIDEO_COMMAND,
       (payload: VideoData) => {
         editor.update(() => {
-          // Adicione um flag para indicar que este é um vídeo recém-inserido
           const videoNode = $createVideoNode({
             ...payload,
-            isNew: true, // Este flag será usado para mostrar o controle de tamanho automaticamente
+            isNew: true, // Flag to show editor automatically on new videos
           })
           $insertNodes([videoNode])
         })

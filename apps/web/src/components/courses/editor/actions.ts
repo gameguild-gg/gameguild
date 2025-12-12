@@ -2,14 +2,34 @@
 
 import { Course } from '@/lib/courses';
 
+// Extended Course type for editor actions with additional properties
+interface EditorCourse extends Partial<Course> {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  area?: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  difficulty?: number;
+  status?: string;
+  tools?: string[];
+  tags?: string[];
+  instructors?: any[];
+  isPublic?: boolean;
+  isFeatured?: boolean;
+  content?: any;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 /**
  * Get course by slug server action
  *
  * @param slug - The course slug to search for
- * @returns Promise<EnhancedCourse | null> - The course if found, null otherwise
+ * @returns Promise<EditorCourse | null> - The course if found, null otherwise
  */
 
-export async function getCourseBySlug(slug: string): Promise<Course | null> {
+export async function getCourseBySlug(slug: string): Promise<EditorCourse | null> {
   try {
     // Validate input
     if (!slug) throw new Error('Invalid slug provided');
@@ -31,13 +51,13 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
     console.log(`[getCourseBySlug] Fetching course with slug: ${normalizedSlug}`);
 
     // Mock implementation - replace with actual database query
-    const mockCourse: Course = {
+    const mockCourse: EditorCourse = {
       id: 'mock-course-id',
       title: `Course for slug: ${normalizedSlug}`,
       slug: normalizedSlug,
       description: 'This is a mock course description for testing purposes.',
       area: 'programming',
-      level: 1,
+      level: 'Beginner',
       difficulty: 1,
       status: 'published',
       tools: ['React', 'TypeScript'],
@@ -99,7 +119,7 @@ export async function getCourseBySlug(slug: string): Promise<Course | null> {
  * @param course - The course to save
  * @returns Promise<boolean> - Success status
  */
-export async function saveCourse(course: Course): Promise<boolean> {
+export async function saveCourse(course: EditorCourse): Promise<boolean> {
   try {
     // Validate input
     if (!course || typeof course !== 'object') {
@@ -137,7 +157,7 @@ export async function saveCourse(course: Course): Promise<boolean> {
  * @param course - The course to auto-save
  * @returns Promise<boolean> - Success status
  */
-export async function autoSaveCourse(course: Course): Promise<boolean> {
+export async function autoSaveCourse(course: EditorCourse): Promise<boolean> {
   try {
     if (!course || !course.id) {
       return false;
@@ -165,9 +185,9 @@ export async function autoSaveCourse(course: Course): Promise<boolean> {
  * Create new course server action
  *
  * @param courseData - Initial course data
- * @returns Promise<EnhancedCourse | null> - The created course or null if failed
+ * @returns Promise<EditorCourse | null> - The created course or null if failed
  */
-export async function createCourse(courseData: Partial<Course>): Promise<Course | null> {
+export async function createCourse(courseData: Partial<EditorCourse>): Promise<EditorCourse | null> {
   try {
     console.log('[createCourse] Creating new course');
 
@@ -177,13 +197,13 @@ export async function createCourse(courseData: Partial<Course>): Promise<Course 
     // 3. Insert into database
     // 4. Return the created course
 
-    const newCourse: Course = {
+    const newCourse: EditorCourse = {
       id: `course-${Date.now()}`,
       title: courseData.title || 'New Course',
       slug: courseData.slug || 'new-course',
       description: courseData.description || '',
       area: courseData.area || 'programming',
-      level: courseData.level || 1,
+      level: courseData.level || 'Beginner',
       difficulty: courseData.difficulty || 1,
       status: 'draft',
       tools: courseData.tools || [],

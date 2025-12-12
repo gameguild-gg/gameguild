@@ -1,19 +1,35 @@
 "use client"
 
-import type React from "react"
-
-import { useEffect, useRef, useState, useContext } from "react"
-import { DecoratorNode, type SerializedLexicalNode, $getNodeByKey } from "lexical"
-import { FileText } from "lucide-react"
-import ReactMarkdown from "react-markdown"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { EditorLoadingContext } from "../lexical-editor"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
+import { useLexicalNodeSelection } from "@lexical/react/useLexicalNodeSelection"
+import { mergeRegister } from "@lexical/utils"
+import {
+  $getNodeByKey,
+  $getSelection,
+  $isNodeSelection,
+  CLICK_COMMAND,
+  COMMAND_PRIORITY_LOW,
+  DecoratorNode,
+  KEY_BACKSPACE_COMMAND,
+  KEY_DELETE_COMMAND,
+  type NodeKey,
+  SELECTION_CHANGE_COMMAND,
+  type SerializedLexicalNode,
+} from "lexical"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { Edit } from "lucide-react"
+import { MarkdownEditor } from "@/components/editor/extras/markdown/markdown-editor"
+import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
+import { useMarkdownComponents } from "@/components/editor/extras/markdown/markdown-components"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
+import rehypeRaw from "rehype-raw"
+import type { JSX } from "react/jsx-runtime"
 
 export interface MarkdownData {
   content: string
+  title?: string
+  caption?: string
 }
 
 export interface SerializedMarkdownNode extends SerializedLexicalNode {
@@ -22,7 +38,7 @@ export interface SerializedMarkdownNode extends SerializedLexicalNode {
   version: 1
 }
 
-export class MarkdownNode extends DecoratorNode<React.ElementType> {
+export class MarkdownNode extends DecoratorNode<JSX.Element> {
   __data: MarkdownData
 
   static getType(): string {
@@ -33,13 +49,15 @@ export class MarkdownNode extends DecoratorNode<React.ElementType> {
     return new MarkdownNode(node.__data, node.__key)
   }
 
-  constructor(data: MarkdownData, key?: string) {
+  constructor(data: MarkdownData, key?: NodeKey) {
     super(key)
     this.__data = data
   }
 
   createDOM(): HTMLElement {
-    return document.createElement("div")
+    const div = document.createElement("div")
+    div.style.display = "contents"
+    return div
   }
 
   updateDOM(): false {
@@ -51,158 +69,170 @@ export class MarkdownNode extends DecoratorNode<React.ElementType> {
     writable.__data = data
   }
 
+  getData(): MarkdownData {
+    return this.getLatest().__data
+  }
+
+  decorate(): JSX.Element {
+    return <MarkdownComponent nodeKey={this.getKey()} data={this.__data} />
+  }
+
+  static importJSON(serializedNode: SerializedMarkdownNode): MarkdownNode {
+    const { data } = serializedNode
+    return new MarkdownNode(data)
+  }
+
   exportJSON(): SerializedMarkdownNode {
     return {
-      type: "markdown",
       data: this.__data,
+      type: "markdown",
       version: 1,
     }
   }
 
-  static importJSON(serializedNode: SerializedMarkdownNode): MarkdownNode {
-    return new MarkdownNode(serializedNode.data)
-  }
-
-  decorate(): React.ElementType {
-    return <MarkdownComponent data={this.__data} nodeKey={this.__key} />
+  isInline(): false {
+    return false
   }
 }
 
 interface MarkdownComponentProps {
+  nodeKey: NodeKey
   data: MarkdownData
-  nodeKey: string
 }
 
-function MarkdownComponent({ data, nodeKey }: MarkdownComponentProps) {
+function MarkdownComponent({ nodeKey, data }: MarkdownComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const isLoading = useContext(EditorLoadingContext)
-  const [isEditing, setIsEditing] = useState(!data.content && !isLoading)
-  const [content, setContent] = useState(data.content)
+  const [isSelected, setSelected, clearSelection] = useLexicalNodeSelection(nodeKey)
+  const [showEditor, setShowEditor] = useState(false)
+  const [hasAutoOpened, setHasAutoOpened] = useState(false)
   const markdownRef = useRef<HTMLDivElement>(null)
+  const markdownComponents = useMarkdownComponents()
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      const isClickInsideMarkdown = markdownRef.current && markdownRef.current.contains(e.target as Node)
-
-      if (!isClickInsideMarkdown) {
-        setIsEditing(false)
+  const onDelete = useCallback(
+    (payload: KeyboardEvent) => {
+      if (isSelected && $isNodeSelection($getSelection())) {
+        const event: KeyboardEvent = payload
+        event.preventDefault()
+        const node = $getNodeByKey(nodeKey)
+        if (node) {
+          node.remove()
+        }
       }
-    }
+      return false
+    },
+    [isSelected, nodeKey],
+  )
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+  const onEdit = () => {
+    setShowEditor(true)
+  }
 
-  useEffect(() => {
-    if (isLoading) {
-      setIsEditing(false)
-    }
-  }, [isLoading])
-
-  const updateMarkdown = (newContent: string) => {
+  const onSave = (newData: MarkdownData) => {
     editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (node instanceof MarkdownNode) {
-        node.setData({ content: newContent })
+      const node = $getNodeByKey(nodeKey) as MarkdownNode
+      if (node) {
+        node.setData(newData)
       }
     })
+    setShowEditor(false)
   }
 
-  const handleContentChange = (newContent: string) => {
-    setContent(newContent)
-    updateMarkdown(newContent)
+  const onCancel = () => {
+    setShowEditor(false)
   }
 
-  const placeholder = `# Markdown Editor
+  useEffect(() => {
+    return mergeRegister(
+      editor.registerCommand(
+        CLICK_COMMAND,
+        (payload) => {
+          const event = payload
+          if (event.target === markdownRef.current) {
+            if (!event.shiftKey) {
+              clearSelection()
+            }
+            setSelected(!isSelected)
+            return true
+          }
+          return false
+        },
+        COMMAND_PRIORITY_LOW,
+      ),
+      editor.registerCommand(KEY_DELETE_COMMAND, onDelete, COMMAND_PRIORITY_LOW),
+      editor.registerCommand(KEY_BACKSPACE_COMMAND, onDelete, COMMAND_PRIORITY_LOW),
+      editor.registerCommand(
+        SELECTION_CHANGE_COMMAND,
+        () => {
+          if ($isNodeSelection($getSelection())) {
+            return false
+          }
+          clearSelection()
+          return false
+        },
+        COMMAND_PRIORITY_LOW,
+      ),
+    )
+  }, [clearSelection, editor, isSelected, nodeKey, onDelete, setSelected])
 
-You can write markdown here. Some examples:
+  useEffect(() => {
+    // Auto-open for new markdown blocks
+    const isNewMarkdown = !data.content || data.content.trim() === ""
 
-## Headers
-# H1
-## H2
-### H3
-
-## Emphasis
-*italic* or _italic_
-**bold** or __bold__
-***bold italic*** or ___bold italic___
-
-## Lists
-- Item 1
-- Item 2
-  - Subitem 2.1
-  - Subitem 2.2
-
-1. First item
-2. Second item
-3. Third item
-
-## Links and Images
-[Link text](URL)
-![Alt text](image URL)
-
-## Code
-\`inline code\`
-
-\`\`\`
-// code block
-function example() {
-  return "Hello, World!";
-}
-\`\`\`
-
-## Blockquotes
-> This is a blockquote
-> Multiple lines
->> Nested blockquotes
-
-## Tables
-| Header 1 | Header 2 |
-|----------|----------|
-| Cell 1    | Cell 2    |
-| Cell 3    | Cell 4    |
-`
+    if (isNewMarkdown && !hasAutoOpened) {
+      setShowEditor(true)
+      setHasAutoOpened(true)
+    }
+  }, [data.content, hasAutoOpened])
 
   return (
-    <div ref={markdownRef} className="my-4 relative group" onClick={() => !isEditing && setIsEditing(true)}>
-      <div className="rounded-lg border bg-muted/20 p-4">
-        {isEditing ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <FileText className="h-4 w-4" />
-                Markdown Editor
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)} disabled={!content}>
-                Done
-              </Button>
-            </div>
-            <Textarea
-              value={content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              placeholder={placeholder}
-              className="min-h-[200px] resize-y font-mono text-sm"
-            />
-          </div>
-        ) : (
-          <div
-            className={cn(
-              "prose prose-stone dark:prose-invert max-w-none",
-              !content && "min-h-[2.5rem] text-sm text-muted-foreground",
-            )}
-          >
-            {content ? <ReactMarkdown>{content}</ReactMarkdown> : "Click to edit markdown..."}
-          </div>
-        )}
+    <>
+      <div
+        ref={markdownRef}
+        className={`relative my-4 ${isSelected ? "ring-2 ring-blue-500 rounded-lg" : ""}`}
+      >
+        <div className="">
+          {data.content ? (
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+              components={markdownComponents}
+            >
+              {data.content}
+            </ReactMarkdown>
+          ) : (
+            <p className="text-gray-400 dark:text-gray-600 italic">
+              Click to add markdown content...
+            </p>
+          )}
+        </div>
+
+        {/* ContentEditMenu for lateral edit button */}
+        <ContentEditMenu
+          options={[
+            {
+              id: "edit",
+              icon: <Edit className="h-4 w-4" />,
+              label: "Edit Markdown",
+              action: onEdit,
+            },
+          ]}
+        />
       </div>
-    </div>
+
+      {/* Markdown Editor Modal */}
+      {showEditor && <MarkdownEditor initialData={data} onSave={onSave} onCancel={onCancel} />}
+    </>
   )
 }
 
-export function $createMarkdownNode(): MarkdownNode {
+export function $createMarkdownNode(data?: Partial<MarkdownData>): MarkdownNode {
   return new MarkdownNode({
-    content: "",
+    content: data?.content || "",
+    title: data?.title,
+    caption: data?.caption,
   })
+}
+
+export function $isMarkdownNode(node: any): node is MarkdownNode {
+  return node instanceof MarkdownNode
 }

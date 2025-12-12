@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
 import { permissionService } from '@/lib/services/permissionService';
-import { ModuleType, ModuleAction, UserRoleAssignment, ModuleRole } from '@/types/modulePermissions';
+import { ModuleAction, ModuleRole, ModuleType, UserRoleAssignment } from '@/types/modulePermissions';
+import { useCallback, useEffect, useState } from 'react';
 
 export interface UseModulePermissionsReturn {
   // Permission checking
   hasPermission: (module: ModuleType, action: ModuleAction, resourceId?: string) => Promise<boolean>;
+  checkPermission: (module: ModuleType, action: ModuleAction, resourceId?: string) => Promise<boolean>;
 
   // Role management
   userRoles: UserRoleAssignment[];
@@ -50,11 +51,11 @@ export function useModulePermissions(userId: string, tenantId?: string, autoLoad
 
   // Load user roles
   const refreshRoles = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !tenantId) return;
 
     setRolesLoading(true);
     try {
-      const roles = await permissionService.getUserRoles(userId, tenantId);
+      const roles = await permissionService.getUserRoles(userId, 'TestingLab' as any, tenantId);
       setUserRoles(roles);
     } catch (error) {
       console.error('Failed to load user roles:', error);
@@ -191,7 +192,7 @@ export function useTestingLabPermissions(userId: string, tenantId?: string) {
 
   const canCreateSessions = useCallback(() => hasPermission(ModuleType.TestingLab, ModuleAction.Create, 'TestingSession'), [hasPermission]);
 
-  const canEditSession = useCallback((sessionId: string) => hasPermission(ModuleType.TestingLab, ModuleAction.Edit, 'TestingSession', sessionId), [hasPermission]);
+  const canEditSession = useCallback((sessionId: string) => hasPermission(ModuleType.TestingLab, ModuleAction.Edit, sessionId), [hasPermission]);
 
   const canDeleteSessions = useCallback(() => hasPermission(ModuleType.TestingLab, ModuleAction.Delete, 'TestingSession'), [hasPermission]);
 
@@ -216,7 +217,7 @@ export function useTestingLabPermissions(userId: string, tenantId?: string) {
     makeAdmin: makeTestingLabAdmin,
     makeManager: makeTestingLabManager,
     // Detailed permission checking
-    checkPermission: (action: ModuleAction, resourceType?: string, resourceId?: string) => checkPermission(ModuleType.TestingLab, action, resourceType, resourceId),
+    checkPermission: (action: ModuleAction, resourceId?: string) => checkPermission(ModuleType.TestingLab, action, resourceId),
   };
 }
 

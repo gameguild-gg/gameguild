@@ -2,17 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Tenant } from '@/lib/api/generated/types.gen';
+import type { Tenant } from '@/lib/api/generated';
 import { updateTenantClient } from '@/lib/admin/tenants/tenant-client-actions';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building, Users, Settings, Edit, Save, X, Calendar, Activity, BarChart, Shield } from 'lucide-react';
+import { Building, Edit, Save, X, Activity, BarChart } from 'lucide-react';
 import { TenantOverviewTab } from './tabs/tenant-overview-tab';
 import { TenantUsersTab } from './tabs/tenant-users-tab';
 import { TenantSettingsTab } from './tabs/tenant-settings-tab';
