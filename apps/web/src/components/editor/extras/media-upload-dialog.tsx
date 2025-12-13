@@ -401,8 +401,18 @@ export function MediaUploadDialog({
         if (upload.type === "file") {
           // Save file to assets
           console.log("MediaUploadDialog: Saving file asset with projectId =", projectId)
+          
+          // If file was compressed, create a new File object with the compressed data
+          // but keep the original filename
+          let fileToSave = upload.file
+          if (upload.compressed && upload.data && upload.name) {
+            // Convert dataUrl back to File with original name
+            const blob = await fetch(upload.data).then(r => r.blob())
+            fileToSave = new File([blob], upload.name, { type: blob.type })
+          }
+          
           const saveResult = await assetManager.saveAsset({
-            file: upload.file,
+            file: fileToSave,
             dataUrl: upload.data,
             author: "user", // TODO: Get from auth context
             license: "user-uploaded",
