@@ -48,6 +48,7 @@ interface MediaUploadDialogProps {
   multiple?: boolean // Allow multiple file selection
   compress?: boolean // Enable compression by default
   allowCompressionToggle?: boolean // Allow users to toggle compression
+  hideLocalAssets?: boolean // Hide local asset selection, show only upload button
 }
 
 interface PendingUpload extends MediaUploadResult {
@@ -71,6 +72,7 @@ export function MediaUploadDialog({
   multiple = true,
   compress = true,
   allowCompressionToggle = false,
+  hideLocalAssets = false,
 }: MediaUploadDialogProps) {
   const projectIdFromContext = useContext(ProjectIdContext)
   const projectId = projectIdFromContext && typeof projectIdFromContext === 'string' ? projectIdFromContext : undefined
@@ -110,7 +112,7 @@ export function MediaUploadDialog({
   // Load all assets when dialog opens
   useEffect(() => {
     async function loadLocalAssets() {
-      if (open && enabledSources.files) {
+      if (open && enabledSources.files && !hideLocalAssets) {
         setIsLoadingAssets(true)
         try {
           // Get ALL assets, not just from current project
@@ -146,7 +148,7 @@ export function MediaUploadDialog({
       }
     }
     loadLocalAssets()
-  }, [open, enabledSources.files])
+  }, [open, enabledSources.files, hideLocalAssets])
 
   const isImageFile = (file: File): boolean => {
     return file.type.startsWith("image/")
@@ -590,64 +592,120 @@ export function MediaUploadDialog({
 
                   {enabledSources.files && (
                     <TabsContent value="files" className="mt-0 flex flex-col flex-1 min-h-0">
-                      <div className="space-y-2 shrink-0">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">Select from your files</Label>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="h-9"
+                      {hideLocalAssets ? (
+                        // Upload-only mode - prominent upload area
+                        <div className="flex flex-col items-center justify-center flex-1 min-h-0">
+                          <div
+                            className="relative flex flex-col items-center justify-center gap-6 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-xl p-16 transition-colors hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 w-full max-w-2xl"
+                            onDragOver={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                                handleFileUpload(e.dataTransfer.files)
+                              }
+                            }}
                           >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Upload New
-                          </Button>
+                            <div className="flex flex-col items-center gap-4">
+                              <div className="p-6 bg-blue-100 dark:bg-blue-900/50 rounded-full">
+                                <Upload className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+                              </div>
+                              <div className="text-center space-y-2">
+                                <p className="text-xl font-semibold text-gray-900 dark:text-gray-100">Drop your files here</p>
+                                <p className="text-base text-gray-600 dark:text-gray-400">or click the button below to browse</p>
+                              </div>
+                            </div>
+
+                            <Button 
+                              size="lg" 
+                              onClick={() => fileInputRef.current?.click()} 
+                              className="mt-4 h-12 px-8 text-base bg-blue-600 hover:bg-blue-700"
+                            >
+                              <Plus className="h-5 w-5 mr-2" />
+                              Select Files to Upload
+                            </Button>
+
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              id="media-upload"
+                              accept={acceptTypes}
+                              multiple={true}
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files.length > 0) {
+                                  handleFileUpload(e.target.files)
+                                }
+                              }}
+                            />
+                          </div>
                         </div>
+                      ) : (
+                        // Full mode with local assets
+                        <>
+                          <div className="space-y-2 shrink-0">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-sm font-medium">Select from your files</Label>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="h-9"
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Upload New
+                              </Button>
+                            </div>
 
-                        <Input
-                          placeholder="Search by name..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="h-9"
-                        />
+                            <Input
+                              placeholder="Search by name..."
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="h-9"
+                            />
 
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          id="media-upload"
-                          accept={acceptTypes}
-                          multiple={true}
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files && e.target.files.length > 0) {
-                              handleFileUpload(e.target.files)
-                            }
-                          }}
-                        />
-                      </div>
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              id="media-upload"
+                              accept={acceptTypes}
+                              multiple={true}
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files.length > 0) {
+                                  handleFileUpload(e.target.files)
+                                }
+                              }}
+                            />
+                          </div>
 
-                      <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 flex-1 overflow-y-auto min-h-0 mt-2 dark:bg-gray-900/50">
-                        <LocalAssetGrid
-                          assets={filteredAssets}
-                          selectedAssets={selectedLocalAssets}
-                          isLoading={isLoadingAssets}
-                          hasNoAssets={filteredAssets.length === 0 && localAssets.length === 0}
-                          noSearchResults={filteredAssets.length === 0 && localAssets.length > 0}
-                          onToggleSelection={toggleLocalAssetSelection}
-                          formatFileSize={formatFileSize}
-                        />
-                      </div>
+                          <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 flex-1 overflow-y-auto min-h-0 mt-2 dark:bg-gray-900/50">
+                            <LocalAssetGrid
+                              assets={filteredAssets}
+                              selectedAssets={selectedLocalAssets}
+                              isLoading={isLoadingAssets}
+                              hasNoAssets={filteredAssets.length === 0 && localAssets.length === 0}
+                              noSearchResults={filteredAssets.length === 0 && localAssets.length > 0}
+                              onToggleSelection={toggleLocalAssetSelection}
+                              formatFileSize={formatFileSize}
+                            />
+                          </div>
 
-                      {selectedLocalAssets.size > 0 && (
-                        <div className="pt-2 shrink-0">
-                          <Button
-                            onClick={handleAddSelectedAssets}
-                            className="w-full h-10 text-sm"
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add {selectedLocalAssets.size} Selected File{selectedLocalAssets.size !== 1 ? 's' : ''}
-                          </Button>
-                        </div>
+                          {selectedLocalAssets.size > 0 && (
+                            <div className="pt-2 shrink-0">
+                              <Button
+                                onClick={handleAddSelectedAssets}
+                                className="w-full h-10 text-sm"
+                              >
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add {selectedLocalAssets.size} Selected File{selectedLocalAssets.size !== 1 ? 's' : ''}
+                              </Button>
+                            </div>
+                          )}
+                        </>
                       )}
                     </TabsContent>
                   )}
