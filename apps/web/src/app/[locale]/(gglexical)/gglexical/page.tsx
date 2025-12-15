@@ -3,7 +3,14 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Eye, Blocks, Plus, Calendar, List, LayoutGrid, FolderOpen, ImageIcon, Upload } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Eye, Blocks, Plus, Calendar, List, LayoutGrid, FolderOpen, ImageIcon, Upload, Columns } from "lucide-react"
 import Link from "next/link"
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
@@ -38,6 +45,8 @@ export default function HomePage() {
   
   // View state
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
+  const [gridColumns, setGridColumns] = useState(5)
+  const [listColumns, setListColumns] = useState(1)
   
   // Database and storage
   const [isDbInitialized, setIsDbInitialized] = useState(false)
@@ -566,6 +575,40 @@ export default function HomePage() {
                     <LayoutGrid className="w-4 h-4" />
                   </Button>
                 </div>
+                
+                {/* Columns selector */}
+                <Select
+                  value={viewMode === 'list' ? String(listColumns) : String(gridColumns)}
+                  onValueChange={(value) => {
+                    if (viewMode === 'list') {
+                      setListColumns(Number(value))
+                    } else {
+                      setGridColumns(Number(value))
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-[140px] h-9">
+                    <Columns className="w-4 h-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {viewMode === 'list' ? (
+                      <>
+                        <SelectItem value="1">1 Column</SelectItem>
+                        <SelectItem value="2">2 Columns</SelectItem>
+                      </>
+                    ) : (
+                      <>
+                        <SelectItem value="5">5 Columns</SelectItem>
+                        <SelectItem value="6">6 Columns</SelectItem>
+                        <SelectItem value="7">7 Columns</SelectItem>
+                        <SelectItem value="9">9 Columns</SelectItem>
+                        <SelectItem value="12">12 Columns</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+                
                 {activeContext === 'projects' && (
                   <>
                     <Button 
@@ -683,6 +726,8 @@ export default function HomePage() {
                     searchTerm={searchTerm}
                     selectedTags={selectedTags}
                     viewMode={viewMode}
+                    gridColumns={gridColumns}
+                    listColumns={listColumns}
                     onOpen={handleProjectOpen}
                     onView={handleProjectView}
                     onDelete={projectActions.handleConfirmDelete}
@@ -734,6 +779,8 @@ export default function HomePage() {
                       assetCurrentPage * assetItemsPerPage
                     )}
                     viewMode={viewMode}
+                    gridColumns={gridColumns}
+                    listColumns={listColumns}
                     onDelete={handleAssetDelete}
                     onDownload={handleAssetDownload}
                     onEdit={handleAssetEdit}
