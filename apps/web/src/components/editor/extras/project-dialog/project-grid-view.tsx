@@ -17,6 +17,7 @@ interface ProjectData {
 
 interface ProjectGridViewProps {
   projects: ProjectData[]
+  columns?: number
   onOpen: (projectId: string, event?: React.MouseEvent) => void
   onView?: (projectId: string, event?: React.MouseEvent) => void
   onDelete?: (projectId: string, projectName: string) => void
@@ -30,6 +31,7 @@ interface ProjectGridViewProps {
 
 export function ProjectGridView({
   projects,
+  columns = 5,
   onOpen,
   onView,
   onDelete,
@@ -40,8 +42,20 @@ export function ProjectGridView({
   openButtonText = "Open",
   openButtonIcon,
 }: ProjectGridViewProps) {
+  // Generate grid columns class based on columns prop
+  const getGridClass = () => {
+    const colMap: Record<number, string> = {
+      5: 'grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+      6: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6',
+      7: 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7',
+      9: 'grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9',
+      12: 'grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12',
+    }
+    return colMap[columns] || colMap[5]
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <div className={`grid ${getGridClass()} gap-4`}>
       {projects.map((project) => (
         <ProjectCard
           key={project.id}

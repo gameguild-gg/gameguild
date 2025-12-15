@@ -22,13 +22,27 @@ interface Asset {
 interface AssetListProps {
   assets: Asset[]
   viewMode: 'list' | 'grid'
+  gridColumns?: number
+  listColumns?: number
   onDelete: (assetId: string, assetName: string) => void
   onDownload: (assetId: string, assetName: string) => void
   onEdit: (assetId: string, currentName: string) => void
 }
 
-export function AssetList({ assets, viewMode, onDelete, onDownload, onEdit }: AssetListProps) {
+export function AssetList({ assets, viewMode, gridColumns = 5, listColumns = 1, onDelete, onDownload, onEdit }: AssetListProps) {
   const [assetDataUrls, setAssetDataUrls] = useState<Record<string, string>>({})
+
+  // Generate grid columns class based on columns prop
+  const getGridClass = () => {
+    const colMap: Record<number, string> = {
+      5: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+      6: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6',
+      7: 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7',
+      9: 'grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9',
+      12: 'grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12',
+    }
+    return colMap[gridColumns] || colMap[5]
+  }
 
   // Load asset data URLs for thumbnails
   useEffect(() => {
@@ -115,7 +129,7 @@ export function AssetList({ assets, viewMode, onDelete, onDownload, onEdit }: As
 
   if (viewMode === 'grid') {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className={`grid ${getGridClass()} gap-4`}>
         {assets.map((asset) => (
           <div
             key={asset.id}
@@ -188,7 +202,7 @@ export function AssetList({ assets, viewMode, onDelete, onDownload, onEdit }: As
   }
 
   return (
-    <div className="space-y-2">
+    <div className={listColumns === 2 ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : "space-y-2"}>
       {assets.map((asset) => (
         <div
           key={asset.id}

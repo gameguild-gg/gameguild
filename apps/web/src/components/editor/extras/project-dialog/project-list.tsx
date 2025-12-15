@@ -27,6 +27,8 @@ interface ProjectListProps {
   searchTerm: string
   selectedTags: string[]
   viewMode?: 'grid' | 'list'
+  gridColumns?: number
+  listColumns?: number
   onOpen: (projectId: string, event?: React.MouseEvent) => void
   onView?: (projectId: string, event?: React.MouseEvent) => void
   onDelete?: (projectId: string, projectName: string) => void
@@ -52,6 +54,8 @@ export function ProjectList({
   searchTerm,
   selectedTags,
   viewMode = 'grid',
+  gridColumns = 5,
+  listColumns = 1,
   onOpen,
   onView,
   onDelete,
@@ -174,6 +178,7 @@ export function ProjectList({
         {viewMode === 'grid' ? (
           <ProjectGridView
             projects={paginatedProjects}
+            columns={gridColumns}
             onOpen={onOpen}
             onView={onView}
             onDelete={onDelete}
@@ -187,6 +192,7 @@ export function ProjectList({
         ) : (
           <ProjectListView
             projects={paginatedProjects}
+            columns={listColumns}
             onOpen={onOpen}
             onView={onView}
             onDelete={onDelete}
