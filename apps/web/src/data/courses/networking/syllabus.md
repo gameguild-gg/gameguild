@@ -15,6 +15,7 @@ This 15-week course introduces students to network programming fundamentals thro
 
 ### Week 1: Network Fundamentals
 **Topics:**
+- Network topologies and devices
 - Understand the OSI model and TCP/IP stack
 - Identify network devices and their roles
 - Grasp basic network addressing concepts
@@ -37,6 +38,7 @@ Quiz covering OSI model layers, TCP/IP fundamentals, and network device identifi
 
 **Hands-on Project:**
 Create an IP address calculator and subnet analyzer. Design a network topology for a hypothetical game server infrastructure, including load balancers and regional servers.
+todo: Use wireshark
 
 **Assessment:**
 - Quiz on IP addressing, subnetting calculations, routing protocol concepts.
@@ -48,9 +50,13 @@ Create an IP address calculator and subnet analyzer. Design a network topology f
 - Understand UDP characteristics and use cases
 - Learn socket programming fundamentals
 - Implement connectionless communication patterns
+- Datagram
+- Reliable UDP introduction
+- Explain that we will cover more how to abstract the package sending/receiving in future weeks with serialization
 
 **Hands-on Project:**
 Develop a real-time "asteroid field" game where ship positions are broadcast via UDP. Include basic chat functionality using UDP sockets.
+Echo server.
 
 **Assessment:**
 Quiz on UDP protocol characteristics, socket programming basics, and connectionless communication patterns.
@@ -62,9 +68,12 @@ Quiz on UDP protocol characteristics, socket programming basics, and connectionl
 - Understand TCP characteristics and reliability mechanisms
 - Learn connection establishment and management
 - Implement flow control and error correction
+- Datagram
+- STUN/TURN intro
 
 **Hands-on Project:**
 Build a turn-based strategy game (tic-tac-toe or chess) using TCP for move synchronization. Implement proper connection handling and error recovery.
+Chat App.
 
 **Assessment:**
 Quiz on TCP protocol features, connection management, and reliability mechanisms.
@@ -75,27 +84,29 @@ Quiz on TCP protocol features, connection management, and reliability mechanisms
 **Topics:**
 - Understand HTTP/HTTPS fundamentals
 - Learn REST API design principles
-- Explore WebSockets and modern protocols (HTTP/2, QUIC)
+- Idempotency and statelessness
+- Explore WebSockets/WebRTC and modern protocols (HTTP/2, QUIC)
 
 **Hands-on Project:**
-Create a game lobby system using HTTP REST APIs and WebSocket connections. Include player statistics tracking and real-time chat functionality.
+Create a lobby system using HTTP REST APIs and WebSocket connections. Include player statistics tracking and real-time chat functionality.
 
 **Assessment:**
 Quiz on HTTP methods, status codes, WebSocket protocol, and modern web protocol features.
 
 ---
 
-### Week 6: Game State Management
+### Week 6: State Management
 **Topics:**
-- Understand game state synchronization concepts
+- Understand state synchronization concepts
 - Learn client-server vs peer-to-peer architectures
 - Implement state replication strategies
+- Object replication
 
 **Hands-on Project:**
 Develop a multiplayer Pong game with shared game state management. Implement both real-time and turn-based synchronization modes.
 
 **Assessment:**
-Quiz on game state management, synchronization strategies, and network architecture patterns.
+Quiz on state management, synchronization strategies, and network architecture patterns.
 
 ---
 
@@ -107,6 +118,7 @@ Quiz on game state management, synchronization strategies, and network architect
 
 **Hands-on Project:**
 Build a "ghost car" racing game with a multi-format serialization library. Store and transmit player car data using various serialization formats and compare performance.
+Extra: build a serialization tool.
 
 **Assessment:**
 Quiz on serialization format comparison, data encoding methods, and performance considerations.
@@ -118,6 +130,7 @@ Quiz on serialization format comparison, data encoding methods, and performance 
 - Understand RPC concepts and implementations
 - Design RESTful game APIs
 - Explore GraphQL for game data queries
+- Extras: gRPC
 
 **Hands-on Project:**
 Create a "remote robot controller" game with an RPC system for game actions (move, attack, chat commands). Implement both REST and RPC interfaces.
@@ -181,6 +194,7 @@ Begin final project development - focus on server architecture design and implem
 
 **Assessment:**
 Quiz on server architecture patterns, load balancing strategies, and scalability concepts.
+Which server architecture to choose for different game genres.
 
 ---
 
@@ -189,6 +203,7 @@ Quiz on server architecture patterns, load balancing strategies, and scalability
 - Understand NAT punchthrough techniques
 - Learn ICE/STUN/TURN protocols
 - Implement peer-to-peer game architectures
+- STEAM P2P networking overview
 
 **Hands-on Project:**
 Continue final project development - implement NAT traversal or P2P features as applicable.
