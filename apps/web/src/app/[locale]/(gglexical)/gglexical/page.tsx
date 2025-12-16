@@ -3,29 +3,27 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Eye, Blocks, Plus, Calendar, List, LayoutGrid, FolderOpen, ImageIcon, Upload, Columns } from "lucide-react"
+import { Eye, Blocks, Plus, FolderOpen as FolderOpenIcon, Edit, Trash, Download, Info } from "lucide-react"
 import Link from "next/link"
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { ProjectList } from "@/components/editor/extras/project-dialog/project-list"
-import { ProjectSearchFilters } from "@/components/editor/extras/project-dialog/project-search-filters"
-import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
+import { 
+  ManagerLayout, 
+  ManagerFilters, 
+  GridView, 
+  ListView,
+  type ManagerCard,
+  type CardAction,
+  type FilterConfig 
+} from "@/components/editor/extras/manager-page"
 import { useProjectDialog } from "@/hooks/editor/use-project-dialog"
 import { useProjectActions } from "@/hooks/editor/use-project-actions"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { toast } from "sonner"
-import { AssetList } from "@/components/editor/extras/asset-manager/asset-list"
-import { AssetFilters } from "@/components/editor/extras/asset-manager/asset-filters"
 import { MediaUploadDialog } from "@/components/editor/extras/media-upload-dialog"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 import { InfoDialog } from "@/components/editor/extras/editor/info-dialog"
+import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
 
 interface ProjectData {
   id: string
@@ -44,8 +42,8 @@ export default function HomePage() {
   const [activeContext, setActiveContext] = useState<'projects' | 'assets'>('projects')
   
   // View state
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list')
-  const [gridColumns, setGridColumns] = useState(5)
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
+  const [gridColumns, setGridColumns] = useState(4)
   const [listColumns, setListColumns] = useState(1)
   
   // Database and storage
@@ -53,23 +51,23 @@ export default function HomePage() {
   const [availableTags, setAvailableTags] = useState<Array<{ name: string }>>([])
   const dbStorage = useRef<EnhancedStorageAdapter>(new EnhancedStorageAdapter())
   
-  // Advanced filters
-  const [authorFilter, setAuthorFilter] = useState("")
-  const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published" | "scheduled">("all")
-  const [dateFromFilter, setDateFromFilter] = useState("")
-  const [dateToFilter, setDateToFilter] = useState("")
-  const [accessFilter, setAccessFilter] = useState<"all" | "all-access" | "all-authors">("all")
-  const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "name" | "name-desc">("newest")
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false) // Mudado para false por padrão para economizar recursos
+  // Unified filters
+  const [filters, setFilters] = useState<FilterConfig>({
+    searchTerm: '',
+    tags: [],
+    tagFilterMode: 'all',
+    storageType: 'all',
+    mimeType: 'all',
+    projectFilter: 'all',
+    usageFilter: 'all',
+    sortOrder: 'newest'
+  })
 
+  const [itemsPerPage, setItemsPerPage] = useState(24)
+  const [currentPage, setCurrentPage] = useState(1)
+  
   // Asset management states
   const [assets, setAssets] = useState<Array<{ id: string; name: string; mimeType: string; size: number; createdAt: string; projects?: string[] }>>([])
-  const [assetSearchTerm, setAssetSearchTerm] = useState("")
-  const [assetMimeTypeFilter, setAssetMimeTypeFilter] = useState("all")
-  const [assetProjectFilter, setAssetProjectFilter] = useState("all")
-  const [assetUsageFilter, setAssetUsageFilter] = useState<"all" | "used" | "unused">("all")
-  const [assetItemsPerPage, setAssetItemsPerPage] = useState(24)
-  const [assetCurrentPage, setAssetCurrentPage] = useState(1)
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [assetToDelete, setAssetToDelete] = useState<{ id: string; name: string } | null>(null)
   const [assetToEdit, setAssetToEdit] = useState<{ id: string; name: string } | null>(null)
@@ -151,10 +149,6 @@ export default function HomePage() {
     setSelectedTags,
     storageTypeFilter,
     setStorageTypeFilter,
-    currentPage,
-    setCurrentPage,
-    itemsPerPage,
-    setItemsPerPage,
     filteredProjects,
     totalProjects,
     tagFilterMode,
@@ -162,7 +156,10 @@ export default function HomePage() {
     handleDownload,
     loadProject,
     refreshProjects,
-  } = useProjectDialog({ isDbInitialized, storageAdapter })
+  } = useProjectDialog({ 
+    isDbInitialized, 
+    storageAdapter
+  })
 
   // Initialize database
   useEffect(() => {
@@ -232,6 +229,30 @@ export default function HomePage() {
     }
   }, [activeContext, isDbInitialized, loadAssets])
 
+  // Sync filters with legacy hooks
+  useEffect(() => {
+    if (filters.searchTerm !== searchTerm) setSearchTerm(filters.searchTerm)
+  }, [filters.searchTerm, searchTerm, setSearchTerm])
+
+  useEffect(() => {
+    if (JSON.stringify(filters.tags) !== JSON.stringify(selectedTags)) {
+      setSelectedTags(filters.tags || [])
+    }
+  }, [filters.tags, selectedTags, setSelectedTags])
+
+  useEffect(() => {
+    const storageType = filters.storageType === 'all' ? undefined : filters.storageType
+    if (storageType !== storageTypeFilter) {
+      setStorageTypeFilter(storageType)
+    }
+  }, [filters.storageType, storageTypeFilter, setStorageTypeFilter])
+
+  useEffect(() => {
+    if (filters.tagFilterMode && filters.tagFilterMode !== tagFilterMode) {
+      setTagFilterMode(filters.tagFilterMode)
+    }
+  }, [filters.tagFilterMode, tagFilterMode, setTagFilterMode])
+
   // Função para atualizar lista após mudanças - MEMOIZADA
   const updateProjectsList = useCallback(async () => {
     await refreshProjects()
@@ -245,20 +266,10 @@ export default function HomePage() {
     onProjectUpdate: updateProjectsList
   })
 
-  // Filter projects based on search and advanced filters - MEMOIZADO para evitar recálculo desnecessário
+  // Filter projects based on unified filters
   const additionalFilteredProjects = useMemo(() => {
-    const filtered = filteredProjects.filter(project => {
-      const matchesAuthor = !authorFilter || "Miguel".toLowerCase().includes(authorFilter.toLowerCase()) // Placeholder author check
-      const matchesStatus = statusFilter === "all" || statusFilter === "draft" // All projects are drafts for now
-      const matchesDateFrom = !dateFromFilter || new Date(project.updatedAt) >= new Date(dateFromFilter)
-      const matchesDateTo = !dateToFilter || new Date(project.updatedAt) <= new Date(dateToFilter)
-      
-      return matchesAuthor && matchesStatus && matchesDateFrom && matchesDateTo
-    })
-
-    // Apply sorting
-    return filtered.sort((a, b) => {
-      switch (sortOrder) {
+    return filteredProjects.sort((a, b) => {
+      switch (filters.sortOrder) {
         case "oldest":
           return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime()
         case "name":
@@ -270,21 +281,19 @@ export default function HomePage() {
           return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
       }
     })
-  }, [filteredProjects, authorFilter, statusFilter, dateFromFilter, dateToFilter, sortOrder])
-
-  const totalPages = Math.ceil(additionalFilteredProjects.length / itemsPerPage)
+  }, [filteredProjects, filters.sortOrder])
 
   // Handle project actions - MEMOIZADAS para evitar recriação
   const handleProjectOpen = useCallback(async (projectId: string, event?: React.MouseEvent) => {
     try {
-      toast.loading("Carregando projeto...", { id: `loading-${projectId}` })
+      toast.loading("Loading project...", { id: `loading-${projectId}` })
       
       const projectData = await loadProject(projectId)
       if (projectData) {
         // Store project data in localStorage for the studio to pick up
         localStorage.setItem('selectedProject', JSON.stringify(projectData))
         
-        toast.success("Redirecionando para Studio...", { 
+        toast.success("Redirecting to Studio...", { 
           id: `loading-${projectId}`,
           duration: 1000
         })
@@ -301,23 +310,23 @@ export default function HomePage() {
         }, 500)
       }
     } catch (error) {
-      toast.error("Erro ao carregar projeto", { 
+      toast.error("Error loading project", { 
         id: `loading-${projectId}`,
-        description: "Não foi possível carregar o projeto"
+        description: "Could not load the project"
       })
     }
   }, [loadProject])
 
   const handleProjectView = useCallback(async (projectId: string, event?: React.MouseEvent) => {
     try {
-      toast.loading("Carregando projeto...", { id: `loading-view-${projectId}` })
+      toast.loading("Loading project...", { id: `loading-view-${projectId}` })
       
       const projectData = await loadProject(projectId)
       if (projectData) {
         // Store project data in localStorage for the viewer to pick up
         localStorage.setItem('selectedProject', JSON.stringify(projectData))
         
-        toast.success("Redirecionando para Viewer...", { 
+        toast.success("Redirecting to Viewer...", { 
           id: `loading-view-${projectId}`,
           duration: 1000
         })
@@ -334,9 +343,9 @@ export default function HomePage() {
         }, 500)
       }
     } catch (error) {
-      toast.error("Erro ao carregar projeto", { 
+      toast.error("Error loading project", { 
         id: `loading-view-${projectId}`,
-        description: "Não foi possível carregar o projeto"
+        description: "Could not load the project"
       })
     }
   }, [loadProject])
@@ -364,23 +373,35 @@ export default function HomePage() {
   const filteredAssets = useMemo(() => {
     return assets.filter((asset) => {
       // Search filter
-      const matchesSearch = !assetSearchTerm || asset.name.toLowerCase().includes(assetSearchTerm.toLowerCase())
+      const matchesSearch = !filters.searchTerm || asset.name.toLowerCase().includes(filters.searchTerm.toLowerCase())
       
       // MIME type filter
-      const matchesMimeType = assetMimeTypeFilter === "all" || asset.mimeType.startsWith(assetMimeTypeFilter + "/")
+      const matchesMimeType = filters.mimeType === "all" || asset.mimeType.startsWith(filters.mimeType + "/")
       
       // Project filter
-      const matchesProject = assetProjectFilter === "all" || asset.projects?.includes(assetProjectFilter)
+      const matchesProject = !filters.projectFilter || filters.projectFilter === "all" || asset.projects?.includes(filters.projectFilter)
       
       // Usage filter
       const matchesUsage =
-        assetUsageFilter === "all" ||
-        (assetUsageFilter === "used" && asset.projects && asset.projects.length > 0) ||
-        (assetUsageFilter === "unused" && (!asset.projects || asset.projects.length === 0))
+        filters.usageFilter === "all" ||
+        (filters.usageFilter === "used" && asset.projects && asset.projects.length > 0) ||
+        (filters.usageFilter === "unused" && (!asset.projects || asset.projects.length === 0))
       
       return matchesSearch && matchesMimeType && matchesProject && matchesUsage
+    }).sort((a, b) => {
+      switch (filters.sortOrder) {
+        case "oldest":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        case "name":
+          return a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+        case "name-desc":
+          return b.name.toLowerCase().localeCompare(a.name.toLowerCase())
+        case "newest":
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      }
     })
-  }, [assets, assetSearchTerm, assetMimeTypeFilter, assetProjectFilter, assetUsageFilter])
+  }, [assets, filters])
 
   const handleAssetDelete = useCallback((assetId: string, assetName: string) => {
     setAssetToDelete({ id: assetId, name: assetName })
@@ -468,350 +489,296 @@ export default function HomePage() {
     setUploadDialogOpen(false)
   }, [loadAssets])
 
-  const assetTotalPages = Math.ceil(filteredAssets.length / assetItemsPerPage)
+  // Convert projects to ManagerCard format
+  const projectCards: ManagerCard[] = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    
+    return additionalFilteredProjects.slice(startIndex, endIndex).map(project => ({
+      type: 'project' as const,
+      id: project.id,
+      name: project.name,
+      tags: project.tags,
+      size: project.size,
+      data: project.data,
+      storageType: project.storageType,
+      createdAt: project.createdAt,
+      updatedAt: project.updatedAt,
+    }))
+  }, [additionalFilteredProjects, currentPage, itemsPerPage])
+
+  // Convert assets to ManagerCard format
+  const assetCards: ManagerCard[] = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    
+    return filteredAssets.slice(startIndex, endIndex).map(asset => ({
+      type: 'asset' as const,
+      id: asset.id,
+      name: asset.name,
+      mimeType: asset.mimeType,
+      size: asset.size,
+      projects: asset.projects,
+      createdAt: asset.createdAt,
+      updatedAt: asset.createdAt,
+    }))
+  }, [filteredAssets, currentPage, itemsPerPage])
+
+  // Define card actions for projects
+  const projectPrimaryActions: CardAction[] = useMemo(() => [
+    {
+      label: 'Open in Studio',
+      icon: <Blocks className="h-4 w-4" />,
+      onClick: (card) => handleProjectOpen(card.id),
+    },
+    {
+      label: 'View',
+      icon: <Eye className="h-4 w-4" />,
+      onClick: (card) => handleProjectView(card.id),
+    },
+    {
+      label: 'Information',
+      icon: <Info className="h-4 w-4" />,
+      onClick: async (card) => {
+        const projectData = await loadProject(card.id)
+        if (projectData) {
+          projectActions.handleOpenInfo(projectData)
+        }
+      },
+    },
+  ], [handleProjectOpen, handleProjectView, loadProject, projectActions])
+
+  const projectSecondaryActions: CardAction[] = useMemo(() => [
+    {
+      label: 'Download',
+      icon: <Download className="h-4 w-4" />,
+      onClick: (card) => {
+        if (card.type === 'project') {
+          handleProjectDownload(card.id, card.name, card.data, card.tags, card.createdAt, card.updatedAt)
+        }
+      },
+    },
+    {
+      label: 'Delete',
+      icon: <Trash className="h-4 w-4" />,
+      onClick: (card) => projectActions.handleConfirmDelete(card.id, card.name),
+      variant: 'destructive' as const,
+    },
+  ], [handleProjectDownload, projectActions])
+
+  // Define card actions for assets
+  const assetPrimaryActions: CardAction[] = useMemo(() => [
+    {
+      label: 'Download',
+      icon: <Download className="h-4 w-4" />,
+      onClick: (card) => handleAssetDownload(card.id, card.name),
+    },
+    {
+      label: 'Rename',
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (card) => handleAssetEdit(card.id, card.name),
+    },
+  ], [handleAssetDownload, handleAssetEdit])
+
+  const assetSecondaryActions: CardAction[] = useMemo(() => [
+    {
+      label: 'Delete',
+      icon: <Trash className="h-4 w-4" />,
+      onClick: (card) => handleAssetDelete(card.id, card.name),
+      variant: 'destructive' as const,
+    },
+  ], [handleAssetDelete])
+
+  const totalPages = Math.ceil(
+    (activeContext === 'projects' ? additionalFilteredProjects.length : filteredAssets.length) / itemsPerPage
+  )
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="flex h-screen">
-        {/* Left Sidebar */}
-        <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-          {/* Logo/Header */}
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Blocks className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">GameGuild</h1>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Content Platform</p>
-          </div>
-
-          {/* Navigation */}
-          <div className="flex-1 p-4 space-y-2">
-            <Button 
-              asChild 
-              className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Link href="/gglexical/studio">
-                <Blocks className="w-4 h-4 mr-3" />
-                Studio
-              </Link>
-            </Button>
-            
-            <Button 
-              asChild 
-              variant="ghost" 
-              className="w-full justify-start hover:bg-gray-100 dark:hover:bg-gray-700"
-            >
-              <Link href="/gglexical/viewer">
-                <Eye className="w-4 h-4 mr-3" />
-                Viewer
-              </Link>
-            </Button>
-
-            {/* Context Buttons */}
-            <div className="pt-4 space-y-2">
-              <p className="text-xs text-gray-500 dark:text-gray-400 px-3 mb-2">MANAGER</p>
-              <Button
-                variant={activeContext === 'projects' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => setActiveContext('projects')}
-              >
-                <FolderOpen className="w-4 h-4 mr-3" />
-                Projects
-              </Button>
-              <Button
-                variant={activeContext === 'assets' ? 'secondary' : 'ghost'}
-                className="w-full justify-start"
-                onClick={() => setActiveContext('assets')}
-              >
-                <ImageIcon className="w-4 h-4 mr-3" />
-                Assets
-              </Button>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              All systems operational
-            </div>
+    <>
+      <ManagerLayout
+      activeContext={activeContext}
+      viewMode={viewMode}
+      gridColumns={gridColumns}
+      listColumns={listColumns}
+      onContextChange={setActiveContext}
+      onViewModeChange={setViewMode}
+      onGridColumnsChange={setGridColumns}
+      onListColumnsChange={setListColumns}
+      onCreateNew={() => {
+        if (activeContext === 'projects') {
+          window.location.href = '/gglexical/studio'
+        } else {
+          setUploadDialogOpen(true)
+        }
+      }}
+      filterSection={
+        <ManagerFilters
+          filters={filters}
+          onFilterChange={(newFilters) => setFilters({ ...filters, ...newFilters })}
+          availableTags={availableTags}
+          availableProjects={additionalFilteredProjects.map(p => ({ id: p.id, name: p.name }))}
+          contextType={activeContext}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
+      }
+      paginationSection={
+        totalPages > 1 ? (
+          <ProjectPagination
+            currentPage={currentPage}
+            totalProjects={activeContext === 'projects' ? additionalFilteredProjects.length : filteredAssets.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+          />
+        ) : undefined
+      }
+    >
+      {!isDbInitialized ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-500 dark:text-gray-400">
+              Loading {activeContext === 'projects' ? 'projects' : 'assets'}...
+            </p>
           </div>
         </div>
+      ) : activeContext === 'projects' ? (
+        viewMode === 'grid' ? (
+          <GridView
+            cards={projectCards}
+            columns={gridColumns}
+            viewMode="grid"
+            primaryActions={projectPrimaryActions}
+            secondaryActions={projectSecondaryActions}
+          />
+        ) : (
+          <ListView
+            cards={projectCards}
+            columns={listColumns}
+            viewMode="list"
+            primaryActions={projectPrimaryActions}
+            secondaryActions={projectSecondaryActions}
+          />
+        )
+      ) : (
+        viewMode === 'grid' ? (
+          <GridView
+            cards={assetCards}
+            columns={gridColumns}
+            viewMode="grid"
+            primaryActions={assetPrimaryActions}
+            secondaryActions={assetSecondaryActions}
+          />
+        ) : (
+          <ListView
+            cards={assetCards}
+            columns={listColumns}
+            viewMode="list"
+            primaryActions={assetPrimaryActions}
+            secondaryActions={assetSecondaryActions}
+          />
+        )
+      )}
+    </ManagerLayout>
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Top Header */}
-          <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  {activeContext === 'projects' ? 'Projects' : 'Assets'}
-                </h2>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {activeContext === 'projects' 
-                    ? `${additionalFilteredProjects.length} of ${totalProjects} projects`
-                    : `${filteredAssets.length} of ${assets.length} assets`
-                  }
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center border rounded-lg">
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className="rounded-r-none"
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className="rounded-l-none"
-                  >
-                    <LayoutGrid className="w-4 h-4" />
-                  </Button>
-                </div>
-                
-                {/* Columns selector */}
-                <Select
-                  value={viewMode === 'list' ? String(listColumns) : String(gridColumns)}
-                  onValueChange={(value) => {
-                    if (viewMode === 'list') {
-                      setListColumns(Number(value))
-                    } else {
-                      setGridColumns(Number(value))
-                    }
-                  }}
-                >
-                  <SelectTrigger className="w-[140px] h-9">
-                    <Columns className="w-4 h-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {viewMode === 'list' ? (
-                      <>
-                        <SelectItem value="1">1 Column</SelectItem>
-                        <SelectItem value="2">2 Columns</SelectItem>
-                      </>
-                    ) : (
-                      <>
-                        <SelectItem value="5">5 Columns</SelectItem>
-                        <SelectItem value="6">6 Columns</SelectItem>
-                        <SelectItem value="7">7 Columns</SelectItem>
-                        <SelectItem value="9">9 Columns</SelectItem>
-                        <SelectItem value="12">12 Columns</SelectItem>
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
-                
-                {activeContext === 'projects' && (
-                  <>
-                    <Button 
-                      variant="outline"
-                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                      className="gap-2"
-                    >
-                      <Calendar className="w-4 h-4" />
-                      Advanced
-                    </Button>
-                    <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
-                      <Plus className="w-4 h-4" />
-                      New project
-                    </Button>
-                  </>
-                )}
-                {activeContext === 'assets' && (
-                  <Button 
-                    className="gap-2 bg-blue-600 hover:bg-blue-700"
-                    onClick={() => setUploadDialogOpen(true)}
-                  >
-                    <Upload className="w-4 h-4" />
-                    Upload Assets
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
+    {/* Delete Confirmation Dialog */}
+    <DeleteConfirmDialog
+      open={projectActions.deleteDialogOpen}
+      onOpenChange={projectActions.setDeleteDialogOpen}
+      itemName={projectActions.projectToDelete?.name}
+      itemType="project"
+      onConfirm={projectActions.handleDelete}
+      title="Confirm Deletion"
+    />
 
-          {/* Filters */}
-          {activeContext === 'projects' ? (
-            <ProjectSearchFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-              availableTags={availableTags}
-              tagFilterMode={tagFilterMode}
-              onTagFilterModeChange={setTagFilterMode}
-              storageTypeFilter={storageTypeFilter}
-              onStorageTypeFilterChange={setStorageTypeFilter}
-              itemsPerPage={itemsPerPage}
-              onItemsPerPageChange={setItemsPerPage}
-              showFilters={true}
-              forceVerticalLayout={false}
-              // Advanced filters props
-              authorFilter={authorFilter}
-              onAuthorFilterChange={setAuthorFilter}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              dateFromFilter={dateFromFilter}
-              onDateFromFilterChange={setDateFromFilter}
-              dateToFilter={dateToFilter}
-              onDateToFilterChange={setDateToFilter}
-              accessFilter={accessFilter}
-              onAccessFilterChange={setAccessFilter}
-              sortOrder={sortOrder}
-              onSortOrderChange={setSortOrder}
-              showAdvancedFilters={showAdvancedFilters}
+    {/* Asset Delete Confirmation Dialog */}
+    <DeleteConfirmDialog
+      open={!!assetToDelete}
+      onOpenChange={(open) => !open && setAssetToDelete(null)}
+      itemName={assetToDelete?.name}
+      itemType="asset"
+      onConfirm={handleConfirmAssetDelete}
+      title="Confirm Asset Deletion"
+      description="This asset may be used in projects. Deleting it will affect all projects that use it."
+    />
+
+    {/* Asset Edit Dialog */}
+    <Dialog open={!!assetToEdit} onOpenChange={(open) => !open && setAssetToEdit(null)}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Rename Asset</DialogTitle>
+          <DialogDescription>
+            Enter a new name for this asset. The file extension will be preserved.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <label htmlFor="asset-name" className="text-sm font-medium">
+              Asset Name
+            </label>
+            <Input
+              id="asset-name"
+              value={newAssetName}
+              onChange={(e) => setNewAssetName(e.target.value)}
+              placeholder="Enter asset name"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newAssetName.trim()) {
+                  handleConfirmAssetEdit()
+                }
+              }}
             />
-          ) : (
-            <AssetFilters
-              searchTerm={assetSearchTerm}
-              onSearchChange={setAssetSearchTerm}
-              mimeTypeFilter={assetMimeTypeFilter}
-              onMimeTypeFilterChange={setAssetMimeTypeFilter}
-              projectFilter={assetProjectFilter}
-              onProjectFilterChange={setAssetProjectFilter}
-              usageFilter={assetUsageFilter}
-              onUsageFilterChange={setAssetUsageFilter}
-              itemsPerPage={assetItemsPerPage}
-              onItemsPerPageChange={setAssetItemsPerPage}
-              availableProjects={additionalFilteredProjects.map(p => ({ id: p.id, name: p.name }))}
-            />
-          )}
-
-          {/* Projects List */}
-          <div className="flex-1 p-6">
-            {!isDbInitialized ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-500 dark:text-gray-400">
-                    Loading {activeContext === 'projects' ? 'projects' : 'assets'}...
-                  </p>
-                </div>
-              </div>
-            ) : activeContext === 'projects' ? (
-              // Projects View
-              additionalFilteredProjects.length === 0 ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <Blocks className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No projects found</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">
-                      {searchTerm || selectedTags.length > 0 ? 
-                        "Try adjusting your search or filters" : 
-                        "Create your first project to get started"
-                      }
-                    </p>
-                    <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                      <Link href="/gglexical/studio">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create New Project
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <ProjectList
-                    projects={additionalFilteredProjects}
-                    currentPage={currentPage}
-                    itemsPerPage={itemsPerPage}
-                    searchTerm={searchTerm}
-                    selectedTags={selectedTags}
-                    viewMode={viewMode}
-                    gridColumns={gridColumns}
-                    listColumns={listColumns}
-                    onOpen={handleProjectOpen}
-                    onView={handleProjectView}
-                    onDelete={projectActions.handleConfirmDelete}
-                    onInfo={projectActions.handleOpenInfo}
-                    showDeleteButton={true}
-                    showStudioViewerButtons={true}
-                  />
-
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="mt-6">
-                      <ProjectPagination
-                        currentPage={currentPage}
-                        totalProjects={additionalFilteredProjects.length}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={setCurrentPage}
-                      />
-                    </div>
-                  )}
-                </>
-              )
-            ) : (
-              // Assets View
-              filteredAssets.length === 0 ? (
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <ImageIcon className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No assets found</h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">
-                      {assetSearchTerm || assetMimeTypeFilter !== 'all' ? 
-                        "Try adjusting your search or filters" : 
-                        "Upload your first asset to get started"
-                      }
-                    </p>
-                    <Button 
-                      onClick={() => setUploadDialogOpen(true)}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Upload Assets
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <AssetList
-                    assets={filteredAssets.slice(
-                      (assetCurrentPage - 1) * assetItemsPerPage,
-                      assetCurrentPage * assetItemsPerPage
-                    )}
-                    viewMode={viewMode}
-                    gridColumns={gridColumns}
-                    listColumns={listColumns}
-                    onDelete={handleAssetDelete}
-                    onDownload={handleAssetDownload}
-                    onEdit={handleAssetEdit}
-                  />
-
-                  {/* Pagination for Assets */}
-                  {assetTotalPages > 1 && (
-                    <div className="mt-6">
-                      <ProjectPagination
-                        currentPage={assetCurrentPage}
-                        totalProjects={filteredAssets.length}
-                        itemsPerPage={assetItemsPerPage}
-                        onPageChange={setAssetCurrentPage}
-                      />
-                    </div>
-                  )}
-                </>
-              )
-            )}
           </div>
         </div>
-      </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setAssetToEdit(null)
+              setNewAssetName("")
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleConfirmAssetEdit}
+            disabled={!newAssetName.trim()}
+          >
+            Rename
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+    {/* Info Dialog */}
+    <InfoDialog
+      open={projectActions.infoDialogOpen}
+      onOpenChange={projectActions.setInfoDialogOpen}
+      project={projectActions.projectToEdit}
+      onSave={projectActions.handleSaveInfo}
+      availableTags={availableTags}
+      storageAdapter={storageAdapter}
+    />
+
+    {/* Upload Assets Dialog */}
+    <MediaUploadDialog
+      open={uploadDialogOpen}
+      onOpenChange={setUploadDialogOpen}
+      onMediaSelected={handleUploadComplete}
+      title="Upload Assets"
+      sources={{ files: true }}
+      multiple={true}
+      compress={true}
+      allowCompressionToggle={true}
+      hideLocalAssets={true}
+    />
+  
       <DeleteConfirmDialog
         open={projectActions.deleteDialogOpen}
         onOpenChange={projectActions.setDeleteDialogOpen}
         itemName={projectActions.projectToDelete?.name}
-        itemType="projeto"
+        itemType="project"
         onConfirm={projectActions.handleDelete}
-        title="Confirmar Exclusão"
+        title="Confirm Deletion"
       />
 
       {/* Asset Delete Confirmation Dialog */}
@@ -821,8 +788,8 @@ export default function HomePage() {
         itemName={assetToDelete?.name}
         itemType="asset"
         onConfirm={handleConfirmAssetDelete}
-        title="Confirmar Exclusão de Asset"
-        description="Este asset pode estar sendo usado em projetos. A exclusão afetará todos os projetos que o utilizam."
+        title="Confirm Asset Deletion"
+        description="This asset may be used in projects. Deleting it will affect all projects that use it."
       />
 
       {/* Asset Edit Dialog */}
@@ -892,8 +859,8 @@ export default function HomePage() {
         multiple={true}
         compress={true}
         allowCompressionToggle={true}
-        hideLocalAssets={true}
-      />
-    </div>
+      hideLocalAssets={true}
+    />
+    </>
   )
 }
