@@ -196,7 +196,7 @@ export default function HomePage() {
   const loadAssets = useCallback(async () => {
     try {
       console.log("Loading assets...")
-      const assetList = await assetManager.listAssets()
+      const assetList = await assetManager.listAssetsWithUsage()
       console.log("Assets loaded:", assetList)
       
       const assetsWithProjects = assetList.map((asset) => {
@@ -206,7 +206,7 @@ export default function HomePage() {
           mimeType: asset.mimeType || 'application/octet-stream',
           size: asset.size || 0,
           createdAt: asset.createdAt || new Date().toISOString(),
-          projects: [], // TODO: Implement project tracking
+          projects: asset.projects || [],
         }
       })
       
