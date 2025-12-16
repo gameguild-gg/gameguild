@@ -45,11 +45,11 @@ export function ProjectGridView({
   // Generate grid columns class based on columns prop
   const getGridClass = () => {
     const colMap: Record<number, string> = {
-      5: 'grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
-      6: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6',
-      7: 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7',
-      9: 'grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9',
-      12: 'grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12',
+      5: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+      6: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6',
+      7: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7',
+      9: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9',
+      12: 'grid-cols-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12',
     }
     return colMap[columns] || colMap[5]
   }
