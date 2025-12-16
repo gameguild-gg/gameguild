@@ -35,11 +35,11 @@ export function AssetList({ assets, viewMode, gridColumns = 5, listColumns = 1, 
   // Generate grid columns class based on columns prop
   const getGridClass = () => {
     const colMap: Record<number, string> = {
-      5: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
-      6: 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6',
-      7: 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7',
-      9: 'grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-9',
-      12: 'grid-cols-3 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-12',
+      5: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
+      6: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6',
+      7: 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7',
+      9: 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-9',
+      12: 'grid-cols-3 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12',
     }
     return colMap[gridColumns] || colMap[5]
   }
@@ -68,10 +68,10 @@ export function AssetList({ assets, viewMode, gridColumns = 5, listColumns = 1, 
     }
   }, [assets])
   const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return <FileImage className="w-5 h-5 text-blue-500" />
-    if (mimeType.startsWith('video/')) return <FileVideo className="w-5 h-5 text-purple-500" />
-    if (mimeType.startsWith('text/')) return <FileText className="w-5 h-5 text-green-500" />
-    return <File className="w-5 h-5 text-gray-500" />
+    if (mimeType.startsWith('image/')) return <FileImage className="w-8 h-8 text-blue-500" />
+    if (mimeType.startsWith('video/')) return <FileVideo className="w-8 h-8 text-purple-500" />
+    if (mimeType.startsWith('text/')) return <FileText className="w-8 h-8 text-green-500" />
+    return <File className="w-8 h-8 text-gray-500" />
   }
 
   const formatFileSize = (bytes: number): string => {
@@ -133,9 +133,9 @@ export function AssetList({ assets, viewMode, gridColumns = 5, listColumns = 1, 
         {assets.map((asset) => (
           <div
             key={asset.id}
-            className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
+            className="group border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 bg-white dark:bg-gray-800"
           >
-            <div className="aspect-square bg-gray-100 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+            <div className="aspect-square bg-gray-100 dark:bg-gray-900 flex items-center justify-center overflow-hidden min-h-[120px]">
               {asset.mimeType.startsWith('image/') && assetDataUrls[asset.id] ? (
                 <img 
                   src={assetDataUrls[asset.id]} 
@@ -143,36 +143,36 @@ export function AssetList({ assets, viewMode, gridColumns = 5, listColumns = 1, 
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="p-4">
+                <div className="p-6">
                   {getFileIcon(asset.mimeType)}
                 </div>
               )}
             </div>
-            <div className="p-3">
-              <div className="flex items-start justify-between gap-2">
+            <div className="p-2 sm:p-3 min-h-[70px] sm:min-h-[80px]">
+              <div className="flex items-start justify-between gap-1 sm:gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate" title={asset.name}>
+                  <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 truncate mb-1 leading-tight" title={asset.name}>
                     {asset.name}
                   </p>
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">{formatFileSize(asset.size)}</span>
+                  <div className="flex items-center gap-1 sm:gap-2 mt-1 flex-wrap">
+                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">{formatFileSize(asset.size)}</span>
                     <Badge 
                       variant="outline" 
-                      className={`text-xs font-medium px-1.5 py-0 h-5 ${formatMimeType(asset.mimeType).color} ${formatMimeType(asset.mimeType).bgColor} border`}
+                      className={`text-[9px] sm:text-xs font-medium px-1 sm:px-1.5 py-0 h-4 sm:h-5 ${formatMimeType(asset.mimeType).color} ${formatMimeType(asset.mimeType).bgColor} border`}
                     >
                       {formatMimeType(asset.mimeType).label}
                     </Badge>
                   </div>
                   {asset.projects && asset.projects.length > 0 && (
-                    <Badge variant="secondary" className="mt-1 text-xs">
+                    <Badge variant="secondary" className="mt-1 text-[9px] sm:text-xs hidden sm:inline-flex">
                       {asset.projects.length} project{asset.projects.length !== 1 ? 's' : ''}
                     </Badge>
                   )}
                 </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreVertical className="w-4 h-4" />
+                    <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0 shrink-0">
+                      <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -206,7 +206,7 @@ export function AssetList({ assets, viewMode, gridColumns = 5, listColumns = 1, 
       {assets.map((asset) => (
         <div
           key={asset.id}
-          className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow bg-white dark:bg-gray-800"
+          className="group border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 bg-white dark:bg-gray-800"
         >
           <div className="flex items-center gap-4">
             <div className="shrink-0 w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded-lg overflow-hidden flex items-center justify-center">
