@@ -69,7 +69,7 @@ export default function HomePage() {
   // Asset management states
   const [assets, setAssets] = useState<Array<{ id: string; name: string; mimeType: string; size: number; createdAt: string; projects?: string[] }>>([])
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
-  const [assetToDelete, setAssetToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [assetToDelete, setAssetToDelete] = useState<{ id: string; name: string; projects: string[] } | null>(null)
   const [assetToEdit, setAssetToEdit] = useState<{ id: string; name: string } | null>(null)
   const [newAssetName, setNewAssetName] = useState("")
 
@@ -404,8 +404,13 @@ export default function HomePage() {
   }, [assets, filters])
 
   const handleAssetDelete = useCallback((assetId: string, assetName: string) => {
-    setAssetToDelete({ id: assetId, name: assetName })
-  }, [])
+    const asset = assets.find(a => a.id === assetId)
+    setAssetToDelete({ 
+      id: assetId, 
+      name: assetName, 
+      projects: asset?.projects || [] 
+    })
+  }, [assets])
 
   const handleAssetEdit = useCallback((assetId: string, currentName: string) => {
     setAssetToEdit({ id: assetId, name: currentName })
@@ -699,7 +704,11 @@ export default function HomePage() {
       itemType="asset"
       onConfirm={handleConfirmAssetDelete}
       title="Confirm Asset Deletion"
-      description="This asset may be used in projects. Deleting it will affect all projects that use it."
+      description={
+        assetToDelete?.projects && assetToDelete.projects.length > 0
+          ? `This asset is used by ${assetToDelete.projects.length} project${assetToDelete.projects.length > 1 ? 's' : ''}${assetToDelete.projects.length <= 5 ? ': ' + assetToDelete.projects.map(pid => additionalFilteredProjects.find(p => p.id === pid)?.name || pid).join(', ') : ''}. Deleting it will affect all projects that use it.`
+          : `Are you sure you want to delete "${assetToDelete?.name}"? This action cannot be undone.`
+      }
     />
 
     {/* Asset Edit Dialog */}
@@ -789,7 +798,11 @@ export default function HomePage() {
         itemType="asset"
         onConfirm={handleConfirmAssetDelete}
         title="Confirm Asset Deletion"
-        description="This asset may be used in projects. Deleting it will affect all projects that use it."
+        description={
+          assetToDelete?.projects && assetToDelete.projects.length > 0
+            ? `This asset is used by ${assetToDelete.projects.length} project${assetToDelete.projects.length > 1 ? 's' : ''}${assetToDelete.projects.length <= 5 ? ': ' + assetToDelete.projects.map(pid => additionalFilteredProjects.find(p => p.id === pid)?.name || pid).join(', ') : ''}. Deleting it will affect all projects that use it.`
+            : `Are you sure you want to delete "${assetToDelete?.name}"? This action cannot be undone.`
+        }
       />
 
       {/* Asset Edit Dialog */}
