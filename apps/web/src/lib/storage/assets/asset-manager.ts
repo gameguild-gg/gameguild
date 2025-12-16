@@ -451,6 +451,29 @@ export class AssetManager {
   }
 
   /**
+   * List all assets with their project usage information
+   */
+  async listAssetsWithUsage(): Promise<Array<AssetMetadata & { projects: string[] }>> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    const index = await this.loadIndex()
+    const allAssets = await this.listAssets()
+
+    // Map assets to include project IDs
+    return allAssets.map(asset => {
+      const usageList = index.assets[asset.id] || []
+      const projectIds = usageList.map(u => u.projectId)
+      
+      return {
+        ...asset,
+        projects: projectIds
+      }
+    })
+  }
+
+  /**
    * Get assets used by a specific project
    */
   async getAssetsForProject(projectId: string): Promise<AssetMetadata[]> {
