@@ -218,29 +218,94 @@ export function ManagerFilters({
           </Select>
         )}
 
-        {/* Sort Order */}
-        <Select
-          value={filters.sortOrder || 'newest'}
-          onValueChange={(value) => onFilterChange({ sortOrder: value as any })}
-        >
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Sort" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest</SelectItem>
-              <SelectItem value="oldest">Oldest</SelectItem>
-              <SelectItem value="name">Name (A-Z)</SelectItem>
-              <SelectItem value="name-desc">Name (Z-A)</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        {/* Sort Order - Multi-select */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Filter className="mr-2 h-4 w-4" />
+              Sort
+              {filters.sortOrder && filters.sortOrder.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {filters.sortOrder.length}
+                </Badge>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64" onInteractOutside={(e) => e.preventDefault()}>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-sm">Sort By</h4>
+                {filters.sortOrder && filters.sortOrder.length > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onFilterChange({ sortOrder: [] })}
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
 
-      {/* Active Filters */}
+              {/* Sort options with checkboxes */}
+              <div className="space-y-2">
+                {[
+                  { value: 'newest', label: 'Date: Newest First', group: 'date' },
+                  { value: 'oldest', label: 'Date: Oldest First', group: 'date' },
+                  { value: 'name', label: 'Name: A-Z', group: 'name' },
+                  { value: 'name-desc', label: 'Name: Z-A', group: 'name' },
+                  { value: 'size-largest', label: 'Size: Largest First', group: 'size' },
+                  { value: 'size-smallest', label: 'Size: Smallest First', group: 'size' },
+                ].map((option) => {
+                  const isSelected = filters.sortOrder?.includes(option.value as any)
+                  
+                  // Check if the opposite option in the same group is selected
+                  const currentSort = filters.sortOrder || []
+                  const groupOptions: Record<string, string[]> = {
+                    'date': ['newest', 'oldest'],
+                    'name': ['name', 'name-desc'],
+                    'size': ['size-largest', 'size-smallest']
+                  }
+                  const oppositeSelected = groupOptions[option.group]?.some(
+                    opt => opt !== option.value && currentSort.includes(opt as any)
+                  )
+                  
+                  return (
+                    <label
+                      key={option.value}
+                      className={`flex items-center gap-2 p-2 rounded ${
+                        oppositeSelected && !isSelected
+                          ? 'cursor-not-allowed opacity-50'
+                          : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={oppositeSelected && !isSelected}
+                        onChange={() => {
+                          const currentSort = filters.sortOrder || []
+                          const newSort = isSelected
+                            ? currentSort.filter((s) => s !== option.value)
+                            : [...currentSort, option.value as any]
+                          onFilterChange({ sortOrder: newSort })
+                        }}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm">{option.label}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>      {/* Active Filters */}
       {(filters.tags && filters.tags.length > 0) || 
        (filters.storageType && filters.storageType !== 'all') ||
        (filters.mimeType && filters.mimeType !== 'all') ||
        (filters.projectFilter && filters.projectFilter !== 'all') ||
-       (filters.usageFilter && filters.usageFilter !== 'all') ? (
+       (filters.usageFilter && filters.usageFilter !== 'all') ||
+       (filters.sortOrder && filters.sortOrder.length > 0) ? (
         <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-200 dark:border-gray-700">
           <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
           
@@ -297,6 +362,29 @@ export function ManagerFilters({
             </Badge>
           )}
 
+          {filters.sortOrder?.map((sort) => {
+            const sortLabels: Record<string, string> = {
+              'newest': 'Newest',
+              'oldest': 'Oldest',
+              'name': 'A-Z',
+              'name-desc': 'Z-A',
+              'size-largest': 'Largest',
+              'size-smallest': 'Smallest',
+            }
+            return (
+              <Badge key={sort} variant="secondary" className="gap-1">
+                {sortLabels[sort] || sort}
+                <X 
+                  className="h-3 w-3 cursor-pointer" 
+                  onClick={() => {
+                    const newSort = filters.sortOrder?.filter((s) => s !== sort) || []
+                    onFilterChange({ sortOrder: newSort })
+                  }}
+                />
+              </Badge>
+            )
+          })}
+
           <Button
             variant="ghost"
             size="sm"
@@ -306,6 +394,7 @@ export function ManagerFilters({
               mimeType: 'all',
               projectFilter: 'all',
               usageFilter: 'all',
+              sortOrder: [],
             })}
           >
             Clear all
