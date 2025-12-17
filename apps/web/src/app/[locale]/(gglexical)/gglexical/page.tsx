@@ -11,6 +11,7 @@ import {
   ManagerFilters, 
   GridView, 
   ListView,
+  applySorting,
   type ManagerCard,
   type CardAction,
   type FilterConfig 
@@ -268,77 +269,7 @@ export default function HomePage() {
 
   // Filter projects based on unified filters
   const additionalFilteredProjects = useMemo(() => {
-    const sorted = [...filteredProjects]
-    
-    if (filters.sortOrder && filters.sortOrder.length > 0) {
-      // Calculate min/max values for normalization
-      const dates = sorted.map(p => new Date(p.updatedAt).getTime())
-      const sizes = sorted.map(p => p.size)
-      const minDate = Math.min(...dates)
-      const maxDate = Math.max(...dates)
-      const minSize = Math.min(...sizes)
-      const maxSize = Math.max(...sizes)
-      
-      // Calculate composite score for each item
-      sorted.sort((a, b) => {
-        let scoreA = 0
-        let scoreB = 0
-        
-        for (const sortType of filters.sortOrder!) {
-          let partialScoreA = 0
-          let partialScoreB = 0
-          
-          switch (sortType) {
-            case "newest":
-              // Normalize dates to 0-1 range (newer = higher score)
-              partialScoreA = maxDate !== minDate ? (new Date(a.updatedAt).getTime() - minDate) / (maxDate - minDate) : 0
-              partialScoreB = maxDate !== minDate ? (new Date(b.updatedAt).getTime() - minDate) / (maxDate - minDate) : 0
-              break
-            case "oldest":
-              // Normalize dates to 0-1 range (older = higher score)
-              partialScoreA = maxDate !== minDate ? (maxDate - new Date(a.updatedAt).getTime()) / (maxDate - minDate) : 0
-              partialScoreB = maxDate !== minDate ? (maxDate - new Date(b.updatedAt).getTime()) / (maxDate - minDate) : 0
-              break
-            case "name":
-              // Alphabetical: earlier in alphabet = higher score
-              const comparison = a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-              partialScoreA = comparison <= 0 ? 1 : 0
-              partialScoreB = comparison >= 0 ? 1 : 0
-              break
-            case "name-desc":
-              // Reverse alphabetical: later in alphabet = higher score
-              const comparisonDesc = b.name.toLowerCase().localeCompare(a.name.toLowerCase())
-              partialScoreA = comparisonDesc <= 0 ? 1 : 0
-              partialScoreB = comparisonDesc >= 0 ? 1 : 0
-              break
-            case "size-largest":
-              // Normalize sizes to 0-1 range (larger = higher score)
-              partialScoreA = maxSize !== minSize ? (a.size - minSize) / (maxSize - minSize) : 0
-              partialScoreB = maxSize !== minSize ? (b.size - minSize) / (maxSize - minSize) : 0
-              break
-            case "size-smallest":
-              // Normalize sizes to 0-1 range (smaller = higher score)
-              partialScoreA = maxSize !== minSize ? (maxSize - a.size) / (maxSize - minSize) : 0
-              partialScoreB = maxSize !== minSize ? (maxSize - b.size) / (maxSize - minSize) : 0
-              break
-          }
-          
-          scoreA += partialScoreA
-          scoreB += partialScoreB
-        }
-        
-        // Average the scores
-        scoreA /= filters.sortOrder!.length
-        scoreB /= filters.sortOrder!.length
-        
-        return scoreB - scoreA // Higher score comes first
-      })
-    } else {
-      // Default: newest first
-      sorted.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-    }
-    
-    return sorted
+    return applySorting(filteredProjects, filters.sortOrder || [], 'updatedAt')
   }, [filteredProjects, filters.sortOrder])
 
   // Handle project actions - MEMOIZADAS para evitar recriação
@@ -448,75 +379,8 @@ export default function HomePage() {
       return matchesSearch && matchesMimeType && matchesProject && matchesUsage
     })
     
-    // Apply sort orders with averaged scoring
-    if (filters.sortOrder && filters.sortOrder.length > 0) {
-      // Calculate min/max values for normalization
-      const dates = filtered.map(a => new Date(a.createdAt).getTime())
-      const sizes = filtered.map(a => a.size)
-      const minDate = Math.min(...dates)
-      const maxDate = Math.max(...dates)
-      const minSize = Math.min(...sizes)
-      const maxSize = Math.max(...sizes)
-      
-      filtered.sort((a, b) => {
-        let scoreA = 0
-        let scoreB = 0
-        
-        for (const sortType of filters.sortOrder!) {
-          let partialScoreA = 0
-          let partialScoreB = 0
-          
-          switch (sortType) {
-            case "newest":
-              // Normalize dates to 0-1 range (newer = higher score)
-              partialScoreA = maxDate !== minDate ? (new Date(a.createdAt).getTime() - minDate) / (maxDate - minDate) : 0
-              partialScoreB = maxDate !== minDate ? (new Date(b.createdAt).getTime() - minDate) / (maxDate - minDate) : 0
-              break
-            case "oldest":
-              // Normalize dates to 0-1 range (older = higher score)
-              partialScoreA = maxDate !== minDate ? (maxDate - new Date(a.createdAt).getTime()) / (maxDate - minDate) : 0
-              partialScoreB = maxDate !== minDate ? (maxDate - new Date(b.createdAt).getTime()) / (maxDate - minDate) : 0
-              break
-            case "name":
-              // Alphabetical: earlier in alphabet = higher score
-              const comparison = a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-              partialScoreA = comparison <= 0 ? 1 : 0
-              partialScoreB = comparison >= 0 ? 1 : 0
-              break
-            case "name-desc":
-              // Reverse alphabetical: later in alphabet = higher score
-              const comparisonDesc = b.name.toLowerCase().localeCompare(a.name.toLowerCase())
-              partialScoreA = comparisonDesc <= 0 ? 1 : 0
-              partialScoreB = comparisonDesc >= 0 ? 1 : 0
-              break
-            case "size-largest":
-              // Normalize sizes to 0-1 range (larger = higher score)
-              partialScoreA = maxSize !== minSize ? (a.size - minSize) / (maxSize - minSize) : 0
-              partialScoreB = maxSize !== minSize ? (b.size - minSize) / (maxSize - minSize) : 0
-              break
-            case "size-smallest":
-              // Normalize sizes to 0-1 range (smaller = higher score)
-              partialScoreA = maxSize !== minSize ? (maxSize - a.size) / (maxSize - minSize) : 0
-              partialScoreB = maxSize !== minSize ? (maxSize - b.size) / (maxSize - minSize) : 0
-              break
-          }
-          
-          scoreA += partialScoreA
-          scoreB += partialScoreB
-        }
-        
-        // Average the scores
-        scoreA /= filters.sortOrder!.length
-        scoreB /= filters.sortOrder!.length
-        
-        return scoreB - scoreA // Higher score comes first
-      })
-    } else {
-      // Default: newest first
-      filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    }
-    
-    return filtered
+    // Apply sorting
+    return applySorting(filtered, filters.sortOrder || [], 'createdAt')
   }, [assets, filters])
 
   const handleAssetDelete = useCallback((assetId: string, assetName: string) => {

@@ -231,7 +231,7 @@ export function ManagerFilters({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-64" onInteractOutside={(e) => e.preventDefault()}>
+          <PopoverContent className="w-64">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h4 className="font-medium text-sm">Sort By</h4>

@@ -16,6 +16,9 @@ export { ListView } from './list-view'
 export { ManagerLayout } from './manager-layout'
 export { ManagerFilters } from './filters'
 
+// Utilities
+export { applySorting } from './sorting'
+
 // Re-export common types for convenience
 export type {
   ViewMode,
