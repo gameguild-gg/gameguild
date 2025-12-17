@@ -50,7 +50,7 @@ export interface FilterConfig {
   usageFilter?: 'all' | 'used' | 'unused'
   dateFrom?: string
   dateTo?: string
-  sortOrder?: 'newest' | 'oldest' | 'name' | 'name-desc'
+  sortOrder?: Array<'newest' | 'oldest' | 'name' | 'name-desc' | 'size-largest' | 'size-smallest'>
 }
 
 export interface ManagerContext {
