@@ -281,7 +281,7 @@ export function ManagerCardComponent({ card, viewMode, isCompact = false, primar
       if (isCompact) {
         return (
           <ShadcnCard 
-            className="group relative border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer overflow-hidden aspect-square"
+            className="group relative border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer overflow-hidden aspect-video"
             onClick={() => onClick?.(card)}
           >
             {/* Image/Icon Preview - full card */}
@@ -362,11 +362,11 @@ export function ManagerCardComponent({ card, viewMode, isCompact = false, primar
       // Normal mode
       return (
         <ShadcnCard 
-          className="group border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col"
+          className="group border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer overflow-hidden flex flex-col p-0"
           onClick={() => onClick?.(card)}
         >
           {/* Image/Icon Preview */}
-          <div className="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-[120px]">
+          <div className="bg-gray-100 dark:bg-gray-900 flex items-center justify-center min-h-[120px] m-0">
             {isImage && assetDataUrl ? (
               <img 
                 src={assetDataUrl} 
@@ -456,10 +456,10 @@ export function ManagerCardComponent({ card, viewMode, isCompact = false, primar
         className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer"
         onClick={() => onClick?.(card)}
       >
-        <div className="p-4 flex items-center justify-between gap-4">
+        <div className="px-3 flex items-center justify-between gap-2">
           {/* Left section */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-2 mb-0.5">
               <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
                 {card.name}
               </h3>
@@ -470,9 +470,9 @@ export function ManagerCardComponent({ card, viewMode, isCompact = false, primar
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
               <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-3.5 h-3.5" />
                 <span>
                   {formatDistanceToNow(new Date(card.updatedAt), { addSuffix: true, locale: ptBR })}
                 </span>
@@ -484,12 +484,12 @@ export function ManagerCardComponent({ card, viewMode, isCompact = false, primar
           {/* Tags */}
           <div className="flex flex-wrap gap-1 max-w-md">
             {card.tags.slice(0, 3).map((tag, idx) => (
-              <Badge key={idx} variant="secondary" className="text-xs">
+              <Badge key={idx} variant="secondary" className="text-xs py-0.5">
                 {tag}
               </Badge>
             ))}
             {card.tags.length > 3 && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs py-0.5">
                 +{card.tags.length - 3}
               </Badge>
             )}
@@ -498,8 +498,8 @@ export function ManagerCardComponent({ card, viewMode, isCompact = false, primar
           {/* Actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <MoreVertical className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                <MoreVertical className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -546,9 +546,9 @@ export function ManagerCardComponent({ card, viewMode, isCompact = false, primar
         className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer"
         onClick={() => onClick?.(card)}
       >
-        <div className="p-4 flex items-center gap-4">
+        <div className="px-3 flex items-center gap-3">
           {/* Thumbnail */}
-          <div className="w-16 h-16 bg-gray-100 dark:bg-gray-900 rounded flex items-center justify-center shrink-0 overflow-hidden">
+          <div className="w-24 h-14 bg-gray-100 dark:bg-gray-900 rounded flex items-center justify-center shrink-0 overflow-hidden">
             {isImage && assetDataUrl ? (
               <img 
                 src={assetDataUrl} 
@@ -556,27 +556,27 @@ export function ManagerCardComponent({ card, viewMode, isCompact = false, primar
                 className="w-full h-full object-cover"
               />
             ) : (
-              <Icon className="w-6 h-6 text-gray-400 dark:text-gray-600" />
+              <Icon className="w-5 h-5 text-gray-400 dark:text-gray-600" />
             )}
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate mb-1">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate mb-0.5">
               {card.name}
             </h3>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge className={`text-xs ${getMimeTypeBadgeColor(card.mimeType)}`}>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Badge className={`text-xs py-0.5 ${getMimeTypeBadgeColor(card.mimeType)}`}>
                 {mimeTypeCategory}
               </Badge>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs py-0.5">
                 {mimeTypeDetail}
               </Badge>
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {formatFileSize(card.size)}
               </span>
               {card.projects && card.projects.length > 0 && (
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className="text-xs py-0.5">
                   {card.projects.length} {card.projects.length === 1 ? 'project' : 'projects'}
                 </Badge>
               )}
@@ -586,8 +586,8 @@ export function ManagerCardComponent({ card, viewMode, isCompact = false, primar
           {/* Actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 shrink-0">
-                <MoreVertical className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 shrink-0">
+                <MoreVertical className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
