@@ -11,10 +11,12 @@ import { useRouter } from "next/navigation"
 import type { LexicalEditor } from "lexical"
 import { OpenProjectDialog } from "@/components/editor/extras/editor/open-project-dialog"
 import { CreateProjectDialog } from "@/components/editor/extras/editor/create-project-dialog"
+import { SizeDetailsDialog } from "@/components/editor/extras/editor/size-details-dialog"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
+import { assetManager } from "@/lib/storage/assets/asset-manager"
 
 interface ProjectData {
   id: string
@@ -61,6 +63,9 @@ export default function Page() {
   const [newProjectName, setNewProjectName] = useState("")
   const [savedProjects, setSavedProjects] = useState<ProjectData[]>([])
   const [currentProjectSize, setCurrentProjectSize] = useState<number>(0)
+  const [currentProjectAssetsSize, setCurrentProjectAssetsSize] = useState<number>(0)
+  const [currentProjectAssets, setCurrentProjectAssets] = useState<Array<{ id: string; name: string; size: number; thumbnail?: string; mimeType?: string }>>([])
+  const [showSizeDetails, setShowSizeDetails] = useState(false)
   const [totalStorageUsed, setTotalStorageUsed] = useState<number>(0)
   const setLoadingRef = useRef<((loading: boolean) => void) | null>(null)
 
@@ -75,8 +80,8 @@ export default function Page() {
 
   const editorRef = useRef<LexicalEditor | null>(null)
 
-  // Tamanho recomendado em KB (500KB)
-  const RECOMMENDED_SIZE_KB = 1000
+  // Tamanho recomendado em KB (5120KB)
+  const RECOMMENDED_SIZE_KB = 5120
 
   const [isFirstTime, setIsFirstTime] = useState(true)
 
@@ -257,6 +262,61 @@ export default function Page() {
     checkSelectedProject()
   }, [isDbInitialized])
 
+  // Function to calculate total asset size for current project
+  const calculateProjectAssetsSize = async (projectId: string) => {
+    if (!projectId) {
+      setCurrentProjectAssetsSize(0)
+      setCurrentProjectAssets([])
+      return
+    }
+
+    try {
+      // Get all assets with usage information
+      const assetsWithUsage = await assetManager.listAssetsWithUsage()
+      
+      // Filter assets used by this project
+      const projectAssets = assetsWithUsage.filter(asset => 
+        asset.projects && asset.projects.includes(projectId)
+      )
+      
+      // Store individual assets with their info and load thumbnails
+      const assetsListPromises = projectAssets.map(async (asset) => {
+        let thumbnailUrl: string | undefined
+        
+        try {
+          // Load the full asset to get its data URL
+          const assetData = await assetManager.getAsset(asset.id)
+          if (assetData && assetData.data) {
+            thumbnailUrl = assetData.data
+          }
+        } catch (error) {
+          console.error(`Failed to load thumbnail for asset ${asset.id}:`, error)
+        }
+        
+        return {
+          id: asset.id,
+          name: asset.name || asset.id,
+          size: (asset.size || 0) / 1024, // Convert to KB
+          thumbnail: thumbnailUrl,
+          mimeType: asset.mimeType
+        }
+      })
+      
+      const assetsList = await Promise.all(assetsListPromises)
+      
+      setCurrentProjectAssets(assetsList)
+      
+      // Calculate total size in KB
+      const totalSize = assetsList.reduce((sum, asset) => sum + asset.size, 0)
+      
+      setCurrentProjectAssetsSize(totalSize)
+    } catch (error) {
+      console.error("Failed to calculate assets size:", error)
+      setCurrentProjectAssetsSize(0)
+      setCurrentProjectAssets([])
+    }
+  }
+
   // Atualizar informações de armazenamento sempre que o editor mudar
   useEffect(() => {
     if (editorState) {
@@ -264,6 +324,15 @@ export default function Page() {
       setCurrentProjectSize(size)
     }
   }, [editorState])
+
+  // Calculate assets size when project changes
+  useEffect(() => {
+    if (currentProjectId && isDbInitialized) {
+      calculateProjectAssetsSize(currentProjectId)
+    } else {
+      setCurrentProjectAssetsSize(0)
+    }
+  }, [currentProjectId, isDbInitialized])
 
   const storageAdapter = {
     save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local") => {
@@ -887,16 +956,16 @@ export default function Page() {
                     </span>
                   </button>
 
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-800">
+                  <button
+                    onClick={() => setShowSizeDetails(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                    title="Click to see size details"
+                  >
                     <HardDrive className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                     <span className={`text-sm font-medium ${getSizeIndicatorColor()}`}>
-                      {formatSize(currentProjectSize)}
+                      {formatSize(currentProjectSize + currentProjectAssetsSize)}
                     </span>
-                    <span className="text-sm text-gray-400 dark:text-gray-500">/</span>
-                    <span className="text-sm text-gray-400 dark:text-gray-500">
-                      {formatSize(RECOMMENDED_SIZE_KB)}
-                    </span>
-                  </div>
+                  </button>
 
                   {syncStats && (
                     <button
@@ -1012,6 +1081,16 @@ export default function Page() {
           </div>
         </div>
       </div>
+      <SizeDetailsDialog
+        open={showSizeDetails}
+        onOpenChange={setShowSizeDetails}
+        currentProjectSize={currentProjectSize}
+        currentProjectAssetsSize={currentProjectAssetsSize}
+        currentProjectAssets={currentProjectAssets}
+        recommendedSizeKB={RECOMMENDED_SIZE_KB}
+        formatSize={formatSize}
+        getSizeIndicatorColor={getSizeIndicatorColor}
+      />
       {/* Sync Status Dialog */}
       <Dialog open={showSyncStatus} onOpenChange={setShowSyncStatus}>
         <DialogContent className="max-w-md">
