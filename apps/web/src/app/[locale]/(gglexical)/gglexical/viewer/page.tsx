@@ -63,9 +63,47 @@ export default function PreviewPage() {
         setIsDbInitialized(true)
         await loadAvailableTags()
         
-        // Check if there's a selected project from the main page
+        // Check if there's a selected project from the main page or URL hash
         const checkSelectedProject = async () => {
           try {
+            // First, check for project ID in URL hash
+            const hash = window.location.hash.replace('#', '')
+            if (hash) {
+              try {
+                const projectData = await dbStorage.current.load(hash)
+                if (projectData && projectData.data) {
+                  setCurrentProject(projectData)
+                  
+                  // Update URL hash if not already set
+                  if (window.location.hash !== `#${projectData.id}`) {
+                    window.history.pushState(null, '', `#${projectData.id}`)
+                  }
+                  
+                  toast.success("Projeto carregado", {
+                    description: `"${projectData.name}" foi aberto para visualização`,
+                    duration: 2500,
+                    icon: "👁️",
+                  })
+                  
+                  return // Exit early
+                } else {
+                  toast.error("Projeto não encontrado", {
+                    description: `Nenhum projeto encontrado com o ID: ${hash}`,
+                    duration: 4000,
+                    icon: "❌",
+                  })
+                }
+              } catch (error) {
+                console.error("Error loading project from hash:", error)
+                toast.error("Erro ao carregar projeto", {
+                  description: "Não foi possível carregar o projeto da URL",
+                  duration: 4000,
+                  icon: "❌",
+                })
+              }
+            }
+            
+            // If no hash or hash loading failed, check localStorage
             const selectedProjectData = localStorage.getItem('selectedProject')
             if (selectedProjectData) {
               const projectData = JSON.parse(selectedProjectData)
@@ -76,6 +114,9 @@ export default function PreviewPage() {
               // Set the current project for viewing
               if (projectData.id && projectData.data) {
                 setCurrentProject(projectData)
+                
+                // Update URL hash
+                window.history.pushState(null, '', `#${projectData.id}`)
                 
                 toast.success("Projeto carregado", {
                   description: `"${projectData.name}" foi aberto para visualização`,
@@ -177,6 +218,8 @@ export default function PreviewPage() {
 
   const handleProjectLoad = (projectData: ProjectData) => {
     setCurrentProject(projectData)
+    // Update URL hash with project ID
+    window.history.pushState(null, '', `#${projectData.id}`)
   }
 
   const getSerializedState = (): SerializedEditorState | null => {

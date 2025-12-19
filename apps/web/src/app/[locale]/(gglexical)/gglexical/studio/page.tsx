@@ -130,9 +130,71 @@ export default function Page() {
   useEffect(() => {
     if (!isDbInitialized) return
     
-    // Check if there's a selected project from the main page
+    // Check if there's a selected project from the main page or URL hash
     const checkSelectedProject = async () => {
       try {
+        // First, check for project ID in URL hash
+        const hash = window.location.hash.replace('#', '')
+        if (hash) {
+          try {
+            const projectData = await storageAdapter.load(hash)
+            if (projectData && projectData.data && editorRef.current) {
+              try {
+                // Validate JSON format first
+                let parsedData
+                try {
+                  parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
+                } catch (parseError) {
+                  throw new Error("Project data is not valid JSON")
+                }
+                
+                // Validate Lexical editor state structure
+                if (!parsedData || typeof parsedData !== 'object' || !parsedData.root) {
+                  throw new Error("Project data is not in expected Lexical format")
+                }
+                
+                const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
+                editorRef.current.setEditorState(editorState)
+                
+                // Set current project info
+                setCurrentProjectId(projectData.id)
+                setCurrentProjectName(projectData.name)
+                setCurrentProjectStorageType(projectData.storageType || "local")
+                setProjectTags(projectData.tags || [])
+                
+                // Update URL hash if not already set
+                if (window.location.hash !== `#${projectData.id}`) {
+                  window.history.pushState(null, '', `#${projectData.id}`)
+                }
+                
+                toast.success("Projeto carregado", {
+                  description: `"${projectData.name}" foi aberto com sucesso`,
+                  duration: 2500,
+                  icon: "📂",
+                })
+                
+                return // Exit early, don't show first time dialog
+              } catch (error) {
+                console.error("Failed to load project from hash:", error)
+                toast.error("Erro ao carregar projeto", {
+                  description: `Não foi possível carregar o projeto: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                  duration: 4000,
+                  icon: "❌",
+                })
+              }
+            } else {
+              toast.error("Projeto não encontrado", {
+                description: `Nenhum projeto encontrado com o ID: ${hash}`,
+                duration: 4000,
+                icon: "❌",
+              })
+            }
+          } catch (error) {
+            console.error("Error loading project from hash:", error)
+          }
+        }
+        
+        // If no hash or hash loading failed, check localStorage
         const selectedProjectData = localStorage.getItem('selectedProject')
         if (selectedProjectData) {
           const projectData = JSON.parse(selectedProjectData)
@@ -163,6 +225,9 @@ export default function Page() {
               setCurrentProjectId(projectData.id)
               setCurrentProjectName(projectData.name)
               setProjectTags(projectData.tags || [])
+              
+              // Update URL hash
+              window.history.pushState(null, '', `#${projectData.id}`)
               
               toast.success("Projeto carregado", {
                 description: `"${projectData.name}" foi aberto com sucesso`,
@@ -781,6 +846,8 @@ export default function Page() {
                       setCurrentProjectStorageType(projectData.storageType || "local")
                       setProjectTags(projectData.tags || [])
                       setIsFirstTime(false)
+                      // Update URL hash with project ID
+                      window.history.pushState(null, '', `#${projectData.id}`)
                     }}
                     onProjectsListUpdate={loadSavedProjectsList}
                     onCreateNew={() => {
@@ -790,6 +857,8 @@ export default function Page() {
                       setCurrentProjectStorageType("local")
                       setProjectTags([])
                       setCreateDialogOpen(true)
+                      // Clear URL hash
+                      window.history.pushState(null, '', window.location.pathname)
                     }}
                     currentProjectName={currentProjectName}
                   />
@@ -888,6 +957,8 @@ export default function Page() {
                   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
                 )
                 setIsFirstTime(false)
+                // Update URL hash with project ID
+                window.history.pushState(null, '', `#${projectData.id}`)
               }}
               onProjectsListUpdate={loadSavedProjectsList}
               onAvailableTagsUpdate={loadAvailableTags}
