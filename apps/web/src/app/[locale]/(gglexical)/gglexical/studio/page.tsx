@@ -325,14 +325,14 @@ export default function Page() {
     }
   }, [editorState])
 
-  // Calculate assets size when project changes
+  // Calculate assets size when project changes or editor content changes
   useEffect(() => {
     if (currentProjectId && isDbInitialized) {
       calculateProjectAssetsSize(currentProjectId)
     } else {
       setCurrentProjectAssetsSize(0)
     }
-  }, [currentProjectId, isDbInitialized])
+  }, [currentProjectId, isDbInitialized, editorState])
 
   const storageAdapter = {
     save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local") => {
@@ -535,6 +535,12 @@ export default function Page() {
     try {
       await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags, currentProjectStorageType)
 
+      // Sync asset index with the saved project data
+      await assetManager.syncProjectAssets(currentProjectId, stateToSave)
+
+      // Recalculate assets size to reflect any changes
+      await calculateProjectAssetsSize(currentProjectId)
+
       toast.success("Project saved successfully", {
         description: `"${currentProjectName}" was saved to ${currentProjectStorageType}.`,
         duration: 3000,
@@ -612,12 +618,19 @@ export default function Page() {
     try {
       const newProjectId = generateProjectId()
       await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags, storageOption)
+      
+      // Sync asset index with the saved project data
+      await assetManager.syncProjectAssets(newProjectId, stateToSave)
+      
       setCurrentProjectId(newProjectId)
       setCurrentProjectName(newProjectName)
       setCurrentProjectStorageType(storageOption)
       setNewProjectName("")
       setSaveAsDialogOpen(false)
       await loadSavedProjectsList()
+
+      // Recalculate assets size for new project
+      await calculateProjectAssetsSize(newProjectId)
 
       toast.success("New project created", {
         description: `"${newProjectName}" was created and saved to ${storageOption}.`,
