@@ -401,7 +401,8 @@ export default function HomePage() {
     if (!assetToDelete) return
     
     try {
-      await assetManager.deleteAsset(assetToDelete.id)
+      // Delete asset completely (from index and store)
+      await assetManager.deleteAssetCompletely(assetToDelete.id)
       toast.success("Asset deleted successfully")
       await loadAssets()
       setAssetToDelete(null)
@@ -415,31 +416,17 @@ export default function HomePage() {
     if (!assetToEdit || !newAssetName.trim()) return
     
     try {
-      const assetData = await assetManager.getAsset(assetToEdit.id)
-      if (!assetData) {
-        toast.error("Asset not found")
-        return
+      // Rename the asset
+      const success = await assetManager.renameAsset(assetToEdit.id, newAssetName.trim())
+      
+      if (success) {
+        toast.success("Asset renamed successfully")
+        await loadAssets()
+        setAssetToEdit(null)
+        setNewAssetName("")
+      } else {
+        toast.error("Failed to rename asset")
       }
-      
-      // Update the asset name in metadata
-      assetData.metadata.name = newAssetName.trim()
-      
-      // Save the updated asset back to IndexedDB
-      // We need to access the private method through a workaround
-      // Instead, we'll delete and recreate with new name
-      const blob = await fetch(assetData.data).then(r => r.blob())
-      const file = new File([blob], newAssetName.trim(), { type: assetData.metadata.mimeType })
-      
-      // Delete old asset
-      await assetManager.deleteAsset(assetToEdit.id)
-      
-      // Save with new name
-      await assetManager.saveAsset({ file })
-      
-      toast.success("Asset renamed successfully")
-      await loadAssets()
-      setAssetToEdit(null)
-      setNewAssetName("")
     } catch (error) {
       console.error("Failed to rename asset:", error)
       toast.error("Failed to rename asset")

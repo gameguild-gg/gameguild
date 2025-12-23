@@ -363,9 +363,52 @@ export class AssetManager {
   }
 
   /**
-   * Delete an asset
+   * Rename an asset by updating its metadata
+   * @param assetId - The asset ID
+   * @param newName - The new name for the asset
+   * @returns true if successful
    */
-  async deleteAsset(assetId: string, projectId?: string, nodeId?: string): Promise<boolean> {
+  async renameAsset(assetId: string, newName: string): Promise<boolean> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    try {
+      // Get the asset data
+      const assetData = await this.getAsset(assetId)
+      if (!assetData) {
+        console.error(`Asset ${assetId} not found`)
+        return false
+      }
+
+      // Update the name in metadata
+      assetData.metadata.name = newName.trim()
+
+      // Save back to store
+      await this.saveAssetToStore(assetData)
+      
+      console.log(`Asset ${assetId} renamed to "${newName}"`)
+      return true
+    } catch (error) {
+      console.error("Failed to rename asset:", error)
+      return false
+    }
+  }
+
+  /**
+   * Remove project reference from asset index
+   * This is used when a node with an asset is deleted from a project
+   * @param assetId - The asset ID
+   * @param projectId - The project ID to check and potentially remove
+   * @param nodeId - Optional node ID being removed
+   * @param projectData - The project's Lexical JSON to verify if asset is still used
+   */
+  async removeProjectReference(
+    assetId: string, 
+    projectId?: string, 
+    nodeId?: string,
+    projectData?: string | object
+  ): Promise<boolean> {
     if (!this.isInitialized) {
       await this.init()
     }
@@ -376,39 +419,83 @@ export class AssetManager {
 
       if (!usageList) {
         console.warn(`Asset ${assetId} not found in index`)
-        // Asset may exist in store but not tracked, delete from store anyway
-        await this.deleteAssetFromStore(assetId)
         return true
       }
 
-      // If projectId and nodeId are provided, remove only that usage
-      if (projectId && nodeId) {
-        const usage = usageList.find((u: AssetUsage) => u.projectId === projectId)
-        if (usage) {
+      // If projectId is NOT provided, do nothing
+      // Assets are never deleted, only references are cleaned
+      if (!projectId) {
+        console.log(`No projectId provided, asset ${assetId} references unchanged`)
+        return true
+      }
+
+      // If projectData is provided, verify if asset is still referenced in the JSON
+      if (projectData) {
+        const stillUsed = this.isAssetUsedInProjectData(projectData, assetId)
+        
+        if (stillUsed) {
+          console.log(`Asset ${assetId} is still being used in project ${projectId}, keeping reference`)
+          return true
+        }
+        
+        console.log(`Asset ${assetId} is no longer used in project ${projectId}, removing reference`)
+      }
+      
+      // Remove the project from usage list
+      const usage = usageList.find((u: AssetUsage) => u.projectId === projectId)
+      if (usage) {
+        // If nodeId is provided, remove only that node
+        if (nodeId) {
           usage.nodeIds = usage.nodeIds.filter((id: string) => id !== nodeId)
           if (usage.nodeIds.length === 0) {
+            // No more nodes from this project, remove project reference
             index.assets[assetId] = usageList.filter((u: AssetUsage) => u.projectId !== projectId)
           }
+        } else {
+          // Remove entire project usage
+          index.assets[assetId] = usageList.filter((u: AssetUsage) => u.projectId !== projectId)
         }
-
-        // If no more usages, delete the asset entirely
-        const updatedUsageList = index.assets[assetId]
-        if (updatedUsageList && updatedUsageList.length === 0) {
-          delete index.assets[assetId]
-          await this.deleteAssetFromStore(assetId)
-        }
-
-        await this.saveIndex(index)
-        return true
       }
 
-      // If no projectId/nodeId, delete the asset entirely
-      delete index.assets[assetId]
-      await this.deleteAssetFromStore(assetId)
+      // Clean up empty usage list from index
+      const updatedUsageList = index.assets[assetId]
+      if (updatedUsageList && updatedUsageList.length === 0) {
+        delete index.assets[assetId]
+        console.log(`Asset ${assetId} has no more project references in index`)
+      }
+
       await this.saveIndex(index)
       return true
     } catch (error) {
-      console.error("Failed to delete asset:", error)
+      console.error("Failed to remove asset reference:", error)
+      return false
+    }
+  }
+
+  /**
+   * Check if an asset is still being used in a project's Lexical JSON
+   * @param projectData - The Lexical JSON data as string or object
+   * @param assetId - The asset ID to search for
+   * @returns true if the asset is found in the JSON, false otherwise
+   */
+  private isAssetUsedInProjectData(projectData: string | object, assetId: string): boolean {
+    try {
+      let jsonData: any
+      
+      if (typeof projectData === 'string') {
+        jsonData = JSON.parse(projectData)
+      } else {
+        jsonData = projectData
+      }
+      
+      // Convert to string and search for asset:// references
+      const jsonString = JSON.stringify(jsonData)
+      const assetPattern = new RegExp(`asset://${assetId}`, 'g')
+      const matches = jsonString.match(assetPattern)
+      
+      return matches !== null && matches.length > 0
+    } catch (error) {
+      console.error('Failed to parse project data:', error)
       return false
     }
   }
@@ -427,6 +514,38 @@ export class AssetManager {
       request.onsuccess = () => resolve()
       request.onerror = () => reject(request.error)
     })
+  }
+
+  /**
+   * Completely delete an asset - removes from index and deletes from store
+   * This should be used when explicitly deleting an asset from the manager UI
+   * @param assetId - The asset ID to delete
+   * @returns true if successful
+   */
+  async deleteAssetCompletely(assetId: string): Promise<boolean> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    try {
+      const index = await this.loadIndex()
+      
+      // Remove from index
+      if (index.assets[assetId]) {
+        delete index.assets[assetId]
+        await this.saveIndex(index)
+        console.log(`Asset ${assetId} removed from index`)
+      }
+      
+      // Delete from store
+      await this.deleteAssetFromStore(assetId)
+      console.log(`Asset ${assetId} deleted from store`)
+      
+      return true
+    } catch (error) {
+      console.error("Failed to delete asset completely:", error)
+      return false
+    }
   }
 
   /**
@@ -721,6 +840,61 @@ export class AssetManager {
     await this.saveIndex(index)
     console.log(`AssetManager: Removed project ${projectId} from ${removedCount} assets`)
     return removedCount
+  }
+
+  /**
+   * Synchronize asset index with project data
+   * Removes references to assets that are no longer used in the project
+   * @param projectId - The project ID to sync
+   * @param projectData - The project's Lexical JSON data
+   * @returns Number of references removed
+   */
+  async syncProjectAssets(projectId: string, projectData: string | object): Promise<number> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    try {
+      const index = await this.loadIndex()
+      let removedCount = 0
+
+      // Check each asset in the index
+      for (const assetId in index.assets) {
+        const usageList = index.assets[assetId]
+        if (!usageList) continue
+
+        // Check if this asset is referenced by the project
+        const hasProjectRef = usageList.some(u => u.projectId === projectId)
+        if (!hasProjectRef) continue
+
+        // Verify if asset is actually used in the project data
+        const stillUsed = this.isAssetUsedInProjectData(projectData, assetId)
+
+        if (!stillUsed) {
+          // Remove the project reference from this asset
+          index.assets[assetId] = usageList.filter(u => u.projectId !== projectId)
+          removedCount++
+
+          console.log(`Asset ${assetId} no longer used by project ${projectId}, removing reference`)
+
+          // If no more usages, delete the asset entry from index
+          if (index.assets[assetId].length === 0) {
+            delete index.assets[assetId]
+            console.log(`Asset ${assetId} has no more project references`)
+          }
+        }
+      }
+
+      if (removedCount > 0) {
+        await this.saveIndex(index)
+        console.log(`AssetManager: Synced project ${projectId}, removed ${removedCount} unused asset references`)
+      }
+
+      return removedCount
+    } catch (error) {
+      console.error("Failed to sync project assets:", error)
+      return 0
+    }
   }
 }
 
