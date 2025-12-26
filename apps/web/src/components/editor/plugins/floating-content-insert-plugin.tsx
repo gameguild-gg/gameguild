@@ -695,7 +695,6 @@ export function FloatingContentInsertPlugin() {
         onOpenChange={setShowImageDialog}
         onMediaSelected={handleImageSelected}
         title="Insert Image"
-        mode={IMAGE_INSERTION_MODE}
         acceptTypes="image/*"
         urlPlaceholder="https://example.com/image.jpg"
         uploadLabel="Select an image from your device"
@@ -708,7 +707,6 @@ export function FloatingContentInsertPlugin() {
         onOpenChange={setShowVideoDialog}
         onMediaSelected={handleVideoSelected}
         title="Insert Video"
-        mode={VIDEO_INSERTION_MODE}
         acceptTypes="video/*"
         urlPlaceholder="https://example.com/video.mp4"
         uploadLabel="Select a video from your device"
@@ -721,7 +719,6 @@ export function FloatingContentInsertPlugin() {
         onOpenChange={setShowAudioDialog}
         onMediaSelected={handleAudioSelected}
         title="Insert Audio"
-        mode={AUDIO_INSERTION_MODE}
         acceptTypes="audio/*"
         urlPlaceholder="https://example.com/audio.mp3"
         uploadLabel="Select an audio file from your device"
