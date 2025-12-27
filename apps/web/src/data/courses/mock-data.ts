@@ -1,6 +1,7 @@
 import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/generated';
 import { ai4gamesProduct, ai4gamesProductProgram, ai4gamesProgram } from './ai4games';
 import { ai4games2Product, ai4games2ProductProgram, ai4games2Program } from './ai4games2';
+import databasesProgram, { databasesProduct, databasesProductProgram } from './databases';
 import { dsaProduct, dsaProductProgram, dsaProgram } from './dsa';
 import gamePublishingProgram, { gamePublishingProduct, gamePublishingProductProgram } from './game-publishing';
 import intro2gproProgram, { intro2gproProduct, intro2gproProductProgram } from './intro2gpro';
@@ -10,9 +11,11 @@ import { pythonProduct, pythonProductProgram, pythonProgram } from './python';
 pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
 ai4games2Product.productPrograms = [ai4games2ProductProgram];
+databasesProduct.productPrograms = [databasesProductProgram];
 dsaProduct.productPrograms = [dsaProductProgram];
 
 export const mockPrograms: Program[] = [
+  databasesProgram,
   pythonProgram,
   ai4gamesProgram,
   ai4games2Program,
@@ -23,6 +26,7 @@ export const mockPrograms: Program[] = [
 ];
 
 export const mockProducts: Product[] = [
+  databasesProduct,
   pythonProduct,
   ai4gamesProduct,
   ai4games2Product,
@@ -33,6 +37,7 @@ export const mockProducts: Product[] = [
 ];
 
 export const mockProductPrograms: ProductProgram[] = [
+  databasesProductProgram,
   pythonProductProgram,
   ai4gamesProductProgram,
   ai4games2ProductProgram,
@@ -43,6 +48,7 @@ export const mockProductPrograms: ProductProgram[] = [
 ];
 
 export const mockProgramContents: ProgramContent[] = [
+  ...(databasesProgram.programContents ?? []),
   ...(pythonProgram.programContents ?? []),
   ...(ai4gamesProgram.programContents ?? []),
   ...(ai4games2Program.programContents ?? []),
