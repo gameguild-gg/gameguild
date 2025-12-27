@@ -26,17 +26,6 @@ export function QuizDisplay({
 
   return (
     <div className="space-y-4">
-      {showFeedback && data.allowRetry && resetQuiz && (
-        <div className="flex justify-center">
-          <button
-            onClick={resetQuiz}
-            className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-          >
-            Reset Quiz
-          </button>
-        </div>
-      )}
-
       {/* Question text - hide for fill-blank as it's rendered inline */}
       {data.questionType !== "fill-blank" && <div className="text-lg font-medium">{data.question}</div>}
 
@@ -66,6 +55,8 @@ export function QuizDisplay({
           correctFeedback={data.correctFeedback || ""}
           incorrectFeedback={data.incorrectFeedback || ""}
           allowRetry={data.allowRetry}
+          onRetry={resetQuiz}
+          showRetryButton={data.allowRetry && !!resetQuiz}
         />
       )}
     </div>
