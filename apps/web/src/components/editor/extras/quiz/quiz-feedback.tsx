@@ -30,11 +30,11 @@ export function QuizFeedback({
     >
       <div className="flex items-center gap-2 flex-1">
         {isCorrect ? (
-          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
+          <div className="shrink-0 w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
             <Check className="h-3 w-3 text-white" />
           </div>
         ) : (
-          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
+          <div className="shrink-0 w-5 h-5 rounded-full bg-red-500 flex items-center justify-center">
             <X className="h-3 w-3 text-white" />
           </div>
         )}
