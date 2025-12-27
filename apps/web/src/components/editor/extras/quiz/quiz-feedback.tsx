@@ -45,6 +45,15 @@ export function QuizFeedback({
         </span>
       </div>
 
+      {showRetryButton && allowRetry && onRetry && (
+        <button
+          onClick={onRetry}
+          className="shrink-0 bg-gray-600 hover:bg-gray-700 text-white font-medium py-1.5 px-4 rounded-md transition-colors duration-200 text-sm"
+        >
+          Reset Quiz
+        </button>
+      )}
+
       {showRetryButton && !allowRetry && onRetry && (
         <Button
           variant="outline"
