@@ -10,7 +10,7 @@ import type { JSX } from "react/jsx-runtime"
 import { Button } from "@/components/ui/button"
 import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
 import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
-import { useQuizLogic } from "@/hooks/editor/use-quiz-logic"
+import { useQuizAnswers } from "@/components/editor/nodes/quiz/hooks/use-quiz-answers"
 import { ContentEditMenu } from "@/components/editor/extras/content-edit-menu"
 import { QuizSettingsDialog } from "./quiz/quiz-settings-dialog"
 
@@ -61,6 +61,10 @@ export interface FillBlankField {
   alternatives: FillBlankAlternative[] // Alternative word sets for this blank
 }
 
+// Using QuizQuestion types from ./quiz/types.ts
+export type { QuizQuestion } from "./quiz/types"
+
+// Legacy interface for backward compatibility with existing serialized data
 export interface QuizData {
   question: string
   questionType: QuestionType
@@ -69,13 +73,9 @@ export interface QuizData {
   incorrectFeedback?: string
   allowRetry: boolean
   backgroundColor?: string
-  // For fill-in-the-blank - NEW STRUCTURE
-  fillBlankFields?: FillBlankField[] // Array of blank fields with their expected words
-  // For matching questions
+  fillBlankFields?: FillBlankField[]
   matchingPairs?: MatchingPair[]
-  // For ordering questions
   orderingItems?: OrderingItem[]
-  // For rating questions
   ratingScale?: { min: number; max: number; step: number }
   correctRating?: number
 }
@@ -144,44 +144,14 @@ interface QuizComponentProps {
 
 function QuizComponent({ data, nodeKey }: QuizComponentProps) {
   const [editor] = useLexicalComposerContext()
-  const isLoading = useEditorLoading()
-
   const [isEditing, setIsEditing] = useState(false)
   const [hasAutoOpened, setHasAutoOpened] = useState(false)
-  const previousAnswersRef = useRef<string>("")
-  const previousQuestionRef = useRef<string>("")
 
-  const {
-    selectedAnswers,
-    setSelectedAnswers,
-    showFeedback,
-    setShowFeedback,
-    isCorrect,
-    setIsCorrect,
-    resetQuiz,
-    checkAnswers,
-    toggleAnswer,
-  } = useQuizLogic({
-    answers: data.answers || [],
-    allowRetry: data.allowRetry !== undefined ? data.allowRetry : true,
-    correctFeedback: data.correctFeedback || "",
-    incorrectFeedback: data.incorrectFeedback || "",
-    questionType: data.questionType,
-    fillBlankFields: data.fillBlankFields,
+  const { selectedAnswers, setSelectedAnswers, showFeedback, isCorrect, checkAnswers, resetQuiz } = useQuizAnswers({
+    data,
   })
 
-  useEffect(() => {
-    // Só resetar o quiz quando as respostas ou perguntas mudarem realmente
-    const currentAnswers = JSON.stringify(data.answers)
-    const currentQuestion = data.question
-    
-    if (currentAnswers !== previousAnswersRef.current || currentQuestion !== previousQuestionRef.current) {
-      resetQuiz()
-      previousAnswersRef.current = currentAnswers
-      previousQuestionRef.current = currentQuestion
-    }
-  }, [data.answers, data.question, resetQuiz])
-
+  // Auto-open editor for new quiz
   useEffect(() => {
     const isNewQuiz = !data.question || data.question.trim() === ""
     if (isNewQuiz && !hasAutoOpened) {
@@ -220,8 +190,21 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
 
   return (
     <>
-      <div className="relative group my-4">
-        <QuizWrapper backgroundColor={data.backgroundColor}>
+      <div className="my-8 relative group">
+        <div className="relative">
+          <QuizWrapper backgroundColor={data.backgroundColor}>
+            <QuizDisplay
+              data={data}
+              selectedAnswers={selectedAnswers}
+              setSelectedAnswers={setSelectedAnswers}
+              showFeedback={showFeedback}
+              isCorrect={isCorrect}
+              checkAnswers={checkAnswers}
+              resetQuiz={resetQuiz}
+            />
+          </QuizWrapper>
+
+          {/* Edit menu */}
           <ContentEditMenu
             options={[
               {
@@ -231,38 +214,8 @@ function QuizComponent({ data, nodeKey }: QuizComponentProps) {
                 action: () => setIsEditing(true),
               },
             ]}
+            className="opacity-100"
           />
-
-          <QuizDisplay
-            question={data.question}
-            questionType={data.questionType}
-            answers={data.answers || []}
-            selectedAnswers={selectedAnswers}
-            setSelectedAnswers={setSelectedAnswers}
-            showFeedback={showFeedback}
-            isCorrect={isCorrect}
-            correctFeedback={data.correctFeedback || ""}
-            incorrectFeedback={data.incorrectFeedback || ""}
-            allowRetry={data.allowRetry !== undefined ? data.allowRetry : true}
-            checkAnswers={checkAnswers}
-            toggleAnswer={toggleAnswer}
-            resetQuiz={resetQuiz}
-            fillBlankFields={data.fillBlankFields}
-            ratingScale={data.ratingScale}
-            correctRating={data.correctRating}
-          />
-        </QuizWrapper>
-
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(true)}
-            className="h-8 w-8 p-0 bg-white/90 hover:bg-white shadow-sm border"
-            title="Edit Quiz"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
