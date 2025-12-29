@@ -93,7 +93,8 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 
 **Monday 2026/01/12** — Introduction & Database Taxonomy
 
-- Course overview, expectations, GitHub repo setup
+- Instructor introduction;
+- Syllabus review, Course overview, outcomes, GitHub repo setup;
 - The Database Zoo: relational, document, key-value, wide-column, graph, time series, search engines, vector, event streaming
 - Decision framework: when to use what
 
@@ -103,6 +104,7 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 - Lab: Clone repo, `docker-compose up` with PostgreSQL + MongoDB + Redis
 - TypeScript + Node.js environment setup
 
+**Quiz 0** (2026/01/15): Course policies & syllabus
 **Quiz 1** (2026/01/15): Database types & use cases
 **Assignment 1** (due 2026/01/18): Docker setup + container commands
 
@@ -116,8 +118,10 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 
 **Thursday 2026/01/22** — Data Definition Language & Basic SELECT
 
+- DBML introduction
 - Relational model fundamentals
 - CREATE TABLE, data types, constraints (PK, FK, NOT NULL, UNIQUE, CHECK)
+- ID types (auto-incrementing, uuid, serial, identity)
 - ALTER TABLE, DROP TABLE
 - SELECT, FROM, WHERE, ORDER BY, LIMIT
 - Seed database introduction: e-commerce schema
@@ -194,6 +198,8 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 - Functional dependencies
 - 1NF, 2NF, 3NF, BCNF
 - Insert, update, delete anomalies
+- Soft-Delete patterns
+- Checksum and Versioning strategies
 
 **Thursday 2026/02/19** — Practical Normalization
 
@@ -215,6 +221,7 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 - Entity-Relationship modeling, cardinality (1:1, 1:N, M:N)
 - Junction tables, UML notation
 - Translating ER diagrams to DDL, CASCADE options
+- Scalability considerations: DB sharding & replication basics
 
 **Thursday 2026/02/26** — Functions, Procedures & Drizzle ORM
 
@@ -224,6 +231,7 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 - Indexing fundamentals
 - Drizzle ORM: schema definition, type-safe queries, migrations
 - Raw SQL vs query builders: trade-offs and when to use each
+- Safety considerations: SQL injection prevention, access control
 
 **Quiz 7** (2026/02/26): ER modeling, stored logic & query builders
 **Assignment 7** (due 2026/03/01): ER diagram + schema + functions + Drizzle queries
@@ -260,6 +268,7 @@ No classes or assignments.
 
 **Monday 2026/03/16** — MongoDB Fundamentals
 
+- ID field
 - Document model vs relational, JSON/BSON
 - Schema design patterns (embedding vs referencing)
 - When to choose document DBs
