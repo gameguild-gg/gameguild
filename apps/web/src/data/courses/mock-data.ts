@@ -17,11 +17,11 @@ networkingProduct.productPrograms = [networkingProductProgram];
 dsaProduct.productPrograms = [dsaProductProgram];
 
 export const mockPrograms: Program[] = [
+  ai4games2Program,
   networkingProgram,
   databasesProgram,
   pythonProgram,
   ai4gamesProgram,
-  ai4games2Program,
   portfolioProgram,
   dsaProgram,
   intro2gproProgram,
@@ -29,11 +29,11 @@ export const mockPrograms: Program[] = [
 ];
 
 export const mockProducts: Product[] = [
+  ai4games2Product,
   networkingProduct,
   databasesProduct,
   pythonProduct,
   ai4gamesProduct,
-  ai4games2Product,
   portfolioProduct,
   dsaProduct,
   intro2gproProduct,
@@ -41,11 +41,11 @@ export const mockProducts: Product[] = [
 ];
 
 export const mockProductPrograms: ProductProgram[] = [
+  ai4games2ProductProgram,
   networkingProductProgram,
   databasesProductProgram,
   pythonProductProgram,
   ai4gamesProductProgram,
-  ai4games2ProductProgram,
   portfolioProductProgram,
   dsaProductProgram,
   intro2gproProductProgram,
@@ -53,11 +53,11 @@ export const mockProductPrograms: ProductProgram[] = [
 ];
 
 export const mockProgramContents: ProgramContent[] = [
+  ...(ai4games2Program.programContents ?? []),
   ...(networkingProgram.programContents ?? []),
   ...(databasesProgram.programContents ?? []),
   ...(pythonProgram.programContents ?? []),
   ...(ai4gamesProgram.programContents ?? []),
-  ...(ai4games2Program.programContents ?? []),
   ...(portfolioProgram.programContents ?? []),
   ...(dsaProgram.programContents ?? []),
   ...(intro2gproProgram.programContents ?? []),
