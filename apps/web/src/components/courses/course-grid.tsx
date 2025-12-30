@@ -11,6 +11,8 @@ interface CourseGridCourse {
   rating: number;
   price: number;
   image: string;
+  thumbnailUrl?: string;
+  coverUrl?: string;
   slug: string;
   instructor: {
     name: string;
