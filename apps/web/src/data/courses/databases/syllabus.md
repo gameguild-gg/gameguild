@@ -116,17 +116,20 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 
 **Monday 2026/01/19** — NO CLASS (Martin Luther King Jr. Day)
 
-**Thursday 2026/01/22** — Data Definition Language & Basic SELECT
+**Thursday 2026/01/22** — Data Definition Language (DDL) & Basic Data Query Language (DQL) and Data Manipulation Language (DML) operations
 
 - DBML introduction
 - Relational model fundamentals
-- CREATE TABLE, data types, constraints (PK, FK, NOT NULL, UNIQUE, CHECK)
+- **DDL (Data Definition Language):** CREATE DATABASE, CREATE SCHEMA, CREATE TABLE, ALTER TABLE, DROP TABLE
+- Data types
+- Introduction to constraints (PK, FK, NOT NULL, UNIQUE, CHECK)
 - ID types (auto-incrementing, uuid, serial, identity)
-- ALTER TABLE, DROP TABLE
-- SELECT, FROM, WHERE, ORDER BY, LIMIT
-- Seed database introduction: e-commerce schema
+- **DQL (Data Query Language):** SELECT, FROM, WHERE, ORDER BY, LIMIT
+- **DML (Data Manipulation Language):** INSERT, UPDATE, DELETE operations
+- Concept of Idempotency
+- Seed database introduction: e-commerce schema, bank/fintech schema, petshop/medical schema, manufacturing schema
 
-**Quiz 2** (2026/01/22): DDL syntax & constraints
+**Quiz 2** (2026/01/22): DDL, DQL, DML syntax & constraints
 **Assignment 2** (due 2026/01/25): Create tables + SELECT queries
 
 ---
@@ -150,7 +153,31 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 
 ---
 
-### WEEK 04 — SQL: Joins
+### WEEK 04 — Database Design: Normalization, Relationships
+
+**2026/02/16 – 2026/02/20**
+
+**Monday 2026/02/16** — Normalization Theory
+
+- 1NF, 2NF, 3NF, BCNF
+- Functional dependencies
+- Entity-Relationship modeling, cardinality (1:1, 1:N, M:N)
+- Junction tables, UML notation
+- Constraints (PK, FK, NOT NULL, UNIQUE, CHECK)
+- Indexing fundamentals
+
+**Thursday 2026/02/19** — Practical Normalization
+
+- Denormalization trade-offs (when to use materialized views)
+- Real-world schema analysis - (MySQL Workbench has samples, Microsoft has samples for SQL Server, CONTOSO)
+- Activity: normalize a problematic spreadsheet
+
+**Quiz 6** (2026/02/19): Normal forms & dependencies
+**Assignment 6** (due 2026/02/22): Design normalized schema + DDL
+
+---
+
+### WEEK 05 — SQL: Joins
 
 **2026/02/02 – 2026/02/06**
 
@@ -168,7 +195,7 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 
 ---
 
-### WEEK 05 — SQL: Subqueries, CTEs & Views
+### WEEK 06 — SQL: Subqueries, CTEs & Views
 
 **2026/02/09 – 2026/02/13**
 
@@ -189,51 +216,33 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 
 ---
 
-### WEEK 06 — Database Design: Normalization
-
-**2026/02/16 – 2026/02/20**
-
-**Monday 2026/02/16** — Normalization Theory
-
-- Functional dependencies
-- 1NF, 2NF, 3NF, BCNF
-- Insert, update, delete anomalies
-- Soft-Delete patterns
-- Checksum and Versioning strategies
-
-**Thursday 2026/02/19** — Practical Normalization
-
-- Denormalization trade-offs (when to use materialized views)
-- Real-world schema analysis
-- Activity: normalize a problematic spreadsheet
-
-**Quiz 6** (2026/02/19): Normal forms & dependencies
-**Assignment 6** (due 2026/02/22): Design normalized schema + DDL
-
----
-
-### WEEK 07 — Database Design: Relationships, Stored Logic & Query Builders
+### WEEK 07 — Schema Patterns, TCL, DCL & ORM
 
 **2026/02/23 – 2026/02/27**
 
-**Monday 2026/02/23** — ER Diagrams & Relationships
+**Monday 2026/02/23** — Schema Design, Data Integrity Patterns & Scalability
 
-- Entity-Relationship modeling, cardinality (1:1, 1:N, M:N)
-- Junction tables, UML notation
+- Insert, update, delete anomalies
+- Soft-Delete patterns
+- Checksum and Versioning strategies
 - Translating ER diagrams to DDL, CASCADE options
 - Scalability considerations: DB sharding & replication basics
 
-**Thursday 2026/02/26** — Functions, Procedures & Drizzle ORM
+**Thursday 2026/02/26** — Functions, Procedures, Transactions & Drizzle ORM
 
 - SQL Functions: CREATE FUNCTION, parameters, return types
 - Stored Procedures: CREATE PROCEDURE, CALL, control flow
 - Triggers: CREATE TRIGGER, BEFORE/AFTER, use cases
-- Indexing fundamentals
+- **TCL (Transaction Control Language):** BEGIN, COMMIT, ROLLBACK, SAVEPOINT
+- ACID properties (Atomicity, Consistency, Isolation, Durability)
+- Isolation levels, concurrency control basics
+- **DCL (Data Control Language):** GRANT, REVOKE, access control
+
 - Drizzle ORM: schema definition, type-safe queries, migrations
 - Raw SQL vs query builders: trade-offs and when to use each
-- Safety considerations: SQL injection prevention, access control
+- Safety considerations: SQL injection prevention
 
-**Quiz 7** (2026/02/26): ER modeling, stored logic & query builders
+**Quiz 7** (2026/02/26): ER modeling, stored logic, transactions & query builders
 **Assignment 7** (due 2026/03/01): ER diagram + schema + functions + Drizzle queries
 
 ---
