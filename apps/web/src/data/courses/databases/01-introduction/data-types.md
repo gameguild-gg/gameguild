@@ -2,6 +2,9 @@
 
 Data can take various forms, in the terms of Databases they are but a bit more specialized by its use cases than what we usually have when we code in general purpose programming languages. Here is a non-exhaustive list of common data types used in databases.
 
+
+[![Data Types Meme](https://preview.redd.it/we-support-all-3-database-types-and-this-constantly-is-an-v0-f2hv3twxwb1a1.jpg?width=320&crop=smart&auto=webp&s=80db294ca98006b9b582544dca14177df54a6fd6)](https://reddit.com)
+
 ::: warning
 
 Each type may have different names or variations depending on the specific database system (e.g., PostgreSQL, MySQL, MongoDB, etc.). Always refer to the documentation of the database you are using for precise definitions and capabilities.
