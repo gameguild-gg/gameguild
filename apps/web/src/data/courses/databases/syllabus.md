@@ -21,7 +21,7 @@ By the end of this course, students will be able to:
 1. **Identify** database paradigms and **justify** technology selection for specific use cases. _(Analysis)_
 2. **Design** normalized schemas using functional dependencies and normal forms. _(Analysis)_
 3. **Construct** SQL queries using joins, subqueries, CTEs, views, and aggregations. _(Technology Literacy)_
-4. **Implement** database solutions using Docker and Drizzle ORM. _(Technology Literacy)_
+4. **Implement** database solutions using containerized systems and ORM usages. _(Technology Literacy)_
 5. **Analyze** database systems by examining components and their relationships. _(Technology Literacy)_
 6. **Compare** raw SQL, query builders, and ORMs, defending appropriate choices for different contexts. _(Analysis)_
 7. **Develop** queries for non-relational databases (MongoDB, Redis, Neo4j, Elasticsearch). _(Integration)_
@@ -385,7 +385,6 @@ No classes or assignments.
 **2026/04/27 – 2026/05/01**
 
 **Monday 2026/04/27** — Presentations (Group A)
-
 **Thursday 2026/04/30** — Presentations (Group B) + Course wrap-up
 
 **Final Project** (due 2026/04/30): Final submission
@@ -418,8 +417,12 @@ No classes or assignments.
 
 | Component                  | Weight |
 | -------------------------- | ------ |
+| Coding Assignments         | 30%    |
+| Midterm Exam               | 20%    |
 | Attendance & Participation | 10%    |
 | Quizzes                    | 20%    |
-| Coding Assignments         | 25%    |
-| Midterm Exam               | 20%    |
-| Final Project              | 25%    |
+| Final Project              | 22%    |
+
+### Late Submission Policy
+
+Late submissions will incur a penalty of **1% deduction per day** up to a maximum of **25% of the total grade**. For example, a submission that is 1 week (7 days) late will receive a 7% penalty, resulting in a maximum possible grade of 93%, which still falls within the A range. This policy encourages timely submission while allowing flexibility for unforeseen circumstances.
