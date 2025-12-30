@@ -178,6 +178,8 @@ CREATE TABLE categories (
 
 ## NOT NULL
 
+[![NULL vs Empty String](https://preview.redd.it/we-support-all-3-database-types-and-this-constantly-is-an-v0-f2hv3twxwb1a1.jpg?width=320&crop=smart&auto=webp&s=80db294ca98006b9b582544dca14177df54a6fd6)](https://reddit.com)
+
 Prevents a column from accepting NULL values.
 
 ::: example "NOT NULL constraint"
