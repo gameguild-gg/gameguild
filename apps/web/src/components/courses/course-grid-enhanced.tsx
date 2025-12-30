@@ -23,6 +23,7 @@ const EnrollmentStatus = {
 
 // Transform Program to CourseGridCourse format
 function transformProgramToCourse(program: Program, index: number) {
+  const thumbnail = program.thumbnail || '/default-course-thumbnail.jpg';
   return {
     id: program.id || `course-${index + 1}`, // Use original program ID as string
     title: program.title,
@@ -34,7 +35,9 @@ function transformProgramToCourse(program: Program, index: number) {
     enrolledStudents: program.currentEnrollments || 0,
     rating: program.averageRating || 0,
     price: 0, // No pricing info in Program type
-    image: program.thumbnail || '',
+    image: thumbnail,
+    thumbnailUrl: thumbnail,
+    coverUrl: thumbnail,
     slug: program.slug || program.id || '',
     instructor: {
       name: 'Instructor', // No instructor info in Program type

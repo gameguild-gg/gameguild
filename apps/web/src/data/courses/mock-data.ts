@@ -5,6 +5,7 @@ import databasesProgram, { databasesProduct, databasesProductProgram } from './d
 import { dsaProduct, dsaProductProgram, dsaProgram } from './dsa';
 import gamePublishingProgram, { gamePublishingProduct, gamePublishingProductProgram } from './game-publishing';
 import intro2gproProgram, { intro2gproProduct, intro2gproProductProgram } from './intro2gpro';
+import networkingProgram, { networkingProduct, networkingProductProgram } from './networking';
 import portfolioProgram, { portfolioProduct, portfolioProductProgram } from './portfolio';
 import { pythonProduct, pythonProductProgram, pythonProgram } from './python';
 
@@ -12,9 +13,11 @@ pythonProduct.productPrograms = [pythonProductProgram];
 ai4gamesProduct.productPrograms = [ai4gamesProductProgram];
 ai4games2Product.productPrograms = [ai4games2ProductProgram];
 databasesProduct.productPrograms = [databasesProductProgram];
+networkingProduct.productPrograms = [networkingProductProgram];
 dsaProduct.productPrograms = [dsaProductProgram];
 
 export const mockPrograms: Program[] = [
+  networkingProgram,
   databasesProgram,
   pythonProgram,
   ai4gamesProgram,
@@ -26,6 +29,7 @@ export const mockPrograms: Program[] = [
 ];
 
 export const mockProducts: Product[] = [
+  networkingProduct,
   databasesProduct,
   pythonProduct,
   ai4gamesProduct,
@@ -37,6 +41,7 @@ export const mockProducts: Product[] = [
 ];
 
 export const mockProductPrograms: ProductProgram[] = [
+  networkingProductProgram,
   databasesProductProgram,
   pythonProductProgram,
   ai4gamesProductProgram,
@@ -48,6 +53,7 @@ export const mockProductPrograms: ProductProgram[] = [
 ];
 
 export const mockProgramContents: ProgramContent[] = [
+  ...(networkingProgram.programContents ?? []),
   ...(databasesProgram.programContents ?? []),
   ...(pythonProgram.programContents ?? []),
   ...(ai4gamesProgram.programContents ?? []),
