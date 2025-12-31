@@ -3,10 +3,10 @@
 import type React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle, List, ToggleLeft, Type, ArrowRight, HelpCircle, Target, Zap } from "lucide-react"
+import { CheckCircle, List, ToggleLeft, Type, ArrowRight, HelpCircle, Target, Zap, Layers } from "lucide-react"
 
 interface QuizTemplate {
-  type: "multiple-choice" | "true-false" | "fill-blank" | "short-answer" | "matching" | "ordering"
+  type: "multiple-choice" | "true-false" | "fill-blank" | "short-answer" | "matching" | "ordering" | "categorization"
   title: string
   description: string
   icon: React.ComponentType<{ className?: string }>
@@ -173,6 +173,38 @@ const quizTemplates: QuizTemplate[] = [
         allowRetry: true,
         shuffleQuestions: false,
         shuffleItems: true,
+        timeLimit: 0,
+      },
+    },
+  },
+  {
+    type: "categorization",
+    title: "Categorization",
+    description: "Sort items into different categories and assign items to where they belong",
+    icon: Layers,
+    preview: "Categorize concepts into their appropriate groups",
+    defaultData: {
+      questions: [
+        {
+          id: "1",
+          question: "Categorize the following items:",
+          type: "categorization",
+          categories: [
+            { id: "1", name: "Fruits", description: "" },
+            { id: "2", name: "Vegetables", description: "" },
+          ],
+          answers: [
+            { id: "1", text: "Apple", categoryIds: ["1"] },
+            { id: "2", text: "Carrot", categoryIds: ["2"] },
+            { id: "3", text: "Banana", categoryIds: ["1"] },
+          ],
+          explanation: "Items should be sorted into their proper categories.",
+        },
+      ],
+      settings: {
+        showResults: true,
+        allowRetry: true,
+        shuffleQuestions: false,
         timeLimit: 0,
       },
     },
