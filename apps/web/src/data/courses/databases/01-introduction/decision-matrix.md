@@ -4,7 +4,6 @@ Choosing the right database for your project is one of the most important archit
 
 ![Database Decision Flowchart](https://i.programmerhumor.io/2025/11/22d670ea923ce8b818044d5cb8e0d32a6895b46658f71df574fd1e6799baa670.jpeg)
 
-![Database Selection](https://i.programmerhumor.io/2025/03/358c2f67fbb453777a84feeda290da35.png)
 
 ---
 
