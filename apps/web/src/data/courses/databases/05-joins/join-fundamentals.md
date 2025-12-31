@@ -2,6 +2,8 @@
 
 Joins combine rows from two or more tables based on related columns. They are fundamental to working with relational databases, allowing you to query normalized data across multiple tables.
 
+![Joins and Subqueries meme](https://i.programmerhumor.io/2024/07/programmerhumor-io-databases-memes-programming-memes-d6df758c4d35dca.png)
+
 ---
 
 ## Why Joins?
