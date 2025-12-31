@@ -1,5 +1,7 @@
 # Game Network Programming with C++
 
+![Game Network Programming with C++](/api/image-proxy?url=https://i.imgur.com/Do3392o.jpeg)
+
 ::: note "Cross-Listed Course"
 
 This is a cross-listed course between Computer Science and Game Programming majors.
@@ -14,9 +16,9 @@ This is a cross-listed course between Computer Science and Game Programming majo
 
 Feel free to add us to your professional network!
 
-- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) <a href="https://www.linkedin.com/in/aletolstenko/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
-- (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/) <a href="https://www.linkedin.com/in/mathrmartins/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
-- (guest lecturers) [Eric Passos](https://www.linkedin.com/in/erick-passos-63039513/) <a href="https://www.linkedin.com/in/erick-passos-63039513/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
+- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) 🔗
+- (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/) 🔗
+- (guest lecturers) [Eric Passos](https://www.linkedin.com/in/erick-passos-63039513/) 🔗
 
 ## Requirements
 
@@ -89,12 +91,12 @@ This course takes a experiential learning, fundamentals-first, implementation-fo
 
 ## Course Overview
 
-| Phase           | Weeks | Focus                                           | Assessment                          |
-| --------------- | ----- | ----------------------------------------------- | ----------------------------------- |
-| Fundamentals    | 1-7   | Protocols, Sockets, Serialization, State Sync   | Weekly Quizzes + Coding Assignments |
-| Midterm         | 8     | Comprehensive Assessment                        | Midterm Exam                        |
-| Advanced Topics | 10-15 | Performance, Prediction, Architecture, Security | Weekly Quizzes + Project Milestones |
-| Final Project   | 16    | Project Delivery                                | Essay + Code + Demo                 |
+| Weeks             | Focus                                           | Assessment                          |
+| ----------------- | ----------------------------------------------- | ----------------------------------- |
+| Fundamentals: 1-7 | Protocols, Sockets, Serialization, State Sync   | Weekly Quizzes + Coding Assignments |
+| Midterm: 8        | Comprehensive Assessment                        | Midterm Exam                        |
+| Advanced: 10-15   | Performance, Prediction, Architecture, Security | Weekly Quizzes + Project Milestones |
+| Final: 16         | Project Delivery                                | Essay + Code + Demo                 |
 
 ---
 
@@ -144,7 +146,7 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ### Week 01: Jan 12–16 — Network Fundamentals
 
-**Tuesday, Jan 13:** Course intro, OSI model, TCP/IP stack overview  
+**Tuesday, Jan 13:** Course intro, repo setup, OSI model, TCP/IP stack overview  
 **Friday, Jan 16:** Network devices, packets, basic addressing concepts
 
 **Quiz 01:** OSI layers, TCP/IP model, network device roles  
