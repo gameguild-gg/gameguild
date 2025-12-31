@@ -29,6 +29,8 @@ Each type may have different names or variations depending on the specific datab
 
 ### Structured Types
 
+![JSON in Database](https://i.programmerhumor.io/2024/02/programmerhumor-io-frontend-memes-databases-memes-f584853d35c11f8.jpg)
+
 - **JSON** (e.g., API responses, configuration, flexible schemas)
 - **XML** (e.g., legacy documents, SOAP messages)
 - **Arrays** (e.g., tags, categories, multiple values)
