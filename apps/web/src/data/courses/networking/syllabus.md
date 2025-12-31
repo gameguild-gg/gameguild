@@ -1,12 +1,22 @@
 # Game Network Programming with C++
 
-::: note "Cross-Listed Course Information"
+::: note "Cross-Listed Course"
 
-**Course Code:** CSI-275: Students will gain a solid understanding of network concepts, models, protocols, and applications. Emphasis is placed on the design and implementation of socket-based network programs, comprising both client and server architectures, and including advanced concepts such as non-blocking sockets, multiplexing, threads, asynchronous programming, and multicasting. Practical skills are developed through hands-on exercises and assignments using selected programming languages. [Course Catalog](https://classlist.champlain.edu/show/course/number/CSI_275)
+This is a cross-listed course between Computer Science and Game Programming majors.
 
-**Course Code:** GPR-430: Students learn the architectural, design and implementation strategies used to develop online games. They develop and stress test reliable and efficient protocols to address network latency (game lag), security and scalability requirements. Students will utilize distributed object caching along with these protocols to implement registration, authentication, server discovery and game lobby systems. [Course Catalog](https://classlist.champlain.edu/show/course/number/GPR_430)
+**CSI-275**: Students will gain a solid understanding of network concepts, models, protocols, and applications. Emphasis is placed on the design and implementation of socket-based network programs, comprising both client and server architectures, and including advanced concepts such as non-blocking sockets, multiplexing, threads, asynchronous programming, and multicasting. Practical skills are developed through hands-on exercises and assignments using selected programming languages. [Course Catalog](https://classlist.champlain.edu/show/course/number/CSI_275)
+
+**GPR-430**: Students learn the architectural, design and implementation strategies used to develop online games. They develop and stress test reliable and efficient protocols to address network latency (game lag), security and scalability requirements. Students will utilize distributed object caching along with these protocols to implement registration, authentication, server discovery and game lobby systems. [Course Catalog](https://classlist.champlain.edu/show/course/number/GPR_430)
 
 :::
+
+## Instructors
+
+Feel free to add us to your professional network!
+
+- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) <a href="https://www.linkedin.com/in/aletolstenko/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
+- (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/) <a href="https://www.linkedin.com/in/mathrmartins/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
+- (guest lecturers) [Eric Passos](https://www.linkedin.com/in/erick-passos-63039513/) <a href="https://www.linkedin.com/in/erick-passos-63039513/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
 
 ## Requirements
 
@@ -91,8 +101,7 @@ This course takes a experiential learning, fundamentals-first, implementation-fo
 ## Spring 2026 — Week-by-Week Schedule
 
 **Schedule:** Tuesday & Friday, 1h15m each  
-**Audience:** Computer Science (2nd year) and Game Programming (4th year) majors  
-**C++ Reference:** [Modern C++ Programming](https://github.com/federico-busato/Modern-CPP-Programming)
+**Audience:** Computer Science (2nd year) and Game Programming (4th year) majors
 
 ---
 
