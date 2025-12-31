@@ -2,6 +2,13 @@
 
 Students with a firm foundation in the basic techniques of artificial intelligence for games will apply their skills to program advanced pathfinding algorithms, artificial opponents, scripting tools and other real-time drivers for non-playable agents. The goal of the course is to provide finely-tuned artificial competition for players using all the rules followed by a human. [Source](https://classliststaging.champlain.edu/show/course/number/GPR_440)
 
+## Instructors
+
+Feel free to add us to your professional network!
+
+- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) <a href="https://www.linkedin.com/in/aletolstenko/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
+- (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/) <a href="https://www.linkedin.com/in/mathrmartins/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
+
 ## Requirements
 
 - [Artificial Intelligence for Games](https://classliststaging.champlain.edu/show/course/number/GPR_340). minimum grade of C.
