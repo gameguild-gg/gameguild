@@ -81,6 +81,29 @@ export function useQuizAnswers({ data }: UseQuizAnswersProps): UseQuizAnswersRet
         break
       }
 
+      case "categorization": {
+        // For categorization: validate that all answers are in correct categories
+        const answers = (data as any).answers || []
+        const categories = (data as any).categories || []
+
+        correct = answers.every((answer: any) => {
+          // Find what category this answer was assigned to
+          const assignedKeys = selectedAnswers.filter((s) => s.startsWith(answer.id + ":"))
+          if (assignedKeys.length === 0) return false
+
+          // Extract assigned category IDs
+          const assignedCategoryIds = assignedKeys.map((key) => key.split(":")[1])
+
+          // Check if assigned categories match expected categories
+          const expectedCategoryIds = answer.categoryIds || []
+          return (
+            assignedCategoryIds.length === expectedCategoryIds.length &&
+            assignedCategoryIds.every((id) => id !== undefined && expectedCategoryIds.includes(id))
+          )
+        })
+        break
+      }
+
       case "essay":
       case "matching":
       case "ordering":

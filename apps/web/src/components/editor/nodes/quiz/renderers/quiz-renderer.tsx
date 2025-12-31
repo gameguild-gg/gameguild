@@ -11,6 +11,7 @@ import { FillBlankRenderer } from "./fill-blank-renderer"
 import { ShortAnswerRenderer } from "./short-answer-renderer"
 import { EssayRenderer } from "./essay-renderer"
 import { RatingRenderer } from "./rating-renderer"
+import { CategorizationRenderer } from "./categorization-renderer"
 import type { QuizData } from "../../quiz-node"
 
 interface QuizRendererProps {
@@ -118,6 +119,17 @@ export function QuizRenderer({ data, selectedAnswers, onAnswerChange, disabled, 
         />
       )
     }
+
+    case "categorization":
+      return (
+        <CategorizationRenderer
+          data={data}
+          selectedAnswers={selectedAnswers}
+          onAnswerChange={onAnswerChange}
+          disabled={disabled}
+          showFeedback={showFeedback}
+        />
+      )
 
     default:
       return <div className="text-red-600">Unsupported question type: {questionType}</div>

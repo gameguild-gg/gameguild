@@ -21,6 +21,7 @@ import { MultipleChoiceEditor } from "./editors/multiple-choice-editor"
 import { TrueFalseEditor } from "./editors/true-false-editor"
 import { FillBlankEditor } from "./editors/fill-blank-editor"
 import { RatingEditor } from "./editors/rating-editor"
+import { CategorizationEditor } from "./editors/categorization-editor"
 import { useQuizAnswers } from "./hooks/use-quiz-answers"
 import type { QuizData } from "../../nodes/quiz-node"
 
@@ -69,7 +70,27 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
   // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
-      reset(data)
+      const dataToLoad = { ...data }
+      
+      // For categorization: convert categories back to matchingPairs format
+      if (data.questionType === "categorization" && (data as any).categories) {
+        const categories = (data as any).categories || []
+        dataToLoad.matchingPairs = categories.map((cat: any) => ({
+          id: cat.id,
+          left: cat.name,
+          right: cat.description || "",
+        })) as any
+        
+        // Ensure answers have categoryIds
+        dataToLoad.answers = (data.answers || []).map((answer: any) => ({
+          id: answer.id,
+          text: answer.text,
+          isCorrect: answer.isCorrect,
+          categoryIds: Array.isArray(answer.categoryIds) ? answer.categoryIds : [],
+        })) as any
+      }
+      
+      reset(dataToLoad)
       setShowTypeSelector(!data.question)
       document.body.style.overflow = "hidden"
       document.body.style.pointerEvents = "none"
@@ -98,6 +119,31 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
         { id: "true", text: "True", isCorrect: template.defaultData.questions[0].correctAnswer === true },
         { id: "false", text: "False", isCorrect: template.defaultData.questions[0].correctAnswer === false },
       ])
+    } else if (template.type === "categorization") {
+      // For categorization: set categories and answers with their category assignments
+      const categories = template.defaultData.questions[0].categories || []
+      const answers = template.defaultData.questions[0].answers || []
+      
+      // Set categories in matchingPairs field - PRESERVE ORIGINAL IDs
+      setValue(
+        "matchingPairs",
+        categories.map((cat: any) => ({
+          id: cat.id, // Keep original ID!
+          left: cat.name,
+          right: cat.description || "",
+        }))
+      )
+      
+      // Set answers with categoryIds
+      setValue(
+        "answers",
+        answers.map((ans: any) => ({
+          id: ans.id,
+          text: ans.text,
+          isCorrect: false,
+          categoryIds: ans.categoryIds || [],
+        } as any))
+      )
     }
 
     setShowTypeSelector(false)
@@ -106,7 +152,31 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
   const onSubmit = (formData: QuizData) => {
     document.body.style.overflow = ""
     document.body.style.pointerEvents = ""
-    onSave(formData)
+    
+    // For categorization, ensure answers have categoryIds preserved
+    if (formData.questionType === "categorization") {
+      const answersWithCategoryIds = formData.answers.map((answer: any) => ({
+        id: answer.id,
+        text: answer.text,
+        isCorrect: answer.isCorrect,
+        categoryIds: Array.isArray(answer.categoryIds) ? answer.categoryIds : [],
+      }))
+      
+      // Also pass categories as a new field
+      const dataToSave = {
+        ...formData,
+        answers: answersWithCategoryIds,
+        categories: (formData.matchingPairs || []).map((cat: any) => ({
+          id: cat.id,
+          name: cat.left,
+          description: cat.right,
+        })),
+      }
+      
+      onSave(dataToSave as any)
+    } else {
+      onSave(formData)
+    }
     onClose()
   }
 
@@ -192,6 +262,7 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                     {questionType === "true-false" && <TrueFalseEditor />}
                     {questionType === "fill-blank" && <FillBlankEditor />}
                     {questionType === "rating" && <RatingEditor />}
+                    {questionType === "categorization" && <CategorizationEditor />}
 
                     {/* Feedback Messages */}
                     <div className="space-y-4">
@@ -274,6 +345,14 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                             fillBlankFields: watch("fillBlankFields"),
                             ratingScale: watch("ratingScale"),
                             correctRating: watch("correctRating"),
+                            // For categorization: pass categories and answers with categoryIds
+                            ...(questionType === "categorization" && {
+                              categories: (watch("matchingPairs") || []).map((cat: any) => ({
+                                id: cat.id,
+                                name: cat.left,
+                                description: cat.right,
+                              })),
+                            }),
                           }}
                           selectedAnswers={selectedAnswers}
                           setSelectedAnswers={setSelectedAnswers}

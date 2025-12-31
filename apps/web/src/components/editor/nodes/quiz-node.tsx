@@ -29,11 +29,13 @@ export type QuestionType =
   | "matching"
   | "ordering"
   | "rating"
+  | "categorization"
 
 export interface QuizAnswer {
   id: string
   text: string
   isCorrect: boolean
+  categoryIds?: string[] // For categorization type
 }
 
 export interface MatchingPair {
@@ -78,6 +80,12 @@ export interface QuizData {
   orderingItems?: OrderingItem[]
   ratingScale?: { min: number; max: number; step: number }
   correctRating?: number
+  // For categorization
+  categories?: Array<{
+    id: string
+    name: string
+    description?: string
+  }>
 }
 
 export interface SerializedQuizNode extends SerializedLexicalNode {
