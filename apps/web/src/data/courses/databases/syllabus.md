@@ -2,6 +2,13 @@
 
 This course will introduce students to database design, Structured Query Language (SQL), normalization, and relational database theory. Traditional relational databases will be contrasted with NoSQL paradigm databases including document-oriented, key-value store, and graph. Students will gain hands-on experience writing database applications.. [Course Catalog](https://classlist.champlain.edu/show/course/number/CSI_300)
 
+## Instructors
+
+Fuul free to add us to your professional network!
+
+- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/);
+- (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/);
+
 ## Requirements
 
 - [Data Structures and Algorithms](https://classlist.champlain.edu/show/course/number/CSI_281) or [Data Structures and Algorithms with Python](https://classlist.champlain.edu/show/course/number/CSI_270)
@@ -81,7 +88,13 @@ This is a work in progress, and the schedule is subject to change. Every change 
 
 ## Holiday and Important Dates
 
-No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
+No Classes:
+
+| Date         | Reason       |
+| ------------ | ------------ |
+| Monday, 1/19 | MLK Day      |
+| 3/9-13       | Spring Break |
+| Friday, 4/10 | Day off      |
 
 ## Week-by-Week Course Plan
 
@@ -127,7 +140,7 @@ No Classes MLK Day: Monday, 1/19 | Spring Break 3/9-13 | No Classes: Friday 4/10
 - **DQL (Data Query Language):** SELECT, FROM, WHERE, ORDER BY, LIMIT
 - **DML (Data Manipulation Language):** INSERT, UPDATE, DELETE operations
 - Concept of Idempotency
-- Seed database introduction: e-commerce schema, bank/fintech schema, petshop/medical schema, manufacturing schema
+- Seed database schema examples: e-commerce, bank/fintech, petshop/medical, manufacturing, healthtech, blockchain explorer
 
 **Quiz 2** (2026/01/22): DDL, DQL, DML syntax & constraints
 **Assignment 2** (due 2026/01/25): Create tables + SELECT queries
@@ -434,4 +447,4 @@ No classes or assignments.
 
 ### Late Submission Policy
 
-Late submissions will incur a penalty of **1% deduction per day** up to a maximum of **25% of the total grade**. For example, a submission that is 1 week (7 days) late will receive a 7% penalty, resulting in a maximum possible grade of 93%, which still falls within the A range. This policy encourages timely submission while allowing flexibility for unforeseen circumstances.
+Late submissions will incur a penalty of **1% deduction per day** up to a maximum of **25% of the total grade**. For example, a submission that is 1 week (7 days) late will receive a 7% penalty, resulting in a maximum possible grade of 93%, which still falls within the A range. This policy encourages timely submission while allowing flexibility for unforeseen circumstances. Please does not make my life miserable by submitting assignments on the finals week. I beg you.
