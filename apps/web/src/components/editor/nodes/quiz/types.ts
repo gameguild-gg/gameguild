@@ -16,6 +16,7 @@ export type QuestionType =
   | "matching"
   | "ordering"
   | "rating"
+  | "categorization"
 
 // ============================================================================
 // Common Interfaces
@@ -103,6 +104,21 @@ export interface RatingQuestion extends QuizSettings {
   correctRating?: number
 }
 
+export interface CategorizationQuestion extends QuizSettings {
+  type: "categorization"
+  question: string
+  categories: Array<{
+    id: string
+    name: string
+    description?: string
+  }>
+  answers: Array<{
+    id: string
+    text: string
+    categoryIds: string[] // Array of category IDs this answer belongs to
+  }>
+}
+
 // ============================================================================
 // Union Type for All Question Types
 // ============================================================================
@@ -116,6 +132,7 @@ export type QuizQuestion =
   | MatchingQuestion
   | OrderingQuestion
   | RatingQuestion
+  | CategorizationQuestion
 
 // ============================================================================
 // Type Guards
@@ -151,4 +168,8 @@ export function isOrdering(quiz: QuizQuestion): quiz is OrderingQuestion {
 
 export function isRating(quiz: QuizQuestion): quiz is RatingQuestion {
   return quiz.type === "rating"
+}
+
+export function isCategorization(quiz: QuizQuestion): quiz is CategorizationQuestion {
+  return quiz.type === "categorization"
 }
