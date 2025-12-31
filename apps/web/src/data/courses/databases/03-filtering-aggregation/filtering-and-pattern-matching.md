@@ -4,8 +4,6 @@ The `WHERE` clause is your primary tool for filtering data in SQL. This lesson c
 
 ![WHERE meme](https://i.programmerhumor.io/2023/02/programmerhumor-io-databases-memes-programming-memes-5b64f9619e9f8f9.jpg)
 
-![Filtering meme](https://i.programmerhumor.io/2021/06/programmerhumor-io-databases-memes-backend-memes-baf0e59b14adbdf.jpg)
-
 ---
 
 ## Boolean Logic
