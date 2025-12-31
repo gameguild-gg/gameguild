@@ -2,6 +2,8 @@
 
 Subqueries (also called nested queries or inner queries) are queries embedded within another query. They enable complex data retrieval that would otherwise require multiple queries or application logic. Set operations combine results from multiple queries.
 
+![Joins and Subqueries meme](https://i.programmerhumor.io/2024/07/programmerhumor-io-databases-memes-programming-memes-d6df758c4d35dca.png)
+
 ---
 
 ## What is a Subquery?
