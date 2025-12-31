@@ -1,6 +1,6 @@
 # History of AI up to 2025
 
-```mermaid
+``` mermaid
 graph TD
     subgraph Foundation["🧠 Foundation Era (1940s-1950s)"]
         direction LR
