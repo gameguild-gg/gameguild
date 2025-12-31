@@ -21,10 +21,12 @@ this [Octalysis article](https://octalysisgroup.com/2015/06/unpredictability-cur
 ### Pseudo Random Number Generation (PRNG)
 
 ::: note
+
 There is no true randomness in computers, as they are deterministic machines. Computers use pseudo-random number
 generators (PRNGs) to simulate randomness. PRNGs generate sequences of numbers that appear random but are actually
 deterministic. The quality of a PRNG is measured by its period (how long before it repeats), distribution (how evenly
 the numbers are spread), and predictability (how difficult it is to guess the next number).
+
 :::
 
 There are a bunch of algorithms to generate pseudo-random numbers, and some of the most common are:
