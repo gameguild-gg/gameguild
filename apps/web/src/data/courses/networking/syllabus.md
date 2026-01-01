@@ -480,13 +480,14 @@ Develop a novel networking solution featuring:
 
 ## Assessment and Grading
 
-| Component          | Weight |
-| ------------------ | ------ |
-| Coding assignments | 30%    |
-| Midterm Exam       | 20%    |
-| Weekly Quizzes     | 20%    |
-| Final Project      | 20%    |
-| Attendance         | 10%    |
+| Component          | Weight | Assessment Method                       |
+| ------------------ | ------ | --------------------------------------- |
+| Readings           | 5%     | Forum discussion evaluation             |
+| Coding Assignments | 25%    | Automatically tested via GitHub Actions |
+| Midterm Exam       | 20%    | Paper-based exam                        |
+| Quizzes            | 20%    | Canvas quizzes                          |
+| Final Project      | 20%    | Essay, Demo, and Presentation           |
+| Attendance         | 10%    | Rollcall attendance tracking            |
 
 ### Late Submission Policy
 
