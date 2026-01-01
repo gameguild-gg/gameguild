@@ -16,7 +16,7 @@ This is a cross-listed course between Computer Science and Game Programming majo
 
 Feel free to add us to your professional network!
 
-- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) 🔗
+- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) 🔗 - [Book a meeting with me](https://calendar.app.google/EU42UnUSyTwyhryL9)
 - (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/) 🔗
 - (guest lecturers) [Eric Passos](https://www.linkedin.com/in/erick-passos-63039513/) 🔗
 

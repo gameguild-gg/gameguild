@@ -29,9 +29,85 @@ Read the repo through carefully, it contains all the information you need to com
 
 - https://github.com/gameguild-gg/network
 
-
 ## Presentation
 
 - https://gaia.cs.umass.edu/kurose_ross/ppt.php - use web archive if link is down
 
+## Key Concepts
 
+### The OSI Model (7 Layers)
+
+The **Open Systems Interconnection (OSI)** model provides a framework for understanding how networks communicate:
+
+```mermaid
+graph TD
+    A["<b>Layer 7: Application</b><br/>HTTP, DNS, game protocols"] --> B["<b>Layer 6: Presentation</b><br/>Data formatting, encryption, compression"]
+    B --> C["<b>Layer 5: Session</b><br/>Session management, connection coordination"]
+    C --> D["<b>Layer 4: Transport</b><br/>TCP/UDP, ports, reliability"]
+    D --> E["<b>Layer 3: Network</b><br/>IP addresses, routing, packets"]
+    E --> F["<b>Layer 2: Data Link</b><br/>MAC addresses, frames, switching"]
+    F --> G["<b>Layer 1: Physical</b><br/>Raw bits, cables, signals"]
+```
+
+### The TCP/IP Model (Simplified View)
+
+The **TCP/IP model** condenses this into 4 layers, combining Session, Presentation, and Application into one:
+
+```mermaid
+graph TD
+    A["<b>Layer 4: Application</b><br/>HTTP, DNS, game protocols, sessions, encryption"] --> B["<b>Layer 3: Transport</b><br/>TCP, UDP, ports"]
+    B --> C["<b>Layer 2: Internet</b><br/>IP addressing, routing"]
+    C --> D["<b>Layer 1: Link</b><br/>Ethernet, MAC addresses, physical signals"]
+```
+
+### Encapsulation: How Data Travels Down the Stack
+
+When data is sent, headers are added at each layer as it travels **down** the stack:
+
+``` mermaid
+graph TD
+    A["Application Data"] --> B["TCP/UDP Header + Data"]
+    B --> C["IP Header + TCP/UDP Header + Data"]
+    C --> D["Ethernet Header + IP Header + TCP/UDP Header + Data"]
+    D --> E["Frame sent on the network wire"]
+```
+
+### Network Devices
+
+- **Hub** — Broadcasts frames to all ports (dumb, repeats everything)
+- **Switch** — Uses MAC addresses to forward frames only to the correct port on the same network
+- **Router** — Uses IP addresses to forward packets between different networks
+
+```mermaid
+graph LR
+    Client["Game Client"] -->|Ethernet Frame<br/>uses MAC| Switch["Switch<br/>(same network)"]
+    Switch -->|Ethernet Frame| Server["Game Server<br/>(same network)"]
+
+    ClientB["Client<br/>192.168.1.10"] -->|IP Packet<br/>uses IP addresses| Router["Router<br/>(gateway)"]
+    Router -->|IP Packet| InternetServer["Server<br/>on different network"]
+```
+
+### Key Addresses
+
+- **MAC Address** — Used on the same local network (48 bits, written as hex)
+- **IP Address** — Used across networks (32 bits for IPv4, 128 bits for IPv6)
+
+On the **same network**, switches use MAC addresses. To reach a **different network**, you need a router and IP addresses.
+
+### Protocols: TCP vs UDP
+
+| Aspect      | TCP                       | UDP                                |
+| ----------- | ------------------------- | ---------------------------------- |
+| Reliability | Guaranteed delivery       | No guarantee                       |
+| Connection  | Connection-oriented       | Connectionless                     |
+| Header Size | 20+ bytes                 | 8 bytes                            |
+| Use Cases   | Email, web, file transfer | Video streaming, online games, DNS |
+
+### Why Learn the OSI Model?
+
+Even though modern developers mainly work at the Application layer, understanding lower layers helps you:
+
+- Debug network issues (latency, packet loss, connection drops)
+- Optimize performance
+- Choose the right protocol for the job
+- Use tools like Wireshark to inspect packets
