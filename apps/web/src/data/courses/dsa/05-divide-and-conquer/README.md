@@ -52,7 +52,7 @@ The algorthims will keep dividing the array (in red) until it reaches the base c
 
 ### Mergesort implementation
 
-``` c++
+```c++
 #include <iostream>
 #include <vector>
 #include <queue>
@@ -181,11 +181,13 @@ int main() {
 #### Merge vs Merge In-Place Performance Considerations
 
 **Merge Function:**
+
 - **Time**: `O(n)` - optimal linear time performance
 - **Space**: `O(n)` - requires temporary array allocation
 - **Performance**: Faster execution due to simple array copying operations
 
 **Merge In-Place Function:**
+
 - **Time**: `O(n^2)` worst case - due to element shifting when inserting from right subarray
 - **Space**: `O(1)` - no additional memory allocation needed
 - **Performance**: Slower because each insertion may require shifting multiple elements
@@ -221,12 +223,11 @@ The partitioning process consists of the following steps:
 - Set the pivot to the leftmost element (assuming you swapped);
 - Set the left and right indexes;
 - While the left index is less than or equal to the right index:
-    - If the left element is less than or equal to the pivot, increment the left index;
-    - If the right element is greater than the pivot, decrement the right index;
-    - If the left element is greater than the pivot and the right element is less than or equal to the pivot, swap the left and right elements;
+  - If the left element is less than or equal to the pivot, increment the left index;
+  - If the right element is greater than the pivot, decrement the right index;
+  - If the left element is greater than the pivot and the right element is less than or equal to the pivot, swap the left and right elements;
 
-<iframe scrolling="no" style="position:relative;top:0px;width:100%;height:500px;" src="https://opendsa-server.cs.vt.edu/embed/quicksortAV"></iframe>
-<a href="https://opendsa-server.cs.vt.edu/ODSA/Books/CS3/html/QuicksortAV.html">source</a>
+[View interactive QuickSort animation on OpenDSA](https://opendsa-server.cs.vt.edu/ODSA/Books/CS3/html/QuicksortAV.html)
 
 ![Sorting_quicksort_anim.gif](https://console-minio.gameguild.gg/api/v1/buckets/gameguild/objects/download?preview=true&prefix=dsa%2F05-divide-and-conquer%2FSorting_quicksort_anim.gif)
 
