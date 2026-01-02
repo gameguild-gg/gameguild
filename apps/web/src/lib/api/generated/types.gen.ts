@@ -1893,6 +1893,7 @@ export type CreateProgramContentDto = {
   parentId?: string | null;
   title: string;
   description?: string | null;
+  slug?: string | null;
   type: ProgramContentType;
   body?: string | null;
   sortOrder?: number;
@@ -3466,6 +3467,7 @@ export type ProgramContent = {
   parentId?: string | null;
   title: string;
   description?: string | null;
+  slug?: string | null;
   type?: ProgramContentType;
   body?: string | null;
   sortOrder?: number;
@@ -3489,6 +3491,7 @@ export type ProgramContentDto = {
   programId?: string;
   parentId?: string | null;
   title?: string | null;
+  slug?: string | null;
   description?: string | null;
   type?: ProgramContentType;
   body?: unknown;
@@ -4963,6 +4966,7 @@ export type UpdateProgramContentDto = {
   id: string;
   title?: string | null;
   description?: string | null;
+  slug?: string | null;
   type?: ProgramContentType;
   body?: string | null;
   sortOrder?: number | null;
