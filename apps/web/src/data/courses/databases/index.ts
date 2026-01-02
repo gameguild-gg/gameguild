@@ -10,7 +10,7 @@ export const databasesProgram: Program = {
     description:
         'This course introduces students to database design, SQL, normalization, and relational database theory. Traditional relational databases will be contrasted with NoSQL paradigms including document-oriented, key-value store, and graph databases. Students will gain hands-on experience writing database applications.',
     slug: 'databases',
-    thumbnail: 'https://placehold.co/400x225/1f2937/ffffff.png?text=Databases',
+    thumbnail: 'https://i.imgur.com/D2Sfd70.jpeg',
     videoShowcaseUrl: null,
     estimatedHours: 48,
     enrollmentStatus: 0, // Open
@@ -36,7 +36,7 @@ export const databasesProduct: Product = {
     description:
         'Master database design, SQL, and modern database paradigms from relational to NoSQL systems',
     shortDescription: 'Learn SQL, normalization, and NoSQL databases with hands-on projects',
-    imageUrl: 'https://placehold.co/400x225/1f2937/ffffff.png?text=Databases',
+    imageUrl: 'https://i.imgur.com/D2Sfd70.jpeg',
     type: 0, // Course
     isBundle: false,
     creatorId: '1',
