@@ -1,5 +1,7 @@
 # Databases
 
+![Databases](https://i.imgur.com/D2Sfd70.jpeg)
+
 This course will introduce students to database design, Structured Query Language (SQL), normalization, and relational database theory. Traditional relational databases will be contrasted with NoSQL paradigm databases including document-oriented, key-value store, and graph. Students will gain hands-on experience writing database applications.. [Course Catalog](https://classlist.champlain.edu/show/course/number/CSI_300)
 
 ## Instructors
