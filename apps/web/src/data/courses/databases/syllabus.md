@@ -429,23 +429,24 @@ No classes or assignments.
 
 ## Assessment Summary
 
-**Weeks 01–07**: 7 Quizzes + 7 Coding Assignments
-**Week 08**: Midterm Exam
-**Week 09**: Spring Break
-**Weeks 10–14**: 5 Quizzes + Project Milestones
-**Weeks 15–16**: Project completion and presentations
+- **Weeks 01–07**: 7 Quizzes + 7 Coding Assignments
+- **Week 08**: Midterm Exam
+- **Week 09**: Spring Break
+- **Weeks 10–14**: 5 Quizzes + Project Milestones
+- **Weeks 15–16**: Project completion and presentations
 
 **Totals**: 12 Quizzes • 7 Coding Assignments • 1 Midterm • 7 Project Milestones
 
 **Gradings:**
 
-| Component                  | Weight |
-| -------------------------- | ------ |
-| Coding Assignments         | 30%    |
-| Midterm Exam               | 20%    |
-| Attendance & Participation | 10%    |
-| Quizzes                    | 20%    |
-| Final Project              | 22%    |
+| Component          | Weight | Assessment Method                       |
+| ------------------ | ------ | --------------------------------------- |
+| Readings           | 5%     | Forum discussion evaluation             |
+| Coding Assignments | 25%    | Automatically tested via GitHub Actions |
+| Midterm Exam       | 20%    | Paper-based exam                        |
+| Quizzes            | 20%    | Canvas quizzes                          |
+| Final Project      | 20%    | Essay, Demo, and Presentation           |
+| Attendance         | 10%    | Rollcall attendance tracking            |
 
 ### Late Submission Policy
 
