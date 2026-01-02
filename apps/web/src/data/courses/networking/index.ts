@@ -2,6 +2,7 @@ import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/gene
 
 import networkingWeek01Lecture from './01-intro/00-lecture.md';
 import networkingWeek01ReadingsMd from './01-intro/01-readings.md';
+import networkingWeek01QuizMd from './01-intro/02-quiz.md';
 import networkingWeek01SetupMd from './01-intro/02-setup.md';
 import networkingWeek01AssignmentMd from './01-intro/03-assignment.md';
 import networkingSyllabus from './syllabus.md';
@@ -137,6 +138,29 @@ export const networkingWeek01Readings: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const networkingWeek01Quiz: ProgramContent & { slug: string } = {
+    id: 'quiz',
+    slug: 'quiz',
+    programId: 'networking-program-1',
+    parentId: 'week-01',
+    title: 'Quiz 01',
+    description: 'Test your understanding of network fundamentals, OSI model, and protocols.',
+    type: 0, // Page
+    body: networkingWeek01QuizMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek01Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 export const networkingWeek01Setup: ProgramContent & { slug: string } = {
     id: 'setup',
     slug: 'setup',
@@ -146,7 +170,7 @@ export const networkingWeek01Setup: ProgramContent & { slug: string } = {
     description: 'GIT, repository, IDE setup, and testing assignments.',
     type: 0, // Page
     body: networkingWeek01SetupMd,
-    sortOrder: 2,
+    sortOrder: 3,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -169,7 +193,7 @@ export const networkingWeek01Assignment: ProgramContent & { slug: string } = {
     description: 'Apply networking fundamentals with a hands-on exercise.',
     type: 0, // Page
     body: networkingWeek01AssignmentMd,
-    sortOrder: 3,
+    sortOrder: 4,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
@@ -183,7 +207,7 @@ export const networkingWeek01Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
-networkingWeek01Intro.children = [networkingWeek01Readings, networkingWeek01Setup, networkingWeek01Assignment];
+networkingWeek01Intro.children = [networkingWeek01Readings, networkingWeek01Quiz, networkingWeek01Setup, networkingWeek01Assignment];
 networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
 

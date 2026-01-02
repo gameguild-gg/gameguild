@@ -87,7 +87,7 @@ This course takes a experiential learning, fundamentals-first, implementation-fo
 - _From Scratch_: No external networking libraries — students implement fundamentals using socket wrappers (Boost.Asio allowed for final projects only)
 - _Continuous Integration_: Assignments auto-graded via GitHub Actions CI/CD
 - _Dual Perspective_: Content framed for both CS distributed systems and game programming real-time applications
-- _Industry Practices_: Wireshark analysis, protocol design, performance measurement under realistic network conditions
+- _Industry Practices_: Wireshark analysis, Docker, protocol design, performance measurement under realistic network conditions
 
 ## Course Overview
 
@@ -430,51 +430,62 @@ This course serves both CS and GPR students. The following terms are equivalent:
 
 Students must choose one of the following capstone projects:
 
-### Option 1: Real-time Multiplayer Action Game
+### Option 1: Select one challenge from our guest lecturers
+
+The challenges will be shared later in the semester.
+
+### Option 2: Real-time Multiplayer Action Game
 
 Develop a fast-paced multiplayer game featuring:
 
-- Client-side prediction and lag compensation
-- Authoritative server with cheat prevention
-- Real-time state synchronization
-- Performance optimization for low-latency gameplay
+- (Required) Client-side prediction and lag compensation
+- (Required) Real-time state synchronization
+- (Extra) Cheat prevention, authoritative server
+- (Extra) Performance optimization for low-latency gameplay
 - Suggestion: Implement a 1x1 fighting game.
 
-### Option 2: MMO-Style Persistent World
+### Option 3: MMO-Style Persistence and Social Features
 
 Create a persistent multiplayer environment including:
 
-- Player management and authentication
-- Real-time chat and social features
-- Basic in-game economy system
-- Database integration for persistent state
+- (Required) Player management and authentication
+- (Required) Real-time chat and social features
+- (Required) Database integration for persistent state
+- (Extra) Basic in-game economy system
+- (Extra) Dashboard for player statistics and analytics
+- Suggestion: Implement the framwork and demo for an Match Making lobby with chat and player profiles, not the actual game.
 
-### Option 3: Peer-to-Peer Game Network
+### Option 4: Peer-to-Peer Game Network
 
 Build a P2P multiplayer game featuring:
 
-- NAT traversal implementation
-- Distributed game state management
-- Conflict resolution mechanisms
-- Network topology optimization
+- (Required) NAT traversal implementation
+- (Required) Distributed game state management
+- (Extra) Master client election and failover
+- (Extra) Conflict resolution mechanisms
+- (Extra) Network topology optimization
 
-### Option 4: Scalable Game Backend Service
+### Option 5: Scalable Game Backend Service
 
 Design a robust server infrastructure with:
 
-- Microservices architecture
-- Database integration and optimization
-- Load balancing and auto-scaling
-- Monitoring and analytics systems
+- (Required) Microservices architecture
+- (Required) Database integration and optimization
+- (Extra) Load balancing and auto-scaling
+- (Extra) Monitoring and analytics systems
 
-### Option 5: Custom Protocol Design
+### Option 6: Custom Protocol Design
 
 Develop a novel networking solution featuring:
 
-- Custom protocol design for specific game genre
-- Performance benchmarking against existing solutions
-- Comprehensive documentation and specification
-- Reference implementation with examples
+- (Required) Custom protocol design for specific game genre
+- (Required) Performance benchmarking against existing solutions
+- (Required) Comprehensive documentation and specification
+- (Required) Reference implementation with examples
+
+### Option 7: Your Own Idea!
+
+Propose a unique project that aligns with course objectives. Must be approved by the instructor.
 
 ---
 
@@ -499,7 +510,7 @@ Late submissions will incur a penalty of **1% deduction per day** up to a maximu
 
 ### Required Software
 
-- **Primary Language:** C++ (C++17 or later)
+- **Primary Language:** C++ (C++17 or later), final projects may use any language;
 - **Compiler:** GCC 9+ or Clang 10+ or MSVC 2019+
 - **Build System:** CMake 3.16+
 - **Version Control:** Git
