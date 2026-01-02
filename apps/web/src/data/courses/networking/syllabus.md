@@ -1,6 +1,6 @@
 # Game Network Programming with C++
 
-![Game Network Programming with C++](/api/image-proxy?url=https://i.imgur.com/Do3392o.jpeg)
+![Game Network Programming with C++](https://i.imgur.com/Do3392o.jpeg)
 
 ::: note "Cross-Listed Course"
 
