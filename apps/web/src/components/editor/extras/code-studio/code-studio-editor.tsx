@@ -64,6 +64,7 @@ export function CodeStudioEditor({
   const [isExecuting, setIsExecuting] = useImmer(false)
   const [output, setOutput] = useImmer<string>("")
   const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
+  const [resolvedContents, setResolvedContents] = useImmer<Record<string, string>>({})
   const gridContainerRef = useRef<HTMLDivElement | null>(null)
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
   const terminalRef = useRef<XTermTerminalHandle | null>(null)
@@ -133,12 +134,17 @@ export function CodeStudioEditor({
     }
   }, [])
   
-  // Sincronizar arquivos quando mudarem
+  // Sincronizar arquivos quando mudarem ou quando conteúdos forem resolvidos
   useEffect(() => {
-    if (localData.files.length > 0) {
-      syncFilesToMonacoFS(localData.files, localData.id)
+    if (localData.files.length > 0 && Object.keys(resolvedContents).length > 0) {
+      // Criar versão dos arquivos com conteúdos resolvidos
+      const filesWithResolvedContent = localData.files.map(file => ({
+        ...file,
+        content: resolvedContents[file.id] || file.content
+      }))
+      syncFilesToMonacoFS(filesWithResolvedContent, localData.id)
     }
-  }, [localData.files, localData.id])
+  }, [localData.files, localData.id, resolvedContents])
 
   // Sincronizar com mudanças externas apenas na primeira montagem
   useEffect(() => {
@@ -168,12 +174,38 @@ export function CodeStudioEditor({
         setShowSettingsMenu(false)
       }
     }
-    
-    if (showSettingsMenu) {
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showSettingsMenu])
+
+  // Resolver conteúdos de assets quando necessário
+  useEffect(() => {
+    const resolveContents = async () => {
+      const newResolvedContents: Record<string, string> = {}
+      
+      for (const file of localData.files) {
+        // Se já foi resolvido e não é referência, manter
+        if (resolvedContents[file.id] && !FileOps.isAssetReference(file.content)) {
+          newResolvedContents[file.id] = resolvedContents[file.id]!
+          continue
+        }
+        
+        // Se é referência a asset, resolver
+        if (FileOps.isAssetReference(file.content)) {
+          const resolved = await FileOps.resolveFileContent(file)
+          newResolvedContents[file.id] = resolved
+        } else {
+          // Conteúdo direto
+          newResolvedContents[file.id] = file.content
+        }
+      }
+      
+      setResolvedContents(newResolvedContents)
+    }
+    
+    resolveContents()
+  }, [localData.files, setResolvedContents])
 
   // Se não há modo definido, não renderizar nada
   if (!localData.mode) {
@@ -193,11 +225,19 @@ export function CodeStudioEditor({
     
   }
 
-  const handleCodeChange = (content: string, fileId: string) => {
+  const handleCodeChange = async (content: string, fileId: string) => {
     setLocalData(draft => {
       const file = draft.files.find(f => f.id === fileId)
       if (file) {
+        // Se o arquivo veio de assets e ainda não foi modificado
+        if (file.assetId && !file.isModified) {
+          // Marcar como modificado (isso fará com que seja convertido para local ao salvar)
+          FileOps.markFileAsModified(draft, fileId)
+        }
+        
+        // Armazenar o novo conteúdo (já não é mais referência)
         file.content = content
+        
         // Atualizar também no sistema de arquivos virtual do Monaco com instanceId
         updateMonacoFile(file.path, content, draft.id)
       }
@@ -237,6 +277,16 @@ export function CodeStudioEditor({
 
     setLocalData(draft => {
       FileOps.createFile(draft, path, name, activeDisplay.id)
+    })
+  }
+
+  const handleAddFileFromAsset = (path: string, assetId: string, fileName: string, content: string) => {
+    if (!localData.layout) return
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+
+    setLocalData(draft => {
+      FileOps.addFileFromAsset(draft, path, assetId, fileName, content, activeDisplay.id)
     })
   }
 
@@ -438,6 +488,7 @@ export function CodeStudioEditor({
             onMoveFile={handleMoveFile}
             onMoveFolder={handleMoveFolder}
             onReorderFiles={handleReorderFiles}
+            onAddFileFromAsset={handleAddFileFromAsset}
           />
         )
       
@@ -499,7 +550,7 @@ export function CodeStudioEditor({
                           fileId={file.id}
                           filePath={file.path}
                           instanceId={localData.id} // ID único da instância para isolamento completo
-                          value={file.content}
+                          value={resolvedContents[file.id] || file.content}
                           onChange={(content) => handleCodeChange(content, file.id)}
                           language={file.language}
                           readonly={localData.readonly}
@@ -557,15 +608,16 @@ export function CodeStudioEditor({
 
     try {
       // Criar mapa de arquivos para suportar imports - apenas arquivos da mesma linguagem
+      // Resolver conteúdos de assets antes de executar
       const filesMap: Record<string, string> = {}
-      localData.files
-        .filter(file => 
-          file.language === fileToExecute.language && 
-          hasValidExtension(file.path, fileToExecute.language)
-        )
-        .forEach(file => {
-          filesMap[`/${file.path}`] = file.content
-        })
+      for (const file of localData.files) {
+        if (file.language === fileToExecute.language && 
+            hasValidExtension(file.path, fileToExecute.language)) {
+          // Resolver conteúdo se for referência a asset
+          const content = resolvedContents[file.id] || file.content
+          filesMap[`/${file.path}`] = content
+        }
+      }
 
       // Usar runWithFiles para suportar imports entre arquivos
       const result = await codeRunnerRef.current.runWithFiles(
@@ -602,47 +654,62 @@ export function CodeStudioEditor({
   }
 
   const handleSaveClick = () => {
-    // Garantir que activeDisplayId seja sempre display-1 ao salvar
-    const display1 = localData.layout?.displays.find(d => d.id === 'display-1')
-    
-    // Determinar o tipo de editor no display-1
-    const display1Editor = display1?.panels.find(p => p.type === 'editor')
-    const isDisplay1Unique = display1Editor?.editorInstance === 'unique'
-    
-    // Sincronizar activeFileId com a aba ativa apropriada
-    let syncedActiveFileId = localData.activeFileId
-    
-    if (isDisplay1Unique) {
-      // Editor único: usar uniqueActiveFileId do display-1
-      if (display1?.uniqueOpenTabs && display1.uniqueOpenTabs.length > 0) {
-        syncedActiveFileId = display1.uniqueActiveFileId
-      } else {
-        syncedActiveFileId = undefined
+    // Processar arquivos modificados de assets antes de salvar
+    // Agora apenas remove a referência ao asset, mantendo o mesmo nome
+    setLocalData(draft => {
+      // Encontrar todos os arquivos modificados que vieram de assets
+      const modifiedAssetFiles = draft.files.filter(f => f.assetId && f.isModified)
+      
+      // Para cada um, remover referência ao asset (converte para local)
+      for (const file of modifiedAssetFiles) {
+        FileOps.createCopyOnSave(draft, file.id)
       }
-    } else {
-      // Editor múltiplo: usar openTabs global
-      if (localData.openTabs && localData.openTabs.length > 0) {
-        // Se já tem activeFileId e está nas tabs abertas, manter
-        // Senão, usar a última tab aberta
-        if (localData.activeFileId && localData.openTabs.includes(localData.activeFileId)) {
-          syncedActiveFileId = localData.activeFileId
+    })
+    
+    // Aguardar o próximo tick para garantir que o estado foi atualizado
+    setTimeout(() => {
+      // Garantir que activeDisplayId seja sempre display-1 ao salvar
+      const display1 = localData.layout?.displays.find(d => d.id === 'display-1')
+      
+      // Determinar o tipo de editor no display-1
+      const display1Editor = display1?.panels.find(p => p.type === 'editor')
+      const isDisplay1Unique = display1Editor?.editorInstance === 'unique'
+      
+      // Sincronizar activeFileId com a aba ativa apropriada
+      let syncedActiveFileId = localData.activeFileId
+      
+      if (isDisplay1Unique) {
+        // Editor único: usar uniqueActiveFileId do display-1
+        if (display1?.uniqueOpenTabs && display1.uniqueOpenTabs.length > 0) {
+          syncedActiveFileId = display1.uniqueActiveFileId
         } else {
-          syncedActiveFileId = localData.openTabs[localData.openTabs.length - 1]
+          syncedActiveFileId = undefined
         }
       } else {
-        syncedActiveFileId = undefined
+        // Editor múltiplo: usar openTabs global
+        if (localData.openTabs && localData.openTabs.length > 0) {
+          // Se já tem activeFileId e está nas tabs abertas, manter
+          // Senão, usar a última tab aberta
+          if (localData.activeFileId && localData.openTabs.includes(localData.activeFileId)) {
+            syncedActiveFileId = localData.activeFileId
+          } else {
+            syncedActiveFileId = localData.openTabs[localData.openTabs.length - 1]
+          }
+        } else {
+          syncedActiveFileId = undefined
+        }
       }
-    }
-    
-    const dataToSave = {
-      ...localData,
-      layout: localData.layout ? {
-        ...localData.layout,
-        activeDisplayId: 'display-1'
-      } : undefined,
-      activeFileId: syncedActiveFileId
-    }
-    onSave?.(dataToSave)
+      
+      const dataToSave = {
+        ...localData,
+        layout: localData.layout ? {
+          ...localData.layout,
+          activeDisplayId: 'display-1'
+        } : undefined,
+        activeFileId: syncedActiveFileId
+      }
+      onSave?.(dataToSave)
+    }, 0)
   }
 
   const handleCancelClick = () => {
