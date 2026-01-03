@@ -19,6 +19,8 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { DeleteConfirmDialog } from "../../dialogs/delete-confirm-dialog"
 import { DuplicateNameDialog } from "../../dialogs/duplicate-name-dialog"
+import { MediaUploadDialog } from "../../media-upload-dialog"
+import { FileSourceMenu } from "../file-source-menu"
 import type { CodeFile, FileTreeFolder, FileTreeItem } from "../types"
 import { cn } from "@/lib/utils"
 
@@ -37,6 +39,7 @@ interface FileExplorerProps {
   onMoveFile: (fileId: string, newPath: string) => void
   onMoveFolder: (folderId: string, newPath: string) => void
   onReorderFiles?: (newOrder: CodeFile[]) => void
+  onAddFileFromAsset?: (path: string, assetId: string, fileName: string, content: string) => void
 }
 
 export function FileExplorer({
@@ -54,6 +57,7 @@ export function FileExplorer({
   onMoveFile,
   onMoveFolder,
   onReorderFiles,
+  onAddFileFromAsset,
 }: FileExplorerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
@@ -64,6 +68,8 @@ export function FileExplorer({
   const [dragEnabled, setDragEnabled] = useState(false)
   const [draggedItem, setDraggedItem] = useState<{ id: string; type: "file" | "folder" } | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
+  const [showAssetDialog, setShowAssetDialog] = useState(false)
+  const [assetDialogPath, setAssetDialogPath] = useState("")
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean
     type: "file" | "folder"
@@ -114,6 +120,44 @@ export function FileExplorer({
     setCreatingType(type)
     setCreatingPath(path)
     setNewItemName("")
+  }
+
+  const handleOpenAssetDialog = (path: string = "") => {
+    setAssetDialogPath(path)
+    setShowAssetDialog(true)
+  }
+
+  const handleAssetSelected = async (results: any) => {
+    if (!onAddFileFromAsset) return
+
+    // Processar resultados (pode ser array ou objeto único)
+    const assets = Array.isArray(results) ? results : [results]
+
+    for (const asset of assets) {
+      if (asset.type === "file" && asset.assetId && asset.name) {
+        // Carregar conteúdo do asset
+        const { assetManager } = await import("@/lib/storage/assets/asset-manager")
+        const assetData = await assetManager.getAsset(asset.assetId)
+        
+        if (assetData?.data) {
+          // Se for um dataURL, converter para texto
+          let content = ""
+          if (assetData.data.startsWith("data:")) {
+            // Extrair base64 e decodificar
+            const base64Data = assetData.data.split(",")[1]
+            if (base64Data) {
+              content = atob(base64Data)
+            }
+          } else {
+            content = assetData.data
+          }
+
+          onAddFileFromAsset(assetDialogPath, asset.assetId, asset.name, content)
+        }
+      }
+    }
+
+    setShowAssetDialog(false)
   }
 
   const handleFinishCreating = () => {
@@ -578,7 +622,7 @@ export function FileExplorer({
                 
                 {openMenuId === folder.id && (
                   <div 
-                    className="absolute right-0 top-6 z-50 w-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1"
+                    className="absolute right-0 top-6 z-50 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg py-1"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -592,6 +636,19 @@ export function FileExplorer({
                       <FileText className="h-3 w-3" />
                       New File
                     </button>
+                    {onAddFileFromAsset && (
+                      <button
+                        className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleOpenAssetDialog(folder.path)
+                          setOpenMenuId(null)
+                        }}
+                      >
+                        <FileText className="h-3 w-3" />
+                        Add from Assets
+                      </button>
+                    )}
                     <button
                       className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
                       onClick={(e) => {
@@ -711,7 +768,19 @@ export function FileExplorer({
         ) : (
           <>
             {renderFileIcon(file.name)}
-            <span className="flex-1 truncate">{file.name}</span>
+            <span className="flex-1 truncate flex items-center gap-1">
+              {file.name}
+              {file.assetId && (
+                <span className="text-[9px] px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" title="From assets">
+                  A
+                </span>
+              )}
+              {file.isModified && (
+                <span className="text-[9px] px-1 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400" title="Modified">
+                  M
+                </span>
+              )}
+            </span>
             <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 relative context-menu-container">
               <Button
                 variant="ghost"
@@ -905,15 +974,27 @@ export function FileExplorer({
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0"
-            onClick={() => handleStartCreating("file", "")}
-            title="New File"
-          >
-            <FileText className="h-3 w-3" />
-          </Button>
+          {onAddFileFromAsset ? (
+            <FileSourceMenu
+              onCreateNew={() => handleStartCreating("file", "")}
+              onAddFromAssets={() => handleOpenAssetDialog("")}
+              trigger={
+                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" title="Add File">
+                  <FileText className="h-3 w-3" />
+                </Button>
+              }
+            />
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => handleStartCreating("file", "")}
+              title="New File"
+            >
+              <FileText className="h-3 w-3" />
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -976,6 +1057,23 @@ export function FileExplorer({
           originalName={duplicateDialog.originalName}
           onConfirm={handleDuplicateConfirm}
           onCancel={handleDuplicateCancel}
+        />
+      )}
+
+      {/* Media Upload Dialog for Code Files */}
+      {onAddFileFromAsset && (
+        <MediaUploadDialog
+          open={showAssetDialog}
+          onOpenChange={setShowAssetDialog}
+          onMediaSelected={handleAssetSelected}
+          title="Add Code File from Assets"
+          acceptTypes="*/*"
+          urlPlaceholder="https://example.com/code-file.js"
+          uploadLabel="Select a code file from your device"
+          urlLabel="Enter the URL of the code file"
+          multiple={true}
+          compress={false}
+          allowCompressionToggle={false}
         />
       )}
     </div>

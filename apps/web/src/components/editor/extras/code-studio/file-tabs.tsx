@@ -155,8 +155,18 @@ export function FileTabs({
               onClick={() => onSelectTab(file.id)}
             >
               <File className="h-3 w-3 shrink-0" />
-              <span className="text-xs whitespace-nowrap">
+              <span className="text-xs whitespace-nowrap flex items-center gap-1">
                 {file.name}
+                {file.assetId && (
+                  <span className="text-[8px] px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" title="From assets">
+                    A
+                  </span>
+                )}
+                {file.isModified && (
+                  <span className="text-[8px] px-1 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400" title="Modified">
+                    M
+                  </span>
+                )}
               </span>
               {onCloseTab && (
                 <Button

@@ -91,6 +91,8 @@ export interface CodeFile {
   isMain: boolean
   isVisible: boolean
   path: string // Caminho completo incluindo pastas, ex: "src/components/Button.tsx"
+  assetId?: string // ID do asset original se o arquivo veio de assets (para tracking e copy-on-write)
+  isModified?: boolean // Flag para indicar se arquivo de asset foi modificado
 }
 
 export interface FileTreeFolder {
