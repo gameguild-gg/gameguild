@@ -1,13 +1,15 @@
 # Databases
 
+![Databases](https://i.imgur.com/D2Sfd70.jpeg)
+
 This course will introduce students to database design, Structured Query Language (SQL), normalization, and relational database theory. Traditional relational databases will be contrasted with NoSQL paradigm databases including document-oriented, key-value store, and graph. Students will gain hands-on experience writing database applications.. [Course Catalog](https://classlist.champlain.edu/show/course/number/CSI_300)
 
 ## Instructors
 
 Feel free to add us to your professional network!
 
-- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) <a href="https://www.linkedin.com/in/aletolstenko/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
-- (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/) <a href="https://www.linkedin.com/in/mathrmartins/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
+- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) 🔗 - [Book a meeting with me](https://calendar.app.google/EU42UnUSyTwyhryL9)
+- (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/) 🔗
 
 ## Requirements
 
@@ -117,9 +119,11 @@ No Classes:
 - Lab: Clone repo, `docker-compose up` with PostgreSQL + MongoDB + Redis
 - TypeScript + Node.js environment setup
 
-**Quiz 0** (2026/01/15): Course policies & syllabus
-**Quiz 1** (2026/01/15): Database types & use cases
-**Assignment 1** (due 2026/01/18): Docker setup + container commands
+Assessments:
+
+- **Quiz 0** (2026/01/15): Course policies & syllabus
+- **Quiz 1** (2026/01/15): Database types & use cases
+- **Assignment 1** (due 2026/01/18): Docker setup + container commands
 
 ---
 
@@ -142,8 +146,10 @@ No Classes:
 - Concept of Idempotency
 - Seed database schema examples: e-commerce, bank/fintech, petshop/medical, manufacturing, healthtech, blockchain explorer
 
-**Quiz 2** (2026/01/22): DDL, DQL, DML syntax & constraints
-**Assignment 2** (due 2026/01/25): Create tables + SELECT queries
+Assessments:
+
+- **Quiz 2** (2026/01/22): DDL, DQL, DML syntax & constraints
+- **Assignment 2** (due 2026/01/25): Create tables + SELECT queries
 
 ---
 
@@ -161,8 +167,10 @@ No Classes:
 - COUNT, SUM, AVG, MIN, MAX
 - GROUP BY, HAVING, DISTINCT in aggregates
 
-**Quiz 3** (2026/01/29): Filtering & aggregation
-**Assignment 3** (due 2026/02/01): Complex filters and aggregations
+Assessments:
+
+- **Quiz 3** (2026/01/29): Filtering & aggregation
+- **Assignment 3** (due 2026/02/01): Complex filters and aggregations
 
 ---
 
@@ -185,8 +193,10 @@ No Classes:
 - Real-world schema analysis - (MySQL Workbench has samples, Microsoft has samples for SQL Server, CONTOSO)
 - Activity: normalize a problematic spreadsheet
 
-**Quiz 6** (2026/02/19): Normal forms & dependencies
-**Assignment 6** (due 2026/02/22): Design normalized schema + DDL
+Assessments:
+
+- **Quiz 6** (2026/02/19): Normal forms & dependencies
+- **Assignment 6** (due 2026/02/22): Design normalized schema + DDL
 
 ---
 
@@ -203,8 +213,10 @@ No Classes:
 - LEFT/RIGHT/FULL OUTER JOIN, self-joins, CROSS JOIN
 - Join visualization and mental models
 
-**Quiz 4** (2026/02/05): Join types & behavior
-**Assignment 4** (due 2026/02/08): Multi-table queries
+Assessments:
+
+- **Quiz 4** (2026/02/05): Join types & behavior
+- **Assignment 4** (due 2026/02/08): Multi-table queries
 
 ---
 
@@ -224,8 +236,10 @@ No Classes:
 - Views: CREATE VIEW, use cases, updatable views
 - Materialized Views: CREATE MATERIALIZED VIEW, REFRESH strategies, performance trade-offs
 
-**Quiz 5** (2026/02/12): Subqueries, CTEs & Views
-**Assignment 5** (due 2026/02/15): Analytical queries + create views
+Assessments:
+
+- **Quiz 5** (2026/02/12): Subqueries, CTEs & Views
+- **Assignment 5** (due 2026/02/15): Analytical queries + create views
 
 ---
 
@@ -255,8 +269,10 @@ No Classes:
 - Raw SQL vs query builders: trade-offs and when to use each
 - Safety considerations: SQL injection prevention
 
-**Quiz 7** (2026/02/26): ER modeling, stored logic, transactions & query builders
-**Assignment 7** (due 2026/03/01): ER diagram + schema + functions + Drizzle queries
+Assessments:
+
+- **Quiz 7** (2026/02/26): ER modeling, stored logic, transactions & query builders
+- **Assignment 7** (due 2026/03/01): ER diagram + schema + functions + Drizzle queries
 
 ---
 
@@ -273,6 +289,10 @@ No Classes:
 **Thursday 2026/03/05** — Midterm Exam
 
 - Covers Weeks 01–07
+
+Assessments:
+
+- **Midterm Exam** (2026/03/05): Comprehensive assessment covering Weeks 01–07
 
 ---
 
@@ -301,8 +321,10 @@ No classes or assignments.
 - Update operators ($set, $push, $pull), aggregation pipeline
 - Drizzle + MongoDB (drizzle-orm/mongodb)
 
-**Quiz 8** (2026/03/19): Document DB concepts
-**Final Project** (due 2026/03/22): Team formation + proposal
+Assessments:
+
+- **Quiz 8** (2026/03/19): Document DB concepts
+- **Final Project** (due 2026/03/22): Team formation + proposal
 
 ---
 
@@ -322,8 +344,10 @@ No classes or assignments.
 - Column families, partition keys, clustering columns
 - CAP theorem, eventual consistency, CQL basics
 
-**Quiz 9** (2026/03/26): Key-Value & Wide-Column
-**Final Project** (due 2026/03/29): Architecture design
+Assessments:
+
+- **Quiz 9** (2026/03/26): Key-Value & Wide-Column
+- **Final Project** (due 2026/03/29): Architecture design
 
 ---
 
@@ -343,8 +367,10 @@ No classes or assignments.
 - Path queries, variable-length patterns, MERGE
 - neo4j-driver for TypeScript
 
-**Quiz 10** (2026/04/02): Graph concepts & Cypher
-**Final Project** (due 2026/04/05): Checkpoint #1
+Assessments:
+
+- **Quiz 10** (2026/04/02): Graph concepts & Cypher
+- **Final Project** (due 2026/04/05): Checkpoint #1
 
 ---
 
@@ -364,8 +390,10 @@ No classes or assignments.
 - Documents, indices, mappings, basic queries (match, term, bool)
 - @elastic/elasticsearch client
 
-**Quiz 11** (2026/04/09): Time Series & Search
-**Final Project** (due 2026/04/12): Checkpoint #2
+Assessments:
+
+- **Quiz 11** (2026/04/09): Time Series & Search
+- **Final Project** (due 2026/04/12): Checkpoint #2
 
 ---
 
@@ -385,8 +413,10 @@ No classes or assignments.
 - Consumer groups, stream processing concepts
 - kafkajs client
 
-**Quiz 12** (2026/04/16): Vector DBs & Streaming
-**Final Project** (due 2026/04/19): Feature freeze
+Assessments:
+
+- **Quiz 12** (2026/04/16): Vector DBs & Streaming
+- **Final Project** (due 2026/04/19): Feature freeze
 
 ---
 
@@ -398,7 +428,9 @@ No classes or assignments.
 
 **Thursday 2026/04/23** — Demo dry runs, peer feedback, documentation review
 
-**Final Project** (due 2026/04/26): Code complete + documentation
+Assessments:
+
+- **Final Project** (due 2026/04/26): Code complete + documentation
 
 ---
 
@@ -409,8 +441,10 @@ No classes or assignments.
 **Monday 2026/04/27** — Presentations (Group A)
 **Thursday 2026/04/30** — Presentations (Group B) + Course wrap-up
 
-**Final Project** (due 2026/04/30): Final submission
-**Peer Evaluations** (due 2026/04/30): Team evaluations
+Assessments:
+
+- **Final Project** (due 2026/04/30): Final submission
+- **Peer Evaluations** (due 2026/04/30): Team evaluations
 
 ---
 
@@ -427,23 +461,24 @@ No classes or assignments.
 
 ## Assessment Summary
 
-**Weeks 01–07**: 7 Quizzes + 7 Coding Assignments
-**Week 08**: Midterm Exam
-**Week 09**: Spring Break
-**Weeks 10–14**: 5 Quizzes + Project Milestones
-**Weeks 15–16**: Project completion and presentations
+- **Weeks 01–07**: 7 Quizzes + 7 Coding Assignments
+- **Week 08**: Midterm Exam
+- **Week 09**: Spring Break
+- **Weeks 10–14**: 5 Quizzes + Project Milestones
+- **Weeks 15–16**: Project completion and presentations
 
 **Totals**: 12 Quizzes • 7 Coding Assignments • 1 Midterm • 7 Project Milestones
 
 **Gradings:**
 
-| Component                  | Weight |
-| -------------------------- | ------ |
-| Coding Assignments         | 30%    |
-| Midterm Exam               | 20%    |
-| Attendance & Participation | 10%    |
-| Quizzes                    | 20%    |
-| Final Project              | 22%    |
+| Component          | Weight | Assessment Method                       |
+| ------------------ | ------ | --------------------------------------- |
+| Readings           | 5%     | Forum discussion evaluation             |
+| Coding Assignments | 25%    | Automatically tested via GitHub Actions |
+| Midterm Exam       | 20%    | Paper-based exam                        |
+| Quizzes            | 20%    | Canvas quizzes                          |
+| Final Project      | 20%    | Essay, Demo, and Presentation           |
+| Attendance         | 10%    | Rollcall attendance tracking            |
 
 ### Late Submission Policy
 

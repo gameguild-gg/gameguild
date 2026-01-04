@@ -27,11 +27,33 @@ The learner has to produce original content. You can use tools like `LLMs` to he
 - You cannot use AI assistance to solve quizzes or exams in any circumstances.
 - Even in accepted cases, using AI assistance and not citing it will be considered plagiarism and will be reported to higher instances and zero-ed;
 
+### Disabling AI Completions
+
+Please disable AI assistance features (like GitHub Copilot, ChatGPT plugins, etc.) in any IDE you use for this course. Relying on AI tools can hinder your learning process and may lead to academic integrity issues.
+
+#### JetBrains IDEs
+
+You can disable AI assistance by going to **Settings/Preferences > Plugins** and disabling any AI-related plugins, such as:
+
+- GitHub Copilot
+- Tabnine AI
+- or any other similar plugins you may have installed.
+
+**In Jetbrains**, you can also disable AI code completion by going to **Settings/Preferences > Editor > General > Inline Completion** and unchecking the options for AI-based suggestions:
+
+- Enable local Full Line completion Suggestions
+- Enable automatic completion on typing
+- Enable multi-line suggestions
+
+#### Other IDEs
+
+For VS Code and other IDEs, refer to their respective documentation on disabling AI extensions and code completion features.
+
 ### How Plagiarism and AI-assisted Tool Abuse is Detected
 
 - Automated tools such as Turnitin (Canvas), MOSS (Beecrowd), and others are used;
 - Professional experience is applied to detect plagiarism;
-- When students use the same AI assistant, they often produce identical answers, which can be easily detected;
+- When students use the same AI assistant, they often produce similar to identical answers, which can be easily detected;
 
 ## Grading Timelines
 
