@@ -358,8 +358,6 @@ LIMIT 10;
 
 **The Historian**
 
-![Time Series meme](https://i.programmerhumor.io/2023/11/programmerhumor-io-backend-memes-databases-memes-e9acb6fc7a2f37f.jpg)
-
 Time series databases are optimized for **time-stamped data**—measurements that change over time. They excel at storing, compressing, and querying temporal data.
 
 ### Key Characteristics
