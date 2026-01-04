@@ -277,15 +277,15 @@ ZREVRANGE leaderboard:game1 0 9 WITHSCORES
 Data Structures in Redis:
 
 ```mermaid
-block
-    columns 1
-    Redis["🔴 Redis In-Memory Store"]
-        Strings["📝 Strings<br/>session:123 = '{...}'<br/>counter:views = '42'"]
-        Lists["📋 Lists<br/>queue:tasks = [task1, task2]<br/>history:page = [v1, v2, v3]"]
-        Sets["🎯 Sets<br/>tags:post = {javascript, db}<br/>online:users = {u1, u2, u3}"]
-        Hashes["🗂️ Hashes<br/>user:123 = {name, email, age}<br/>config:app = {timeout, retries}"]
-        ZSets["🏆 Sorted Sets (Leaderboards)<br/>game:scores = {p1:1500, p2:2300}<br/>rank:players = {alice:1, bob:2}"]
-        Streams["⏱️ Streams<br/>events:orders = [event1, event2]<br/>logs:app = [log1, log2]"]
+flowchart LR
+  Redis["🔴 Redis In-Memory Store"]
+
+  Redis --> Strings["📝 Strings\nsession:123 = '{...}'\ncounter:views = 42"]
+  Redis --> Lists["📋 Lists\nqueue:tasks = [task1, task2]\nhistory:page = [v1, v2, v3]"]
+  Redis --> Sets["🎯 Sets\ntags:post = {javascript, db}\nonline:users = {u1, u2, u3}"]
+  Redis --> Hashes["🗂️ Hashes\nuser:123 = {name, email, age}\nconfig:app = {timeout, retries}"]
+  Redis --> ZSets["🏆 Sorted Sets (Leaderboards)\ngame:scores = {p1:1500, p2:2300}\nrank:players = {alice:1, bob:2}"]
+  Redis --> Streams["⏱️ Streams\nevents:orders = [event1, event2]\nlogs:app = [log1, log2]"]
 ```
 
 ---
