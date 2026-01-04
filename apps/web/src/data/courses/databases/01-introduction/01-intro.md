@@ -22,7 +22,7 @@ DB is a piece of software that manages data by exposing an interface to interact
 
 Some databases use a specific language to interact with the data. **SQL** (Structured Query Language) is the most used in relational databases. Other databases may use different query languages or APIs, such as MongoDB's query language for document databases.
 
-<blockquote class="reddit-embed-bq" style="height:500px" data-embed-height="740"><a href="https://www.reddit.com/r/ProgrammerHumor/comments/8a6m04/so_our_databases_professor_has_been_putting_memes/">so our databases professor has been putting memes in his slides teaching with memes: a concept</a><br> by<a href="https://www.reddit.com/user/Pradeep2k17/">u/Pradeep2k17</a> in<a href="https://www.reddit.com/r/ProgrammerHumor/">ProgrammerHumor</a></blockquote><script async="" src="https://embed.reddit.com/widgets.js" charset="UTF-8"></script>
+[![Teaching with memes: SQL pronunciation](https://preview.redd.it/266xy4z1s7q01.jpg?width=640&crop=smart&auto=webp&s=7e776bda941235d004abfbea0b8bc46ca0316da7)](https://www.reddit.com/r/ProgrammerHumor/comments/8a6m04/so_our_databases_professor_has_been_putting_memes/)
 
 ## Query
 
@@ -138,4 +138,4 @@ Complexity may solve some issues, but add new ones as well. Consider some factor
 
 :::
 
-<div class="tenor-gif-embed" data-postid="13528303" data-share-method="host" data-aspect-ratio="1.78082" data-width="100%"><a href="https://tenor.com/view/that-escalated-quickly-gif-13528303">That Escalated GIF</a>from <a href="https://tenor.com/search/that-gifs">That GIFs</a></div> <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
+[![That Escalated Quickly](https://media.tenor.com/images/13528303/tenor.gif)](https://tenor.com/view/that-escalated-quickly-gif-13528303)

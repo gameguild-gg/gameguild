@@ -18,7 +18,7 @@ DevOps is a set of practices that combines software development (Dev) and IT ope
 
 Every company implements its own version of how it should work for them, but in general they follow a flow similar to this:
 
-<blockquote class="imgur-embed-pub" lang="en" data-id="0lSuLev"><a href="https://imgur.com/0lSuLev">View post on imgur.com</a></blockquote><script async src="//s.imgur.com/min/embed.js" charset="utf-8"></script>
+[![DevOps Pipeline](https://i.imgur.com/0lSuLev.png)](https://imgur.com/0lSuLev)
 
 ## Version Control Systems (VCS)
 
@@ -36,12 +36,14 @@ Version Control Systems (VCS) are essential tools for managing changes to source
 ### Types of Version Control Systems
 
 #### Centralized VCS
+
 - Single central repository that all developers connect to
 - Examples: Subversion (SVN), Team Foundation Server (TFS)
 - Pros: Simple to understand, centralized control
 - Cons: Single point of failure, requires network connection
 
 #### Distributed VCS
+
 - Every developer has a complete copy of the repository
 - Examples: Git, Mercurial, Bazaar
 - Pros: No single point of failure, works offline, flexible workflows
@@ -49,7 +51,7 @@ Version Control Systems (VCS) are essential tools for managing changes to source
 
 ### Git
 
-<blockquote class="reddit-embed-bq" style="height:500px" data-embed-height="740"><a href="https://www.reddit.com/r/ProgrammerHumor/comments/gtl9qy/git_checkout_memesfolder/">git checkout memes-folder</a><br> by<a href=""></a> in<a href="https://www.reddit.com/r/ProgrammerHumor/">ProgrammerHumor</a></blockquote><script async="" src="https://embed.reddit.com/widgets.js" charset="UTF-8"></script>
+[![Git version control brain meme](https://preview.redd.it/yzen2uo7qy151.jpg?width=320&crop=smart&auto=webp&s=5cf6192f6c954c47c71ab3af56213f6006f47768)](https://www.reddit.com/r/ProgrammerHumor/comments/gtl9qy/git_checkout_memesfolder/)
 
 Git is a **distributed** version control system (VCS). It take snapshots of a tracked folder by tracking it changes by consolidating them into isolated **commits**, effectivelly creating a history of changes.
 
@@ -65,7 +67,8 @@ Git can be tricky to use if you skip the following step below. Chose your poison
 
 ::: note "Terminal Lovers"
 
-For the ones more hardcore, I would recommend to use command line. 
+For the ones more hardcore, I would recommend to use command line.
+
 1. Learn the basics here: [git scm book](https://git-scm.com/book/). This is the best resource for beginners.
 2. Learn it interactively here: [learngitbranching.js.org](https://learngitbranching.js.org). This is the best practical way to learn git. It is interactive and you can see the results of your commands in real time.
 3. Learn Git Flow branching model. [Atlassian Git Flow](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow) is a popular branching model that is used in many games industry.
@@ -98,20 +101,20 @@ Git Flow:
 - [SourceTree](https://www.sourcetreeapp.com/) Solid open source git GUI tool.
 - [TortoiseGit](https://tortoisegit.org/) Native and integrated to Windows ecosystem. It is really bad at solving merging conflicts. Supports Git LFS locking.
 
-| Tool | LFS Locking | Designer-Friendly | Free Option | Best For | Merge Conflict Resolution |
-|------|------------|-------------------|-------------|----------|---------------------------|
-| **Fork** | ✅ Full support | Very good | ❌ Paid only | Teams needing locking | Good - Visual 3-way merge tool |
-| **Tower** | ❌ Not supported | Excellent | ✅ Free for education | Design-first workflows | Excellent - Conflict Wizard with undo |
-| **GitKraken** | ❌ Not supported | Excellent | ✅ Free tier (public repos) | Visual learners | **Amazing - AI-powered suggestions & explanations** |
-| **SmartGit** | ✅ Full support | Moderate | ✅ Free for non-commercial | Technical designers | Very good - Advanced merge tools |
-| **Sublime Merge** | ❌ Not supported | Good | ✅ Unlimited evaluation | Speed-focused developers | Good - 3-way visual editor, no AI |
-| **TortoiseGit** | ✅ Full support | Basic | ✅ Completely free | Windows-only teams | Basic - External merge tool integration |
-| **Sourcetree** | ❌ Not supported | Poor | ✅ Completely free | Atlassian users | Poor - Limited built-in tools |
-| **GitHub Desktop** | ❌ Not supported | Good | ✅ Completely free | GitHub beginners | Basic - Simple conflict highlighting |
+| Tool               | LFS Locking      | Designer-Friendly | Free Option                 | Best For                 | Merge Conflict Resolution                           |
+| ------------------ | ---------------- | ----------------- | --------------------------- | ------------------------ | --------------------------------------------------- |
+| **Fork**           | ✅ Full support  | Very good         | ❌ Paid only                | Teams needing locking    | Good - Visual 3-way merge tool                      |
+| **Tower**          | ❌ Not supported | Excellent         | ✅ Free for education       | Design-first workflows   | Excellent - Conflict Wizard with undo               |
+| **GitKraken**      | ❌ Not supported | Excellent         | ✅ Free tier (public repos) | Visual learners          | **Amazing - AI-powered suggestions & explanations** |
+| **SmartGit**       | ✅ Full support  | Moderate          | ✅ Free for non-commercial  | Technical designers      | Very good - Advanced merge tools                    |
+| **Sublime Merge**  | ❌ Not supported | Good              | ✅ Unlimited evaluation     | Speed-focused developers | Good - 3-way visual editor, no AI                   |
+| **TortoiseGit**    | ✅ Full support  | Basic             | ✅ Completely free          | Windows-only teams       | Basic - External merge tool integration             |
+| **Sourcetree**     | ❌ Not supported | Poor              | ✅ Completely free          | Atlassian users          | Poor - Limited built-in tools                       |
+| **GitHub Desktop** | ❌ Not supported | Good              | ✅ Completely free          | GitHub beginners         | Basic - Simple conflict highlighting                |
 
 ### Subversion (SVN)
 
-::: note 
+::: note
 
 This section SVN is only here for completeness. You may use SVN for specific and controlled scope. But I don't see any company using it nowadays. Game companies use either git with LFS, perforce, plastic or other in-house solution.
 
@@ -156,7 +159,7 @@ For binary assets that cannot be merged (like 3D models, textures, or level file
 4. **Check In**: Developer commits changes and releases the lock
 5. **Unlock**: File becomes available for others to edit
 
-``` mermaid
+```mermaid
 sequenceDiagram
     participant Developer
     participant VCS
@@ -171,6 +174,7 @@ sequenceDiagram
 #### Game Development VCS Tools
 
 **Git LFS (Large File Storage) with Locking**
+
 - Extension to Git for handling large binary files
 - Provides file locking capabilities for binary assets
 - Pros: Familiar Git workflow, good integration with existing Git tools
@@ -178,6 +182,7 @@ sequenceDiagram
 - Best for: Teams already using Git who need to add large asset support
 
 **Perforce (P4)**
+
 - Industry-standard centralized VCS used by major game studios
 - Excellent binary file handling and locking mechanisms
 - Advanced branching and merging capabilities
@@ -186,6 +191,7 @@ sequenceDiagram
 - Best for: Large studios with complex asset pipelines
 
 **Plastic SCM**
+
 - Modern distributed VCS designed for game development
 - Native Unity integration and visual merge tools
 - Supports both centralized and distributed workflows
@@ -209,7 +215,7 @@ Not all files should be tracked by version control. The `.gitignore` file tells 
 
 - **Build Artifacts**: Compiled binaries (`.exe`, `.dll`, `.so`), Object files (`.o`, `.obj`), Build directories (`build/`, `bin/`, `obj/`)
 - **IDE and Editor Files**: `.vscode/`, `.idea/`, Temporary files created by editors, User-specific settings
-**Operating System Files** - `.DS_Store` (macOS), `Thumbs.db` (Windows), `desktop.ini` (Windows)
+  **Operating System Files** - `.DS_Store` (macOS), `Thumbs.db` (Windows), `desktop.ini` (Windows)
 
 #### Game Engine Specific Examples:
 
@@ -218,6 +224,7 @@ Not all files should be tracked by version control. The `.gitignore` file tells 
 - [**Godot Projects:**](https://github.com/github/gitignore/blob/main/Godot.gitignore)
 
 #### Best Practices:
+
 - Create `.gitignore` before your first commit
 - Use templates from [gitignore.io](https://gitignore.io) or [GitHub's collection](https://github.com/github/gitignore)
 - Add project-specific ignores as needed
@@ -256,7 +263,7 @@ Choose based on your team's existing tools, storage needs, and hosting preferenc
 - **Continuous Integration (CI)**: Automatically building and testing your code whenever changes are made.
 - **Continuous Deployment (CD)**: Automatically deploying your code to production( or staging) after successful tests.
 
-``` mermaid
+```mermaid
 graph TD
     A[Developer] -->|Commit Code| B[Version Control System]
     B -->|Trigger CI| C[Continuous Integration Server]
@@ -272,7 +279,7 @@ graph TD
 
 Every major game engine has its own way of building artifacts.
 
-I personally created a GitHub Actions workflow for Unity projects. It builds the project for WebGL and deploys it to GitHub Pages on every commit. 
+I personally created a GitHub Actions workflow for Unity projects. It builds the project for WebGL and deploys it to GitHub Pages on every commit.
 
 - **Unity** You can find the workflow in the [UnityBoilerplate](https://github.com/gameguild-gg/UnityBoilerplate) repository. It will generate a deployment [like this](https://gameguild-gg.github.io/UnityBoilerplate/).
 - **C++-SDL3-CPM-CMake** If you enjoy hardcore coding, use this [SDL3-CPM-CMake-Example](https://github.com/gameguild-gg/SDL3-CPM-CMake-Example) repository, it will deploy to gh-pages [like this](https://gameguild-gg.github.io/SDL3-CPM-CMake-Example/).
