@@ -1,3 +1,10 @@
+# [2.28.0](https://github.com/gameguild-gg/gameguild/compare/v2.27.0...v2.28.0) (2026-01-04)
+
+
+### Features
+
+* **databases/week1:** Add Quiz 01 and refine Week 1 course content ([a8d4ede](https://github.com/gameguild-gg/gameguild/commit/a8d4ede56dfe15b6474184669e75dadfec14e364))
+
 # [2.27.0](https://github.com/gameguild-gg/gameguild/compare/v2.26.0...v2.27.0) (2026-01-04)
 
 
