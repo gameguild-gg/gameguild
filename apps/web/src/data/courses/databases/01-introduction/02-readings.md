@@ -2,7 +2,7 @@
 
 ## Required (read/watch before class)
 
-- [Course syllabus](../syllabus.md) — expectations, schedule, assessments
+- [Course syllabus](../syllabus) — expectations, schedule, assessments
 - [What is a database?](https://www.digitalocean.com/community/tutorials/what-is-a-database) — quick primer on why databases exist
 - [ACID transactions explained](https://www.ibm.com/topics/acid-transactions) — atomicity, consistency, isolation, durability
 - [Relational vs. NoSQL at a glance](https://www.mongodb.com/compare/relational-vs-nosql) — strengths and trade-offs
