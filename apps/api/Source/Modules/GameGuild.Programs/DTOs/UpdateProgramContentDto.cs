@@ -1,18 +1,21 @@
-using GameGuild.SharedKernel.Enums;
-using GameGuild.Modules.Programs.Models;
-using GameGuild.Modules.Programs.Entities;
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Modules.Programs;
+using GameGuild.Modules.Programs.Entities;
+using GameGuild.Modules.Programs.Models;
+using GameGuild.SharedKernel.Enums;
+namespace GameGuild.Modules.Programs;
 
 /// <summary>
 /// DTO for updating existing program content
 /// </summary>
-public class UpdateProgramContentDto {
+public class UpdateProgramContentDto
+{
   [Required] public Guid Id { get; set; }
 
   [StringLength(255)] public string? Title { get; set; }
 
   public string? Description { get; set; }
+
+  [StringLength(255)] public string? Slug { get; set; }
 
   public ProgramContentType? Type { get; set; }
 

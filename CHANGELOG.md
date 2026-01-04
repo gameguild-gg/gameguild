@@ -1,3 +1,47 @@
+# [2.27.0](https://github.com/gameguild-gg/gameguild/compare/v2.26.0...v2.27.0) (2026-01-04)
+
+
+### Features
+
+* **courses/databases:** Add comprehensive database zoo lesson and refine decision guide ([dde45ff](https://github.com/gameguild-gg/gameguild/commit/dde45ff823eca1b25c92813a968e2c86672166cb))
+
+# [2.26.0](https://github.com/gameguild-gg/gameguild/compare/v2.25.0...v2.26.0) (2026-01-02)
+
+
+### Features
+
+* **apps/web/courses/databases:** Define course structure and Week 01 module ([d089dd0](https://github.com/gameguild-gg/gameguild/commit/d089dd04c2d63d15b63013ab1faecbf54236ad71))
+* **course-sidebar:** Display cumulative duration for content items ([c38b421](https://github.com/gameguild-gg/gameguild/commit/c38b4218b))
+* **courses/networking:** Add Week 01 quiz and update syllabus ([af4883c](https://github.com/gameguild-gg/gameguild/commit/af4883c73))
+* **courses/networking/intro:** Add comprehensive networking fundamentals lecture and quiz ([ac5a365](https://github.com/gameguild-gg/gameguild/commit/ac5a3651d))
+* **apps/web:** Add Networking Week 01 and content updates ([6027d17](https://github.com/gameguild-gg/gameguild/commit/6027d1719))
+* **apps/web:** Add image proxy and networking course intro ([67d1ba2](https://github.com/gameguild-gg/gameguild/commit/67d1ba280))
+* **courses:** Add Game Networking course and enhance image fields ([3017369](https://github.com/gameguild-gg/gameguild/commit/30173695c))
+* **courses/databases:** Update syllabus to include DDL, DQL, and DML operations; enhance normalization and schema design content ([440304b](https://github.com/gameguild-gg/gameguild/commit/440304b98))
+* **courses:** Add comprehensive networking syllabus and update database details ([86f1a28](https://github.com/gameguild-gg/gameguild/commit/86f1a2848))
+* **courses/databases:** Add initial module content and expand syllabus ([04faf8c](https://github.com/gameguild-gg/gameguild/commit/04faf8cfa))
+* **data/courses:** Add Databases course ([938b4e9](https://github.com/gameguild-gg/gameguild/commit/938b4e96b))
+
+
+### Bug Fixes
+
+* networking ([7be38d8](https://github.com/gameguild-gg/gameguild/commit/7be38d871))
+
+
+### Documentation
+
+* **courses/databases:** Refine instructor contact links and add meeting option ([91b345d](https://github.com/gameguild-gg/gameguild/commit/91b345d34))
+* **web/courses/databases:** Update course thumbnail and add to syllabus ([a8361f8](https://github.com/gameguild-gg/gameguild/commit/a8361f8fa))
+* **courses/networking/intro:** Reorder answers for networking fundamentals quiz ([505384c](https://github.com/gameguild-gg/gameguild/commit/505384ce2))
+* **networking-syllabus:** Clarify course assessment and grading methods ([82effcd](https://github.com/gameguild-gg/gameguild/commit/82effcd85))
+* **courses:** Add instructor details and refine course content ([c05208c](https://github.com/gameguild-gg/gameguild/commit/c05208c73))
+* add outer joins and advanced patterns lesson ([185861b](https://github.com/gameguild-gg/gameguild/commit/185861bc8))
+* add join fundamentals lesson for database course ([360e644](https://github.com/gameguild-gg/gameguild/commit/360e64495))
+* **ai4games2:** Add comprehensive course syllabus ([ca7ce60](https://github.com/gameguild-gg/gameguild/commit/ca7ce6076))
+* **courses:** Improve syllabi content and refine mock data order ([d9453f8](https://github.com/gameguild-gg/gameguild/commit/d9453f8ef))
+
+
+
 # [2.25.0](https://github.com/gameguild-gg/gameguild/compare/v2.24.0...v2.25.0) (2025-12-09)
 
 

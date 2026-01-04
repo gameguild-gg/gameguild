@@ -46,11 +46,14 @@ export interface Config<T extends ClientOptions = ClientOptions> extends Omit<Re
   throwOnError?: T['throwOnError'];
 }
 
-export interface RequestOptions<TResponseStyle extends ResponseStyle = 'fields', ThrowOnError extends boolean = boolean, Url extends string = string>
-  extends Config<{
-    responseStyle: TResponseStyle;
-    throwOnError: ThrowOnError;
-  }> {
+export interface RequestOptions<
+  TResponseStyle extends ResponseStyle = 'fields',
+  ThrowOnError extends boolean = boolean,
+  Url extends string = string,
+> extends Config<{
+  responseStyle: TResponseStyle;
+  throwOnError: ThrowOnError;
+}> {
   /**
    * Any body that you want to add to your request.
    *
