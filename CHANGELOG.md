@@ -1,3 +1,10 @@
+# [2.27.0](https://github.com/gameguild-gg/gameguild/compare/v2.26.0...v2.27.0) (2026-01-04)
+
+
+### Features
+
+* **courses/databases:** Add comprehensive database zoo lesson and refine decision guide ([dde45ff](https://github.com/gameguild-gg/gameguild/commit/dde45ff823eca1b25c92813a968e2c86672166cb))
+
 # [2.26.0](https://github.com/gameguild-gg/gameguild/compare/v2.25.0...v2.26.0) (2026-01-02)
 
 
