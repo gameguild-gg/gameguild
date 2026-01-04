@@ -6,8 +6,8 @@ Students with a firm foundation in the basic techniques of artificial intelligen
 
 Feel free to add us to your professional network!
 
-- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) <a href="https://www.linkedin.com/in/aletolstenko/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
-- (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/) <a href="https://www.linkedin.com/in/mathrmartins/"><img src="https://upload.wikimedia.org/wikipedia/commons/8/81/LinkedIn_icon.svg" alt="LinkedIn" width="16" height="16" style="vertical-align: middle;"></a>
+- (main) [Alexandre Tolstenko](https://www.linkedin.com/in/aletolstenko/) 🔗 - [Book a meeting with me](https://calendar.app.google/EU42UnUSyTwyhryL9)
+- (external) [Matheus Martins](https://www.linkedin.com/in/mathrmartins/) 🔗
 
 ## Requirements
 
