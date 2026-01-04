@@ -263,15 +263,10 @@ export const week01AssignmentContent: ProgramContent = {
 };
 
 // Wire program contents and product-program relations
+// only the parent contents go directly under the program
 databasesProgram.programContents = [
     databasesSyllabusContent,
     week01IntroContent,
-    week01ReadingsContent,
-    week01DbZooContent,
-    week01DecisionMatrixContent,
-    week01DataTypesContent,
-    week01QuizContent,
-    week01AssignmentContent,
 ];
 
 // Set up parent-child relationships
