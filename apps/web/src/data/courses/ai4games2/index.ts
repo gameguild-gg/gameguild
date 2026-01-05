@@ -34,7 +34,7 @@ export const ai4games2Program: Program = {
     "Learn advanced artificial intelligence techniques specifically designed for game development, including pathfinding, decision-making, and procedural content generation.",
   slug: "ai4games2",
   thumbnail:
-    "https://placehold.co/400x225/1f2937/ffffff.png?text=Advanced+Game+AI",
+    "https://i.imgur.com/cooKXbw.jpeg",
   videoShowcaseUrl: null,
   estimatedHours: 60,
   enrollmentStatus: 0,

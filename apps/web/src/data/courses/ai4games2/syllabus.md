@@ -1,5 +1,7 @@
 # Advanced Artificial Intelligence for Games
 
+![Adv. AI for Games Banner](https://i.imgur.com/cooKXbw.jpeg)
+
 Students with a firm foundation in the basic techniques of artificial intelligence for games will apply their skills to program advanced pathfinding algorithms, artificial opponents, scripting tools and other real-time drivers for non-playable agents. The goal of the course is to provide finely-tuned artificial competition for players using all the rules followed by a human. [Source](https://classliststaging.champlain.edu/show/course/number/GPR_440)
 
 ## Instructors
