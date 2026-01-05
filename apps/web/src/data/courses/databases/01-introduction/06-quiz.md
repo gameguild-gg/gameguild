@@ -62,3 +62,11 @@
 - B) "Do you need ACID transactions?"
 - C) "Do you require full-text search?"
 - D) "Is the dataset under 10 GB?"
+
+!!! code
+{
+"description": "On SQLite, how can I get the version?",
+"language": "sql",
+"code": "SELECT sqlite_version();"
+}
+!!!
