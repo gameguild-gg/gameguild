@@ -4,7 +4,9 @@
 
 O Code Studio agora suporta a integração com o sistema de assets, permitindo que usuários adicionem arquivos de código existentes de assets ou façam upload de novos arquivos, de forma similar ao comportamento do editor de Media.
 
-**Otimização de Armazenamento**: Arquivos não modificados de assets armazenam apenas uma referência (`asset://id`) em vez de duplicar o conteúdo, economizando memória e evitando redundância.
+**Otimização de Armazenamento**: 
+- Arquivos não modificados de assets armazenam apenas uma referência (`asset://id`) em vez de duplicar o conteúdo, economizando memória e evitando redundância.
+- **Armazenamento de Texto**: Arquivos de código são armazenados como texto plano em assets (não base64), permitindo fácil inspeção e debugging.
 
 ## Funcionalidades Implementadas
 
@@ -63,6 +65,57 @@ export interface CodeFile {
 
 - **Não modificado**: `content = "asset://abc123def456"`
 - **Modificado**: `content = "código real do arquivo..."`
+
+### Asset Storage Types
+
+Arquivos podem ser armazenados de duas formas em assets:
+
+**`AssetMetadata.storageType`:**
+- **`'text'`**: Armazenado como texto plano (para arquivos de código)
+  - Vantagens: Fácil inspeção, menor overhead, compatível com ferramentas
+  - Usado para: `.js`, `.ts`, `.py`, `.txt`, `.md`, `.json`, etc.
+- **`'dataurl'`**: Armazenado como base64 (para imagens e binários)
+  - Vantagens: Suporta qualquer tipo de arquivo
+  - Usado para: Imagens, vídeos, arquivos binários
+
+## Sistema de Assets - Armazenamento de Texto
+
+### Tipos de Armazenamento (`AssetMetadata.storageType`)
+
+**1. Text Storage (`'text'`)**
+- Arquivo armazenado como texto plano no IndexedDB
+- Detecção automática por MIME type ou extensão
+- Extensões suportadas: `.txt`, `.md`, `.js`, `.ts`, `.jsx`, `.tsx`, `.json`, `.xml`, `.html`, `.css`, `.py`, `.java`, `.c`, `.cpp`, `.rs`, `.go`, `.rb`, `.php`, `.sh`, `.yml`, `.yaml`, `.sql`, `.lua`, `.r`, `.swift`, `.kt`, `.cs`, e muitas outras
+- MIME types: `text/*`, `application/javascript`, `application/json`, `application/xml`, `application/typescript`
+
+**2. DataURL Storage (`'dataurl'`)**
+- Arquivo armazenado como base64
+- Usado para imagens, vídeos, e arquivos binários
+- Formato: `data:image/png;base64,iVBORw0KG...`
+
+### Forçar Text Storage
+
+No `MediaUploadDialog`, use `forceTextStorage={true}`:
+
+```tsx
+<MediaUploadDialog
+  forceTextStorage={true}  // Força armazenamento como texto
+  acceptTypes="*/*"
+  // ... outras props
+/>
+```
+
+### AssetManager - Métodos de Detecção
+
+**`isTextFile(file: File): boolean`**
+- Verifica se arquivo deve ser armazenado como texto
+- Checa MIME type e extensão
+- Automático para arquivos de código
+
+**`fileToDataUrl(file: File, asText: boolean): Promise<string>`**
+- `asText=true`: retorna texto plano
+- `asText=false`: retorna dataURL base64
+- Usado internamente pelo `saveAsset()`
 
 ## Componentes Modificados
 
@@ -243,10 +296,16 @@ O `MediaUploadDialog` é configurado para aceitar arquivos de código:
 - Conteúdo real não é duplicado
 - Economia significativa para arquivos grandes
 
+**Text Storage vs Base64:**
+- Arquivos de código: armazenados como texto plano em assets
+- Vantagens: Menor overhead, fácil debug, inspeção direta no IndexedDB
+- Imagens/binários: continuam em base64 como antes
+
 **Resolução de Conteúdo:**
 - Lazy loading: busca do asset apenas quando necessário
 - Cache em `resolvedContents` para evitar re-buscas
 - Resolução automática para: visualização, edição, execução
+- `resolveFileContent()` detecta automaticamente tipo de storage
 
 ### Gestão de Pastas
 
