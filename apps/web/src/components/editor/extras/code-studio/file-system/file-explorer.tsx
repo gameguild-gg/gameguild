@@ -12,13 +12,18 @@ import {
   Trash2,
   Edit3,
   MoreVertical,
-  GripVertical
+  GripVertical,
+  Lock,
+  Unlock,
+  Eye,
+  EyeOff
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { DeleteConfirmDialog } from "../../dialogs/delete-confirm-dialog"
 import { DuplicateNameDialog } from "../../dialogs/duplicate-name-dialog"
+import { BaseConfirmDialog } from "../../dialogs/base-confirm-dialog"
 import { MediaUploadDialog } from "../../media-upload-dialog"
 import { FileSourceMenu } from "../file-source-menu"
 import type { CodeFile, FileTreeFolder, FileTreeItem, FileType } from "../types"
@@ -45,6 +50,8 @@ interface FileExplorerProps {
   onToggleFolderVisibility?: (folderId: string) => void
   onToggleFileReadonly?: (fileId: string) => void
   onToggleFolderReadonly?: (folderId: string) => void
+  onSetAllReadonly?: (readonly: boolean) => void
+  onSetAllHidden?: (hidden: boolean) => void
   isPreview?: boolean
 }
 
@@ -69,6 +76,8 @@ export function FileExplorer({
   onToggleFolderVisibility,
   onToggleFileReadonly,
   onToggleFolderReadonly,
+  onSetAllReadonly,
+  onSetAllHidden,
   isPreview = false,
 }: FileExplorerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -95,6 +104,11 @@ export function FileExplorer({
     path: string
     mode: "create" | "rename"
     itemId?: string
+  } | null>(null)
+  const [bulkActionDialog, setBulkActionDialog] = useState<{
+    open: boolean
+    type: "readonly" | "hidden"
+    action: "set" | "unset"
   } | null>(null)
 
   // Fechar menu ao clicar fora
@@ -313,6 +327,38 @@ export function FileExplorer({
     setDuplicateDialog(null)
     // Se estava criando, não limpar os campos para permitir correção
     // Se estava renomeando, já foi limpo antes de abrir o dialog
+  }
+
+  const handleBulkReadonlyClick = () => {
+    // Verificar se algum arquivo/pasta já está readonly
+    const hasReadonly = files.some(f => f.readonly) || folders.some(f => f.readonly)
+    setBulkActionDialog({
+      open: true,
+      type: "readonly",
+      action: hasReadonly ? "unset" : "set"
+    })
+  }
+
+  const handleBulkHiddenClick = () => {
+    // Verificar se algum arquivo/pasta já está hidden
+    const hasHidden = files.some(f => !f.isVisible) || folders.some(f => !f.isVisible)
+    setBulkActionDialog({
+      open: true,
+      type: "hidden",
+      action: hasHidden ? "unset" : "set"
+    })
+  }
+
+  const handleConfirmBulkAction = () => {
+    if (!bulkActionDialog) return
+
+    if (bulkActionDialog.type === "readonly") {
+      onSetAllReadonly?.(bulkActionDialog.action === "set")
+    } else if (bulkActionDialog.type === "hidden") {
+      onSetAllHidden?.(bulkActionDialog.action === "set")
+    }
+
+    setBulkActionDialog(null)
   }
 
   // Drag and Drop handlers
@@ -1157,6 +1203,36 @@ export function FileExplorer({
           </div>
         </div>
         <div className="flex items-center gap-1">
+          {onSetAllReadonly && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={handleBulkReadonlyClick}
+              title="Toggle Read-Only for All"
+            >
+              {files.some(f => f.readonly) || folders.some(f => f.readonly) ? (
+                <Unlock className="h-3 w-3" />
+              ) : (
+                <Lock className="h-3 w-3" />
+              )}
+            </Button>
+          )}
+          {onSetAllHidden && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={handleBulkHiddenClick}
+              title="Toggle Visibility for All"
+            >
+              {files.some(f => !f.isVisible) || folders.some(f => !f.isVisible) ? (
+                <Eye className="h-3 w-3" />
+              ) : (
+                <EyeOff className="h-3 w-3" />
+              )}
+            </Button>
+          )}
           {onAddFileFromAsset ? (
             <FileSourceMenu
               onCreateNew={() => handleStartCreating("file", "")}
@@ -1245,6 +1321,47 @@ export function FileExplorer({
           originalName={duplicateDialog.originalName}
           onConfirm={handleDuplicateConfirm}
           onCancel={handleDuplicateCancel}
+        />
+      )}
+
+      {/* Bulk Action Confirmation Dialog */}
+      {bulkActionDialog && (
+        <BaseConfirmDialog
+          open={bulkActionDialog.open}
+          onOpenChange={(open) => !open && setBulkActionDialog(null)}
+          title={
+            bulkActionDialog.type === "readonly"
+              ? bulkActionDialog.action === "set"
+                ? "Set All Files Read-Only"
+                : "Allow Editing for All Files"
+              : bulkActionDialog.action === "set"
+              ? "Hide All Files in Preview"
+              : "Show All Files in Preview"
+          }
+          description={
+            bulkActionDialog.type === "readonly"
+              ? bulkActionDialog.action === "set"
+                ? "This will make all files and folders read-only. You won't be able to edit them."
+                : "This will allow editing for all files and folders."
+              : bulkActionDialog.action === "set"
+              ? "This will hide all files and folders in preview mode."
+              : "This will show all files and folders in preview mode."
+          }
+          onConfirm={handleConfirmBulkAction}
+          confirmText={bulkActionDialog.action === "set" ? "Apply" : "Apply"}
+          icon={
+            bulkActionDialog.type === "readonly" ? (
+              bulkActionDialog.action === "set" ? (
+                <Lock className="h-12 w-12 text-orange-500" />
+              ) : (
+                <Unlock className="h-12 w-12 text-green-500" />
+              )
+            ) : bulkActionDialog.action === "set" ? (
+              <EyeOff className="h-12 w-12 text-gray-500" />
+            ) : (
+              <Eye className="h-12 w-12 text-blue-500" />
+            )
+          }
         />
       )}
 
