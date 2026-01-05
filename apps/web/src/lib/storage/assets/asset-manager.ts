@@ -177,7 +177,10 @@ export class AssetManager {
         mimeType = params.file.type
         size = params.file.size
         origin = "upload"
-        dataUrl = await this.fileToDataUrl(params.file)
+        
+        // Check if should store as text
+        const shouldStoreAsText = params.forceTextStorage || this.isTextFile(params.file)
+        dataUrl = await this.fileToDataUrl(params.file, shouldStoreAsText)
       } else if (params.dataUrl) {
         // Data URL (already converted)
         dataUrl = params.dataUrl
@@ -219,6 +222,12 @@ export class AssetManager {
       let metadata: AssetMetadata
 
       if (isNewAsset) {
+        // Determine storage type
+        const storageType: 'dataurl' | 'text' = 
+          !dataUrl.startsWith('data:') && !dataUrl.startsWith('http') 
+            ? 'text' 
+            : 'dataurl'
+        
         // Create new metadata
         metadata = {
           id: sha1hash,
@@ -229,6 +238,7 @@ export class AssetManager {
           sha1hash,
           size,
           mimeType,
+          storageType,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         }
@@ -294,15 +304,54 @@ export class AssetManager {
   }
 
   /**
-   * Convert File to data URL
+   * Convert File to data URL or plain text
    */
-  private fileToDataUrl(file: File): Promise<string> {
+  private fileToDataUrl(file: File, asText: boolean = false): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
       reader.onload = () => resolve(reader.result as string)
       reader.onerror = reject
-      reader.readAsDataURL(file)
+      
+      if (asText) {
+        // Read as plain text
+        reader.readAsText(file)
+      } else {
+        // Read as data URL (base64)
+        reader.readAsDataURL(file)
+      }
     })
+  }
+
+  /**
+   * Check if file is a text file based on MIME type or extension
+   */
+  private isTextFile(file: File): boolean {
+    // Text MIME types
+    const textMimeTypes = [
+      'text/',
+      'application/javascript',
+      'application/json',
+      'application/xml',
+      'application/typescript',
+    ]
+    
+    if (textMimeTypes.some(type => file.type.startsWith(type))) {
+      return true
+    }
+    
+    // Text extensions
+    const textExtensions = [
+      '.txt', '.md', '.js', '.ts', '.jsx', '.tsx',
+      '.json', '.xml', '.html', '.css', '.scss', '.sass',
+      '.py', '.java', '.c', '.cpp', '.h', '.hpp',
+      '.rs', '.go', '.rb', '.php', '.sh', '.bash',
+      '.yml', '.yaml', '.toml', '.ini', '.conf',
+      '.sql', '.lua', '.r', '.swift', '.kt', '.cs',
+      '.vb', '.pl', '.scala', '.dart', '.zig', '.nim',
+    ]
+    
+    const fileName = file.name.toLowerCase()
+    return textExtensions.some(ext => fileName.endsWith(ext))
   }
 
   /**

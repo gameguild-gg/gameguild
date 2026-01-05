@@ -49,6 +49,7 @@ interface MediaUploadDialogProps {
   compress?: boolean // Enable compression by default
   allowCompressionToggle?: boolean // Allow users to toggle compression
   hideLocalAssets?: boolean // Hide local asset selection, show only upload button
+  forceTextStorage?: boolean // Force storage as plain text instead of base64 (for code files)
 }
 
 interface PendingUpload extends MediaUploadResult {
@@ -73,6 +74,7 @@ export function MediaUploadDialog({
   compress = true,
   allowCompressionToggle = false,
   hideLocalAssets = false,
+  forceTextStorage = false,
 }: MediaUploadDialogProps) {
   const projectIdFromContext = useContext(ProjectIdContext)
   const projectId = projectIdFromContext && typeof projectIdFromContext === 'string' ? projectIdFromContext : undefined
@@ -420,6 +422,7 @@ export function MediaUploadDialog({
             license: "user-uploaded",
             projectId,
             nodeId: `temp-${Date.now()}`, // Temporary ID, will be updated when node is created
+            forceTextStorage, // Use text storage for code files
           })
 
           if (saveResult.success && saveResult.assetUrl) {

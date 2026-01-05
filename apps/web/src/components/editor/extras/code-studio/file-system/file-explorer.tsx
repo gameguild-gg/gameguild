@@ -1074,6 +1074,7 @@ export function FileExplorer({
           multiple={true}
           compress={false}
           allowCompressionToggle={false}
+          forceTextStorage={true}
         />
       )}
     </div>
