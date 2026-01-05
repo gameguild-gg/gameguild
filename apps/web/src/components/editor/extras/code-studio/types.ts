@@ -102,6 +102,7 @@ export interface FileTreeFolder {
   name: string
   path: string
   isExpanded: boolean
+  isVisible: boolean
   children: (CodeFile | FileTreeFolder)[]
   type: "folder"
 }

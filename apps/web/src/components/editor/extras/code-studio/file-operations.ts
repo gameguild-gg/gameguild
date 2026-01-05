@@ -56,6 +56,7 @@ export function createFolder(
     name,
     path: fullPath,
     isExpanded: true,
+    isVisible: true,
     children: [],
     type: "folder",
   }
@@ -358,4 +359,24 @@ export async function resolveFileContent(file: CodeFile): Promise<string> {
   }
   
   return '' // Fallback para string vazia se falhar
+}
+
+export function toggleFileVisibility(
+  draft: CodeStudioData,
+  fileId: string
+): void {
+  const file = draft.files.find(f => f.id === fileId)
+  if (file) {
+    file.isVisible = !file.isVisible
+  }
+}
+
+export function toggleFolderVisibility(
+  draft: CodeStudioData,
+  folderId: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (folder) {
+    folder.isVisible = !folder.isVisible
+  }
 }
