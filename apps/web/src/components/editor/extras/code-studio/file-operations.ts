@@ -380,3 +380,23 @@ export function toggleFolderVisibility(
     folder.isVisible = !folder.isVisible
   }
 }
+
+export function toggleFileReadonly(
+  draft: CodeStudioData,
+  fileId: string
+): void {
+  const file = draft.files.find(f => f.id === fileId)
+  if (file) {
+    file.readonly = !file.readonly
+  }
+}
+
+export function toggleFolderReadonly(
+  draft: CodeStudioData,
+  folderId: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (folder) {
+    folder.readonly = !folder.readonly
+  }
+}
