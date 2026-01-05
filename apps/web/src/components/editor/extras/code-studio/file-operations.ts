@@ -34,7 +34,7 @@ export function createFile(
     name,
     content,
     language,
-    isMain: draft.files.length === 0,
+    isFile: 'f', // Arquivo padrão
     isVisible: true,
     path: fullPath,
   }
@@ -271,7 +271,7 @@ export function addFileFromAsset(
     name: fileName,
     content: `asset://${assetId}`, // Referência ao asset, não o conteúdo completo
     language,
-    isMain: draft.files.length === 0,
+    isFile: 'f', // Arquivo padrão
     isVisible: true,
     path: fullPath,
     assetId, // Guardar referência ao asset original

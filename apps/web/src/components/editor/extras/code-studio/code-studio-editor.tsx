@@ -344,6 +344,29 @@ export function CodeStudioEditor({
     })
   }
 
+  const handleChangeFileType = (fileId: string, fileType: 'f' | 'm' | 't') => {
+    setLocalData(draft => {
+      const file = draft.files.find(f => f.id === fileId)
+      if (file) {
+        // Se está marcando como 'm' ou 't', remover a marca de outros arquivos
+        if (fileType === 'm') {
+          draft.files.forEach(f => {
+            if (f.id !== fileId && f.isFile === 'm') {
+              f.isFile = 'f'
+            }
+          })
+        } else if (fileType === 't') {
+          draft.files.forEach(f => {
+            if (f.id !== fileId && f.isFile === 't') {
+              f.isFile = 'f'
+            }
+          })
+        }
+        file.isFile = fileType
+      }
+    })
+  }
+
   // Layout handlers
   const getActiveDisplay = (): DisplayConfig | undefined => {
     if (!localData.layout) return undefined
@@ -489,6 +512,7 @@ export function CodeStudioEditor({
             onMoveFolder={handleMoveFolder}
             onReorderFiles={handleReorderFiles}
             onAddFileFromAsset={handleAddFileFromAsset}
+            onChangeFileType={handleChangeFileType}
           />
         )
       
@@ -568,21 +592,30 @@ export function CodeStudioEditor({
         )
       
       case "output":
+        const mainFile = localData.files.find(f => f.isFile === 'm')
+        const testFile = localData.files.find(f => f.isFile === 't')
+        
         return (
           <ResultPanel
             ref={terminalRef}
             output={output}
             isExecuting={isExecuting}
             mode={localData.mode!}
-            onExecute={handleExecute}
+            onExecuteFile={handleExecuteFile}
+            onExecuteProject={handleExecuteProject}
+            onExecuteTest={handleExecuteTest}
             onStop={handleStop}
             testCases={localData.testCases?.[localData.activeFileId || ""] || []}
+            activeFile={activeFile}
+            hasMainFile={!!mainFile}
+            hasTestFile={!!testFile}
           />
         )
     }
   }
 
-  const handleExecute = async () => {
+  // Executa o arquivo atualmente selecionado
+  const handleExecuteFile = async () => {
     if (!codeRunnerRef.current || !terminalRef.current) return
     
     // Buscar arquivo ativo: primeiro tentar painéis únicos, depois global
@@ -600,6 +633,33 @@ export function CodeStudioEditor({
     }
     
     if (!fileToExecute) return
+    
+    await executeFile(fileToExecute)
+  }
+
+  // Executa o arquivo marcado como 'm' (main)
+  const handleExecuteProject = async () => {
+    if (!codeRunnerRef.current || !terminalRef.current) return
+    
+    const mainFile = localData.files.find(f => f.isFile === 'm')
+    if (!mainFile) return
+    
+    await executeFile(mainFile)
+  }
+
+  // Executa o arquivo marcado como 't' (test)
+  const handleExecuteTest = async () => {
+    if (!codeRunnerRef.current || !terminalRef.current) return
+    
+    const testFile = localData.files.find(f => f.isFile === 't')
+    if (!testFile) return
+    
+    await executeFile(testFile)
+  }
+
+  // Função auxiliar para executar um arquivo
+  const executeFile = async (fileToExecute: CodeFile) => {
+    if (!codeRunnerRef.current || !terminalRef.current) return
     
     setIsExecuting(true)
     setOutput('') // Limpar output anterior - isso vai limpar o terminal via useEffect
@@ -644,6 +704,8 @@ export function CodeStudioEditor({
       setIsExecuting(false)
     }
   }
+
+  const handleExecute = handleExecuteFile // Manter retrocompatibilidade
 
   const handleStop = async () => {
     if (codeRunnerRef.current) {

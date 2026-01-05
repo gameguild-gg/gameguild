@@ -83,12 +83,14 @@ export type ShikiTheme =
   | "github-dimmed"    // GitHub Dimmed theme
   | "plus"             // Plus theme
 
+export type FileType = 'f' | 'm' | 't' // f = arquivo padrão, m = main (entry point), t = test main
+
 export interface CodeFile {
   id: string
   name: string
   content: string
   language: SupportedLanguage
-  isMain: boolean
+  isFile: FileType // Tipo de arquivo: 'f' (padrão), 'm' (main), 't' (test)
   isVisible: boolean
   path: string // Caminho completo incluindo pastas, ex: "src/components/Button.tsx"
   assetId?: string // ID do asset original se o arquivo veio de assets (para tracking e copy-on-write)

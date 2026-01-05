@@ -21,7 +21,7 @@ import { DeleteConfirmDialog } from "../../dialogs/delete-confirm-dialog"
 import { DuplicateNameDialog } from "../../dialogs/duplicate-name-dialog"
 import { MediaUploadDialog } from "../../media-upload-dialog"
 import { FileSourceMenu } from "../file-source-menu"
-import type { CodeFile, FileTreeFolder, FileTreeItem } from "../types"
+import type { CodeFile, FileTreeFolder, FileTreeItem, FileType } from "../types"
 import { cn } from "@/lib/utils"
 
 interface FileExplorerProps {
@@ -40,6 +40,7 @@ interface FileExplorerProps {
   onMoveFolder: (folderId: string, newPath: string) => void
   onReorderFiles?: (newOrder: CodeFile[]) => void
   onAddFileFromAsset?: (path: string, assetId: string, fileName: string, content: string) => void
+  onChangeFileType?: (fileId: string, fileType: FileType) => void
 }
 
 export function FileExplorer({
@@ -58,6 +59,7 @@ export function FileExplorer({
   onMoveFolder,
   onReorderFiles,
   onAddFileFromAsset,
+  onChangeFileType,
 }: FileExplorerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
@@ -770,6 +772,16 @@ export function FileExplorer({
             {renderFileIcon(file.name)}
             <span className="flex-1 truncate flex items-center gap-1">
               {file.name}
+              {file.isFile === 'm' && (
+                <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" title="Main file (Project)">
+                  M
+                </span>
+              )}
+              {file.isFile === 't' && (
+                <span className="text-[9px] px-1 py-0.5 rounded bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400" title="Test file">
+                  T
+                </span>
+              )}
               {file.assetId && (
                 <span className="text-[9px] px-1 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" title="From assets">
                   A
@@ -777,7 +789,7 @@ export function FileExplorer({
               )}
               {file.isModified && (
                 <span className="text-[9px] px-1 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400" title="Modified">
-                  M
+                  ●
                 </span>
               )}
             </span>
@@ -810,6 +822,55 @@ export function FileExplorer({
                     <Edit3 className="h-3 w-3" />
                     Rename
                   </button>
+                  {onChangeFileType && (
+                    <>
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                      <div className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium">Mark as:</div>
+                      <button
+                        className={cn(
+                          "w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2",
+                          file.isFile === 'f' && "bg-gray-100 dark:bg-gray-700"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onChangeFileType(file.id, 'f')
+                          setOpenMenuId(null)
+                        }}
+                      >
+                        {file.isFile === 'f' && <span className="text-blue-600 dark:text-blue-400">✓</span>}
+                        <span className={file.isFile !== 'f' ? 'ml-5' : ''}>Regular File</span>
+                      </button>
+                      <button
+                        className={cn(
+                          "w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2",
+                          file.isFile === 'm' && "bg-gray-100 dark:bg-gray-700"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onChangeFileType(file.id, 'm')
+                          setOpenMenuId(null)
+                        }}
+                      >
+                        {file.isFile === 'm' && <span className="text-green-600 dark:text-green-400">✓</span>}
+                        <span className={file.isFile !== 'm' ? 'ml-5' : ''}>Main File (Project)</span>
+                      </button>
+                      <button
+                        className={cn(
+                          "w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2",
+                          file.isFile === 't' && "bg-gray-100 dark:bg-gray-700"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onChangeFileType(file.id, 't')
+                          setOpenMenuId(null)
+                        }}
+                      >
+                        {file.isFile === 't' && <span className="text-purple-600 dark:text-purple-400">✓</span>}
+                        <span className={file.isFile !== 't' ? 'ml-5' : ''}>Test File</span>
+                      </button>
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                    </>
+                  )}
                   <button
                     className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600 dark:text-red-400"
                     onClick={(e) => {
