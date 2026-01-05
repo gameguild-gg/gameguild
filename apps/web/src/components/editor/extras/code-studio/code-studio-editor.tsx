@@ -391,6 +391,18 @@ export function CodeStudioEditor({
     })
   }
 
+  const handleSetAllReadonly = (readonly: boolean) => {
+    setLocalData(draft => {
+      FileOps.setAllFilesReadonly(draft, readonly)
+    })
+  }
+
+  const handleSetAllHidden = (hidden: boolean) => {
+    setLocalData(draft => {
+      FileOps.setAllFilesHidden(draft, hidden)
+    })
+  }
+
   // Layout handlers
   const getActiveDisplay = (): DisplayConfig | undefined => {
     if (!localData.layout) return undefined
@@ -541,6 +553,8 @@ export function CodeStudioEditor({
             onToggleFolderVisibility={handleToggleFolderVisibility}
             onToggleFileReadonly={handleToggleFileReadonly}
             onToggleFolderReadonly={handleToggleFolderReadonly}
+            onSetAllReadonly={handleSetAllReadonly}
+            onSetAllHidden={handleSetAllHidden}
             isPreview={isPreview}
           />
         )

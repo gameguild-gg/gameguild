@@ -400,3 +400,37 @@ export function toggleFolderReadonly(
     folder.readonly = !folder.readonly
   }
 }
+
+export function setAllFilesReadonly(
+  draft: CodeStudioData,
+  readonly: boolean
+): void {
+  // Setar em todos os arquivos
+  draft.files.forEach(file => {
+    file.readonly = readonly
+  })
+  
+  // Setar em todas as pastas
+  if (draft.folders) {
+    draft.folders.forEach(folder => {
+      folder.readonly = readonly
+    })
+  }
+}
+
+export function setAllFilesHidden(
+  draft: CodeStudioData,
+  hidden: boolean
+): void {
+  // Setar em todos os arquivos
+  draft.files.forEach(file => {
+    file.isVisible = !hidden
+  })
+  
+  // Setar em todas as pastas
+  if (draft.folders) {
+    draft.folders.forEach(folder => {
+      folder.isVisible = !hidden
+    })
+  }
+}
