@@ -1,3 +1,10 @@
+# [2.30.0](https://github.com/gameguild-gg/gameguild/compare/v2.29.0...v2.30.0) (2026-01-05)
+
+
+### Features
+
+* **courses/ai4games2:** Add slug for syllabus content ([967838a](https://github.com/gameguild-gg/gameguild/commit/967838a0440ce742734cedddea07588967cea572))
+
 # [2.29.0](https://github.com/gameguild-gg/gameguild/compare/v2.28.0...v2.29.0) (2026-01-05)
 
 
