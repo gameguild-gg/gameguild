@@ -56,7 +56,7 @@ export function CodeStudioEditor({
       return {
         ...data,
         mode: data.mode || "execution",
-        layout: createDefaultLayout(),
+        layout: createDefaultLayout(data.mode || "execution"),
       }
     }
     return data
@@ -158,7 +158,7 @@ export function CodeStudioEditor({
       if (!data.layout) {
         Object.assign(draft, data)
         draft.mode = data.mode || "execution"
-        draft.layout = createDefaultLayout()
+        draft.layout = createDefaultLayout(data.mode || "execution")
       } else {
         // Usar dados do JSON exatamente como salvos
         Object.assign(draft, data)
@@ -850,9 +850,6 @@ export function CodeStudioEditor({
           <div className="flex items-center gap-2">
             <Code2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span className="font-medium text-sm">{localData.title || "Code Studio"}</span>
-            <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full">
-              {currentMode.label}
-            </span>
             {localData.readonly && (
               <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-full flex items-center gap-1">
                 <Lock className="h-3 w-3" />
@@ -911,10 +908,6 @@ export function CodeStudioEditor({
               <Code2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Code Studio</h2>
             </div>
-            
-            <span className="text-sm px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium">
-              {currentMode.label}
-            </span>
           </div>
           
           <Button variant="ghost" size="sm" onClick={handleCancelClick}>
