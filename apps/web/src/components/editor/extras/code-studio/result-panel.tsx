@@ -10,10 +10,14 @@ interface ResultPanelProps {
   mode: EditorMode
   output: string
   isExecuting: boolean
-  onExecute: () => void
+  onExecuteFile: () => void
+  onExecuteProject: () => void
+  onExecuteTest: () => void
   onStop?: () => void
   testCases: TestCase[]
   activeFile?: CodeFile
+  hasMainFile: boolean
+  hasTestFile: boolean
 }
 
 export const ResultPanel = forwardRef<XTermTerminalHandle, ResultPanelProps>(
@@ -21,16 +25,19 @@ export const ResultPanel = forwardRef<XTermTerminalHandle, ResultPanelProps>(
     mode,
     output,
     isExecuting,
-    onExecute,
+    onExecuteFile,
+    onExecuteProject,
+    onExecuteTest,
     onStop,
     testCases,
     activeFile,
+    hasMainFile,
+    hasTestFile,
   }, ref) {
   // Unified output panel for both execution and test modes
   if (mode === "execution" || mode === "test") {
     const isTestMode = mode === "test"
     const headerLabel = isTestMode ? "Test Output" : "Console Output"
-    const buttonLabel = isTestMode ? "Run Tests" : "Run"
     
     return (
       <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-950">
@@ -42,17 +49,48 @@ export const ResultPanel = forwardRef<XTermTerminalHandle, ResultPanelProps>(
               <span className="ml-2 text-gray-500">({testCases.length} tests)</span>
             )}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {isExecuting ? (
-              <Button variant="ghost" size="sm" onClick={onStop} className="h-7 text-xs">
+              <Button variant="ghost" size="sm" onClick={onStop} className="h-7 text-xs px-2">
                 <Square className="h-3 w-3 mr-1" />
                 Stop
               </Button>
             ) : (
-              <Button variant="ghost" size="sm" onClick={onExecute} className="h-7 text-xs">
-                <Play className="h-3 w-3 mr-1" />
-                {buttonLabel}
-              </Button>
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onExecuteFile} 
+                  className="h-7 text-xs px-2"
+                  disabled={!activeFile}
+                  title="Run current file"
+                >
+                  <Play className="h-3 w-3 mr-1" />
+                  File
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onExecuteProject} 
+                  className="h-7 text-xs px-2"
+                  disabled={!hasMainFile}
+                  title="Run main file (marked as 'm')"
+                >
+                  <Play className="h-3 w-3 mr-1" />
+                  Project
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onExecuteTest} 
+                  className="h-7 text-xs px-2"
+                  disabled={!hasTestFile}
+                  title="Run test file (marked as 't')"
+                >
+                  <Play className="h-3 w-3 mr-1" />
+                  Test
+                </Button>
+              </>
             )}
           </div>
         </div>
