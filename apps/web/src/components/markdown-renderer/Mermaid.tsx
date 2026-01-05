@@ -66,43 +66,40 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
 
         // Fix node heights - mermaid sometimes miscalculates when using <br/> tags
         setTimeout(() => {
-          const svgElement = containerRef.current?.querySelector('svg');
-          if (svgElement) {
-            // Find all foreignObject elements (used for HTML labels) and ensure they have proper height
-            const foreignObjects = svgElement.querySelectorAll('foreignObject');
-            foreignObjects.forEach((fo) => {
-              const div = fo.querySelector('div');
-              if (div) {
-                // Get actual content height and add padding
-                const contentHeight = div.scrollHeight + 20;
-                const heightAttr = fo.getAttribute('height');
-                const currentHeight = heightAttr !== null && heightAttr !== '' ? parseFloat(heightAttr) : 0;
-                if (contentHeight > currentHeight) {
-                  fo.setAttribute('height', String(contentHeight));
+          try {
+            const svgElement = containerRef.current?.querySelector('svg');
+            if (svgElement) {
+              // Find all foreignObject elements (used for HTML labels) and ensure they have proper height
+              const foreignObjects = svgElement.querySelectorAll('foreignObject');
+              foreignObjects.forEach((fo) => {
+                const div = fo.querySelector('div');
+                if (div) {
+                  // Get actual content height and add padding
+                  const contentHeight = div.scrollHeight + 20;
+                  const heightAttr = fo.getAttribute('height');
+                  const currentHeight = heightAttr !== null && heightAttr !== '' ? parseFloat(heightAttr) : 0;
+                  if (contentHeight > currentHeight) {
+                    fo.setAttribute('height', String(contentHeight));
+                  }
                 }
-              }
-            });
+              });
 
-            // Update viewBox to accommodate the full content
-            const bbox = svgElement.getBBox();
-            const padding = 20;
-            svgElement.setAttribute(
-              'viewBox',
-              `${bbox.x - padding} ${bbox.y - padding} ${bbox.width + padding * 2} ${bbox.height + padding * 2}`
-            );
-
-            // Remove fixed dimensions and let viewBox control sizing
-            svgElement.removeAttribute('width');
-            svgElement.removeAttribute('height');
-            svgElement.style.height = 'auto';
-            svgElement.style.maxWidth = '100%';
+              // Remove fixed dimensions and let CSS control sizing
+              svgElement.removeAttribute('width');
+              svgElement.removeAttribute('height');
+              svgElement.style.width = '100%';
+              svgElement.style.height = 'auto';
+              svgElement.style.maxWidth = '100%';
+            }
+          } catch {
+            // Silently ignore DOM manipulation errors
           }
         }, 100);
 
         setError(null);
       } catch (err) {
-        console.error('Mermaid rendering failed:', err);
         const errorMessage = err instanceof Error ? err.message : 'Failed to render the diagram. Please check your syntax.';
+        console.error('Mermaid rendering failed:', errorMessage);
         setError(errorMessage);
       }
     };

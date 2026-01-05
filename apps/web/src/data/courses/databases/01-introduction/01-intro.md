@@ -138,4 +138,4 @@ Complexity may solve some issues, but add new ones as well. Consider some factor
 
 :::
 
-[![That Escalated Quickly](https://media.tenor.com/images/13528303/tenor.gif)](https://tenor.com/view/that-escalated-quickly-gif-13528303)
+[![That Escalated Quickly](https://c.tenor.com/8ZZr0H9l30EAAAAd/tenor.gif)](https://tenor.com/view/that-escalated-quickly-gif-13528303)
