@@ -43,6 +43,8 @@ interface FileExplorerProps {
   onChangeFileType?: (fileId: string, fileType: FileType) => void
   onToggleFileVisibility?: (fileId: string) => void
   onToggleFolderVisibility?: (folderId: string) => void
+  onToggleFileReadonly?: (fileId: string) => void
+  onToggleFolderReadonly?: (folderId: string) => void
   isPreview?: boolean
 }
 
@@ -65,6 +67,8 @@ export function FileExplorer({
   onChangeFileType,
   onToggleFileVisibility,
   onToggleFolderVisibility,
+  onToggleFileReadonly,
+  onToggleFolderReadonly,
   isPreview = false,
 }: FileExplorerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -614,6 +618,11 @@ export function FileExplorer({
               )}
               <span className="flex-1 truncate flex items-center gap-1" onClick={() => onToggleFolder(folder.id)}>
                 {folder.name}
+                {folder.readonly && (
+                  <span className="text-[9px] px-1 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" title="Read-only">
+                    🔒
+                  </span>
+                )}
                 {!folder.isVisible && !isPreview && (
                   <span className="text-[9px] px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400" title="Hidden in preview">
                     🙈
@@ -702,6 +711,28 @@ export function FileExplorer({
                           <>
                             <span className="h-3 w-3 flex items-center justify-center">🙈</span>
                             Show in Preview
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {onToggleFolderReadonly && (
+                      <button
+                        className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleFolderReadonly(folder.id)
+                          setOpenMenuId(null)
+                        }}
+                      >
+                        {folder.readonly ? (
+                          <>
+                            <span className="h-3 w-3 flex items-center justify-center">🔓</span>
+                            Allow Editing
+                          </>
+                        ) : (
+                          <>
+                            <span className="h-3 w-3 flex items-center justify-center">🔒</span>
+                            Set Read-Only
                           </>
                         )}
                       </button>
@@ -809,6 +840,11 @@ export function FileExplorer({
             {renderFileIcon(file.name)}
             <span className="flex-1 truncate flex items-center gap-1">
               {file.name}
+              {file.readonly && (
+                <span className="text-[9px] px-1 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" title="Read-only">
+                  🔒
+                </span>
+              )}
               {!file.isVisible && !isPreview && (
                 <span className="text-[9px] px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400" title="Hidden in preview">
                   🙈
@@ -931,6 +967,28 @@ export function FileExplorer({
                         <>
                           <span className="h-3 w-3 flex items-center justify-center">🙈</span>
                           Show in Preview
+                        </>
+                      )}
+                    </button>
+                  )}
+                  {onToggleFileReadonly && (
+                    <button
+                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onToggleFileReadonly(file.id)
+                        setOpenMenuId(null)
+                      }}
+                    >
+                      {file.readonly ? (
+                        <>
+                          <span className="h-3 w-3 flex items-center justify-center">🔓</span>
+                          Allow Editing
+                        </>
+                      ) : (
+                        <>
+                          <span className="h-3 w-3 flex items-center justify-center">🔒</span>
+                          Set Read-Only
                         </>
                       )}
                     </button>

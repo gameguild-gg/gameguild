@@ -92,6 +92,7 @@ export interface CodeFile {
   language: SupportedLanguage
   isFile: FileType // Tipo de arquivo: 'f' (padrão), 'm' (main), 't' (test)
   isVisible: boolean
+  readonly?: boolean // Se true, o arquivo não pode ser editado
   path: string // Caminho completo incluindo pastas, ex: "src/components/Button.tsx"
   assetId?: string // ID do asset original se o arquivo veio de assets (para tracking e copy-on-write)
   isModified?: boolean // Flag para indicar se arquivo de asset foi modificado
@@ -103,6 +104,7 @@ export interface FileTreeFolder {
   path: string
   isExpanded: boolean
   isVisible: boolean
+  readonly?: boolean // Se true, todos os arquivos dentro não podem ser editados
   children: (CodeFile | FileTreeFolder)[]
   type: "folder"
 }

@@ -379,6 +379,18 @@ export function CodeStudioEditor({
     })
   }
 
+  const handleToggleFileReadonly = (fileId: string) => {
+    setLocalData(draft => {
+      FileOps.toggleFileReadonly(draft, fileId)
+    })
+  }
+
+  const handleToggleFolderReadonly = (folderId: string) => {
+    setLocalData(draft => {
+      FileOps.toggleFolderReadonly(draft, folderId)
+    })
+  }
+
   // Layout handlers
   const getActiveDisplay = (): DisplayConfig | undefined => {
     if (!localData.layout) return undefined
@@ -527,6 +539,8 @@ export function CodeStudioEditor({
             onChangeFileType={handleChangeFileType}
             onToggleFileVisibility={handleToggleFileVisibility}
             onToggleFolderVisibility={handleToggleFolderVisibility}
+            onToggleFileReadonly={handleToggleFileReadonly}
+            onToggleFolderReadonly={handleToggleFolderReadonly}
             isPreview={isPreview}
           />
         )
@@ -575,6 +589,19 @@ export function CodeStudioEditor({
                     const file = localData.files.find(f => f.id === fileId)
                     if (!file) return null
                     const isActive = fileId === currentActiveFileId
+                    
+                    // Verificar se arquivo ou pasta pai está readonly
+                    let isFileReadonly = file.readonly || false
+                    if (!isFileReadonly && localData.folders) {
+                      // Verificar se está dentro de uma pasta readonly
+                      const fileFolder = localData.folders.find(folder => 
+                        file.path.startsWith(folder.path + "/")
+                      )
+                      if (fileFolder?.readonly) {
+                        isFileReadonly = true
+                      }
+                    }
+                    
                     return (
                       <div
                         key={`${file.id}-${index}`}
@@ -592,7 +619,7 @@ export function CodeStudioEditor({
                           value={resolvedContents[file.id] || file.content}
                           onChange={(content) => handleCodeChange(content, file.id)}
                           language={file.language}
-                          readonly={localData.readonly}
+                          readonly={localData.readonly || isFileReadonly}
                           showLineNumbers={localData.showLineNumbers}
                           fontSize={localData.fontSize}
                           shikiTheme={localData.shikiTheme}
