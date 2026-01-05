@@ -96,6 +96,7 @@ export const ai4games2SyllabusContent: ProgramContent = {
   programId: "ai4games-program-2",
   parentId: undefined,
   title: "Course Syllabus",
+  slug: "syllabus",
   description: "AI for Games course overview and objectives",
   type: 0,
   body: ai4games2Syllabus,
