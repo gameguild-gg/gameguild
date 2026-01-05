@@ -19,6 +19,8 @@ export interface AssetMetadata {
   size: number
   /** MIME type */
   mimeType: string
+  /** Storage type: 'dataurl' (base64) or 'text' (plain text) */
+  storageType?: 'dataurl' | 'text'
   /** When the asset was created */
   createdAt: string
   /** When the asset was last updated */
@@ -65,6 +67,8 @@ export interface SaveAssetParams {
   author?: string
   /** License information */
   license?: string
+  /** Force storage as plain text instead of base64 (for code files) */
+  forceTextStorage?: boolean
 }
 
 export interface SaveAssetResult {
