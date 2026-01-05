@@ -31,6 +31,8 @@ The learner has to produce original content. You can use tools like `LLMs` to he
 
 Please disable AI assistance features (like GitHub Copilot, ChatGPT plugins, etc.) in any IDE you use for this course. Relying on AI tools can hinder your learning process and may lead to academic integrity issues.
 
+> 📚 **Further reading:** _New Kid in the Classroom: Exploring Student Perceptions of AI Coding Assistants_ ([arXiv:2507.22900](https://arxiv.org/abs/2507.22900), 2025). In a two-part exam with 20 introductory programming students, the study found that while AI tools boosted confidence in early coding, students struggled to extend solutions once the AI was removed—showing overreliance and gaps in foundational understanding. This is why we ask you to disable AI agents during assignments: to build durable, independent skills.
+
 #### JetBrains IDEs
 
 You can disable AI assistance by going to **Settings/Preferences > Plugins** and disabling any AI-related plugins, such as:
