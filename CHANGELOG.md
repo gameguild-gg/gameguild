@@ -1,3 +1,10 @@
+# [2.29.0](https://github.com/gameguild-gg/gameguild/compare/v2.28.0...v2.29.0) (2026-01-05)
+
+
+### Features
+
+* **apps/web/markdown-renderer:** Implement SQL support in code activity component ([9e54d41](https://github.com/gameguild-gg/gameguild/commit/9e54d41a848fb4c4341e5965d2e2c690c38b1b71))
+
 # [2.28.0](https://github.com/gameguild-gg/gameguild/compare/v2.27.0...v2.28.0) (2026-01-04)
 
 
