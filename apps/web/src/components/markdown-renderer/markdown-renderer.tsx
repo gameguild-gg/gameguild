@@ -1,7 +1,6 @@
 'use client';
 
 import 'katex/dist/katex.min.css';
-import './markdown-renderer.css';
 import { useTheme } from 'next-themes';
 import NextImage from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -13,6 +12,7 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import { Admonition } from './Admonition';
+import './markdown-renderer.css';
 import { MarkdownCodeActivity } from './MarkdownCodeActivity';
 import { MarkdownErrorBoundary } from './MarkdownErrorBoundary';
 import { MarkdownQuizActivity } from './MarkdownQuizActivity';
