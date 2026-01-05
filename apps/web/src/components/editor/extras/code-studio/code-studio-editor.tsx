@@ -367,6 +367,18 @@ export function CodeStudioEditor({
     })
   }
 
+  const handleToggleFileVisibility = (fileId: string) => {
+    setLocalData(draft => {
+      FileOps.toggleFileVisibility(draft, fileId)
+    })
+  }
+
+  const handleToggleFolderVisibility = (folderId: string) => {
+    setLocalData(draft => {
+      FileOps.toggleFolderVisibility(draft, folderId)
+    })
+  }
+
   // Layout handlers
   const getActiveDisplay = (): DisplayConfig | undefined => {
     if (!localData.layout) return undefined
@@ -513,6 +525,9 @@ export function CodeStudioEditor({
             onReorderFiles={handleReorderFiles}
             onAddFileFromAsset={handleAddFileFromAsset}
             onChangeFileType={handleChangeFileType}
+            onToggleFileVisibility={handleToggleFileVisibility}
+            onToggleFolderVisibility={handleToggleFolderVisibility}
+            isPreview={isPreview}
           />
         )
       

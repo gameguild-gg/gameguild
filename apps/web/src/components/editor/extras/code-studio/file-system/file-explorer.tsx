@@ -41,6 +41,9 @@ interface FileExplorerProps {
   onReorderFiles?: (newOrder: CodeFile[]) => void
   onAddFileFromAsset?: (path: string, assetId: string, fileName: string, content: string) => void
   onChangeFileType?: (fileId: string, fileType: FileType) => void
+  onToggleFileVisibility?: (fileId: string) => void
+  onToggleFolderVisibility?: (folderId: string) => void
+  isPreview?: boolean
 }
 
 export function FileExplorer({
@@ -60,6 +63,9 @@ export function FileExplorer({
   onReorderFiles,
   onAddFileFromAsset,
   onChangeFileType,
+  onToggleFileVisibility,
+  onToggleFolderVisibility,
+  isPreview = false,
 }: FileExplorerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
@@ -606,8 +612,13 @@ export function FileExplorer({
               ) : (
                 <Folder className="h-4 w-4 text-blue-500 shrink-0" />
               )}
-              <span className="flex-1 truncate" onClick={() => onToggleFolder(folder.id)}>
+              <span className="flex-1 truncate flex items-center gap-1" onClick={() => onToggleFolder(folder.id)}>
                 {folder.name}
+                {!folder.isVisible && !isPreview && (
+                  <span className="text-[9px] px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400" title="Hidden in preview">
+                    🙈
+                  </span>
+                )}
               </span>
               <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 relative context-menu-container">
                 <Button
@@ -673,6 +684,28 @@ export function FileExplorer({
                       <Edit3 className="h-3 w-3" />
                       Rename
                     </button>
+                    {onToggleFolderVisibility && (
+                      <button
+                        className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleFolderVisibility(folder.id)
+                          setOpenMenuId(null)
+                        }}
+                      >
+                        {folder.isVisible ? (
+                          <>
+                            <span className="h-3 w-3 flex items-center justify-center">👁️</span>
+                            Hide in Preview
+                          </>
+                        ) : (
+                          <>
+                            <span className="h-3 w-3 flex items-center justify-center">🙈</span>
+                            Show in Preview
+                          </>
+                        )}
+                      </button>
+                    )}
                     <button
                       className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600 dark:text-red-400"
                       onClick={(e) => {
@@ -692,8 +725,12 @@ export function FileExplorer({
         
         {isExpanded && (
           <div>
-            {subFolders.map(subFolder => renderFolder(subFolder, level + 1))}
-            {folderFiles.map((file, index) => renderFile(file, level + 1, index === folderFiles.length - 1))}
+            {subFolders
+              .filter(f => !isPreview || f.isVisible)
+              .map(subFolder => renderFolder(subFolder, level + 1))}
+            {folderFiles
+              .filter(f => !isPreview || f.isVisible)
+              .map((file, index) => renderFile(file, level + 1, index === folderFiles.length - 1))}
             
             {creatingType && creatingPath === folder.path && (
               <div 
@@ -772,6 +809,11 @@ export function FileExplorer({
             {renderFileIcon(file.name)}
             <span className="flex-1 truncate flex items-center gap-1">
               {file.name}
+              {!file.isVisible && !isPreview && (
+                <span className="text-[9px] px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400" title="Hidden in preview">
+                  🙈
+                </span>
+              )}
               {file.isFile === 'm' && (
                 <span className="text-[9px] px-1 py-0.5 rounded bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400" title="Main file (Project)">
                   M
@@ -870,6 +912,28 @@ export function FileExplorer({
                       </button>
                       <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                     </>
+                  )}
+                  {onToggleFileVisibility && (
+                    <button
+                      className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onToggleFileVisibility(file.id)
+                        setOpenMenuId(null)
+                      }}
+                    >
+                      {file.isVisible ? (
+                        <>
+                          <span className="h-3 w-3 flex items-center justify-center">👁️</span>
+                          Hide in Preview
+                        </>
+                      ) : (
+                        <>
+                          <span className="h-3 w-3 flex items-center justify-center">🙈</span>
+                          Show in Preview
+                        </>
+                      )}
+                    </button>
                   )}
                   <button
                     className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2 text-red-600 dark:text-red-400"
@@ -1070,8 +1134,13 @@ export function FileExplorer({
 
       {/* File Tree */}
       <div className="flex-1 overflow-auto">
-        {folders.filter(f => !f.path.includes("/")).map(folder => renderFolder(folder))}
-        {rootFiles.map((file, index) => renderFile(file, 0, index === rootFiles.length - 1))}
+        {folders
+          .filter(f => !f.path.includes("/"))
+          .filter(f => !isPreview || f.isVisible)
+          .map(folder => renderFolder(folder))}
+        {rootFiles
+          .filter(f => !isPreview || f.isVisible)
+          .map((file, index) => renderFile(file, 0, index === rootFiles.length - 1))}
         
         {creatingType && creatingPath === "" && (
           <div className="flex items-center gap-1 px-2 py-1">
