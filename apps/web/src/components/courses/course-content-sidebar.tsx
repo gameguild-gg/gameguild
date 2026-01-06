@@ -170,7 +170,7 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
 
   return (
     <>
-      {mounted && isSidebarOpen && (
+      {mounted && isMobile && isSidebarOpen && (
         <div
           className="fixed top-0 left-0 right-0 bottom-0 bg-black/50 z-40 lg:hidden"
           onClick={closeSidebar}
@@ -181,9 +181,13 @@ export function CourseContentSidebar({ courseSlug, courseTitle, content }: Cours
         className={cn(
           "w-80 bg-background flex flex-col transition-all duration-300 ease-in-out",
           "lg:fixed lg:top-0 lg:left-0 lg:h-screen lg:border-r lg:border-border lg:z-40",
-          mounted ? (isSidebarOpen ? "lg:translate-x-0" : "lg:-translate-x-full") : "lg:-translate-x-full",
+          // Desktop: Start visible, hide if closed after mount
+          "lg:translate-x-0",
+          mounted && !isSidebarOpen && "lg:-translate-x-full",
+          // Mobile: Start hidden, show if open after mount
           "fixed top-0 left-0 h-screen z-50 border-r border-border",
-          mounted ? (isSidebarOpen ? "translate-x-0" : "-translate-x-full") : "-translate-x-full"
+          "-translate-x-full",
+          mounted && isSidebarOpen && "translate-x-0"
         )}
       >
         <div className="p-4 border-b border-border">
