@@ -1,3 +1,10 @@
+# [2.32.0](https://github.com/gameguild-gg/gameguild/compare/v2.31.0...v2.32.0) (2026-01-06)
+
+
+### Features
+
+* **courses/ai4games2/fsm:** Refine FSM example with state registration and improved transition mapping ([a9099cd](https://github.com/gameguild-gg/gameguild/commit/a9099cd877b4728d3d9f96fb353332bd6fb860ce))
+
 # [2.31.0](https://github.com/gameguild-gg/gameguild/compare/v2.30.0...v2.31.0) (2026-01-06)
 
 
