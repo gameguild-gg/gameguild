@@ -6,6 +6,13 @@ import type {
   SaveAssetParams,
   SaveAssetResult,
 } from "./types"
+import type {
+  CollectionManifest,
+  CollectionData,
+  SaveCollectionParams,
+  SaveCollectionResult,
+  CollectionMetadata,
+} from "./collection-types"
 
 /**
  * AssetManager handles storage and management of media assets
@@ -16,8 +23,9 @@ export class AssetManager {
   private isInitialized = false
 
   private readonly DB_NAME = "GGAssetsDB"
-  private readonly DB_VERSION = 1
+  private readonly DB_VERSION = 2
   private readonly ASSETS_STORE = "assets"
+  private readonly COLLECTIONS_STORE = "collections"
   private readonly INDEX_STORE = "asset_index"
   private readonly INDEX_KEY = "main_index"
 
@@ -51,6 +59,12 @@ export class AssetManager {
         if (!db.objectStoreNames.contains(this.ASSETS_STORE)) {
           console.log(`AssetManager: Creating object store: ${this.ASSETS_STORE}`)
           db.createObjectStore(this.ASSETS_STORE, { keyPath: "metadata.id" })
+        }
+
+        // Create collections store
+        if (!db.objectStoreNames.contains(this.COLLECTIONS_STORE)) {
+          console.log(`AssetManager: Creating object store: ${this.COLLECTIONS_STORE}`)
+          db.createObjectStore(this.COLLECTIONS_STORE, { keyPath: "metadata.id" })
         }
 
         // Create index store
@@ -233,6 +247,7 @@ export class AssetManager {
           id: sha1hash,
           name: fileName,
           origin,
+          type: params.type || "asset",
           author: params.author,
           license: params.license,
           sha1hash,
@@ -943,6 +958,215 @@ export class AssetManager {
     } catch (error) {
       console.error("Failed to sync project assets:", error)
       return 0
+    }
+  }
+
+  /**
+   * Save a collection to storage
+   * Collections are special assets that contain manifests referencing other assets
+   */
+  async saveCollection(params: SaveCollectionParams): Promise<SaveCollectionResult> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    try {
+      console.log("AssetManager: Saving collection", { name: params.name })
+
+      // Create manifest
+      const manifest: CollectionManifest = {
+        type: "collection",
+        metadata: {
+          id: "", // Will be set after hashing
+          name: params.name,
+          description: params.description,
+          tags: params.tags,
+          created: Date.now(),
+          updated: Date.now(),
+          author: params.author,
+        },
+        structure: params.structure,
+      }
+
+      // Generate SHA1 hash of the manifest
+      const manifestJson = JSON.stringify(manifest, null, 2)
+      const collectionId = await this.generateSHA1(manifestJson)
+      manifest.metadata.id = collectionId
+
+      // Check if collection already exists
+      const existing = await this.getCollectionFromStore(collectionId)
+      if (existing) {
+        console.log(`Collection ${collectionId} already exists, updating`)
+        manifest.metadata.created = existing.metadata.created
+        manifest.metadata.updated = Date.now()
+      }
+
+      // Save to collections store
+      const collectionData: CollectionData = {
+        metadata: manifest.metadata,
+        manifest: JSON.stringify(manifest),
+      }
+
+      await this.saveCollectionToStore(collectionData)
+
+      console.log(`Collection saved successfully: ${collectionId} (${params.name})`)
+
+      return {
+        success: true,
+        collectionId,
+        metadata: manifest.metadata,
+      }
+    } catch (error) {
+      console.error("Failed to save collection:", error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      }
+    }
+  }
+
+  /**
+   * Save collection data to IndexedDB
+   */
+  private async saveCollectionToStore(collectionData: CollectionData): Promise<void> {
+    if (!this.db) throw new Error("AssetManager not initialized")
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.COLLECTIONS_STORE], "readwrite")
+      const store = transaction.objectStore(this.COLLECTIONS_STORE)
+      const request = store.put(collectionData)
+
+      request.onsuccess = () => {
+        console.log(`Collection saved: ${collectionData.metadata.id} (${collectionData.metadata.name})`)
+        resolve()
+      }
+      request.onerror = () => {
+        console.error(`Failed to save collection: ${collectionData.metadata.id}`, request.error)
+        reject(request.error)
+      }
+    })
+  }
+
+  /**
+   * Get a collection from store by ID
+   */
+  private async getCollectionFromStore(collectionId: string): Promise<CollectionData | null> {
+    if (!this.db) throw new Error("AssetManager not initialized")
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.COLLECTIONS_STORE], "readonly")
+      const store = transaction.objectStore(this.COLLECTIONS_STORE)
+      const request = store.get(collectionId)
+
+      request.onsuccess = () => resolve(request.result || null)
+      request.onerror = () => reject(request.error)
+    })
+  }
+
+  /**
+   * Get a collection by ID (public method)
+   */
+  async getCollection(collectionId: string): Promise<CollectionManifest | null> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    const data = await this.getCollectionFromStore(collectionId)
+    if (!data) return null
+
+    try {
+      return JSON.parse(data.manifest) as CollectionManifest
+    } catch (error) {
+      console.error("Failed to parse collection manifest:", error)
+      return null
+    }
+  }
+
+  /**
+   * List all collections
+   */
+  async listCollections(): Promise<CollectionMetadata[]> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db!.transaction([this.COLLECTIONS_STORE], "readonly")
+      const store = transaction.objectStore(this.COLLECTIONS_STORE)
+      const request = store.getAll()
+
+      request.onsuccess = () => {
+        const collections: CollectionMetadata[] = request.result.map(
+          (data: CollectionData) => data.metadata
+        )
+        resolve(collections)
+      }
+      request.onerror = () => reject(request.error)
+    })
+  }
+
+  /**
+   * Delete a collection
+   */
+  async deleteCollection(collectionId: string): Promise<boolean> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    try {
+      if (!this.db) throw new Error("AssetManager not initialized")
+
+      return new Promise((resolve, reject) => {
+        const transaction = this.db!.transaction([this.COLLECTIONS_STORE], "readwrite")
+        const store = transaction.objectStore(this.COLLECTIONS_STORE)
+        const request = store.delete(collectionId)
+
+        request.onsuccess = () => {
+          console.log(`Collection deleted: ${collectionId}`)
+          resolve(true)
+        }
+        request.onerror = () => {
+          console.error(`Failed to delete collection: ${collectionId}`, request.error)
+          reject(request.error)
+        }
+      })
+    } catch (error) {
+      console.error("Failed to delete collection:", error)
+      return false
+    }
+  }
+
+  /**
+   * Rename a collection
+   */
+  async renameCollection(collectionId: string, newName: string): Promise<boolean> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    try {
+      const data = await this.getCollectionFromStore(collectionId)
+      if (!data) {
+        console.error(`Collection ${collectionId} not found`)
+        return false
+      }
+
+      const manifest = JSON.parse(data.manifest) as CollectionManifest
+      manifest.metadata.name = newName.trim()
+      manifest.metadata.updated = Date.now()
+
+      const updatedData: CollectionData = {
+        metadata: manifest.metadata,
+        manifest: JSON.stringify(manifest),
+      }
+
+      await this.saveCollectionToStore(updatedData)
+
+      console.log(`Collection ${collectionId} renamed to "${newName}"`)
+      return true
+    } catch (error) {
+      console.error("Failed to rename collection:", error)
+      return false
     }
   }
 }
