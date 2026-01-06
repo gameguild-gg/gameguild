@@ -85,6 +85,8 @@ public:
 But this implementation lacks a robust way to test conditions for transitions. So we need to add a way to check if transitions should occur. Use a dictionary of from-to state pairs mapped to condition functions.
 
 ```c++
+enum class StateName { Patrol, Chase, Attack };
+
 class State {
 public:
     virtual void onEnter() = 0;
@@ -92,7 +94,7 @@ public:
     virtual void onExit() = 0;
     const StateName name;
 protected:
-    State(StateName n) : name(n) {}
+    explicit State(StateName n) : name(n) {}
 };
 
 class PatrolState : public State {
@@ -108,23 +110,35 @@ public:
 using ConditionFunc = std::function<bool()>;
 
 class FSM {
-    State* currentState;
-    // Map of transitions: (fromState, toState) -> condition function
+    State* currentState = nullptr;
+    // Map of transitions: fromState -> (toState -> condition function)
     std::map<StateName, std::map<StateName, ConditionFunc>> transitions;
     // storage of possible states
     std::map<StateName, State*> states;
 
 public:
+    void registerState(State* state) {
+        states[state->name] = state;
+        if (!currentState) {
+            currentState = state; // set initial if not set
+            currentState->onEnter();
+        }
+    }
+
     void addTransition(StateName from, StateName to, ConditionFunc condition) {
-        transitions[{from, to}] = condition;
+        transitions[from][to] = condition;
     }
+
     void changeState(State* newState) {
-        currentState->onExit();
+        if (currentState) currentState->onExit();
         currentState = newState;
-        currentState->onEnter();
+        if (currentState) currentState->onEnter();
     }
+
     void update() {
-        // possible transitions from current state
+        if (!currentState) return;
+        // possible transitions from current state.
+        // transitons must be registered beforehand
         for (const auto& [toState, condition] : transitions[currentState->name]) {
             if (condition()) {
                 changeState(states[toState]);
@@ -284,4 +298,3 @@ public:
 I personally find HSMs to be more complex than necessary for most game AI applications. The only time I have used them was in a project where the AI behavior was extremely complex and hierarchical by nature. In most cases, a well-structured FSM or Behavior Tree suffices and is easier to manage.
 
 :::
-
