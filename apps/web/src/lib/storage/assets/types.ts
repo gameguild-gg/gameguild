@@ -89,3 +89,81 @@ export interface SaveAssetResult {
   /** Asset metadata */
   metadata?: AssetMetadata
 }
+
+/**
+ * Mapping of file extensions to MIME types
+ */
+export const MIME_TYPES: Record<string, string> = {
+  // Code files
+  'js': 'text/javascript',
+  'jsx': 'text/javascript',
+  'ts': 'text/typescript',
+  'tsx': 'text/typescript',
+  'py': 'text/x-python',
+  'java': 'text/x-java',
+  'c': 'text/x-c',
+  'cpp': 'text/x-c++',
+  'cs': 'text/x-csharp',
+  'php': 'text/x-php',
+  'rb': 'text/x-ruby',
+  'go': 'text/x-go',
+  'rs': 'text/x-rust',
+  'swift': 'text/x-swift',
+  'kt': 'text/x-kotlin',
+  'sql': 'text/x-sql',
+  'html': 'text/html',
+  'css': 'text/css',
+  'scss': 'text/x-scss',
+  'sass': 'text/x-sass',
+  'less': 'text/x-less',
+  'json': 'application/json',
+  'xml': 'application/xml',
+  'yaml': 'text/yaml',
+  'yml': 'text/yaml',
+  'md': 'text/markdown',
+  'txt': 'text/plain',
+  'sh': 'text/x-sh',
+  'bash': 'text/x-sh',
+  // Images
+  'jpg': 'image/jpeg',
+  'jpeg': 'image/jpeg',
+  'png': 'image/png',
+  'gif': 'image/gif',
+  'svg': 'image/svg+xml',
+  'webp': 'image/webp',
+}
+
+/**
+ * Get MIME type from file extension
+ * @param fileName - The file name or extension
+ * @returns MIME type or 'text/plain' if not found
+ */
+export function getMimeTypeFromFileName(fileName: string): string {
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  if (!ext) return 'text/plain'
+  return MIME_TYPES[ext] || 'text/plain'
+}
+
+/**
+ * MIME type prefixes that indicate text content
+ */
+export const TEXT_MIME_TYPES = [
+  'text/',
+  'application/javascript',
+  'application/json',
+  'application/xml',
+  'application/typescript',
+]
+
+/**
+ * File extensions that should be treated as text files
+ */
+export const TEXT_EXTENSIONS = [
+  '.txt', '.md', '.js', '.ts', '.jsx', '.tsx',
+  '.json', '.xml', '.html', '.css', '.scss', '.sass',
+  '.py', '.java', '.c', '.cpp', '.h', '.hpp',
+  '.rs', '.go', '.rb', '.php', '.sh', '.bash',
+  '.yml', '.yaml', '.toml', '.ini', '.conf',
+  '.sql', '.lua', '.r', '.swift', '.kt', '.cs',
+  '.vb', '.pl', '.scala', '.dart', '.zig', '.nim',
+]
