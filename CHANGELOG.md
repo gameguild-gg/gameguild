@@ -1,3 +1,10 @@
+# [2.33.0](https://github.com/gameguild-gg/gameguild/compare/v2.32.0...v2.33.0) (2026-01-06)
+
+
+### Features
+
+* **courses/ai4games2/fsm:** Add Finite State Machine assignment ([176531f](https://github.com/gameguild-gg/gameguild/commit/176531f405377d407e03e6c4c4242f4c2823be01))
+
 # [2.32.0](https://github.com/gameguild-gg/gameguild/compare/v2.31.0...v2.32.0) (2026-01-06)
 
 
