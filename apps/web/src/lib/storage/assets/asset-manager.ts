@@ -6,6 +6,7 @@ import type {
   SaveAssetParams,
   SaveAssetResult,
 } from "./types"
+import { getMimeTypeFromFileName, TEXT_MIME_TYPES, TEXT_EXTENSIONS } from "./types"
 import type {
   CollectionManifest,
   CollectionData,
@@ -199,63 +200,30 @@ export class AssetManager {
         // Data URL (already converted)
         dataUrl = params.dataUrl
         origin = "data"
-        // Extract MIME type from data URL
-        const matches = dataUrl.match(/^data:([^;]+);/)
-        mimeType = matches && matches[1] ? matches[1] : "application/octet-stream"
         
         // Use provided fileName or generate one
         fileName = params.fileName || `asset-${Date.now()}`
         
-        // If we have a fileName, try to determine MIME type from extension
-        if (params.fileName && mimeType === "application/octet-stream") {
-          const ext = params.fileName.split('.').pop()?.toLowerCase()
-          if (ext) {
-            const mimeTypes: Record<string, string> = {
-              // Code files
-              'js': 'text/javascript',
-              'jsx': 'text/javascript',
-              'ts': 'text/typescript',
-              'tsx': 'text/typescript',
-              'py': 'text/x-python',
-              'java': 'text/x-java',
-              'c': 'text/x-c',
-              'cpp': 'text/x-c++',
-              'cs': 'text/x-csharp',
-              'php': 'text/x-php',
-              'rb': 'text/x-ruby',
-              'go': 'text/x-go',
-              'rs': 'text/x-rust',
-              'swift': 'text/x-swift',
-              'kt': 'text/x-kotlin',
-              'sql': 'text/x-sql',
-              'html': 'text/html',
-              'css': 'text/css',
-              'scss': 'text/x-scss',
-              'sass': 'text/x-sass',
-              'less': 'text/x-less',
-              'json': 'application/json',
-              'xml': 'application/xml',
-              'yaml': 'text/yaml',
-              'yml': 'text/yaml',
-              'md': 'text/markdown',
-              'txt': 'text/plain',
-              'sh': 'text/x-sh',
-              'bash': 'text/x-sh',
-              // Images
-              'jpg': 'image/jpeg',
-              'jpeg': 'image/jpeg',
-              'png': 'image/png',
-              'gif': 'image/gif',
-              'svg': 'image/svg+xml',
-              'webp': 'image/webp',
-            }
-            mimeType = mimeTypes[ext] || 'application/octet-stream'
+        // Check if it's a data URL or plain text
+        if (dataUrl.startsWith('data:')) {
+          // Extract MIME type from data URL
+          const matches = dataUrl.match(/^data:([^;]+);/)
+          mimeType = matches && matches[1] ? matches[1] : "application/octet-stream"
+          
+          // If we have a fileName, try to determine MIME type from extension
+          if (params.fileName && mimeType === "application/octet-stream") {
+            mimeType = getMimeTypeFromFileName(params.fileName)
           }
+          
+          // Estimate size from base64 data URL
+          const base64 = dataUrl.split(",")[1]
+          size = base64 ? Math.ceil((base64.length * 3) / 4) : 0
+        } else {
+          // Plain text content
+          mimeType = getMimeTypeFromFileName(params.fileName || fileName)
+          // Calculate size from text content (UTF-8 encoding)
+          size = new TextEncoder().encode(dataUrl).length
         }
-        
-        // Estimate size from data URL
-        const base64 = dataUrl.split(",")[1]
-        size = base64 ? Math.ceil((base64.length * 3) / 4) : 0
       } else if (params.urlSource) {
         // URL source
         dataUrl = params.urlSource
@@ -391,32 +359,14 @@ export class AssetManager {
    * Check if file is a text file based on MIME type or extension
    */
   private isTextFile(file: File): boolean {
-    // Text MIME types
-    const textMimeTypes = [
-      'text/',
-      'application/javascript',
-      'application/json',
-      'application/xml',
-      'application/typescript',
-    ]
-    
-    if (textMimeTypes.some(type => file.type.startsWith(type))) {
+    // Check MIME type
+    if (TEXT_MIME_TYPES.some(type => file.type.startsWith(type))) {
       return true
     }
     
-    // Text extensions
-    const textExtensions = [
-      '.txt', '.md', '.js', '.ts', '.jsx', '.tsx',
-      '.json', '.xml', '.html', '.css', '.scss', '.sass',
-      '.py', '.java', '.c', '.cpp', '.h', '.hpp',
-      '.rs', '.go', '.rb', '.php', '.sh', '.bash',
-      '.yml', '.yaml', '.toml', '.ini', '.conf',
-      '.sql', '.lua', '.r', '.swift', '.kt', '.cs',
-      '.vb', '.pl', '.scala', '.dart', '.zig', '.nim',
-    ]
-    
+    // Check file extension
     const fileName = file.name.toLowerCase()
-    return textExtensions.some(ext => fileName.endsWith(ext))
+    return TEXT_EXTENSIONS.some(ext => fileName.endsWith(ext))
   }
 
   /**
