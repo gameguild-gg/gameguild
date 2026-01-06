@@ -1,3 +1,10 @@
+# [2.31.0](https://github.com/gameguild-gg/gameguild/compare/v2.30.0...v2.31.0) (2026-01-06)
+
+
+### Features
+
+* **apps/web/ai4games2:** Add FSM & Decision Architectures module, reorganize course content ([f3b7551](https://github.com/gameguild-gg/gameguild/commit/f3b755194099de35f60f69d49e280fa199243b70))
+
 # [2.30.0](https://github.com/gameguild-gg/gameguild/compare/v2.29.0...v2.30.0) (2026-01-05)
 
 
