@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { X, Save, Code2, Menu, Lock, Layout } from "lucide-react"
-import type { CodeStudioData, CodeFile, PanelConfig, DisplayConfig, PanelType, AspectRatio } from "./types"
+import type { CodeStudioData, CodeFile, FileTreeFolder, PanelConfig, DisplayConfig, PanelType, AspectRatio } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
 import type { XTermTerminalHandle } from "./xterm-terminal"
@@ -29,6 +29,8 @@ import * as PanelOps from "./panel-operations"
 import { getGridDimensions, getContainerDimensions } from "./grid-utils"
 import { UnifiedCodeRunner, setDownloadNotificationCallback } from "./runners"
 import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, disposeMonacoFileSystem } from "./monaco-file-system"
+import { saveProjectAsCollection, countAssetReferences } from "./file-system/collection-utils"
+import { assetManager } from "@/lib/storage/assets/asset-manager"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -403,6 +405,386 @@ export function CodeStudioEditor({
     })
   }
 
+  // Collection handlers
+  const handleImportCollection = async (
+    path: string, 
+    files: Array<{ name: string; path: string; assetId: string; isFile?: 'f' | 'm' | 't'; readonly?: boolean; isVisible?: boolean }>,
+    folderMetadata?: Map<string, { readonly?: boolean; isVisible?: boolean }>
+  ) => {
+    console.log('[handleImportCollection] Importing to path:', path, 'files:', files)
+    
+    // Group files by their directory paths to create folders first
+    const foldersNeeded = new Set<string>()
+    
+    for (const file of files) {
+      // Extract all folder paths needed for this file
+      const pathParts = file.path.split('/')
+      pathParts.pop() // Remove filename
+      
+      // Build cumulative paths (e.g., "src", "src/components", "src/components/ui")
+      let currentPath = ''
+      for (const part of pathParts) {
+        currentPath = currentPath ? `${currentPath}/${part}` : part
+        const fullFolderPath = path ? `${path}/${currentPath}` : currentPath
+        foldersNeeded.add(fullFolderPath)
+      }
+    }
+
+    // Sort folders by depth (create parent folders first)
+    const sortedFolders = Array.from(foldersNeeded).sort((a, b) => {
+      const depthA = (a.match(/\//g) || []).length
+      const depthB = (b.match(/\//g) || []).length
+      return depthA - depthB
+    })
+
+    console.log('[handleImportCollection] Creating folders:', sortedFolders)
+
+    // Create folders
+    setLocalData(draft => {
+      for (const folderPath of sortedFolders) {
+        // Check if folder already exists
+        const exists = draft.folders?.some(f => f.path === folderPath)
+        if (exists) {
+          console.log('[handleImportCollection] Folder already exists:', folderPath)
+          continue
+        }
+
+        // Extract parent path and folder name
+        const lastSlash = folderPath.lastIndexOf('/')
+        const parentPath = lastSlash >= 0 ? folderPath.substring(0, lastSlash) : ''
+        const folderName = lastSlash >= 0 ? folderPath.substring(lastSlash + 1) : folderPath
+
+        console.log('[handleImportCollection] Creating folder:', { folderPath, parentPath, folderName })
+
+        // Get metadata for this folder from collection (if available)
+        // Need to remove destination path prefix to get original collection path
+        const relativeFolderPath = path && folderPath.startsWith(`${path}/`) 
+          ? folderPath.substring(path.length + 1) 
+          : folderPath
+        const metadata = folderMetadata?.get(relativeFolderPath)
+        
+        console.log('[handleImportCollection] Folder metadata lookup:', { 
+          folderPath, 
+          relativeFolderPath, 
+          metadata,
+          hasMetadata: folderMetadata ? `${folderMetadata.size} entries` : 'no metadata'
+        })
+
+        const newFolder: FileTreeFolder = {
+          id: `${Date.now()}-${Math.random()}`,
+          name: folderName,
+          path: folderPath,
+          isExpanded: true,
+          isVisible: metadata?.isVisible ?? true,
+          children: [],
+          type: "folder",
+          readonly: metadata?.readonly,
+        }
+
+        if (!draft.folders) {
+          draft.folders = []
+        }
+        draft.folders.push(newFolder)
+      }
+    })
+
+    // Import files
+    for (const file of files) {
+      try {
+        console.log('[handleImportCollection] Importing file:', file)
+
+        // Use the asset:// URL or empty content for empty files
+        const content = file.assetId ? `asset://${file.assetId}` : ''
+        
+        // Extract folder path and filename from file.path
+        const pathParts = file.path.split('/')
+        const fileName = pathParts.pop() || file.name
+        const relativeFolderPath = pathParts.join('/')
+        const fullPath = path 
+          ? (relativeFolderPath ? `${path}/${relativeFolderPath}/${fileName}` : `${path}/${fileName}`)
+          : (relativeFolderPath ? `${relativeFolderPath}/${fileName}` : fileName)
+
+        console.log('[handleImportCollection] File paths:', { fileName, relativeFolderPath, fullPath })
+
+        // Add file directly to draft
+        setLocalData(draft => {
+          // Check if file already exists
+          const existingFile = draft.files.find(f => f.path === fullPath)
+          if (existingFile) {
+            console.log('[handleImportCollection] File already exists, updating content:', fullPath)
+            existingFile.content = content
+            existingFile.assetId = file.assetId
+            existingFile.isModified = false
+            return
+          }
+
+          const language = getLanguageFromExtension(fileName)
+          const newFile: CodeFile = {
+            id: `${Date.now()}-${Math.random()}`,
+            name: fileName,
+            content,
+            language,
+            isFile: file.isFile || 'f',
+            isVisible: file.isVisible ?? true,
+            readonly: file.readonly,
+            path: fullPath,
+            assetId: file.assetId || undefined,
+            isModified: false,
+          }
+
+          console.log('[handleImportCollection] Created file:', newFile)
+          draft.files.push(newFile)
+        })
+      } catch (error) {
+        console.error(`Failed to import file ${file.name}:`, error)
+      }
+    }
+
+    console.log('[handleImportCollection] Import completed')
+  }
+
+  const handleSaveAsCollection = async (path: string, folderName?: string): Promise<{ success: boolean; error?: string }> => {
+    console.log('[handleSaveAsCollection] Starting with path:', path, 'folderName:', folderName)
+    try {
+      // Get files and folders for the specified path
+      let targetFiles: CodeFile[] = []
+      let targetFolders: FileTreeFolder[] = []
+
+      if (path === "") {
+        // Root: get files and folders that are at root level
+        // Root files: path doesn't contain '/' (path = filename)
+        // Root folders: path doesn't contain '/' (path = foldername)
+        console.log('[handleSaveAsCollection] All items:', {
+          files: localData.files.map(f => ({ name: f.name, path: f.path })),
+          folders: localData.folders.map(f => ({ name: f.name, path: f.path }))
+        })
+        
+        targetFiles = localData.files.filter(f => !f.path.includes('/'))
+        targetFolders = localData.folders.filter(f => !f.path.includes('/'))
+        
+        console.log('[handleSaveAsCollection] Root level:', {
+          fileCount: targetFiles.length,
+          folderCount: targetFolders.length,
+          allFiles: localData.files.length,
+          allFolders: localData.folders.length,
+          files: targetFiles.map(f => ({ name: f.name, path: f.path })),
+          folders: targetFolders.map(f => ({ name: f.name, path: f.path }))
+        })
+      } else {
+        // Specific folder: files and subfolders inside this path
+        // Files inside "new": path starts with "new/" (e.g., "new/README.md")
+        // Subfolders inside "new": path starts with "new/" (e.g., "new/subfolder")
+        const pathPrefix = `${path}/`
+        targetFiles = localData.files.filter(f => f.path.startsWith(pathPrefix))
+        targetFolders = localData.folders.filter(f => f.path.startsWith(pathPrefix))
+        
+        console.log('[handleSaveAsCollection] Folder contents:', path, {
+          fileCount: targetFiles.length,
+          folderCount: targetFolders.length,
+          files: targetFiles.map(f => ({ name: f.name, path: f.path })),
+          folders: targetFolders.map(f => ({ name: f.name, path: f.path }))
+        })
+      }
+
+      console.log('[handleSaveAsCollection] Converting files to assets...')
+      // Convert local files to assets before saving
+      const convertedFiles: CodeFile[] = []
+      for (const file of targetFiles) {
+        // Check if file is empty
+        const isEmpty = !file.content || file.content.trim() === ''
+        
+        if (isEmpty) {
+          // Empty file - keep without creating asset
+          convertedFiles.push({
+            ...file,
+            content: '',
+          })
+          console.log('[handleSaveAsCollection] File is empty, keeping without asset:', file.name)
+          continue
+        }
+        
+        // Check if file needs to be converted to a new asset
+        const needsNewAsset = !file.content.startsWith("asset://") || file.isModified
+        
+        if (file.content.startsWith("asset://") && !file.isModified) {
+          // Asset that hasn't been modified - keep reference
+          convertedFiles.push(file)
+          console.log('[handleSaveAsCollection] File already asset (unmodified):', file.name)
+        } else {
+          // File needs new asset (either local content or modified asset)
+          const reason = !file.content.startsWith("asset://") ? "local content" : "modified asset"
+          console.log(`[handleSaveAsCollection] Converting file to asset (${reason}):`, file.name)
+          
+          // Get actual content
+          let contentToSave = file.content
+          if (file.content.startsWith("asset://") && file.isModified) {
+            // Modified asset - need to get resolved content from resolvedContents
+            const resolvedContent = resolvedContents[file.id]
+            if (resolvedContent) {
+              contentToSave = resolvedContent
+              console.log('[handleSaveAsCollection] Using resolved content for modified asset:', file.name)
+            } else {
+              console.warn('[handleSaveAsCollection] No resolved content found for modified asset:', file.name)
+            }
+          }
+          
+          // Create asset from content
+          const result = await assetManager.saveAsset({
+            dataUrl: contentToSave,
+            forceTextStorage: true,
+            author: "Code Studio Collection Export",
+            type: "collection",
+          })
+
+          if (result.success && result.assetId) {
+            // Create new file with asset reference
+            convertedFiles.push({
+              ...file,
+              content: `asset://${result.assetId}`,
+            })
+          } else {
+            console.error(`Failed to create asset for ${file.name}:`, result.error)
+            convertedFiles.push(file) // Keep original
+          }
+        }
+      }
+
+      // Recursively build folder structure with files and subfolders
+      const buildFolderStructure = async (
+        folderPath: string, 
+        folderName: string,
+        originalFolder: FileTreeFolder
+      ): Promise<FileTreeFolder> => {
+        // folderPath is the full path of this folder (e.g., "new" or "new/subfolder")
+        // Get all files that are directly inside this folder
+        // Files in "new": path = "new/filename.ext" (starts with folderPath/ and no additional slashes)
+        const pathPrefix = `${folderPath}/`
+        const folderFiles = localData.files.filter(f => {
+          if (!f.path.startsWith(pathPrefix)) return false
+          // Check if file is directly in this folder (no sub-paths)
+          const relativePath = f.path.substring(pathPrefix.length)
+          return !relativePath.includes('/')
+        })
+        
+        // Get all subfolders that are directly inside this folder
+        // Subfolders in "new": path = "new/subfoldername" (starts with folderPath/ and no additional slashes)
+        const subfolders = localData.folders.filter(f => {
+          if (!f.path.startsWith(pathPrefix)) return false
+          const relativePath = f.path.substring(pathPrefix.length)
+          return !relativePath.includes('/')
+        })
+        
+        console.log('[buildFolderStructure]', folderName, 'at path:', folderPath, {
+          fileCount: folderFiles.length,
+          subfolderCount: subfolders.length,
+          files: folderFiles.map(f => ({ name: f.name, path: f.path })),
+          subfolders: subfolders.map(f => ({ name: f.name, path: f.path })),
+          readonly: originalFolder.readonly,
+          isVisible: originalFolder.isVisible,
+        })
+
+        const children: (CodeFile | FileTreeFolder)[] = []
+
+        // Convert and add files
+        for (const file of folderFiles) {
+          // Check if file is empty
+          const isEmpty = !file.content || file.content.trim() === ''
+          
+          if (isEmpty) {
+            // Empty file - keep without creating asset
+            children.push({
+              ...file,
+              content: '',
+            })
+            continue
+          }
+          
+          if (file.content.startsWith("asset://") && !file.isModified) {
+            // Asset that hasn't been modified - keep reference
+            children.push(file)
+          } else {
+            // File needs new asset (either local content or modified asset)
+            let contentToSave = file.content
+            if (file.content.startsWith("asset://") && file.isModified) {
+              // Modified asset - need to get resolved content
+              const resolvedContent = resolvedContents[file.id]
+              if (resolvedContent) {
+                contentToSave = resolvedContent
+              }
+            }
+            
+            const result = await assetManager.saveAsset({
+              dataUrl: contentToSave,
+              forceTextStorage: true,
+              author: "Code Studio Collection Export",
+              type: "collection",
+            })
+
+            if (result.success && result.assetId) {
+              children.push({
+                ...file,
+                content: `asset://${result.assetId}`,
+              })
+            } else {
+              children.push(file)
+            }
+          }
+        }
+
+        // Recursively process subfolders
+        for (const subfolder of subfolders) {
+          const builtSubfolder = await buildFolderStructure(subfolder.path, subfolder.name, subfolder)
+          children.push(builtSubfolder)
+        }
+
+        return {
+          id: `folder-${folderPath}-${folderName}`,
+          name: folderName,
+          path: folderPath,
+          isExpanded: false,
+          isVisible: originalFolder.isVisible,
+          readonly: originalFolder.readonly,
+          children,
+          type: "folder"
+        }
+      }
+
+      // Build converted folders with proper hierarchy
+      const convertedFolders: FileTreeFolder[] = []
+      for (const folder of targetFolders) {
+        console.log('[handleSaveAsCollection] Building folder structure for:', folder.name, 'path:', folder.path)
+        const builtFolder = await buildFolderStructure(folder.path, folder.name, folder)
+        convertedFolders.push(builtFolder)
+      }
+
+      console.log('[handleSaveAsCollection] Calling saveProjectAsCollection with:', {
+        name: folderName || "Untitled Collection",
+        folderCount: convertedFolders.length,
+        fileCount: convertedFiles.length,
+        folders: convertedFolders.map(f => ({ 
+          name: f.name, 
+          childCount: f.children.length,
+          children: f.children.map(c => 'children' in c ? `folder:${c.name}` : `file:${c.name}`)
+        }))
+      })
+
+      // Now save as collection using converted files
+      const result = await saveProjectAsCollection({
+        name: folderName || "Untitled Collection",
+        folders: convertedFolders,
+        files: convertedFiles,
+      })
+
+      return result
+    } catch (error) {
+      console.error('Failed to save collection:', error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      }
+    }
+  }
+
   // Layout handlers
   const getActiveDisplay = (): DisplayConfig | undefined => {
     if (!localData.layout) return undefined
@@ -555,6 +937,8 @@ export function CodeStudioEditor({
             onToggleFolderReadonly={handleToggleFolderReadonly}
             onSetAllReadonly={handleSetAllReadonly}
             onSetAllHidden={handleSetAllHidden}
+            onImportCollection={handleImportCollection}
+            onSaveAsCollection={handleSaveAsCollection}
             isPreview={isPreview}
           />
         )
