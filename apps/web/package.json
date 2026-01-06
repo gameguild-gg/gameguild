@@ -134,6 +134,7 @@
         "react-redux": "^9.2.0",
         "react-resizable-panels": "^3.0.6",
         "react-syntax-highlighter": "^15.6.1",
+        "reading-time-estimator": "^2.0.4",
         "recharts": "^2.15.4",
         "rehype-katex": "^7.0.1",
         "rehype-raw": "^7.0.0",
