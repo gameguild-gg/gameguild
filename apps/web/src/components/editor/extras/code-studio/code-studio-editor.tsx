@@ -631,7 +631,7 @@ export function CodeStudioEditor({
           // Create asset from content
           const result = await assetManager.saveAsset({
             dataUrl: contentToSave,
-            forceTextStorage: true,
+            fileName: file.name,
             author: "Code Studio Collection Export",
             type: "collection",
           })
@@ -715,7 +715,7 @@ export function CodeStudioEditor({
             
             const result = await assetManager.saveAsset({
               dataUrl: contentToSave,
-              forceTextStorage: true,
+              fileName: file.name,
               author: "Code Studio Collection Export",
               type: "collection",
             })

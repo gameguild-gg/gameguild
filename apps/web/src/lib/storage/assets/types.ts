@@ -61,6 +61,8 @@ export interface SaveAssetParams {
   dataUrl?: string
   /** URL source (for URL-based uploads) */
   urlSource?: string
+  /** File name (used to determine MIME type when using dataUrl) */
+  fileName?: string
   /** Project/document ID that will use this asset */
   projectId?: string
   /** Node ID that will use this asset */

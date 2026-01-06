@@ -202,10 +202,60 @@ export class AssetManager {
         // Extract MIME type from data URL
         const matches = dataUrl.match(/^data:([^;]+);/)
         mimeType = matches && matches[1] ? matches[1] : "application/octet-stream"
+        
+        // Use provided fileName or generate one
+        fileName = params.fileName || `asset-${Date.now()}`
+        
+        // If we have a fileName, try to determine MIME type from extension
+        if (params.fileName && mimeType === "application/octet-stream") {
+          const ext = params.fileName.split('.').pop()?.toLowerCase()
+          if (ext) {
+            const mimeTypes: Record<string, string> = {
+              // Code files
+              'js': 'text/javascript',
+              'jsx': 'text/javascript',
+              'ts': 'text/typescript',
+              'tsx': 'text/typescript',
+              'py': 'text/x-python',
+              'java': 'text/x-java',
+              'c': 'text/x-c',
+              'cpp': 'text/x-c++',
+              'cs': 'text/x-csharp',
+              'php': 'text/x-php',
+              'rb': 'text/x-ruby',
+              'go': 'text/x-go',
+              'rs': 'text/x-rust',
+              'swift': 'text/x-swift',
+              'kt': 'text/x-kotlin',
+              'sql': 'text/x-sql',
+              'html': 'text/html',
+              'css': 'text/css',
+              'scss': 'text/x-scss',
+              'sass': 'text/x-sass',
+              'less': 'text/x-less',
+              'json': 'application/json',
+              'xml': 'application/xml',
+              'yaml': 'text/yaml',
+              'yml': 'text/yaml',
+              'md': 'text/markdown',
+              'txt': 'text/plain',
+              'sh': 'text/x-sh',
+              'bash': 'text/x-sh',
+              // Images
+              'jpg': 'image/jpeg',
+              'jpeg': 'image/jpeg',
+              'png': 'image/png',
+              'gif': 'image/gif',
+              'svg': 'image/svg+xml',
+              'webp': 'image/webp',
+            }
+            mimeType = mimeTypes[ext] || 'application/octet-stream'
+          }
+        }
+        
         // Estimate size from data URL
         const base64 = dataUrl.split(",")[1]
         size = base64 ? Math.ceil((base64.length * 3) / 4) : 0
-        fileName = `asset-${Date.now()}`
       } else if (params.urlSource) {
         // URL source
         dataUrl = params.urlSource
