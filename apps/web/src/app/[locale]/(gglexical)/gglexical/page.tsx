@@ -441,13 +441,33 @@ export default function HomePage() {
         return
       }
       
+      let downloadUrl: string
+      let shouldRevokeUrl = false
+      
+      // Check if data is a data URL or plain text
+      if (asset.data.startsWith('data:') || asset.data.startsWith('http')) {
+        // Already a data URL or external URL, use directly
+        downloadUrl = asset.data
+      } else {
+        // Plain text content (from collections), create a blob URL
+        const mimeType = asset.metadata.mimeType || 'text/plain'
+        const blob = new Blob([asset.data], { type: mimeType })
+        downloadUrl = URL.createObjectURL(blob)
+        shouldRevokeUrl = true
+      }
+      
       // Download the asset
       const link = document.createElement('a')
-      link.href = asset.data
+      link.href = downloadUrl
       link.download = assetName
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      
+      // Revoke blob URL if we created one
+      if (shouldRevokeUrl) {
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 100)
+      }
       
       toast.success("Asset downloaded successfully")
     } catch (error) {
