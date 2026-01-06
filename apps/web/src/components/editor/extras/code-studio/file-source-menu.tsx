@@ -16,7 +16,11 @@ interface FileSourceMenuProps {
   trigger?: React.ReactNode
 }
 
-export function FileSourceMenu({ onCreateNew, onAddFromAssets, trigger }: FileSourceMenuProps) {
+export function FileSourceMenu({ 
+  onCreateNew, 
+  onAddFromAssets, 
+  trigger 
+}: FileSourceMenuProps) {
   const [open, setOpen] = useState(false)
 
   const handleCreateNew = () => {
@@ -38,7 +42,7 @@ export function FileSourceMenu({ onCreateNew, onAddFromAssets, trigger }: FileSo
           </Button>
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-48">
+      <DropdownMenuContent align="start" className="w-56">
         <DropdownMenuItem onClick={handleCreateNew} className="cursor-pointer">
           <FilePlus className="h-4 w-4 mr-2" />
           <span>Create New File</span>

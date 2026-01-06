@@ -16,7 +16,10 @@ import {
   Lock,
   Unlock,
   Eye,
-  EyeOff
+  EyeOff,
+  Package,
+  Download,
+  Save
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -26,6 +29,8 @@ import { DuplicateNameDialog } from "../../dialogs/duplicate-name-dialog"
 import { BaseConfirmDialog } from "../../dialogs/base-confirm-dialog"
 import { MediaUploadDialog } from "../../media-upload-dialog"
 import { FileSourceMenu } from "../file-source-menu"
+import { CollectionBrowser } from "./collection-browser"
+import { SaveCollectionDialog } from "./save-collection-dialog"
 import type { CodeFile, FileTreeFolder, FileTreeItem, FileType } from "../types"
 import { cn } from "@/lib/utils"
 
@@ -52,6 +57,8 @@ interface FileExplorerProps {
   onToggleFolderReadonly?: (folderId: string) => void
   onSetAllReadonly?: (readonly: boolean) => void
   onSetAllHidden?: (hidden: boolean) => void
+  onImportCollection?: (path: string, files: Array<{ name: string; path: string; assetId: string; isFile?: 'f' | 'm' | 't'; readonly?: boolean; isVisible?: boolean }>, folderMetadata?: Map<string, { readonly?: boolean; isVisible?: boolean }>) => void
+  onSaveAsCollection?: (path: string, folderName?: string) => Promise<{ success: boolean; error?: string }>
   isPreview?: boolean
 }
 
@@ -78,6 +85,8 @@ export function FileExplorer({
   onToggleFolderReadonly,
   onSetAllReadonly,
   onSetAllHidden,
+  onImportCollection,
+  onSaveAsCollection,
   isPreview = false,
 }: FileExplorerProps) {
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -110,6 +119,11 @@ export function FileExplorer({
     type: "readonly" | "hidden"
     action: "set" | "unset"
   } | null>(null)
+  const [showCollectionBrowser, setShowCollectionBrowser] = useState(false)
+  const [collectionPath, setCollectionPath] = useState("")
+  const [showSaveCollectionDialog, setShowSaveCollectionDialog] = useState(false)
+  const [saveCollectionPath, setSaveCollectionPath] = useState("")
+  const [saveCollectionFolderName, setSaveCollectionFolderName] = useState("")
 
   // Fechar menu ao clicar fora
   useEffect(() => {
@@ -793,6 +807,36 @@ export function FileExplorer({
                       <Trash2 className="h-3 w-3" />
                       Delete
                     </button>
+                    <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                    {onImportCollection && (
+                      <button
+                        className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setCollectionPath(folder.path)
+                          setShowCollectionBrowser(true)
+                          setOpenMenuId(null)
+                        }}
+                      >
+                        <Download className="h-3 w-3" />
+                        Import Collection
+                      </button>
+                    )}
+                    {onSaveAsCollection && (
+                      <button
+                        className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setSaveCollectionPath(folder.path)
+                          setSaveCollectionFolderName(folder.name)
+                          setShowSaveCollectionDialog(true)
+                          setOpenMenuId(null)
+                        }}
+                      >
+                        <Save className="h-3 w-3" />
+                        Save as Collection
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -1263,6 +1307,35 @@ export function FileExplorer({
           >
             <Plus className="h-3 w-3" />
           </Button>
+          {onImportCollection && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => {
+                setCollectionPath("")
+                setShowCollectionBrowser(true)
+              }}
+              title="Import Collection"
+            >
+              <Download className="h-3 w-3" />
+            </Button>
+          )}
+          {onSaveAsCollection && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => {
+                setSaveCollectionPath("")
+                setSaveCollectionFolderName("")
+                setShowSaveCollectionDialog(true)
+              }}
+              title="Save as Collection"
+            >
+              <Package className="h-3 w-3" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -1380,6 +1453,32 @@ export function FileExplorer({
           compress={false}
           allowCompressionToggle={false}
           forceTextStorage={true}
+        />
+      )}
+
+      {/* Collection Browser Dialog */}
+      {onImportCollection && showCollectionBrowser && (
+        <CollectionBrowser
+          onImportFiles={(files, folderMetadata) => {
+            onImportCollection(collectionPath, files, folderMetadata)
+            setShowCollectionBrowser(false)
+          }}
+          onClose={() => setShowCollectionBrowser(false)}
+        />
+      )}
+
+      {/* Save Collection Dialog */}
+      {onSaveAsCollection && (
+        <SaveCollectionDialog
+          open={showSaveCollectionDialog}
+          onOpenChange={setShowSaveCollectionDialog}
+          onSave={async (params) => {
+            if (onSaveAsCollection) {
+              return await onSaveAsCollection(saveCollectionPath, saveCollectionFolderName || params.name)
+            }
+            return { success: false, error: "Handler not available" }
+          }}
+          folderName={saveCollectionFolderName}
         />
       )}
     </div>
