@@ -46,6 +46,22 @@ void update() {
 }
 ```
 
+::: tip "When switches are better than if/else"
+
+Switches are translated to jump tables by the compiler, making them generally faster than a series of if/else, and the threshold where switches become more efficient is quite low (around 3). A switch will have to
+
+1. Transform the input to an integer to be used as index (usually 1 CPU instruction);
+2. Sum the index to the jump table base address (usually 1 CPU instruction);
+3. Jump to the corresponding case (1 CPU instruction).
+
+Every failed `if` check, going to the next `if`, will cost you the comparison instruction plus a jump instruction, which is at least 2 CPU instructions.
+
+But being honest, most compilers with optimization enabled, the compiler will optimize both constructs to be equally efficient in most cases, so don't worry too much about it unless you are writing performance critical code. So focus on readability and maintainability first.
+
+You may want to try here https://godbolt.org/z/ndanqKsGf enabling / disabling the optimization flags and the usage of if or switch to see the differences.
+
+:::
+
 A more robust approach is to encapsulate states and transitions using the State Pattern, allowing for cleaner code organization and easier maintenance.
 
 ```c++
