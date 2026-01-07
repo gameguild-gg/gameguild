@@ -265,7 +265,7 @@ export class AssetManager {
           id: sha1hash,
           name: fileName,
           origin,
-          type: params.type || "asset",
+          type: params.type || "standard",
           author: params.author,
           license: params.license,
           sha1hash,

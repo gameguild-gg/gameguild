@@ -59,6 +59,7 @@ export default function HomePage() {
     tagFilterMode: 'all',
     storageType: 'all',
     mimeType: 'all',
+    assetType: 'all',
     projectFilter: 'all',
     usageFilter: 'all',
     sortOrder: []
@@ -68,7 +69,7 @@ export default function HomePage() {
   const [currentPage, setCurrentPage] = useState(1)
   
   // Asset management states
-  const [assets, setAssets] = useState<Array<{ id: string; name: string; mimeType: string; size: number; createdAt: string; projects?: string[] }>>([])
+  const [assets, setAssets] = useState<Array<{ id: string; name: string; mimeType: string; size: number; createdAt: string; projects?: string[]; type?: 'standard' | 'bundler' }>>([])
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [assetToDelete, setAssetToDelete] = useState<{ id: string; name: string; projects: string[] } | null>(null)
   const [assetToEdit, setAssetToEdit] = useState<{ id: string; name: string } | null>(null)
@@ -208,6 +209,7 @@ export default function HomePage() {
           size: asset.size || 0,
           createdAt: asset.createdAt || new Date().toISOString(),
           projects: asset.projects || [],
+          type: asset.type || 'standard',
         }
       })
       
@@ -367,6 +369,13 @@ export default function HomePage() {
       // MIME type filter
       const matchesMimeType = filters.mimeType === "all" || asset.mimeType.startsWith(filters.mimeType + "/")
       
+      // Asset type filter
+      const assetType = asset.type || 'standard'
+      const matchesAssetType = 
+        filters.assetType === "all" || 
+        (filters.assetType === "standard" && assetType === "standard") ||
+        (filters.assetType === "bundler" && assetType === "bundler")
+      
       // Project filter
       const matchesProject = !filters.projectFilter || filters.projectFilter === "all" || asset.projects?.includes(filters.projectFilter)
       
@@ -376,7 +385,7 @@ export default function HomePage() {
         (filters.usageFilter === "used" && asset.projects && asset.projects.length > 0) ||
         (filters.usageFilter === "unused" && (!asset.projects || asset.projects.length === 0))
       
-      return matchesSearch && matchesMimeType && matchesProject && matchesUsage
+      return matchesSearch && matchesMimeType && matchesAssetType && matchesProject && matchesUsage
     })
     
     // Apply sorting
@@ -513,6 +522,7 @@ export default function HomePage() {
       projects: asset.projects,
       createdAt: asset.createdAt,
       updatedAt: asset.createdAt,
+      assetType: asset.type,
     }))
   }, [filteredAssets, currentPage, itemsPerPage])
 

@@ -181,6 +181,23 @@ export function ManagerFilters({
           </Select>
         )}
 
+        {/* Asset Type (Assets only) */}
+        {!isProjectContext && (
+          <Select
+            value={filters.assetType || 'all'}
+            onValueChange={(value) => onFilterChange({ assetType: value as any })}
+          >
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="Asset type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="standard">Standard</SelectItem>
+              <SelectItem value="bundler">Bundler</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
+
         {/* Project Filter (Assets only) */}
         {!isProjectContext && availableProjects.length > 0 && (
           <Select
@@ -303,6 +320,7 @@ export function ManagerFilters({
       {(filters.tags && filters.tags.length > 0) || 
        (filters.storageType && filters.storageType !== 'all') ||
        (filters.mimeType && filters.mimeType !== 'all') ||
+       (filters.assetType && filters.assetType !== 'all') ||
        (filters.projectFilter && filters.projectFilter !== 'all') ||
        (filters.usageFilter && filters.usageFilter !== 'all') ||
        (filters.sortOrder && filters.sortOrder.length > 0) ? (
@@ -338,6 +356,16 @@ export function ManagerFilters({
               <X 
                 className="h-3 w-3 cursor-pointer" 
                 onClick={() => onFilterChange({ mimeType: 'all' })}
+              />
+            </Badge>
+          )}
+
+          {filters.assetType && filters.assetType !== 'all' && (
+            <Badge variant="secondary" className="gap-1">
+              {filters.assetType === 'standard' ? 'Standard' : 'Bundler'}
+              <X 
+                className="h-3 w-3 cursor-pointer" 
+                onClick={() => onFilterChange({ assetType: 'all' })}
               />
             </Badge>
           )}
@@ -392,6 +420,7 @@ export function ManagerFilters({
               tags: [],
               storageType: 'all',
               mimeType: 'all',
+              assetType: 'all',
               projectFilter: 'all',
               usageFilter: 'all',
               sortOrder: [],
