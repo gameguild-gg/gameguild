@@ -25,9 +25,9 @@ function createExecutionModeLayout(): LayoutConfig {
         name: "Mirror",
         aspectRatio: "2:1",
         panels: [
-          { id: "explorer-3", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 6 },
-          { id: "editor-3", type: "editor", row: 0, col: 6, rowSpan: 8, colSpan: 18, editorInstance: "multiple" },
-          { id: "output-3", type: "output", row: 8, col: 6, rowSpan: 4, colSpan: 18 },
+          { id: "explorer-2", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 6 },
+          { id: "editor-2", type: "editor", row: 0, col: 6, rowSpan: 8, colSpan: 18, editorInstance: "multiple" },
+          { id: "output-2", type: "output", row: 8, col: 6, rowSpan: 4, colSpan: 18 },
         ],
       },
     ],
@@ -54,9 +54,9 @@ function createTestModeLayout(): LayoutConfig {
         name: "Mirror",
         aspectRatio: "2:1",
         panels: [
-          { id: "explorer-3", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 6 },
-          { id: "editor-3", type: "editor", row: 0, col: 6, rowSpan: 8, colSpan: 18, editorInstance: "multiple" },
-          { id: "output-3", type: "output", row: 8, col: 6, rowSpan: 4, colSpan: 18 },
+          { id: "explorer-2", type: "explorer", row: 0, col: 0, rowSpan: 12, colSpan: 6 },
+          { id: "editor-2", type: "editor", row: 0, col: 6, rowSpan: 8, colSpan: 18, editorInstance: "multiple" },
+          { id: "output-2", type: "output", row: 8, col: 6, rowSpan: 4, colSpan: 18 },
         ],
       },
       {
