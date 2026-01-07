@@ -1,3 +1,10 @@
+# [2.34.0](https://github.com/gameguild-gg/gameguild/compare/v2.33.0...v2.34.0) (2026-01-07)
+
+
+### Features
+
+* **courses/networking/week02:** Add Network Addressing module with C++ assignment ([8b95938](https://github.com/gameguild-gg/gameguild/commit/8b95938c8ed9225aa54a749c06e0aabb956417ce))
+
 # [2.33.0](https://github.com/gameguild-gg/gameguild/compare/v2.32.0...v2.33.0) (2026-01-06)
 
 
