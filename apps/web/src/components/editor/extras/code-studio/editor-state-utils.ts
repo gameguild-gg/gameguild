@@ -30,7 +30,7 @@ export function getEditorState(data: CodeStudioData, displayId: string): EditorS
   }
 
   const hasUniqueEditor = display.panels.some(
-    p => p.type === "editor" && p.editorInstance === "unique"
+    p => (p.type === "full-editor" || p.type === "focus-editor") && p.editorInstance === "unique"
   )
 
   if (hasUniqueEditor) {
@@ -70,7 +70,7 @@ export function setEditorState(
   }
 
   const hasUniqueEditor = display.panels.some(
-    p => p.type === "editor" && p.editorInstance === "unique"
+    p => (p.type === "full-editor" || p.type === "focus-editor") && p.editorInstance === "unique"
   )
 
   if (hasUniqueEditor) {

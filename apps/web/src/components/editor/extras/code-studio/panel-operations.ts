@@ -47,7 +47,7 @@ export function addPanel(
     col: targetCol,
     rowSpan,
     colSpan,
-    ...(type === "editor" && { editorInstance: "multiple" as EditorInstance }),
+    ...((type === "full-editor" || type === "focus-editor") && { editorInstance: "multiple" as EditorInstance }),
   }
 
   const display = draft.layout.displays.find(d => d.id === activeDisplay.id)
@@ -122,7 +122,7 @@ export function toggleEditorInstance(
   if (!display) return
   
   const panel = display.panels.find(p => p.id === panelId)
-  if (panel && panel.type === "editor") {
+  if (panel && (panel.type === "full-editor" || panel.type === "focus-editor")) {
     panel.editorInstance = (panel.editorInstance === "multiple" ? "unique" : "multiple") as EditorInstance
   }
 }
