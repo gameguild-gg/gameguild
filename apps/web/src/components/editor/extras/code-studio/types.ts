@@ -111,7 +111,7 @@ export interface FileTreeFolder {
 
 export type FileTreeItem = CodeFile | FileTreeFolder
 
-export type PanelType = "explorer" | "editor" | "output"
+export type PanelType = "explorer" | "full-editor" | "focus-editor" | "output"
 
 export type EditorInstance = "multiple" | "unique"
 
@@ -129,7 +129,8 @@ export interface PanelConfig {
   col: number // 0 to (cols-1), depends on display aspect ratio
   rowSpan: number // 1 to rows, depends on display aspect ratio
   colSpan: number // 1 to cols, depends on display aspect ratio
-  editorInstance?: EditorInstance // Apenas para painéis tipo "editor"
+  editorInstance?: EditorInstance // Para painéis tipo "full-editor" ou "focus-editor"
+  focusIndexPath?: string // Para "focus-editor": caminho da pasta índice (ex: "/solutions")
 }
 
 export interface DisplayConfig {
