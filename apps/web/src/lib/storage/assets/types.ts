@@ -9,8 +9,8 @@ export interface AssetMetadata {
   name: string
   /** Origin/source of the asset (e.g., "upload", "url", "import") */
   origin: string
-  /** Type of asset: "asset" (standalone) or "collection" (created as part of a collection) */
-  type?: "asset" | "collection"
+  /** Type of asset: "standard" (standalone) or "bundler" (created as part of a collection) */
+  type?: "standard" | "bundler"
   /** Author/uploader information */
   author?: string
   /** License information */
@@ -71,8 +71,8 @@ export interface SaveAssetParams {
   author?: string
   /** License information */
   license?: string
-  /** Type of asset: "asset" (standalone) or "collection" (created as part of a collection) */
-  type?: "asset" | "collection"
+  /** Type of asset: "standard" (standalone) or "bundler" (created as part of a collection) */
+  type?: "standard" | "bundler"
   /** Force storage as plain text instead of base64 (for code files) */
   forceTextStorage?: boolean
 }
