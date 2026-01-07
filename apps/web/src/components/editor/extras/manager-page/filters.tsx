@@ -24,7 +24,7 @@ interface ManagerFiltersProps {
   onFilterChange: (filters: Partial<FilterConfig>) => void
   availableTags?: Array<{ name: string }>
   availableProjects?: Array<{ id: string; name: string }>
-  contextType: 'projects' | 'assets'
+  contextType: 'projects' | 'assets' | 'collections'
   itemsPerPage: number
   onItemsPerPageChange: (items: number) => void
 }
@@ -39,6 +39,8 @@ export function ManagerFilters({
   onItemsPerPageChange,
 }: ManagerFiltersProps) {
   const isProjectContext = contextType === 'projects'
+  const isAssetContext = contextType === 'assets'
+  const isCollectionContext = contextType === 'collections'
 
   return (
     <div className="p-4 space-y-4">
@@ -48,15 +50,15 @@ export function ManagerFilters({
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder={isProjectContext ? "Search projects..." : "Search assets..."}
+            placeholder={isProjectContext ? "Search projects..." : isAssetContext ? "Search assets..." : "Search collections..."}
             value={filters.searchTerm}
             onChange={(e) => onFilterChange({ searchTerm: e.target.value })}
             className="pl-9"
           />
         </div>
 
-        {/* Tags (Projects only) */}
-        {isProjectContext && availableTags.length > 0 && (
+        {/* Tags (Projects and Collections) */}
+        {(isProjectContext || isCollectionContext) && availableTags.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm">
@@ -163,7 +165,7 @@ export function ManagerFilters({
         )}
 
         {/* MIME Type (Assets only) */}
-        {!isProjectContext && (
+        {isAssetContext && (
           <Select
             value={filters.mimeType || 'all'}
             onValueChange={(value) => onFilterChange({ mimeType: value })}
@@ -182,7 +184,7 @@ export function ManagerFilters({
         )}
 
         {/* Asset Type (Assets only) */}
-        {!isProjectContext && (
+        {isAssetContext && (
           <Select
             value={filters.assetType || 'all'}
             onValueChange={(value) => onFilterChange({ assetType: value as any })}
@@ -199,7 +201,7 @@ export function ManagerFilters({
         )}
 
         {/* Project Filter (Assets only) */}
-        {!isProjectContext && availableProjects.length > 0 && (
+        {isAssetContext && availableProjects.length > 0 && (
           <Select
             value={filters.projectFilter || 'all'}
             onValueChange={(value) => onFilterChange({ projectFilter: value })}
@@ -219,7 +221,7 @@ export function ManagerFilters({
         )}
 
         {/* Usage Filter (Assets only) */}
-        {!isProjectContext && (
+        {isAssetContext && (
           <Select
             value={filters.usageFilter || 'all'}
             onValueChange={(value) => onFilterChange({ usageFilter: value as any })}

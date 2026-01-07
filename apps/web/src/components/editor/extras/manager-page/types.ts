@@ -5,7 +5,7 @@
 
 export type ViewMode = 'list' | 'grid'
 
-export type CardType = 'project' | 'asset'
+export type CardType = 'project' | 'asset' | 'collection'
 
 export interface BaseCard {
   id: string
@@ -32,7 +32,15 @@ export interface AssetCard extends BaseCard {
   assetType?: 'standard' | 'bundler'
 }
 
-export type ManagerCard = ProjectCard | AssetCard
+export interface CollectionCard extends BaseCard {
+  type: 'collection'
+  description?: string
+  tags?: string[]
+  fileCount: number
+  totalSize: number
+}
+
+export type ManagerCard = ProjectCard | AssetCard | CollectionCard
 
 export interface CardAction {
   label: string
@@ -56,7 +64,7 @@ export interface FilterConfig {
 }
 
 export interface ManagerContext {
-  type: 'projects' | 'assets'
+  type: 'projects' | 'assets' | 'collections'
   viewMode: ViewMode
   gridColumns: number
   listColumns: number
@@ -71,7 +79,7 @@ export interface ManagerPageProps {
   totalCards: number
   primaryActions: CardAction[]
   secondaryActions: CardAction[]
-  onContextChange: (context: 'projects' | 'assets') => void
+  onContextChange: (context: 'projects' | 'assets' | 'collections') => void
   onViewModeChange: (mode: ViewMode) => void
   onGridColumnsChange: (columns: number) => void
   onListColumnsChange: (columns: number) => void

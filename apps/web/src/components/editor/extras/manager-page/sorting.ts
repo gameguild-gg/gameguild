@@ -7,9 +7,12 @@ type SortOrder = 'newest' | 'oldest' | 'name' | 'name-desc' | 'size-largest' | '
 
 interface SortableItem {
   name: string
-  size: number
+  size?: number
+  totalSize?: number  // For collections
   createdAt?: string
   updatedAt?: string
+  created?: string    // For collections
+  updated?: string    // For collections
 }
 
 /**
@@ -19,7 +22,7 @@ interface SortableItem {
 export function applySorting<T extends SortableItem>(
   items: T[],
   sortOrder: SortOrder[],
-  dateField: 'createdAt' | 'updatedAt' = 'updatedAt'
+  dateField: 'createdAt' | 'updatedAt' | 'created' | 'updated' = 'updatedAt'
 ): T[] {
   if (!sortOrder || sortOrder.length === 0) {
     // Default: newest first
@@ -38,7 +41,7 @@ export function applySorting<T extends SortableItem>(
     const dateStr = item[dateField]
     return dateStr ? new Date(dateStr).getTime() : 0
   })
-  const sizes = sorted.map(item => item.size)
+  const sizes = sorted.map(item => item.size ?? item.totalSize ?? 0)
   const minDate = Math.min(...dates)
   const maxDate = Math.max(...dates)
   const minSize = Math.min(...sizes)
@@ -86,14 +89,18 @@ export function applySorting<T extends SortableItem>(
         }
         case "size-largest": {
           // Normalize sizes to 0-1 range (larger = higher score)
-          partialScoreA = maxSize !== minSize ? (a.size - minSize) / (maxSize - minSize) : 0
-          partialScoreB = maxSize !== minSize ? (b.size - minSize) / (maxSize - minSize) : 0
+          const sizeA = a.size ?? a.totalSize ?? 0
+          const sizeB = b.size ?? b.totalSize ?? 0
+          partialScoreA = maxSize !== minSize ? (sizeA - minSize) / (maxSize - minSize) : 0
+          partialScoreB = maxSize !== minSize ? (sizeB - minSize) / (maxSize - minSize) : 0
           break
         }
         case "size-smallest": {
           // Normalize sizes to 0-1 range (smaller = higher score)
-          partialScoreA = maxSize !== minSize ? (maxSize - a.size) / (maxSize - minSize) : 0
-          partialScoreB = maxSize !== minSize ? (maxSize - b.size) / (maxSize - minSize) : 0
+          const sizeA = a.size ?? a.totalSize ?? 0
+          const sizeB = b.size ?? b.totalSize ?? 0
+          partialScoreA = maxSize !== minSize ? (maxSize - sizeA) / (maxSize - minSize) : 0
+          partialScoreB = maxSize !== minSize ? (maxSize - sizeB) / (maxSize - minSize) : 0
           break
         }
       }

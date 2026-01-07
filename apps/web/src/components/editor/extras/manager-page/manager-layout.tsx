@@ -15,17 +15,18 @@ import {
   LayoutGrid, 
   List, 
   Columns as ColumnsIcon,
-  Plus
+  Plus,
+  Package
 } from 'lucide-react'
 import { type ViewMode } from './types'
 
 interface ManagerLayoutProps {
   children: React.ReactNode
-  activeContext: 'projects' | 'assets'
+  activeContext: 'projects' | 'assets' | 'collections'
   viewMode: ViewMode
   gridColumns: number
   listColumns: number
-  onContextChange: (context: 'projects' | 'assets') => void
+  onContextChange: (context: 'projects' | 'assets' | 'collections') => void
   onViewModeChange: (mode: ViewMode) => void
   onGridColumnsChange: (columns: number) => void
   onListColumnsChange: (columns: number) => void
@@ -83,29 +84,49 @@ export function ManagerLayout({
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 p-4 space-y-2">
-            <Button
-              variant={activeContext === 'projects' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => onContextChange('projects')}
-            >
-              <Folder className="mr-2 h-4 w-4" />
-              Projects
-            </Button>
-            <Button
-              variant={activeContext === 'assets' ? 'default' : 'ghost'}
-              className="w-full justify-start"
-              onClick={() => onContextChange('assets')}
-            >
-              <ImageIcon className="mr-2 h-4 w-4" />
-              Assets
-            </Button>
+          <div className="flex-1 p-4 space-y-4">
+            {/* Projects */}
+            <div>
+              <Button
+                variant={activeContext === 'projects' ? 'default' : 'ghost'}
+                className="w-full justify-start"
+                onClick={() => onContextChange('projects')}
+              >
+                <Folder className="mr-2 h-4 w-4" />
+                Projects
+              </Button>
+            </div>
+
+            {/* Resources Group */}
+            <div>
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 px-3 mb-2 uppercase tracking-wider">
+                Resources
+              </p>
+              <div className="space-y-1">
+                <Button
+                  variant={activeContext === 'assets' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => onContextChange('assets')}
+                >
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  Assets
+                </Button>
+                <Button
+                  variant={activeContext === 'collections' ? 'default' : 'ghost'}
+                  className="w-full justify-start"
+                  onClick={() => onContextChange('collections')}
+                >
+                  <Package className="mr-2 h-4 w-4" />
+                  Collections
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Footer */}
           <div className="p-4 border-t border-gray-200 dark:border-gray-700">
             <p className="text-xs text-gray-500 dark:text-gray-400">
-              {activeContext === 'projects' ? 'Manage Projects' : 'Manage Assets'}
+              {activeContext === 'projects' ? 'Manage Projects' : activeContext === 'assets' ? 'Manage Assets' : 'Manage Collections'}
             </p>
           </div>
         </div>
@@ -117,17 +138,19 @@ export function ManagerLayout({
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {activeContext === 'projects' ? 'My Projects' : 'My Assets'}
+                  {activeContext === 'projects' ? 'My Projects' : activeContext === 'assets' ? 'My Assets' : 'My Collections'}
                 </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                   {activeContext === 'projects' 
                     ? 'Manage and organize your projects'
-                    : 'Manage and organize your media files'
+                    : activeContext === 'assets'
+                    ? 'Manage and organize your media files'
+                    : 'Manage and organize your asset collections'
                   }
                 </p>
               </div>
               
-              {onCreateNew && (
+              {onCreateNew && activeContext !== 'collections' && (
                 <Button onClick={onCreateNew}>
                   <Plus className="mr-2 h-4 w-4" />
                   {activeContext === 'projects' ? 'New Project' : 'Upload Asset'}
