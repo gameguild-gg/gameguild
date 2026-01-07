@@ -10,11 +10,11 @@
 export * from './types'
 
 // Components
-export { ManagerCardComponent } from './card'
+export { ManagerCardComponent } from './card/card'
 export { GridView } from './grid-view'
 export { ListView } from './list-view'
 export { ManagerLayout } from './manager-layout'
-export { ManagerFilters } from './filters'
+export { ManagerFilters } from './filters/filters'
 
 // Utilities
 export { applySorting } from './sorting'
