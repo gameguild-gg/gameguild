@@ -129,7 +129,7 @@ function CodeStudioComponent({ data, nodeKey }: { data: CodeStudioData; nodeKey:
               name: `main${languageConfig.defaultExtension}`,
               content: languageConfig.defaultTemplate,
               language: defaultLanguage,
-              isMain: true,
+              isFile: 'f',
               isVisible: true,
               path: `main${languageConfig.defaultExtension}`,
             },

@@ -27,7 +27,7 @@ export function createDisplay(
     panels: [
       { 
         id: `editor-${Date.now()}`, 
-        type: "editor", 
+        type: "full-editor", 
         row: 0, 
         col: 0, 
         rowSpan: rows, 

@@ -14,6 +14,8 @@ import { MODE_CONFIGS, LANGUAGE_CONFIGS, getLanguageFromExtension, hasValidExten
 import { useTheme } from "next-themes"
 import { FileExplorer } from "./file-system/file-explorer"
 import { FileTabs } from "./file-tabs"
+import { LanguageSelector } from "./language-selector"
+import { FocusEditorConfig } from "./focus-editor-config"
 import { SettingsMenu } from "./settings-menu"
 import { ResizablePanel } from "./resizable-panel"
 import { GridDropZone } from "./grid-drop-zone"
@@ -804,7 +806,9 @@ export function CodeStudioEditor({
       // Ao trocar de display, atualizar activeFileId para refletir o estado do novo display
       const newDisplay = draft.layout?.displays.find(d => d.id === displayId)
       if (newDisplay) {
-        const editorPanel = newDisplay.panels.find(p => p.type === 'editor')
+        const editorPanel = newDisplay.panels.find(p => 
+          p.type === 'full-editor' || p.type === 'focus-editor'
+        )
         if (editorPanel?.editorInstance === 'unique') {
           // Display com editor único: usar uniqueActiveFileId
           draft.activeFileId = newDisplay.uniqueActiveFileId
@@ -909,6 +913,21 @@ export function CodeStudioEditor({
     PanelOps.onPanelDragEnd()
   }
 
+  const handleSetFocusIndexPath = (panelId: string, path: string) => {
+    const activeDisplay = getActiveDisplay()
+    if (!activeDisplay) return
+
+    setLocalData(draft => {
+      const display = draft.layout?.displays.find(d => d.id === activeDisplay.id)
+      if (!display) return
+      
+      const panel = display.panels.find(p => p.id === panelId)
+      if (panel && panel.type === "focus-editor") {
+        panel.focusIndexPath = path
+      }
+    })
+  }
+
   // Renderizar conteúdo de cada painel
   const renderPanelContent = (panel: PanelConfig, displayConfig?: DisplayConfig) => {
     switch (panel.type) {
@@ -943,7 +962,7 @@ export function CodeStudioEditor({
           />
         )
       
-      case "editor":
+      case "full-editor":
         // No preview, usar displayConfig passado; no editor, usar activeDisplay
         const displayToUse = isPreview && displayConfig ? displayConfig : getActiveDisplay()
         const isUniqueInstance = panel.editorInstance === "unique"
@@ -1031,6 +1050,81 @@ export function CodeStudioEditor({
           </div>
         )
       
+      case "focus-editor":
+        // Focus editor: Language selector instead of file tabs
+        const focusDisplayToUse = isPreview && displayConfig ? displayConfig : getActiveDisplay()
+        const isFocusUniqueInstance = panel.editorInstance === "unique"
+        
+        // For focus-editor, we maintain a single active file based on language selection
+        const focusActiveFileId = isFocusUniqueInstance
+          ? focusDisplayToUse?.uniqueActiveFileId
+          : localData.activeFileId
+        
+        return (
+          <div className="flex flex-col h-full relative">
+            {/* Editor Instance Switch */}
+            {panel.editorInstance && localData.layout?.editMode && (
+              <EditorInstanceSwitch
+                editorInstance={panel.editorInstance}
+                onToggle={() => handleToggleEditorInstance(panel.id)}
+              />
+            )}
+            
+            {/* Focus Editor Config - Only in edit mode */}
+            {localData.layout?.editMode && (
+              <FocusEditorConfig
+                focusIndexPath={panel.focusIndexPath}
+                folders={localData.folders || []}
+                onSetIndexPath={(path) => handleSetFocusIndexPath(panel.id, path)}
+              />
+            )}
+            
+            <LanguageSelector
+              files={localData.files}
+              focusIndexPath={panel.focusIndexPath}
+              activeFileId={focusActiveFileId}
+              onSelectLanguage={(fileId) => handleFileSelect(fileId, panel.id)}
+            />
+            
+            <div className="flex-1 min-h-0 relative">
+              {!focusActiveFileId ? (
+                <EmptyEditorState />
+              ) : (
+                (() => {
+                  const file = localData.files.find(f => f.id === focusActiveFileId)
+                  if (!file) return <EmptyEditorState />
+                  
+                  // Check if file or parent folder is readonly
+                  let isFileReadonly = file.readonly || false
+                  if (!isFileReadonly && localData.folders) {
+                    const fileFolder = localData.folders.find(folder => 
+                      file.path.startsWith(folder.path + "/")
+                    )
+                    if (fileFolder?.readonly) {
+                      isFileReadonly = true
+                    }
+                  }
+                  
+                  return (
+                    <MonacoCodeEditor
+                      fileId={file.id}
+                      filePath={file.path}
+                      instanceId={localData.id}
+                      value={resolvedContents[file.id] || file.content}
+                      onChange={(content) => handleCodeChange(content, file.id)}
+                      language={file.language}
+                      readonly={localData.readonly || isFileReadonly}
+                      showLineNumbers={localData.showLineNumbers}
+                      fontSize={localData.fontSize}
+                      shikiTheme={localData.shikiTheme}
+                    />
+                  )
+                })()
+              )}
+            </div>
+          </div>
+        )
+      
       case "output":
         const mainFile = localData.files.find(f => f.isFile === 'm')
         const testFile = localData.files.find(f => f.isFile === 't')
@@ -1065,7 +1159,7 @@ export function CodeStudioEditor({
     // Se houver painéis com instância única, usar o arquivo ativo deles
     if (activeDisplay) {
       const uniqueEditorPanel = activeDisplay.panels.find(
-        p => p.type === 'editor' && p.editorInstance === 'unique'
+        p => (p.type === 'full-editor' || p.type === 'focus-editor') && p.editorInstance === 'unique'
       )
       if (uniqueEditorPanel && activeDisplay.uniqueActiveFileId) {
         fileToExecute = localData.files.find(f => f.id === activeDisplay.uniqueActiveFileId)
@@ -1174,7 +1268,9 @@ export function CodeStudioEditor({
       const display1 = localData.layout?.displays.find(d => d.id === 'display-1')
       
       // Determinar o tipo de editor no display-1
-      const display1Editor = display1?.panels.find(p => p.type === 'editor')
+      const display1Editor = display1?.panels.find(p => 
+        p.type === 'full-editor' || p.type === 'focus-editor'
+      )
       const isDisplay1Unique = display1Editor?.editorInstance === 'unique'
       
       // Sincronizar activeFileId com a aba ativa apropriada
