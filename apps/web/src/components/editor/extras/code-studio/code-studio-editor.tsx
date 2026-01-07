@@ -15,7 +15,6 @@ import { useTheme } from "next-themes"
 import { FileExplorer } from "./file-system/file-explorer"
 import { FileTabs } from "./file-tabs"
 import { LanguageSelector } from "./language-selector"
-import { FocusEditorConfig } from "./focus-editor-config"
 import { SettingsMenu } from "./settings-menu"
 import { ResizablePanel } from "./resizable-panel"
 import { GridDropZone } from "./grid-drop-zone"
@@ -189,18 +188,12 @@ export function CodeStudioEditor({
       const newResolvedContents: Record<string, string> = {}
       
       for (const file of localData.files) {
-        // Se já foi resolvido e não é referência, manter
-        if (resolvedContents[file.id] && !FileOps.isAssetReference(file.content)) {
-          newResolvedContents[file.id] = resolvedContents[file.id]!
-          continue
-        }
-        
         // Se é referência a asset, resolver
         if (FileOps.isAssetReference(file.content)) {
           const resolved = await FileOps.resolveFileContent(file)
           newResolvedContents[file.id] = resolved
         } else {
-          // Conteúdo direto
+          // Conteúdo direto - sempre usar file.content atualizado
           newResolvedContents[file.id] = file.content
         }
       }
@@ -392,6 +385,12 @@ export function CodeStudioEditor({
   const handleToggleFolderReadonly = (folderId: string) => {
     setLocalData(draft => {
       FileOps.toggleFolderReadonly(draft, folderId)
+    })
+  }
+
+  const handleToggleFocusFolder = (folderId: string) => {
+    setLocalData(draft => {
+      FileOps.toggleFocusFolder(draft, folderId)
     })
   }
 
@@ -913,21 +912,6 @@ export function CodeStudioEditor({
     PanelOps.onPanelDragEnd()
   }
 
-  const handleSetFocusIndexPath = (panelId: string, path: string) => {
-    const activeDisplay = getActiveDisplay()
-    if (!activeDisplay) return
-
-    setLocalData(draft => {
-      const display = draft.layout?.displays.find(d => d.id === activeDisplay.id)
-      if (!display) return
-      
-      const panel = display.panels.find(p => p.id === panelId)
-      if (panel && panel.type === "focus-editor") {
-        panel.focusIndexPath = path
-      }
-    })
-  }
-
   // Renderizar conteúdo de cada painel
   const renderPanelContent = (panel: PanelConfig, displayConfig?: DisplayConfig) => {
     switch (panel.type) {
@@ -954,6 +938,7 @@ export function CodeStudioEditor({
             onToggleFolderVisibility={handleToggleFolderVisibility}
             onToggleFileReadonly={handleToggleFileReadonly}
             onToggleFolderReadonly={handleToggleFolderReadonly}
+            onToggleFocusFolder={handleToggleFocusFolder}
             onSetAllReadonly={handleSetAllReadonly}
             onSetAllHidden={handleSetAllHidden}
             onImportCollection={handleImportCollection}
@@ -1070,18 +1055,9 @@ export function CodeStudioEditor({
               />
             )}
             
-            {/* Focus Editor Config - Only in edit mode */}
-            {localData.layout?.editMode && (
-              <FocusEditorConfig
-                focusIndexPath={panel.focusIndexPath}
-                folders={localData.folders || []}
-                onSetIndexPath={(path) => handleSetFocusIndexPath(panel.id, path)}
-              />
-            )}
-            
             <LanguageSelector
               files={localData.files}
-              focusIndexPath={panel.focusIndexPath}
+              folders={localData.folders || []}
               activeFileId={focusActiveFileId}
               onSelectLanguage={(fileId) => handleFileSelect(fileId, panel.id)}
             />

@@ -55,6 +55,7 @@ interface FileExplorerProps {
   onToggleFolderVisibility?: (folderId: string) => void
   onToggleFileReadonly?: (fileId: string) => void
   onToggleFolderReadonly?: (folderId: string) => void
+  onToggleFocusFolder?: (folderId: string) => void
   onSetAllReadonly?: (readonly: boolean) => void
   onSetAllHidden?: (hidden: boolean) => void
   onImportCollection?: (path: string, files: Array<{ name: string; path: string; assetId: string; isFile?: 'f' | 'm' | 't'; readonly?: boolean; isVisible?: boolean }>, folderMetadata?: Map<string, { readonly?: boolean; isVisible?: boolean }>) => void
@@ -83,6 +84,7 @@ export function FileExplorer({
   onToggleFolderVisibility,
   onToggleFileReadonly,
   onToggleFolderReadonly,
+  onToggleFocusFolder,
   onSetAllReadonly,
   onSetAllHidden,
   onImportCollection,
@@ -678,6 +680,11 @@ export function FileExplorer({
               )}
               <span className="flex-1 truncate flex items-center gap-1" onClick={() => onToggleFolder(folder.id)}>
                 {folder.name}
+                {folder.isFocusFolder && (
+                  <span className="text-[9px] px-1 py-0.5 rounded bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400" title="Focus folder for focus-editor">
+                    🎯
+                  </span>
+                )}
                 {folder.readonly && (
                   <span className="text-[9px] px-1 py-0.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400" title="Read-only">
                     🔒
@@ -793,6 +800,28 @@ export function FileExplorer({
                           <>
                             <span className="h-3 w-3 flex items-center justify-center">🔒</span>
                             Set Read-Only
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {onToggleFocusFolder && (
+                      <button
+                        className="w-full px-3 py-1.5 text-left text-xs hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleFocusFolder(folder.id)
+                          setOpenMenuId(null)
+                        }}
+                      >
+                        {folder.isFocusFolder ? (
+                          <>
+                            <span className="h-3 w-3 flex items-center justify-center">🎯</span>
+                            Unset Focus Folder
+                          </>
+                        ) : (
+                          <>
+                            <span className="h-3 w-3 flex items-center justify-center">🎯</span>
+                            Set as Focus Folder
                           </>
                         )}
                       </button>

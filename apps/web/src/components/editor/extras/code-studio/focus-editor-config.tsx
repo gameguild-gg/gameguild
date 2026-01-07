@@ -9,16 +9,24 @@ import { useState, useRef, useEffect } from "react"
 interface FocusEditorConfigProps {
   focusIndexPath?: string
   folders: FileTreeFolder[]
+  editorInstance?: "multiple" | "unique"
   onSetIndexPath: (path: string) => void
 }
 
 export function FocusEditorConfig({
   focusIndexPath,
   folders,
+  editorInstance,
   onSetIndexPath,
 }: FocusEditorConfigProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Only show config for unique editor instances
+  // Multiple instances use the folder marked as focus
+  if (editorInstance === "multiple") {
+    return null
+  }
 
   // Close dropdown when clicking outside
   useEffect(() => {

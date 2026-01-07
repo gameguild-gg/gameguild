@@ -105,6 +105,7 @@ export interface FileTreeFolder {
   isExpanded: boolean
   isVisible: boolean
   readonly?: boolean // Se true, todos os arquivos dentro não podem ser editados
+  isFocusFolder?: boolean // Se true, esta pasta é usada como pasta índice padrão para focus-editor com editorInstance="multiple"
   children: (CodeFile | FileTreeFolder)[]
   type: "folder"
 }
@@ -130,7 +131,6 @@ export interface PanelConfig {
   rowSpan: number // 1 to rows, depends on display aspect ratio
   colSpan: number // 1 to cols, depends on display aspect ratio
   editorInstance?: EditorInstance // Para painéis tipo "full-editor" ou "focus-editor"
-  focusIndexPath?: string // Para "focus-editor": caminho da pasta índice (ex: "/solutions")
 }
 
 export interface DisplayConfig {

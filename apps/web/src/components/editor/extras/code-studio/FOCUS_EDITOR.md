@@ -5,7 +5,8 @@ O **Focus Editor** é um tipo de painel editor que mostra um seletor de linguage
 ## Características
 
 - **Seletor de Linguagem**: Dropdown para escolher entre diferentes linguagens
-- **Pasta Índice**: Os arquivos são filtrados por uma pasta específica configurável
+- **Pasta Focus Única**: Uma pasta marcada como focus 🎯 para todos os editores
+- **Configuração Simples**: Apenas marque a pasta no File Explorer
 - **Agrupamento por Nome**: Arquivos com o mesmo nome mas extensões diferentes são agrupados
 - **Sem Abas**: Interface limpa focada em uma única tarefa
 
@@ -18,12 +19,18 @@ No modo de edição de layout:
 2. Arraste o botão **Focus Editor** (ciano) para o grid
 3. O painel será criado com configuração padrão
 
-### 2. Configurar Pasta Índice
+### 2. Marcar Pasta como Focus
 
-Com o modo de edição ativo:
-1. No painel Focus Editor, você verá uma barra amarela no topo
-2. Clique no dropdown "Index Folder"
-3. Selecione a pasta que contém os arquivos de solução
+**Para todos os tipos de focus-editor** (multiple e unique):
+1. No File Explorer, clique com o botão direito na pasta desejada
+2. Selecione **"Set as Focus Folder"** 🎯
+3. A pasta ficará marcada com o ícone 🎯
+4. Todos os focus-editors usarão esta pasta automaticamente
+
+**Importante**: 
+- Apenas uma pasta pode ser marcada como focus por vez
+- Esta é a **única forma** de configurar a pasta para focus-editor
+- Funciona tanto para `editorInstance: "multiple"` quanto `"unique"`
 
 ### 3. Estrutura de Arquivos
 
@@ -42,6 +49,32 @@ Os arquivos na pasta índice devem ter o **mesmo nome base** mas **extensões di
 - Use o dropdown de linguagem na barra superior
 - Mostra a extensão do arquivo (JS, PY, CPP, etc.)
 - Ao selecionar, o editor muda para o arquivo correspondente
+
+## Diferenças: Full Editor vs Focus Editor
+
+| Característica | Full Editor | Focus Editor |
+|----------------|-------------|--------------|
+| Navegação | Abas de arquivos | Seletor de linguagem |
+| Arquivos | Todos os arquivos abertos | Arquivos da pasta focus |
+| Uso | Projetos gerais | Desafios/Exercícios |
+| Abrir/Fechar | Via Explorer ou tabs | Automático por pasta |
+| Visual | Abas horizontais | Dropdown simples |
+| Configuração Pasta | N/A | Marcar pasta como focus 🎯 |
+
+## Editor Instance: Multiple vs Unique
+
+**Ambos usam a mesma pasta marcada como focus 🎯**
+
+### Multiple (Compartilhado)
+- Todos os focus-editors multiple compartilham o mesmo estado de arquivo ativo
+- Trocar de linguagem em um painel afeta todos os outros paineis multiple
+- Ideal para exercícios padronizados onde todos os displays mostram a mesma solução
+
+### Unique (Isolado)
+- Cada painel unique tem seu próprio estado de arquivo ativo independente
+- Trocar linguagem em um painel não afeta outros paineis
+- Todos ainda usam a mesma pasta focus, mas permitem navegação independente
+- Ideal para comparar diferentes abordagens da mesma solução
 
 ## Exemplo de Uso
 
@@ -78,7 +111,8 @@ const codeStudioData = {
       id: "folder-1",
       name: "solutions",
       path: "/solutions",
-      isOpen: true
+      isOpen: true,
+      isFocusFolder: true  // ← Pasta marcada como focus
     }
   ],
   layout: {
@@ -95,8 +129,8 @@ const codeStudioData = {
             col: 0,
             rowSpan: 8,
             colSpan: 12,
-            editorInstance: "unique",
-            focusIndexPath: "/solutions"  // ← Pasta índice configurada
+            editorInstance: "unique"
+            // Não precisa de focusIndexPath - usa a pasta marcada como focus
           },
           {
             id: "output-1",
@@ -120,17 +154,51 @@ const codeStudioData = {
 | Característica | Full Editor | Focus Editor |
 |----------------|-------------|--------------|
 | Navegação | Abas de arquivos | Seletor de linguagem |
-| Arquivos | Todos os arquivos abertos | Arquivos da pasta índice |
+| Arquivos | Todos os arquivos abertos | Arquivos da pasta focus |
 | Uso | Projetos gerais | Desafios/Exercícios |
 | Abrir/Fechar | Via Explorer ou tabs | Automático por pasta |
 | Visual | Abas horizontais | Dropdown simples |
+| Configuração Pasta | N/A | Marcar pasta como focus 🎯 |
+
+## Editor Instance: Multiple vs Unique
+
+**Ambos usam a mesma pasta marcada como focus 🎯**
+
+### Multiple (Compartilhado)
+- Todos os focus-editors multiple compartilham o mesmo estado de arquivo ativo
+- Trocar de linguagem em um painel afeta todos os outros paineis multiple
+- Ideal para exercícios padronizados onde todos os displays mostram a mesma solução
+
+### Unique (Isolado)
+- Cada painel unique tem seu próprio estado de arquivo ativo independente
+- Trocar linguagem em um painel não afeta outros paineis
+- Todos ainda usam a mesma pasta focus, mas permitem navegação independente
+- Ideal para comparar diferentes abordagens da mesma solução
 
 ## Boas Práticas
 
 1. **Naming Convention**: Use o mesmo nome base para todos os arquivos de solução
 2. **Pasta Única**: Mantenha arquivos de uma solução em uma pasta dedicada
-3. **Instance Unique**: Use `editorInstance: "unique"` para isolamento por display
-4. **Readonly**: Configure pastas como readonly quando necessário
+3. **Marcar Focus**: Sempre marque a pasta principal como focus 🎯 no File Explorer
+4. **Multiple para Sincronização**: Use `editorInstance: "multiple"` quando quiser que todos os paineis mostrem a mesma linguagem
+5. **Unique para Independência**: Use `editorInstance: "unique"` quando cada painel precisar navegar independentemente
+6. **Readonly**: Configure pastas como readonly quando necessário
+
+## Workflow Recomendado
+
+### Para Exercícios Sincronizados (Multiple)
+1. Crie uma pasta `/solutions`
+2. Marque-a como **Focus Folder** 🎯 no File Explorer
+3. Adicione arquivos: `solution.js`, `solution.py`, `solution.cpp`
+4. Use focus-editor com `editorInstance: "multiple"`
+5. Todos os paineis mostrarão a mesma linguagem selecionada
+
+### Para Comparações Independentes (Unique)
+1. Crie uma pasta `/solutions`
+2. Marque-a como **Focus Folder** 🎯
+3. Adicione múltiplas implementações: `solution.js`, `solution.py`, `solution.cpp`
+4. Use vários focus-editors com `editorInstance: "unique"`
+5. Cada painel pode mostrar uma linguagem diferente para comparação
 
 ## Casos de Uso
 
