@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { type ManagerCard, type CardAction, type ViewMode } from './types'
-import { ManagerCardComponent } from './card'
+import { ManagerCardComponent } from './card/card'
 
 interface GridViewProps {
   cards: ManagerCard[]
