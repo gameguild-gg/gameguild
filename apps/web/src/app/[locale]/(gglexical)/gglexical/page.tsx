@@ -40,7 +40,7 @@ interface ProjectData {
 
 export default function HomePage() {
   // Active context/view
-  const [activeContext, setActiveContext] = useState<'projects' | 'assets'>('projects')
+  const [activeContext, setActiveContext] = useState<'projects' | 'assets' | 'collections'>('projects')
   
   // View state
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid')
@@ -74,6 +74,12 @@ export default function HomePage() {
   const [assetToDelete, setAssetToDelete] = useState<{ id: string; name: string; projects: string[] } | null>(null)
   const [assetToEdit, setAssetToEdit] = useState<{ id: string; name: string } | null>(null)
   const [newAssetName, setNewAssetName] = useState("")
+
+  // Collection management states
+  const [collections, setCollections] = useState<Array<{ id: string; name: string; description?: string; tags?: string[]; fileCount: number; totalSize: number; created: string; updated: string }>>([])
+  const [collectionToDelete, setCollectionToDelete] = useState<{ id: string; name: string } | null>(null)
+  const [collectionToEdit, setCollectionToEdit] = useState<{ id: string; name: string } | null>(null)
+  const [newCollectionName, setNewCollectionName] = useState("")
 
 
 
@@ -222,6 +228,98 @@ export default function HomePage() {
       })
     }
   }, [])
+
+  // Load collections from assetManager
+  const loadCollections = useCallback(async () => {
+    try {
+      console.log("Loading collections...")
+      const collectionList = await assetManager.listCollections()
+      console.log("Collections loaded:", collectionList)
+      
+      // Calculate file count and total size from manifest
+      const collectionsWithDetails = await Promise.all(
+        collectionList.map(async (collection) => {
+          try {
+            const manifest = await assetManager.getCollection(collection.id)
+            if (manifest) {
+              const fileCount = countFilesInStructure(manifest.structure)
+              const totalSize = calculateTotalSize(manifest.structure)
+              
+              return {
+                id: collection.id,
+                name: collection.name,
+                description: collection.description,
+                tags: collection.tags,
+                fileCount,
+                totalSize,
+                created: new Date(collection.created).toISOString(),
+                updated: new Date(collection.updated).toISOString(),
+              }
+            }
+          } catch (error) {
+            console.error(`Failed to load manifest for collection ${collection.id}:`, error)
+          }
+          
+          return {
+            id: collection.id,
+            name: collection.name,
+            description: collection.description,
+            tags: collection.tags,
+            fileCount: 0,
+            totalSize: 0,
+            created: new Date(collection.created).toISOString(),
+            updated: new Date(collection.updated).toISOString(),
+          }
+        })
+      )
+      
+      setCollections(collectionsWithDetails)
+      console.log("Collections state updated:", collectionsWithDetails)
+    } catch (error) {
+      console.error("Failed to load collections:", error)
+      toast.error("Failed to load collections", {
+        description: error instanceof Error ? error.message : "Unknown error"
+      })
+    }
+  }, [])
+
+  // Helper functions for collection details
+  const countFilesInStructure = (structure: any): number => {
+    let count = 0
+    if (structure.files) count += structure.files.length
+    if (structure.folders) {
+      structure.folders.forEach((folder: any) => {
+        count += countFilesInStructure(folder)
+      })
+    }
+    return count
+  }
+
+  const calculateTotalSize = (structure: any): number => {
+    let size = 0
+    if (structure.files) {
+      structure.files.forEach((file: any) => {
+        if (file.content) {
+          size += new TextEncoder().encode(file.content).length
+        }
+      })
+    }
+    if (structure.folders) {
+      structure.folders.forEach((folder: any) => {
+        size += calculateTotalSize(folder)
+      })
+    }
+    return size
+  }
+
+  // Load collections when switching to collections context
+  useEffect(() => {
+    console.log("Collection context effect:", { activeContext, isDbInitialized })
+    if (activeContext === 'collections' && isDbInitialized) {
+      console.log("Loading collections now...")
+      loadCollections()
+    }
+  }, [activeContext, isDbInitialized, loadCollections])
 
   // Load assets when switching to assets context
   useEffect(() => {
@@ -490,6 +588,50 @@ export default function HomePage() {
     setUploadDialogOpen(false)
   }, [loadAssets])
 
+  // Collection management functions
+  const handleCollectionDelete = useCallback((collectionId: string, collectionName: string) => {
+    setCollectionToDelete({ id: collectionId, name: collectionName })
+  }, [])
+
+  const handleCollectionEdit = useCallback((collectionId: string, currentName: string) => {
+    setCollectionToEdit({ id: collectionId, name: currentName })
+    setNewCollectionName(currentName)
+  }, [])
+
+  const handleConfirmCollectionDelete = useCallback(async () => {
+    if (!collectionToDelete) return
+    
+    try {
+      await assetManager.deleteCollection(collectionToDelete.id)
+      toast.success("Collection deleted successfully")
+      await loadCollections()
+      setCollectionToDelete(null)
+    } catch (error) {
+      console.error("Failed to delete collection:", error)
+      toast.error("Failed to delete collection")
+    }
+  }, [collectionToDelete, loadCollections])
+
+  const handleConfirmCollectionEdit = useCallback(async () => {
+    if (!collectionToEdit || !newCollectionName.trim()) return
+    
+    try {
+      const success = await assetManager.renameCollection(collectionToEdit.id, newCollectionName.trim())
+      
+      if (success) {
+        toast.success("Collection renamed successfully")
+        await loadCollections()
+        setCollectionToEdit(null)
+        setNewCollectionName("")
+      } else {
+        toast.error("Failed to rename collection")
+      }
+    } catch (error) {
+      console.error("Failed to rename collection:", error)
+      toast.error("Failed to rename collection")
+    }
+  }, [collectionToEdit, newCollectionName, loadCollections])
+
   // Convert projects to ManagerCard format
   const projectCards: ManagerCard[] = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage
@@ -525,6 +667,48 @@ export default function HomePage() {
       assetType: asset.type,
     }))
   }, [filteredAssets, currentPage, itemsPerPage])
+
+  // Filter and sort collections
+  const filteredCollections = useMemo(() => {
+    const filtered = collections.filter((collection) => {
+      // Search filter
+      const matchesSearch = !filters.searchTerm || 
+        collection.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        (collection.description && collection.description.toLowerCase().includes(filters.searchTerm.toLowerCase()))
+      
+      // Tags filter
+      const matchesTags = !filters.tags || filters.tags.length === 0 || (
+        collection.tags && (
+          filters.tagFilterMode === 'all'
+            ? filters.tags.every(tag => collection.tags?.includes(tag))
+            : filters.tags.some(tag => collection.tags?.includes(tag))
+        )
+      )
+      
+      return matchesSearch && matchesTags
+    })
+    
+    // Apply sorting
+    return applySorting(filtered, filters.sortOrder || [], 'updated')
+  }, [collections, filters])
+
+  // Convert collections to ManagerCard format
+  const collectionCards: ManagerCard[] = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    
+    return filteredCollections.slice(startIndex, endIndex).map(collection => ({
+      type: 'collection' as const,
+      id: collection.id,
+      name: collection.name,
+      description: collection.description,
+      tags: collection.tags,
+      fileCount: collection.fileCount,
+      totalSize: collection.totalSize,
+      createdAt: new Date(collection.created).toISOString(),
+      updatedAt: new Date(collection.updated).toISOString(),
+    }))
+  }, [filteredCollections, currentPage, itemsPerPage])
 
   // Define card actions for projects
   const projectPrimaryActions: CardAction[] = useMemo(() => [
@@ -591,8 +775,26 @@ export default function HomePage() {
     },
   ], [handleAssetDelete])
 
+  // Define card actions for collections
+  const collectionPrimaryActions: CardAction[] = useMemo(() => [
+    {
+      label: 'Rename',
+      icon: <Edit className="h-4 w-4" />,
+      onClick: (card) => handleCollectionEdit(card.id, card.name),
+    },
+  ], [handleCollectionEdit])
+
+  const collectionSecondaryActions: CardAction[] = useMemo(() => [
+    {
+      label: 'Delete',
+      icon: <Trash className="h-4 w-4" />,
+      onClick: (card) => handleCollectionDelete(card.id, card.name),
+      variant: 'destructive' as const,
+    },
+  ], [handleCollectionDelete])
+
   const totalPages = Math.ceil(
-    (activeContext === 'projects' ? additionalFilteredProjects.length : filteredAssets.length) / itemsPerPage
+    (activeContext === 'projects' ? additionalFilteredProjects.length : activeContext === 'assets' ? filteredAssets.length : filteredCollections.length) / itemsPerPage
   )
 
   return (
@@ -628,7 +830,7 @@ export default function HomePage() {
         totalPages > 1 ? (
           <ProjectPagination
             currentPage={currentPage}
-            totalProjects={activeContext === 'projects' ? additionalFilteredProjects.length : filteredAssets.length}
+            totalProjects={activeContext === 'projects' ? additionalFilteredProjects.length : activeContext === 'assets' ? filteredAssets.length : filteredCollections.length}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
           />
@@ -640,7 +842,7 @@ export default function HomePage() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-500 dark:text-gray-400">
-              Loading {activeContext === 'projects' ? 'projects' : 'assets'}...
+              Loading {activeContext === 'projects' ? 'projects' : activeContext === 'assets' ? 'assets' : 'collections'}...
             </p>
           </div>
         </div>
@@ -662,7 +864,7 @@ export default function HomePage() {
             secondaryActions={projectSecondaryActions}
           />
         )
-      ) : (
+      ) : activeContext === 'assets' ? (
         viewMode === 'grid' ? (
           <GridView
             cards={assetCards}
@@ -678,6 +880,24 @@ export default function HomePage() {
             viewMode="list"
             primaryActions={assetPrimaryActions}
             secondaryActions={assetSecondaryActions}
+          />
+        )
+      ) : (
+        viewMode === 'grid' ? (
+          <GridView
+            cards={collectionCards}
+            columns={gridColumns}
+            viewMode="grid"
+            primaryActions={collectionPrimaryActions}
+            secondaryActions={collectionSecondaryActions}
+          />
+        ) : (
+          <ListView
+            cards={collectionCards}
+            columns={listColumns}
+            viewMode="list"
+            primaryActions={collectionPrimaryActions}
+            secondaryActions={collectionSecondaryActions}
           />
         )
       )}
@@ -869,8 +1089,66 @@ export default function HomePage() {
         multiple={true}
         compress={true}
         allowCompressionToggle={true}
-      hideLocalAssets={true}
-    />
+        hideLocalAssets={true}
+      />
+
+      {/* Collection Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={!!collectionToDelete}
+        onOpenChange={(open) => !open && setCollectionToDelete(null)}
+        itemName={collectionToDelete?.name}
+        itemType="collection"
+        onConfirm={handleConfirmCollectionDelete}
+        title="Confirm Collection Deletion"
+        description={`Are you sure you want to delete "${collectionToDelete?.name}"? This will not delete the individual assets, only the collection. This action cannot be undone.`}
+      />
+
+      {/* Collection Edit Dialog */}
+      <Dialog open={!!collectionToEdit} onOpenChange={(open) => !open && setCollectionToEdit(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rename Collection</DialogTitle>
+            <DialogDescription>
+              Enter a new name for this collection.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="collection-name" className="text-sm font-medium">
+                Collection Name
+              </label>
+              <Input
+                id="collection-name"
+                value={newCollectionName}
+                onChange={(e) => setNewCollectionName(e.target.value)}
+                placeholder="Enter collection name"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && newCollectionName.trim()) {
+                    handleConfirmCollectionEdit()
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCollectionToEdit(null)
+                setNewCollectionName("")
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmCollectionEdit}
+              disabled={!newCollectionName.trim()}
+            >
+              Rename
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
