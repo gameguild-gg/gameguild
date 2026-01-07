@@ -2,35 +2,37 @@
 
 import { ChevronDown, Code } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { CodeFile } from "./types"
+import type { CodeFile, FileTreeFolder } from "./types"
 import { cn } from "@/lib/utils"
 import { useState, useRef, useEffect } from "react"
 
 interface LanguageSelectorProps {
   files: CodeFile[]
-  focusIndexPath?: string
+  folders: FileTreeFolder[]
   activeFileId?: string
   onSelectLanguage: (fileId: string) => void
 }
 
 export function LanguageSelector({
   files,
-  focusIndexPath,
+  folders,
   activeFileId,
   onSelectLanguage,
 }: LanguageSelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Filter files by focusIndexPath and group by basename
+  // Filter files by focus folder and group by basename
   const getAvailableFiles = () => {
-    if (!focusIndexPath) return []
+    // Find folder marked as focus
+    const focusFolder = folders.find(f => f.isFocusFolder)
+    if (!focusFolder) return []
     
-    // Filter files that are in the index folder
+    // Filter files that are in the focus folder
     const indexFiles = files.filter(file => {
       const filePath = file.path
       const folderPath = filePath.substring(0, filePath.lastIndexOf('/'))
-      return folderPath === focusIndexPath
+      return folderPath === focusFolder.path
     })
 
     // Group by basename (name without extension)
@@ -72,7 +74,7 @@ export function LanguageSelector({
       <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
         <Code className="h-4 w-4 text-gray-400" />
         <span className="text-xs text-gray-500 dark:text-gray-400 italic">
-          No index folder selected
+          No focus folder selected (mark a folder as focus 🎯)
         </span>
       </div>
     )

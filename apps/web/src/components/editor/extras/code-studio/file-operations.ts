@@ -401,6 +401,23 @@ export function toggleFolderReadonly(
   }
 }
 
+export function toggleFocusFolder(
+  draft: CodeStudioData,
+  folderId: string
+): void {
+  const folder = draft.folders?.find(f => f.id === folderId)
+  if (folder) {
+    // Desmarcar todas as outras pastas como focus
+    draft.folders?.forEach(f => {
+      if (f.id !== folderId) {
+        f.isFocusFolder = false
+      }
+    })
+    // Toggle na pasta selecionada
+    folder.isFocusFolder = !folder.isFocusFolder
+  }
+}
+
 export function setAllFilesReadonly(
   draft: CodeStudioData,
   readonly: boolean
