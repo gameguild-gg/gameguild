@@ -29,6 +29,7 @@ export interface AssetCard extends BaseCard {
   size: number
   projects?: string[]
   thumbnailUrl?: string
+  assetType?: 'standard' | 'bundler'
 }
 
 export type ManagerCard = ProjectCard | AssetCard
@@ -46,6 +47,7 @@ export interface FilterConfig {
   tagFilterMode?: 'all' | 'any'
   storageType?: 'all' | 'local' | 'gameguild-cloud' | 'google-drive'
   mimeType?: string
+  assetType?: 'all' | 'standard' | 'bundler'
   projectFilter?: string
   usageFilter?: 'all' | 'used' | 'unused'
   dateFrom?: string

@@ -633,7 +633,7 @@ export function CodeStudioEditor({
             dataUrl: contentToSave,
             fileName: file.name,
             author: "Code Studio Collection Export",
-            type: "collection",
+            type: "bundler",
           })
 
           if (result.success && result.assetId) {
@@ -717,7 +717,7 @@ export function CodeStudioEditor({
               dataUrl: contentToSave,
               fileName: file.name,
               author: "Code Studio Collection Export",
-              type: "collection",
+              type: "bundler",
             })
 
             if (result.success && result.assetId) {
