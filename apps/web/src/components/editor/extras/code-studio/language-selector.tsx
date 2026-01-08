@@ -32,6 +32,8 @@ export function LanguageSelector({
   const [resetType, setResetType] = useState<"current" | "all">("current")
   const dropdownRef = useRef<HTMLDivElement>(null)
   const resetMenuRef = useRef<HTMLDivElement>(null)
+  // Track last selected file ID for each basename
+  const lastSelectedPerBasenameRef = useRef<Record<string, string>>({})
 
   // Filter files by focus folder and group by basename
   const getFileGroups = () => {
@@ -65,6 +67,13 @@ export function LanguageSelector({
   // Determine current basename from active file
   const activeFile = files.find(f => f.id === activeFileId)
   const currentBasename = activeFile ? activeFile.name.substring(0, activeFile.name.lastIndexOf('.')) : basenames[0] || null
+
+  // Update last selected file when active file changes
+  useEffect(() => {
+    if (activeFile && currentBasename) {
+      lastSelectedPerBasenameRef.current[currentBasename] = activeFile.id
+    }
+  }, [activeFile, currentBasename])
 
   // Reset handlers
   const handleResetClick = (type: "current" | "all") => {
@@ -187,9 +196,22 @@ export function LanguageSelector({
           <Code className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
           {basenames.map((basename) => {
             const basenameFiles = fileGroups.get(basename) || []
-            const activeBasenameFile = basenameFiles.find(f => f.id === activeFileId)
             const isCurrentBasename = basename === currentBasename
-            const activeExtension = activeBasenameFile?.name.split('.').pop() || basenameFiles[0]?.name.split('.').pop() || "js"
+            
+            // Determine which file to show in the dropdown button
+            let displayFile: CodeFile | undefined
+            if (isCurrentBasename) {
+              // Current basename: show active file
+              displayFile = basenameFiles.find(f => f.id === activeFileId)
+            } else {
+              // Other basename: show last selected or first
+              const lastSelectedId = lastSelectedPerBasenameRef.current[basename]
+              displayFile = lastSelectedId 
+                ? basenameFiles.find(f => f.id === lastSelectedId)
+                : undefined
+            }
+            
+            const activeExtension = displayFile?.name.split('.').pop() || basenameFiles[0]?.name.split('.').pop() || "js"
             const isOpen = openDropdown === basename
 
             return (
@@ -197,11 +219,15 @@ export function LanguageSelector({
                 <FileCode className="h-3 w-3 text-gray-500 dark:text-gray-400" />
                 <button
                   onClick={() => {
-                    // Select first file of this basename if not already on this basename
+                    // Select last selected file of this basename, or first if none selected before
                     if (!isCurrentBasename) {
-                      const firstFile = basenameFiles[0]
-                      if (firstFile) {
-                        onSelectLanguage(firstFile.id)
+                      const lastSelectedId = lastSelectedPerBasenameRef.current[basename]
+                      const fileToSelect = lastSelectedId 
+                        ? basenameFiles.find(f => f.id === lastSelectedId) || basenameFiles[0]
+                        : basenameFiles[0]
+                      
+                      if (fileToSelect) {
+                        onSelectLanguage(fileToSelect.id)
                       }
                     }
                   }}

@@ -73,6 +73,7 @@ export function CodeStudioEditor({
   const terminalRef = useRef<XTermTerminalHandle | null>(null)
   const initializedRef = useRef(false)
   const originalDataRef = useRef<CodeStudioData>(JSON.parse(JSON.stringify(data)))
+  const lastProcessedContentsRef = useRef<Record<string, string>>({})
 
   // Initialize runner and Monaco file system
   useEffect(() => {
@@ -139,8 +140,9 @@ export function CodeStudioEditor({
   }, [])
   
   // Sincronizar arquivos quando mudarem ou quando conteúdos forem resolvidos
+  // Note: Não incluir resolvedContents nas dependências para evitar re-sync constante
   useEffect(() => {
-    if (localData.files.length > 0 && Object.keys(resolvedContents).length > 0) {
+    if (localData.files.length > 0) {
       // Criar versão dos arquivos com conteúdos resolvidos
       const filesWithResolvedContent = localData.files.map(file => ({
         ...file,
@@ -148,7 +150,7 @@ export function CodeStudioEditor({
       }))
       syncFilesToMonacoFS(filesWithResolvedContent, localData.id)
     }
-  }, [localData.files, localData.id, resolvedContents])
+  }, [localData.files, localData.id])
 
   // Sincronizar com mudanças externas apenas na primeira montagem
   useEffect(() => {
@@ -186,24 +188,38 @@ export function CodeStudioEditor({
   // Resolver conteúdos de assets quando necessário
   useEffect(() => {
     const resolveContents = async () => {
-      const newResolvedContents: Record<string, string> = {}
+      const updates: Record<string, string> = {}
+      let hasChanges = false
       
       for (const file of localData.files) {
+        let newContent: string
+        
         // Se é referência a asset, resolver
         if (FileOps.isAssetReference(file.content)) {
-          const resolved = await FileOps.resolveFileContent(file)
-          newResolvedContents[file.id] = resolved
+          newContent = await FileOps.resolveFileContent(file)
         } else {
-          // Conteúdo direto - sempre usar file.content atualizado
-          newResolvedContents[file.id] = file.content
+          // Conteúdo direto
+          newContent = file.content
+        }
+        
+        // Só atualizar se realmente mudou comparado com o último processado
+        if (lastProcessedContentsRef.current[file.id] !== newContent) {
+          updates[file.id] = newContent
+          lastProcessedContentsRef.current[file.id] = newContent
+          hasChanges = true
         }
       }
       
-      setResolvedContents(newResolvedContents)
+      // Aplicar todas as mudanças de uma vez
+      if (hasChanges) {
+        setResolvedContents(draft => {
+          Object.assign(draft, updates)
+        })
+      }
     }
     
     resolveContents()
-  }, [localData.files, setResolvedContents])
+  }, [localData.files])
 
   // Se não há modo definido, não renderizar nada
   if (!localData.mode) {
@@ -236,8 +252,8 @@ export function CodeStudioEditor({
         // Armazenar o novo conteúdo (já não é mais referência)
         file.content = content
         
-        // Atualizar também no sistema de arquivos virtual do Monaco com instanceId
-        updateMonacoFile(file.path, content, draft.id)
+        // Não chamar updateMonacoFile aqui - o Monaco já está gerenciando o arquivo
+        // e chamar isso causaria uma atualização circular
       }
     })
   }
@@ -257,9 +273,12 @@ export function CodeStudioEditor({
       }
     })
 
-    // Clear resolved content for this file to force re-resolution
+    // Force update resolved content to trigger Monaco re-render
     setResolvedContents(draft => {
-      delete draft[fileId]
+      const originalFile = originalDataRef.current.files.find(f => f.id === fileId)
+      if (originalFile) {
+        draft[fileId] = originalFile.content
+      }
     })
   }
 
@@ -278,8 +297,12 @@ export function CodeStudioEditor({
       })
     })
 
-    // Clear all resolved contents to force re-resolution
-    setResolvedContents({})
+    // Force update all resolved contents to trigger Monaco re-render
+    setResolvedContents(draft => {
+      originalDataRef.current.files.forEach(originalFile => {
+        draft[originalFile.id] = originalFile.content
+      })
+    })
   }
 
   // File Management
