@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Editor, { OnMount } from '@monaco-editor/react';
-import { Play } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { Play } from 'lucide-react';
+import React, { useState } from 'react';
 
-export type CodeLanguage = 'c' | 'cpp' | 'python' | 'javascript' | 'typescript' | 'rust' | 'c#' | 'lua';
+export type CodeLanguage = 'c' | 'cpp' | 'python' | 'javascript' | 'typescript' | 'rust' | 'c#' | 'lua' | 'sql';
 
-export function triggerConfetti() {
+export function triggerConfetti(): void {
   const duration = 1000; // 1 second
   const animationEnd = Date.now() + duration;
   const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
 
-  function randomInRange(min: number, max: number) {
+  function randomInRange(min: number, max: number): number {
     return Math.random() * (max - min) + min;
   }
 
@@ -42,20 +42,21 @@ export interface MarkdownCodeActivityProps {
   code: string;
   description: string;
   language: CodeLanguage;
-  expectedOutput: string;
-  stdin: string;
+  expectedOutput?: string;
+  stdin?: string;
   height?: number;
 }
 
-export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
+export function MarkdownCodeActivity(params: MarkdownCodeActivityProps): React.ReactElement {
   const [stdErr, setStdErr] = useState<string>('');
   const [stdOut, setStdOut] = useState<string>('');
   const [code, setCode] = useState<string>(params.code);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [isRunning, setIsRunning] = useState(false);
 
+
   const onEditorDidMount: OnMount = (editor) => {
-    const updateHeight = () => {
+    const updateHeight = (): void => {
       const contentHeight = editor.getContentHeight();
       const currentWidth = editor.getLayoutInfo().width;
 
@@ -67,37 +68,89 @@ export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
     updateHeight();
   };
 
-  const handleRunCode = async () => {
+  const handleRunCode = async (): Promise<void> => {
     setIsRunning(true);
     setStdErr('');
     setStdOut('');
     setIsCorrect(null);
-    
-    // Simulate code execution for demo purposes
-    setTimeout(() => {
-      // This is a simplified version - in a real implementation, you'd have actual code execution
+
+
+    try {
       let actualOutput = '';
-      
-      // Simple simulation based on the code content
-       if (params.language === 'python' && code.includes('print(')) {
-         // Extract what's being printed
-         const printMatch = code.match(/print\(['"]([^'"]*)['"]\)/);
-         if (printMatch && printMatch[1]) {
-           actualOutput = printMatch[1];
-         }
-       }
-      
-      setStdOut(actualOutput);
-      setIsRunning(false);
-      
-      // Compare actual output with expected output
-      const isOutputCorrect = actualOutput.trim() === params.expectedOutput.trim();
-      setIsCorrect(isOutputCorrect);
-      
-      if (isOutputCorrect) {
-        triggerConfetti();
+
+      if (params.language === 'python' && code.includes('print(')) {
+        const printMatch = code.match(/print\(['"]([^'"]*)['"]\)/);
+        if (printMatch !== null && typeof printMatch[1] === 'string') {
+          actualOutput = printMatch[1];
+        }
+      } else if (params.language === 'sql') {
+        const { default: initSqlJs } = await import('sql.js');
+        const SQL = await initSqlJs({ locateFile: (file: string) => `https://sql.js.org/dist/${file}` });
+        const db = new SQL.Database();
+
+        // Run setup statements from stdin first (e.g., CREATE TABLE, INSERT)
+        if (params.stdin !== undefined && params.stdin.length > 0) {
+          db.exec(params.stdin);
+        }
+
+        // Execute the user's code and capture results
+        const results = db.exec(code);
+
+        // Format all result sets
+        const outputParts: string[] = [];
+        for (const result of results) {
+          if (result.values.length > 0) {
+            const rows = result.values.map((row: Array<string | number | null>) =>
+              row
+                .map((cell: string | number | null) => {
+                  if (cell === null || cell === undefined) return 'NULL';
+                  if (typeof cell === 'number') return cell.toString();
+                  return String(cell);
+                })
+                .join(' | '),
+            );
+            outputParts.push(rows.join('\n'));
+          }
+        }
+        actualOutput = outputParts.join('\n');
+
+        // If no results but query executed successfully, show a message for DDL statements
+        if (actualOutput === '' && results.length === 0) {
+          // Check if it's a SELECT that returned no rows vs DDL statement
+          const upperCode = code.toUpperCase().trim();
+          if (upperCode.startsWith('SELECT')) {
+            actualOutput = '(no rows returned)';
+          } else {
+            actualOutput = 'Query executed successfully';
+          }
+        }
+
+        db.close();
       }
-    }, 2000);
+
+      setStdOut(actualOutput);
+
+      // Only validate if expectedOutput is provided and non-empty
+      const expectedOutput = params.expectedOutput ?? '';
+      const hasExpectedOutput = expectedOutput.trim().length > 0;
+      if (hasExpectedOutput) {
+        const isOutputCorrect = actualOutput.trim() === expectedOutput.trim();
+        setIsCorrect(isOutputCorrect);
+
+        if (isOutputCorrect) {
+          triggerConfetti();
+        }
+      } else {
+        // No expected output - just display result without validation
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error executing code';
+      console.error('Code activity error:', message, error);
+      setStdErr(message);
+      setIsCorrect(false);
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   return (
@@ -109,7 +162,7 @@ export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
             defaultLanguage={params.language}
             theme="vs-dark"
             value={code}
-            onChange={(value) => setCode(value || '')}
+            onChange={(value) => setCode(value ?? '')}
             height={'100%'}
             width={'100%'}
             onMount={onEditorDidMount}
@@ -146,15 +199,15 @@ export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
           </div>
         )}
 
-        {/* Área de saída */}
-        {isCorrect === null && (
+        {/* Output area - always show when no expected output, or when not yet validated */}
+        {(isCorrect === null || (params.expectedOutput === undefined || params.expectedOutput.trim().length === 0)) && (
           <>
             <Card className="bg-[#2d2d2d] text-white p-4 min-h-fit font-mono">
               {isRunning && <p>Running {params.language} code...</p>}
               {!isRunning && stdOut && (
                 <>
                   <p className="text-green-100">Output:</p>
-                  <p className="text-green-400">{stdOut}</p>
+                  <p className="text-green-400 whitespace-pre-wrap">{stdOut}</p>
                 </>
               )}
               {stdErr &&
@@ -167,8 +220,8 @@ export function MarkdownCodeActivity(params: MarkdownCodeActivityProps) {
           </>
         )}
 
-        {/* Botões */}
-        {isCorrect !== true && (
+        {/* Botões - always show when no expected output (sandbox mode), or when not yet correct */}
+        {(isCorrect !== true || params.expectedOutput === undefined || params.expectedOutput.trim().length === 0) && (
           <div className="flex justify-between">
             <Button
               variant="secondary"

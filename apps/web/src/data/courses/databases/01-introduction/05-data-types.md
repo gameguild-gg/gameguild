@@ -66,5 +66,4 @@ Each type may have different names or variations depending on the specific datab
 - **Full-text search** (e.g., indexed text for search queries)
 - **CIDR** (e.g., network address blocks)
 
-## Database Taxonomy
 

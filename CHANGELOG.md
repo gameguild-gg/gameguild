@@ -1,3 +1,52 @@
+# [2.34.0](https://github.com/gameguild-gg/gameguild/compare/v2.33.0...v2.34.0) (2026-01-07)
+
+
+### Features
+
+* **courses/networking/week02:** Add Network Addressing module with C++ assignment ([8b95938](https://github.com/gameguild-gg/gameguild/commit/8b95938c8ed9225aa54a749c06e0aabb956417ce))
+
+# [2.33.0](https://github.com/gameguild-gg/gameguild/compare/v2.32.0...v2.33.0) (2026-01-06)
+
+
+### Features
+
+* **courses/ai4games2/fsm:** Add Finite State Machine assignment ([176531f](https://github.com/gameguild-gg/gameguild/commit/176531f405377d407e03e6c4c4242f4c2823be01))
+
+# [2.32.0](https://github.com/gameguild-gg/gameguild/compare/v2.31.0...v2.32.0) (2026-01-06)
+
+
+### Features
+
+* **courses/ai4games2/fsm:** Refine FSM example with state registration and improved transition mapping ([a9099cd](https://github.com/gameguild-gg/gameguild/commit/a9099cd877b4728d3d9f96fb353332bd6fb860ce))
+
+# [2.31.0](https://github.com/gameguild-gg/gameguild/compare/v2.30.0...v2.31.0) (2026-01-06)
+
+
+### Features
+
+* **apps/web/ai4games2:** Add FSM & Decision Architectures module, reorganize course content ([f3b7551](https://github.com/gameguild-gg/gameguild/commit/f3b755194099de35f60f69d49e280fa199243b70))
+
+# [2.30.0](https://github.com/gameguild-gg/gameguild/compare/v2.29.0...v2.30.0) (2026-01-05)
+
+
+### Features
+
+* **courses/ai4games2:** Add slug for syllabus content ([967838a](https://github.com/gameguild-gg/gameguild/commit/967838a0440ce742734cedddea07588967cea572))
+
+# [2.29.0](https://github.com/gameguild-gg/gameguild/compare/v2.28.0...v2.29.0) (2026-01-05)
+
+
+### Features
+
+* **apps/web/markdown-renderer:** Implement SQL support in code activity component ([9e54d41](https://github.com/gameguild-gg/gameguild/commit/9e54d41a848fb4c4341e5965d2e2c690c38b1b71))
+
+# [2.28.0](https://github.com/gameguild-gg/gameguild/compare/v2.27.0...v2.28.0) (2026-01-04)
+
+
+### Features
+
+* **databases/week1:** Add Quiz 01 and refine Week 1 course content ([a8d4ede](https://github.com/gameguild-gg/gameguild/commit/a8d4ede56dfe15b6474184669e75dadfec14e364))
+
 # [2.27.0](https://github.com/gameguild-gg/gameguild/compare/v2.26.0...v2.27.0) (2026-01-04)
 
 

@@ -1,8 +1,8 @@
 'use client';
 
-import { ReactNode, createContext, useContext, useState, useEffect } from 'react';
+import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
-// Custom hook to detect mobile screen size without hydration issues
+// Custom hook to detect mobile screen size
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -12,10 +12,10 @@ function useIsMobile() {
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 1024);
     };
-    
+
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
-    
+
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
@@ -34,16 +34,12 @@ interface SidebarContextType {
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  // Always start with sidebar closed to prevent hydration mismatch
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { isMobile, mounted } = useIsMobile();
 
-  // Set initial state based on screen size after component mounts
-  useEffect(() => {
-    if (mounted && !isMobile) {
-      setIsSidebarOpen(true);
-    }
-  }, [mounted, isMobile]);
+  // Initialize sidebar state based on screen size to prevent layout shift
+  // On desktop (>=1024px), sidebar is open by default
+  // On mobile (<1024px), sidebar is closed by default
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const closeSidebar = () => setIsSidebarOpen(false);

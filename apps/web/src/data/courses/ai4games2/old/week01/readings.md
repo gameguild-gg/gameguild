@@ -12,6 +12,4 @@
 
 ## Try it out in class
 
-- [FastNoise2](https://github.com/Auburn/FastNoise2) Download the latest release and try to generate something with it,
-  then share with your peers.
-
+- [FastNoise2](https://github.com/Auburn/FastNoise2) Download the latest release and try to generate something with it, then share with your peers.
