@@ -310,6 +310,27 @@ export function CodeStudioEditor({
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
 
+    // Check if there's a focus-editor in the active display
+    const hasFocusEditor = activeDisplay.panels.some(p => p.type === "focus-editor")
+    
+    if (hasFocusEditor) {
+      // Find the focus folder
+      const focusFolder = localData.folders?.find(f => f.isFocusFolder)
+      
+      if (focusFolder) {
+        // Check if the file is in the focus folder
+        const file = localData.files.find(f => f.id === fileId)
+        if (file) {
+          const fileFolderPath = file.path.substring(0, file.path.lastIndexOf('/'))
+          
+          // If file is not in focus folder, don't select it
+          if (fileFolderPath !== focusFolder.path) {
+            return
+          }
+        }
+      }
+    }
+
     setLocalData(draft => {
       TabOps.selectFile(draft, fileId, panelId, activeDisplay)
     })
