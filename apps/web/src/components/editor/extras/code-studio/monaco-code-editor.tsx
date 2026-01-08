@@ -108,6 +108,8 @@ export function MonacoCodeEditor({
     url: "",
   })
   const { resolvedTheme, theme: themeState } = useTheme()
+  const isUserTypingRef = useRef(false)
+  const lastValueRef = useRef(value)
   
   // Determinar o tema atual (dark ou light) - usa theme como fallback
   const effectiveTheme = resolvedTheme || themeState
@@ -297,10 +299,43 @@ export function MonacoCodeEditor({
   }
 
   const handleChange = (value: string | undefined) => {
+    isUserTypingRef.current = true
     if (onChange && !readonly) {
       onChange(value || "")
     }
   }
+
+  // Atualizar conteúdo do editor quando value mudar externamente (reset)
+  useEffect(() => {
+    if (editorRef.current && !isUserTypingRef.current && value !== lastValueRef.current) {
+      const editor = editorRef.current
+      const model = editor.getModel()
+      if (model) {
+        const currentValue = model.getValue()
+        if (currentValue !== value) {
+          // Salvar posição do cursor
+          const position = editor.getPosition()
+          
+          // Atualizar conteúdo
+          model.setValue(value)
+          
+          // Restaurar posição do cursor se ainda válida
+          if (position) {
+            editor.setPosition(position)
+          }
+        }
+      }
+      lastValueRef.current = value
+    }
+    
+    // Resetar flag após um breve delay
+    if (isUserTypingRef.current) {
+      const timeout = setTimeout(() => {
+        isUserTypingRef.current = false
+      }, 100)
+      return () => clearTimeout(timeout)
+    }
+  }, [value])
 
   // Atualizar opções quando props mudarem
   useEffect(() => {
@@ -337,7 +372,7 @@ export function MonacoCodeEditor({
         key={fileId} // Força nova instância do Monaco para cada arquivo
         height={height}
         language={language}
-        value={value}
+        defaultValue={value} // Usar defaultValue ao invés de value para modo não-controlado
         path={filePath && instanceId ? `file:///${instanceId}/${filePath}` : filePath ? `file:///${filePath}` : undefined} // URI único com instanceId
         onChange={handleChange}
         beforeMount={handleEditorWillMount}
