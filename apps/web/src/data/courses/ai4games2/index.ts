@@ -5,36 +5,41 @@ import {
   ProgramContent,
 } from "@/lib/api/generated";
 
-import ai4games2ExtraLecture from "./chapters/extras/llms.md";
-import ai4games2Week01Lecture from "./chapters/week01/lecture.md";
-import ai4games2Week01Readings from "./chapters/week01/readings.md";
-import ai4games2Week02Lecture from "./chapters/week02/lecture.md";
-import ai4games2Week02Pcg from "./chapters/week02/pcg.md";
-import ai4games2Week03Astar from "./chapters/week03/a-star.md";
-import ai4games2Week03Lecture from "./chapters/week03/lecture.md";
-import ai4games2Week04Assignment from "./chapters/week04/assignment.md";
-import ai4games2Week04Lecture from "./chapters/week04/lecture.md";
-import ai4games2Week05Lecture from "./chapters/week05/lecture.md";
-import ai4games2Week05Lecture2 from "./chapters/week05/lecture2.md";
-import ai4games2Week06Lecture from "./chapters/week06/lecture.md";
-import ai4games2Week07Lecture from "./chapters/week07/lecture.md";
-import ai4games2Week08Lecture from "./chapters/week08/lecture.md";
-import ai4games2Week09Lecture from "./chapters/week09/lecture.md";
-import ai4games2Week10Lecture from "./chapters/week10/lecture.md";
-import ai4games2Week11Assignment from "./chapters/week11/assignment.md";
-import ai4games2Week11Board from "./chapters/week11/board.md";
-import ai4games2Week12Lecture from "./chapters/week12/lecture.md";
-import ai4games2Week13Lecture from "./chapters/week13/lecture.md";
+import ai4games2Week01Lecture from "./01-fsm/01-lecture.md";
+import ai4games2Week01Readings from "./01-fsm/02-readings.md";
+import ai4games2Week01Quiz from "./01-fsm/03-quiz.md";
+import ai4games2Week01Setup from "./01-fsm/04-setup.md";
+import ai4games2Week01Assignment from "./01-fsm/05-assignment.md";
+import ai4games2ExtraOldLecture from "./old/extras/llms.md";
+import ai4games2Week01OldLecture from "./old/week01/lecture.md";
+import ai4games2Week01OldReadings from "./old/week01/readings.md";
+import ai4games2Week02OldLecture from "./old/week02/lecture.md";
+import ai4games2Week02OldPcg from "./old/week02/pcg.md";
+import ai4games2Week03OldAstar from "./old/week03/a-star.md";
+import ai4games2Week03OldLecture from "./old/week03/lecture.md";
+import ai4games2Week04OldAssignment from "./old/week04/assignment.md";
+import ai4games2Week04OldLecture from "./old/week04/lecture.md";
+import ai4games2Week05OldLecture from "./old/week05/lecture.md";
+import ai4games2Week05OldLecture2 from "./old/week05/lecture2.md";
+import ai4games2Week06OldLecture from "./old/week06/lecture.md";
+import ai4games2Week07OldLecture from "./old/week07/lecture.md";
+import ai4games2Week08OldLecture from "./old/week08/lecture.md";
+import ai4games2Week09OldLecture from "./old/week09/lecture.md";
+import ai4games2Week10OldLecture from "./old/week10/lecture.md";
+import ai4games2Week11OldAssignment from "./old/week11/assignment.md";
+import ai4games2Week11OldBoard from "./old/week11/board.md";
+import ai4games2Week12OldLecture from "./old/week12/lecture.md";
+import ai4games2Week13OldLecture from "./old/week13/lecture.md";
 import ai4games2Syllabus from "./syllabus.md";
 
 export const ai4games2Program: Program = {
-  id: "ai4games-program-2",
+  id: "ai4games2-program",
   title: "Advanced Game AI",
   description:
     "Learn advanced artificial intelligence techniques specifically designed for game development, including pathfinding, decision-making, and procedural content generation.",
   slug: "ai4games2",
   thumbnail:
-    "https://placehold.co/400x225/1f2937/ffffff.png?text=Advanced+Game+AI",
+    "https://i.imgur.com/cooKXbw.jpeg",
   videoShowcaseUrl: null,
   estimatedHours: 60,
   enrollmentStatus: 0,
@@ -53,14 +58,14 @@ export const ai4games2Program: Program = {
 };
 
 export const ai4games2Product: Product = {
-  id: "ai4games2-product-1",
+  id: "ai4games2-product",
   title: "Advanced Game AI Course",
   name: "Advanced Game AI",
   description: "Master advanced AI techniques for game development",
   shortDescription:
     "Learn advanced pathfinding, decision-making, and procedural content generation",
   imageUrl:
-    "https://placehold.co/400x225/1f2937/ffffff.png?text=Advanced+Game+AI",
+    "https://i.imgur.com/cooKXbw.jpeg",
   type: 0,
   isBundle: false,
   creatorId: "1",
@@ -81,10 +86,10 @@ export const ai4games2Product: Product = {
 };
 
 export const ai4games2ProductProgram: ProductProgram = {
-  id: "ai4games2-product-program-1",
-  productId: "ai4games2-product-1",
+  id: "ai4games2-product-program",
+  productId: "ai4games2-product",
   product: ai4games2Product,
-  programId: "ai4games-program-2",
+  programId: "ai4games2-program",
   program: ai4games2Program,
   sortOrder: 1,
   createdAt: "2023-01-01T00:00:00Z",
@@ -92,18 +97,19 @@ export const ai4games2ProductProgram: ProductProgram = {
 };
 
 export const ai4games2SyllabusContent: ProgramContent = {
-  id: "ai4games-syllabus",
-  programId: "ai4games-program-2",
+  id: "ai4games2-syllabus",
+  programId: "ai4games2-program",
   parentId: undefined,
   title: "Course Syllabus",
-  description: "AI for Games course overview and objectives",
+  slug: "syllabus",
+  description: "Advanced AI for Games course overview and objectives",
   type: 0,
   body: ai4games2Syllabus,
   sortOrder: 1,
   isRequired: true,
   gradingMethod: 0,
   maxPoints: null,
-  estimatedMinutes: 30,
+  estimatedMinutes: 20,
   visibility: 1,
   program: ai4games2Program,
   parent: undefined,
@@ -113,15 +119,88 @@ export const ai4games2SyllabusContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week01Content: ProgramContent = {
-  id: "ai4games-week-01",
-  programId: "ai4games-program-2",
+// Parent container for all old content
+export const ai4games2OldContent: ProgramContent = {
+  id: "ai4games2-old",
+  programId: "ai4games2-program",
   parentId: undefined,
-  title: "Week 1: Course Overview and Expectations",
-  description: "Introduction and course expectations",
+  title: "Old Content (Archive)",
+  slug: "old",
+  description: "Archived course content from previous versions",
+  type: 0,
+  body: "# Archived Content\n\nThis section contains archived content from previous versions of the course.",
+  sortOrder: 2,
+  isRequired: false,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 1,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+// Old Week 01 Content (from archived version)
+export const ai4games2Week01OldLectureContent: ProgramContent = {
+  id: "ai4games2-week-01-old-lecture",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 1: Introduction",
+  slug: "week-01",
+  description: "Archived week 1 lecture content",
+  type: 0,
+  body: ai4games2Week01OldLecture,
+  sortOrder: 1,
+  isRequired: false,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2OldContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week01OldReadingsContent: ProgramContent = {
+  id: "ai4games2-week-01-old-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-01-old-lecture",
+  title: "Week 1: Readings",
+  slug: "readings",
+  description: "Archived week 1 readings",
+  type: 0,
+  body: ai4games2Week01OldReadings,
+  sortOrder: 1,
+  isRequired: false,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week01OldLectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+// New Week 01 Content (Primary, from 01-fsm folder)
+export const ai4games2Week01LectureContent: ProgramContent = {
+  id: "ai4games2-week-01-lecture",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 1: FSM & Decision Basics",
+  slug: "week-01",
+  description: "Finite state machines, behavior trees, and decision architectures fundamentals",
   type: 0,
   body: ai4games2Week01Lecture,
-  sortOrder: 2,
+  sortOrder: 1,
   isRequired: true,
   gradingMethod: 0,
   maxPoints: null,
@@ -136,35 +215,152 @@ export const ai4games2Week01Content: ProgramContent = {
 };
 
 export const ai4games2Week01ReadingsContent: ProgramContent = {
-  id: "ai4games-week-01-readings",
-  programId: "ai4games-program-2",
-  parentId: "ai4games-week-01",
+  id: "ai4games2-week-01-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-01-lecture",
   title: "Week 1: Readings",
-  description: "Required readings for Week 1",
+  slug: "readings",
+  description: "Required readings and videos for FSM and Behavior Trees",
   type: 0,
   body: ai4games2Week01Readings,
-  sortOrder: 3,
+  sortOrder: 1,
   isRequired: true,
   gradingMethod: 0,
   maxPoints: null,
-  estimatedMinutes: 45,
+  estimatedMinutes: 120,
   visibility: 1,
   program: ai4games2Program,
-  parent: ai4games2Week01Content,
+  parent: ai4games2Week01LectureContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week02Content: ProgramContent = {
-  id: "ai4games-week-02",
-  programId: "ai4games-program-2",
-  parentId: undefined,
+export const ai4games2Week01QuizContent: ProgramContent = {
+  id: "ai4games2-week-01-quiz",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-01-lecture",
+  title: "Week 1: Quiz",
+  slug: "quiz",
+  description: "Test your understanding of FSM concepts, state patterns, and transitions",
+  type: 0,
+  body: ai4games2Week01Quiz,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 10,
+  estimatedMinutes: 15,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week01LectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week01SetupContent: ProgramContent = {
+  id: "ai4games2-week-01-setup",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-01-lecture",
+  title: "Week 1: Setup",
+  slug: "setup",
+  description: "Repository setup, development environment, and assignment submission workflow",
+  type: 0,
+  body: ai4games2Week01Setup,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 30,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week01LectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week01AssignmentContent: ProgramContent = {
+  id: "ai4games2-week-01-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-01-lecture",
+  title: "Week 1: Assignment",
+  slug: "assignment",
+  description: "Implement a simple finite state machine with proper state patterns",
+  type: 0,
+  body: ai4games2Week01Assignment,
+  sortOrder: 4,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 180,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week01LectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week02OldContent: ProgramContent = {
+  id: "ai4games2-week-02",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
   title: "Week 2: Procedural Content Generation",
+  slug: "week-02",
   description: "PCG concepts and techniques",
   type: 0,
-  body: ai4games2Week02Lecture,
+  body: ai4games2Week02OldLecture,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2OldContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week02OldPcgContent: ProgramContent = {
+  id: "ai4games2-week-02-pcg",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-02",
+  title: "Week 2: PCG Materials",
+  slug: "pcg",
+  description: "Supplementary PCG resources",
+  type: 0,
+  body: ai4games2Week02OldPcg,
+  sortOrder: 2,
+  isRequired: false,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week02OldContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week03OldContent: ProgramContent = {
+  id: "ai4games2-week-03",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 3: Pathfinding",
+  slug: "week-03",
+  description: "Pathfinding algorithms and heuristics",
+  type: 0,
+  body: ai4games2Week03OldLecture,
   sortOrder: 4,
   isRequired: true,
   gradingMethod: 0,
@@ -172,43 +368,91 @@ export const ai4games2Week02Content: ProgramContent = {
   estimatedMinutes: 90,
   visibility: 1,
   program: ai4games2Program,
-  parent: undefined,
+  parent: ai4games2OldContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week02PcgContent: ProgramContent = {
-  id: "ai4games-week-02-pcg",
-  programId: "ai4games-program-2",
-  parentId: "ai4games-week-02",
-  title: "Week 2: PCG Materials",
-  description: "Supplementary PCG resources",
+export const ai4games2Week03OldAstarContent: ProgramContent = {
+  id: "ai4games2-week-03-astar",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-03",
+  title: "Week 3: A* Algorithm",
+  slug: "astar",
+  description: "Deep dive into A*",
   type: 0,
-  body: ai4games2Week02Pcg,
-  sortOrder: 5,
-  isRequired: false,
+  body: ai4games2Week03OldAstar,
+  sortOrder: 2,
+  isRequired: true,
   gradingMethod: 0,
   maxPoints: null,
   estimatedMinutes: 60,
   visibility: 1,
   program: ai4games2Program,
-  parent: ai4games2Week02Content,
+  parent: ai4games2Week03OldContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week03Content: ProgramContent = {
-  id: "ai4games-week-03",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 3: Pathfinding",
-  description: "Pathfinding algorithms and heuristics",
+export const ai4games2Week04OldContent: ProgramContent = {
+  id: "ai4games2-week-04",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 4: Decision Making",
+  slug: "week-04",
+  description: "State machines and behavior trees",
   type: 0,
-  body: ai4games2Week03Lecture,
+  body: ai4games2Week04OldLecture,
+  sortOrder: 5,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2OldContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week04OldAssignmentContent: ProgramContent = {
+  id: "ai4games2-week-04-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-04",
+  title: "Week 4: Assignment",
+  slug: "assignment",
+  description: "Implement a behavior tree",
+  type: 0,
+  body: ai4games2Week04OldAssignment,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 180,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week04OldContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week05OldContent: ProgramContent = {
+  id: "ai4games2-week-05",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 5: Advanced Topics",
+  slug: "week-05",
+  description: "Utility AI and decision systems",
+  type: 0,
+  body: ai4games2Week05OldLecture,
   sortOrder: 6,
   isRequired: true,
   gradingMethod: 0,
@@ -216,43 +460,68 @@ export const ai4games2Week03Content: ProgramContent = {
   estimatedMinutes: 90,
   visibility: 1,
   program: ai4games2Program,
-  parent: undefined,
+  parent: ai4games2OldContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week03AstarContent: ProgramContent = {
-  id: "ai4games-week-03-astar",
-  programId: "ai4games-program-2",
-  parentId: "ai4games-week-03",
-  title: "Week 3: A* Algorithm",
-  description: "Deep dive into A*",
+export const ai4games2Week05OldCsharpContent: ProgramContent = {
+  id: "ai4games2-week-05-csharp",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-05",
+  title: "Week 5: C# Systems",
+  slug: "csharp",
+  description: "C# implementation details",
   type: 0,
-  body: ai4games2Week03Astar,
-  sortOrder: 7,
-  isRequired: true,
+  body: ai4games2Week05OldLecture2,
+  sortOrder: 2,
+  isRequired: false,
   gradingMethod: 0,
   maxPoints: null,
   estimatedMinutes: 60,
   visibility: 1,
   program: ai4games2Program,
-  parent: ai4games2Week03Content,
+  parent: ai4games2Week05OldContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week04Content: ProgramContent = {
-  id: "ai4games-week-04",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 4: Decision Making",
-  description: "State machines and behavior trees",
+export const ai4games2Week06OldContent: ProgramContent = {
+  id: "ai4games2-week-06",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 6: Navigation Meshes",
+  slug: "week-06",
+  description: "NavMesh fundamentals",
   type: 0,
-  body: ai4games2Week04Lecture,
+  body: ai4games2Week06OldLecture,
+  sortOrder: 7,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2OldContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week07OldContent: ProgramContent = {
+  id: "ai4games2-week-07",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 7: Steering Behaviors",
+  slug: "week-07",
+  description: "Flocking and movement",
+  type: 0,
+  body: ai4games2Week07OldLecture,
   sortOrder: 8,
   isRequired: true,
   gradingMethod: 0,
@@ -260,109 +529,137 @@ export const ai4games2Week04Content: ProgramContent = {
   estimatedMinutes: 90,
   visibility: 1,
   program: ai4games2Program,
-  parent: undefined,
+  parent: ai4games2OldContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week04AssignmentContent: ProgramContent = {
-  id: "ai4games-week-04-assignment",
-  programId: "ai4games-program-2",
-  parentId: "ai4games-week-04",
-  title: "Week 4: Assignment",
-  description: "Implement a behavior tree",
+export const ai4games2Week08OldContent: ProgramContent = {
+  id: "ai4games2-week-08",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 8: Tactical AI",
+  slug: "week-08",
+  description: "Tactics and strategy",
   type: 0,
-  body: ai4games2Week04Assignment,
+  body: ai4games2Week08OldLecture,
   sortOrder: 9,
-  isRequired: true,
-  gradingMethod: 1,
-  maxPoints: 100,
-  estimatedMinutes: 180,
-  visibility: 1,
-  program: ai4games2Program,
-  parent: ai4games2Week04Content,
-  children: [],
-  contentInteractions: [],
-  createdAt: "2023-01-01T00:00:00Z",
-  updatedAt: "2023-01-01T00:00:00Z",
-};
-
-export const ai4games2Week05Content: ProgramContent = {
-  id: "ai4games-week-05",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 5: Advanced Topics",
-  description: "Utility AI and decision systems",
-  type: 0,
-  body: ai4games2Week05Lecture,
-  sortOrder: 10,
   isRequired: true,
   gradingMethod: 0,
   maxPoints: null,
   estimatedMinutes: 90,
   visibility: 1,
   program: ai4games2Program,
-  parent: undefined,
+  parent: ai4games2OldContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week05CsharpContent: ProgramContent = {
-  id: "ai4games-week-05-csharp",
-  programId: "ai4games-program-2",
-  parentId: "ai4games-week-05",
-  title: "Week 5: C# Systems",
-  description: "C# implementation details",
+export const ai4games2Week09OldContent: ProgramContent = {
+  id: "ai4games2-week-09",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 9: Machine Learning Basics",
+  slug: "week-09",
+  description: "Intro to ML for games",
   type: 0,
-  body: ai4games2Week05Lecture2,
+  body: ai4games2Week09OldLecture,
+  sortOrder: 10,
+  isRequired: false,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2OldContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week10OldContent: ProgramContent = {
+  id: "ai4games2-week-10",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 10: Advanced Pathfinding",
+  slug: "week-10",
+  description: "Optimizations and large maps",
+  type: 0,
+  body: ai4games2Week10OldLecture,
   sortOrder: 11,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2OldContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week11OldAssignmentContent: ProgramContent = {
+  id: "ai4games2-week-11-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 11: Assignment",
+  slug: "week-11",
+  description: "Build a tactical AI system",
+  type: 0,
+  body: ai4games2Week11OldAssignment,
+  sortOrder: 12,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 240,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2OldContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week11OldBoardContent: ProgramContent = {
+  id: "ai4games2-week-11-board",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-11-assignment",
+  title: "Week 11: Discussion Board",
+  slug: "board",
+  description: "Assignment Q&A and discussion",
+  type: 0,
+  body: ai4games2Week11OldBoard,
+  sortOrder: 2,
   isRequired: false,
   gradingMethod: 0,
   maxPoints: null,
   estimatedMinutes: 60,
   visibility: 1,
   program: ai4games2Program,
-  parent: ai4games2Week05Content,
+  parent: ai4games2Week11OldAssignmentContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week06Content: ProgramContent = {
-  id: "ai4games-week-06",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 6: Navigation Meshes",
-  description: "NavMesh fundamentals",
+export const ai4games2Week12OldContent: ProgramContent = {
+  id: "ai4games2-week-12",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 12: Emergent Behavior",
+  slug: "week-12",
+  description: "Complex systems and emergence",
   type: 0,
-  body: ai4games2Week06Lecture,
-  sortOrder: 12,
-  isRequired: true,
-  gradingMethod: 0,
-  maxPoints: null,
-  estimatedMinutes: 90,
-  visibility: 1,
-  program: ai4games2Program,
-  parent: undefined,
-  children: [],
-  contentInteractions: [],
-  createdAt: "2023-01-01T00:00:00Z",
-  updatedAt: "2023-01-01T00:00:00Z",
-};
-
-export const ai4games2Week07Content: ProgramContent = {
-  id: "ai4games-week-07",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 7: Steering Behaviors",
-  description: "Flocking and movement",
-  type: 0,
-  body: ai4games2Week07Lecture,
+  body: ai4games2Week12OldLecture,
   sortOrder: 13,
   isRequired: true,
   gradingMethod: 0,
@@ -370,21 +667,22 @@ export const ai4games2Week07Content: ProgramContent = {
   estimatedMinutes: 90,
   visibility: 1,
   program: ai4games2Program,
-  parent: undefined,
+  parent: ai4games2OldContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week08Content: ProgramContent = {
-  id: "ai4games-week-08",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 8: Tactical AI",
-  description: "Tactics and strategy",
+export const ai4games2Week13OldContent: ProgramContent = {
+  id: "ai4games2-week-13",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Week 13: Modern AI Tools",
+  slug: "week-13",
+  description: "LLMs and game AI",
   type: 0,
-  body: ai4games2Week08Lecture,
+  body: ai4games2Week13OldLecture,
   sortOrder: 14,
   isRequired: true,
   gradingMethod: 0,
@@ -392,190 +690,73 @@ export const ai4games2Week08Content: ProgramContent = {
   estimatedMinutes: 90,
   visibility: 1,
   program: ai4games2Program,
-  parent: undefined,
+  parent: ai4games2OldContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week09Content: ProgramContent = {
-  id: "ai4games-week-09",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 9: Machine Learning Basics",
-  description: "Intro to ML for games",
+export const ai4games2ExtraOldContent: ProgramContent = {
+  id: "ai4games2-extras-llms",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-old",
+  title: "Extra: LLMs for Game AI",
+  slug: "extras-llms",
+  description: "Exploring LLMs in game AI",
   type: 0,
-  body: ai4games2Week09Lecture,
+  body: ai4games2ExtraOldLecture,
   sortOrder: 15,
   isRequired: false,
   gradingMethod: 0,
   maxPoints: null,
-  estimatedMinutes: 90,
-  visibility: 1,
-  program: ai4games2Program,
-  parent: undefined,
-  children: [],
-  contentInteractions: [],
-  createdAt: "2023-01-01T00:00:00Z",
-  updatedAt: "2023-01-01T00:00:00Z",
-};
-
-export const ai4games2Week10Content: ProgramContent = {
-  id: "ai4games-week-10",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 10: Advanced Pathfinding",
-  description: "Optimizations and large maps",
-  type: 0,
-  body: ai4games2Week10Lecture,
-  sortOrder: 16,
-  isRequired: true,
-  gradingMethod: 0,
-  maxPoints: null,
-  estimatedMinutes: 90,
-  visibility: 1,
-  program: ai4games2Program,
-  parent: undefined,
-  children: [],
-  contentInteractions: [],
-  createdAt: "2023-01-01T00:00:00Z",
-  updatedAt: "2023-01-01T00:00:00Z",
-};
-
-export const ai4games2Week11AssignmentContent: ProgramContent = {
-  id: "ai4games-week-11-assignment",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 11: Assignment",
-  description: "Build a tactical AI system",
-  type: 0,
-  body: ai4games2Week11Assignment,
-  sortOrder: 17,
-  isRequired: true,
-  gradingMethod: 1,
-  maxPoints: 100,
-  estimatedMinutes: 240,
-  visibility: 1,
-  program: ai4games2Program,
-  parent: undefined,
-  children: [],
-  contentInteractions: [],
-  createdAt: "2023-01-01T00:00:00Z",
-  updatedAt: "2023-01-01T00:00:00Z",
-};
-
-export const ai4games2Week11BoardContent: ProgramContent = {
-  id: "ai4games-week-11-board",
-  programId: "ai4games-program-2",
-  parentId: "ai4games-week-11-assignment",
-  title: "Week 11: Discussion Board",
-  description: "Assignment Q&A and discussion",
-  type: 0,
-  body: ai4games2Week11Board,
-  sortOrder: 18,
-  isRequired: false,
-  gradingMethod: 0,
-  maxPoints: null,
   estimatedMinutes: 60,
   visibility: 1,
   program: ai4games2Program,
-  parent: ai4games2Week11AssignmentContent,
+  parent: ai4games2OldContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
-export const ai4games2Week12Content: ProgramContent = {
-  id: "ai4games-week-12",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 12: Emergent Behavior",
-  description: "Complex systems and emergence",
-  type: 0,
-  body: ai4games2Week12Lecture,
-  sortOrder: 19,
-  isRequired: true,
-  gradingMethod: 0,
-  maxPoints: null,
-  estimatedMinutes: 90,
-  visibility: 1,
-  program: ai4games2Program,
-  parent: undefined,
-  children: [],
-  contentInteractions: [],
-  createdAt: "2023-01-01T00:00:00Z",
-  updatedAt: "2023-01-01T00:00:00Z",
-};
+// Set up children arrays for nested content (week sub-items)
+ai4games2Week01LectureContent.children = [
+  ai4games2Week01ReadingsContent,
+  ai4games2Week01QuizContent,
+  ai4games2Week01SetupContent,
+  ai4games2Week01AssignmentContent,
+];
+ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
+ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
+ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
+ai4games2Week05OldContent.children = [ai4games2Week05OldCsharpContent];
+ai4games2Week11OldAssignmentContent.children = [ai4games2Week11OldBoardContent];
 
-export const ai4games2Week13Content: ProgramContent = {
-  id: "ai4games-week-13",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Week 13: Modern AI Tools",
-  description: "LLMs and game AI",
-  type: 0,
-  body: ai4games2Week13Lecture,
-  sortOrder: 20,
-  isRequired: true,
-  gradingMethod: 0,
-  maxPoints: null,
-  estimatedMinutes: 90,
-  visibility: 1,
-  program: ai4games2Program,
-  parent: undefined,
-  children: [],
-  contentInteractions: [],
-  createdAt: "2023-01-01T00:00:00Z",
-  updatedAt: "2023-01-01T00:00:00Z",
-};
-
-export const ai4games2ExtraContent: ProgramContent = {
-  id: "ai4games-extras-llms",
-  programId: "ai4games-program-2",
-  parentId: undefined,
-  title: "Extra: LLMs for Game AI",
-  description: "Exploring LLMs in game AI",
-  type: 0,
-  body: ai4games2ExtraLecture,
-  sortOrder: 21,
-  isRequired: false,
-  gradingMethod: 0,
-  maxPoints: null,
-  estimatedMinutes: 60,
-  visibility: 1,
-  program: ai4games2Program,
-  parent: undefined,
-  children: [],
-  contentInteractions: [],
-  createdAt: "2023-01-01T00:00:00Z",
-  updatedAt: "2023-01-01T00:00:00Z",
-};
+// Set up children for the old content container
+ai4games2Week01OldLectureContent.children = [ai4games2Week01OldReadingsContent];
+ai4games2OldContent.children = [
+  ai4games2Week01OldLectureContent,
+  ai4games2Week02OldContent,
+  ai4games2Week03OldContent,
+  ai4games2Week04OldContent,
+  ai4games2Week05OldContent,
+  ai4games2Week06OldContent,
+  ai4games2Week07OldContent,
+  ai4games2Week08OldContent,
+  ai4games2Week09OldContent,
+  ai4games2Week10OldContent,
+  ai4games2Week11OldAssignmentContent,
+  ai4games2Week12OldContent,
+  ai4games2Week13OldContent,
+  ai4games2ExtraOldContent,
+];
 
 ai4games2Product.productPrograms = [ai4games2ProductProgram];
 ai4games2Program.programContents = [
   ai4games2SyllabusContent,
-  ai4games2Week01Content,
-  ai4games2Week01ReadingsContent,
-  ai4games2Week02Content,
-  ai4games2Week02PcgContent,
-  ai4games2Week03Content,
-  ai4games2Week03AstarContent,
-  ai4games2Week04Content,
-  ai4games2Week04AssignmentContent,
-  ai4games2Week05Content,
-  ai4games2Week05CsharpContent,
-  ai4games2Week06Content,
-  ai4games2Week07Content,
-  ai4games2Week08Content,
-  ai4games2Week09Content,
-  ai4games2Week10Content,
-  ai4games2Week11AssignmentContent,
-  ai4games2Week11BoardContent,
-  ai4games2Week12Content,
-  ai4games2Week13Content,
-  ai4games2ExtraContent,
+  ai4games2Week01LectureContent,
+  ai4games2OldContent,
 ];
 
 export default ai4games2Program;
