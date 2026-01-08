@@ -68,28 +68,30 @@ export const ResultPanel = forwardRef<XTermTerminalHandle, ResultPanelProps>(
                   <Play className="h-3 w-3 mr-1" />
                   File
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={onExecuteProject} 
-                  className="h-7 text-xs px-2"
-                  disabled={!hasMainFile}
-                  title="Run main file (marked as 'm')"
-                >
-                  <Play className="h-3 w-3 mr-1" />
-                  Project
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={onExecuteTest} 
-                  className="h-7 text-xs px-2"
-                  disabled={!hasTestFile}
-                  title="Run test file (marked as 't')"
-                >
-                  <Play className="h-3 w-3 mr-1" />
-                  Test
-                </Button>
+                {hasMainFile && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={onExecuteProject} 
+                    className="h-7 text-xs px-2"
+                    title="Run main file (marked as 'm')"
+                  >
+                    <Play className="h-3 w-3 mr-1" />
+                    Project
+                  </Button>
+                )}
+                {hasTestFile && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={onExecuteTest} 
+                    className="h-7 text-xs px-2"
+                    title="Run test file (marked as 't')"
+                  >
+                    <Play className="h-3 w-3 mr-1" />
+                    Test
+                  </Button>
+                )}
               </>
             )}
           </div>
