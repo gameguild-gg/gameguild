@@ -1451,12 +1451,12 @@ export function CodeStudioEditor({
   // Modal de edição (fullscreen)
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
       style={{ pointerEvents: 'auto' }}
       onClick={handleCancelClick}
     >
       <div 
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full h-full flex flex-col"
         style={{ pointerEvents: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
