@@ -1631,13 +1631,35 @@ export function CodeStudioEditor({
 
               const { cols, rows } = getGridDimensions(activeDisplay.aspectRatio)
               const { maxWidth, maxHeight } = getContainerDimensions(activeDisplay.aspectRatio)
+              
+              // Scale dimensions for fullscreen while respecting aspect ratio
+              // Only scale if NOT the Base display
+              let scaledMaxWidth = maxWidth
+              let scaledMaxHeight = maxHeight
+              
+              if (modalSize === 'fullscreen' && activeDisplay.name !== 'Base') {
+                switch (activeDisplay.aspectRatio) {
+                  case '2:1':
+                    scaledMaxWidth = '90vw'
+                    scaledMaxHeight = '45vw' // Mantém proporção 2:1
+                    break
+                  case '1:1':
+                    scaledMaxWidth = '80vh'
+                    scaledMaxHeight = '80vh' // Mantém proporção 1:1
+                    break
+                  case '1:2':
+                    scaledMaxWidth = '40vw'
+                    scaledMaxHeight = '80vw' // Mantém proporção 1:2
+                    break
+                }
+              }
 
               return (
                 <div
                   className="w-full h-full"
                   style={{
-                    maxWidth,
-                    maxHeight,
+                    maxWidth: scaledMaxWidth,
+                    maxHeight: scaledMaxHeight,
                   }}
                 >
                   <GridDropZone
