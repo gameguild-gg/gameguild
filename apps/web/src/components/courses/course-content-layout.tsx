@@ -28,10 +28,10 @@ export function CourseContentLayoutClient({ courseSlug, courseTitle, content, ch
             {/* Main Content Area */}
             <main className={cn(
                 "flex-1 transition-all duration-300 ease-in-out",
-                // Large screens: adjust margin based on sidebar state
-                "lg:ml-0",
-                // Only apply conditional styling after hydration
-                mounted && isSidebarOpen && "lg:ml-80",
+                // Start with desktop layout (sidebar open) to prevent layout shift
+                "lg:ml-80",
+                // Only hide margin after mount if sidebar is closed
+                mounted && !isSidebarOpen && "lg:ml-0",
                 // Ensure no horizontal overflow
                 "min-w-0"
             )}>

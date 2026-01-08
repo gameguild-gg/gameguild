@@ -6,7 +6,8 @@ import week01Readings from './01-introduction/02-readings.md';
 import week01DbZoo from './01-introduction/03-db-zoo.md';
 import week01DecisionMatrix from './01-introduction/04-decision-matrix.md';
 import week01DataTypes from './01-introduction/05-data-types.md';
-import week01Assignment from './01-introduction/06-assignment-01.md';
+import week01Quiz from './01-introduction/06-quiz.md';
+import week01Assignment from './01-introduction/07-assignment-01.md';
 import databasesSyllabus from './syllabus.md';
 
 // Program definition
@@ -88,7 +89,7 @@ export const databasesSyllabusContent: ProgramContent = {
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
-    estimatedMinutes: 45,
+    estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
     parent: undefined,
@@ -112,7 +113,7 @@ export const week01IntroContent: ProgramContent = {
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
-    estimatedMinutes: 45,
+    estimatedMinutes: 30,
     visibility: 1, // Published
     program: databasesProgram,
     parent: undefined,
@@ -136,7 +137,7 @@ export const week01ReadingsContent: ProgramContent = {
     isRequired: false,
     gradingMethod: 0, // None
     maxPoints: null,
-    estimatedMinutes: 30,
+    estimatedMinutes: 35,
     visibility: 1, // Published
     program: databasesProgram,
     parent: week01IntroContent,
@@ -159,7 +160,7 @@ export const week01DbZooContent: ProgramContent = {
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
-    estimatedMinutes: 20,
+    estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
     parent: week01IntroContent,
@@ -182,7 +183,30 @@ export const week01DecisionMatrixContent: ProgramContent = {
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
-    estimatedMinutes: 60,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week01IntroContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week01QuizContent: ProgramContent = {
+    id: 'databases-week-01-quiz',
+    programId: 'databases-program-1',
+    slug: 'quiz-01',
+    parentId: 'databases-week-01-intro',
+    title: 'Quiz 01: Introduction to Databases',
+    description: 'Multiple-choice quiz on the Week 1 database landscape and setup basics',
+    type: 0, // Page
+    body: week01Quiz,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
     visibility: 1, // Published
     program: databasesProgram,
     parent: week01IntroContent,
@@ -205,7 +229,7 @@ export const week01DataTypesContent: ProgramContent = {
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
-    estimatedMinutes: 45,
+    estimatedMinutes: 25,
     visibility: 1, // Published
     program: databasesProgram,
     parent: week01IntroContent,
@@ -224,11 +248,11 @@ export const week01AssignmentContent: ProgramContent = {
     description: 'Set up Docker, PostgreSQL, and Adminer for your first assignment',
     type: 1, // Assignment
     body: week01Assignment,
-    sortOrder: 5,
+    sortOrder: 6,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
-    estimatedMinutes: 90,
+    estimatedMinutes: 75,
     visibility: 1, // Published
     program: databasesProgram,
     parent: week01IntroContent,
@@ -239,6 +263,7 @@ export const week01AssignmentContent: ProgramContent = {
 };
 
 // Wire program contents and product-program relations
+// only the parent contents go directly under the program
 databasesProgram.programContents = [
     databasesSyllabusContent,
     week01IntroContent,
@@ -250,6 +275,7 @@ week01IntroContent.children = [
     week01DbZooContent,
     week01DecisionMatrixContent,
     week01DataTypesContent,
+    week01QuizContent,
     week01AssignmentContent,
 ];
 

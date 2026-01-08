@@ -272,32 +272,32 @@ graph TD
     Q1 -->|Yes| Q2{"Complex<br/>Relationships?"}
     Q1 -->|No| Q3{"Primary Focus?"}
 
-    Q2 -->|Yes - Complex| Relational["✅ Relational<br/>(PostgreSQL, MySQL)<br/>ACID + complex queries"]
+    Q2 -->|Yes - Complex| Relational["Relational<br/>(PostgreSQL, MySQL)<br/>ACID + complex queries"]
     Q2 -->|No - Simple| Q4{"Schema<br/>Flexibility?"}
 
-    Q4 -->|Flexible| Document["✅ Document<br/>(MongoDB)<br/>Schema-less + ACID (some)"]
+    Q4 -->|Flexible| Document["Document<br/>(MongoDB)<br/>Schema-less + ACID (some)"]
     Q4 -->|Strict| Relational
 
     Q3 --> Q5{"What's Your Data?"}
 
     Q5 -->|Relationships| Q8{"Traversal<br/>Heavy?"}
-    Q8 -->|Yes - Heavy| Graph["✅ Graph DB<br/>(Neo4j)<br/>Relationship-first"]
-    Q8 -->|No - Light| Document["✅ Document<br/>(MongoDB)<br/>Schema-less + ACID (some)"]
+    Q8 -->|Yes - Heavy| Graph["Graph DB<br/>(Neo4j)<br/>Relationship-first"]
+    Q8 -->|No - Light| Document["Document<br/>(MongoDB)<br/>Schema-less + ACID (some)"]
 
     Q5 -->|Key-Value Pairs| Q6{"Need<br/>Persistence?"}
-    Q6 -->|Low| DynamoDB["✅ DynamoDB/etcd<br/>Serverless caching"]
-    Q6 -->|High| Redis["✅ Key-Value Store<br/>(Redis)<br/>In-memory + fast"]
+    Q6 -->|Low| DynamoDB["DynamoDB/etcd<br/>Serverless caching"]
+    Q6 -->|High| Redis["Key-Value Store<br/>(Redis)<br/>In-memory + fast"]
 
     Q5 -->|Time-Series Data| Q7{"Scale<br/>Requirements?"}
-    Q5 -->|Full-Text Search| Search["✅ Search Engine<br/>(Elasticsearch)<br/>Inverted index + relevance"]
+    Q5 -->|Full-Text Search| Search["Search Engine<br/>(Elasticsearch)<br/>Inverted index + relevance"]
 
-    Q5 -->|Embeddings/Vectors| Vector["✅ Vector DB<br/>(pgvector, Pinecone)<br/>Similarity search + AI"]
-    Q5 -->|Event Streams| Kafka["✅ Event Streaming<br/>(Kafka)<br/>Real-time pipelines"]
+    Q5 -->|Embeddings/Vectors| Vector["Vector DB<br/>(pgvector, Pinecone)<br/>Similarity search + AI"]
+    Q5 -->|Event Streams| Kafka["Event Streaming<br/>(Kafka)<br/>Real-time pipelines"]
 
-    Q7 -->|Small-Medium| TimescaleDB["✅ Time Series<br/>(TimescaleDB)<br/>SQL + time buckets"]
+    Q7 -->|Small-Medium| TimescaleDB["Time Series<br/>(TimescaleDB)<br/>SQL + time buckets"]
     Q7 -->|Massive Scale| Q9{"Global<br/>Distribution?"}
 
-    Q9 -->|Yes| Cassandra["✅ Wide-Column<br/>(Cassandra)<br/>Global + eventual consistency"]
+    Q9 -->|Yes| Cassandra["Wide-Column<br/>(Cassandra)<br/>Global + eventual consistency"]
     Q9 -->|No| TimescaleDB
 
 ```
@@ -306,21 +306,10 @@ graph TD
 
 ## Common Anti-Patterns
 
-### ❌ Using MongoDB for Everything
-
-MongoDB is flexible, but not ideal for complex transactions or heavy JOINs.
-
-### ❌ Using Redis as Primary Database
-
-Redis is excellent for caching, but data persistence and complex queries are limited.
-
-### ❌ Premature Optimization with NoSQL
-
-Start with PostgreSQL unless you have specific scaling requirements that demand NoSQL.
-
-### ❌ Ignoring Operational Complexity
-
-Each database adds operational overhead. Consider managed services or stick to fewer databases.
+- **MongoDB for everything** — great for flexible documents, not for multi-step transactions or heavy joins.
+- **Redis as the primary store** — blazing fast cache, weak for durability and complex queries.
+- **NoSQL by default** — start with Postgres unless you have a clear scaling/consistency need.
+- **Adding databases casually** — every DB adds ops cost. Fewer is simpler; managed services help.
 
 ---
 
@@ -332,12 +321,3 @@ Each database adds operational overhead. Consider managed services or stick to f
 4. **Understand CAP trade-offs** — you can't have everything
 5. **Think polyglot** — different data, different databases
 6. **Measure first** — don't optimize prematurely
-
----
-
-## Additional Resources
-
-- [DB-Engines Ranking](https://db-engines.com/en/ranking)
-- [CAP Theorem Explained](https://www.ibm.com/topics/cap-theorem)
-- [PostgreSQL vs MongoDB](https://www.mongodb.com/compare/mongodb-postgresql)
-- [When to Use Redis](https://redis.io/docs/get-started/)
