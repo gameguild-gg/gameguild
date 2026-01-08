@@ -72,6 +72,7 @@ export function CodeStudioEditor({
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
   const terminalRef = useRef<XTermTerminalHandle | null>(null)
   const initializedRef = useRef(false)
+  const originalDataRef = useRef<CodeStudioData>(JSON.parse(JSON.stringify(data)))
 
   // Initialize runner and Monaco file system
   useEffect(() => {
@@ -239,6 +240,46 @@ export function CodeStudioEditor({
         updateMonacoFile(file.path, content, draft.id)
       }
     })
+  }
+
+  const handleResetFile = (fileId: string) => {
+    setLocalData(draft => {
+      const file = draft.files.find(f => f.id === fileId)
+      const originalFile = originalDataRef.current.files.find(f => f.id === fileId)
+      
+      if (file && originalFile) {
+        // Reset content to original
+        file.content = originalFile.content
+        file.isModified = false
+        
+        // Update Monaco file system
+        updateMonacoFile(file.path, originalFile.content, draft.id)
+      }
+    })
+
+    // Clear resolved content for this file to force re-resolution
+    setResolvedContents(draft => {
+      delete draft[fileId]
+    })
+  }
+
+  const handleResetAllFiles = () => {
+    setLocalData(draft => {
+      // Reset all files to original content
+      draft.files.forEach(file => {
+        const originalFile = originalDataRef.current.files.find(f => f.id === file.id)
+        if (originalFile) {
+          file.content = originalFile.content
+          file.isModified = false
+          
+          // Update Monaco file system
+          updateMonacoFile(file.path, originalFile.content, draft.id)
+        }
+      })
+    })
+
+    // Clear all resolved contents to force re-resolution
+    setResolvedContents({})
   }
 
   // File Management
@@ -1060,6 +1101,9 @@ export function CodeStudioEditor({
               folders={localData.folders || []}
               activeFileId={focusActiveFileId}
               onSelectLanguage={(fileId) => handleFileSelect(fileId, panel.id)}
+              isPreview={isPreview}
+              onResetFile={handleResetFile}
+              onResetAllFiles={handleResetAllFiles}
             />
             
             <div className="flex-1 min-h-0 relative">

@@ -1,16 +1,20 @@
 "use client"
 
-import { ChevronDown, Code, FileCode } from "lucide-react"
+import { ChevronDown, Code, FileCode, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { CodeFile, FileTreeFolder } from "./types"
 import { cn } from "@/lib/utils"
 import { useState, useRef, useEffect } from "react"
+import { ResetConfirmDialog } from "../dialogs/reset-confirm-dialog"
 
 interface LanguageSelectorProps {
   files: CodeFile[]
   folders: FileTreeFolder[]
   activeFileId?: string
   onSelectLanguage: (fileId: string) => void
+  isPreview?: boolean
+  onResetFile?: (fileId: string) => void
+  onResetAllFiles?: () => void
 }
 
 export function LanguageSelector({
@@ -18,9 +22,16 @@ export function LanguageSelector({
   folders,
   activeFileId,
   onSelectLanguage,
+  isPreview = false,
+  onResetFile,
+  onResetAllFiles,
 }: LanguageSelectorProps) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const [showResetMenu, setShowResetMenu] = useState(false)
+  const [resetDialogOpen, setResetDialogOpen] = useState(false)
+  const [resetType, setResetType] = useState<"current" | "all">("current")
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const resetMenuRef = useRef<HTMLDivElement>(null)
 
   // Filter files by focus folder and group by basename
   const getFileGroups = () => {
@@ -55,19 +66,38 @@ export function LanguageSelector({
   const activeFile = files.find(f => f.id === activeFileId)
   const currentBasename = activeFile ? activeFile.name.substring(0, activeFile.name.lastIndexOf('.')) : basenames[0] || null
 
+  // Reset handlers
+  const handleResetClick = (type: "current" | "all") => {
+    setResetType(type)
+    setResetDialogOpen(true)
+    setShowResetMenu(false)
+  }
+
+  const handleConfirmReset = () => {
+    if (resetType === "current" && activeFileId && onResetFile) {
+      onResetFile(activeFileId)
+    } else if (resetType === "all" && onResetAllFiles) {
+      onResetAllFiles()
+    }
+    setResetDialogOpen(false)
+  }
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setOpenDropdown(null)
       }
+      if (resetMenuRef.current && !resetMenuRef.current.contains(event.target as Node)) {
+        setShowResetMenu(false)
+      }
     }
 
-    if (openDropdown) {
+    if (openDropdown || showResetMenu) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [openDropdown])
+  }, [openDropdown, showResetMenu])
 
   if (basenames.length === 0) {
     return (
@@ -237,6 +267,59 @@ export function LanguageSelector({
           })}
         </>
       )}
+      
+      {/* Reset Button - Only in preview mode */}
+      {isPreview && (onResetFile || onResetAllFiles) && (
+        <div ref={resetMenuRef} className="relative ml-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowResetMenu(!showResetMenu)}
+            className={cn(
+              "h-7 px-2 text-xs flex items-center gap-1.5",
+              "hover:bg-orange-100 dark:hover:bg-orange-900/20",
+              "text-orange-600 dark:text-orange-400"
+            )}
+            title="Reset files"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span>Reset</span>
+          </Button>
+
+          {showResetMenu && (
+            <div className="absolute top-full right-0 mt-1 z-50 min-w-[180px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg overflow-hidden">
+              <button
+                onClick={() => handleResetClick("current")}
+                disabled={!activeFileId}
+                className={cn(
+                  "w-full px-4 py-2 text-left text-xs flex items-center gap-2",
+                  "hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
+                  !activeFileId && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                <RotateCcw className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+                <span>Reset Current File</span>
+              </button>
+              <button
+                onClick={() => handleResetClick("all")}
+                className="w-full px-4 py-2 text-left text-xs flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <RotateCcw className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+                <span>Reset All Files</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Reset Confirmation Dialog */}
+      <ResetConfirmDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        resetType={resetType}
+        fileName={activeFile?.name}
+        onConfirm={handleConfirmReset}
+      />
     </div>
   )
 }
