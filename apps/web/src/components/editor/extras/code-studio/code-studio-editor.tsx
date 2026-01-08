@@ -75,6 +75,19 @@ export function CodeStudioEditor({
   const originalDataRef = useRef<CodeStudioData>(JSON.parse(JSON.stringify(data)))
   const lastProcessedContentsRef = useRef<Record<string, string>>({})
 
+  // Block body scroll and browser navigation when editor is open (not in preview mode)
+  useEffect(() => {
+    if (!isPreview) {
+      document.body.style.overflow = 'hidden'
+      document.body.style.pointerEvents = 'none'
+      
+      return () => {
+        document.body.style.overflow = ''
+        document.body.style.pointerEvents = ''
+      }
+    }
+  }, [isPreview])
+
   // Initialize runner and Monaco file system
   useEffect(() => {
     // Setup download notification callback
@@ -1439,10 +1452,12 @@ export function CodeStudioEditor({
   return (
     <div 
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      style={{ pointerEvents: 'auto' }}
       onClick={handleCancelClick}
     >
       <div 
         className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        style={{ pointerEvents: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
