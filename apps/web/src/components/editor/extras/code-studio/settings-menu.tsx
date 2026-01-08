@@ -3,17 +3,53 @@
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { X, Lock, Unlock, Hash, Type, Palette } from "lucide-react"
+import { X, Lock, Unlock, Hash, Type, Palette, Maximize2 } from "lucide-react"
 import type { CodeStudioData, ShikiTheme } from "./types"
 import { SHIKI_THEME_CONFIGS } from "./types"
+import { 
+  ModalSize, 
+  getEditorPreferences, 
+  setGlobalPreference, 
+  setNodeTypePreference,
+  MODAL_SIZE_LABELS 
+} from "@/lib/storage/editor/editor-preferences"
+import { useState, useEffect } from "react"
 
 interface SettingsMenuProps {
   data: CodeStudioData
   onDataChange: (newData: Partial<CodeStudioData>) => void
   onClose: () => void
+  nodeType?: string
+  onModalSizeChange?: (size: ModalSize) => void
 }
 
-export function SettingsMenu({ data, onDataChange, onClose }: SettingsMenuProps) {
+export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-studio', onModalSizeChange }: SettingsMenuProps) {
+  const [modalSize, setModalSize] = useState<ModalSize>('widescreen')
+  const [applyToAllNodes, setApplyToAllNodes] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+  
+  useEffect(() => {
+    // Load preferences whenever menu opens
+    setIsLoading(true)
+    getEditorPreferences(nodeType).then((prefs: { modalSize: ModalSize }) => {
+      setModalSize(prefs.modalSize)
+      setIsLoading(false)
+    })
+  }, [nodeType])
+  
+  const handleModalSizeChange = async (size: ModalSize) => {
+    setModalSize(size)
+    
+    if (applyToAllNodes) {
+      await setGlobalPreference('modalSize', size)
+    } else {
+      await setNodeTypePreference(nodeType, 'modalSize', size)
+    }
+    
+    // Notify parent component immediately
+    onModalSizeChange?.(size)
+  }
+  
   return (
     <div className="absolute top-10 left-0 z-50 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
       <div className="p-4 space-y-4">
@@ -108,6 +144,53 @@ export function SettingsMenu({ data, onDataChange, onClose }: SettingsMenuProps)
                 </option>
               ))}
             </select>
+          </div>
+          
+          {/* Modal Size */}
+          <div className="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-3">
+            <div className="flex items-center gap-2">
+              <Maximize2 className="h-4 w-4 text-orange-500" />
+              <Label className="text-sm font-medium">
+                Modal Size
+              </Label>
+            </div>
+            
+            <div className="space-y-2">
+              {(Object.keys(MODAL_SIZE_LABELS) as ModalSize[]).map((size) => (
+                <label
+                  key={size}
+                  className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 p-1.5 rounded"
+                >
+                  <input
+                    type="radio"
+                    name="modalSize"
+                    value={size}
+                    checked={modalSize === size}
+                    onChange={() => handleModalSizeChange(size)}
+                    className="w-4 h-4 text-orange-500"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {MODAL_SIZE_LABELS[size]}
+                  </span>
+                </label>
+              ))}
+            </div>
+            
+            <div className="flex items-center justify-between pt-2">
+              <Label htmlFor="applyToAll" className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+                Apply to all node types
+              </Label>
+              <Switch
+                id="applyToAll"
+                checked={applyToAllNodes}
+                onCheckedChange={setApplyToAllNodes}
+              />
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {applyToAllNodes 
+                ? "Size will apply to all code editors" 
+                : "Size only for Code Studio nodes"}
+            </p>
           </div>
         </div>
       </div>

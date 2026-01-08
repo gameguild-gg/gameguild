@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useImmer } from "use-immer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,6 +32,14 @@ import { UnifiedCodeRunner, setDownloadNotificationCallback } from "./runners"
 import { initializeMonacoFileSystem, syncFilesToMonacoFS, updateMonacoFile, disposeMonacoFileSystem } from "./monaco-file-system"
 import { saveProjectAsCollection, countAssetReferences } from "./file-system/collection-utils"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { 
+  ModalSize, 
+  getEditorPreferences, 
+  getModalSizeClasses, 
+  enterFullscreen, 
+  exitFullscreen,
+  isFullscreenActive 
+} from "@/lib/storage/editor/editor-preferences"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -68,12 +76,52 @@ export function CodeStudioEditor({
   const [output, setOutput] = useImmer<string>("")
   const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
   const [resolvedContents, setResolvedContents] = useImmer<Record<string, string>>({})
+  const [modalSize, setModalSize] = useState<ModalSize | null>(null)
+  const [isInFullscreen, setIsInFullscreen] = useState(false)
   const gridContainerRef = useRef<HTMLDivElement | null>(null)
+  const modalContainerRef = useRef<HTMLDivElement | null>(null)
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
   const terminalRef = useRef<XTermTerminalHandle | null>(null)
   const initializedRef = useRef(false)
   const originalDataRef = useRef<CodeStudioData>(JSON.parse(JSON.stringify(data)))
   const lastProcessedContentsRef = useRef<Record<string, string>>({})
+
+  // Load modal size preferences on mount
+  useEffect(() => {
+    getEditorPreferences('code-studio').then((prefs: { modalSize: ModalSize }) => {
+      setModalSize(prefs.modalSize)
+    })
+  }, [])
+
+  // Handle fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsInFullscreen(isFullscreenActive())
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+    }
+  }, [])
+
+  // Apply fullscreen when modal size changes to fullscreen
+  useEffect(() => {
+    const applyFullscreen = async () => {
+      if (modalSize === 'fullscreen' && modalContainerRef.current) {
+        if (!isFullscreenActive()) {
+          await enterFullscreen(modalContainerRef.current)
+        }
+      } else if (modalSize !== 'fullscreen' && isFullscreenActive()) {
+        await exitFullscreen()
+      }
+    }
+    
+    applyFullscreen()
+  }, [modalSize])
 
   // Block body scroll and browser navigation when editor is open (not in preview mode)
   useEffect(() => {
@@ -1449,14 +1497,22 @@ export function CodeStudioEditor({
   }
 
   // Modal de edição (fullscreen)
+  // Wait for preferences to load
+  if (!modalSize) {
+    return null
+  }
+  
+  const { container, modal } = getModalSizeClasses(modalSize)
+  
   return (
     <div 
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+      ref={modalContainerRef}
+      className={cn("fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50", container)}
       style={{ pointerEvents: 'auto' }}
       onClick={handleCancelClick}
     >
       <div 
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full h-full flex flex-col"
+        className={cn("bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl flex flex-col", modal)}
         style={{ pointerEvents: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1494,6 +1550,8 @@ export function CodeStudioEditor({
                 data={localData}
                 onDataChange={handleDataChange}
                 onClose={() => setShowSettingsMenu(false)}
+                nodeType="code-studio"
+                onModalSizeChange={(size) => setModalSize(size)}
               />
             )}
           </div>
