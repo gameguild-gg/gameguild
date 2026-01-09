@@ -192,50 +192,6 @@ export async function clearAllNodeTypePreferences(nodeType: string): Promise<voi
   await db.set(allPrefs)
 }
 
-// Fullscreen API helpers
-export async function enterFullscreen(element: HTMLElement): Promise<boolean> {
-  try {
-    if (element.requestFullscreen) {
-      await element.requestFullscreen()
-      return true
-    }
-    // @ts-ignore - Safari webkit prefix
-    if (element.webkitRequestFullscreen) {
-      // @ts-ignore
-      await element.webkitRequestFullscreen()
-      return true
-    }
-    return false
-  } catch (error) {
-    console.error('Failed to enter fullscreen:', error)
-    return false
-  }
-}
-
-export async function exitFullscreen(): Promise<boolean> {
-  try {
-    if (document.exitFullscreen) {
-      await document.exitFullscreen()
-      return true
-    }
-    // @ts-ignore - Safari webkit prefix
-    if (document.webkitExitFullscreen) {
-      // @ts-ignore
-      await document.webkitExitFullscreen()
-      return true
-    }
-    return false
-  } catch (error) {
-    console.error('Failed to exit fullscreen:', error)
-    return false
-  }
-}
-
-export function isFullscreenActive(): boolean {
-  // @ts-ignore - Safari webkit prefix
-  return !!(document.fullscreenElement || document.webkitFullscreenElement)
-}
-
 // Modal size helper
 export function getModalSizeClasses(size: ModalSize): { container: string; modal: string } {
   switch (size) {

@@ -35,10 +35,7 @@ import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { 
   ModalSize, 
   getEditorPreferences, 
-  getModalSizeClasses, 
-  enterFullscreen, 
-  exitFullscreen,
-  isFullscreenActive 
+  getModalSizeClasses 
 } from "@/lib/storage/editor/editor-preferences"
 
 interface CodeStudioEditorProps {
@@ -77,7 +74,6 @@ export function CodeStudioEditor({
   const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
   const [resolvedContents, setResolvedContents] = useImmer<Record<string, string>>({})
   const [modalSize, setModalSize] = useState<ModalSize | null>(null)
-  const [isInFullscreen, setIsInFullscreen] = useState(false)
   const gridContainerRef = useRef<HTMLDivElement | null>(null)
   const modalContainerRef = useRef<HTMLDivElement | null>(null)
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
@@ -92,36 +88,6 @@ export function CodeStudioEditor({
       setModalSize(prefs.modalSize)
     })
   }, [])
-
-  // Handle fullscreen changes
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsInFullscreen(isFullscreenActive())
-    }
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange)
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange)
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
-    }
-  }, [])
-
-  // Apply fullscreen when modal size changes to fullscreen
-  useEffect(() => {
-    const applyFullscreen = async () => {
-      if (modalSize === 'fullscreen' && modalContainerRef.current) {
-        if (!isFullscreenActive()) {
-          await enterFullscreen(modalContainerRef.current)
-        }
-      } else if (modalSize !== 'fullscreen' && isFullscreenActive()) {
-        await exitFullscreen()
-      }
-    }
-    
-    applyFullscreen()
-  }, [modalSize])
 
   // Block body scroll and browser navigation when editor is open (not in preview mode)
   useEffect(() => {
