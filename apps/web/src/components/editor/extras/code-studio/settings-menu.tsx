@@ -24,8 +24,8 @@ interface SettingsMenuProps {
   onModalSizeChange?: (size: ModalSize) => void
 }
 
-export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-studio', onModalSizeChange }: SettingsMenuProps) {
-  const [activeTab, setActiveTab] = useState<'general' | 'code-studio'>('code-studio')
+export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'style', onModalSizeChange }: SettingsMenuProps) {
+  const [activeTab, setActiveTab] = useState<'system' | 'style'>('style')
   const [modalSize, setModalSize] = useState<ModalSize>('widescreen')
   const [applyToAllNodes, setApplyToAllNodes] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
@@ -99,30 +99,30 @@ export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-stu
         {/* Tabs */}
         <div className="flex border-b border-gray-200 dark:border-gray-700 px-4 pt-3">
           <button
-            onClick={() => setActiveTab('code-studio')}
+            onClick={() => setActiveTab('style')}
             className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
-              activeTab === 'code-studio'
+              activeTab === 'style'
                 ? 'border-orange-500 text-orange-600 dark:text-orange-400'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            Code Studio
+            Style
           </button>
           <button
-            onClick={() => setActiveTab('general')}
+            onClick={() => setActiveTab('system')}
             className={`px-4 py-2 text-xs font-medium border-b-2 transition-colors ${
-              activeTab === 'general'
+              activeTab === 'system'
                 ? 'border-orange-500 text-orange-600 dark:text-orange-400'
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
             }`}
           >
-            General
+            System
           </button>
         </div>
         
         {/* Content */}
         <div className="p-4 space-y-3 overflow-y-auto">
-          {activeTab === 'general' && (
+          {activeTab === 'system' && (
             <>
               {/* Modal Size */}
               <div className="space-y-3">
@@ -185,7 +185,7 @@ export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-stu
             </>
           )}
           
-          {activeTab === 'code-studio' && (
+          {activeTab === 'style' && (
             <>
               {/* Show Line Numbers */}
               <div className="flex items-center justify-between">
