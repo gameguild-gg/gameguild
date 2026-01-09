@@ -13,7 +13,7 @@ import {
   setNodeTypePreference,
   MODAL_SIZE_LABELS 
 } from "@/lib/storage/editor/editor-preferences"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 interface SettingsMenuProps {
   data: CodeStudioData
@@ -27,6 +27,7 @@ export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-stu
   const [modalSize, setModalSize] = useState<ModalSize>('widescreen')
   const [applyToAllNodes, setApplyToAllNodes] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   useEffect(() => {
     // Load preferences whenever menu opens
@@ -37,17 +38,34 @@ export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-stu
     })
   }, [nodeType])
   
+  useEffect(() => {
+    // Cleanup timeout on unmount
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
+  
   const handleModalSizeChange = async (size: ModalSize) => {
     setModalSize(size)
     
-    if (applyToAllNodes) {
-      await setGlobalPreference('modalSize', size)
-    } else {
-      await setNodeTypePreference(nodeType, 'modalSize', size)
+    // Clear previous timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
     }
     
-    // Notify parent component immediately
-    onModalSizeChange?.(size)
+    // Delay actual save and notification by 250ms
+    timeoutRef.current = setTimeout(async () => {
+      if (applyToAllNodes) {
+        await setGlobalPreference('modalSize', size)
+      } else {
+        await setNodeTypePreference(nodeType, 'modalSize', size)
+      }
+      
+      // Notify parent component after delay
+      onModalSizeChange?.(size)
+    }, 250)
   }
   
   return (
@@ -151,29 +169,39 @@ export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-stu
             <div className="flex items-center gap-2">
               <Maximize2 className="h-4 w-4 text-orange-500" />
               <Label className="text-sm font-medium">
-                Modal Size
+                Modal Size: {MODAL_SIZE_LABELS[modalSize]}
               </Label>
             </div>
             
             <div className="space-y-2">
-              {(Object.keys(MODAL_SIZE_LABELS) as ModalSize[]).map((size) => (
-                <label
-                  key={size}
-                  className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 p-1.5 rounded"
-                >
-                  <input
-                    type="radio"
-                    name="modalSize"
-                    value={size}
-                    checked={modalSize === size}
-                    onChange={() => handleModalSizeChange(size)}
-                    className="w-4 h-4 text-orange-500"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {MODAL_SIZE_LABELS[size]}
-                  </span>
-                </label>
-              ))}
+              <input
+                type="range"
+                min="0"
+                max="3"
+                step="1"
+                value={['compact', 'widescreen', 'ultrawide', 'fullscreen'].indexOf(modalSize)}
+                onChange={(e) => {
+                  const sizes: ModalSize[] = ['compact', 'widescreen', 'ultrawide', 'fullscreen']
+                  const selectedSize = sizes[parseInt(e.target.value)]
+                  if (selectedSize) {
+                    handleModalSizeChange(selectedSize)
+                  }
+                }}
+                className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                style={{
+                  background: `linear-gradient(to right, 
+                    rgb(249, 115, 22) 0%, 
+                    rgb(249, 115, 22) ${(['compact', 'widescreen', 'ultrawide', 'fullscreen'].indexOf(modalSize) / 3) * 100}%, 
+                    rgb(229, 231, 235) ${(['compact', 'widescreen', 'ultrawide', 'fullscreen'].indexOf(modalSize) / 3) * 100}%, 
+                    rgb(229, 231, 235) 100%)`
+                }}
+              />
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 px-1">
+                <span>Compact</span>
+                <span>Wide</span>
+                <span>Ultra</span>
+                <span>Full</span>
+              </div>
             </div>
             
             <div className="flex items-center justify-between pt-2">
