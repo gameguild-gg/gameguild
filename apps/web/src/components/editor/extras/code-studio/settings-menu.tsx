@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { X, Lock, Unlock, Hash, Type, Palette, Maximize2 } from "lucide-react"
+import { X, Hash, Type, Palette, Maximize2 } from "lucide-react"
 import type { CodeStudioData, ShikiTheme } from "./types"
 import { SHIKI_THEME_CONFIGS } from "./types"
 import { 
@@ -187,30 +187,6 @@ export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-stu
           
           {activeTab === 'code-studio' && (
             <>
-              {/* Read Only Global */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {data.readonly ? (
-                      <Lock className="h-4 w-4 text-red-500" />
-                    ) : (
-                      <Unlock className="h-4 w-4 text-green-500" />
-                    )}
-                    <Label htmlFor="readonly" className="text-sm font-medium cursor-pointer">
-                      Read Only Outside Editor
-                    </Label>
-                  </div>
-                  <Switch
-                    id="readonly"
-                    checked={data.readonly || false}
-                    onCheckedChange={(checked) => onDataChange({ readonly: checked })}
-                  />
-                </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 ml-6">
-                  When enabled, code is not editable in preview mode
-                </p>
-              </div>
-              
               {/* Show Line Numbers */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
