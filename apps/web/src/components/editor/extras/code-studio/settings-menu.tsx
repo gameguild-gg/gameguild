@@ -11,6 +11,7 @@ import {
   getEditorPreferences, 
   setGlobalPreference, 
   setNodeTypePreference,
+  hasNodeTypePreference,
   MODAL_SIZE_LABELS 
 } from "@/lib/storage/editor/editor-preferences"
 import { useState, useEffect, useRef } from "react"
@@ -31,11 +32,21 @@ export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-stu
   
   useEffect(() => {
     // Load preferences whenever menu opens
-    setIsLoading(true)
-    getEditorPreferences(nodeType).then((prefs: { modalSize: ModalSize }) => {
+    const loadPreferences = async () => {
+      setIsLoading(true)
+      
+      // Get current modal size
+      const prefs = await getEditorPreferences(nodeType)
       setModalSize(prefs.modalSize)
+      
+      // Check if there's a node-specific preference
+      const hasNodeSpecific = await hasNodeTypePreference(nodeType, 'modalSize')
+      setApplyToAllNodes(!hasNodeSpecific) // If has node-specific, switch is OFF
+      
       setIsLoading(false)
-    })
+    }
+    
+    loadPreferences()
   }, [nodeType])
   
   useEffect(() => {
@@ -204,21 +215,23 @@ export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-stu
               </div>
             </div>
             
-            <div className="flex items-center justify-between pt-2">
-              <Label htmlFor="applyToAll" className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
-                Apply to all node types
-              </Label>
+            <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col gap-0.5">
+                <Label htmlFor="applyToAll" className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                  Scope
+                </Label>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {applyToAllNodes 
+                    ? "All projects & nodes" 
+                    : "Code Studio nodes only"}
+                </span>
+              </div>
               <Switch
                 id="applyToAll"
                 checked={applyToAllNodes}
                 onCheckedChange={setApplyToAllNodes}
               />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {applyToAllNodes 
-                ? "Size will apply to all code editors" 
-                : "Size only for Code Studio nodes"}
-            </p>
           </div>
         </div>
       </div>
