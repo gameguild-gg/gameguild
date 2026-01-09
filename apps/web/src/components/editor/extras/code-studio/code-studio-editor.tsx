@@ -1415,24 +1415,10 @@ export function CodeStudioEditor({
     const hasExplorer = baseDisplay.panels.some(p => p.type === 'explorer')
 
     return (
-      <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
-        {/* Header compacto */}
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-center gap-2">
-            <Code2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className="font-medium text-sm">{localData.title || "Code Studio"}</span>
-            {localData.readonly && (
-              <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-full flex items-center gap-1">
-                <Lock className="h-3 w-3" />
-                Read Only
-              </span>
-            )}
-          </div>
-        </div>
-
+      <>
         {/* Layout renderizado com base no Display Base */}
         <div 
-          className="grid gap-3 p-3"
+          className="grid gap-3"
           style={{
             gridTemplateColumns: `repeat(${baseDisplay.aspectRatio === '2:1' ? 24 : 12}, 1fr)`,
             gridTemplateRows: `repeat(${baseDisplay.aspectRatio === '1:2' ? 24 : 12}, 1fr)`,
@@ -1452,13 +1438,7 @@ export function CodeStudioEditor({
             </div>
           ))}
         </div>
-
-        {localData.caption && (
-          <div className="p-2 text-xs text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800">
-            {localData.caption}
-          </div>
-        )}
-      </div>
+      </>
     )
   }
 
