@@ -1413,6 +1413,14 @@ export function CodeStudioEditor({
 
     // Verificar se há painel explorer no Display Base
     const hasExplorer = baseDisplay.panels.some(p => p.type === 'explorer')
+    
+    // Calcular altura máxima baseada nos painéis
+    const maxRowSpan = Math.max(...baseDisplay.panels.map(p => p.row + p.rowSpan))
+    const totalRows = baseDisplay.aspectRatio === '1:2' ? 24 : 12
+    
+    // Usar apenas as linhas necessárias para os painéis
+    const actualRows = maxRowSpan
+    const actualCols = baseDisplay.aspectRatio === '2:1' ? 24 : 12
 
     return (
       <>
@@ -1420,9 +1428,9 @@ export function CodeStudioEditor({
         <div 
           className="grid gap-3 w-full"
           style={{
-            gridTemplateColumns: `repeat(${baseDisplay.aspectRatio === '2:1' ? 24 : 12}, 1fr)`,
-            gridTemplateRows: `repeat(${baseDisplay.aspectRatio === '1:2' ? 24 : 12}, 1fr)`,
-            aspectRatio: baseDisplay.aspectRatio === '2:1' ? '2/1' : baseDisplay.aspectRatio === '1:2' ? '1/2' : '1/1',
+            gridTemplateColumns: `repeat(${actualCols}, 1fr)`,
+            gridTemplateRows: `repeat(${actualRows}, 1fr)`,
+            aspectRatio: `${actualCols}/${actualRows}`,
           }}
         >
           {baseDisplay.panels.map(panel => (
