@@ -1418,11 +1418,11 @@ export function CodeStudioEditor({
       <>
         {/* Layout renderizado com base no Display Base */}
         <div 
-          className="grid gap-3"
+          className="grid gap-3 w-full"
           style={{
             gridTemplateColumns: `repeat(${baseDisplay.aspectRatio === '2:1' ? 24 : 12}, 1fr)`,
             gridTemplateRows: `repeat(${baseDisplay.aspectRatio === '1:2' ? 24 : 12}, 1fr)`,
-            height: baseDisplay.aspectRatio === '2:1' ? '600px' : baseDisplay.aspectRatio === '1:2' ? '1200px' : '600px',
+            aspectRatio: baseDisplay.aspectRatio === '2:1' ? '2/1' : baseDisplay.aspectRatio === '1:2' ? '1/2' : '1/1',
           }}
         >
           {baseDisplay.panels.map(panel => (
