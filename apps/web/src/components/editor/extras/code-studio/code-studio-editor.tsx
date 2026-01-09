@@ -1610,10 +1610,20 @@ export function CodeStudioEditor({
 
               return (
                 <div
-                  className="w-full h-full"
+                  className={cn(
+                    "w-full h-full",
+                    localData.layout?.editMode && "border-2 border-blue-500 border-dashed"
+                  )}
                   style={{
                     maxWidth: scaledMaxWidth,
                     maxHeight: scaledMaxHeight,
+                    backgroundImage: localData.layout?.editMode 
+                      ? `linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+                         linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)`
+                      : undefined,
+                    backgroundSize: localData.layout?.editMode 
+                      ? `calc(100% / ${cols}) calc(100% / ${rows})`
+                      : undefined,
                   }}
                 >
                   <GridDropZone
