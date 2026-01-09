@@ -113,19 +113,15 @@ const db = new PreferencesDB()
 // Public API
 export async function getEditorPreferences(nodeType?: string): Promise<EditorPreferences> {
   const allPrefs = await db.get()
-  console.log('[EditorPrefs] Loading preferences for nodeType:', nodeType, allPrefs)
   
   if (nodeType && allPrefs.nodeTypes[nodeType]) {
     // Merge node-specific preferences with global defaults
-    const merged = {
+    return {
       ...allPrefs.global,
       ...allPrefs.nodeTypes[nodeType],
     }
-    console.log('[EditorPrefs] Returning merged preferences:', merged)
-    return merged
   }
   
-  console.log('[EditorPrefs] Returning global preferences:', allPrefs.global)
   return allPrefs.global
 }
 
@@ -148,9 +144,7 @@ export async function setGlobalPreference<K extends keyof EditorPreferences>(
     }
   }
   
-  console.log('[EditorPrefs] Saving global preference:', key, value, allPrefs)
   await db.set(allPrefs)
-  console.log('[EditorPrefs] Global preference saved successfully')
 }
 
 export async function setNodeTypePreference<K extends keyof EditorPreferences>(
@@ -190,6 +184,11 @@ export async function clearAllNodeTypePreferences(nodeType: string): Promise<voi
   const allPrefs = await db.get()
   delete allPrefs.nodeTypes[nodeType]
   await db.set(allPrefs)
+}
+
+export async function hasNodeTypePreference(nodeType: string, key: keyof EditorPreferences): Promise<boolean> {
+  const allPrefs = await db.get()
+  return !!(allPrefs.nodeTypes[nodeType] && allPrefs.nodeTypes[nodeType][key] !== undefined)
 }
 
 // Modal size helper
