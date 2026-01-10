@@ -84,7 +84,7 @@ By the end of this course, students will be able to:
 
 This course takes a experiential learning, fundamentals-first, implementation-focused approach to network programming. Students learn by building. Every concept is reinforced through hands-on coding assignments automatically tested via GitHub Actions. The course emphasizes:
 
-- _From Scratch_: No external networking libraries — students implement fundamentals using socket wrappers (Boost.Asio allowed for final projects only)
+- _From Scratch_: No external networking libraries - students implement fundamentals using socket wrappers (Boost.Asio allowed for final projects only)
 - _Continuous Integration_: Assignments auto-graded via GitHub Actions CI/CD
 - _Dual Perspective_: Content framed for both CS distributed systems and game programming real-time applications
 - _Industry Practices_: Wireshark analysis, Docker, protocol design, performance measurement under realistic network conditions
@@ -100,7 +100,7 @@ This course takes a experiential learning, fundamentals-first, implementation-fo
 
 ---
 
-## Spring 2026 — Week-by-Week Schedule
+## Spring 2026 - Week-by-Week Schedule
 
 **Schedule:** Tuesday & Friday, 1h15m each  
 **Audience:** Computer Science (2nd year) and Game Programming (4th year) majors
@@ -111,7 +111,7 @@ This course takes a experiential learning, fundamentals-first, implementation-fo
 
 **Primary Free Textbook:**
 
-- Peterson & Davie, _Computer Networks: A Systems Approach_ — [book.systemsapproach.org](https://book.systemsapproach.org/) (CC BY 4.0, free)
+- Peterson & Davie, _Computer Networks: A Systems Approach_ - [book.systemsapproach.org](https://book.systemsapproach.org/) (CC BY 4.0, free)
 
 **Essential Reading (All Students):**
 
@@ -144,13 +144,13 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ---
 
-### Week 01: Jan 12–16 — Network Fundamentals
+### Week 01: Jan 12–16 - Network Fundamentals
 
 **Tuesday, Jan 13:** Course intro, repo setup, OSI model, TCP/IP stack overview  
 **Friday, Jan 16:** Network devices, packets, basic addressing concepts
 
 **Quiz 01:** OSI layers, TCP/IP model, network device roles  
-**Coding Assignment 01:** _Packet Inspector_ — Parse raw packet data from a file, identify headers and payload
+**Coding Assignment 01:** _Packet Inspector_ - Parse raw packet data from a file, identify headers and payload
 
 **Readings:**
 
@@ -159,13 +159,13 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ---
 
-### Week 02: Jan 19–23 — IP Addressing and DNS
+### Week 02: Jan 19–23 - IP Addressing and DNS
 
 **Tuesday, Jan 20:** IPv4/IPv6 addressing, subnetting, CIDR notation  
 **Friday, Jan 23:** DNS resolution, routing basics, Wireshark intro
 
 **Quiz 02:** IP addressing, subnetting calculations, DNS resolution  
-**Coding Assignment 02:** _IP Calculator_ — Subnet analyzer that computes network address, broadcast, and host range
+**Coding Assignment 02:** _IP Calculator_ - Subnet analyzer that computes network address, broadcast, and host range
 
 **Readings:**
 
@@ -174,13 +174,13 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ---
 
-### Week 03: Jan 26–30 — UDP and Socket Basics
+### Week 03: Jan 26–30 - UDP and Socket Basics
 
 **Tuesday, Jan 27:** UDP characteristics, datagrams, when to use UDP  
 **Friday, Jan 30:** Berkeley sockets API, socket wrapper design
 
 **Quiz 03:** UDP protocol, datagram structure, socket fundamentals  
-**Coding Assignment 03:** _UDP Echo_ — Build a UDP echo client/server using provided socket wrapper boilerplate
+**Coding Assignment 03:** _UDP Echo_ - Build a UDP echo client/server using provided socket wrapper boilerplate
 
 **Readings:**
 
@@ -189,13 +189,13 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ---
 
-### Week 04: Feb 2–6 — TCP and Reliable Communication
+### Week 04: Feb 2–6 - TCP and Reliable Communication
 
 **Tuesday, Feb 3:** TCP handshake, connection lifecycle, reliability mechanisms  
 **Friday, Feb 6:** Flow control, congestion control, TCP vs UDP tradeoffs
 
 **Quiz 04:** TCP connection states, reliability mechanisms, flow control  
-**Coding Assignment 04:** _TCP Chat_ — Simple chat application with proper connection handling and graceful shutdown
+**Coding Assignment 04:** _TCP Chat_ - Simple chat application with proper connection handling and graceful shutdown
 
 **Readings:**
 
@@ -204,13 +204,13 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ---
 
-### Week 05: Feb 9–13 — Framing and Data Transmission
+### Week 05: Feb 9–13 - Framing and Data Transmission
 
 **Tuesday, Feb 10:** Message framing (length-prefix, delimiters), buffering  
 **Friday, Feb 13:** Handling partial reads/writes, deadlock prevention
 
 **Quiz 05:** Framing strategies, buffer management, transmission edge cases  
-**Coding Assignment 05:** _Framed Messenger_ — Length-prefixed message protocol with multi-message handling
+**Coding Assignment 05:** _Framed Messenger_ - Length-prefixed message protocol with multi-message handling
 
 **Readings:**
 
@@ -219,13 +219,13 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ---
 
-### Week 06: Feb 16–20 — Serialization
+### Week 06: Feb 16–20 - Serialization
 
 **Tuesday, Feb 17:** JSON, binary formats, struct packing, endianness  
 **Friday, Feb 20:** Custom bitpacking, compression techniques, performance comparison
 
 **Quiz 06:** Serialization formats, endianness, binary encoding  
-**Coding Assignment 06:** _Object Streamer_ — Serialize/deserialize custom objects using binary format with bitpacking
+**Coding Assignment 06:** _Object Streamer_ - Serialize/deserialize custom objects using binary format with bitpacking
 
 **Readings:**
 
@@ -235,13 +235,13 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ---
 
-### Week 07: Feb 23–27 — Distributed State and Synchronization
+### Week 07: Feb 23–27 - Distributed State and Synchronization
 
 **Tuesday, Feb 24:** State synchronization models (CS: distributed systems patterns / GPR: client-server vs P2P), delta compression  
 **Friday, Feb 27:** Lag compensation principles, server reconciliation, "never trust the client"
 
 **Quiz 07:** Synchronization patterns, lag compensation, reconciliation strategies  
-**Coding Assignment 07:** _State Sync_ — Replicate shared state between multiple clients with delta updates and basic reconciliation
+**Coding Assignment 07:** _State Sync_ - Replicate shared state between multiple clients with delta updates and basic reconciliation
 
 **Readings:**
 
@@ -255,7 +255,7 @@ _Focus: Fundamentals + Weekly Coding Assignments_
 
 ---
 
-### Week 08: Mar 2–6 — Midterm
+### Week 08: Mar 2–6 - Midterm
 
 **Tuesday, Mar 3:** Midterm review, Q&A, practice problems  
 **Friday, Mar 6:** **MIDTERM EXAM**
@@ -268,7 +268,7 @@ _No quiz this week_
 
 ---
 
-### Week 09: Mar 9–13 — SPRING BREAK
+### Week 09: Mar 9–13 - SPRING BREAK
 
 _No classes_
 
@@ -280,7 +280,7 @@ _Focus: Advanced Topics + Final Project Milestones_
 
 ---
 
-### Week 10: Mar 16–20 — HTTP, REST APIs, and Real-Time Web Protocols
+### Week 10: Mar 16–20 - HTTP, REST APIs, and Real-Time Web Protocols
 
 **Tuesday, Mar 17:** HTTP fundamentals, methods, status codes, statelessness  
 **Friday, Mar 20:** REST API design principles, WebSockets for bidirectional communication
@@ -296,7 +296,7 @@ _Focus: Advanced Topics + Final Project Milestones_
 
 ---
 
-### Week 11: Mar 23–27 — Non-Blocking I/O and Concurrency
+### Week 11: Mar 23–27 - Non-Blocking I/O and Concurrency
 
 **Tuesday, Mar 24:** Blocking vs non-blocking sockets, select/poll/epoll (CS: event-driven servers / GPR: game loop integration)  
 **Friday, Mar 27:** Multithreading basics, thread safety, async patterns
@@ -312,7 +312,7 @@ _Focus: Advanced Topics + Final Project Milestones_
 
 ---
 
-### Week 12: Mar 30 – Apr 3 — Performance, Simulation Frequency, and Reliability
+### Week 12: Mar 30 – Apr 3 - Performance, Simulation Frequency, and Reliability
 
 **Tuesday, Mar 31:** Latency, jitter, packet loss measurement, tick rates / simulation frequency (CS: update intervals / GPR: server tick rates), bandwidth tradeoffs  
 **Friday, Apr 3:** Reliable UDP implementation, acknowledgments, retransmission strategies, bandwidth management and prioritization
@@ -328,13 +328,13 @@ _Focus: Advanced Topics + Final Project Milestones_
 
 ---
 
-### Week 13: Apr 6–10 — Client Prediction and Interpolation / Smoothing
+### Week 13: Apr 6–10 - Client Prediction and Interpolation / Smoothing
 
 **Tuesday, Apr 7:** Client-side prediction, entity interpolation / smoothing (CS: optimistic updates / GPR: dead reckoning), input handling
 
 **Guest Lecturer:** Photon Quantum (confirmed, Tuesday)
 
-**Friday, Apr 10:** _NO CLASS — Day Off_
+**Friday, Apr 10:** _NO CLASS - Day Off_
 
 **Quiz 11:** Prediction, interpolation / smoothing, input delay concepts  
 **Project Milestone 04:** Alpha build (core networking features functional)
@@ -347,7 +347,7 @@ _Focus: Advanced Topics + Final Project Milestones_
 
 ---
 
-### Week 14: Apr 13–17 — Server Architecture and Session Management
+### Week 14: Apr 13–17 - Server Architecture and Session Management
 
 **Tuesday, Apr 14:** Authoritative servers, dedicated vs listen servers (CS: centralized vs distributed authority / GPR: host migration), rollback networking concepts  
 **Friday, Apr 17:** Session management, connection brokering / matchmaking (CS: service discovery / GPR: lobby systems), scaling considerations
@@ -363,7 +363,7 @@ _Focus: Advanced Topics + Final Project Milestones_
 
 ---
 
-### Week 15: Apr 20–24 — NAT Traversal and Security
+### Week 15: Apr 20–24 - NAT Traversal and Security
 
 **Tuesday, Apr 21:** NAT types, hole punching, STUN/TURN/ICE concepts (CS: peer connectivity / GPR: P2P game connections)  
 **Friday, Apr 24:** Network security, encryption basics, authentication, anti-cheat principles (fog of war, server authority, input validation)
@@ -382,7 +382,7 @@ _No quiz this week (last week before finals)_
 
 ---
 
-### Week 16: Apr 27 – May 1 — Final Project Delivery
+### Week 16: Apr 27 – May 1 - Final Project Delivery
 
 **Project Milestone 07 (Final):** Complete submission
 
@@ -541,8 +541,8 @@ Late submissions will incur a penalty of **1% deduction per day** up to a maximu
 
 ### Online Resources
 
-- [Gaffer On Games](https://gafferongames.com/) — Networking articles by Glenn Fiedler
-- [Valve Developer Community](https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking) — Source Engine networking
+- [Gaffer On Games](https://gafferongames.com/) - Networking articles by Glenn Fiedler
+- [Valve Developer Community](https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking) - Source Engine networking
 - [Unity Netcode for GameObjects](https://docs-multiplayer.unity3d.com/netcode/current/about/)
 - [Unreal Engine Networking](https://dev.epicgames.com/documentation/en-us/unreal-engine/networking-and-multiplayer-in-unreal-engine)
 

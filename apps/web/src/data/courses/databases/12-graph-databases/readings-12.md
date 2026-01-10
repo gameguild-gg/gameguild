@@ -1,4 +1,4 @@
-# Week 12 Readings & Resources — Graph Databases & Neo4j
+# Week 12 Readings & Resources - Graph Databases & Neo4j
 
 Curated collection of documentation, tutorials, tools, videos, and books for learning Neo4j and graph databases.
 
@@ -325,9 +325,9 @@ Annual conference with talks on graph databases, algorithms, and real-world use 
 
 **Recommended Talks:**
 
-- **"Graph Algorithms for Data Science"** — Practical applications of PageRank, community detection
-- **"Building Recommendation Engines with Neo4j"** — Collaborative filtering techniques
-- **"Fraud Detection with Graph Analytics"** — Pattern detection and anomaly analysis
+- **"Graph Algorithms for Data Science"** - Practical applications of PageRank, community detection
+- **"Building Recommendation Engines with Neo4j"** - Collaborative filtering techniques
+- **"Fraud Detection with Graph Analytics"** - Pattern detection and anomaly analysis
 
 ---
 
@@ -370,11 +370,11 @@ Free cloud instances with pre-loaded datasets.
 
 **Datasets Available:**
 
-1. **Movies** — Actors, directors, movies, ratings
-2. **Recommendations** — E-commerce product recommendations
-3. **Twitter Network** — Social network analysis
-4. **Fraud Detection** — Transaction patterns
-5. **Network Management** — IT infrastructure dependencies
+1. **Movies** - Actors, directors, movies, ratings
+2. **Recommendations** - E-commerce product recommendations
+3. **Twitter Network** - Social network analysis
+4. **Fraud Detection** - Transaction patterns
+5. **Network Management** - IT infrastructure dependencies
 
 ---
 

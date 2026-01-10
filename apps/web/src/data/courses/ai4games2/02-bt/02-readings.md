@@ -1,4 +1,4 @@
-# Week 02 Readings — Advanced Behavior Trees & Decision Trees
+# Week 02 Readings - Advanced Behavior Trees & Decision Trees
 
 ---
 
@@ -6,9 +6,9 @@
 
 | #   | Reading                                                                                                                                                                                                       | Time   | Covers                                                                                 |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------- |
-| 1   | Ian Millington, **AI for Games (3rd Ed.)**, Chapter 5 (Decision-Making Systems: FSMs, Behavior Trees, Decision Trees, Utility AI) — ISBN 9781138483972                                                        | 60 min | Core BT concepts, composition patterns, FSM vs BT trade-offs, practical implementation |
-| 2   | Anthony Francis, [Overcoming Pitfalls in BT Design](http://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter09_Overcoming_Pitfalls_in_Behavior_Tree_Design.pdf) (PDF) — Game AI Pro 3                           | 30 min | Production patterns, blackboard decoupling, architecture anti-patterns                 |
-| 3   | Bill Merrill, [Building Utility Decisions into Your Existing BT](https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter10_Building_Utility_Decisions_into_Your_Existing_Behavior_Tree.pdf) (PDF) — Game AI Pro | 25 min | Hybrid BT/Utility architecture, dynamic priority selection                             |
+| 1   | Ian Millington, **AI for Games (3rd Ed.)**, Chapter 5 (Decision-Making Systems: FSMs, Behavior Trees, Decision Trees, Utility AI) - ISBN 9781138483972                                                        | 60 min | Core BT concepts, composition patterns, FSM vs BT trade-offs, practical implementation |
+| 2   | Anthony Francis, [Overcoming Pitfalls in BT Design](http://www.gameaipro.com/GameAIPro3/GameAIPro3_Chapter09_Overcoming_Pitfalls_in_Behavior_Tree_Design.pdf) (PDF) - Game AI Pro 3                           | 30 min | Production patterns, blackboard decoupling, architecture anti-patterns                 |
+| 3   | Bill Merrill, [Building Utility Decisions into Your Existing BT](https://www.gameaipro.com/GameAIPro/GameAIPro_Chapter10_Building_Utility_Decisions_into_Your_Existing_Behavior_Tree.pdf) (PDF) - Game AI Pro | 25 min | Hybrid BT/Utility architecture, dynamic priority selection                             |
 
 **Focus while reading:**
 
@@ -20,9 +20,9 @@
 
 | #   | Video                                                                                                                                      | Time   | Covers                                                     |
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ---------------------------------------------------------- |
-| A   | GDC 2006 — [Three States and a Plan: The AI of F.E.A.R.](https://www.gdcvault.com/play/1013282/Three-States-and-a-Plan) (Jeff Orkin)       | 45 min | GOAP vs BT trade-offs, action planning, tactical behaviors |
-| B   | GDC 2018 — [Beyond Killzone: Creating New AI for Horizon Zero Dawn](https://www.gdcvault.com/play/1025010/Beyond-Killzone-Creating-New-AI) | 60 min | Scaling BTs for 25+ character types, open-world AI         |
-| C   | GDC 2016 — [AI Behavior Editing and Debugging in The Division](https://www.gdcvault.com/play/1023382/AI-Behavior-Editing-and-Debugging)    | 30 min | Production BT debugging, Snowdrop engine tools             |
+| A   | GDC 2006 - [Three States and a Plan: The AI of F.E.A.R.](https://www.gdcvault.com/play/1013282/Three-States-and-a-Plan) (Jeff Orkin)       | 45 min | GOAP vs BT trade-offs, action planning, tactical behaviors |
+| B   | GDC 2018 - [Beyond Killzone: Creating New AI for Horizon Zero Dawn](https://www.gdcvault.com/play/1025010/Beyond-Killzone-Creating-New-AI) | 60 min | Scaling BTs for 25+ character types, open-world AI         |
+| C   | GDC 2016 - [AI Behavior Editing and Debugging in The Division](https://www.gdcvault.com/play/1023382/AI-Behavior-Editing-and-Debugging)    | 30 min | Production BT debugging, Snowdrop engine tools             |
 
 ## Documentation & Tutorials
 
@@ -42,11 +42,11 @@
 
 | Resource                                                                                                                                                                                    | Time   | Focus                                                               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------- |
-| Ian Millington, **AI for Games (3rd Ed.)**, Chapter 7.6 (Decision Tree Learning) — ISBN 9781138483972                                                                                       | 40 min | ID3 algorithm, information gain, entropy, automatic tree generation |
-| GDC 2014 — [The Last of Us: Human Enemy AI](https://www.gdcvault.com/play/1020338/The-Last-of-Us-Human) (Travis McIntosh)                                                                   | 60 min | Behavior stacks, post selectors, real-time level analysis           |
-| GDC 2023 — [Preparing AI Systems for God of War Ragnarok](https://www.gdcvault.com/play/1028840/Preparing-AI-Systems-for-God)                                                               | 55 min | Migration from Lua to BTs, enhanced awareness systems               |
-| Sagredo-Olivenza et al., [Trained Behavior Trees](https://ieeexplore.ieee.org/document/8116624) — IEEE Transactions on Games                                                                | —      | ML-generated BTs from player demonstrations                         |
-| Robertson & Watson, [Building BTs from Observations in RTS Games](https://www.researchgate.net/publication/308809078_Building_behavior_trees_from_observations_in_real-time_strategy_games) | —      | Motif-finding for automatic BT extraction                           |
+| Ian Millington, **AI for Games (3rd Ed.)**, Chapter 7.6 (Decision Tree Learning) - ISBN 9781138483972                                                                                       | 40 min | ID3 algorithm, information gain, entropy, automatic tree generation |
+| GDC 2014 - [The Last of Us: Human Enemy AI](https://www.gdcvault.com/play/1020338/The-Last-of-Us-Human) (Travis McIntosh)                                                                   | 60 min | Behavior stacks, post selectors, real-time level analysis           |
+| GDC 2023 - [Preparing AI Systems for God of War Ragnarok](https://www.gdcvault.com/play/1028840/Preparing-AI-Systems-for-God)                                                               | 55 min | Migration from Lua to BTs, enhanced awareness systems               |
+| Sagredo-Olivenza et al., [Trained Behavior Trees](https://ieeexplore.ieee.org/document/8116624) - IEEE Transactions on Games                                                                | -      | ML-generated BTs from player demonstrations                         |
+| Robertson & Watson, [Building BTs from Observations in RTS Games](https://www.researchgate.net/publication/308809078_Building_behavior_trees_from_observations_in_real-time_strategy_games) | -      | Motif-finding for automatic BT extraction                           |
 
 ## Code Study (Optional)
 

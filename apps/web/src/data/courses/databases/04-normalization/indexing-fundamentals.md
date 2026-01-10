@@ -1,6 +1,6 @@
 # Indexing Fundamentals
 
-Indexes are data structures that improve the speed of data retrieval operations on database tables. They work similarly to an index in a book — instead of reading every page to find a topic, you look it up in the index and go directly to the relevant page.
+Indexes are data structures that improve the speed of data retrieval operations on database tables. They work similarly to an index in a book - instead of reading every page to find a topic, you look it up in the index and go directly to the relevant page.
 
 ---
 
@@ -8,7 +8,7 @@ Indexes are data structures that improve the speed of data retrieval operations 
 
 ### Without an Index
 
-When you query a table without an index, the database must perform a **full table scan** — reading every row to find matches.
+When you query a table without an index, the database must perform a **full table scan** - reading every row to find matches.
 
 ```sql
 SELECT * FROM customers WHERE email = 'alice@example.com';
@@ -115,7 +115,7 @@ But **NOT** efficiently for:
 - Queries on `C` alone
 - Queries on `B` and `C`
 
-Think of it like a phone book sorted by (Last Name, First Name) — you can look up "Smith" quickly, or "Smith, John", but not all "Johns".
+Think of it like a phone book sorted by (Last Name, First Name) - you can look up "Smith" quickly, or "Smith, John", but not all "Johns".
 
 ### Unique Index
 
@@ -229,8 +229,8 @@ BRIN indexes are much smaller than B-Tree but only effective when data is physic
 
 PostgreSQL automatically creates indexes for:
 
-1. **PRIMARY KEY** — Unique B-Tree index
-2. **UNIQUE constraints** — Unique B-Tree index
+1. **PRIMARY KEY** - Unique B-Tree index
+2. **UNIQUE constraints** - Unique B-Tree index
 
 ```sql
 CREATE TABLE users (
@@ -330,7 +330,7 @@ An index is typically beneficial when a query selects **less than 5-15%** of the
 
 ## Index-Only Scans (Covering Indexes)
 
-When all columns needed by a query are in the index, PostgreSQL can answer the query using **only the index** — never touching the table.
+When all columns needed by a query are in the index, PostgreSQL can answer the query using **only the index** - never touching the table.
 
 ```sql
 -- Create index including both columns
@@ -554,13 +554,13 @@ For a table with 10 million rows and heavy INSERT traffic (1000 inserts/second),
 
 ## Key Takeaways
 
-1. **Indexes speed up reads but slow down writes** — use them strategically
+1. **Indexes speed up reads but slow down writes** - use them strategically
 2. **B-Tree is the default** and works for most use cases (equality, ranges, ordering)
 3. **Foreign keys need manual indexes** in PostgreSQL
-4. **Composite index column order matters** — put high-selectivity columns first
+4. **Composite index column order matters** - put high-selectivity columns first
 5. **Partial indexes** reduce size for filtered queries
 6. **Use EXPLAIN ANALYZE** to verify index usage
 7. **Covering indexes** enable index-only scans
 8. **Maintain indexes** with VACUUM, ANALYZE, and occasional REINDEX
 9. **Name indexes consistently** for easier maintenance
-10. **Don't over-index** — each index has storage and write overhead
+10. **Don't over-index** - each index has storage and write overhead

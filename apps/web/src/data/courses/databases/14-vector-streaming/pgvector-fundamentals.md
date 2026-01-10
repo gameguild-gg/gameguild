@@ -1,4 +1,4 @@
-# pgvector Fundamentals — Vector Databases
+# pgvector Fundamentals - Vector Databases
 
 ## Introduction
 

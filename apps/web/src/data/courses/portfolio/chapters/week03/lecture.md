@@ -185,7 +185,7 @@ I’d love to connect and learn more about your experiences in the industry. Loo
 ## Conclusion
 
 By implementing these strategies, you’ll build a strong LinkedIn presence that reflects your skills, experience, and
-aspirations in the game industry. Networking is an ongoing process—keep engaging with posts, sharing your projects, and
+aspirations in the game industry. Networking is an ongoing process-keep engaging with posts, sharing your projects, and
 connecting with professionals to expand your opportunities!
 
 Happy networking!

@@ -75,7 +75,7 @@ This quiz tests your understanding of **subqueries** (scalar, IN, EXISTS, ANY/AL
 
 ### Question 8
 
-**All views are updatable — you can always INSERT, UPDATE, or DELETE through a view.**
+**All views are updatable - you can always INSERT, UPDATE, or DELETE through a view.**
 
 - [ ] True
 - [ ] False
@@ -426,7 +426,7 @@ SELECT n FROM nums;
 
 ---
 
-### Question 34 — Requirement → SQL
+### Question 34 - Requirement → SQL
 
 **Requirement:** Find customers who have placed at least one order (use EXISTS).
 
@@ -458,7 +458,7 @@ WHERE o.customer_id EXISTS (SELECT 1 FROM orders o);
 
 ---
 
-### Question 35 — SQL → Description
+### Question 35 - SQL → Description
 
 **What does this query find?**
 
@@ -474,7 +474,7 @@ WHERE price > ALL (SELECT price FROM products WHERE category_id = 5);
 
 ---
 
-### Question 36 — Requirement → SQL
+### Question 36 - Requirement → SQL
 
 **Requirement:** Combine customer emails and employee emails into one list, removing duplicates.
 
@@ -510,7 +510,7 @@ SELECT email FROM employees;
 
 ---
 
-### Question 37 — SQL → Description
+### Question 37 - SQL → Description
 
 **What does this query produce?**
 
@@ -537,7 +537,7 @@ ORDER BY cs.avg_price DESC;
 
 ---
 
-### Question 38 — Requirement → SQL
+### Question 38 - Requirement → SQL
 
 **Requirement:** Find products that have been ordered in both January AND February 2026.
 
@@ -585,7 +585,7 @@ WHERE o.created_at >= '2026-02-01' AND o.created_at < '2026-03-01';
 
 ---
 
-### Question 39 — SQL → Description
+### Question 39 - SQL → Description
 
 **What hierarchy does this recursive CTE traverse?**
 
@@ -611,7 +611,7 @@ SELECT * FROM org_chart ORDER BY level;
 
 ---
 
-### Question 40 — Requirement → SQL
+### Question 40 - Requirement → SQL
 
 **Requirement:** Create a view showing only active products with their category names, hiding the internal flags and timestamps.
 
@@ -655,7 +655,7 @@ WHERE p.is_active = true;
 
 ---
 
-### Question 41 — SQL → Description
+### Question 41 - SQL → Description
 
 **What does this correlated subquery find?**
 
@@ -675,7 +675,7 @@ WHERE price = (
 
 ---
 
-### Question 42 — Requirement → SQL
+### Question 42 - Requirement → SQL
 
 **Requirement:** Find all customer emails that are NOT in the employees table (customers only, not employees).
 
@@ -711,7 +711,7 @@ SELECT email FROM employees;
 
 ---
 
-### Question 43 — SQL → Description
+### Question 43 - SQL → Description
 
 **What happens when you query this view after the underlying data changes?**
 
@@ -730,7 +730,7 @@ SELECT * FROM recent_orders;
 
 ---
 
-### Question 44 — Requirement → SQL
+### Question 44 - Requirement → SQL
 
 **Requirement:** Create a materialized view for monthly sales totals that can be refreshed without blocking reads.
 
@@ -773,7 +773,7 @@ FROM orders GROUP BY DATE_TRUNC('month', order_date);
 
 ---
 
-### Question 45 — SQL → Description
+### Question 45 - SQL → Description
 
 **What problem does this query solve?**
 

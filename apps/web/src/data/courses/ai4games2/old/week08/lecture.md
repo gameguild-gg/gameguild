@@ -6,7 +6,7 @@ We already covered briefly multi agents when we covered the topic agents. In thi
 
 ## 1. Introduction
 
-In its classical form, GOAP is often used for single-agent planning where actions are assumed to be atomic—occurring instantaneously without interfering with one another. Naturally, when multiple agents share the same environment, planning becomes significantly more complex. Agents not only have to reason about their own actions but also account for the fact that their actions might block resources (like grid positions or shared resources) for a period of time.
+In its classical form, GOAP is often used for single-agent planning where actions are assumed to be atomic-occurring instantaneously without interfering with one another. Naturally, when multiple agents share the same environment, planning becomes significantly more complex. Agents not only have to reason about their own actions but also account for the fact that their actions might block resources (like grid positions or shared resources) for a period of time.
 
 In a multi-agent setting, actions have **durations** and can **block time slots** and **spaces** or **temporal state block**. For example, while an agent is walking, it will plan ahead that at time X it will be at position Z. Other agents must then consider that position Z will be unavailable at that time.
 
@@ -133,6 +133,6 @@ In real-world applications, the exact duration of actions might vary, and unexpe
 
 ### 7. Conclusion
 
-Modifying GOAP for a multi-agent environment requires a shift in perspective—from instantaneous actions to actions that take time and occupy space over intervals. By integrating a temporal dimension, incorporating action durations, and establishing a reservation system for resources, agents can plan their actions in a way that minimizes conflicts and improves overall coordination.
+Modifying GOAP for a multi-agent environment requires a shift in perspective-from instantaneous actions to actions that take time and occupy space over intervals. By integrating a temporal dimension, incorporating action durations, and establishing a reservation system for resources, agents can plan their actions in a way that minimizes conflicts and improves overall coordination.
 
 This multi-agent extension not only increases the realism of the simulation (or game) but also allows agents to act more intelligently in dynamic, shared environments where every action has both a spatial and temporal footprint. Through careful design of state representations, action definitions, and planning algorithms, we can achieve a robust multi-agent system that balances individual objectives with the collective needs of the environment.

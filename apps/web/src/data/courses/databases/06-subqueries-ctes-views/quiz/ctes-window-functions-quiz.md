@@ -8,7 +8,7 @@ This quiz tests your understanding of **Common Table Expressions (CTEs)** and **
 
 ## Moved from Week 02 DDL/DML/DQL Quiz
 
-### Question 1 — SQL → Description (CTE + Window Functions)
+### Question 1 - SQL → Description (CTE + Window Functions)
 
 **Given this SQL statement:**
 

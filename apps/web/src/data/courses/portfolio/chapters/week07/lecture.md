@@ -2,7 +2,7 @@
 
 ## Lecture Content
 
-At this stage, you should have a solid foundation for your **centerpiece project**—the work that will showcase your skills and define your portfolio. This week, we’ll focus on assessing progress, troubleshooting challenges, and incorporating feedback effectively.
+At this stage, you should have a solid foundation for your **centerpiece project**-the work that will showcase your skills and define your portfolio. This week, we’ll focus on assessing progress, troubleshooting challenges, and incorporating feedback effectively.
 
 ---
 
@@ -42,7 +42,7 @@ Projects rarely go exactly as planned, and that’s okay. What matters is how yo
 | Time management struggles     | Use a task tracker, schedule focused work blocks, and limit distractions     |  
 
 ### **Timeboxing and Adjusting Goals**
-Timeboxing—allocating a fixed amount of time to a task—can **prevent over-investing in minor details**. If something takes too long, reassess its importance and either simplify or move on.
+Timeboxing-allocating a fixed amount of time to a task-can **prevent over-investing in minor details**. If something takes too long, reassess its importance and either simplify or move on.
 
 
 !!! quiz
@@ -59,7 +59,7 @@ Timeboxing—allocating a fixed amount of time to a task—can **prevent over-in
 ## **Incorporating Feedback Into Your Project**
 
 ### **The Iterative Process**
-Feedback is **not a critique of your abilities**—it’s a tool for improvement. The best projects evolve through iteration, where you:
+Feedback is **not a critique of your abilities**-it’s a tool for improvement. The best projects evolve through iteration, where you:
 
 1. Build an initial version
 2. Get feedback

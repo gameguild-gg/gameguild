@@ -1,4 +1,4 @@
-# Redis Fundamentals — Key-Value Store
+# Redis Fundamentals - Key-Value Store
 
 ## What is Redis?
 

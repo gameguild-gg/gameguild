@@ -1,4 +1,4 @@
-# Quiz 12 — Vector Databases & Event Streaming
+# Quiz 12 - Vector Databases & Event Streaming
 
 **Due:** Thursday, April 16, 2026
 **Topics:** pgvector, Embeddings, Similarity Search, Kafka, Topics, Partitions, Producers, Consumers
@@ -27,13 +27,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) Store and query high-dimensional vector embeddings for similarity search** — pgvector adds a `vector` data type to PostgreSQL, enabling storage of embeddings (e.g., [0.1, 0.2, 0.3, ...]) and similarity search using operators like `<=>` (cosine distance), `<->` (L2 distance).
+- ✅ **B) Store and query high-dimensional vector embeddings for similarity search** - pgvector adds a `vector` data type to PostgreSQL, enabling storage of embeddings (e.g., [0.1, 0.2, 0.3, ...]) and similarity search using operators like `<=>` (cosine distance), `<->` (L2 distance).
 
-- ❌ **A) Compress large tables to save disk space** — pgvector doesn't compress tables. Use PostgreSQL's native compression or TimescaleDB for that.
+- ❌ **A) Compress large tables to save disk space** - pgvector doesn't compress tables. Use PostgreSQL's native compression or TimescaleDB for that.
 
-- ❌ **C) Create vector graphics in database reports** — pgvector is for numerical vectors (embeddings), not graphics.
+- ❌ **C) Create vector graphics in database reports** - pgvector is for numerical vectors (embeddings), not graphics.
 
-- ❌ **D) Accelerate SQL queries with vectorized execution** — This refers to query execution optimization (SIMD), not pgvector's purpose.
+- ❌ **D) Accelerate SQL queries with vectorized execution** - This refers to query execution optimization (SIMD), not pgvector's purpose.
 
 **Key Concept:** pgvector enables AI/ML use cases like semantic search, RAG, and recommendation systems by storing embeddings and computing similarity.
 
@@ -55,13 +55,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) Cosine distance (`<=>`)** — OpenAI embeddings are **normalized** (unit length), making cosine similarity the ideal metric. Cosine measures the angle between vectors, not magnitude, which is perfect for semantic similarity.
+- ✅ **B) Cosine distance (`<=>`)** - OpenAI embeddings are **normalized** (unit length), making cosine similarity the ideal metric. Cosine measures the angle between vectors, not magnitude, which is perfect for semantic similarity.
 
-- ❌ **A) Euclidean distance (`<->`)** — Works for embeddings but less common for text. Better for image embeddings or non-normalized vectors.
+- ❌ **A) Euclidean distance (`<->`)** - Works for embeddings but less common for text. Better for image embeddings or non-normalized vectors.
 
-- ❌ **C) Inner product (`<#>`)** — Rarely used. Only for specific ML models requiring dot product similarity.
+- ❌ **C) Inner product (`<#>`)** - Rarely used. Only for specific ML models requiring dot product similarity.
 
-- ❌ **D) Manhattan distance** — Not supported by pgvector.
+- ❌ **D) Manhattan distance** - Not supported by pgvector.
 
 **Key Concept:** Cosine similarity (`<=>`) is the standard for text embeddings because it ignores vector magnitude and focuses on direction (meaning).
 
@@ -83,13 +83,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) Accelerate similarity search using approximate nearest neighbor (ANN) algorithms** — Without indices, pgvector scans **all vectors** (exact search, slow). IVFFlat and HNSW use ANN algorithms to search only a subset of vectors, achieving 10-1000x speedup with 95-99%+ accuracy.
+- ✅ **B) Accelerate similarity search using approximate nearest neighbor (ANN) algorithms** - Without indices, pgvector scans **all vectors** (exact search, slow). IVFFlat and HNSW use ANN algorithms to search only a subset of vectors, achieving 10-1000x speedup with 95-99%+ accuracy.
 
-- ❌ **A) Ensure data integrity and prevent duplicates** — Indices don't enforce uniqueness in pgvector.
+- ❌ **A) Ensure data integrity and prevent duplicates** - Indices don't enforce uniqueness in pgvector.
 
-- ❌ **C) Compress embeddings to reduce storage** — Indices don't compress data; they optimize search.
+- ❌ **C) Compress embeddings to reduce storage** - Indices don't compress data; they optimize search.
 
-- ❌ **D) Automatically generate embeddings from text** — Embeddings must be generated externally (OpenAI API, ML models).
+- ❌ **D) Automatically generate embeddings from text** - Embeddings must be generated externally (OpenAI API, ML models).
 
 **Key Concept:** Use **IVFFlat** for < 1M vectors, **HNSW** for 1M-10M vectors when query speed is critical.
 
@@ -111,13 +111,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) Retrieve relevant documents based on semantic similarity** — In RAG, pgvector retrieves the most relevant documents (via similarity search on query embeddings), which are then provided as context to the LLM for answer generation.
+- ✅ **B) Retrieve relevant documents based on semantic similarity** - In RAG, pgvector retrieves the most relevant documents (via similarity search on query embeddings), which are then provided as context to the LLM for answer generation.
 
-- ❌ **A) Generate responses to user questions** — The LLM (GPT-4, Claude) generates responses, not pgvector.
+- ❌ **A) Generate responses to user questions** - The LLM (GPT-4, Claude) generates responses, not pgvector.
 
-- ❌ **C) Fine-tune the language model** — RAG doesn't require fine-tuning; it augments prompts with retrieved context.
+- ❌ **C) Fine-tune the language model** - RAG doesn't require fine-tuning; it augments prompts with retrieved context.
 
-- ❌ **D) Translate user queries to different languages** — Translation is an LLM task, not vector search.
+- ❌ **D) Translate user queries to different languages** - Translation is an LLM task, not vector search.
 
 **Key Concept:** RAG = **Retrieve** (pgvector) + **Augment** (add context to prompt) + **Generate** (LLM response).
 
@@ -139,13 +139,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) Number of clusters for approximate search** — IVFFlat divides vectors into `lists` clusters. During search, only the closest clusters are scanned (approximate search). More lists = better accuracy but slower queries.
+- ✅ **B) Number of clusters for approximate search** - IVFFlat divides vectors into `lists` clusters. During search, only the closest clusters are scanned (approximate search). More lists = better accuracy but slower queries.
 
-- ❌ **A) Number of vector dimensions** — Dimensions are defined in the table schema: `vector(1536)`.
+- ❌ **A) Number of vector dimensions** - Dimensions are defined in the table schema: `vector(1536)`.
 
-- ❌ **C) Replication factor for fault tolerance** — pgvector doesn't manage replication; that's a PostgreSQL cluster feature.
+- ❌ **C) Replication factor for fault tolerance** - pgvector doesn't manage replication; that's a PostgreSQL cluster feature.
 
-- ❌ **D) Compression level for embeddings** — IVFFlat doesn't compress data.
+- ❌ **D) Compression level for embeddings** - IVFFlat doesn't compress data.
 
 **Key Concept:** `lists` rule of thumb: `sqrt(rows)` for datasets < 1M rows. Example: 100K rows → `lists = 316`.
 
@@ -167,13 +167,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) A named category or feed to which events are published** — Topics are like channels (e.g., `order-events`, `user-clicks`). Producers publish events to topics, and consumers subscribe to topics.
+- ✅ **B) A named category or feed to which events are published** - Topics are like channels (e.g., `order-events`, `user-clicks`). Producers publish events to topics, and consumers subscribe to topics.
 
-- ❌ **A) A database table for storing events** — Topics are append-only logs, not tables. They don't support UPDATE or DELETE.
+- ❌ **A) A database table for storing events** - Topics are append-only logs, not tables. They don't support UPDATE or DELETE.
 
-- ❌ **C) A queue for task processing** — Topics are publish/subscribe systems, not traditional queues (like RabbitMQ). Multiple consumer groups can read the same topic.
+- ❌ **C) A queue for task processing** - Topics are publish/subscribe systems, not traditional queues (like RabbitMQ). Multiple consumer groups can read the same topic.
 
-- ❌ **D) A consumer group identifier** — Consumer groups are separate from topics.
+- ❌ **D) A consumer group identifier** - Consumer groups are separate from topics.
 
 **Key Concept:** Topics are **multi-subscriber** (many consumers), **append-only**, and **immutable**.
 
@@ -195,13 +195,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) Enable parallel processing and scalability** — Each partition is an ordered sequence of events. Multiple consumers (in the same group) can process different partitions in parallel, enabling horizontal scalability.
+- ✅ **B) Enable parallel processing and scalability** - Each partition is an ordered sequence of events. Multiple consumers (in the same group) can process different partitions in parallel, enabling horizontal scalability.
 
-- ❌ **A) Encrypt data for security** — Partitions don't handle encryption; that's configured separately.
+- ❌ **A) Encrypt data for security** - Partitions don't handle encryption; that's configured separately.
 
-- ❌ **C) Compress events to save storage** — Compression is a separate Kafka configuration (gzip, snappy, lz4).
+- ❌ **C) Compress events to save storage** - Compression is a separate Kafka configuration (gzip, snappy, lz4).
 
-- ❌ **D) Automatically delete old events** — Retention policies (time-based or size-based) delete old events, not partitions.
+- ❌ **D) Automatically delete old events** - Retention policies (time-based or size-based) delete old events, not partitions.
 
 **Key Concept:** More partitions = more parallelism. Example: 10 partitions → 10 consumers can process in parallel.
 
@@ -223,13 +223,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) Hash of the key modulo number of partitions** — Kafka hashes the message key and uses modulo to determine the partition. This ensures **events with the same key always go to the same partition**, preserving order for that key.
+- ✅ **B) Hash of the key modulo number of partitions** - Kafka hashes the message key and uses modulo to determine the partition. This ensures **events with the same key always go to the same partition**, preserving order for that key.
 
-- ❌ **A) Round-robin across all partitions** — Round-robin is used when **no key** is provided.
+- ❌ **A) Round-robin across all partitions** - Round-robin is used when **no key** is provided.
 
-- ❌ **C) Randomly assigns to any partition** — Kafka uses deterministic hashing, not random assignment.
+- ❌ **C) Randomly assigns to any partition** - Kafka uses deterministic hashing, not random assignment.
 
-- ❌ **D) Always assigns to partition 0** — Keys are distributed across all partitions.
+- ❌ **D) Always assigns to partition 0** - Keys are distributed across all partitions.
 
 **Key Concept:** Use keys when **ordering matters** (e.g., all events for user-123 must be processed in order).
 
@@ -251,13 +251,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) A set of consumers that cooperate to consume partitions from a topic** — Consumers in the same group divide partitions among themselves (load balancing). Each partition is consumed by **one consumer per group**. Multiple groups can independently consume the same topic.
+- ✅ **B) A set of consumers that cooperate to consume partitions from a topic** - Consumers in the same group divide partitions among themselves (load balancing). Each partition is consumed by **one consumer per group**. Multiple groups can independently consume the same topic.
 
-- ❌ **A) A group of topics consumed together** — Consumer groups consume from one or more topics, but they're not "grouped topics."
+- ❌ **A) A group of topics consumed together** - Consumer groups consume from one or more topics, but they're not "grouped topics."
 
-- ❌ **C) A partition replication strategy** — Replication is managed by Kafka brokers, not consumer groups.
+- ❌ **C) A partition replication strategy** - Replication is managed by Kafka brokers, not consumer groups.
 
-- ❌ **D) A message compression algorithm** — Compression (gzip, snappy) is separate from consumer groups.
+- ❌ **D) A message compression algorithm** - Compression (gzip, snappy) is separate from consumer groups.
 
 **Key Concept:** Consumer groups enable **parallel processing** and **independent consumption** by multiple applications.
 
@@ -279,13 +279,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **A) A unique identifier for each event within a partition** — Offsets are **sequential integers** (0, 1, 2, ...) that uniquely identify each event in a partition. Consumers track their current offset to know which events have been processed.
+- ✅ **A) A unique identifier for each event within a partition** - Offsets are **sequential integers** (0, 1, 2, ...) that uniquely identify each event in a partition. Consumers track their current offset to know which events have been processed.
 
-- ❌ **B) The time delay between producer and consumer** — That's latency, not offset.
+- ❌ **B) The time delay between producer and consumer** - That's latency, not offset.
 
-- ❌ **C) The number of replicas for a partition** — Replication factor is configured separately.
+- ❌ **C) The number of replicas for a partition** - Replication factor is configured separately.
 
-- ❌ **D) A consumer group name** — Group IDs are separate from offsets.
+- ❌ **D) A consumer group name** - Group IDs are separate from offsets.
 
 **Key Concept:** Offsets enable **resumable consumption**. If a consumer crashes, it can resume from the last committed offset.
 
@@ -307,13 +307,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **C) Kafka rebalances and assigns the failed consumer's partitions to other consumers** — When a consumer fails, Kafka detects the failure (via heartbeats) and triggers a **rebalance**. The failed consumer's partitions are reassigned to remaining consumers in the group, ensuring no data loss.
+- ✅ **C) Kafka rebalances and assigns the failed consumer's partitions to other consumers** - When a consumer fails, Kafka detects the failure (via heartbeats) and triggers a **rebalance**. The failed consumer's partitions are reassigned to remaining consumers in the group, ensuring no data loss.
 
-- ❌ **A) All events are lost** — Events are persisted in Kafka; they're not lost when consumers fail.
+- ❌ **A) All events are lost** - Events are persisted in Kafka; they're not lost when consumers fail.
 
-- ❌ **B) The topic is deleted** — Topics are independent of consumers.
+- ❌ **B) The topic is deleted** - Topics are independent of consumers.
 
-- ❌ **D) New events are rejected until the consumer restarts** — Producers continue publishing; events are buffered until consumed.
+- ❌ **D) New events are rejected until the consumer restarts** - Producers continue publishing; events are buffered until consumed.
 
 **Key Concept:** Kafka provides **fault tolerance** through automatic rebalancing.
 
@@ -335,13 +335,13 @@ Answer all 12 questions. Each question has **one correct answer** unless otherwi
 
 **Explanations:**
 
-- ✅ **B) When you need to ensure events are processed successfully before marking them as consumed** — Auto-commit commits offsets periodically (e.g., every 5 seconds), even if processing fails. Manual commit allows you to commit **only after successful processing**, preventing data loss or duplicate processing.
+- ✅ **B) When you need to ensure events are processed successfully before marking them as consumed** - Auto-commit commits offsets periodically (e.g., every 5 seconds), even if processing fails. Manual commit allows you to commit **only after successful processing**, preventing data loss or duplicate processing.
 
-- ❌ **A) When you want faster processing** — Manual commits add overhead, making processing slightly slower.
+- ❌ **A) When you want faster processing** - Manual commits add overhead, making processing slightly slower.
 
-- ❌ **C) When you're using multiple consumer groups** — Commit strategy is independent of the number of groups.
+- ❌ **C) When you're using multiple consumer groups** - Commit strategy is independent of the number of groups.
 
-- ❌ **D) When topics have many partitions** — Commit strategy is independent of partition count.
+- ❌ **D) When topics have many partitions** - Commit strategy is independent of partition count.
 
 **Key Concept:** Manual commit pattern:
 ```typescript

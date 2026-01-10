@@ -373,7 +373,7 @@ GROUP BY category;
 
 ---
 
-### Question 26 — Requirement → SQL
+### Question 26 - Requirement → SQL
 
 **Requirement:** Find all employees whose salary is between $40,000 and $80,000 (inclusive), work in either the 'Engineering' or 'Marketing' department, and have a non-null manager_id.
 
@@ -413,7 +413,7 @@ WHERE salary > 40000 AND salary < 80000
 
 ---
 
-### Question 27 — SQL → Description
+### Question 27 - SQL → Description
 
 **What does this query do?**
 
@@ -447,7 +447,7 @@ HAVING COUNT(*) > 100;
 
 ---
 
-### Question 28 — Requirement → SQL
+### Question 28 - Requirement → SQL
 
 **Requirement:** Calculate the total revenue, number of orders, and average order value for each month in 2025, but only show months where total revenue exceeded $10,000.
 
@@ -504,7 +504,7 @@ HAVING total_revenue > 10000;
 
 ---
 
-### Question 29 — SQL → Description
+### Question 29 - SQL → Description
 
 **What does this query find?**
 
@@ -525,7 +525,7 @@ WHERE product_id NOT IN (
 
 ---
 
-### Question 30 — Requirement → SQL
+### Question 30 - Requirement → SQL
 
 **Requirement:** Find customers who have placed more than 5 orders AND have spent a total of more than $500, showing their name, order count, and total spent, sorted by total spent descending.
 

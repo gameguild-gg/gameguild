@@ -1,4 +1,4 @@
-# Week 11 — Redis & Cassandra Readings & Resources
+# Week 11 - Redis & Cassandra Readings & Resources
 
 ## Redis (Key-Value Store)
 

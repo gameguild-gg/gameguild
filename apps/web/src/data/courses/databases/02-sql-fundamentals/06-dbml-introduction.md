@@ -616,12 +616,12 @@ Consider:
 
 ## Key Takeaways
 
-1. **DBML is for design** — Use it to plan schemas before writing SQL
-2. **Human-readable** — Easier to review and understand than DDL
-3. **Tool integration** — Works with dbdiagram.io for visualization
-4. **Database-agnostic** — Export to PostgreSQL, MySQL, SQL Server, etc.
-5. **Documentation** — Self-documenting with notes and comments
-6. **Version control** — Plain text files work great with git
+1. **DBML is for design** - Use it to plan schemas before writing SQL
+2. **Human-readable** - Easier to review and understand than DDL
+3. **Tool integration** - Works with dbdiagram.io for visualization
+4. **Database-agnostic** - Export to PostgreSQL, MySQL, SQL Server, etc.
+5. **Documentation** - Self-documenting with notes and comments
+6. **Version control** - Plain text files work great with git
 
 ---
 

@@ -1,9 +1,9 @@
 # Wave Function Collapse (WFC) for Games
 
-Ah, **Wave Function Collapse**—a term that sounds like it belongs in a science fiction novel, but in reality, it's an
+Ah, **Wave Function Collapse**-a term that sounds like it belongs in a science fiction novel, but in reality, it's an
 algorithm with a fancy name that doesn’t really involve any quantum magic. It's widely used in **Procedural Content
 Generation (PCG)**, a technique that game developers absolutely adore because it makes their lives easier. But don’t let
-the quantum-themed name fool you—there’s no need for Schrödinger’s cat or any collapsing universes here.
+the quantum-themed name fool you-there’s no need for Schrödinger’s cat or any collapsing universes here.
 
 ::: note "🚨 **Personal Opinion Alert**:"
 Who came up with this name? Sure, it sounds cool and science-y, but it's about as quantum as my morning coffee. Let’s be
@@ -18,13 +18,13 @@ generate images and textures following specific rules, and game devs were like, 
 
 Imagine you have a blank world (a grid, pixels, voxels, whatever). You also have a set of rules about what goes where (
 e.g., no putting rivers next to mountains). WFC's job is to fill this world, slot by slot, making sure everything sticks
-to the rules. It's a bit like Sudoku—but instead of numbers, you're dealing with game elements like terrain tiles,
+to the rules. It's a bit like Sudoku-but instead of numbers, you're dealing with game elements like terrain tiles,
 rooms, or textures. Easy-peasy, right?
 
 Here’s the general rundown:
 
 * **Sampling the World**: First, create some slots to fill (think of pixels, textures, or rooms in a dungeon).
-* **Set the Rules**: Define the constraints for your content—like which tile can sit next to which. No roads to nowhere!
+* **Set the Rules**: Define the constraints for your content-like which tile can sit next to which. No roads to nowhere!
 * **Collapse the World**: Start with an empty world and let the algorithm fill in the blanks, one tile at a time,
   according to the rules. This is the "collapse" part.
 
@@ -34,7 +34,7 @@ Now let's break it down in detail so you can use this in your next game and look
 
 ### Superposition (No, You’re Not in Physics Class)
 
-At the start, each slot can be _anything_—just like your favorite RPG character before you completely ruin the build
+At the start, each slot can be _anything_-just like your favorite RPG character before you completely ruin the build
 with bad choices. 😅 In WFC, this means every tile can be in a "superposition" of many possible states. Over time, WFC
 reduces this mess of possibilities by applying rules, eventually collapsing each slot to a single state.
 
@@ -50,8 +50,8 @@ out with Room C and no one else." It’s like high school cliques, but for tiles
 ### Entropy: The "Hot Mess" Meter 🔥
 
 Remember entropy from physics class? It’s basically a measure of chaos. But in WFC, entropy just means the number of
-options a tile has left. A tile with high entropy is still a hot mess—it could be _anything_. A tile with low entropy,
-though, has its life together—it has only a few valid options. WFC works by collapsing the low-entropy tiles first, like
+options a tile has left. A tile with high entropy is still a hot mess-it could be _anything_. A tile with low entropy,
+though, has its life together-it has only a few valid options. WFC works by collapsing the low-entropy tiles first, like
 prioritizing the people who already know what they want for lunch. 🍔
 
 ### Backtracking: Undo Like a Pro ⏪
@@ -68,7 +68,7 @@ more roads to nowhere!
 
 * **Dungeon Generation**: Imagine generating dungeons where rooms, hallways, and dead-ends all adhere to your design
   rules. WFC handles this beautifully.
-* **Overworld Maps**: You can create sprawling open-world maps with biomes that transition logically—deserts next to
+* **Overworld Maps**: You can create sprawling open-world maps with biomes that transition logically-deserts next to
   dunes, mountains surrounded by hills. Say goodbye to floating islands next to volcanoes! 🌋
 
 ### 2\. Texture Synthesis 🎨
@@ -84,7 +84,7 @@ boards dynamically, keeping things fresh and players on their toes.
 
 ### 4\. Story or Quest Generation 📜
 
-WFC can go beyond just placing tiles—it can even help with generating quests or non-linear stories. Define a set of
+WFC can go beyond just placing tiles-it can even help with generating quests or non-linear stories. Define a set of
 events and rules about how they fit together, and let WFC create unique quest chains that stay coherent. Move over,
 Dungeons & Dragons! 🐉
 
@@ -92,7 +92,7 @@ Dungeons & Dragons! 🐉
 
 ### Step 1: Define Your Tile Set
 
-First, decide what your tiles represent—whether they’re rooms, terrain, or objects. Next, define the constraints for
+First, decide what your tiles represent-whether they’re rooms, terrain, or objects. Next, define the constraints for
 each tile. Room A connects to Hallways, Room B connects to Room C, and so on.
 
 ### Step 2: Set Up the Grid and Superposition
@@ -285,7 +285,7 @@ std::vector<Cell*> getNeighbors(Cell* cell, std::vector<std::vector<Cell>>& grid
 ## Conclusion
 
 Wave Function Collapse is the ultimate game dev hack. It helps generate complex, rule-following worlds without losing
-the randomness that makes games exciting. Sure, it has its challenges—like any powerful tool—but once you get the hang
+the randomness that makes games exciting. Sure, it has its challenges-like any powerful tool-but once you get the hang
 of it, WFC can make your worlds, quests, and even stories feel richer and more dynamic. Plus, it saves you a ton of
 time!
 

@@ -1,4 +1,4 @@
-# Quiz 01 — Introduction to Databases
+# Quiz 01 - Introduction to Databases
 
 ## Multiple Choice Questions (choices randomized per item)
 

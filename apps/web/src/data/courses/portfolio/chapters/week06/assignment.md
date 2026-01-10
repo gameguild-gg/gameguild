@@ -16,7 +16,7 @@ Find a **game programming or game development** job posting that interests you a
 
 Using the job description as a guide, write a **tailored cover letter** that:
 - Matches **your skills and experience** with the job’s requirements.
-- Uses a **tone appropriate for the game industry**—relaxed yet professional, incorporating enthusiasm for the company’s work.
+- Uses a **tone appropriate for the game industry**-relaxed yet professional, incorporating enthusiasm for the company’s work.
 - Applies the **argument-evidence-impact** approach to highlight your strengths with concrete examples.
 - Includes a **strong introduction** that captures attention. Be bold, confident, humble, and catchy, but don't be exaggerated, use too much dramatic, and don't use cliches.
 - Ends with a **clear call to action**, encouraging the employer to take the next step.
@@ -36,7 +36,7 @@ When reviewing, focus on:
 - **Effectiveness of Arguments:** Are key skills and experiences backed up with evidence?
 - **Call to Action:** Does the ending encourage the employer to engage further?
 
-Provide **specific and constructive feedback**—point out strengths and suggest improvements.
+Provide **specific and constructive feedback**-point out strengths and suggest improvements.
 
 ---
 
