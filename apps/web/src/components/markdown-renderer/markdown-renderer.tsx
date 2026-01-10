@@ -88,9 +88,10 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
       }
 
       const codeContent = String(children).replace(/\n$/, '');
-      const inline = !codeContent.includes('\n');
+      const isFenced = !!match; // fenced code blocks provide a language class
+      const isBlock = isFenced || codeContent.includes('\n');
 
-      if (!inline) {
+      if (isBlock) {
         return (
           <SyntaxHighlighter
             style={isDark ? vscDarkPlus : vs}
@@ -103,11 +104,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
               backgroundColor: isDark ? 'hsl(var(--muted))' : 'hsl(var(--background))',
               border: '1px solid hsl(var(--border))',
               color: 'hsl(var(--foreground))',
+              overflow: 'visible',
+              maxWidth: '100%',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
             }}
             codeTagProps={{
               style: {
                 whiteSpace: 'pre-wrap',
-                wordBreak: 'keep-all',
+                wordBreak: 'break-word',
+                wordWrap: 'break-word',
                 overflowWrap: 'break-word',
                 fontSize: '0.875rem',
                 lineHeight: '1.6',
@@ -124,7 +132,11 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
       }
 
       return (
-        <code className="bg-muted border border-border rounded px-1.5 py-0.5 font-mono text-sm inline whitespace-nowrap text-foreground font-medium" {...props}>
+        <code
+          className="bg-muted border border-border rounded px-1 py-0.5 font-mono text-sm inline text-foreground font-medium"
+          style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'normal', verticalAlign: 'baseline' }}
+          {...props}
+        >
           {children}
         </code>
       );
