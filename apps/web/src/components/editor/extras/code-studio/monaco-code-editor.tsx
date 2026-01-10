@@ -5,7 +5,7 @@ import Editor from "@monaco-editor/react"
 import type { editor } from "monaco-editor"
 import type { Monaco } from "@monaco-editor/react"
 import type { SupportedLanguage, ShikiTheme } from "./types"
-import { getShikiThemeName } from "./types"
+import { getShikiThemeName, SHIKI_LANGS } from "./types"
 import { shikiToMonaco } from "@shikijs/monaco"
 import { useTheme } from "next-themes"
 import { createHighlighter, type Highlighter } from "shiki"
@@ -33,35 +33,17 @@ async function getShikiHighlighter(): Promise<Highlighter> {
         'github-dark-dimmed',
         'dark-plus',
         'light-plus',
+        'catppuccin-mocha',
+        'catppuccin-latte',
+        'vitesse-dark',
+        'vitesse-light',
+        'monokai',
+        'solarized-dark',
+        'solarized-light',
+        'dracula',
+        'nord',
       ],
-      langs: [
-        'javascript',
-        'typescript',
-        'python',
-        'lua',
-        'c',
-        'cpp',
-        'html',
-        'css',
-        'markdown',
-        'java',
-        'go',
-        'rust',
-        'php',
-        'ruby',
-        'swift',
-        'kotlin',
-        'csharp',
-        'sql',
-        'bash',
-        'powershell',
-        'r',
-        'scala',
-        'dart',
-        'json',
-        'yaml',
-        'xml',
-      ],
+      langs: SHIKI_LANGS,
     }).then((highlighter) => {
       shikiHighlighter = highlighter
       return highlighter
