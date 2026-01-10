@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { X, Save, Code2, Menu, Lock, Layout } from "lucide-react"
-import type { CodeStudioData, CodeFile, FileTreeFolder, PanelConfig, DisplayConfig, PanelType, AspectRatio } from "./types"
+import type { CodeStudioData, CodeFile, FileTreeFolder, PanelConfig, DisplayConfig, PanelType, AspectRatio, ShikiTheme } from "./types"
 import { MonacoCodeEditor } from "./monaco-code-editor"
 import { ResultPanel } from "./result-panel"
 import type { XTermTerminalHandle } from "./xterm-terminal"
@@ -37,6 +37,8 @@ import {
   getEditorPreferences, 
   getModalSizeClasses 
 } from "@/lib/storage/editor/editor-preferences"
+import { getProjectPreference, type ProjectPreferences } from "@/lib/storage/editor/project-preferences"
+import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 
 interface CodeStudioEditorProps {
   data: CodeStudioData
@@ -45,6 +47,7 @@ interface CodeStudioEditorProps {
   onSave?: (data: CodeStudioData) => void
   onCancel?: () => void
   onEdit?: () => void
+  projectId?: string
 }
 
 export function CodeStudioEditor({ 
@@ -54,6 +57,7 @@ export function CodeStudioEditor({
   onSave, 
   onCancel,
   onEdit,
+  projectId,
 }: CodeStudioEditorProps) {
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme === "dark"
@@ -74,6 +78,8 @@ export function CodeStudioEditor({
   const [showSettingsMenu, setShowSettingsMenu] = useImmer(false)
   const [resolvedContents, setResolvedContents] = useImmer<Record<string, string>>({})
   const [modalSize, setModalSize] = useState<ModalSize | null>(null)
+  const [projectPreferences, setProjectPreferences] = useState<ProjectPreferences | undefined>()
+  const [effectiveShikiTheme, setEffectiveShikiTheme] = useState<ShikiTheme>(data.shikiTheme || "github")
   const gridContainerRef = useRef<HTMLDivElement | null>(null)
   const modalContainerRef = useRef<HTMLDivElement | null>(null)
   const codeRunnerRef = useRef<UnifiedCodeRunner | null>(null)
@@ -82,12 +88,68 @@ export function CodeStudioEditor({
   const originalDataRef = useRef<CodeStudioData>(JSON.parse(JSON.stringify(data)))
   const lastProcessedContentsRef = useRef<Record<string, string>>({})
 
-  // Load modal size preferences on mount
+  // Load modal size and project preferences on mount
   useEffect(() => {
     getEditorPreferences('code-studio').then((prefs: { modalSize: ModalSize }) => {
       setModalSize(prefs.modalSize)
     })
-  }, [])
+    
+    // Load project preferences if projectId is available
+    if (projectId) {
+      const loadProjectPrefs = async () => {
+        try {
+          const adapter = new EnhancedStorageAdapter()
+          await adapter.init()
+          const prefs = await adapter.getProjectPreferences(projectId)
+          setProjectPreferences(prefs)
+          
+          // Get shikiTheme from project preferences
+          if (prefs) {
+            const theme = getProjectPreference(prefs, 'code-studio', 'shikiTheme')
+            if (theme) {
+              setEffectiveShikiTheme(theme)
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load project preferences:", error)
+        }
+      }
+      loadProjectPrefs()
+    }
+  }, [projectId])
+
+  // Update effectiveShikiTheme when projectPreferences changes
+  useEffect(() => {
+    if (projectId && projectPreferences) {
+      const theme = getProjectPreference(projectPreferences, 'code-studio', 'shikiTheme')
+      if (theme) {
+        setEffectiveShikiTheme(theme)
+      }
+    }
+  }, [projectPreferences, projectId])
+
+  // Reload project preferences when settings menu closes (to get latest changes)
+  useEffect(() => {
+    if (!showSettingsMenu && projectId) {
+      const reloadPrefs = async () => {
+        try {
+          const adapter = new EnhancedStorageAdapter()
+          await adapter.init()
+          const prefs = await adapter.getProjectPreferences(projectId)
+          if (prefs) {
+            setProjectPreferences(prefs)
+            const theme = getProjectPreference(prefs, 'code-studio', 'shikiTheme')
+            if (theme) {
+              setEffectiveShikiTheme(theme)
+            }
+          }
+        } catch (error) {
+          console.error("Failed to reload project preferences:", error)
+        }
+      }
+      reloadPrefs()
+    }
+  }, [showSettingsMenu, projectId])
 
   // Block body scroll and browser navigation when editor is open (not in preview mode)
   useEffect(() => {
@@ -1136,7 +1198,7 @@ export function CodeStudioEditor({
                           readonly={localData.readonly || isFileReadonly}
                           showLineNumbers={localData.showLineNumbers}
                           fontSize={localData.fontSize}
-                          shikiTheme={localData.shikiTheme}
+                          shikiTheme={effectiveShikiTheme}
                         />
                       </div>
                     )
@@ -1207,7 +1269,7 @@ export function CodeStudioEditor({
                       readonly={localData.readonly || isFileReadonly}
                       showLineNumbers={localData.showLineNumbers}
                       fontSize={localData.fontSize}
-                      shikiTheme={localData.shikiTheme}
+                      shikiTheme={effectiveShikiTheme}
                     />
                   )
                 })()
@@ -1506,6 +1568,8 @@ export function CodeStudioEditor({
                 onClose={() => setShowSettingsMenu(false)}
                 nodeType="code-studio"
                 onModalSizeChange={(size) => setModalSize(size)}
+                projectId={projectId}
+                onShikiThemePreview={(theme) => setEffectiveShikiTheme(theme)}
               />
             )}
           </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import type { CodeStudioData } from "./types"
+import type { CodeStudioData, ShikiTheme } from "./types"
 import { ModalSize } from "@/lib/storage/editor/editor-preferences"
 import { BaseSettingsMenu, SystemSettings, CodeStudioStyleSettings, type SettingsTab } from "../settings-menu"
 
@@ -10,14 +10,16 @@ interface SettingsMenuProps {
   onClose: () => void
   nodeType?: string
   onModalSizeChange?: (size: ModalSize) => void
+  projectId?: string
+  onShikiThemePreview?: (theme: ShikiTheme) => void
 }
 
-export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-studio', onModalSizeChange }: SettingsMenuProps) {
+export function SettingsMenu({ data, onDataChange, onClose, nodeType = 'code-studio', onModalSizeChange, projectId, onShikiThemePreview }: SettingsMenuProps) {
   const tabs: SettingsTab[] = [
     {
       id: 'style',
       label: 'Style',
-      content: <CodeStudioStyleSettings data={data} onDataChange={onDataChange} />
+      content: <CodeStudioStyleSettings data={data} onDataChange={onDataChange} projectId={projectId} onShikiThemePreview={onShikiThemePreview} />
     },
     {
       id: 'system',
