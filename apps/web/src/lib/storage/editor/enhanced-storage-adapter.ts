@@ -1,8 +1,11 @@
 import { SyncManager } from "../../sync/editor/sync-manager"
 import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
+import type { ProjectPreferences } from "./project-preferences"
 
-interface ProjectData {
+export type { ProjectPreferences } from "./project-preferences"
+
+export interface ProjectData {
   id: string
   name: string
   data: string
@@ -14,6 +17,7 @@ interface ProjectData {
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
   storageType: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean // Computed dynamically based on local storage check
+  preferences?: ProjectPreferences // Project-level preferences
 }
 
 interface TagData {
@@ -32,6 +36,7 @@ interface ProjectMetadata {
   updatedAt: string
   syncStatus?: "synced" | "pending" | "conflict" | "local-only"
   storageType: "local" | "gameguild-cloud" | "google-drive"
+  preferences?: ProjectPreferences
 }
 
 export class EnhancedStorageAdapter {
@@ -41,7 +46,7 @@ export class EnhancedStorageAdapter {
   private isInitialized = false
 
   private readonly DB_NAME = "GGEditorDB"
-  private readonly DB_VERSION = 3 // Incremented for storageType support
+  private readonly DB_VERSION = 3 // Incremented for preferences support
   private readonly STORE_NAME = "projects"
   private readonly TAGS_STORE_NAME = "tags" // Kept for migration/compatibility, can be removed later
   private readonly METADATA_STORE_NAME = "project_metadata"
@@ -159,13 +164,13 @@ export class EnhancedStorageAdapter {
     }
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local"): Promise<void> {
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
     const now = new Date().toISOString()
 
-    // Check if project exists to preserve createdAt and get old tags
+    // Check if project exists to preserve createdAt, old tags, and preferences
     const existing = await this.loadFromIndexedDB(id)
     const oldTags = existing ? existing.tags : []
 
@@ -180,6 +185,7 @@ export class EnhancedStorageAdapter {
       updatedAt: now,
       syncStatus: "pending",
       storageType,
+      preferences: preferences || existing?.preferences, // Preserve existing preferences if not provided
     }
 
     // Save to IndexedDB
@@ -240,6 +246,7 @@ export class EnhancedStorageAdapter {
         updatedAt: projectData.updatedAt,
         syncStatus: projectData.syncStatus,
         storageType: projectData.storageType,
+        preferences: projectData.preferences,
       }
       metadataStore.put(metadata)
 
@@ -762,6 +769,33 @@ export class EnhancedStorageAdapter {
   async getProjectsByStorageType(storageType: "local" | "gameguild-cloud" | "google-drive"): Promise<ProjectData[]> {
     const allProjects = await this.listFromIndexedDB()
     return allProjects.filter((project) => project.storageType === storageType)
+  }
+
+  // Project preferences management
+  async updateProjectPreferences(id: string, preferences: ProjectPreferences): Promise<void> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const project = await this.loadFromIndexedDB(id)
+    if (!project) {
+      throw new Error(`Project ${id} not found`)
+    }
+
+    const updatedProject: ProjectData = {
+      ...project,
+      preferences,
+      updatedAt: new Date().toISOString(),
+      syncStatus: "pending",
+    }
+
+    await this.saveToIndexedDB(updatedProject)
+    await this.syncManager.queueProjectUpdate(updatedProject)
+
+    console.log(`Updated preferences for project "${project.name}"`)
+  }
+
+  async getProjectPreferences(id: string): Promise<ProjectPreferences | undefined> {
+    const project = await this.loadFromIndexedDB(id)
+    return project?.preferences
   }
 
   async getStorageTypeStats(): Promise<{
