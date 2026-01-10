@@ -1,14 +1,11 @@
 "use client"
 
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { Maximize2 } from "lucide-react"
 import { 
   ModalSize, 
   getEditorPreferences, 
-  setGlobalPreference, 
   setNodeTypePreference,
-  hasNodeTypePreference,
   MODAL_SIZE_LABELS 
 } from "@/lib/storage/editor/editor-preferences"
 import { useState, useEffect, useRef } from "react"
@@ -20,7 +17,6 @@ interface SystemSettingsProps {
 
 export function SystemSettings({ nodeType = 'code-studio', onModalSizeChange }: SystemSettingsProps) {
   const [modalSize, setModalSize] = useState<ModalSize>('widescreen')
-  const [applyToAllNodes, setApplyToAllNodes] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   
@@ -29,13 +25,9 @@ export function SystemSettings({ nodeType = 'code-studio', onModalSizeChange }: 
     const loadPreferences = async () => {
       setIsLoading(true)
       
-      // Get current modal size
+      // Get current modal size (node-specific or fallback to global)
       const prefs = await getEditorPreferences(nodeType)
       setModalSize(prefs.modalSize)
-      
-      // Check if there's a node-specific preference
-      const hasNodeSpecific = await hasNodeTypePreference(nodeType, 'modalSize')
-      setApplyToAllNodes(!hasNodeSpecific) // If has node-specific, switch is OFF
       
       setIsLoading(false)
     }
@@ -62,11 +54,8 @@ export function SystemSettings({ nodeType = 'code-studio', onModalSizeChange }: 
     
     // Delay actual save and notification by 250ms
     timeoutRef.current = setTimeout(async () => {
-      if (applyToAllNodes) {
-        await setGlobalPreference('modalSize', size)
-      } else {
-        await setNodeTypePreference(nodeType, 'modalSize', size)
-      }
+      // Always save as node-specific (code-studio only)
+      await setNodeTypePreference(nodeType, 'modalSize', size)
       
       // Notify parent component after delay
       onModalSizeChange?.(size)
@@ -117,24 +106,6 @@ export function SystemSettings({ nodeType = 'code-studio', onModalSizeChange }: 
             <span>Ultra</span>
             <span>Full</span>
           </div>
-        </div>
-        
-        <div className="flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex flex-col gap-0.5">
-            <Label htmlFor="applyToAll" className="text-xs font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
-              Scope
-            </Label>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {applyToAllNodes 
-                ? "All projects & nodes" 
-                : "Code Studio nodes only"}
-            </span>
-          </div>
-          <Switch
-            id="applyToAll"
-            checked={applyToAllNodes}
-            onCheckedChange={setApplyToAllNodes}
-          />
         </div>
       </div>
     </>
