@@ -82,6 +82,12 @@ export type ShikiTheme =
   | "github-default"   // GitHub Default theme
   | "github-dimmed"    // GitHub Dimmed theme
   | "plus"             // Plus theme
+  | "catppuccin"       // Catppuccin theme
+  | "vitesse"          // Vitesse theme
+  | "monokai"          // Monokai theme
+  | "solarized"        // Solarized theme
+  | "dracula"          // Dracula theme
+  | "nord"             // Nord theme
 
 export type FileType = 'f' | 'm' | 't' // f = arquivo padrão, m = main (entry point), t = test main
 
@@ -986,6 +992,43 @@ export function hasValidExtension(filePath: string, language: SupportedLanguage)
   return validExtensions.some(ext => lowerPath.endsWith(ext))
 }
 
+// Shiki supported languages for syntax highlighting
+export const SHIKI_LANGS = [
+  'javascript',
+  'typescript',
+  'python',
+  'lua',
+  'c',
+  'cpp',
+  'html',
+  'css',
+  'markdown',
+  'java',
+  'go',
+  'rust',
+  'php',
+  'ruby',
+  'swift',
+  'kotlin',
+  'csharp',
+  'sql',
+  'bash',
+  'powershell',
+  'r',
+  'scala',
+  'dart',
+  'json',
+  'yaml',
+  'xml',
+  'prolog',
+  'pascal',
+  'fsharp',
+  'haskell',
+  'riscv',
+  'wasm',
+  'ocaml',
+]
+
 // Shiki theme configurations
 export const SHIKI_THEME_CONFIGS: Record<ShikiTheme, { label: string; dark: string; light: string }> = {
   "github": {
@@ -1007,6 +1050,36 @@ export const SHIKI_THEME_CONFIGS: Record<ShikiTheme, { label: string; dark: stri
     label: "Plus",
     dark: "dark-plus",
     light: "light-plus",
+  },
+  "catppuccin": {
+    label: "Catppuccin",
+    dark: "catppuccin-mocha",
+    light: "catppuccin-latte",
+  },
+  "vitesse": {
+    label: "Vitesse",
+    dark: "vitesse-dark",
+    light: "vitesse-light",
+  },
+  "monokai": {
+    label: "Monokai",
+    dark: "monokai",
+    light: "monokai",
+  },
+  "solarized": {
+    label: "Solarized",
+    dark: "solarized-dark",
+    light: "solarized-light",
+  },
+  "dracula": {
+    label: "Dracula",
+    dark: "dracula",
+    light: "dracula",
+  },
+  "nord": {
+    label: "Nord",
+    dark: "nord",
+    light: "nord",
   },
 }
 
