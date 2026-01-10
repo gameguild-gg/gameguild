@@ -2,8 +2,6 @@
 
 DML (Data Manipulation Language) is the subset of SQL used to manipulate data within database tables. The main operations are INSERT, UPDATE, and DELETE.
 
-[![DML meme](https://programmerhumor.io/wp-content/uploads/2023/03/programmerhumor-io-databases-memes-backend-memes-08a1cd1a18087d8.jpg)](https://programmerhumor.io/)
-
 ## INSERT Statement
 
 Adds new rows to a table.
@@ -25,7 +23,7 @@ VALUES ('johndoe', 'john@example.com', CURRENT_TIMESTAMP);
 
 ```sql
 INSERT INTO products (name, price, category)
-VALUES 
+VALUES
     ('Laptop', 999.99, 'Electronics'),
     ('Mouse', 29.99, 'Electronics'),
     ('Keyboard', 79.99, 'Electronics');
@@ -67,8 +65,8 @@ Copy data from one table to another:
 ```sql
 -- Copy active users to archive
 INSERT INTO archived_users (id, username, email)
-SELECT id, username, email 
-FROM users 
+SELECT id, username, email
+FROM users
 WHERE is_active = false;
 
 -- Insert with transformation
@@ -90,13 +88,13 @@ Modifies existing rows in a table.
 
 ```sql
 -- Update single row
-UPDATE users 
-SET email = 'newemail@example.com' 
+UPDATE users
+SET email = 'newemail@example.com'
 WHERE id = 1;
 
 -- Update multiple columns
-UPDATE products 
-SET price = 89.99, updated_at = CURRENT_TIMESTAMP 
+UPDATE products
+SET price = 89.99, updated_at = CURRENT_TIMESTAMP
 WHERE id = 42;
 
 -- Update all rows (dangerous!)
@@ -122,18 +120,18 @@ UPDATE products SET price = 0;
 
 ```sql
 -- Increase price by 10%
-UPDATE products 
-SET price = price * 1.10 
+UPDATE products
+SET price = price * 1.10
 WHERE category = 'Electronics';
 
 -- Decrease stock
-UPDATE products 
-SET stock = stock - 5 
+UPDATE products
+SET stock = stock - 5
 WHERE id = 100;
 
 -- Conditional update with CASE
-UPDATE orders 
-SET status = CASE 
+UPDATE orders
+SET status = CASE
     WHEN shipped_at IS NOT NULL THEN 'shipped'
     WHEN paid_at IS NOT NULL THEN 'paid'
     ELSE 'pending'
@@ -147,8 +145,8 @@ END;
 ::: example "Update with returning"
 
 ```sql
-UPDATE products 
-SET price = price * 0.9 
+UPDATE products
+SET price = price * 0.9
 WHERE category = 'Clearance'
 RETURNING id, name, price;
 ```
@@ -209,7 +207,7 @@ DELETE FROM users;
 
 ```sql
 -- Return deleted rows
-DELETE FROM expired_tokens 
+DELETE FROM expired_tokens
 WHERE created_at < NOW() - INTERVAL '30 days'
 RETURNING id, user_id;
 ```
@@ -218,14 +216,14 @@ RETURNING id, user_id;
 
 ### DELETE vs TRUNCATE
 
-| Feature | DELETE | TRUNCATE |
-|---------|--------|----------|
-| WHERE clause | ✅ Yes | ❌ No |
-| RETURNING | ✅ Yes | ❌ No |
-| Triggers | ✅ Fires | ❌ Doesn't fire |
-| Transaction | ✅ Can rollback | ⚠️ Depends on DB |
-| Speed | Slower (row by row) | Faster (drops pages) |
-| Resets SERIAL/IDENTITY | ❌ No | ✅ Optional |
+| Feature                | DELETE              | TRUNCATE             |
+| ---------------------- | ------------------- | -------------------- |
+| WHERE clause           | ✅ Yes              | ❌ No                |
+| RETURNING              | ✅ Yes              | ❌ No                |
+| Triggers               | ✅ Fires            | ❌ Doesn't fire      |
+| Transaction            | ✅ Can rollback     | ⚠️ Depends on DB     |
+| Speed                  | Slower (row by row) | Faster (drops pages) |
+| Resets SERIAL/IDENTITY | ❌ No               | ✅ Optional          |
 
 ## Idempotency in DML
 
@@ -240,7 +238,7 @@ Running these twice produces different results:
 INSERT INTO logs (message) VALUES ('User logged in');
 INSERT INTO logs (message) VALUES ('User logged in');
 
--- ❌ Counter increases twice  
+-- ❌ Counter increases twice
 UPDATE products SET view_count = view_count + 1 WHERE id = 1;
 UPDATE products SET view_count = view_count + 1 WHERE id = 1;
 ```
@@ -274,7 +272,7 @@ ON CONFLICT (id) DO NOTHING;
 -- Insert or update if exists
 INSERT INTO products (sku, name, price)
 VALUES ('ABC123', 'Widget', 29.99)
-ON CONFLICT (sku) DO UPDATE 
+ON CONFLICT (sku) DO UPDATE
 SET name = EXCLUDED.name,
     price = EXCLUDED.price,
     updated_at = CURRENT_TIMESTAMP;
@@ -282,7 +280,7 @@ SET name = EXCLUDED.name,
 -- Upsert with condition
 INSERT INTO inventory (product_id, quantity)
 VALUES (1, 100)
-ON CONFLICT (product_id) DO UPDATE 
+ON CONFLICT (product_id) DO UPDATE
 SET quantity = inventory.quantity + EXCLUDED.quantity
 WHERE inventory.quantity < 1000;
 ```
@@ -297,7 +295,7 @@ PostgreSQL's RETURNING clause works with all DML operations:
 -- INSERT
 INSERT INTO users (name) VALUES ('John') RETURNING id;
 
--- UPDATE  
+-- UPDATE
 UPDATE users SET status = 'active' WHERE id = 1 RETURNING *;
 
 -- DELETE
@@ -305,6 +303,7 @@ DELETE FROM tokens WHERE expired = true RETURNING id, user_id;
 ```
 
 This is extremely useful for:
+
 - Getting auto-generated IDs
 - Confirming what was modified
 - Chaining operations in application code
