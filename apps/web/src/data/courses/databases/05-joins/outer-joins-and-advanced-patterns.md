@@ -327,7 +327,7 @@ LEFT JOIN employees d ON m.manager_id = d.id;
 
 ## CROSS JOIN
 
-Returns the **Cartesian product** — every row from the first table paired with every row from the second table.
+Returns the **Cartesian product** - every row from the first table paired with every row from the second table.
 
 ### Syntax
 
@@ -440,7 +440,7 @@ Think of joins as matching rows:
 
 ## Filtering with Outer Joins
 
-### WHERE vs ON — Critical Difference!
+### WHERE vs ON - Critical Difference!
 
 For outer joins, WHERE and ON behave differently:
 
@@ -626,11 +626,11 @@ JOIN customers c ON o.customer_id = c.id;
 ## Key Takeaways
 
 1. **LEFT JOIN** keeps all rows from the left table
-2. **RIGHT JOIN** is just LEFT JOIN with swapped tables—use LEFT JOIN for consistency
+2. **RIGHT JOIN** is just LEFT JOIN with swapped tables-use LEFT JOIN for consistency
 3. **FULL OUTER JOIN** keeps all rows from both tables
 4. **Self-joins** connect a table to itself for hierarchies and comparisons
 5. **CROSS JOIN** produces all combinations (Cartesian product)
-6. **WHERE vs ON matters** for outer joins—ON filters before joining, WHERE after
+6. **WHERE vs ON matters** for outer joins-ON filters before joining, WHERE after
 7. **Anti-joins** (LEFT JOIN + IS NULL or NOT EXISTS) find non-matching rows
 
 ---

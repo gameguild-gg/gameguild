@@ -605,4 +605,4 @@ Design the junction table(s) for:
 5. **Self-referencing** relationships handle hierarchies and networks
 6. **Weak entities** depend on parent entities and use composite keys
 7. **Cardinality** (1 vs many) and **participation** (optional vs mandatory) define constraints
-8. **Design before coding** — ER diagrams prevent costly restructuring later
+8. **Design before coding** - ER diagrams prevent costly restructuring later

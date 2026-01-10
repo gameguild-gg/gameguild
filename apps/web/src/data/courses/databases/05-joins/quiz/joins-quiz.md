@@ -192,7 +192,7 @@ JOIN customers ON customer_id = id;
 ```
 
 - [ ] A. The `JOIN` keyword should be `INNER JOIN`
-- [ ] B. `id` and `customer_id` are ambiguous — unclear which table they belong to
+- [ ] B. `id` and `customer_id` are ambiguous - unclear which table they belong to
 - [ ] C. The query is missing a `WHERE` clause
 - [ ] D. Nothing is wrong, this query is valid
 
@@ -467,7 +467,7 @@ SELECT * FROM orders, customers;
 
 ---
 
-### Question 31 — Requirement → SQL
+### Question 31 - Requirement → SQL
 
 **Requirement:** Show all products with their category names. Products must have a category, but also show the supplier name if available (products may not have a supplier assigned).
 
@@ -507,7 +507,7 @@ INNER JOIN suppliers s ON p.supplier_id = s.id;
 
 ---
 
-### Question 32 — SQL → Description
+### Question 32 - SQL → Description
 
 **What does this query find?**
 
@@ -525,7 +525,7 @@ WHERE p.id IS NULL;
 
 ---
 
-### Question 33 — Requirement → SQL
+### Question 33 - Requirement → SQL
 
 **Requirement:** Find all pairs of employees who were hired on the same date (don't include an employee paired with themselves, and don't show duplicate pairs like Alice-Bob and Bob-Alice).
 
@@ -563,7 +563,7 @@ HAVING COUNT(*) > 1;
 
 ---
 
-### Question 34 — SQL → Description
+### Question 34 - SQL → Description
 
 **What does this query calculate?**
 
@@ -588,7 +588,7 @@ ORDER BY revenue DESC;
 
 ---
 
-### Question 35 — Requirement → SQL
+### Question 35 - Requirement → SQL
 
 **Requirement:** Generate a report showing all combinations of product colors and sizes for inventory planning.
 
@@ -624,7 +624,7 @@ FULL OUTER JOIN sizes s ON c.id = s.id;
 
 ---
 
-### Question 36 — SQL → Description
+### Question 36 - SQL → Description
 
 **What does this query do?**
 
@@ -645,7 +645,7 @@ WHERE NOT EXISTS (
 
 ---
 
-### Question 37 — Requirement → SQL
+### Question 37 - Requirement → SQL
 
 **Requirement:** Show order details including customer name, ordered product names, and quantities. Only include orders that have at least one order item.
 
@@ -687,7 +687,7 @@ RIGHT JOIN order_items oi ON o.id = oi.order_id;
 
 ---
 
-### Question 38 — SQL → Description
+### Question 38 - SQL → Description
 
 **What happens with this query?**
 
@@ -705,7 +705,7 @@ WHERE d.location = 'New York';
 
 ---
 
-### Question 39 — Requirement → SQL
+### Question 39 - Requirement → SQL
 
 **Requirement:** Find the total number of unique products ordered and total quantity sold per customer, but only for customers who have ordered more than 5 different products.
 
@@ -755,7 +755,7 @@ WHERE DISTINCT products > 5;
 
 ---
 
-### Question 40 — SQL → Description
+### Question 40 - SQL → Description
 
 **What type of join pattern is this?**
 

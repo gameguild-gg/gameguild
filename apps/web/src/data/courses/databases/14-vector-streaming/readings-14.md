@@ -1,4 +1,4 @@
-# Week 14 Readings — Vector Databases & Event Streaming
+# Week 14 Readings - Vector Databases & Event Streaming
 
 **Topics:** pgvector, Embeddings, Similarity Search, RAG, Kafka, Topics, Partitions, Producers, Consumers
 

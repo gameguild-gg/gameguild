@@ -6,7 +6,7 @@ This quiz tests your ability to translate between **natural language requirement
 
 ---
 
-## Question 1 — Requirement → SQL
+## Question 1 - Requirement → SQL
 
 **Requirement:** The e-commerce team needs to create a new table called `products` with the following columns:
 - `product_id`: auto-incrementing integer, primary key
@@ -54,7 +54,7 @@ VALUES (SERIAL, VARCHAR(200), DECIMAL(10,2), CURRENT_TIMESTAMP);
 
 ---
 
-## Question 2 — SQL → Description
+## Question 2 - SQL → Description
 
 **Given this SQL statement:**
 
@@ -77,7 +77,7 @@ ALTER COLUMN salary SET NOT NULL;
 
 ---
 
-## Question 3 — Requirement → SQL
+## Question 3 - Requirement → SQL
 
 **Requirement:** The inventory manager needs to add 50 units of product SKU "LAPTOP-PRO-15" to warehouse "WH-EAST". The `inventory` table has columns: `id`, `sku`, `warehouse_code`, `quantity`, `last_updated`.
 
@@ -111,7 +111,7 @@ VALUES ('LAPTOP-PRO-15', 'WH-EAST', 50);
 
 ---
 
-## Question 4 — SQL → Description
+## Question 4 - SQL → Description
 
 **Given this SQL statement:**
 
@@ -136,7 +136,7 @@ LIMIT 10;
 
 ---
 
-## Question 5 — Requirement → SQL
+## Question 5 - Requirement → SQL
 
 **Requirement:** The HR system needs to permanently remove all employee records from the `employees` table where the `termination_date` is before January 1, 2024, and the `status` is 'inactive'.
 
@@ -168,7 +168,7 @@ WHERE termination_date < '2024-01-01' AND status = 'inactive';
 
 ---
 
-## Question 6 — SQL → Description
+## Question 6 - SQL → Description
 
 **Given this SQL statement:**
 
@@ -196,7 +196,7 @@ CREATE TABLE analytics.daily_metrics (
 
 ---
 
-## Question 7 — Requirement → SQL
+## Question 7 - Requirement → SQL
 
 **Requirement:** The admin needs to retrieve all users who registered after January 1, 2025, showing only their ID, email, and registration date, sorted by registration date with the newest first, limited to 50 results.
 
@@ -237,7 +237,7 @@ ORDER BY registered_at ASC;
 
 ---
 
-## Question 8 — SQL → Description
+## Question 8 - SQL → Description
 
 **Given this SQL statement:**
 
@@ -267,7 +267,7 @@ WHERE p.category = 'electronics';
 
 ---
 
-## Question 9 — Requirement → SQL
+## Question 9 - Requirement → SQL
 
 **Requirement:** The database administrator needs to:
 1. Add a new column `phone` (VARCHAR 20) to the `customers` table
@@ -306,7 +306,7 @@ ALTER TABLE customers REMOVE COLUMN fax;
 
 ---
 
-## Question 10 — SQL → Description
+## Question 10 - SQL → Description
 
 **Given this SQL statement:**
 

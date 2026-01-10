@@ -58,7 +58,7 @@ DROP TABLE IF EXISTS users;
 
 ### DQL Operations (SELECT)
 
-All SELECT queries are naturally **idempotent** — they only read data, never modify it.
+All SELECT queries are naturally **idempotent** - they only read data, never modify it.
 
 ```sql
 -- ✅ Always idempotent

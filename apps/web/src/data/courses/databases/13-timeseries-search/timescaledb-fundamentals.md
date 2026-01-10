@@ -1,4 +1,4 @@
-# TimescaleDB Fundamentals — Time Series Databases
+# TimescaleDB Fundamentals - Time Series Databases
 
 ## Introduction
 

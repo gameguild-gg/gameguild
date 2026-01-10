@@ -1,8 +1,8 @@
-# Week 10 — Document Databases: MongoDB
+# Week 10 - Document Databases: MongoDB
 
 **Dates:** March 16-20, 2026  
 **Topic:** MongoDB Fundamentals & CRUD Operations  
-**Assessment:** Quiz 8 — Document DB Concepts
+**Assessment:** Quiz 8 - Document DB Concepts
 
 ---
 
@@ -26,7 +26,7 @@ By the end of this week, you will be able to:
 
 ## Weekly Schedule
 
-### Monday, March 16 — MongoDB Fundamentals
+### Monday, March 16 - MongoDB Fundamentals
 
 **Topics:**
 - Document model vs relational model
@@ -47,7 +47,7 @@ By the end of this week, you will be able to:
 
 ---
 
-### Thursday, March 19 — CRUD & Aggregation
+### Thursday, March 19 - CRUD & Aggregation
 
 **Topics:**
 - **CRUD Operations:**
@@ -84,7 +84,7 @@ By the end of this week, you will be able to:
 
 ## Assessment
 
-### Quiz 8 — Document Databases (Due: Thursday, March 19)
+### Quiz 8 - Document Databases (Due: Thursday, March 19)
 
 **Topics Covered:**
 - Document model vs relational model

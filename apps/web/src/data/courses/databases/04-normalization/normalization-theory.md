@@ -20,7 +20,7 @@ Consider this denormalized table storing order information:
 This structure has several problems:
 
 ### 1. Update Anomaly
-If Alice changes her email, we must update **every row** where she appears. In row 4, someone updated her email but forgot rows 1 and 2 — now we have inconsistent data.
+If Alice changes her email, we must update **every row** where she appears. In row 4, someone updated her email but forgot rows 1 and 2 - now we have inconsistent data.
 
 ### 2. Insert Anomaly
 We cannot add a new product to our catalog without creating an order for it. The product information is tied to order data.
@@ -91,16 +91,16 @@ A table is in **1NF** if:
 
 ### Violation Example
 
-**Not in 1NF — Multi-valued column:**
+**Not in 1NF - Multi-valued column:**
 
 | student_id | name | phone_numbers |
 |------------|------|---------------|
 | 1 | Alice | 555-1234, 555-5678 |
 | 2 | Bob | 555-9999 |
 
-The `phone_numbers` column contains multiple values — not atomic.
+The `phone_numbers` column contains multiple values - not atomic.
 
-**Not in 1NF — Repeating groups:**
+**Not in 1NF - Repeating groups:**
 
 | order_id | product1 | qty1 | product2 | qty2 | product3 | qty3 |
 |----------|----------|------|----------|------|----------|------|
@@ -108,7 +108,7 @@ The `phone_numbers` column contains multiple values — not atomic.
 
 Repeating columns for products violate 1NF.
 
-### Fixed — In 1NF
+### Fixed - In 1NF
 
 **Student phones (separate table):**
 
@@ -158,7 +158,7 @@ A table is in **2NF** if:
 1. It is in 1NF
 2. Every non-key attribute is **fully functionally dependent** on the **entire** primary key
 
-2NF addresses **partial dependencies** — where non-key attributes depend on only *part* of a composite key.
+2NF addresses **partial dependencies** - where non-key attributes depend on only *part* of a composite key.
 
 > **Note:** 2NF only applies to tables with composite (multi-column) primary keys. A table with a single-column primary key that is in 1NF is automatically in 2NF.
 
@@ -179,7 +179,7 @@ A table is in **2NF** if:
 
 `product_name` and `product_price` depend only on `product_id`, not on the full composite key.
 
-### Fixed — In 2NF
+### Fixed - In 2NF
 
 Decompose into two tables:
 
@@ -221,7 +221,7 @@ CREATE TABLE order_items (
 ### Rule
 A table is in **3NF** if:
 1. It is in 2NF
-2. There are **no transitive dependencies** — every non-key attribute depends **only** on the primary key, not on other non-key attributes
+2. There are **no transitive dependencies** - every non-key attribute depends **only** on the primary key, not on other non-key attributes
 
 ### Violation Example
 
@@ -241,7 +241,7 @@ A table is in **3NF** if:
 
 `department_name` and `department_budget` depend on `department_id`, not directly on `employee_id`.
 
-### Fixed — In 3NF
+### Fixed - In 3NF
 
 **departments table:**
 | department_id | department_name | department_budget |
@@ -312,7 +312,7 @@ Consider a table tracking which professors teach which subjects in which semeste
 
 This violates BCNF because `professor` is not a superkey, yet it determines `subject`.
 
-### Fixed — In BCNF
+### Fixed - In BCNF
 
 **professor_subjects table:**
 | professor | subject |
@@ -542,7 +542,7 @@ List all functional dependencies in this table:
 ## Key Takeaways
 
 1. **Normalization reduces redundancy** but may require more JOINs to retrieve data
-2. **1NF** ensures atomic values — no lists or repeating groups
+2. **1NF** ensures atomic values - no lists or repeating groups
 3. **2NF** eliminates partial dependencies on composite keys
 4. **3NF** eliminates transitive dependencies through non-key attributes
 5. **BCNF** ensures every determinant is a candidate key

@@ -18,7 +18,7 @@ In HTN planning, we take the same GOAP actions and raise the level of abstractio
 - **Primitive Tasks**: These directly correspond to the GOAP actions. They are “atomic” and can be executed directly.
 - **Compound Tasks**: Instead of selecting actions randomly from a flat list, compound tasks are high-level objectives that are decomposed into a series of subtasks. These subtasks may include primitive tasks (the GOAP actions) or even other compound tasks.
 
-By embedding domain knowledge into the HTN planner, we can define methods—structured recipes that decompose a compound task into a sequence or network of subtasks. This hierarchy allows us to:
+By embedding domain knowledge into the HTN planner, we can define methods-structured recipes that decompose a compound task into a sequence or network of subtasks. This hierarchy allows us to:
 
 - Organize and reuse knowledge more naturally.
 - Reduce the search space by leveraging known task decompositions.
@@ -28,7 +28,7 @@ By embedding domain knowledge into the HTN planner, we can define methods—stru
 
 ### 3.1. From GOAP Actions to Primitive Tasks
 
-In GOAP, you defined independent actions—such as `MoveAction` and `AttackAction`, each with their own preconditions, effects, costs, and unique identifiers. In HTN planning, these actions transform into primitive tasks. They retain all the detailed semantics of the original GOAP actions and serve as the atomic, executable units at the bottom of the hierarchical structure.
+In GOAP, you defined independent actions-such as `MoveAction` and `AttackAction`, each with their own preconditions, effects, costs, and unique identifiers. In HTN planning, these actions transform into primitive tasks. They retain all the detailed semantics of the original GOAP actions and serve as the atomic, executable units at the bottom of the hierarchical structure.
 
 ### 3.2. Compound Tasks and Methods: Structuring Higher-Level Goals
 
@@ -39,7 +39,7 @@ For example, consider a compound task like `SecureArea`. This high-level objecti
 - Task 1: **MoveToLocation** (a primitive task derived from a GOAP MoveAction).
 - Task 2: **EliminateThreat** (a primitive task derived from a GOAP AttackAction).
 
-This decomposition is achieved through methods—domain-specific recipes that dictate how a compound task should be broken down into its constituent subtasks. Each method typically includes:
+This decomposition is achieved through methods-domain-specific recipes that dictate how a compound task should be broken down into its constituent subtasks. Each method typically includes:
 
 - The name of the compound task it applies to.
 - A prescribed sequence or set of subtasks.
@@ -52,7 +52,7 @@ Methods leverage existing domain knowledge to structure the planning problem, re
 A central concept in HTN planning is the task network. Unlike a simple list of tasks, a task network is a structured representation that captures the relationships, dependencies, and ordering constraints among tasks. Here are some key aspects of task networks:
 
 - **Ordering Constraints**: The network defines the sequence in which tasks must be executed. Some tasks are strictly sequential, while others may be performed in parallel if they do not depend on one another.
-- **Dependency Relationships**: Task networks capture dependencies—certain tasks may only be initiated once others are completed. This ensures that prerequisites are met and that the plan flows logically.
+- **Dependency Relationships**: Task networks capture dependencies-certain tasks may only be initiated once others are completed. This ensures that prerequisites are met and that the plan flows logically.
 - **Hierarchical Structure**: The task network reflects the hierarchical decomposition process. At the top level, you have the compound task (e.g., "SecureArea"), and as you decompose it, the network branches into subtasks until only primitive tasks (the GOAP actions) remain.
 - **Flexibility and Adaptability**: By organizing tasks into a network, the planner can more easily adapt to changes. If an unexpected event occurs, the network can be re-evaluated, and tasks can be re-ordered while preserving critical dependencies.
 
@@ -60,7 +60,7 @@ When you construct a task network from GOAP-derived primitive tasks and compound
 
 ## 4. Implementing an HTN Planner in C++ Using GOAP Actions
 
-We will extend our previous GOAP implementation, where actions are independent state transitions—by constructing an HTN planner that builds a structured task network. Here, our familiar GOAP actions serve as the primitive tasks, and we introduce compound tasks along with methods that decompose these tasks into ordered subtasks. The resulting task network not only sequences tasks but also captures dependencies and ordering constraints inherent in hierarchical planning.
+We will extend our previous GOAP implementation, where actions are independent state transitions-by constructing an HTN planner that builds a structured task network. Here, our familiar GOAP actions serve as the primitive tasks, and we introduce compound tasks along with methods that decompose these tasks into ordered subtasks. The resulting task network not only sequences tasks but also captures dependencies and ordering constraints inherent in hierarchical planning.
 
 ### 4.1. Defining Task and Method Structures
 
@@ -135,7 +135,7 @@ bool decomposeTask(const shared_ptr<Task>& task,
 
 ### 4.3 An Example: Building a Task Network for "SecureArea"
 
-Let’s apply our HTN planner to a simple example. Suppose we have a compound task `SecureArea`, which—based on our domain knowledge—should be decomposed into two primitive tasks:
+Let’s apply our HTN planner to a simple example. Suppose we have a compound task `SecureArea`, which-based on our domain knowledge-should be decomposed into two primitive tasks:
 
 - **MoveToLocation**: Derived from the GOAP MoveAction.
 - **EliminateThreat**: Derived from the GOAP AttackAction.

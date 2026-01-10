@@ -331,7 +331,7 @@ SELECT * FROM tree WHERE NOT cycle;
 
 ## Views
 
-A **view** is a stored query that acts like a virtual table. It doesn't store data itself—it runs the underlying query when accessed.
+A **view** is a stored query that acts like a virtual table. It doesn't store data itself-it runs the underlying query when accessed.
 
 ### Creating Views
 
@@ -351,10 +351,10 @@ SELECT * FROM active_products WHERE price < 50;
 
 ### View Benefits
 
-1. **Simplification** — Hide complex joins and logic
-2. **Security** — Expose only certain columns/rows
-3. **Abstraction** — Shield applications from schema changes
-4. **Reusability** — Define once, use everywhere
+1. **Simplification** - Hide complex joins and logic
+2. **Security** - Expose only certain columns/rows
+3. **Abstraction** - Shield applications from schema changes
+4. **Reusability** - Define once, use everywhere
 
 ### Complex View Example
 
