@@ -10,6 +10,10 @@ import ai4games2Week01Readings from "./01-fsm/02-readings.md";
 import ai4games2Week01Quiz from "./01-fsm/03-quiz.md";
 import ai4games2Week01Setup from "./01-fsm/04-setup.md";
 import ai4games2Week01Assignment from "./01-fsm/05-assignment.md";
+import ai4games2Week02Lecture from "./02-bt/01-lecture.md";
+import ai4games2Week02Readings from "./02-bt/02-readings.md";
+import ai4games2Week02Quiz from "./02-bt/03-quiz.md";
+import ai4games2Week02Assignment from "./02-bt/04-assignment.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -300,6 +304,99 @@ export const ai4games2Week01AssignmentContent: ProgramContent = {
   visibility: 1,
   program: ai4games2Program,
   parent: ai4games2Week01LectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+// New Week 02 Content (Behavior Trees)
+export const ai4games2Week02LectureContent: ProgramContent = {
+  id: "ai4games2-week-02-lecture",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 2: Behavior Trees",
+  slug: "week-02",
+  description: "Behavior Tree fundamentals: Selector, Sequence, Status, Running state, and guard AI",
+  type: 0,
+  body: ai4games2Week02Lecture,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week02ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-02-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-02-lecture",
+  title: "Week 2: Readings",
+  slug: "readings",
+  description: "Required readings and videos for Behavior Trees",
+  type: 0,
+  body: ai4games2Week02Readings,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 120,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week02LectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week02QuizContent: ProgramContent = {
+  id: "ai4games2-week-02-quiz",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-02-lecture",
+  title: "Week 2: Quiz",
+  slug: "quiz",
+  description: "Test your understanding of Behavior Trees (Selectors, Sequences, abort modes, debugging)",
+  type: 0,
+  body: ai4games2Week02Quiz,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 10,
+  estimatedMinutes: 15,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week02LectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week02AssignmentContent: ProgramContent = {
+  id: "ai4games2-week-02-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-02-lecture",
+  title: "Week 2: Assignment",
+  slug: "assignment",
+  description: "Implement a guard AI using Behavior Trees (Selector/Sequence) with Running/resume semantics",
+  type: 0,
+  body: ai4games2Week02Assignment,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 10,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week02LectureContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
@@ -727,6 +824,11 @@ ai4games2Week01LectureContent.children = [
   ai4games2Week01SetupContent,
   ai4games2Week01AssignmentContent,
 ];
+ai4games2Week02LectureContent.children = [
+  ai4games2Week02ReadingsContent,
+  ai4games2Week02QuizContent,
+  ai4games2Week02AssignmentContent,
+];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
 ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
@@ -756,6 +858,7 @@ ai4games2Product.productPrograms = [ai4games2ProductProgram];
 ai4games2Program.programContents = [
   ai4games2SyllabusContent,
   ai4games2Week01LectureContent,
+  ai4games2Week02LectureContent,
   ai4games2OldContent,
 ];
 

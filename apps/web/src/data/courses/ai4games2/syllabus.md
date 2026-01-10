@@ -116,19 +116,25 @@ This is a work in progress schedule. It is subject to change. Every change will 
 - Industry AI landscape: what shipped games actually use
 - GitHub setup walkthrough
 
-**Thursday 2026/01/15** — Environment Setup Lab
+**Thursday 2026/01/15** — FSM Deep Dive
 
 - Clone course repository
 - CMake + doctest environment verification
 - GitHub Actions auto-grading demonstration
-- FSM architecture review (from prerequisite)
+- FSM architecture: from naive switch/if-else to State Pattern
+- Transition management: separation of states and transitions
+- Stack-based FSMs (pushdown automata)
+- **Hierarchical State Machines (HSMs)**: nested substates, parent-child relationships
 
-**Quiz 0** (2026/01/15): Course policies & syllabus  
-**Assignment 0** (due 2026/01/18): **Simple FSM Implementation**
+**Reading**: Millington Ch. 5 (Decision Making - FSM sections)
 
-- Implement a 3-state FSM (Patrol → Chase → Attack) for an NPC
-- Boilerplate provided with state interface and test harness
-- Auto-graded: state transitions verified against 20+ test scenarios
+**Quiz 0** (2026/01/15): Course policies, syllabus, FSM concepts  
+**Assignment 0** (due 2026/01/18): **FSM Implementation with State Pattern**
+
+- Implement a clean FSM framework separating states from transitions
+- 3-state system (IDLE → ALERT → COMBAT) with condition-based transitions
+- Data-driven transitions configurable at runtime
+- Auto-graded: state lifecycle verification (onEnter/execute/onExit) across multiple scenarios
 
 ---
 
@@ -140,7 +146,6 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 **Thursday 2026/01/22** — Decision Systems Deep Dive
 
-- **Hierarchical FSMs**: pushdown automata, state stacks
 - **Behavior Trees**: selectors, sequences, parallels, decorators
 - **Decision Trees**: runtime evaluation, pruning strategies
 - When to use what: trade-offs and industry patterns
@@ -148,14 +153,10 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 **Reading**: Millington Ch. 5 (Decision Making)
 
-**Quiz 1** (2026/01/22): FSM concepts, BT node types  
-**Assignment 1** (due 2026/01/25): **Complete Decision System**
+**Quiz 1** (2026/01/22): BT node types, decision tree concepts  
+**Assignment 1** (due 2026/01/25): TBD
 
-- Part A: Implement HFSM with 2-level hierarchy for combat NPC
-- Part B: Implement equivalent behavior as Behavior Tree
-- Part C: Implement equivalent behavior as Decision Tree
-- Auto-graded: all three must produce identical behavior for test scenarios
-- Performance benchmark: decisions/millisecond comparison
+- _Assignment details to be determined_
 
 ---
 
