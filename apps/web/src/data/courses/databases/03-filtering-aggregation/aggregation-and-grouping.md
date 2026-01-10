@@ -21,7 +21,7 @@ Aggregate functions process multiple rows and return a single value.
 
 ## COUNT
 
-### COUNT(*) — Count All Rows
+### COUNT(*) - Count All Rows
 
 Counts every row, including those with NULL values.
 
@@ -33,7 +33,7 @@ SELECT COUNT(*) FROM orders;
 SELECT COUNT(*) AS total_products FROM products;
 ```
 
-### COUNT(column) — Count Non-NULL Values
+### COUNT(column) - Count Non-NULL Values
 
 Counts only rows where the specified column is NOT NULL.
 

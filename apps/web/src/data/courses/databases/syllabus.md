@@ -102,18 +102,18 @@ No Classes:
 
 ---
 
-### WEEK 01 — The Database Landscape & DevOps Setup
+### WEEK 01 - The Database Landscape & DevOps Setup
 
 **2026/01/12 – 2026/01/16**
 
-**Monday 2026/01/12** — Introduction & Database Taxonomy
+**Monday 2026/01/12** - Introduction & Database Taxonomy
 
 - Instructor introduction;
 - Syllabus review, Course overview, outcomes, GitHub repo setup;
 - The Database Zoo: relational, document, key-value, wide-column, graph, time series, search engines, vector, event streaming
 - Decision framework: when to use what
 
-**Thursday 2026/01/15** — Docker & Container-Based Development
+**Thursday 2026/01/15** - Docker & Container-Based Development
 
 - Running databases in containers, Docker Compose
 - Lab: Clone repo, `docker-compose up` with PostgreSQL + MongoDB + Redis
@@ -127,13 +127,13 @@ Assessments:
 
 ---
 
-### WEEK 02 — SQL Fundamentals: DDL & Basic Queries
+### WEEK 02 - SQL Fundamentals: DDL & Basic Queries
 
 **2026/01/19 – 2026/01/23**
 
-**Monday 2026/01/19** — NO CLASS (Martin Luther King Jr. Day)
+**Monday 2026/01/19** - NO CLASS (Martin Luther King Jr. Day)
 
-**Thursday 2026/01/22** — Data Definition Language (DDL) & Basic Data Query Language (DQL) and Data Manipulation Language (DML) operations
+**Thursday 2026/01/22** - Data Definition Language (DDL) & Basic Data Query Language (DQL) and Data Manipulation Language (DML) operations
 
 - DBML introduction
 - Relational model fundamentals
@@ -153,16 +153,16 @@ Assessments:
 
 ---
 
-### WEEK 03 — SQL: Filtering & Aggregation
+### WEEK 03 - SQL: Filtering & Aggregation
 
 **2026/01/26 – 2026/01/30**
 
-**Monday 2026/01/26** — Advanced WHERE & Pattern Matching
+**Monday 2026/01/26** - Advanced WHERE & Pattern Matching
 
 - Boolean logic (AND, OR, NOT), LIKE, IN, BETWEEN
 - NULL handling, CASE expressions, date/time functions
 
-**Thursday 2026/01/29** — Aggregation & Grouping
+**Thursday 2026/01/29** - Aggregation & Grouping
 
 - COUNT, SUM, AVG, MIN, MAX
 - GROUP BY, HAVING, DISTINCT in aggregates
@@ -174,11 +174,11 @@ Assessments:
 
 ---
 
-### WEEK 04 — Database Design: Normalization, Relationships
+### WEEK 04 - Database Design: Normalization, Relationships
 
 **2026/02/16 – 2026/02/20**
 
-**Monday 2026/02/16** — Normalization Theory
+**Monday 2026/02/16** - Normalization Theory
 
 - 1NF, 2NF, 3NF, BCNF
 - Functional dependencies
@@ -187,7 +187,7 @@ Assessments:
 - Constraints (PK, FK, NOT NULL, UNIQUE, CHECK)
 - Indexing fundamentals
 
-**Thursday 2026/02/19** — Practical Normalization
+**Thursday 2026/02/19** - Practical Normalization
 
 - Denormalization trade-offs (when to use materialized views)
 - Real-world schema analysis - (MySQL Workbench has samples, Microsoft has samples for SQL Server, CONTOSO)
@@ -200,15 +200,15 @@ Assessments:
 
 ---
 
-### WEEK 05 — SQL: Joins
+### WEEK 05 - SQL: Joins
 
 **2026/02/02 – 2026/02/06**
 
-**Monday 2026/02/02** — Join Fundamentals
+**Monday 2026/02/02** - Join Fundamentals
 
 - INNER JOIN mechanics, join conditions, multi-table joins, table aliases
 
-**Thursday 2026/02/05** — Outer Joins & Advanced Patterns
+**Thursday 2026/02/05** - Outer Joins & Advanced Patterns
 
 - LEFT/RIGHT/FULL OUTER JOIN, self-joins, CROSS JOIN
 - Join visualization and mental models
@@ -220,17 +220,17 @@ Assessments:
 
 ---
 
-### WEEK 06 — SQL: Subqueries, CTEs & Views
+### WEEK 06 - SQL: Subqueries, CTEs & Views
 
 **2026/02/09 – 2026/02/13**
 
-**Monday 2026/02/09** — Subqueries & Set Operations
+**Monday 2026/02/09** - Subqueries & Set Operations
 
 - Scalar subqueries, subqueries in WHERE (IN, EXISTS, ANY, ALL)
 - Correlated vs non-correlated subqueries
 - UNION, INTERSECT, EXCEPT
 
-**Thursday 2026/02/12** — CTEs & Views
+**Thursday 2026/02/12** - CTEs & Views
 
 - Common Table Expressions (WITH clause), recursive CTEs
 - Views: CREATE VIEW, use cases, updatable views
@@ -243,11 +243,11 @@ Assessments:
 
 ---
 
-### WEEK 07 — Schema Patterns, TCL, DCL & ORM
+### WEEK 07 - Schema Patterns, TCL, DCL & ORM
 
 **2026/02/23 – 2026/02/27**
 
-**Monday 2026/02/23** — Schema Design, Data Integrity Patterns & Scalability
+**Monday 2026/02/23** - Schema Design, Data Integrity Patterns & Scalability
 
 - Insert, update, delete anomalies
 - Soft-Delete patterns
@@ -255,7 +255,7 @@ Assessments:
 - Translating ER diagrams to DDL, CASCADE options
 - Scalability considerations: DB sharding & replication basics
 
-**Thursday 2026/02/26** — Functions, Procedures, Transactions & Drizzle ORM
+**Thursday 2026/02/26** - Functions, Procedures, Transactions & Drizzle ORM
 
 - SQL Functions: CREATE FUNCTION, parameters, return types
 - Stored Procedures: CREATE PROCEDURE, CALL, control flow
@@ -276,17 +276,17 @@ Assessments:
 
 ---
 
-### WEEK 08 — Midterm
+### WEEK 08 - Midterm
 
 **2026/03/02 – 2026/03/06**
 
-**Monday 2026/03/02** — Midterm Review
+**Monday 2026/03/02** - Midterm Review
 
 - Recap of Weeks 01–07
 - Q&A session
 - **Final Project Introduction**
 
-**Thursday 2026/03/05** — Midterm Exam
+**Thursday 2026/03/05** - Midterm Exam
 
 - Covers Weeks 01–07
 
@@ -296,7 +296,7 @@ Assessments:
 
 ---
 
-### WEEK 09 — SPRING BREAK
+### WEEK 09 - SPRING BREAK
 
 **2026/03/09 – 2026/03/13**
 
@@ -304,18 +304,18 @@ No classes or assignments.
 
 ---
 
-### WEEK 10 — Document Databases: MongoDB
+### WEEK 10 - Document Databases: MongoDB
 
 **2026/03/16 – 2026/03/20**
 
-**Monday 2026/03/16** — MongoDB Fundamentals
+**Monday 2026/03/16** - MongoDB Fundamentals
 
 - ID field
 - Document model vs relational, JSON/BSON
 - Schema design patterns (embedding vs referencing)
 - When to choose document DBs
 
-**Thursday 2026/03/19** — MongoDB CRUD & Aggregation
+**Thursday 2026/03/19** - MongoDB CRUD & Aggregation
 
 - insertOne/Many, find with projections, query operators
 - Update operators ($set, $push, $pull), aggregation pipeline
@@ -328,18 +328,18 @@ Assessments:
 
 ---
 
-### WEEK 11 — Key-Value & Wide-Column Stores
+### WEEK 11 - Key-Value & Wide-Column Stores
 
 **2026/03/23 – 2026/03/27**
 
-**Monday 2026/03/23** — Key-Value Stores: Redis
+**Monday 2026/03/23** - Key-Value Stores: Redis
 
 - Redis data structures (strings, lists, sets, hashes, sorted sets)
 - Use cases: caching, sessions, rate limiting, leaderboards
 - TTL, expiration, Pub/Sub
 - ioredis client for TypeScript
 
-**Thursday 2026/03/26** — Wide-Column Stores: Cassandra
+**Thursday 2026/03/26** - Wide-Column Stores: Cassandra
 
 - Column families, partition keys, clustering columns
 - CAP theorem, eventual consistency, CQL basics
@@ -351,17 +351,17 @@ Assessments:
 
 ---
 
-### WEEK 12 — Graph Databases: Neo4j
+### WEEK 12 - Graph Databases: Neo4j
 
 **2026/03/30 – 2026/04/03**
 
-**Monday 2026/03/30** — Graph Database Fundamentals
+**Monday 2026/03/30** - Graph Database Fundamentals
 
 - Nodes, relationships, properties
 - When graphs beat relational
 - Use cases: social networks, recommendations, fraud detection
 
-**Thursday 2026/04/02** — Cypher Query Language
+**Thursday 2026/04/02** - Cypher Query Language
 
 - MATCH, CREATE, WHERE, RETURN
 - Path queries, variable-length patterns, MERGE
@@ -374,17 +374,17 @@ Assessments:
 
 ---
 
-### WEEK 13 — Time Series & Search Engines
+### WEEK 13 - Time Series & Search Engines
 
 **2026/04/06 – 2026/04/10**
 
-**Monday 2026/04/06** — Time Series Databases
+**Monday 2026/04/06** - Time Series Databases
 
 - TimescaleDB: hypertables, retention policies, continuous aggregates
 - Downsampling, IoT/monitoring use cases
 - TimescaleDB with Drizzle (PostgreSQL extension)
 
-**Thursday 2026/04/09** — Search Engines: Elasticsearch
+**Thursday 2026/04/09** - Search Engines: Elasticsearch
 
 - Inverted indices, analyzers, tokenizers
 - Documents, indices, mappings, basic queries (match, term, bool)
@@ -397,17 +397,17 @@ Assessments:
 
 ---
 
-### WEEK 14 — Vector Databases & Event Streaming
+### WEEK 14 - Vector Databases & Event Streaming
 
 **2026/04/13 – 2026/04/17**
 
-**Monday 2026/04/13** — Vector Databases
+**Monday 2026/04/13** - Vector Databases
 
 - Embeddings, pgvector, similarity search (cosine, euclidean)
 - Indexing (IVFFlat, HNSW), RAG architecture
 - pgvector with Drizzle (PostgreSQL extension)
 
-**Thursday 2026/04/16** — Event Streaming: Kafka
+**Thursday 2026/04/16** - Event Streaming: Kafka
 
 - Topics, partitions, producers/consumers
 - Consumer groups, stream processing concepts
@@ -420,13 +420,13 @@ Assessments:
 
 ---
 
-### WEEK 15 — Final Project Work
+### WEEK 15 - Final Project Work
 
 **2026/04/20 – 2026/04/24**
 
-**Monday 2026/04/20** — Project work session, instructor consultations
+**Monday 2026/04/20** - Project work session, instructor consultations
 
-**Thursday 2026/04/23** — Demo dry runs, peer feedback, documentation review
+**Thursday 2026/04/23** - Demo dry runs, peer feedback, documentation review
 
 Assessments:
 
@@ -434,12 +434,12 @@ Assessments:
 
 ---
 
-### WEEK 16 — Final Presentations
+### WEEK 16 - Final Presentations
 
 **2026/04/27 – 2026/05/01**
 
-**Monday 2026/04/27** — Presentations (Group A)
-**Thursday 2026/04/30** — Presentations (Group B) + Course wrap-up
+**Monday 2026/04/27** - Presentations (Group A)
+**Thursday 2026/04/30** - Presentations (Group B) + Course wrap-up
 
 Assessments:
 

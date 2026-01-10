@@ -513,12 +513,12 @@ Ensure the database remains available during failures.
 
 ### Start Simple
 
-1. **Optimize queries first** — Indexing often solves problems
-2. **Add caching** — Reduce database load
-3. **Connection pooling** — Handle more connections
-4. **Read replicas** — Distribute read load
-5. **Partitioning** — Manage large tables
-6. **Sharding** — Only when truly necessary (adds complexity)
+1. **Optimize queries first** - Indexing often solves problems
+2. **Add caching** - Reduce database load
+3. **Connection pooling** - Handle more connections
+4. **Read replicas** - Distribute read load
+5. **Partitioning** - Manage large tables
+6. **Sharding** - Only when truly necessary (adds complexity)
 
 ---
 
@@ -564,7 +564,7 @@ Calculate appropriate pool size for:
 
 ## Key Takeaways
 
-1. **Start with vertical scaling** — simpler and often sufficient
+1. **Start with vertical scaling** - simpler and often sufficient
 2. **Read replicas** handle read-heavy workloads
 3. **Partitioning** improves query performance on large tables
 4. **Sharding** distributes data but adds complexity
@@ -572,5 +572,5 @@ Calculate appropriate pool size for:
 6. **Caching** dramatically reduces database load
 7. **Proper indexing** is often the biggest win
 8. **High availability** requires replication and failover
-9. **Scale incrementally** — add complexity only when needed
+9. **Scale incrementally** - add complexity only when needed
 10. **Managed databases** (RDS, Cloud SQL) simplify operations

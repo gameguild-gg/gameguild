@@ -1,6 +1,6 @@
 # ORMs, Query Builders & SQL Injection
 
-Modern applications often use abstractions over raw SQL. Understanding these tools—and their security implications—is essential.
+Modern applications often use abstractions over raw SQL. Understanding these tools-and their security implications-is essential.
 
 ---
 
@@ -626,7 +626,7 @@ Write a Drizzle transaction that:
 2. **Drizzle ORM** offers a SQL-like syntax with excellent TypeScript support
 3. **Always use parameterized queries** to prevent SQL injection
 4. **Never concatenate user input** into SQL strings
-5. **Column/table names cannot be parameterized** — use whitelists
+5. **Column/table names cannot be parameterized** - use whitelists
 6. **ORMs automatically parameterize** when using their query methods
 7. **Raw SQL escape hatches** should still use parameters
 8. **Test for SQL injection** in security audits

@@ -1,4 +1,4 @@
-# Week 13 — Time Series & Search Engines
+# Week 13 - Time Series & Search Engines
 
 **Dates:** April 6-10, 2026
 
@@ -8,8 +8,8 @@
 
 This week explores two specialized database technologies designed for specific use cases:
 
-1. **TimescaleDB** — Time-series database (PostgreSQL extension) optimized for IoT, monitoring, and analytics workloads
-2. **Elasticsearch** — Search engine optimized for full-text search, log analysis, and real-time analytics
+1. **TimescaleDB** - Time-series database (PostgreSQL extension) optimized for IoT, monitoring, and analytics workloads
+2. **Elasticsearch** - Search engine optimized for full-text search, log analysis, and real-time analytics
 
 Both technologies excel in their domains but require understanding their unique data models and query patterns.
 
@@ -34,7 +34,7 @@ By the end of this week, you will:
 
 ## Weekly Schedule
 
-### Monday, April 6 — TimescaleDB
+### Monday, April 6 - TimescaleDB
 
 **Topics:**
 
@@ -65,7 +65,7 @@ psql -h localhost -U postgres -d timescale_db
 
 ---
 
-### Thursday, April 9 — Elasticsearch
+### Thursday, April 9 - Elasticsearch
 
 **Topics:**
 
@@ -100,7 +100,7 @@ open http://localhost:5601/app/dev_tools#/console
 
 ## Assessments
 
-### Quiz 11 — Time Series & Search Engines
+### Quiz 11 - Time Series & Search Engines
 
 **Due:** Thursday, April 9, 2026 by 11:59 PM
 
@@ -120,7 +120,7 @@ open http://localhost:5601/app/dev_tools#/console
 
 ---
 
-### Final Project — Checkpoint #2
+### Final Project - Checkpoint #2
 
 **Due:** Sunday, April 12, 2026 by 11:59 PM
 

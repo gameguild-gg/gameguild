@@ -145,7 +145,7 @@ Given a CIDR prefix length, calculate the corresponding subnet mask in dotted de
 
 ### CIDR Notation
 
-**Classless Inter-Domain Routing** — a compact way to write subnet masks.
+**Classless Inter-Domain Routing** - a compact way to write subnet masks.
 
 ```
 192.168.1.0/24
@@ -263,7 +263,7 @@ Combine everything: given an IP/CIDR, calculate network address, broadcast addre
 
 **Problem:** Humans remember names. Computers use numbers.
 
-**Solution:** Domain Name System — a distributed database mapping names → IPs.
+**Solution:** Domain Name System - a distributed database mapping names → IPs.
 
 ```
 game.example.com → 203.0.113.50
@@ -631,6 +631,6 @@ Output:
 
 ## Next Week Preview
 
-**Week 03:** Transport Layer — UDP vs TCP
+**Week 03:** Transport Layer - UDP vs TCP
 
 We'll implement actual socket communication. Your IP Calculator prepares you to understand the addressing that underlies every `connect()` and `bind()` call.

@@ -1,4 +1,4 @@
-# Week 13 Readings — Time Series & Search Engines
+# Week 13 Readings - Time Series & Search Engines
 
 **Topics:** TimescaleDB, Elasticsearch, Inverted Indices, Aggregations
 

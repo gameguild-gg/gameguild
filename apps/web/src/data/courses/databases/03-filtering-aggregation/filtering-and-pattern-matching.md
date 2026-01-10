@@ -627,7 +627,7 @@ Find:
 2. **IN** is cleaner than multiple OR conditions
 3. **BETWEEN** is inclusive on both ends
 4. **LIKE** is case-sensitive; use **ILIKE** for case-insensitive matching
-5. **NULL requires special handling** — use IS NULL, not = NULL
+5. **NULL requires special handling** - use IS NULL, not = NULL
 6. **COALESCE** handles NULL values gracefully
 7. **CASE** provides conditional logic within queries
 8. **Date functions** are essential for time-based filtering

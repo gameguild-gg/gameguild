@@ -74,9 +74,9 @@ graph TD
 
 ### Network Devices
 
-- **Hub** — Broadcasts frames to all ports (dumb, repeats everything)
-- **Switch** — Uses MAC addresses to forward frames only to the correct port on the same network
-- **Router** — Uses IP addresses to forward packets between different networks
+- **Hub** - Broadcasts frames to all ports (dumb, repeats everything)
+- **Switch** - Uses MAC addresses to forward frames only to the correct port on the same network
+- **Router** - Uses IP addresses to forward packets between different networks
 
 ```mermaid
 graph LR
@@ -89,8 +89,8 @@ graph LR
 
 ### Key Addresses
 
-- **MAC Address** — Used on the same local network (48 bits, written as hex)
-- **IP Address** — Used across networks (32 bits for IPv4, 128 bits for IPv6)
+- **MAC Address** - Used on the same local network (48 bits, written as hex)
+- **IP Address** - Used across networks (32 bits for IPv4, 128 bits for IPv6)
 
 On the **same network**, switches use MAC addresses. To reach a **different network**, you need a router and IP addresses.
 

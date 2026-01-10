@@ -1,4 +1,4 @@
-# Elasticsearch Fundamentals — Search Engines
+# Elasticsearch Fundamentals - Search Engines
 
 ## Introduction
 

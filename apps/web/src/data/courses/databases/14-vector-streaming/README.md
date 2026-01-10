@@ -1,4 +1,4 @@
-# Week 14 — Vector Databases & Event Streaming
+# Week 14 - Vector Databases & Event Streaming
 
 **Dates:** April 13-17, 2026
 
@@ -8,8 +8,8 @@
 
 This week explores two cutting-edge database technologies for AI and real-time applications:
 
-1. **pgvector** — PostgreSQL extension for vector similarity search (semantic search, RAG, recommendations)
-2. **Apache Kafka** — Distributed event streaming platform (real-time pipelines, microservices, analytics)
+1. **pgvector** - PostgreSQL extension for vector similarity search (semantic search, RAG, recommendations)
+2. **Apache Kafka** - Distributed event streaming platform (real-time pipelines, microservices, analytics)
 
 Both technologies enable modern application architectures: AI-powered search and event-driven systems.
 
@@ -34,7 +34,7 @@ By the end of this week, you will:
 
 ## Weekly Schedule
 
-### Monday, April 13 — Vector Databases (pgvector)
+### Monday, April 13 - Vector Databases (pgvector)
 
 **Topics:**
 
@@ -66,7 +66,7 @@ CREATE EXTENSION vector;
 
 ---
 
-### Thursday, April 16 — Event Streaming (Kafka)
+### Thursday, April 16 - Event Streaming (Kafka)
 
 **Topics:**
 
@@ -100,7 +100,7 @@ docker-compose logs kafka | grep "started"
 
 ## Assessments
 
-### Quiz 12 — Vector Databases & Event Streaming
+### Quiz 12 - Vector Databases & Event Streaming
 
 **Due:** Thursday, April 16, 2026 by 11:59 PM
 
@@ -120,7 +120,7 @@ docker-compose logs kafka | grep "started"
 
 ---
 
-### Final Project — Feature Freeze
+### Final Project - Feature Freeze
 
 **Due:** Saturday, April 19, 2026 by 11:59 PM
 

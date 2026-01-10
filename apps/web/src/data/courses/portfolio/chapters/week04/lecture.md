@@ -6,7 +6,7 @@ A polished repository can significantly impact how potential employers and colla
 
 ## Introduction
 
-Your code repositories are not just storage spaces for your projects—they are reflections of your coding style, attention to detail, and professionalism. A well-organized repository with clear documentation can help others (and potential employers) understand your work quickly.
+Your code repositories are not just storage spaces for your projects-they are reflections of your coding style, attention to detail, and professionalism. A well-organized repository with clear documentation can help others (and potential employers) understand your work quickly.
 
 !!! quiz
 {
