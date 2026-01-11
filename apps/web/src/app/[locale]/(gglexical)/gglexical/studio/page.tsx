@@ -18,6 +18,7 @@ import { ProjectSizeIndicator } from "@/components/editor/extras/editor/project-
 import { SyncStatusIndicator } from "@/components/editor/extras/editor/sync-status-indicator"
 import { EditableProjectTitle } from "@/components/editor/extras/editor/editable-project-title"
 import { ProjectStorageInfo } from "@/components/editor/extras/editor/project-storage-info"
+import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/components/editor/extras/editor/project-title-operations"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -732,80 +733,30 @@ export default function Page() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [showTagDropdown])
 
-   // Add these handler functions after the existing handler functions:
+  // Title operations
   const handleTitleEdit = () => {
-    if (!currentProjectId) {
-      toast.error("Sem projeto ativo", {
-        description: "Crie ou abra um projeto primeiro",
-        duration: 3000,
-        icon: "📝",
-      })
-      return
-    }
-    setEditingProjectName(currentProjectName)
-    setIsEditingTitle(true)
+    titleEdit({
+      currentProjectId,
+      currentProjectName,
+      setEditingProjectName,
+      setIsEditingTitle,
+    })
   }
 
   const handleTitleSave = async () => {
-    if (!editingProjectName.trim()) {
-      toast.error("Nome obrigatório", {
-        description: "O projeto precisa ter um nome",
-        duration: 3000,
-        icon: "✏️",
-      })
-      setEditingProjectName(currentProjectName)
-      setIsEditingTitle(false)
-      return
-    }
-
-    if (editingProjectName.trim() === currentProjectName) {
-      setIsEditingTitle(false)
-      return
-    }
-
-    // Check if project with same name already exists
-    const existingProjects = await storageAdapter.list()
-    if (existingProjects.some((p) => p.name === editingProjectName.trim() && p.id !== currentProjectId)) {
-      toast.error("Nome já existe", {
-        description: `Já existe um projeto com o nome "${editingProjectName.trim()}"`,
-        duration: 4000,
-        icon: "🚫",
-      })
-      setEditingProjectName(currentProjectName)
-      setIsEditingTitle(false)
-      return
-    }
-
-    try {
-      // Get current editor state
-      let stateToSave = editorState
-      if (!stateToSave && editorRef.current) {
-        const currentState = editorRef.current.getEditorState()
-        stateToSave = JSON.stringify(currentState.toJSON())
-      }
-
-      if (stateToSave) {
-        await storageAdapter.save(currentProjectId, editingProjectName.trim(), stateToSave, projectTags)
-        setCurrentProjectName(editingProjectName.trim())
-        await loadSavedProjectsList()
-
-        toast.success("Nome alterado", {
-          description: `Projeto renomeado para "${editingProjectName.trim()}"`,
-          duration: 3000,
-          icon: "✏️",
-        })
-      }
-    } catch (error) {
-      console.error("Failed to rename project:", error)
-      toast.error("Erro ao renomear", {
-        description: "Não foi possível alterar o nome do projeto",
-        duration: 4000,
-        icon: "❌",
-      })
-      setEditingProjectName(currentProjectName)
-    }
-
-    setIsEditingTitle(false)
+    await titleSave({
+      editingProjectName,
+      currentProjectName,
+      currentProjectId,
+      editorState,
+      editorRef,
+      projectTags,
+      storageAdapter,
+      setCurrentProjectName,
+      setEditingProjectName,
+      setIsEditingTitle,
+      loadSavedProjectsList,
+    })
   }
 
   const [exitDialogOpen, setExitDialogOpen] = useState(false)
