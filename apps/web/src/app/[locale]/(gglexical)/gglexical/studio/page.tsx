@@ -13,6 +13,7 @@ import { OpenProjectDialog } from "@/components/editor/extras/editor/open-projec
 import { CreateProjectDialog } from "@/components/editor/extras/editor/create-project-dialog"
 import { SizeDetailsDialog } from "@/components/editor/extras/editor/size-details-dialog"
 import { SyncStatusDialog } from "@/components/editor/extras/editor/sync-status-dialog"
+import { AutoSaveToggle } from "@/components/editor/extras/editor/auto-save-toggle"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -940,26 +941,11 @@ export default function Page() {
 
                 {/* Status Indicators */}
                 <div className="flex items-center gap-4">
-                  <button
-                    onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
-                    className="flex items-center gap-2 px-3 py-1.5 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                  <AutoSaveToggle
+                    enabled={autoSaveEnabled}
+                    onToggle={() => setAutoSaveEnabled(!autoSaveEnabled)}
                     disabled={!isDbInitialized}
-                  >
-                    <div
-                      className={`h-2 w-2 rounded-full ${
-                        autoSaveEnabled && isDbInitialized ? "bg-green-500 animate-pulse" : "bg-gray-400 dark:bg-gray-600"
-                      }`}
-                    />
-                    <span
-                      className={`font-medium ${
-                        autoSaveEnabled && isDbInitialized
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-gray-500 dark:text-gray-400"
-                      }`}
-                    >
-                      {autoSaveEnabled && isDbInitialized ? "Auto-save" : "Manual"}
-                    </span>
-                  </button>
+                  />
 
                   <button
                     onClick={() => setShowSizeDetails(true)}
