@@ -54,7 +54,7 @@ export interface FilterConfig {
   tags?: string[]
   tagFilterMode?: 'all' | 'any'
   storageType?: 'all' | 'local' | 'gameguild-cloud' | 'google-drive'
-  mimeType?: string
+  mimeTypes?: string[] // Multi-select MIME types filter
   assetType?: 'all' | 'standard' | 'bundler'
   projectFilter?: string
   usageFilter?: 'all' | 'used' | 'unused'

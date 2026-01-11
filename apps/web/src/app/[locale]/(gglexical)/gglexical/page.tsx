@@ -25,6 +25,7 @@ import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 import { InfoDialog } from "@/components/editor/extras/editor/info-dialog"
 import { ProjectPagination } from "@/components/editor/extras/project-dialog/project-pagination"
+import { MIME_TYPES } from "@/lib/storage/assets/types"
 
 interface ProjectData {
   id: string
@@ -58,7 +59,7 @@ export default function HomePage() {
     tags: [],
     tagFilterMode: 'all',
     storageType: 'all',
-    mimeType: 'all',
+    mimeTypes: [],
     assetType: 'all',
     projectFilter: 'all',
     usageFilter: 'all',
@@ -461,11 +462,26 @@ export default function HomePage() {
   // Asset management functions
   const filteredAssets = useMemo(() => {
     const filtered = assets.filter((asset) => {
-      // Search filter
-      const matchesSearch = !filters.searchTerm || asset.name.toLowerCase().includes(filters.searchTerm.toLowerCase())
+      // Search filter - searches in both name and mimeType
       
-      // MIME type filter
-      const matchesMimeType = filters.mimeType === "all" || asset.mimeType.startsWith(filters.mimeType + "/")
+      const matchesSearch = !filters.searchTerm || 
+        asset.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        asset.mimeType.toLowerCase().includes(filters.searchTerm.toLowerCase())
+      
+      // MIME type filter - now using extensions array mapped to MIME types
+      let matchesMimeType = true
+      if (filters.mimeTypes && filters.mimeTypes.length > 0) {
+        // Convert selected extensions to their MIME types
+        const selectedMimeTypes = filters.mimeTypes.map(ext => {
+          const extWithoutDot = ext.substring(1) // Remove the leading dot
+          return MIME_TYPES[extWithoutDot]
+        }).filter(Boolean) // Remove undefined values
+        
+        // Check if asset's MIME type matches any of the selected MIME types
+        // Also check by file extension as fallback
+        const assetExt = '.' + asset.name.split('.').pop()?.toLowerCase()
+        matchesMimeType = selectedMimeTypes.includes(asset.mimeType) || filters.mimeTypes.includes(assetExt)
+      }
       
       // Asset type filter
       const assetType = asset.type || 'standard'
