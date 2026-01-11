@@ -12,6 +12,7 @@ import type { LexicalEditor } from "lexical"
 import { OpenProjectDialog } from "@/components/editor/extras/editor/open-project-dialog"
 import { CreateProjectDialog } from "@/components/editor/extras/editor/create-project-dialog"
 import { SizeDetailsDialog } from "@/components/editor/extras/editor/size-details-dialog"
+import { SyncStatusDialog } from "@/components/editor/extras/editor/sync-status-dialog"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -842,15 +843,6 @@ export default function Page() {
                   {/* Project Info Display */}
                   {currentProjectId && (
                     <div className="ml-6 flex items-center gap-4 pl-6 border-l border-gray-300 dark:border-gray-600">
-                      {/*
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Project:</span>
-                        <div className="flex items-center gap-2 font-medium text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-gray-800 px-3 py-1">
-                          <FileText className="h-4 w-4" />
-                          <span className="max-w-[200px] truncate">{currentProjectName}</span>
-                        </div>
-                      </div>
-                      */}
                       <div className="flex items-center gap-2 text-sm">
                         <span className="text-gray-600 dark:text-gray-400">Storage:</span>
                         <span className="font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-3 py-1 flex items-center gap-1">
@@ -1104,85 +1096,12 @@ export default function Page() {
         formatSize={formatSize}
         getSizeIndicatorColor={getSizeIndicatorColor}
       />
-      {/* Sync Status Dialog */}
-      <Dialog open={showSyncStatus} onOpenChange={setShowSyncStatus}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Synchronization Status</DialogTitle>
-          </DialogHeader>
-          {syncStats && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-                <span className="text-sm text-gray-600 dark:text-gray-300">Connection:</span>
-                <div className="flex items-center gap-2">
-                  <div className={`h-2 w-2 rounded-full ${syncStats.isOnline ? "bg-green-500" : "bg-red-500"}`} />
-                  <span className="text-sm font-medium">{syncStats.isOnline ? "Online" : "Offline"}</span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="text-sm font-medium">Sync Queue</h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded bg-blue-50 p-2 dark:bg-blue-900">
-                    <div className="font-medium text-blue-800 dark:text-blue-200">Pending</div>
-                    <div className="text-blue-600 dark:text-blue-300">{syncStats.queue.pending}</div>
-                  </div>
-                  <div className="rounded bg-yellow-50 p-2 dark:bg-yellow-900">
-                    <div className="font-medium text-yellow-800 dark:text-yellow-200">Processing</div>
-                    <div className="text-yellow-600 dark:text-yellow-300">{syncStats.queue.processing}</div>
-                  </div>
-                  <div className="rounded bg-green-50 p-2 dark:bg-green-900">
-                    <div className="font-medium text-green-800 dark:text-green-200">Completed</div>
-                    <div className="text-green-600 dark:text-green-300">{syncStats.queue.completed}</div>
-                  </div>
-                  <div className="rounded bg-red-50 p-2 dark:bg-red-900">
-                    <div className="font-medium text-red-800 dark:text-red-200">Failed</div>
-                    <div className="text-red-600 dark:text-red-300">{syncStats.queue.failed}</div>
-                  </div>
-                </div>
-              </div>
-
-              {syncStats.lastSync && (
-                <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">Last sync:</span>
-                  <div className="text-sm font-medium">{new Date(syncStats.lastSync).toLocaleString()}</div>
-                </div>
-              )}
-
-              {syncStats.queue.failed > 0 && (
-                <Button
-                  onClick={async () => {
-                    try {
-                      await dbStorage.current.retryFailedSync()
-                      toast.success("Trying again", {
-                        description: "Failed items have been re-queued",
-                        duration: 3000,
-                        icon: "🔄",
-                      })
-                    } catch (error) {
-                      toast.error("Error trying again", {
-                        description: "Unable to reprocess items",
-                        duration: 4000,
-                        icon: "❌",
-                      })
-                    }
-                  }}
-                  className="w-full"
-                  variant="outline"
-                >
-                  Retry Failed Items
-                </Button>
-              )}
-
-              <div className="flex justify-end">
-                <Button variant="outline" onClick={() => setShowSyncStatus(false)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <SyncStatusDialog
+        open={showSyncStatus}
+        onOpenChange={setShowSyncStatus}
+        syncStats={syncStats}
+        onRetryFailed={() => dbStorage.current.retryFailedSync()}
+      />
       <ExitConfirmDialog
         open={exitDialogOpen}
         onOpenChange={setExitDialogOpen}
