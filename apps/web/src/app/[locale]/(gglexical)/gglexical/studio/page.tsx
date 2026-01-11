@@ -21,6 +21,7 @@ import { ProjectStorageInfo } from "@/components/editor/extras/editor/project-st
 import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/components/editor/extras/editor/project-title-operations"
 import { handleSave as saveProject, handleSaveAs as saveAsProject } from "@/components/editor/extras/editor/project-save-operations"
 import { calculateProjectAssetsSize as calculateAssets } from "@/components/editor/extras/editor/project-assets-operations"
+import { checkSelectedProject as checkProject } from "@/components/editor/extras/editor/project-load-operations"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -146,126 +147,15 @@ export default function Page() {
     
     // Check if there's a selected project from the main page or URL hash
     const checkSelectedProject = async () => {
-      try {
-        // First, check for project ID in URL hash
-        const hash = window.location.hash.replace('#', '')
-        if (hash) {
-          try {
-            const projectData = await storageAdapter.load(hash)
-            if (projectData && projectData.data && editorRef.current) {
-              try {
-                // Validate JSON format first
-                let parsedData
-                try {
-                  parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
-                } catch (parseError) {
-                  throw new Error("Project data is not valid JSON")
-                }
-                
-                // Validate Lexical editor state structure
-                if (!parsedData || typeof parsedData !== 'object' || !parsedData.root) {
-                  throw new Error("Project data is not in expected Lexical format")
-                }
-                
-                const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
-                editorRef.current.setEditorState(editorState)
-                
-                // Set current project info
-                setCurrentProjectId(projectData.id)
-                setCurrentProjectName(projectData.name)
-                setCurrentProjectStorageType(projectData.storageType || "local")
-                setProjectTags(projectData.tags || [])
-                
-                // Update URL hash if not already set
-                if (window.location.hash !== `#${projectData.id}`) {
-                  window.history.pushState(null, '', `#${projectData.id}`)
-                }
-                
-                toast.success("Projeto carregado", {
-                  description: `"${projectData.name}" foi aberto com sucesso`,
-                  duration: 2500,
-                  icon: "📂",
-                })
-                
-                return // Exit early, don't show first time dialog
-              } catch (error) {
-                console.error("Failed to load project from hash:", error)
-                toast.error("Erro ao carregar projeto", {
-                  description: `Não foi possível carregar o projeto: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                  duration: 4000,
-                  icon: "❌",
-                })
-              }
-            } else {
-              toast.error("Projeto não encontrado", {
-                description: `Nenhum projeto encontrado com o ID: ${hash}`,
-                duration: 4000,
-                icon: "❌",
-              })
-            }
-          } catch (error) {
-            console.error("Error loading project from hash:", error)
-          }
-        }
-        
-        // If no hash or hash loading failed, check localStorage
-        const selectedProjectData = localStorage.getItem('selectedProject')
-        if (selectedProjectData) {
-          const projectData = JSON.parse(selectedProjectData)
-          
-          // Clear the localStorage item
-          localStorage.removeItem('selectedProject')
-          
-          // Load the project into the editor
-          if (projectData.id && projectData.data && editorRef.current) {
-            try {
-              // Validate JSON format first
-              let parsedData
-              try {
-                parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
-              } catch (parseError) {
-                throw new Error("Project data is not valid JSON")
-              }
-              
-              // Validate Lexical editor state structure
-              if (!parsedData || typeof parsedData !== 'object' || !parsedData.root) {
-                throw new Error("Project data is not in expected Lexical format")
-              }
-              
-              const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
-              editorRef.current.setEditorState(editorState)
-              
-              // Set current project info
-              setCurrentProjectId(projectData.id)
-              setCurrentProjectName(projectData.name)
-              setProjectTags(projectData.tags || [])
-              
-              // Update URL hash
-              window.history.pushState(null, '', `#${projectData.id}`)
-              
-              toast.success("Projeto carregado", {
-                description: `"${projectData.name}" foi aberto com sucesso`,
-                duration: 2500,
-                icon: "📂",
-              })
-              
-              return // Exit early, don't show first time dialog
-            } catch (error) {
-              console.error("Failed to load selected project:", error)
-              toast.error("Erro ao carregar projeto", {
-                description: `Não foi possível carregar o projeto selecionado: ${error instanceof Error ? error.message : 'Unknown error'}`,
-                duration: 4000,
-                icon: "❌",
-              })
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error checking selected project:", error)
-      }
-      
-      // If no project was loaded or loading failed, show first time dialog if needed
-      setIsFirstTime(false)
+      await checkProject({
+        storageAdapter,
+        editorRef,
+        setCurrentProjectId,
+        setCurrentProjectName,
+        setCurrentProjectStorageType,
+        setProjectTags,
+        setIsFirstTime,
+      })
     }
     
     checkSelectedProject()
