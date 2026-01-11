@@ -175,7 +175,7 @@ UPDATE departments SET dept_id = 100 WHERE dept_id = 1;
 
 ### SET NULL / SET DEFAULT
 
-Same behavior as ON DELETE — sets the FK to NULL or its default value.
+Same behavior as ON DELETE - sets the FK to NULL or its default value.
 
 ```sql
 CREATE TABLE employees (
@@ -412,10 +412,10 @@ What happens when you delete an organization?
 
 ## Key Takeaways
 
-1. **RESTRICT/NO ACTION** — Prevent deletion if children exist (safest default)
-2. **CASCADE** — Delete children when parent is deleted (for owned data)
-3. **SET NULL** — Orphan children by setting FK to NULL (for independent data)
-4. **SET DEFAULT** — Use a fallback value (requires default value and valid reference)
-5. **ON UPDATE CASCADE** — Essential when using natural keys that may change
-6. **Review cascade chains** — Understand how deep deletes propagate
-7. **Be careful with self-references** — CASCADE on manager_id can delete entire org trees
+1. **RESTRICT/NO ACTION** - Prevent deletion if children exist (safest default)
+2. **CASCADE** - Delete children when parent is deleted (for owned data)
+3. **SET NULL** - Orphan children by setting FK to NULL (for independent data)
+4. **SET DEFAULT** - Use a fallback value (requires default value and valid reference)
+5. **ON UPDATE CASCADE** - Essential when using natural keys that may change
+6. **Review cascade chains** - Understand how deep deletes propagate
+7. **Be careful with self-references** - CASCADE on manager_id can delete entire org trees

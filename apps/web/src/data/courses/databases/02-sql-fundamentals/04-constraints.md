@@ -30,8 +30,8 @@ Constraints act as the **last line of defense** for data quality.
 
 A primary key uniquely identifies each row in a table. It combines:
 
-- `NOT NULL` — cannot be empty
-- `UNIQUE` — no duplicates allowed
+- `NOT NULL` - cannot be empty
+- `UNIQUE` - no duplicates allowed
 
 Each table should have exactly one primary key.
 

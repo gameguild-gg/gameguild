@@ -1,4 +1,4 @@
-# DML — Data Manipulation Language
+# DML - Data Manipulation Language
 
 DML (Data Manipulation Language) is the subset of SQL used to manipulate data within database tables. The main operations are INSERT, UPDATE, and DELETE.
 

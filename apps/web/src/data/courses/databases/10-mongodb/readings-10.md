@@ -1,4 +1,4 @@
-# Week 10 — MongoDB Readings & Resources
+# Week 10 - MongoDB Readings & Resources
 
 ## Official Documentation
 

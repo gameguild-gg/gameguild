@@ -50,7 +50,7 @@ enum class Status { Success, Failure, Running };
 
 Leaf nodes do actual work:
 
-### Conditions — Instant checks
+### Conditions - Instant checks
 
 ```cpp
 // "Can I see the player?" → Yes (Success) or No (Failure)
@@ -59,7 +59,7 @@ bool canSeePlayer();  // Returns true/false instantly
 
 Conditions **never** return Running. They check and answer immediately.
 
-### Actions — Do something
+### Actions - Do something
 
 ```cpp
 // "Shoot!" → Done (Success) or Still shooting (Running)
@@ -183,7 +183,7 @@ flowchart TB
 
 **Common decorator types:**
 
-### Inverter — Flip success/failure
+### Inverter - Flip success/failure
 
 ```cpp
 class Inverter : public Node {
@@ -198,9 +198,9 @@ public:
 };
 ```
 
-**Use case**: "If NOT can see player" — invert a condition check.
+**Use case**: "If NOT can see player" - invert a condition check.
 
-### Repeater — Run N times
+### Repeater - Run N times
 
 ```cpp
 class Repeat : public Node {
@@ -225,7 +225,7 @@ public:
 
 **Use case**: "Shoot 3 times in a row" or "Patrol 5 waypoints".
 
-### Succeeder / Failer — Force a result
+### Succeeder / Failer - Force a result
 
 ```cpp
 class AlwaysSucceed : public Node {
@@ -240,7 +240,7 @@ public:
 
 **Use case**: Make a branch always succeed regardless of outcome, useful for optional tasks.
 
-### UntilFail / UntilSucceed — Loop conditions
+### UntilFail / UntilSucceed - Loop conditions
 
 ```cpp
 class UntilFail : public Node {

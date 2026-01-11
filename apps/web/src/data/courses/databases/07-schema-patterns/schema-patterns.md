@@ -10,10 +10,10 @@ This lesson covers common schema design patterns for maintaining data integrity,
 
 When you delete a row with `DELETE FROM`, it's gone forever (unless you have backups). This causes problems:
 
-1. **Audit trail lost** — No record that the data ever existed
-2. **Foreign key issues** — Child records may become orphaned
-3. **Accidental deletion** — No easy recovery
-4. **Reporting gaps** — Historical reports become inaccurate
+1. **Audit trail lost** - No record that the data ever existed
+2. **Foreign key issues** - Child records may become orphaned
+3. **Accidental deletion** - No easy recovery
+4. **Reporting gaps** - Historical reports become inaccurate
 
 ### Soft Delete Solution
 
@@ -546,10 +546,10 @@ CREATE TABLE items (
 
 ## Key Takeaways
 
-1. **Soft deletes preserve data** — Use `deleted_at` timestamp instead of `DELETE`
-2. **Versioning prevents conflicts** — Increment version on update, check before saving
-3. **History tables provide audit trails** — Use triggers to capture changes automatically
-4. **Temporal tables track time** — Use date ranges for "as of" queries
-5. **Checksums verify integrity** — Hash important data to detect tampering
-6. **Avoid common anti-patterns** — EAV, comma-separated values, polymorphic associations
-7. **Standard audit columns** — Add `created_at`, `created_by`, `updated_at`, `updated_by` to all tables
+1. **Soft deletes preserve data** - Use `deleted_at` timestamp instead of `DELETE`
+2. **Versioning prevents conflicts** - Increment version on update, check before saving
+3. **History tables provide audit trails** - Use triggers to capture changes automatically
+4. **Temporal tables track time** - Use date ranges for "as of" queries
+5. **Checksums verify integrity** - Hash important data to detect tampering
+6. **Avoid common anti-patterns** - EAV, comma-separated values, polymorphic associations
+7. **Standard audit columns** - Add `created_at`, `created_by`, `updated_at`, `updated_by` to all tables

@@ -1,4 +1,4 @@
-# Cassandra Fundamentals — Wide-Column Store
+# Cassandra Fundamentals - Wide-Column Store
 
 ## What is Cassandra?
 
@@ -58,7 +58,7 @@
 - ❌ ACID transactions across rows
 - ❌ Complex joins (Cassandra has NO joins)
 - ❌ Ad-hoc queries (must query by partition key)
-- ❌ Small datasets (< 100GB) — overhead not worth it
+- ❌ Small datasets (< 100GB) - overhead not worth it
 
 ---
 
@@ -223,7 +223,7 @@ ORDER BY post_id DESC;
 **Important:**
 
 - **Always query by partition key** to avoid full table scans
-- Cassandra **does NOT support JOINs** — denormalize your data
+- Cassandra **does NOT support JOINs** - denormalize your data
 - `ORDER BY` only works on clustering keys (data already sorted)
 
 ### Update Data
@@ -359,7 +359,7 @@ CREATE TABLE events (
   PRIMARY KEY ((user_id, event_date), event_id)
 );
 
--- Partition key: (user_id, event_date) — hash of both
+-- Partition key: (user_id, event_date) - hash of both
 -- Clustering key: event_id
 -- Better distribution: user events split by date
 ```

@@ -182,11 +182,11 @@ print("Value of pi:", math.pi)
 
 ### Common `math` Functions:
 
-- `math.sqrt(x)` — Returns the square root of `x`.
-- `math.pow(x, y)` — Raises `x` to the power of `y`.
-- `math.sin(x)` — Computes the sine of `x` (radians).
-- `math.cos(x)` — Computes the cosine of `x` (radians).
-- `math.log(x)` — Computes the natural logarithm of `x`.
+- `math.sqrt(x)` - Returns the square root of `x`.
+- `math.pow(x, y)` - Raises `x` to the power of `y`.
+- `math.sin(x)` - Computes the sine of `x` (radians).
+- `math.cos(x)` - Computes the cosine of `x` (radians).
+- `math.log(x)` - Computes the natural logarithm of `x`.
 
 ::: tip "Importing Specific Functions"
 You can import specific functions from the `math` module to avoid prefixing them with `math.`:

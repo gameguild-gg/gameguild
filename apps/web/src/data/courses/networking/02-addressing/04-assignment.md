@@ -144,19 +144,19 @@ Build a **NetworkUtils C++ class** implementing IP addressing, subnet calculatio
 
 The `main.cpp` includes **9 networking scenarios**:
 
-1. **Server Configuration** — Validate bind addresses (0.0.0.0, 127.0.0.1, 192.168.x.x)
-2. **LAN Planning** — Design subnet for 50-computer studio (growth planning)
-3. **Public Subnet Analysis** — Lecture example breakdown (192.168.100.50/26)
-4. **CIDR Operations** — Common network subnets reference table
-5. **IPv6 Support** — Check readiness for IPv6 deployment
-6. **DNS Configuration** — Validate server hostnames
-7. **Network Classification** — Decide which IPs suitable for public servers
-8. **Player IP Validation** — Check if player IP in region-locked subnet
-9. **Binary Representation** — Understand octet-to-binary for subnetting math
+1. **Server Configuration** - Validate bind addresses (0.0.0.0, 127.0.0.1, 192.168.x.x)
+2. **LAN Planning** - Design subnet for 50-computer studio (growth planning)
+3. **Public Subnet Analysis** - Lecture example breakdown (192.168.100.50/26)
+4. **CIDR Operations** - Common network subnets reference table
+5. **IPv6 Support** - Check readiness for IPv6 deployment
+6. **DNS Configuration** - Validate server hostnames
+7. **Network Classification** - Decide which IPs suitable for public servers
+8. **Player IP Validation** - Check if player IP in region-locked subnet
+9. **Binary Representation** - Understand octet-to-binary for subnetting math
 
 ## Implementation Tips
 
-1. **Start with IPv4 (Tasks 1-3)** — These are the most used and map directly to quiz questions
+1. **Start with IPv4 (Tasks 1-3)** - These are the most used and map directly to quiz questions
 2. **Use bitwise operations efficiently:**
    ```cpp
    // Create mask with 'prefix' ones: (0xFFFFFFFFU << (32 - prefix))
@@ -176,7 +176,7 @@ The `main.cpp` includes **9 networking scenarios**:
 
 ## References
 
-- **Lecture:** Week 02 — IP Addressing and DNS
+- **Lecture:** Week 02 - IP Addressing and DNS
 - **Textbook:** Beej's Guide Ch. 6-8 (IPv4/IPv6), Ch. 17 (Subnets)
 - **RFCs:**
   - RFC 791: IPv4 (32-bit address space)

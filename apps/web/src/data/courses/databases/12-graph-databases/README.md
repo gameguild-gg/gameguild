@@ -1,8 +1,8 @@
-# Week 12 — Graph Databases: Neo4j
+# Week 12 - Graph Databases: Neo4j
 
 **Dates:** March 30 – April 3, 2026  
 **Topics:** Graph Databases, Neo4j, Cypher Query Language  
-**Assessment:** Quiz 10 — Graph Databases & Neo4j
+**Assessment:** Quiz 10 - Graph Databases & Neo4j
 
 ---
 
@@ -26,7 +26,7 @@ By the end of this week, you will be able to:
 
 ## Weekly Schedule
 
-### Monday, March 30 — Graph Database Fundamentals
+### Monday, March 30 - Graph Database Fundamentals
 
 **Topics:**
 - What is a graph database?
@@ -56,7 +56,7 @@ By the end of this week, you will be able to:
 
 ---
 
-### Thursday, April 2 — Cypher Query Language
+### Thursday, April 2 - Cypher Query Language
 
 **Topics:**
 - **CRUD Operations:**
@@ -95,7 +95,7 @@ By the end of this week, you will be able to:
 
 ## Assessment
 
-### Quiz 10 — Graph Databases & Neo4j (Due: Thursday, April 2)
+### Quiz 10 - Graph Databases & Neo4j (Due: Thursday, April 2)
 
 **Topics Covered:**
 - Graph model fundamentals (nodes, relationships, properties, labels)

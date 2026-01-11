@@ -376,10 +376,10 @@ EXECUTE FUNCTION log_all_changes();
 ### Trigger Special Variables
 
 In trigger functions:
-- `NEW` — The new row (INSERT, UPDATE)
-- `OLD` — The old row (UPDATE, DELETE)
-- `TG_OP` — Operation: 'INSERT', 'UPDATE', 'DELETE'
-- `TG_TABLE_NAME` — Name of the table
+- `NEW` - The new row (INSERT, UPDATE)
+- `OLD` - The old row (UPDATE, DELETE)
+- `TG_OP` - Operation: 'INSERT', 'UPDATE', 'DELETE'
+- `TG_TABLE_NAME` - Name of the table
 
 ```sql
 CREATE OR REPLACE FUNCTION audit_changes()
@@ -571,5 +571,5 @@ Create a reusable audit trigger that logs all changes to any table to a central 
 4. **BEFORE triggers** can modify data before it's written
 5. **AFTER triggers** react to changes after they're committed
 6. **NEW** contains the new row; **OLD** contains the old row
-7. **Use triggers sparingly** — they add hidden complexity
-8. **Document triggers well** — their automatic nature can surprise developers
+7. **Use triggers sparingly** - they add hidden complexity
+8. **Document triggers well** - their automatic nature can surprise developers

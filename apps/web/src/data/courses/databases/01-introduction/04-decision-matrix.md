@@ -306,18 +306,18 @@ graph TD
 
 ## Common Anti-Patterns
 
-- **MongoDB for everything** — great for flexible documents, not for multi-step transactions or heavy joins.
-- **Redis as the primary store** — blazing fast cache, weak for durability and complex queries.
-- **NoSQL by default** — start with Postgres unless you have a clear scaling/consistency need.
-- **Adding databases casually** — every DB adds ops cost. Fewer is simpler; managed services help.
+- **MongoDB for everything** - great for flexible documents, not for multi-step transactions or heavy joins.
+- **Redis as the primary store** - blazing fast cache, weak for durability and complex queries.
+- **NoSQL by default** - start with Postgres unless you have a clear scaling/consistency need.
+- **Adding databases casually** - every DB adds ops cost. Fewer is simpler; managed services help.
 
 ---
 
 ## Key Takeaways
 
-1. **Start simple** — PostgreSQL handles most use cases well
+1. **Start simple** - PostgreSQL handles most use cases well
 2. **Add specialized databases** when you have specific needs
-3. **Consider operational complexity** — more databases = more maintenance
-4. **Understand CAP trade-offs** — you can't have everything
-5. **Think polyglot** — different data, different databases
-6. **Measure first** — don't optimize prematurely
+3. **Consider operational complexity** - more databases = more maintenance
+4. **Understand CAP trade-offs** - you can't have everything
+5. **Think polyglot** - different data, different databases
+6. **Measure first** - don't optimize prematurely

@@ -1,4 +1,4 @@
-# Apache Kafka Fundamentals — Event Streaming
+# Apache Kafka Fundamentals - Event Streaming
 
 ## Introduction
 

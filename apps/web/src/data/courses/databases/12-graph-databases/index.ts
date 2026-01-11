@@ -1,152 +1,133 @@
-import type { ProgramContent } from '../../../types/content';
+import type { ProgramContent } from '@/lib/api/generated';
 
-// Week 12 — Graph Databases: Neo4j
+// Week 12 - Graph Databases: Neo4j
 
 export const week12GraphContent: ProgramContent = {
   id: 'databases-week12',
+  programId: 'databases-program-1',
   slug: 'week12-graph-databases',
-  title: 'Week 12 — Graph Databases: Neo4j',
+  parentId: undefined,
+  title: 'Week 12 - Graph Databases: Neo4j',
   description:
     'Master graph databases with Neo4j. Learn nodes, relationships, Cypher query language, path traversals, and build recommendation engines for social networks and e-commerce.',
-  sortOrder: 120,
+  type: 0, // Page
+  body: '# Week 12 - Graph Databases: Neo4j\n\nNeo4j fundamentals and graph database concepts.',
+  sortOrder: 12,
+  isRequired: true,
+  gradingMethod: 0, // None
+  maxPoints: null,
   estimatedMinutes: 300,
-  visibility: 'published' as const,
-  metadata: {
-    week: 12,
-    dates: '2026/03/30 – 2026/04/03',
-    topics: ['Graph Databases', 'Neo4j', 'Cypher', 'Recommendations', 'Social Networks'],
-    assessments: ['Quiz 10: Graph Databases', 'Final Project Checkpoint #1'],
-    objectives: [
-      'Explain the graph database model (nodes, relationships, properties)',
-      'Compare graph databases to relational databases',
-      'Write Cypher queries (CREATE, MATCH, MERGE, DELETE)',
-      'Traverse variable-length paths and find shortest paths',
-      'Build recommendation engines with collaborative filtering',
-      'Integrate Neo4j with TypeScript using neo4j-driver',
-    ],
-  },
-  children: [
-    'databases-week12-overview',
-    'databases-week12-neo4j',
-    'databases-week12-readings',
-    'databases-week12-quiz',
-  ],
+  visibility: 1, // Published
+  program: undefined as any,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: '2026-03-30T00:00:00Z',
+  updatedAt: '2026-03-30T00:00:00Z',
 };
 
 export const week12OverviewContent: ProgramContent = {
   id: 'databases-week12-overview',
+  programId: 'databases-program-1',
   slug: 'overview',
+  parentId: 'databases-week12',
   title: 'Week 12 Overview',
   description:
     'Introduction to graph databases and Neo4j. Weekly schedule, learning objectives, and Final Project Checkpoint #1 requirements.',
+  type: 0, // Page
+  body: '',
   sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0, // None
+  maxPoints: null,
   estimatedMinutes: 15,
-  visibility: 'published' as const,
-  contentType: 'reading' as const,
-  metadata: {
-    fileType: 'markdown',
-    filePath: 'databases/12-graph-databases/README.md',
-    topics: ['Graph Databases', 'Neo4j', 'Week Overview'],
-  },
+  visibility: 1, // Published
+  program: undefined as any,
+  parent: week12GraphContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: '2026-03-30T00:00:00Z',
+  updatedAt: '2026-03-30T00:00:00Z',
 };
 
 export const week12Neo4jContent: ProgramContent = {
   id: 'databases-week12-neo4j',
+  programId: 'databases-program-1',
   slug: 'neo4j-fundamentals',
+  parentId: 'databases-week12',
   title: 'Neo4j Fundamentals',
   description:
     'Comprehensive guide to graph databases and Neo4j. Learn Cypher query language, graph traversals, indexes, constraints, and build real-world applications like recommendation engines and fraud detection systems.',
+  type: 0, // Page
+  body: '',
   sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0, // None
+  maxPoints: null,
   estimatedMinutes: 120,
-  visibility: 'published' as const,
-  contentType: 'reading' as const,
-  metadata: {
-    fileType: 'markdown',
-    filePath: 'databases/12-graph-databases/neo4j-fundamentals.md',
-    topics: [
-      'Neo4j',
-      'Cypher',
-      'Graph Model',
-      'Nodes',
-      'Relationships',
-      'Path Queries',
-      'Recommendations',
-      'neo4j-driver',
-    ],
-    objectives: [
-      'Understand graph database model (nodes, relationships, properties, labels)',
-      'Write Cypher CRUD operations (CREATE, MATCH, MERGE, DELETE)',
-      'Traverse variable-length paths and find shortest paths',
-      'Implement indexes and constraints for performance',
-      'Build recommendation engines with collaborative filtering',
-      'Integrate Neo4j with TypeScript using neo4j-driver',
-      'Design graph schemas for social networks and fraud detection',
-    ],
-  },
+  visibility: 1, // Published
+  program: undefined as any,
+  parent: week12GraphContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: '2026-03-30T00:00:00Z',
+  updatedAt: '2026-03-30T00:00:00Z',
 };
 
 export const week12ReadingsContent: ProgramContent = {
   id: 'databases-week12-readings',
+  programId: 'databases-program-1',
   slug: 'readings',
+  parentId: 'databases-week12',
   title: 'Readings & Resources',
   description:
     'Curated collection of Neo4j documentation, tutorials, graph algorithms, tools, videos, books, and community resources for deeper learning.',
+  type: 0, // Page
+  body: '',
   sortOrder: 3,
+  isRequired: false,
+  gradingMethod: 0, // None
+  maxPoints: null,
   estimatedMinutes: 30,
-  visibility: 'published' as const,
-  contentType: 'reading' as const,
-  metadata: {
-    fileType: 'markdown',
-    filePath: 'databases/12-graph-databases/readings-12.md',
-    topics: ['Resources', 'Documentation', 'Tutorials', 'Tools', 'Graph Algorithms'],
-  },
+  visibility: 1, // Published
+  program: undefined as any,
+  parent: week12GraphContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: '2026-03-30T00:00:00Z',
+  updatedAt: '2026-03-30T00:00:00Z',
 };
 
 export const week12QuizContent: ProgramContent = {
   id: 'databases-week12-quiz',
+  programId: 'databases-program-1',
   slug: 'quiz10',
-  title: 'Quiz 10 — Graph Databases & Neo4j',
+  parentId: 'databases-week12',
+  title: 'Quiz 10 - Graph Databases & Neo4j',
   description:
     'Assessment covering graph model fundamentals, Cypher query language, variable-length paths, MERGE vs CREATE, indexes, relationship properties, and use case analysis. 12 questions with detailed explanations.',
+  type: 2, // Quiz
+  body: '',
   sortOrder: 4,
+  isRequired: true,
+  gradingMethod: 1, // Points
+  maxPoints: 100,
   estimatedMinutes: 45,
-  visibility: 'published' as const,
-  contentType: 'assessment' as const,
-  metadata: {
-    fileType: 'markdown',
-    filePath: 'databases/12-graph-databases/quiz/graph-neo4j-quiz.md',
-    topics: [
-      'Graph Databases',
-      'Neo4j',
-      'Cypher',
-      'Nodes',
-      'Relationships',
-      'Path Queries',
-      'MERGE',
-      'Indexes',
-    ],
-    assessmentType: 'quiz',
-    totalPoints: 100,
-    passingScore: 70,
-    gradingMethod: 'automatic',
-    objectives: [
-      'Explain the labeled property graph model',
-      'Compare graph vs relational databases for different use cases',
-      'Interpret Cypher pattern matching (directed, undirected, variable-length)',
-      'Use MERGE for upsert operations vs CREATE for inserts',
-      'Calculate path lengths and find shortest paths',
-      'Apply OPTIONAL MATCH for LEFT JOIN behavior',
-      'Access relationship properties in queries',
-      'Design indexes for performance optimization',
-      'Select appropriate databases for recommendation engines',
-    ],
-  },
+  visibility: 1, // Published
+  program: undefined as any,
+  parent: week12GraphContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: '2026-03-30T00:00:00Z',
+  updatedAt: '2026-03-30T00:00:00Z',
 };
 
-export const allWeek12Content = [
-  week12GraphContent,
+// Set up parent-child relationships
+week12GraphContent.children = [
   week12OverviewContent,
   week12Neo4jContent,
   week12ReadingsContent,
   week12QuizContent,
 ];
+
+export default week12GraphContent;

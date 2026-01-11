@@ -1,4 +1,4 @@
-# DQL — Data Query Language
+# DQL - Data Query Language
 
 DQL (Data Query Language) is the subset of SQL used to retrieve data from the database. The primary statement is `SELECT`.
 
@@ -262,14 +262,14 @@ FROM products;
 
 Understanding the logical order of SQL clause evaluation:
 
-1. `FROM` — Source tables
-2. `WHERE` — Row filtering
-3. `GROUP BY` — Grouping (covered in Week 03)
-4. `HAVING` — Group filtering (covered in Week 03)
-5. `SELECT` — Column selection and expressions
-6. `DISTINCT` — Duplicate removal
-7. `ORDER BY` — Sorting
-8. `LIMIT/OFFSET` — Row limiting
+1. `FROM` - Source tables
+2. `WHERE` - Row filtering
+3. `GROUP BY` - Grouping (covered in Week 03)
+4. `HAVING` - Group filtering (covered in Week 03)
+5. `SELECT` - Column selection and expressions
+6. `DISTINCT` - Duplicate removal
+7. `ORDER BY` - Sorting
+8. `LIMIT/OFFSET` - Row limiting
 
 ::: note
 

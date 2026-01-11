@@ -195,18 +195,18 @@ After completing this week's readings, you should be able to:
 
 Based on question frequency and real-world importance:
 
-1. **Transactions & ACID** (14 questions) — Critical for data integrity
-2. **Access Control** (12 questions) — Essential for security
-3. **Triggers & Functions** (12 questions) — Key for automation
-4. **SQL Injection Prevention** (7 questions) — Security fundamental
+1. **Transactions & ACID** (14 questions) - Critical for data integrity
+2. **Access Control** (12 questions) - Essential for security
+3. **Triggers & Functions** (12 questions) - Key for automation
+4. **SQL Injection Prevention** (7 questions) - Security fundamental
 
 ### Study Tips
 
-1. **Practice writing triggers** — CREATE TRIGGER syntax appears frequently
-2. **Know isolation levels** — Understand what each prevents
-3. **Memorize ACID** — Be able to explain each property
-4. **GRANT/REVOKE syntax** — Know column-level and schema-level grants
-5. **SQL injection patterns** — Recognize vulnerable code
+1. **Practice writing triggers** - CREATE TRIGGER syntax appears frequently
+2. **Know isolation levels** - Understand what each prevents
+3. **Memorize ACID** - Be able to explain each property
+4. **GRANT/REVOKE syntax** - Know column-level and schema-level grants
+5. **SQL injection patterns** - Recognize vulnerable code
 
 ---
 
@@ -254,11 +254,11 @@ Using Drizzle ORM:
 | Isolation Level | How much transactions can see of concurrent changes |
 | Dirty Read | Reading uncommitted data from another transaction |
 | Phantom Read | New rows appearing in repeated queries |
-| RLS | Row-Level Security — controlling access to individual rows |
+| RLS | Row-Level Security - controlling access to individual rows |
 | Sharding | Distributing data across multiple database servers |
 | Partitioning | Splitting a table into smaller physical pieces |
 | Read Replica | A database copy that handles read queries |
-| ORM | Object Relational Mapping — database abstraction layer |
+| ORM | Object Relational Mapping - database abstraction layer |
 | SQL Injection | Attack that inserts malicious SQL via user input |
 | Parameterized Query | Query where user input is passed as parameters, not concatenated |
 
@@ -266,11 +266,11 @@ Using Drizzle ORM:
 
 ## Common Mistakes to Avoid
 
-1. **Using string concatenation in SQL** — Always use parameterized queries
-2. **Forgetting to handle soft-deleted records in queries** — Add WHERE deleted_at IS NULL
-3. **Using CASCADE without understanding implications** — Can delete more than expected
-4. **Choosing wrong isolation level** — Read Committed is usually sufficient
-5. **Granting ALL PRIVILEGES** — Violates least privilege principle
-6. **Ignoring unique constraints with soft delete** — Need partial indexes
-7. **Not using transactions for multi-step operations** — Risk inconsistent state
-8. **Returning NEW in AFTER triggers** — Only BEFORE triggers use return values meaningfully
+1. **Using string concatenation in SQL** - Always use parameterized queries
+2. **Forgetting to handle soft-deleted records in queries** - Add WHERE deleted_at IS NULL
+3. **Using CASCADE without understanding implications** - Can delete more than expected
+4. **Choosing wrong isolation level** - Read Committed is usually sufficient
+5. **Granting ALL PRIVILEGES** - Violates least privilege principle
+6. **Ignoring unique constraints with soft delete** - Need partial indexes
+7. **Not using transactions for multi-step operations** - Risk inconsistent state
+8. **Returning NEW in AFTER triggers** - Only BEFORE triggers use return values meaningfully

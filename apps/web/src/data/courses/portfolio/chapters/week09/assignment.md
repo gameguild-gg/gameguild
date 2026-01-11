@@ -41,7 +41,7 @@ This is your **last chance for feedback** before finalizing your demo reel! Shar
 ### **Example of a Great Feedback Comment:**
 ✅ *"Your transitions are mostly smooth, but the cut at 0:15 feels a bit abrupt. Maybe add a slight fade or time it with the music beat?"*
 
-❌ *"Looks good!"* (This is not helpful—be specific!)
+❌ *"Looks good!"* (This is not helpful-be specific!)
 
 ---
 

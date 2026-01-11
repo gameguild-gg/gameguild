@@ -319,7 +319,7 @@ CREATE TABLE orders (
 | `product_list` is multi-valued | 1NF | Create `order_items` junction table |
 | Customer data repeated | 3NF | Create `customers` table |
 | Customer address might include city/zip | 1NF | Separate address components |
-| `total` can be computed | — | Consider if denormalization is intentional |
+| `total` can be computed | - | Consider if denormalization is intentional |
 
 **Normalized Version:**
 
@@ -368,36 +368,36 @@ CREATE TABLE order_items (
 
 MySQL provides several sample databases for learning:
 
-1. **Sakila** — DVD rental store
+1. **Sakila** - DVD rental store
    - Customers, Films, Rentals, Inventory
    - Great example of a normalized schema
 
-2. **World** — Geographic data
+2. **World** - Geographic data
    - Countries, Cities, Languages
    - Simple 3NF design
 
-3. **Employees** — HR data
+3. **Employees** - HR data
    - Employees, Departments, Salaries, Titles
    - Historical data with date ranges
 
 ### Microsoft Sample Databases
 
-1. **AdventureWorks** — Manufacturing and sales
+1. **AdventureWorks** - Manufacturing and sales
    - Comprehensive ERP-style schema
    - Product lifecycle, sales, HR
 
-2. **Northwind** — Classic trading company
+2. **Northwind** - Classic trading company
    - Customers, Orders, Products, Suppliers
    - Simple e-commerce model
 
-3. **Contoso** — Retail analytics
+3. **Contoso** - Retail analytics
    - OLAP-style star schema
    - Designed for reporting
 
 ### PostgreSQL Samples
 
-1. **dvdrental** — Based on Sakila
-2. **pagila** — PostgreSQL port of Sakila
+1. **dvdrental** - Based on Sakila
+2. **pagila** - PostgreSQL port of Sakila
 
 **Loading Sample Data:**
 ```bash
@@ -547,24 +547,24 @@ Signs that you've over-denormalized:
 
 ### Design Phase
 
-1. **Start with 3NF** — normalize first, denormalize with purpose
-2. **Document intentional denormalization** — note why and how it's maintained
-3. **Use ERD tools** — visualize before implementing (dbdiagram.io, MySQL Workbench)
-4. **Review sample schemas** — learn from proven designs
+1. **Start with 3NF** - normalize first, denormalize with purpose
+2. **Document intentional denormalization** - note why and how it's maintained
+3. **Use ERD tools** - visualize before implementing (dbdiagram.io, MySQL Workbench)
+4. **Review sample schemas** - learn from proven designs
 
 ### Implementation Phase
 
-1. **Add indexes on foreign keys** — PostgreSQL doesn't do this automatically
-2. **Use constraints** — enforce data integrity at the database level
-3. **Consider materialized views** — for complex reporting queries
-4. **Plan for schema evolution** — make additive changes when possible
+1. **Add indexes on foreign keys** - PostgreSQL doesn't do this automatically
+2. **Use constraints** - enforce data integrity at the database level
+3. **Consider materialized views** - for complex reporting queries
+4. **Plan for schema evolution** - make additive changes when possible
 
 ### Maintenance Phase
 
-1. **Monitor query performance** — use EXPLAIN ANALYZE regularly
-2. **Review slow queries** — identify denormalization opportunities
-3. **Maintain materialized views** — set up refresh schedules
-4. **Validate data consistency** — check redundant data periodically
+1. **Monitor query performance** - use EXPLAIN ANALYZE regularly
+2. **Review slow queries** - identify denormalization opportunities
+3. **Maintain materialized views** - set up refresh schedules
+4. **Validate data consistency** - check redundant data periodically
 
 ---
 
@@ -613,11 +613,11 @@ Include the refresh strategy.
 
 ## Key Takeaways
 
-1. **3NF is the default target** — provides good balance of integrity and performance
-2. **Denormalize strategically** — for read-heavy, well-defined query patterns
-3. **Document denormalization** — track what, why, and how it's maintained
-4. **Use materialized views** — for expensive read queries without write complexity
-5. **Maintain redundant data carefully** — triggers or application logic must keep data in sync
-6. **Measure before optimizing** — use EXPLAIN ANALYZE to identify real bottlenecks
-7. **Study existing schemas** — Sakila, AdventureWorks, and others are valuable learning resources
-8. **Plan for evolution** — schemas change; design for additive migrations
+1. **3NF is the default target** - provides good balance of integrity and performance
+2. **Denormalize strategically** - for read-heavy, well-defined query patterns
+3. **Document denormalization** - track what, why, and how it's maintained
+4. **Use materialized views** - for expensive read queries without write complexity
+5. **Maintain redundant data carefully** - triggers or application logic must keep data in sync
+6. **Measure before optimizing** - use EXPLAIN ANALYZE to identify real bottlenecks
+7. **Study existing schemas** - Sakila, AdventureWorks, and others are valuable learning resources
+8. **Plan for evolution** - schemas change; design for additive migrations

@@ -1,4 +1,4 @@
-# Behavior Trees — Assignment
+# Behavior Trees - Assignment
 
 Refer the repo [GameGuild AI4Games Repo](https://github.com/gameguild-gg/ai4games) for the full project context. And read the [GameGuild AI4Games Course](https://gameguild.gg/p/ai4games2) for detailed explanations.
 
@@ -8,23 +8,23 @@ Implement the missing pieces of a minimal Behavior Tree system for a guard AI.
 
 **Composite Nodes:**
 
-- `Selector::tick()` — Try children in order until one returns Success or Running; otherwise return Failure
-- `Sequence::tick()` — Run children in order; if any returns Failure or Running, stop and return that status; otherwise return Success
+- `Selector::tick()` - Try children in order until one returns Success or Running; otherwise return Failure
+- `Sequence::tick()` - Run children in order; if any returns Failure or Running, stop and return that status; otherwise return Success
 
 **Leaf Nodes (Conditions):**
 
-- `CanSeePlayer::tick()` — Return Success if `m_ctx.canSeePlayer` is true, else Failure
-- `HasAmmo::tick()` — Return Success if `m_ctx.ammo > 0`, else Failure
+- `CanSeePlayer::tick()` - Return Success if `m_ctx.canSeePlayer` is true, else Failure
+- `HasAmmo::tick()` - Return Success if `m_ctx.ammo > 0`, else Failure
 
 **Leaf Nodes (Actions):**
 
-- `Shoot::tick()` — Decrement ammo, print `"Bang! Ammo: <new_ammo>"`, return Success
-- `Patrol::tick()` — Print `"Patrolling"`, return Running
-- `Chase::tick()` — Print `"Chasing"`, return Running
+- `Shoot::tick()` - Decrement ammo, print `"Bang! Ammo: <new_ammo>"`, return Success
+- `Patrol::tick()` - Print `"Patrolling"`, return Running
+- `Chase::tick()` - Print `"Chasing"`, return Running
 
 **Factory:**
 
-- `createGuardBT(GuardContext&)` — Build and return the root node of the tree below:
+- `createGuardBT(GuardContext&)` - Build and return the root node of the tree below:
 
 ```
 Selector (root)
@@ -42,9 +42,9 @@ Selector (root)
 
 Input: First line `canSeePlayer=<true|false> ammo=<int>`, then commands per line:
 
-- `see` / `nosee` — Update visibility
-- `ammo=<N>` — Set ammo
-- `tick` — Execute one tree tick and print leaf outputs + `ROOT:<Success|Failure|Running>`
+- `see` / `nosee` - Update visibility
+- `ammo=<N>` - Set ammo
+- `tick` - Execute one tree tick and print leaf outputs + `ROOT:<Success|Failure|Running>`
 
 The `runBT()` function is already complete and handles all parsing/printing.
 

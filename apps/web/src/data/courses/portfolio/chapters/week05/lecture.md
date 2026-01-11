@@ -8,7 +8,7 @@ your work and yourself as a programmer.
 
 ## What Makes a Great Programmer Demo Reel
 
-A great demo reel is more than just a collection of clips—it’s a narrative that demonstrates your technical skills,
+A great demo reel is more than just a collection of clips-it’s a narrative that demonstrates your technical skills,
 problem-solving abilities, and creative approach. Here are key elements to consider:
 
 ::: tip "Duration"
@@ -67,8 +67,8 @@ one with 30 seconds will be presented at the Senior Show.
       about the technical aspects of your work.
 
 - **Immersive Audio:**  
-  Incorporate the game’s audio elements—such as crisp sound effects, a memorable musical score, and expressive voice
-  acting—to create a rich, immersive experience for your audience.
+  Incorporate the game’s audio elements-such as crisp sound effects, a memorable musical score, and expressive voice
+  acting-to create a rich, immersive experience for your audience.
 
 - **Intuitive User Interface:**  
   Display the game’s user interface, including menus, heads-up displays (HUD), and other interactive elements, to
@@ -87,8 +87,8 @@ one with 30 seconds will be presented at the Senior Show.
   showcasing how players connect and compete.
 
 - **Clear Call-to-Action:**  
-  End your demo reel with a decisive call-to-action—such as directing viewers to the game’s website, social media
-  channels, or a download link—to guide them on the next steps.
+  End your demo reel with a decisive call-to-action-such as directing viewers to the game’s website, social media
+  channels, or a download link-to guide them on the next steps.
 
 ### Captivating Intro
 
