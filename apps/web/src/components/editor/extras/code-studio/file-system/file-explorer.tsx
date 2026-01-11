@@ -29,10 +29,10 @@ import { DuplicateNameDialog } from "../../dialogs/duplicate-name-dialog"
 import { BaseConfirmDialog } from "../../dialogs/base-confirm-dialog"
 import { MediaUploadDialog } from "../../media-upload-dialog"
 import { FileSourceMenu } from "../file-source-menu"
-import { CollectionBrowser } from "./collection-browser"
 import { SaveCollectionDialog } from "./save-collection-dialog"
 import type { CodeFile, FileTreeFolder, FileTreeItem, FileType } from "../types"
 import { cn } from "@/lib/utils"
+import { assetManager } from "@/lib/storage/assets/asset-manager"
 
 interface FileExplorerProps {
   files: CodeFile[]
@@ -1487,12 +1487,71 @@ export function FileExplorer({
 
       {/* Collection Browser Dialog */}
       {onImportCollection && showCollectionBrowser && (
-        <CollectionBrowser
-          onImportFiles={(files, folderMetadata) => {
-            onImportCollection(collectionPath, files, folderMetadata)
+        <MediaUploadDialog
+          open={showCollectionBrowser}
+          onOpenChange={setShowCollectionBrowser}
+          title="Import Collection"
+          sources={{ collections: true, files: false, url: false }}
+          onMediaSelected={async (result) => {
+            const results = Array.isArray(result) ? result : [result]
+            
+            for (const res of results) {
+              if (res.data.startsWith('collection://')) {
+                const collectionId = res.data.replace('collection://', '')
+                
+                try {
+                  // Load collection manifest
+                  const manifest = await assetManager.getCollection(collectionId)
+                  
+                  if (manifest) {
+                    // Extract files from collection structure
+                    const files: Array<{ name: string; path: string; assetId: string; isFile?: 'f' | 'm' | 't'; readonly?: boolean; isVisible?: boolean }> = []
+                    const folderMetadata = new Map<string, { readonly?: boolean; isVisible?: boolean }>()
+                    
+                    const collectFiles = (folder: any, basePath = '') => {
+                      // Store folder metadata
+                      if (folder.path) {
+                        folderMetadata.set(folder.path, {
+                          readonly: folder.readonly,
+                          isVisible: folder.isVisible,
+                        })
+                      }
+                      
+                      // Add files from this folder
+                      if (folder.files) {
+                        folder.files.forEach((file: any) => {
+                          files.push({
+                            name: file.name,
+                            path: file.path,
+                            assetId: file.assetId || '',
+                            isFile: file.isFile,
+                            readonly: file.readonly,
+                            isVisible: file.isVisible,
+                          })
+                        })
+                      }
+                      
+                      // Recursively collect from subfolders
+                      if (folder.folders) {
+                        folder.folders.forEach((subfolder: any) => {
+                          collectFiles(subfolder, folder.path || '')
+                        })
+                      }
+                    }
+                    
+                    collectFiles(manifest.structure)
+                    
+                    // Import files
+                    onImportCollection(collectionPath, files, folderMetadata)
+                  }
+                } catch (error) {
+                  console.error('Failed to import collection:', error)
+                }
+              }
+            }
+            
             setShowCollectionBrowser(false)
           }}
-          onClose={() => setShowCollectionBrowser(false)}
         />
       )}
 

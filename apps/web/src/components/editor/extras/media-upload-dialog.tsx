@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useState, useContext, useEffect } from "react"
-import { AlertCircle, X, Plus, Zap, HardDrive, Upload } from "lucide-react"
+import { AlertCircle, X, Plus, Zap, HardDrive, Upload, Package } from "lucide-react"
 
 import { CompressionSettingsDialog, type CompressionSettings } from "@/components/editor/extras/compressor/compression-settings-dialog"
 import { LocalAssetGrid } from "./media-upload-dialog/local-asset-grid"
@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { WebPConverter } from "@/lib/editor/webp-converter"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { ProjectIdContext } from "../lexical-editor"
+import type { CollectionMetadata } from "@/lib/storage/assets/collection-types"
 
 export interface MediaUploadResult {
   type: "file" | "url"
@@ -32,6 +33,7 @@ export interface MediaUploadResult {
 interface MediaSourceConfig {
   files?: boolean // Allow file upload and local asset selection
   url?: boolean // Allow URL input
+  collections?: boolean // Allow collection selection
 }
 
 interface MediaUploadDialogProps {
@@ -80,11 +82,13 @@ export function MediaUploadDialog({
   const projectId = projectIdFromContext && typeof projectIdFromContext === 'string' ? projectIdFromContext : undefined
   
   const enabledSources = {
-    files: sources.files !== false,
-    url: sources.url !== false,
+    files: sources.files === true,
+    url: sources.url === true,
+    collections: sources.collections === true,
   }
   
   const getDefaultTab = () => {
+    if (enabledSources.collections) return "collections"
     if (enabledSources.files) return "files"
     if (enabledSources.url) return "url"
     return "files"
@@ -103,6 +107,11 @@ export function MediaUploadDialog({
   const [currentCompressionFile, setCurrentCompressionFile] = useState<File | null>(null)
   const [globalCompressionSettings, setGlobalCompressionSettings] = useState<CompressionSettings | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Collections state
+  const [collections, setCollections] = useState<CollectionMetadata[]>([])
+  const [selectedCollection, setSelectedCollection] = useState<string | null>(null)
+  const [isLoadingCollections, setIsLoadingCollections] = useState(false)
 
   // Debug: Log projectId when dialog opens or projectId changes
   useEffect(() => {
@@ -151,6 +160,24 @@ export function MediaUploadDialog({
     }
     loadLocalAssets()
   }, [open, enabledSources.files, hideLocalAssets])
+
+  // Load collections when dialog opens
+  useEffect(() => {
+    async function loadCollections() {
+      if (open && enabledSources.collections) {
+        setIsLoadingCollections(true)
+        try {
+          const list = await assetManager.listCollections()
+          setCollections(list)
+        } catch (error) {
+          console.error('Failed to load collections:', error)
+        } finally {
+          setIsLoadingCollections(false)
+        }
+      }
+    }
+    loadCollections()
+  }, [open, enabledSources.collections])
 
   const isImageFile = (file: File): boolean => {
     return file.type.startsWith("image/")
@@ -402,6 +429,18 @@ export function MediaUploadDialog({
 
       // Process files one by one for safety
       for (const upload of pendingUploads) {
+        // Check if it's a collection URL
+        if (upload.data.startsWith('collection://')) {
+          // Collection - pass through directly without saving as asset
+          results.push({
+            type: "file",
+            data: upload.data, // collection://id
+            name: upload.name,
+            size: upload.size,
+          })
+          continue
+        }
+        
         if (upload.type === "file") {
           // Save file to assets
           console.log("MediaUploadDialog: Saving file asset with projectId =", projectId)
@@ -482,6 +521,8 @@ export function MediaUploadDialog({
       setError(null)
     } catch (error) {
       console.error("Error saving assets:", error)
+      setCollections([])
+      setSelectedCollection(null)
       setError(`Failed to save assets: ${error instanceof Error ? error.message : "Unknown error"}`)
     }
   }
@@ -578,7 +619,13 @@ export function MediaUploadDialog({
 
               {Object.values(enabledSources).filter(Boolean).length > 1 ? (
                 <Tabs defaultValue={activeTab} value={activeTab} onValueChange={handleTabChange} className="w-full flex flex-col flex-1 min-h-0">
-                  <TabsList className="grid w-full grid-cols-2 mb-3">
+                  <TabsList className={`grid w-full ${enabledSources.collections && enabledSources.files && enabledSources.url ? 'grid-cols-3' : enabledSources.collections || (enabledSources.files && enabledSources.url) ? 'grid-cols-2' : 'grid-cols-1'} mb-3`}>
+                    {enabledSources.collections && (
+                      <TabsTrigger value="collections" className="flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        Collections
+                      </TabsTrigger>
+                    )}
                     {enabledSources.files && (
                       <TabsTrigger value="files" className="flex items-center gap-2">
                         <HardDrive className="h-4 w-4" />
@@ -592,6 +639,110 @@ export function MediaUploadDialog({
                       </TabsTrigger>
                     )}
                   </TabsList>
+
+                  {enabledSources.collections && (
+                    <TabsContent value="collections" className="mt-0 flex flex-col flex-1 min-h-0">
+                      <div className="flex flex-col flex-1 min-h-0 gap-4">
+                        <div className="space-y-2 shrink-0">
+                          <Label className="text-sm font-medium">Select a collection to import</Label>
+                          <Input
+                            placeholder="Search collections..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="h-9"
+                          />
+                        </div>
+
+                        <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 flex-1 overflow-y-auto min-h-0 dark:bg-gray-900/50">
+                          {isLoadingCollections ? (
+                            <div className="flex items-center justify-center h-full">
+                              <div className="text-center">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                <p className="text-sm text-gray-500">Loading collections...</p>
+                              </div>
+                            </div>
+                          ) : collections.length === 0 ? (
+                            <div className="flex items-center justify-center h-full">
+                              <div className="text-center space-y-2">
+                                <Package className="h-12 w-12 text-gray-400 mx-auto" />
+                                <p className="text-sm text-gray-500">No collections found</p>
+                                <p className="text-xs text-gray-400">Create collections in the Code Studio</p>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 gap-2">
+                              {collections
+                                .filter(collection => 
+                                  !searchQuery || 
+                                  collection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                  (collection.description && collection.description.toLowerCase().includes(searchQuery.toLowerCase()))
+                                )
+                                .map(collection => (
+                                  <button
+                                    key={collection.id}
+                                    onClick={() => setSelectedCollection(collection.id)}
+                                    className={`p-4 rounded-lg border-2 text-left transition-all hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 ${
+                                      selectedCollection === collection.id
+                                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                                        : 'border-gray-200 dark:border-gray-700'
+                                    }`}
+                                  >
+                                    <div className="flex items-start gap-3">
+                                      <Package className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className="font-medium text-sm mb-1 truncate">{collection.name}</h4>
+                                        {collection.description && (
+                                          <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                                            {collection.description}
+                                          </p>
+                                        )}
+                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                          <span>ID: {collection.id.substring(0, 8)}...</span>
+                                          <span>•</span>
+                                          <span>{new Date(collection.created).toLocaleDateString()}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </button>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {selectedCollection && (
+                          <div className="pt-2 shrink-0">
+                            <Button
+                              onClick={async () => {
+                                try {
+                                  const manifest = await assetManager.getCollection(selectedCollection)
+                                  if (manifest) {
+                                    // Add collection as a pending upload with special type
+                                    const newUpload: PendingUpload = {
+                                      id: `collection-${selectedCollection}-${Date.now()}`,
+                                      type: "file" as const,
+                                      data: `collection://${selectedCollection}`,
+                                      name: manifest.metadata.name,
+                                      size: 0,
+                                    }
+                                    setPendingUploads(prev => [...prev, newUpload])
+                                    setSelectedCollection(null)
+                                    setError(null)
+                                  }
+                                } catch (error) {
+                                  console.error('Failed to load collection:', error)
+                                  setError('Failed to load collection')
+                                }
+                              }}
+                              className="w-full h-10 text-sm"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Selected Collection
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  )}
 
                   {enabledSources.files && (
                     <TabsContent value="files" className="mt-0 flex flex-col flex-1 min-h-0">
@@ -742,6 +893,105 @@ export function MediaUploadDialog({
                     </TabsContent>
                   )}
                 </Tabs>
+              ) : enabledSources.collections ? (
+                <div className="flex flex-col flex-1 min-h-0 gap-4">
+                  <div className="space-y-2 shrink-0">
+                    <Label className="text-sm font-medium">Select a collection to import</Label>
+                    <Input
+                      placeholder="Search collections..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
+
+                  <div className="border-2 border-gray-200 dark:border-gray-700 rounded-xl p-3 flex-1 overflow-y-auto min-h-0 dark:bg-gray-900/50">
+                    {isLoadingCollections ? (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                          <p className="text-sm text-gray-500">Loading collections...</p>
+                        </div>
+                      </div>
+                    ) : collections.length === 0 ? (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center space-y-2">
+                          <Package className="h-12 w-12 text-gray-400 mx-auto" />
+                          <p className="text-sm text-gray-500">No collections found</p>
+                          <p className="text-xs text-gray-400">Create collections in the Code Studio</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2">
+                        {collections
+                          .filter(collection => 
+                            !searchQuery || 
+                            collection.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            (collection.description && collection.description.toLowerCase().includes(searchQuery.toLowerCase()))
+                          )
+                          .map(collection => (
+                            <button
+                              key={collection.id}
+                              onClick={() => setSelectedCollection(collection.id)}
+                              className={`p-4 rounded-lg border-2 text-left transition-all hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 ${
+                                selectedCollection === collection.id
+                                  ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/30'
+                                  : 'border-gray-200 dark:border-gray-700'
+                              }`}
+                            >
+                              <div className="flex items-start gap-3">
+                                <Package className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-medium text-sm mb-1 truncate">{collection.name}</h4>
+                                  {collection.description && (
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2 mb-2">
+                                      {collection.description}
+                                    </p>
+                                  )}
+                                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                                    <span>ID: {collection.id.substring(0, 8)}...</span>
+                                    <span>•</span>
+                                    <span>{new Date(collection.created).toLocaleDateString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedCollection && (
+                    <div className="pt-2 shrink-0">
+                      <Button
+                        onClick={async () => {
+                          try {
+                            const manifest = await assetManager.getCollection(selectedCollection)
+                            if (manifest) {
+                              const newUpload: PendingUpload = {
+                                id: `collection-${selectedCollection}-${Date.now()}`,
+                                type: "file" as const,
+                                data: `collection://${selectedCollection}`,
+                                name: manifest.metadata.name,
+                                size: 0,
+                              }
+                              setPendingUploads(prev => [...prev, newUpload])
+                              setSelectedCollection(null)
+                              setError(null)
+                            }
+                          } catch (error) {
+                            console.error('Failed to load collection:', error)
+                            setError('Failed to load collection')
+                          }
+                        }}
+                        className="w-full h-10 text-sm"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Selected Collection
+                      </Button>
+                    </div>
+                  )}
+                </div>
               ) : enabledSources.files ? (
                 <div className="space-y-4">
                   <div className="text-center">
