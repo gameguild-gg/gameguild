@@ -347,31 +347,48 @@ export function CodeStudioEditor({
     })
   }
 
-  const handleResetFile = (fileId: string) => {
+  const handleResetFile = async (fileId: string) => {
+    const originalFile = originalDataRef.current.files.find(f => f.id === fileId)
+    if (!originalFile) return
+
+    // Resolve asset reference if needed
+    let contentToRestore = originalFile.content
+    if (FileOps.isAssetReference(originalFile.content)) {
+      contentToRestore = await FileOps.resolveFileContent(originalFile)
+    }
+
     setLocalData(draft => {
       const file = draft.files.find(f => f.id === fileId)
-      const originalFile = originalDataRef.current.files.find(f => f.id === fileId)
       
-      if (file && originalFile) {
+      if (file) {
         // Reset content to original
         file.content = originalFile.content
         file.isModified = false
         
-        // Update Monaco file system
-        updateMonacoFile(file.path, originalFile.content, draft.id)
+        // Update Monaco file system with resolved content
+        updateMonacoFile(file.path, contentToRestore, draft.id)
       }
     })
 
     // Force update resolved content to trigger Monaco re-render
     setResolvedContents(draft => {
-      const originalFile = originalDataRef.current.files.find(f => f.id === fileId)
-      if (originalFile) {
-        draft[fileId] = originalFile.content
-      }
+      draft[fileId] = contentToRestore
+      lastProcessedContentsRef.current[fileId] = contentToRestore
     })
   }
 
-  const handleResetAllFiles = () => {
+  const handleResetAllFiles = async () => {
+    // Resolve all asset references first
+    const resolvedContentsMap: Record<string, string> = {}
+    
+    for (const originalFile of originalDataRef.current.files) {
+      let contentToRestore = originalFile.content
+      if (FileOps.isAssetReference(originalFile.content)) {
+        contentToRestore = await FileOps.resolveFileContent(originalFile)
+      }
+      resolvedContentsMap[originalFile.id] = contentToRestore
+    }
+
     setLocalData(draft => {
       // Reset all files to original content
       draft.files.forEach(file => {
@@ -380,16 +397,19 @@ export function CodeStudioEditor({
           file.content = originalFile.content
           file.isModified = false
           
-          // Update Monaco file system
-          updateMonacoFile(file.path, originalFile.content, draft.id)
+          // Update Monaco file system with resolved content
+          const resolvedContent = resolvedContentsMap[originalFile.id]
+          updateMonacoFile(file.path, resolvedContent, draft.id)
         }
       })
     })
 
     // Force update all resolved contents to trigger Monaco re-render
     setResolvedContents(draft => {
-      originalDataRef.current.files.forEach(originalFile => {
-        draft[originalFile.id] = originalFile.content
+      Object.assign(draft, resolvedContentsMap)
+      // Update last processed contents
+      Object.entries(resolvedContentsMap).forEach(([fileId, content]) => {
+        lastProcessedContentsRef.current[fileId] = content
       })
     })
   }
