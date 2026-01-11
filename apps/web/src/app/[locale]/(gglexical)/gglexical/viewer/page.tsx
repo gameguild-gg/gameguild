@@ -12,16 +12,8 @@ import { PreviewTableOfContents } from "@/components/editor/extras/preview/previ
 import { ProjectSidebarList } from "@/components/editor/extras/preview/project-sidebar-list-improved"
 import { useRouter } from "next/navigation"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-}
+import { checkSelectedProject as checkProjectPreview } from "@/components/editor/extras/preview/preview-load-operations"
+import type { ProjectData } from "@/components/editor/extras/preview/preview-load-operations"
 
 interface SerializedEditorState {
   root: {
@@ -64,78 +56,12 @@ export default function PreviewPage() {
         await loadAvailableTags()
         
         // Check if there's a selected project from the main page or URL hash
-        const checkSelectedProject = async () => {
-          try {
-            // First, check for project ID in URL hash
-            const hash = window.location.hash.replace('#', '')
-            if (hash) {
-              try {
-                const projectData = await dbStorage.current.load(hash)
-                if (projectData && projectData.data) {
-                  setCurrentProject(projectData)
-                  
-                  // Update URL hash if not already set
-                  if (window.location.hash !== `#${projectData.id}`) {
-                    window.history.pushState(null, '', `#${projectData.id}`)
-                  }
-                  
-                  toast.success("Projeto carregado", {
-                    description: `"${projectData.name}" foi aberto para visualização`,
-                    duration: 2500,
-                    icon: "👁️",
-                  })
-                  
-                  return // Exit early
-                } else {
-                  toast.error("Projeto não encontrado", {
-                    description: `Nenhum projeto encontrado com o ID: ${hash}`,
-                    duration: 4000,
-                    icon: "❌",
-                  })
-                }
-              } catch (error) {
-                console.error("Error loading project from hash:", error)
-                toast.error("Erro ao carregar projeto", {
-                  description: "Não foi possível carregar o projeto da URL",
-                  duration: 4000,
-                  icon: "❌",
-                })
-              }
-            }
-            
-            // If no hash or hash loading failed, check localStorage
-            const selectedProjectData = localStorage.getItem('selectedProject')
-            if (selectedProjectData) {
-              const projectData = JSON.parse(selectedProjectData)
-              
-              // Clear the localStorage item
-              localStorage.removeItem('selectedProject')
-              
-              // Set the current project for viewing
-              if (projectData.id && projectData.data) {
-                setCurrentProject(projectData)
-                
-                // Update URL hash
-                window.history.pushState(null, '', `#${projectData.id}`)
-                
-                toast.success("Projeto carregado", {
-                  description: `"${projectData.name}" foi aberto para visualização`,
-                  duration: 2500,
-                  icon: "👁️",
-                })
-              }
-            }
-          } catch (error) {
-            console.error("Error checking selected project:", error)
-            toast.error("Erro ao carregar projeto", {
-              description: "Não foi possível carregar o projeto selecionado",
-              duration: 4000,
-              icon: "❌",
-            })
-          }
-        }
-        
-        await checkSelectedProject()
+        await checkProjectPreview({
+          storageAdapter: {
+            load: (id: string) => dbStorage.current.load(id),
+          },
+          setCurrentProject,
+        })
         
       } catch (error) {
         console.error("Failed to initialize IndexedDB:", error)
