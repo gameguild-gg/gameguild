@@ -24,7 +24,7 @@
 
 ## Optional Deep Dive
 
-- RFC 1918, ["Address Allocation for Private Internets"](https://www.rfc-editor.org/rfc/rfc1918) — The original standard defining 10.x.x.x, 172.16.x.x, 192.168.x.x private ranges
-- Beej's Guide, [Ch. 31 "Domain Name System (DNS)"](https://beej.us/guide/bgnet0/html/#domain-name-system-dns) — More detailed DNS coverage with Python examples
+- RFC 1918, ["Address Allocation for Private Internets"](https://www.rfc-editor.org/rfc/rfc1918) - The original standard defining 10.x.x.x, 172.16.x.x, 192.168.x.x private ranges
+- Beej's Guide, [Ch. 31 "Domain Name System (DNS)"](https://beej.us/guide/bgnet0/html/#domain-name-system-dns) - More detailed DNS coverage with Python examples
 - [RFC 791 (IPv4)](https://datatracker.ietf.org/doc/html/rfc791) | [RFC 8200 (IPv6)](https://datatracker.ietf.org/doc/html/rfc8200) | [RFC 1035 (DNS)](https://datatracker.ietf.org/doc/html/rfc1035)
 - [Wireshark User's Guide](https://www.wireshark.org/docs/wsug_html_chunked/) + [Kurose/Ross Wireshark Labs](https://gaia.cs.umass.edu/kurose_ross/wireshark.php)

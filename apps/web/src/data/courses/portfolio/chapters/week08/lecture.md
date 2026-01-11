@@ -111,7 +111,7 @@ ffmpeg -i input.mp4 -vcodec libx264 -crf 23 -preset slow output.mp4
 - Keep captions **concise** but informative.
 - **Highlight key features** showcased in the visual.
 - Use **action-oriented language**: Instead of “Main character running,” say **“Dynamic parkour movement system in action.”**
-- Avoid redundancy—if the visual already conveys the idea, keep text minimal.
+- Avoid redundancy-if the visual already conveys the idea, keep text minimal.
 
 ---
 

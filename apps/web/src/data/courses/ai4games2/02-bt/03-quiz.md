@@ -1,4 +1,4 @@
-# Week 02 Quiz — Behavior Trees
+# Week 02 Quiz - Behavior Trees
 
 !!! quiz
 {

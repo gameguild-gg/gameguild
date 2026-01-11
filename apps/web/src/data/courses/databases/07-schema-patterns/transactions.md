@@ -550,7 +550,7 @@ Demonstrate the difference between Read Committed and Repeatable Read using two 
 
 ## Key Takeaways
 
-1. **Transactions ensure ACID properties** — Atomicity, Consistency, Isolation, Durability
+1. **Transactions ensure ACID properties** - Atomicity, Consistency, Isolation, Durability
 2. **BEGIN...COMMIT** wraps operations as a single unit
 3. **ROLLBACK** undoes all changes since BEGIN
 4. **SAVEPOINT** allows partial rollbacks

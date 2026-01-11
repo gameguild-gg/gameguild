@@ -8,7 +8,7 @@ This quiz tests your understanding of **indexes** and their creation in SQL.
 
 ## Moved from Week 02 DDL/DML/DQL Quiz
 
-### Question 1 — Creating Indexes
+### Question 1 - Creating Indexes
 
 **Requirement:** The database administrator needs to:
 1. Add a unique constraint on the `email` column in the `users` table

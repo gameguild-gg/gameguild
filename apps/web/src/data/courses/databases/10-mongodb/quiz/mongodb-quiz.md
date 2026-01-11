@@ -1,4 +1,4 @@
-# Quiz 8: Document Databases — MongoDB Fundamentals
+# Quiz 8: Document Databases - MongoDB Fundamentals
 
 ## Instructions
 
@@ -6,7 +6,7 @@ This quiz tests your understanding of MongoDB document databases, including sche
 
 ---
 
-## Question 1 — Document Model vs Relational
+## Question 1 - Document Model vs Relational
 
 **Scenario:** You're building a blog platform. Each blog post can have 0-100 comments. Users can write many posts and many comments.
 
@@ -38,7 +38,7 @@ This quiz tests your understanding of MongoDB document databases, including sche
 
 ---
 
-## Question 2 — JSON vs BSON
+## Question 2 - JSON vs BSON
 
 **Which statement about BSON is TRUE?**
 
@@ -68,7 +68,7 @@ This quiz tests your understanding of MongoDB document databases, including sche
 
 ---
 
-## Question 3 — ObjectId Structure
+## Question 3 - ObjectId Structure
 
 **Given this ObjectId: `507f1f77bcf86cd799439011`**
 
@@ -104,7 +104,7 @@ This quiz tests your understanding of MongoDB document databases, including sche
 
 ---
 
-## Question 4 — Requirement → MongoDB Insert
+## Question 4 - Requirement → MongoDB Insert
 
 **Requirement:** A user registration system needs to create a new user account with:
 - Username: "alice"
@@ -177,7 +177,7 @@ db.users.save({
 
 ---
 
-## Question 5 — MongoDB Query → Description
+## Question 5 - MongoDB Query → Description
 
 **Given this MongoDB query:**
 
@@ -220,7 +220,7 @@ db.orders.find({
 
 ---
 
-## Question 6 — Schema Design Decision
+## Question 6 - Schema Design Decision
 
 **Scenario:** An e-commerce app has products with **varying attributes**:
 - Electronics: brand, warranty, voltage
@@ -239,7 +239,7 @@ db.orders.find({
 
 **Explanation:**
 
-- **B is CORRECT** ✅ — **Attribute Pattern**
+- **B is CORRECT** ✅ - **Attribute Pattern**
   ```javascript
   {
     "_id": ObjectId("..."),
@@ -268,7 +268,7 @@ db.orders.find({
 
 ---
 
-## Question 7 — Requirement → MongoDB Update
+## Question 7 - Requirement → MongoDB Update
 
 **Requirement:** Increment the `likes` count by 1 and add "trending" to the `tags` array for post with `_id: ObjectId("507f1f77bcf86cd799439011")`. Don't add "trending" if it already exists in tags.
 
@@ -337,7 +337,7 @@ db.posts.update(
 
 ---
 
-## Question 8 — Aggregation Pipeline → Description
+## Question 8 - Aggregation Pipeline → Description
 
 **Given this aggregation pipeline:**
 
@@ -388,7 +388,7 @@ db.orders.aggregate([
 
 ---
 
-## Question 9 — When to Choose MongoDB
+## Question 9 - When to Choose MongoDB
 
 **Which scenario is MongoDB BEST suited for?**
 
@@ -420,7 +420,7 @@ db.orders.aggregate([
 
 ---
 
-## Question 10 — Embedding vs Referencing
+## Question 10 - Embedding vs Referencing
 
 **Scenario:** A movie database has:
 - Movies (title, year, runtime)
@@ -477,7 +477,7 @@ db.orders.aggregate([
 
 ---
 
-## Question 11 — MongoDB $lookup (JOIN)
+## Question 11 - MongoDB $lookup (JOIN)
 
 **Given these collections:**
 
@@ -556,7 +556,7 @@ db.users.aggregate([
 
 ---
 
-## Question 12 — BSON Data Types
+## Question 12 - BSON Data Types
 
 **Which MongoDB field definition is VALID?**
 
@@ -632,18 +632,18 @@ db.users.aggregate([
 
 ## Answer Key
 
-1. **A** — Reference comments (unbounded growth)
-2. **B** — BSON has extended types (Date, ObjectId, Binary)
-3. **B** — ObjectId = timestamp + random + counter
-4. **A** — `insertOne()` with correct types
-5. **A** — Find 10 recent completed orders $100-$500
-6. **B** — Attribute Pattern for varying fields
-7. **B** — `$inc` and `$addToSet`
-8. **B** — Top 10 customers by spending
-9. **B** — CMS with flexible schema
-10. **C** — Reference actors with array of IDs
-11. **A** — `$lookup` from users to orders
-12. **B** or **D** — BSON types (B is more precise)
+1. **A** - Reference comments (unbounded growth)
+2. **B** - BSON has extended types (Date, ObjectId, Binary)
+3. **B** - ObjectId = timestamp + random + counter
+4. **A** - `insertOne()` with correct types
+5. **A** - Find 10 recent completed orders $100-$500
+6. **B** - Attribute Pattern for varying fields
+7. **B** - `$inc` and `$addToSet`
+8. **B** - Top 10 customers by spending
+9. **B** - CMS with flexible schema
+10. **C** - Reference actors with array of IDs
+11. **A** - `$lookup` from users to orders
+12. **B** or **D** - BSON types (B is more precise)
 
 ---
 

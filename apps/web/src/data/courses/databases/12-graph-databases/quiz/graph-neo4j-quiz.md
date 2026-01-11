@@ -1,4 +1,4 @@
-# Quiz 10 — Graph Databases & Neo4j
+# Quiz 10 - Graph Databases & Neo4j
 
 **Total Points:** 100  
 **Passing Score:** 70%  
@@ -33,17 +33,17 @@ Which of the following best describes the **labeled property graph model** used 
 
 **Explanation:**
 
-✅ **A is correct** — Neo4j uses the labeled property graph model where:
+✅ **A is correct** - Neo4j uses the labeled property graph model where:
 - Nodes can have one or more **labels** (e.g., `:Person`, `:Admin`)
 - Nodes can have **properties** (key-value pairs like `{name: "Alice", age: 30}`)
 - Relationships connect nodes and can have **types** (e.g., `:FRIENDS_WITH`)
 - Relationships can also have **properties** (e.g., `{since: 2020, strength: 0.8}`)
 
-❌ **B is incorrect** — Both nodes and relationships can have properties.
+❌ **B is incorrect** - Both nodes and relationships can have properties.
 
-❌ **C is incorrect** — Nodes and relationships have separate property namespaces.
+❌ **C is incorrect** - Nodes and relationships have separate property namespaces.
 
-❌ **D is incorrect** — Relationships CAN have properties in addition to directionality.
+❌ **D is incorrect** - Relationships CAN have properties in addition to directionality.
 
 **Key Concept:** The labeled property graph model allows flexible schema design with rich metadata on both nodes and relationships.
 
@@ -67,20 +67,20 @@ For which of the following use cases would Neo4j be the **most appropriate** cho
 
 **Explanation:**
 
-✅ **B is correct** — Graph databases excel at **deep relationship traversals**:
+✅ **B is correct** - Graph databases excel at **deep relationship traversals**:
 - Finding friends-of-friends (2 hops) is fast with Neo4j's index-free adjacency
 - SQL would require multiple self-joins (`users JOIN friendships f1 JOIN friendships f2 JOIN friendships f3`)
 - Performance degrades exponentially in SQL for deep joins (6+ levels)
 - Neo4j maintains constant-time traversal complexity (O(1) per hop)
 
-❌ **A is incorrect** — E-commerce transactions are better suited for relational databases (PostgreSQL) due to:
+❌ **A is incorrect** - E-commerce transactions are better suited for relational databases (PostgreSQL) due to:
 - ACID guarantees at scale
 - Complex aggregations and reporting
 - Simple one-to-many relationships (order → items)
 
-❌ **C is incorrect** — Aggregations over millions of rows are better handled by columnar databases or SQL databases optimized for analytics (PostgreSQL, ClickHouse).
+❌ **C is incorrect** - Aggregations over millions of rows are better handled by columnar databases or SQL databases optimized for analytics (PostgreSQL, ClickHouse).
 
-❌ **D is incorrect** — Authentication is a simple CRUD operation better suited for relational databases.
+❌ **D is incorrect** - Authentication is a simple CRUD operation better suited for relational databases.
 
 **Decision Framework:**
 - **Use Graph DB:** Relationship-heavy queries, recommendations, fraud detection, pattern matching
@@ -112,7 +112,7 @@ RETURN b.name;
 
 **Explanation:**
 
-✅ **C is correct** — The pattern `-[:FRIENDS_WITH]-` (without arrows) matches relationships in **any direction**:
+✅ **C is correct** - The pattern `-[:FRIENDS_WITH]-` (without arrows) matches relationships in **any direction**:
 
 ```cypher
 // Matches both:
@@ -122,11 +122,11 @@ RETURN b.name;
 
 This returns all friends regardless of who initiated the friendship.
 
-❌ **A is incorrect** — That would require `-[:FRIENDS_WITH]->` (outgoing arrow).
+❌ **A is incorrect** - That would require `-[:FRIENDS_WITH]->` (outgoing arrow).
 
-❌ **B is incorrect** — That would require `<-[:FRIENDS_WITH]-` (incoming arrow).
+❌ **B is incorrect** - That would require `<-[:FRIENDS_WITH]-` (incoming arrow).
 
-❌ **D is incorrect** — Undirected patterns are valid in Cypher. Direction is optional.
+❌ **D is incorrect** - Undirected patterns are valid in Cypher. Direction is optional.
 
 **Comparison:**
 
@@ -167,23 +167,23 @@ Which Cypher query finds all people connected to Alice within **exactly 3 hops**
 
 **Explanation:**
 
-✅ **A is correct** — `*3` means **exactly 3 hops**:
+✅ **A is correct** - `*3` means **exactly 3 hops**:
 
 ```cypher
 (alice)-[:FRIENDS_WITH]->(f1)-[:FRIENDS_WITH]->(f2)-[:FRIENDS_WITH]->(p)
 // Exactly 3 relationships traversed
 ```
 
-❌ **B is incorrect** — `*1..3` means **1 to 3 hops** (inclusive):
+❌ **B is incorrect** - `*1..3` means **1 to 3 hops** (inclusive):
 - Returns friends (1 hop)
 - Returns friends-of-friends (2 hops)
 - Returns friends-of-friends-of-friends (3 hops)
 
 This matches MORE people than just 3-hop connections.
 
-❌ **C is incorrect** — This finds **direct friends** (1 hop) and limits results to 3 people. Not the same as "3 hops away."
+❌ **C is incorrect** - This finds **direct friends** (1 hop) and limits results to 3 people. Not the same as "3 hops away."
 
-❌ **D is incorrect** — Syntax error. `length()` requires a path variable:
+❌ **D is incorrect** - Syntax error. `length()` requires a path variable:
 
 ```cypher
 // Correct syntax for D
@@ -224,7 +224,7 @@ What is the difference between `CREATE` and `MERGE` in Neo4j?
 
 **Explanation:**
 
-✅ **A is correct** — Key differences:
+✅ **A is correct** - Key differences:
 
 **CREATE:**
 - Always creates a new node/relationship
@@ -257,11 +257,11 @@ ON MATCH SET p.lastSeen = timestamp()
 RETURN p;
 ```
 
-❌ **B is incorrect** — Both can use indexes. Speed difference is due to existence checks, not indexing.
+❌ **B is incorrect** - Both can use indexes. Speed difference is due to existence checks, not indexing.
 
-❌ **C is incorrect** — Neither requires unique constraints, but MERGE benefits from them for performance.
+❌ **C is incorrect** - Neither requires unique constraints, but MERGE benefits from them for performance.
 
-❌ **D is incorrect** — They have different semantics (create vs upsert).
+❌ **D is incorrect** - They have different semantics (create vs upsert).
 
 **Best Practice:** Use `MERGE` when loading data to avoid duplicates. Use `CREATE` for bulk inserts when you know data is unique.
 
@@ -300,7 +300,7 @@ What does `length(path)` return?
 
 **Explanation:**
 
-✅ **B is correct** — `length(path)` returns the **number of relationships** (edges) in the path:
+✅ **B is correct** - `length(path)` returns the **number of relationships** (edges) in the path:
 
 ```
 (Alice)-[:FRIENDS_WITH]->(Bob)-[:FRIENDS_WITH]->(Charlie)-[:FRIENDS_WITH]->(David)
@@ -310,11 +310,11 @@ What does `length(path)` return?
 - 3 relationships
 - `length(path) = 3`
 
-❌ **A is incorrect** — Number of **nodes** would be `length(nodes(path))` = 4 (Alice, Bob, Charlie, David).
+❌ **A is incorrect** - Number of **nodes** would be `length(nodes(path))` = 4 (Alice, Bob, Charlie, David).
 
-❌ **C is incorrect** — Number of intermediate nodes (excluding start and end) = 2 (Bob, Charlie).
+❌ **C is incorrect** - Number of intermediate nodes (excluding start and end) = 2 (Bob, Charlie).
 
-❌ **D is incorrect** — `1` would mean only one relationship (direct connection).
+❌ **D is incorrect** - `1` would mean only one relationship (direct connection).
 
 **Path Functions:**
 
@@ -354,7 +354,7 @@ RETURN p.name, collect(friend.name) AS friends;
 
 **Explanation:**
 
-✅ **B is correct** — `collect()` aggregates values into an **array**:
+✅ **B is correct** - `collect()` aggregates values into an **array**:
 
 **Result:**
 
@@ -364,7 +364,7 @@ RETURN p.name, collect(friend.name) AS friends;
 
 One row, with all friend names in an array.
 
-❌ **A is incorrect** — That would happen without aggregation:
+❌ **A is incorrect** - That would happen without aggregation:
 
 ```cypher
 MATCH (p:Person {name: "Alice"})-[:FRIENDS_WITH]->(friend)
@@ -377,14 +377,14 @@ RETURN p.name, friend.name;  // Multiple rows
 | "Alice" | "Charlie" |
 | "Alice" | "David" |
 
-❌ **C is incorrect** — To get the count, use `count()`:
+❌ **C is incorrect** - To get the count, use `count()`:
 
 ```cypher
 MATCH (p:Person {name: "Alice"})-[:FRIENDS_WITH]->(friend)
 RETURN p.name, count(friend) AS friendCount;
 ```
 
-❌ **D is incorrect** — Cypher uses **implicit grouping**. No explicit `GROUP BY` needed. Non-aggregated columns (like `p.name`) become grouping keys automatically.
+❌ **D is incorrect** - Cypher uses **implicit grouping**. No explicit `GROUP BY` needed. Non-aggregated columns (like `p.name`) become grouping keys automatically.
 
 **Other Aggregation Functions:**
 
@@ -425,7 +425,7 @@ Which solution will **most improve** performance?
 
 **Explanation:**
 
-✅ **B is correct** — Creating an **index on `email`** allows Neo4j to:
+✅ **B is correct** - Creating an **index on `email`** allows Neo4j to:
 - Skip scanning all `:Person` nodes
 - Directly lookup nodes by email (O(log N) instead of O(N))
 - Dramatically improve query performance
@@ -442,11 +442,11 @@ WHERE p.email = "alice@example.com"  // Uses index
 RETURN p;
 ```
 
-❌ **A is incorrect** — `LIMIT 1` only reduces the number of **returned results**, not the number of nodes scanned. Neo4j still scans all `:Person` nodes to find matches.
+❌ **A is incorrect** - `LIMIT 1` only reduces the number of **returned results**, not the number of nodes scanned. Neo4j still scans all `:Person` nodes to find matches.
 
-❌ **C is incorrect** — `MERGE` is for **creating** nodes if they don't exist (upsert), not for querying. It would be slower.
+❌ **C is incorrect** - `MERGE` is for **creating** nodes if they don't exist (upsert), not for querying. It would be slower.
 
-❌ **D is incorrect** — Filtering in application code is **much slower** because:
+❌ **D is incorrect** - Filtering in application code is **much slower** because:
 - All nodes must be transferred over the network
 - Filtering happens in application memory instead of database
 - Wastes bandwidth and processing time
@@ -480,7 +480,7 @@ What does `OPTIONAL MATCH` do in Neo4j?
 
 **Explanation:**
 
-✅ **B is correct** — `OPTIONAL MATCH` is equivalent to **SQL's LEFT JOIN**:
+✅ **B is correct** - `OPTIONAL MATCH` is equivalent to **SQL's LEFT JOIN**:
 
 **Example:**
 
@@ -508,11 +508,11 @@ RETURN p.name, friend.name;
 
 David would **not appear** at all (only people with friends are returned).
 
-❌ **A is incorrect** — The query always runs. Only the optional pattern can be null.
+❌ **A is incorrect** - The query always runs. Only the optional pattern can be null.
 
-❌ **C is incorrect** — `OPTIONAL MATCH` doesn't improve performance; it changes semantics (include nulls).
+❌ **C is incorrect** - `OPTIONAL MATCH` doesn't improve performance; it changes semantics (include nulls).
 
-❌ **D is incorrect** — The query doesn't fail if the optional pattern is missing; it returns `null`.
+❌ **D is incorrect** - The query doesn't fail if the optional pattern is missing; it returns `null`.
 
 **Use Cases:**
 
@@ -557,7 +557,7 @@ How do you query the `strength` property of the relationship?
 
 **Explanation:**
 
-✅ **B is correct** — To access relationship properties:
+✅ **B is correct** - To access relationship properties:
 
 1. **Bind the relationship to a variable**: `[r:FRIENDS_WITH]`
 2. **Access properties with dot notation**: `r.strength`
@@ -573,11 +573,11 @@ RETURN a.name, b.name, r.since, r.strength;
 |--------|--------|---------|------------|
 | "Alice" | "Bob" | 2020 | 0.8 |
 
-❌ **A is incorrect** — Syntax error. `FRIENDS_WITH` is not a variable; it's a relationship type. Must bind to variable: `[r:FRIENDS_WITH]`.
+❌ **A is incorrect** - Syntax error. `FRIENDS_WITH` is not a variable; it's a relationship type. Must bind to variable: `[r:FRIENDS_WITH]`.
 
-❌ **C is incorrect** — `{strength}` in pattern matches relationships **with** a `strength` property but doesn't return the value. Incorrect syntax for returning the property.
+❌ **C is incorrect** - `{strength}` in pattern matches relationships **with** a `strength` property but doesn't return the value. Incorrect syntax for returning the property.
 
-❌ **D is incorrect** — `b.strength` accesses the **node's** property, not the relationship's property.
+❌ **D is incorrect** - `b.strength` accesses the **node's** property, not the relationship's property.
 
 **Comparison:**
 
@@ -618,7 +618,7 @@ DELETE p;
 
 **Explanation:**
 
-✅ **B is correct** — Neo4j **prevents** deleting nodes with relationships to maintain graph integrity:
+✅ **B is correct** - Neo4j **prevents** deleting nodes with relationships to maintain graph integrity:
 
 **Error Message:**
 
@@ -634,11 +634,11 @@ MATCH (p:Person {name: "Alice"})
 DETACH DELETE p;  // Deletes Alice AND all her relationships
 ```
 
-❌ **A is incorrect** — That's what `DETACH DELETE` does, not `DELETE`.
+❌ **A is incorrect** - That's what `DETACH DELETE` does, not `DELETE`.
 
-❌ **C is incorrect** — No partial deletion occurs. The query fails entirely.
+❌ **C is incorrect** - No partial deletion occurs. The query fails entirely.
 
-❌ **D is incorrect** — The node is not modified; the query fails.
+❌ **D is incorrect** - The node is not modified; the query fails.
 
 **Comparison:**
 
@@ -688,7 +688,7 @@ Which database paradigm is **most appropriate**?
 
 **Explanation:**
 
-✅ **C is correct** — Graph databases excel at **collaborative filtering** recommendations:
+✅ **C is correct** - Graph databases excel at **collaborative filtering** recommendations:
 
 **Why Neo4j?**
 
@@ -729,7 +729,7 @@ LIMIT 20;
 
 4. **Performance:** Traversing user→product→user→product is **fast** in Neo4j (index-free adjacency) but **slow** in SQL (multiple self-joins).
 
-❌ **A is incorrect** — Relational databases **can** do this, but performance degrades with complex joins:
+❌ **A is incorrect** - Relational databases **can** do this, but performance degrades with complex joins:
 
 ```sql
 -- Slow for large datasets
@@ -744,9 +744,9 @@ GROUP BY p2.product_id;
 
 This requires 3+ joins and becomes prohibitively slow with millions of users/products.
 
-❌ **B is incorrect** — MongoDB can store recommendations, but **computing** them requires application logic or aggregation pipelines that are less efficient than graph traversals.
+❌ **B is incorrect** - MongoDB can store recommendations, but **computing** them requires application logic or aggregation pipelines that are less efficient than graph traversals.
 
-❌ **D is incorrect** — Redis can **cache** pre-computed recommendations, but doesn't help with **generating** recommendations. You'd still need another database to compute them.
+❌ **D is incorrect** - Redis can **cache** pre-computed recommendations, but doesn't help with **generating** recommendations. You'd still need another database to compute them.
 
 **Hybrid Approach:**
 

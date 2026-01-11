@@ -1,8 +1,8 @@
-# Week 11 — Key-Value & Wide-Column Stores
+# Week 11 - Key-Value & Wide-Column Stores
 
 **Dates:** March 23-27, 2026  
 **Topics:** Redis (Key-Value) & Cassandra (Wide-Column)  
-**Assessment:** Quiz 9 — Key-Value & Wide-Column Stores
+**Assessment:** Quiz 9 - Key-Value & Wide-Column Stores
 
 ---
 
@@ -26,7 +26,7 @@ By the end of this week, you will be able to:
 
 ## Weekly Schedule
 
-### Monday, March 23 — Redis (Key-Value Store)
+### Monday, March 23 - Redis (Key-Value Store)
 
 **Topics:**
 - What is Redis? (in-memory, single-threaded, atomic operations)
@@ -59,7 +59,7 @@ By the end of this week, you will be able to:
 
 ---
 
-### Thursday, March 26 — Cassandra (Wide-Column Store)
+### Thursday, March 26 - Cassandra (Wide-Column Store)
 
 **Topics:**
 - What is Cassandra? (distributed, masterless, linearly scalable)
@@ -100,7 +100,7 @@ By the end of this week, you will be able to:
 
 ## Assessment
 
-### Quiz 9 — Key-Value & Wide-Column Stores (Due: Thursday, March 26)
+### Quiz 9 - Key-Value & Wide-Column Stores (Due: Thursday, March 26)
 
 **Topics Covered:**
 - Redis data structures (strings, lists, sets, hashes, sorted sets)

@@ -4,10 +4,10 @@
 
 Complete the following readings before attempting the Week 04 quiz:
 
-1. [normalization-theory.md](normalization-theory.md) — 1NF, 2NF, 3NF, BCNF, functional dependencies
-2. [entity-relationships.md](entity-relationships.md) — ER modeling, cardinality, junction tables, UML notation
-3. [indexing-fundamentals.md](indexing-fundamentals.md) — Index types, creation, and performance
-4. [practical-normalization.md](practical-normalization.md) — Denormalization trade-offs, real-world schemas, materialized views
+1. [normalization-theory.md](normalization-theory.md) - 1NF, 2NF, 3NF, BCNF, functional dependencies
+2. [entity-relationships.md](entity-relationships.md) - ER modeling, cardinality, junction tables, UML notation
+3. [indexing-fundamentals.md](indexing-fundamentals.md) - Index types, creation, and performance
+4. [practical-normalization.md](practical-normalization.md) - Denormalization trade-offs, real-world schemas, materialized views
 
 ---
 
@@ -24,7 +24,7 @@ Complete the following readings before attempting the Week 04 quiz:
 
 ## Quiz Coverage Analysis
 
-### Part A: Normal Forms (Questions 1-15) — From [normalization-theory.md](normalization-theory.md)
+### Part A: Normal Forms (Questions 1-15) - From [normalization-theory.md](normalization-theory.md)
 
 | Topic | Content Section | Quiz Questions |
 |-------|-----------------|----------------|
@@ -40,7 +40,7 @@ Complete the following readings before attempting the Week 04 quiz:
 
 ---
 
-### Part B: Entity-Relationships (Questions 16-30) — From [entity-relationships.md](entity-relationships.md)
+### Part B: Entity-Relationships (Questions 16-30) - From [entity-relationships.md](entity-relationships.md)
 
 | Topic | Content Section | Quiz Questions |
 |-------|-----------------|----------------|
@@ -60,7 +60,7 @@ Complete the following readings before attempting the Week 04 quiz:
 
 ---
 
-### Part C: Indexing (Questions 31-45) — From [indexing-fundamentals.md](indexing-fundamentals.md)
+### Part C: Indexing (Questions 31-45) - From [indexing-fundamentals.md](indexing-fundamentals.md)
 
 | Topic | Content Section | Quiz Questions |
 |-------|-----------------|----------------|
@@ -82,7 +82,7 @@ Complete the following readings before attempting the Week 04 quiz:
 
 ---
 
-### Bonus Section (Questions 46-48) — Integrated Scenarios
+### Bonus Section (Questions 46-48) - Integrated Scenarios
 
 | Topic | Sources | Quiz Questions |
 |-------|---------|----------------|
@@ -152,53 +152,53 @@ Complete the following readings before attempting the Week 04 quiz:
 After completing the readings and quiz, students should be able to:
 
 ### Normalization Theory
-- ✅ Define and identify 1NF, 2NF, 3NF, BCNF — **Q1-Q6, Q9-Q10, Q12-Q13, Q15**
-- ✅ Identify functional dependencies — **Q7, Q11**
-- ✅ Identify partial and transitive dependencies — **Q3, Q4, Q6, Q10, Q11, Q13**
-- ✅ Normalize a denormalized table — **Q46**
-- ✅ Explain trade-offs of normalization — **Q8, Q14**
+- ✅ Define and identify 1NF, 2NF, 3NF, BCNF - **Q1-Q6, Q9-Q10, Q12-Q13, Q15**
+- ✅ Identify functional dependencies - **Q7, Q11**
+- ✅ Identify partial and transitive dependencies - **Q3, Q4, Q6, Q10, Q11, Q13**
+- ✅ Normalize a denormalized table - **Q46**
+- ✅ Explain trade-offs of normalization - **Q8, Q14**
 
 ### Entity-Relationship Modeling
-- ✅ Identify relationship types (1:1, 1:N, M:N) — **Q16-Q17, Q19, Q23-Q24, Q29**
-- ✅ Implement relationships with proper FK placement — **Q16, Q24, Q26, Q29**
-- ✅ Design junction tables with additional attributes — **Q17, Q22, Q25**
-- ✅ Model self-referencing relationships — **Q18, Q26, Q30**
-- ✅ Identify weak entities — **Q20, Q28**
-- ✅ Read Crow's Foot notation — **Q21**
-- ✅ Distinguish mandatory vs optional participation — **Q21, Q27**
+- ✅ Identify relationship types (1:1, 1:N, M:N) - **Q16-Q17, Q19, Q23-Q24, Q29**
+- ✅ Implement relationships with proper FK placement - **Q16, Q24, Q26, Q29**
+- ✅ Design junction tables with additional attributes - **Q17, Q22, Q25**
+- ✅ Model self-referencing relationships - **Q18, Q26, Q30**
+- ✅ Identify weak entities - **Q20, Q28**
+- ✅ Read Crow's Foot notation - **Q21**
+- ✅ Distinguish mandatory vs optional participation - **Q21, Q27**
 
 ### Indexing Fundamentals
-- ✅ Understand automatic vs manual index creation — **Q31, Q32**
-- ✅ Create effective composite indexes — **Q33, Q40**
-- ✅ Understand index trade-offs — **Q34**
-- ✅ Use partial and expression indexes — **Q35, Q44**
-- ✅ Choose appropriate index types — **Q36, Q38, Q42**
-- ✅ Analyze query plans with EXPLAIN — **Q41**
-- ✅ Maintain indexes properly — **Q43, Q45**
-- ✅ Identify good index candidates — **Q39, Q47**
+- ✅ Understand automatic vs manual index creation - **Q31, Q32**
+- ✅ Create effective composite indexes - **Q33, Q40**
+- ✅ Understand index trade-offs - **Q34**
+- ✅ Use partial and expression indexes - **Q35, Q44**
+- ✅ Choose appropriate index types - **Q36, Q38, Q42**
+- ✅ Analyze query plans with EXPLAIN - **Q41**
+- ✅ Maintain indexes properly - **Q43, Q45**
+- ✅ Identify good index candidates - **Q39, Q47**
 
 ### Practical Application
-- ✅ Make denormalization decisions — **Q14**
-- ✅ Design normalized schemas — **Q46**
-- ✅ Troubleshoot performance issues — **Q48**
+- ✅ Make denormalization decisions - **Q14**
+- ✅ Design normalized schemas - **Q46**
+- ✅ Troubleshoot performance issues - **Q48**
 
 ---
 
 ## Study Tips
 
-1. **Master the dependency types first** — Understanding partial and transitive dependencies is key to understanding 2NF and 3NF
+1. **Master the dependency types first** - Understanding partial and transitive dependencies is key to understanding 2NF and 3NF
 
-2. **Draw ER diagrams** — Visualize relationships before writing SQL; use dbdiagram.io or similar tools
+2. **Draw ER diagrams** - Visualize relationships before writing SQL; use dbdiagram.io or similar tools
 
-3. **Practice the normalization process** — Take a denormalized spreadsheet and normalize it step-by-step
+3. **Practice the normalization process** - Take a denormalized spreadsheet and normalize it step-by-step
 
-4. **Remember FK placement rule** — In 1:N, the FK goes in the "many" side; in 1:1, use UNIQUE on the FK
+4. **Remember FK placement rule** - In 1:N, the FK goes in the "many" side; in 1:1, use UNIQUE on the FK
 
-5. **Index foreign keys manually** — PostgreSQL doesn't do this automatically (a common exam topic!)
+5. **Index foreign keys manually** - PostgreSQL doesn't do this automatically (a common exam topic!)
 
-6. **Use EXPLAIN ANALYZE** — Run it on real queries to see how indexes affect execution
+6. **Use EXPLAIN ANALYZE** - Run it on real queries to see how indexes affect execution
 
-7. **Column order matters for composite indexes** — `(A, B)` helps queries on A or (A, B), but not B alone
+7. **Column order matters for composite indexes** - `(A, B)` helps queries on A or (A, B), but not B alone
 
 ---
 
@@ -223,15 +223,15 @@ After completing the readings and quiz, students should be able to:
 ## Additional Resources
 
 ### Sample Databases for Practice
-- **Sakila** (MySQL) — DVD rental, well-normalized
-- **Northwind** (SQL Server) — Classic trading company
-- **AdventureWorks** (SQL Server) — Comprehensive ERP schema
-- **dvdrental** (PostgreSQL) — Port of Sakila
+- **Sakila** (MySQL) - DVD rental, well-normalized
+- **Northwind** (SQL Server) - Classic trading company
+- **AdventureWorks** (SQL Server) - Comprehensive ERP schema
+- **dvdrental** (PostgreSQL) - Port of Sakila
 
 ### ER Diagram Tools
-- [dbdiagram.io](https://dbdiagram.io) — DBML-based, free
-- [MySQL Workbench](https://www.mysql.com/products/workbench/) — Visual design
-- [pgModeler](https://pgmodeler.io/) — PostgreSQL-specific
+- [dbdiagram.io](https://dbdiagram.io) - DBML-based, free
+- [MySQL Workbench](https://www.mysql.com/products/workbench/) - Visual design
+- [pgModeler](https://pgmodeler.io/) - PostgreSQL-specific
 
 ### PostgreSQL Index Documentation
 - [PostgreSQL: Index Types](https://www.postgresql.org/docs/current/indexes-types.html)

@@ -1,4 +1,4 @@
-# Quiz 01 — Finite State Machines
+# Quiz 01 - Finite State Machines
 
 **Topics:** FSM basics, State Pattern, Stack-based FSMs, Hierarchical FSMs
 

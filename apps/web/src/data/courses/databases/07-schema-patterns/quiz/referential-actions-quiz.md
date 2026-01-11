@@ -8,7 +8,7 @@ This quiz tests your understanding of **ON DELETE/UPDATE actions**, **CASCADE op
 
 ## Moved from Week 02 Constraints Quiz
 
-### Question 1 — ON DELETE SET NULL
+### Question 1 - ON DELETE SET NULL
 
 **Consider the following table:**
 
@@ -31,7 +31,7 @@ CREATE TABLE products (
 
 ---
 
-### Question 2 — ON DELETE CASCADE
+### Question 2 - ON DELETE CASCADE
 
 **Which `ON DELETE` action should you use when deleting a parent record should also delete all related child records?**
 

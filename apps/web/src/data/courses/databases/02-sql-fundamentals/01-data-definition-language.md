@@ -1,4 +1,4 @@
-# DDL — Data Definition Language
+# DDL - Data Definition Language
 
 DDL (Data Definition Language) is the subset of SQL used to define and manage the structure of database objects such as databases, schemas, tables, and constraints.
 
@@ -207,7 +207,7 @@ TRUNCATE TABLE users CASCADE;
 
 ## DDL is NOT Idempotent
 
-Most DDL operations are **not idempotent** — running them twice will cause an error:
+Most DDL operations are **not idempotent** - running them twice will cause an error:
 
 ```sql
 CREATE TABLE users (...);  -- ✅ Works

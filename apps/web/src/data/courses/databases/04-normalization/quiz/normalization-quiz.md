@@ -3,9 +3,9 @@
 ## Instructions
 
 This quiz covers:
-- **Part A:** Normal Forms (1NF, 2NF, 3NF, BCNF) — 15 questions
-- **Part B:** Entity-Relationships & Schema Design — 15 questions  
-- **Part C:** Indexing Fundamentals — 15 questions
+- **Part A:** Normal Forms (1NF, 2NF, 3NF, BCNF) - 15 questions
+- **Part B:** Entity-Relationships & Schema Design - 15 questions  
+- **Part C:** Indexing Fundamentals - 15 questions
 
 **Total: 45 questions**
 
@@ -100,10 +100,10 @@ Time estimate: 45-60 minutes
 | 1 | Alice | Math, Physics, Chemistry |
 | 2 | Bob | History, English |
 
-- [ ] A. Violates 1NF — multi-valued attribute
-- [ ] B. Violates 2NF — partial dependency
-- [ ] C. Violates 3NF — transitive dependency
-- [ ] D. No violation — table is in 3NF
+- [ ] A. Violates 1NF - multi-valued attribute
+- [ ] B. Violates 2NF - partial dependency
+- [ ] C. Violates 3NF - transitive dependency
+- [ ] D. No violation - table is in 3NF
 
 ---
 
@@ -610,7 +610,7 @@ CREATE TABLE employees (
 |:-:|:------:|-------------|
 | 1 | **True** | 2NF violations require partial dependencies on composite keys. Single-column PKs can't have partial dependencies. |
 | 2 | **False** | NULL values do not violate 1NF. 1NF requires atomic values and no repeating groups, not the absence of NULLs. |
-| 3 | **True** | This is the definition of a partial dependency—a non-key attribute depending on only part of a composite key. |
+| 3 | **True** | This is the definition of a partial dependency-a non-key attribute depending on only part of a composite key. |
 | 4 | **True** | 3NF specifically targets transitive dependencies where non-key → non-key. |
 | 5 | **False** | Achieving BCNF may require sacrificing some functional dependencies. Lossless decomposition is always possible, but dependency preservation is not guaranteed. |
 | 6 | **True** | `department_name` depends on `department_id`, not directly on `employee_id`. This is a classic transitive dependency. |
@@ -640,7 +640,7 @@ CREATE TABLE employees (
 | 25 | **C** | Junction tables can have additional attributes like `role_name` to describe the relationship. |
 | 26 | **B** | Self-referencing FK: `manager_id` references `employees(employee_id)` in the same table. |
 | 27 | **B** | Orders MUST have a customer (mandatory), but customers MAY have zero or more orders (optional on customer side). |
-| 28 | **B** | `order_items` is a weak entity—it cannot exist without an order and has a composite PK including the order's FK. |
+| 28 | **B** | `order_items` is a weak entity-it cannot exist without an order and has a composite PK including the order's FK. |
 | 29 | **B** | The UNIQUE constraint on the FK ensures that each user has at most one profile (1:1 relationship). |
 | 30 | **B** | Self-referencing FK (`parent_id`) is the standard way to model hierarchical data in a single table. |
 
@@ -656,7 +656,7 @@ CREATE TABLE employees (
 | 36 | **False** | Hash indexes only support equality comparisons (=). B-Tree indexes are needed for range queries. |
 | 37 | **True** | Index-only scans are possible when all required columns are in the index, avoiding table access (heap fetch). |
 | 38 | **True** | B-Tree is the default and most versatile index type in PostgreSQL, supporting =, <, >, BETWEEN, and ORDER BY. |
-| 39 | **C** | Foreign keys used in JOINs are excellent index candidates—high selectivity and frequently used in queries. |
+| 39 | **C** | Foreign keys used in JOINs are excellent index candidates-high selectivity and frequently used in queries. |
 | 40 | **B** | The composite index (customer_id, order_date) is most efficient when querying on customer_id first, then order_date. |
 | 41 | **B** | EXPLAIN shows the plan; EXPLAIN ANALYZE actually runs the query and reports real execution times and row counts. |
 | 42 | **C** | GIN (Generalized Inverted Index) is designed for full-text search and array/JSONB containment queries. |
