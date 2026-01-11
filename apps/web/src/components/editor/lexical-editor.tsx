@@ -94,16 +94,7 @@ import {
   COMMAND_PRIORITY_HIGH,
 } from "lexical"
 import { useEffect, createContext } from "react"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { DeleteConfirmDialog } from "./extras/dialogs/delete-confirm-dialog"
 import { useState } from "react"
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import type { LexicalEditor } from "lexical"
@@ -265,28 +256,18 @@ function StructureDeleteConfirmPlugin() {
   }, [editor])
 
   return (
-    <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure you want to delete this structural element? This action cannot be undone.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setShowConfirm(false)}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => {
-              pendingDelete()
-              setShowConfirm(false)
-            }}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <DeleteConfirmDialog
+      open={showConfirm}
+      onOpenChange={setShowConfirm}
+      title="Confirm Deletion"
+      itemName="structural element"
+      itemType="element"
+      onConfirm={() => {
+        pendingDelete()
+        setShowConfirm(false)
+      }}
+      description="Are you sure you want to delete this structural element? This action cannot be undone."
+    />
   )
 }
 
