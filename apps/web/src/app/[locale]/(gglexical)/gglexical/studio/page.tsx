@@ -15,6 +15,7 @@ import { SizeDetailsDialog } from "@/components/editor/extras/editor/size-detail
 import { SyncStatusDialog } from "@/components/editor/extras/editor/sync-status-dialog"
 import { AutoSaveToggle } from "@/components/editor/extras/editor/auto-save-toggle"
 import { ProjectSizeIndicator } from "@/components/editor/extras/editor/project-size-indicator"
+import { SyncStatusIndicator } from "@/components/editor/extras/editor/sync-status-indicator"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -957,36 +958,11 @@ export default function Page() {
                   />
 
                   {syncStats && (
-                    <button
+                    <SyncStatusIndicator
+                      syncStats={syncStats}
+                      isSyncEnabled={syncConfig.isEnabled()}
                       onClick={() => setShowSyncStatus(!showSyncStatus)}
-                      className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 transition-colors hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700"
-                    >
-                      <div
-                        className={`h-2 w-2 rounded-full ${
-                          syncStats.isOnline
-                            ? syncStats.isSyncing
-                              ? "bg-blue-500 animate-pulse"
-                              : "bg-green-500"
-                            : syncConfig.isEnabled()
-                              ? "bg-red-500"
-                              : "bg-gray-400"
-                        }`}
-                      />
-                      <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                        {!syncConfig.isEnabled()
-                          ? "Sync Off"
-                          : syncStats.isOnline
-                            ? syncStats.isSyncing
-                              ? "Syncing..."
-                              : "Synced"
-                            : "Offline"}
-                      </span>
-                      {syncStats.queue.pending > 0 && (
-                        <span className="bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          {syncStats.queue.pending}
-                        </span>
-                      )}
-                    </button>
+                    />
                   )}
                 </div>
               </div>
