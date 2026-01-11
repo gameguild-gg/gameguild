@@ -5,6 +5,7 @@ import { type FilterConfig } from '../types'
 import { FilterSearch } from './filter-search'
 import { FilterTags } from './filter-tags'
 import { FilterSelect } from './filter-select'
+import { FilterMimeTypes } from './filter-mime-types'
 import { FilterSort } from './filter-sort'
 import { FilterActiveBadges } from './filter-active-badges'
 import {
@@ -91,11 +92,9 @@ export function ManagerFilters({
 
         {isAssetContext && (
           <>
-            <FilterSelect
-              value={filters.mimeType || 'all'}
-              onChange={(value) => onFilterChange({ mimeType: value })}
-              options={MIME_TYPE_OPTIONS}
-              placeholder="File type"
+            <FilterMimeTypes
+              selectedTypes={filters.mimeTypes || []}
+              onChange={(types) => onFilterChange({ mimeTypes: types })}
             />
 
             <FilterSelect
