@@ -10,6 +10,19 @@ import week01Quiz from './01-introduction/06-quiz.md';
 import week01Assignment from './01-introduction/07-assignment-01.md';
 import databasesSyllabus from './syllabus.md';
 
+// Week 02 imports
+import week02Readings from './02-sql-fundamentals/00-readings-02.md';
+import week02DDL from './02-sql-fundamentals/01-data-definition-language.md';
+import week02DML from './02-sql-fundamentals/02-data-manipulation-language.md';
+import week02DQL from './02-sql-fundamentals/03-data-query-language.md';
+import week02Constraints from './02-sql-fundamentals/04-constraints.md';
+import week02Idempotency from './02-sql-fundamentals/05-idempotency.md';
+import week02DBML from './02-sql-fundamentals/06-dbml-introduction.md';
+import week02QuizConstraints from './02-sql-fundamentals/quiz/constraints-datatypes-quiz.md';
+import week02QuizDDLDMLDQL from './02-sql-fundamentals/quiz/ddl-dml-dql-quiz.md';
+import week02QuizIdempotencyFix from './02-sql-fundamentals/quiz/idempotency-fix-quiz.md';
+import week02QuizIdempotency from './02-sql-fundamentals/quiz/idempotency-quiz.md';
+
 // Program definition
 export const databasesProgram: Program = {
     id: 'databases-program-1',
@@ -262,11 +275,292 @@ export const week01AssignmentContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 02: SQL Fundamentals - Parent content
+export const week02ReadingsContent: ProgramContent = {
+    id: 'databases-week-02-readings',
+    programId: 'databases-program-1',
+    slug: 'sql-fundamentals',
+    parentId: undefined,
+    title: 'SQL Fundamentals',
+    description: 'Learn DDL, DML, DQL, constraints, idempotency, and DBML',
+    type: 0, // Page
+    body: week02Readings,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Week 02 child contents
+export const week02DDLContent: ProgramContent = {
+    id: 'databases-week-02-ddl',
+    programId: 'databases-program-1',
+    slug: 'data-definition-language',
+    parentId: 'databases-week-02-readings',
+    title: 'Data Definition Language (DDL)',
+    description: 'Learn CREATE, ALTER, DROP, and TRUNCATE statements',
+    type: 0, // Page
+    body: week02DDL,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week02DMLContent: ProgramContent = {
+    id: 'databases-week-02-dml',
+    programId: 'databases-program-1',
+    slug: 'data-manipulation-language',
+    parentId: 'databases-week-02-readings',
+    title: 'Data Manipulation Language (DML)',
+    description: 'Learn INSERT, UPDATE, and DELETE statements',
+    type: 0, // Page
+    body: week02DML,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 35,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week02DQLContent: ProgramContent = {
+    id: 'databases-week-02-dql',
+    programId: 'databases-program-1',
+    slug: 'data-query-language',
+    parentId: 'databases-week-02-readings',
+    title: 'Data Query Language (DQL)',
+    description: 'Master SELECT queries with filtering, sorting, and limiting',
+    type: 0, // Page
+    body: week02DQL,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 35,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week02ConstraintsContent: ProgramContent = {
+    id: 'databases-week-02-constraints',
+    programId: 'databases-program-1',
+    slug: 'constraints',
+    parentId: 'databases-week-02-readings',
+    title: 'SQL Constraints',
+    description: 'Understanding PRIMARY KEY, FOREIGN KEY, UNIQUE, NOT NULL, CHECK, and DEFAULT',
+    type: 0, // Page
+    body: week02Constraints,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week02IdempotencyContent: ProgramContent = {
+    id: 'databases-week-02-idempotency',
+    programId: 'databases-program-1',
+    slug: 'idempotency',
+    parentId: 'databases-week-02-readings',
+    title: 'Idempotency in SQL',
+    description: 'Learn to design idempotent database operations',
+    type: 0, // Page
+    body: week02Idempotency,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week02DBMLContent: ProgramContent = {
+    id: 'databases-week-02-dbml',
+    programId: 'databases-program-1',
+    slug: 'dbml-introduction',
+    parentId: 'databases-week-02-readings',
+    title: 'Database Markup Language (DBML)',
+    description: 'Introduction to DBML for schema design and documentation',
+    type: 0, // Page
+    body: week02DBML,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Week 02 Quiz parent node
+export const week02QuizzesContent: ProgramContent = {
+    id: 'databases-week-02-quizzes',
+    programId: 'databases-program-1',
+    slug: 'quizzes',
+    parentId: 'databases-week-02-readings',
+    title: 'Week 02 Quizzes',
+    description: 'Test your knowledge of SQL fundamentals',
+    type: 0, // Page
+    body: '# Week 02 Quizzes\n\nComplete the quizzes below to test your understanding of SQL fundamentals.',
+    sortOrder: 7,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02ReadingsContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Week 02 Quiz contents (children of week02QuizzesContent)
+export const week02QuizIdempotencyContent: ProgramContent = {
+    id: 'databases-week-02-quiz-idempotency',
+    programId: 'databases-program-1',
+    slug: 'idempotency-quiz',
+    parentId: 'databases-week-02-quizzes',
+    title: 'Quiz: Idempotency in SQL Operations',
+    description: 'Categorize SQL statements as idempotent or non-idempotent',
+    type: 0, // Page
+    body: week02QuizIdempotency,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02QuizzesContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week02QuizIdempotencyFixContent: ProgramContent = {
+    id: 'databases-week-02-quiz-idempotency-fix',
+    programId: 'databases-program-1',
+    slug: 'idempotency-fix-quiz',
+    parentId: 'databases-week-02-quizzes',
+    title: 'Quiz: Making SQL Operations Idempotent',
+    description: 'Learn how to modify SQL statements to make them idempotent',
+    type: 0, // Page
+    body: week02QuizIdempotencyFix,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02QuizzesContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week02QuizDDLDMLDQLContent: ProgramContent = {
+    id: 'databases-week-02-quiz-ddl-dml-dql',
+    programId: 'databases-program-1',
+    slug: 'ddl-dml-dql-quiz',
+    parentId: 'databases-week-02-quizzes',
+    title: 'Quiz: DDL, DML, and DQL Translation',
+    description: 'Translate between natural language requirements and SQL statements',
+    type: 0, // Page
+    body: week02QuizDDLDMLDQL,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 25,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02QuizzesContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week02QuizConstraintsContent: ProgramContent = {
+    id: 'databases-week-02-quiz-constraints',
+    programId: 'databases-program-1',
+    slug: 'constraints-datatypes-quiz',
+    parentId: 'databases-week-02-quizzes',
+    title: 'Quiz: Constraints and Data Types',
+    description: 'Test your understanding of SQL constraints and data types',
+    type: 0, // Page
+    body: week02QuizConstraints,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 20,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week02QuizzesContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents and product-program relations
 // only the parent contents go directly under the program
 databasesProgram.programContents = [
     databasesSyllabusContent,
     week01IntroContent,
+    week02ReadingsContent,
 ];
 
 // Set up parent-child relationships
@@ -277,6 +571,23 @@ week01IntroContent.children = [
     week01DataTypesContent,
     week01QuizContent,
     week01AssignmentContent,
+];
+
+week02ReadingsContent.children = [
+    week02DDLContent,
+    week02DMLContent,
+    week02DQLContent,
+    week02ConstraintsContent,
+    week02IdempotencyContent,
+    week02DBMLContent,
+    week02QuizzesContent,
+];
+
+week02QuizzesContent.children = [
+    week02QuizIdempotencyContent,
+    week02QuizIdempotencyFixContent,
+    week02QuizDDLDMLDQLContent,
+    week02QuizConstraintsContent,
 ];
 
 databasesProduct.productPrograms = [databasesProductProgram];

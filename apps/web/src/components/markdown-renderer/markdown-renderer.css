@@ -90,15 +90,29 @@
 
 .syntax-highlighter pre {
   white-space: pre-wrap !important;
-  word-break: keep-all !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
   overflow-wrap: break-word !important;
   margin: 0 !important;
   background-color: transparent !important;
+  max-width: 100% !important;
 }
 
 .syntax-highlighter code {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace !important;
   color: hsl(var(--foreground)) !important;
+  white-space: pre-wrap !important;
+  word-break: break-word !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Inline code alignment and wrapping */
+.markdown-content code {
+  vertical-align: baseline;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* KaTeX LaTeX formula styling */
