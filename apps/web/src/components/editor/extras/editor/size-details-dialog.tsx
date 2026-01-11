@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { HardDrive } from "lucide-react"
+import { HardDrive, FolderArchive, Image, FileText } from "lucide-react"
 
 interface AssetInfo {
   id: string
@@ -31,6 +31,13 @@ export function SizeDetailsDialog({
   formatSize,
   getSizeIndicatorColor,
 }: SizeDetailsDialogProps) {
+  // Separate assets and collections
+  const collections = currentProjectAssets.filter(asset => asset.mimeType === 'application/collection')
+  const regularAssets = currentProjectAssets.filter(asset => asset.mimeType !== 'application/collection')
+  
+  const totalCollectionsSize = collections.reduce((sum, c) => sum + c.size, 0)
+  const totalAssetsSize = regularAssets.reduce((sum, a) => sum + a.size, 0)
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -47,13 +54,13 @@ export function SizeDetailsDialog({
           </div>
 
           {/* Assets Section */}
-          {currentProjectAssets.length > 0 && (
+          {regularAssets.length > 0 && (
             <div className="space-y-2">
               <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Assets ({currentProjectAssets.length}):
+                Assets ({regularAssets.length}):
               </h4>
               <div className="max-h-60 space-y-1.5 overflow-y-auto rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
-                {currentProjectAssets.map((asset) => (
+                {regularAssets.map((asset) => (
                   <div
                     key={asset.id}
                     className="flex items-center gap-2 rounded bg-white px-3 py-2 text-xs dark:bg-gray-900"
@@ -65,9 +72,13 @@ export function SizeDetailsDialog({
                         alt={asset.name}
                         className="h-10 w-10 rounded border border-gray-200 object-cover dark:border-gray-700"
                       />
+                    ) : asset.mimeType?.startsWith("image/") ? (
+                      <div className="flex h-10 w-10 items-center justify-center rounded border border-gray-200 bg-blue-50 dark:border-gray-700 dark:bg-blue-900/30">
+                        <Image className="h-5 w-5 text-blue-500 dark:text-blue-400" />
+                      </div>
                     ) : (
                       <div className="flex h-10 w-10 items-center justify-center rounded border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800">
-                        <HardDrive className="h-5 w-5 text-gray-400 dark:text-gray-600" />
+                        <FileText className="h-5 w-5 text-gray-400 dark:text-gray-600" />
                       </div>
                     )}
 
@@ -88,7 +99,47 @@ export function SizeDetailsDialog({
               <div className="flex items-center justify-between rounded-lg bg-blue-50 p-3 dark:bg-blue-900/30">
                 <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Total Assets:</span>
                 <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                  {formatSize(currentProjectAssetsSize)}
+                  {formatSize(totalAssetsSize)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Collections Section */}
+          {collections.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Collections ({collections.length}):
+              </h4>
+              <div className="max-h-60 space-y-1.5 overflow-y-auto rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                {collections.map((collection) => (
+                  <div
+                    key={collection.id}
+                    className="flex items-center gap-2 rounded bg-white px-3 py-2 text-xs dark:bg-gray-900"
+                  >
+                    {/* Collection Icon */}
+                    <div className="flex h-10 w-10 items-center justify-center rounded border border-purple-200 bg-purple-50 dark:border-purple-700 dark:bg-purple-900/30">
+                      <FolderArchive className="h-5 w-5 text-purple-500 dark:text-purple-400" />
+                    </div>
+
+                    {/* Name and Size */}
+                    <div className="flex min-w-0 flex-1 items-center justify-between">
+                      <span className="truncate text-gray-700 dark:text-gray-300" title={collection.name}>
+                        {collection.name}
+                      </span>
+                      <span className="ml-2 whitespace-nowrap font-medium text-purple-600 dark:text-purple-400">
+                        {formatSize(collection.size)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Collections Subtotal */}
+              <div className="flex items-center justify-between rounded-lg bg-purple-50 p-3 dark:bg-purple-900/30">
+                <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Collections:</span>
+                <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                  {formatSize(totalCollectionsSize)}
                 </span>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { assetManager } from "@/lib/storage/assets/asset-manager"
+import type { CollectionStructure } from "@/lib/storage/assets/collection-types"
 
 // Parameter interface
 export interface CalculateAssetsParams {
@@ -14,7 +15,32 @@ export interface CalculateAssetsParams {
 }
 
 /**
- * Calculate total asset size for current project
+ * Calculate total size recursively for collection structure
+ */
+function calculateCollectionSize(structure: CollectionStructure): number {
+  let size = 0
+  
+  // Calculate size from files
+  if (structure.files) {
+    structure.files.forEach((file) => {
+      if (file.size) {
+        size += file.size
+      }
+    })
+  }
+  
+  // Recursively calculate size from folders
+  if (structure.folders && Array.isArray(structure.folders)) {
+    structure.folders.forEach((folder) => {
+      size += calculateCollectionSize(folder as CollectionStructure)
+    })
+  }
+  
+  return size
+}
+
+/**
+ * Calculate total asset size for current project (including collections)
  */
 export async function calculateProjectAssetsSize(params: CalculateAssetsParams): Promise<void> {
   const { projectId, setCurrentProjectAssetsSize, setCurrentProjectAssets } = params
@@ -26,7 +52,7 @@ export async function calculateProjectAssetsSize(params: CalculateAssetsParams):
   }
 
   try {
-    // Get all assets with usage information
+    // Get all regular assets with usage information
     const assetsWithUsage = await assetManager.listAssetsWithUsage()
     
     // Filter assets used by this project
@@ -59,10 +85,44 @@ export async function calculateProjectAssetsSize(params: CalculateAssetsParams):
     
     const assetsList = await Promise.all(assetsListPromises)
     
-    setCurrentProjectAssets(assetsList)
+    // Now check for collections - we'll include all collections for now
+    // since there's no usage tracking for collections yet
+    const allCollections = await assetManager.listCollections()
+    const collectionPromises = allCollections.map(async (collection) => {
+      try {
+        const manifest = await assetManager.getCollection(collection.id)
+        if (manifest) {
+          const collectionSize = calculateCollectionSize(manifest.structure)
+          
+          return {
+            id: collection.id,
+            name: collection.name || collection.id,
+            size: collectionSize / 1024, // Convert to KB
+            thumbnail: undefined,
+            mimeType: 'application/collection'
+          }
+        }
+      } catch (error) {
+        console.error(`Failed to process collection ${collection.id}:`, error)
+      }
+      return null
+    })
+    
+    const collectionsResults = await Promise.all(collectionPromises)
+    const collectionsList = collectionsResults.filter(Boolean) as Array<{
+      id: string
+      name: string
+      size: number
+      thumbnail?: string
+      mimeType?: string
+    }>
+    
+    // Combine assets and collections
+    const allItems = [...assetsList, ...collectionsList]
+    setCurrentProjectAssets(allItems)
     
     // Calculate total size in KB
-    const totalSize = assetsList.reduce((sum, asset) => sum + asset.size, 0)
+    const totalSize = allItems.reduce((sum, item) => sum + item.size, 0)
     
     setCurrentProjectAssetsSize(totalSize)
   } catch (error) {
