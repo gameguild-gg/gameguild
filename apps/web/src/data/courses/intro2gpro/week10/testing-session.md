@@ -26,7 +26,7 @@ Prepare a minimum-functioning prototype focused solely on your game’s core mec
 ### Build a Playable Prototype
 - Ensure the prototype is playable and clearly highlights the core mechanic.
 - Avoid additional features or art that distract from the main mechanic.
-- Aim for simplicity—no levels, polish, or complex graphics required at this stage.
+- Aim for simplicity-no levels, polish, or complex graphics required at this stage.
 
 ### User Experience
 - Add clear instructions or visual guides so testers understand how to interact.
@@ -41,7 +41,7 @@ Prepare a minimum-functioning prototype focused solely on your game’s core mec
 - Review the build instructions (we use GitHub in our scenario): [https://confluence.champlain.edu/display/GSP/Making+a+build](https://confluence.champlain.edu/display/GSP/Making+a+build)
 - Prepare the URL or ZIP build of your game.
 - Write questions for a feedback form (Google Forms or equivalent).
-- The form should explain the game, controls, and testing goals—or include a short in-game tutorial.
+- The form should explain the game, controls, and testing goals-or include a short in-game tutorial.
 - Share the form with me so I can grade it.
 - In class, we will run a playtesting session; you will playtest peers’ games and provide feedback.
 

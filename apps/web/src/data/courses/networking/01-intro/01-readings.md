@@ -1,4 +1,4 @@
-# Week 01 Readings — Network Fundamentals
+# Week 01 Readings - Network Fundamentals
 
 **Tuesday Topics:** OSI model, TCP/IP stack  
 **Friday Topics:** Network devices, packets, basic addressing
@@ -27,4 +27,4 @@
 
 ## Optional Deep Dive
 
-- Peterson & Davie, [Section 1.3 "Architecture"](https://book.systemsapproach.org/foundation/architecture.html) — For students wanting the academic treatment
+- Peterson & Davie, [Section 1.3 "Architecture"](https://book.systemsapproach.org/foundation/architecture.html) - For students wanting the academic treatment

@@ -6,7 +6,7 @@ This quiz tests your understanding of Redis (key-value store) and Cassandra (wid
 
 ---
 
-## Question 1 — Redis Data Structure Selection
+## Question 1 - Redis Data Structure Selection
 
 **Scenario:** You're building a real-time leaderboard for a gaming app where players' scores change frequently. You need to:
 - Update scores quickly
@@ -26,9 +26,9 @@ SET)
 
 - **D is CORRECT** ✅
   - **Sorted Set** stores members with scores
-  - `ZADD leaderboard 1000 "alice"` — O(log N) update
-  - `ZREVRANGE leaderboard 0 9` — Get top 10
-  - `ZREVRANK leaderboard "alice"` — Get rank
+  - `ZADD leaderboard 1000 "alice"` - O(log N) update
+  - `ZREVRANGE leaderboard 0 9` - Get top 10
+  - `ZREVRANK leaderboard "alice"` - Get rank
   - Automatically sorted by score
   
 - **A is wrong** ❌
@@ -46,7 +46,7 @@ SET)
 
 ---
 
-## Question 2 — Requirement → Redis Commands
+## Question 2 - Requirement → Redis Commands
 
 **Requirement:** Implement a rate limiter that allows **100 requests per minute** per user. After 1 minute, the counter should reset automatically.
 
@@ -109,7 +109,7 @@ ZCARD rate:user:1000
 
 ---
 
-## Question 3 — Redis Pub/Sub vs Lists
+## Question 3 - Redis Pub/Sub vs Lists
 
 **Scenario:** You need a message queue where:
 - Producers send tasks
@@ -148,7 +148,7 @@ ZCARD rate:user:1000
 
 ---
 
-## Question 4 — Redis TTL Behavior
+## Question 4 - Redis TTL Behavior
 
 **Given these commands:**
 
@@ -203,13 +203,13 @@ SET session:abc "updated_data" KEEPTTL
 
 ---
 
-## Question 5 — Cassandra CAP Theorem
+## Question 5 - Cassandra CAP Theorem
 
 **Cassandra is classified as which CAP model?**
 
-- [ ] A. CA (Consistency + Availability) — sacrifices partition tolerance
-- [ ] B. CP (Consistency + Partition Tolerance) — sacrifices availability
-- [ ] C. AP (Availability + Partition Tolerance) — sacrifices consistency
+- [ ] A. CA (Consistency + Availability) - sacrifices partition tolerance
+- [ ] B. CP (Consistency + Partition Tolerance) - sacrifices availability
+- [ ] C. AP (Availability + Partition Tolerance) - sacrifices consistency
 - [ ] D. CAP (all three guaranteed)
 
 **Explanation:**
@@ -247,7 +247,7 @@ USING CONSISTENCY ONE;
 
 ---
 
-## Question 6 — Cassandra Primary Key
+## Question 6 - Cassandra Primary Key
 
 **Given this table:**
 
@@ -299,11 +299,11 @@ CREATE TABLE events (
 -- Clustering key: event_id
 ```
 
-**Key takeaway:** `PRIMARY KEY (partition, clustering)` — partition determines node, clustering sorts within partition.
+**Key takeaway:** `PRIMARY KEY (partition, clustering)` - partition determines node, clustering sorts within partition.
 
 ---
 
-## Question 7 — Requirement → CQL Query
+## Question 7 - Requirement → CQL Query
 
 **Requirement:** Get the **last 10 posts** for user with ID `123e4567-e89b-12d3-a456-426614174000`, sorted by most recent first.
 
@@ -365,7 +365,7 @@ LIMIT 10;
 
 ---
 
-## Question 8 — Cassandra Denormalization
+## Question 8 - Cassandra Denormalization
 
 **Scenario:** You have users and posts. You need to support two queries:
 1. Get all posts by a user
@@ -449,7 +449,7 @@ CREATE TABLE posts (
 
 ---
 
-## Question 9 — Redis vs Cassandra Use Cases
+## Question 9 - Redis vs Cassandra Use Cases
 
 **Which scenario is BETTER suited for Cassandra than Redis?**
 
@@ -493,7 +493,7 @@ CREATE TABLE posts (
 
 ---
 
-## Question 10 — Cassandra Consistency Levels
+## Question 10 - Cassandra Consistency Levels
 
 **Given:**
 - Replication Factor (RF) = 3 (data replicated on 3 nodes)
@@ -538,7 +538,7 @@ CREATE TABLE posts (
 
 ---
 
-## Question 11 — Redis Hash vs String
+## Question 11 - Redis Hash vs String
 
 **Scenario:** Store user profile with 10 fields (name, email, age, city, etc.).
 
@@ -589,7 +589,7 @@ SET user:1000:email "alice@example.com"
 
 ---
 
-## Question 12 — Cassandra Write Path
+## Question 12 - Cassandra Write Path
 
 **What happens when you write to Cassandra?**
 
@@ -659,18 +659,18 @@ Client → Coordinator Node
 
 ## Answer Key
 
-1. **D** — Sorted Set for leaderboard
-2. **C** — Fixed window rate limiting (key per minute + INCR + EXPIRE)
-3. **C** — Lists with BRPOP for task queue
-4. **C** — SET removes TTL (-1 = no expiration)
-5. **C** — Cassandra is AP (availability + partition tolerance)
-6. **B** — user_id = partition key, post_id = clustering key
-7. **B** — Query by partition key, LIMIT 10
-8. **B** — Denormalize into two tables (one per query)
-9. **B** — 100TB time-series data (Cassandra's strength)
-10. **B** — QUORUM + QUORUM = strong consistency
-11. **B** — Hash for multi-field objects
-12. **B** — Write to commit log + memtable, flush to SSTable
+1. **D** - Sorted Set for leaderboard
+2. **C** - Fixed window rate limiting (key per minute + INCR + EXPIRE)
+3. **C** - Lists with BRPOP for task queue
+4. **C** - SET removes TTL (-1 = no expiration)
+5. **C** - Cassandra is AP (availability + partition tolerance)
+6. **B** - user_id = partition key, post_id = clustering key
+7. **B** - Query by partition key, LIMIT 10
+8. **B** - Denormalize into two tables (one per query)
+9. **B** - 100TB time-series data (Cassandra's strength)
+10. **B** - QUORUM + QUORUM = strong consistency
+11. **B** - Hash for multi-field objects
+12. **B** - Write to commit log + memtable, flush to SSTable
 
 ---
 

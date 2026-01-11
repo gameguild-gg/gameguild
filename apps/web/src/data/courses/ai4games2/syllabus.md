@@ -81,7 +81,7 @@ This course focuses on **Experiential Learning**, where students learn by buildi
 | ----------------------------- | ----- | -------------------------------------------------- | ----------------------------------------- |
 | Decision & Search Foundations | 1-7   | FSM, BTs, Utility AI, MinMax, MCTS, Chess Engine   | 7 Coding Assignments + Weekly Quizzes     |
 | Midterm                       | 8     | Chess AI Competition                               | Tournament + Code Review + Analysis Essay |
-| Spring Break                  | 9     | —                                                  | —                                         |
+| Spring Break                  | 9     | -                                                  | -                                         |
 | Advanced Topics               | 10-11 | Wave Function Collapse, GOAP Planning              | 2 Coding Assignments + Quizzes            |
 | Project Focus                 | 12-14 | Multi-Agent, Influence Maps, Stealth/Believability | Quizzes + Project Checkpoints             |
 | Finalization                  | 15-16 | Peer Evaluation, Presentations                     | Final Project (Code + Essay + Demo)       |
@@ -104,11 +104,11 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 ---
 
-### WEEK 01 — Course Setup & FSM Refresher
+### WEEK 01 - Course Setup & FSM Refresher
 
 **2026/01/12 – 2026/01/16**
 
-**Monday 2026/01/12** — Course Introduction
+**Monday 2026/01/12** - Course Introduction
 
 - Instructor introduction
 - Syllabus review, course outcomes, grading breakdown
@@ -116,7 +116,7 @@ This is a work in progress schedule. It is subject to change. Every change will 
 - Industry AI landscape: what shipped games actually use
 - GitHub setup walkthrough
 
-**Thursday 2026/01/15** — FSM Deep Dive
+**Thursday 2026/01/15** - FSM Deep Dive
 
 - Clone course repository
 - CMake + doctest environment verification
@@ -138,13 +138,13 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 ---
 
-### WEEK 02 — Advanced Decision Architectures
+### WEEK 02 - Advanced Decision Architectures
 
 **2026/01/19 – 2026/01/23**
 
-**Monday 2026/01/19** — NO CLASS (Martin Luther King Jr. Day)
+**Monday 2026/01/19** - NO CLASS (Martin Luther King Jr. Day)
 
-**Thursday 2026/01/22** — Decision Systems Deep Dive
+**Thursday 2026/01/22** - Decision Systems Deep Dive
 
 - **Behavior Trees**: selectors, sequences, parallels, decorators
 - **Decision Trees**: runtime evaluation, pruning strategies
@@ -160,11 +160,11 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 ---
 
-### WEEK 03 — Utility AI
+### WEEK 03 - Utility AI
 
 **2026/01/26 – 2026/01/30**
 
-**Monday 2026/01/26** — Utility AI Fundamentals
+**Monday 2026/01/26** - Utility AI Fundamentals
 
 - Scoring-based decision making
 - Response curves: linear, quadratic, logistic, sine
@@ -172,7 +172,7 @@ This is a work in progress schedule. It is subject to change. Every change will 
 - Combining considerations: multiplication vs. averaging
 - Infinite Axis Utility System (IAUS) overview
 
-**Thursday 2026/01/29** — Utility AI in Practice
+**Thursday 2026/01/29** - Utility AI in Practice
 
 - Tuning response curves for desired behavior
 - Debugging utility systems: score visualization
@@ -192,18 +192,18 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 ---
 
-### WEEK 04 — MinMax and Alpha-Beta Pruning
+### WEEK 04 - MinMax and Alpha-Beta Pruning
 
 **2026/02/02 – 2026/02/06**
 
-**Monday 2026/02/02** — Game Tree Search Foundations
+**Monday 2026/02/02** - Game Tree Search Foundations
 
 - Two-player zero-sum games
 - MinMax algorithm: theory and recursive implementation
 - Evaluation functions: static board assessment
 - Terminal vs. non-terminal nodes
 
-**Thursday 2026/02/05** — Alpha-Beta Pruning
+**Thursday 2026/02/05** - Alpha-Beta Pruning
 
 - Pruning principle: why it works
 - Alpha-beta implementation
@@ -224,18 +224,18 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 ---
 
-### WEEK 05 — Monte Carlo Tree Search
+### WEEK 05 - Monte Carlo Tree Search
 
 **2026/02/09 – 2026/02/13**
 
-**Monday 2026/02/09** — MCTS Fundamentals
+**Monday 2026/02/09** - MCTS Fundamentals
 
 - Four phases: Selection, Expansion, Simulation, Backpropagation
 - UCB1 formula: exploration vs. exploitation
 - When MCTS beats MinMax: large branching factors, hard-to-evaluate positions
 - Case study: AlphaGo's approach
 
-**Thursday 2026/02/12** — MCTS Implementation
+**Thursday 2026/02/12** - MCTS Implementation
 
 - Tree policy vs. default policy
 - Simulation strategies: random vs. heuristic rollouts
@@ -256,18 +256,18 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 ---
 
-### WEEK 06 — Chess Engine Core
+### WEEK 06 - Chess Engine Core
 
 **2026/02/16 – 2026/02/20**
 
-**Monday 2026/02/16** — Chess AI Architecture
+**Monday 2026/02/16** - Chess AI Architecture
 
 - UCI protocol overview (library provided)
 - Board representation strategies
 - Move generation (library provided)
 - Evaluation function design: material, position, mobility, king safety
 
-**Thursday 2026/02/19** — Search Implementation for Chess
+**Thursday 2026/02/19** - Search Implementation for Chess
 
 - Iterative deepening: anytime algorithm benefits
 - Aspiration windows
@@ -289,18 +289,18 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 ---
 
-### WEEK 07 — Chess Engine Optimization
+### WEEK 07 - Chess Engine Optimization
 
 **2026/02/23 – 2026/02/27**
 
-**Monday 2026/02/23** — Advanced Chess Techniques
+**Monday 2026/02/23** - Advanced Chess Techniques
 
 - Null-move pruning, late move reductions
 - Killer move heuristic, history tables
 - Opening book integration
 - Endgame considerations
 
-**Thursday 2026/02/26** — Competition Preparation Workshop
+**Thursday 2026/02/26** - Competition Preparation Workshop
 
 - In-class practice tournament (preliminary rankings)
 - Debugging session with instructor support
@@ -317,17 +317,17 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 ---
 
-### WEEK 08 — MIDTERM: Chess AI Competition
+### WEEK 08 - MIDTERM: Chess AI Competition
 
 **2026/03/02 – 2026/03/06**
 
-**Monday 2026/03/02** — Competition Warm-up
+**Monday 2026/03/02** - Competition Warm-up
 
 - Final engine testing
 - Last-minute questions
 - **Final Project detailed introduction and team formation**
 
-**Thursday 2026/03/05** — Chess Competition Day
+**Thursday 2026/03/05** - Chess Competition Day
 
 **Tournament Format:**
 
@@ -344,7 +344,7 @@ This is a work in progress schedule. It is subject to change. Every change will 
 
 ---
 
-### WEEK 09 — SPRING BREAK
+### WEEK 09 - SPRING BREAK
 
 **2026/03/09 – 2026/03/13**
 
@@ -352,18 +352,18 @@ No classes or assignments. Optional: continue engine development for post-mortem
 
 ---
 
-### WEEK 10 — Wave Function Collapse
+### WEEK 10 - Wave Function Collapse
 
 **2026/03/16 – 2026/03/20**
 
-**Monday 2026/03/16** — WFC Fundamentals
+**Monday 2026/03/16** - WFC Fundamentals
 
 - Constraint-based procedural generation
 - Tiled vs. overlapping models
 - Entropy-based cell selection
 - Propagation algorithm
 
-**Thursday 2026/03/19** — WFC Implementation
+**Thursday 2026/03/19** - WFC Implementation
 
 - Adjacency constraint definition
 - Failure recovery: backtracking vs. restart
@@ -387,18 +387,18 @@ No classes or assignments. Optional: continue engine development for post-mortem
 
 ---
 
-### WEEK 11 — Goal-Oriented Action Planning (GOAP)
+### WEEK 11 - Goal-Oriented Action Planning (GOAP)
 
 **2026/03/23 – 2026/03/27**
 
-**Monday 2026/03/23** — GOAP as A\* Through Action Space
+**Monday 2026/03/23** - GOAP as A\* Through Action Space
 
 - From spatial pathfinding to planning
 - World state representation
 - Actions: preconditions and effects
 - Planning as search: start state → goal state
 
-**Thursday 2026/03/26** — GOAP Implementation
+**Thursday 2026/03/26** - GOAP Implementation
 
 - Regressive vs. progressive planning
 - Cost functions and action preferences
@@ -422,17 +422,17 @@ No classes or assignments. Optional: continue engine development for post-mortem
 
 ---
 
-### WEEK 12 — Multi-Agent Systems
+### WEEK 12 - Multi-Agent Systems
 
 **2026/03/30 – 2026/04/03**
 
-**Monday 2026/03/30** — Multi-Agent Coordination
+**Monday 2026/03/30** - Multi-Agent Coordination
 
 - Blackboard architecture: shared knowledge base
 - Publisher/subscriber patterns
 - Knowledge queries and posting
 
-**Thursday 2026/04/02** — Scheduling and Resource Management
+**Thursday 2026/04/02** - Scheduling and Resource Management
 
 - Time-slot scheduling for coordinated actions
 - Token systems: attack tokens, speak tokens
@@ -447,18 +447,18 @@ No classes or assignments. Optional: continue engine development for post-mortem
 
 ---
 
-### WEEK 13 — Influence Maps and Tactical AI
+### WEEK 13 - Influence Maps and Tactical AI
 
 **2026/04/06 – 2026/04/10**
 
-**Monday 2026/04/06** — Influence Maps
+**Monday 2026/04/06** - Influence Maps
 
 - Spatial reasoning through value propagation
 - Decay functions and update frequencies
 - Layered maps: threat, territory, resources
 - Queries: "safest path", "best attack position"
 
-**Thursday 2026/04/09** — Tactical Position Evaluation
+**Thursday 2026/04/09** - Tactical Position Evaluation
 
 - Cover point generation and quality scoring
 - Flanking opportunity detection
@@ -471,18 +471,18 @@ No classes or assignments. Optional: continue engine development for post-mortem
 
 ---
 
-### WEEK 14 — Stealth AI and Believable Agents
+### WEEK 14 - Stealth AI and Believable Agents
 
 **2026/04/13 – 2026/04/17**
 
-**Monday 2026/04/13** — Stealth Game AI
+**Monday 2026/04/13** - Stealth Game AI
 
 - Perception systems: vision cones, audio detection
 - Awareness states: Unaware → Suspicious → Alert → Combat → Search
 - Last known position tracking
 - Alert propagation and coordinated search
 
-**Thursday 2026/04/16** — Believable Agent Design
+**Thursday 2026/04/16** - Believable Agent Design
 
 - Imperfection: intentional mistakes, reaction delays
 - Personality systems: aggression, caution, curiosity
@@ -495,17 +495,17 @@ No classes or assignments. Optional: continue engine development for post-mortem
 
 ---
 
-### WEEK 15 — Peer Evaluation and Code Freeze
+### WEEK 15 - Peer Evaluation and Code Freeze
 
 **2026/04/20 – 2026/04/24**
 
-**Monday 2026/04/20** — Peer Evaluation Session
+**Monday 2026/04/20** - Peer Evaluation Session
 
 - Teams exchange projects for code review
 - Structured feedback using provided rubric
 - Bug identification and UX feedback
 
-**Thursday 2026/04/23** — Code Freeze and Polish
+**Thursday 2026/04/23** - Code Freeze and Polish
 
 - Final bug fixes only (no new features)
 - Documentation completion
@@ -519,16 +519,16 @@ No classes or assignments. Optional: continue engine development for post-mortem
 
 ---
 
-### WEEK 16 — Final Presentations
+### WEEK 16 - Final Presentations
 
 **2026/04/27 – 2026/05/01**
 
-**Monday 2026/04/27** — Presentations (Group A)
+**Monday 2026/04/27** - Presentations (Group A)
 
 - 10-minute presentation + 5-minute Q&A per team
 - Live demonstration required
 
-**Thursday 2026/04/30** — Presentations (Group B)
+**Thursday 2026/04/30** - Presentations (Group B)
 
 - 10-minute presentation + 5-minute Q&A per team
 - Live demonstration required
@@ -545,14 +545,14 @@ No classes or assignments. Optional: continue engine development for post-mortem
 
 Students select or propose a project demonstrating multiple course techniques:
 
-1. **AI Director System** — L4D-style pacing manager with stress tracking and dynamic spawning
-2. **Tactical Squad Coordinator** — GOAP-based squad with role assignment, cover usage, flanking
-3. **Predator AI** — Single intelligent enemy with multi-sensory perception, 20+ behavior tree branches
-4. **Open World NPC Scheduler** — NPCs with daily routines, need-driven behavior (utility AI), player interaction
-5. **Procedural Dungeon with Encounters** — WFC generation + enemy placement using influence maps
-6. **Stealth Game AI System** — Complete guard AI with vision, audio, awareness states, coordinated search
-7. **Industry Partnership Project** — Real challenge from partner company (proposals provided before Week 8)
-8. **Custom Proposal** — Approved alternative demonstrating 3+ course techniques
+1. **AI Director System** - L4D-style pacing manager with stress tracking and dynamic spawning
+2. **Tactical Squad Coordinator** - GOAP-based squad with role assignment, cover usage, flanking
+3. **Predator AI** - Single intelligent enemy with multi-sensory perception, 20+ behavior tree branches
+4. **Open World NPC Scheduler** - NPCs with daily routines, need-driven behavior (utility AI), player interaction
+5. **Procedural Dungeon with Encounters** - WFC generation + enemy placement using influence maps
+6. **Stealth Game AI System** - Complete guard AI with vision, audio, awareness states, coordinated search
+7. **Industry Partnership Project** - Real challenge from partner company (proposals provided before Week 8)
+8. **Custom Proposal** - Approved alternative demonstrating 3+ course techniques
 
 ---
 

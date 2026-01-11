@@ -43,7 +43,7 @@ FROM table1
 INNER JOIN table2 ON table1.column = table2.column;
 ```
 
-The `INNER` keyword is optional—`JOIN` alone means `INNER JOIN`:
+The `INNER` keyword is optional-`JOIN` alone means `INNER JOIN`:
 
 ```sql
 SELECT columns
@@ -507,7 +507,7 @@ Write a query showing:
 3. **ON clause** defines the relationship between tables
 4. **Chain joins** to combine data from multiple tables
 5. **Use WHERE** for filtering, **ON** for join conditions
-6. **Avoid NATURAL JOIN** — be explicit about join columns
+6. **Avoid NATURAL JOIN** - be explicit about join columns
 7. **Watch for Cartesian products** from missing join conditions
 
 ---

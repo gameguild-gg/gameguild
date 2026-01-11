@@ -1,4 +1,4 @@
-# Neo4j Fundamentals — Graph Databases
+# Neo4j Fundamentals - Graph Databases
 
 ## Introduction
 
@@ -117,7 +117,7 @@ RETURN u;
 
 ## CRUD Operations
 
-### CREATE — Insert Data
+### CREATE - Insert Data
 
 **Create Nodes:**
 
@@ -163,7 +163,7 @@ CREATE
 
 ---
 
-### MATCH — Query Data
+### MATCH - Query Data
 
 **Basic MATCH:**
 
@@ -233,7 +233,7 @@ RETURN path;
 
 ---
 
-### MERGE — Upsert (Create or Match)
+### MERGE - Upsert (Create or Match)
 
 **MERGE** ensures a pattern exists: creates it if missing, matches if exists.
 
@@ -267,7 +267,7 @@ MERGE (p:Person {name: "Alice"})
 
 ---
 
-### UPDATE — Modify Data
+### UPDATE - Modify Data
 
 **SET:**
 
@@ -309,7 +309,7 @@ RETURN p;
 
 ---
 
-### DELETE — Remove Data
+### DELETE - Remove Data
 
 ```cypher
 // Delete node (must have no relationships)

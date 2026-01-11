@@ -1,3 +1,25 @@
+# [2.35.0](https://github.com/gameguild-gg/gameguild/compare/v2.34.0...v2.35.0) (2026-01-11)
+
+
+### Bug Fixes
+
+* **apps/web/markdown-renderer:** Improve word wrapping for code blocks and inline code ([690c034](https://github.com/gameguild-gg/gameguild/commit/690c034ac298c3acc030a33fb22abfcebf44958a))
+* **dashes:** replace all strange dash behavior ([a7c3448](https://github.com/gameguild-gg/gameguild/commit/a7c34482a9f7bb83edd499cdd2ec7996dc22fe95))
+* **web:** fix TypeScript errors in weeks 11-14 database content files ([acba836](https://github.com/gameguild-gg/gameguild/commit/acba8369256cade7aba632069c53505bccfb7ef0))
+
+
+### Features
+
+* add Drizzle ORM MongoDB integration guide ([789f335](https://github.com/gameguild-gg/gameguild/commit/789f335c492e6962672caf104a1e9e1c74872413))
+* add MongoDB aggregation pipeline guide ([735d889](https://github.com/gameguild-gg/gameguild/commit/735d8899b9355b3ba4a666384c95bac98e7c60a7))
+* add MongoDB CRUD operations documentation ([9a267ff](https://github.com/gameguild-gg/gameguild/commit/9a267ff69451fe8febac9da7cbbb812aa3167c39))
+* add MongoDB resources and quiz content ([741db1b](https://github.com/gameguild-gg/gameguild/commit/741db1ba42932eb17e02ad5730e600ca69677ca3))
+* add MongoDB schema design patterns guide ([826709c](https://github.com/gameguild-gg/gameguild/commit/826709cf62ff89d9dbe2d9ddfe9e2227e124ac26))
+* add Week 10 MongoDB content structure and exports ([767c64d](https://github.com/gameguild-gg/gameguild/commit/767c64d60a00603c3925fb0b7ee0832a094f0bb3))
+* add Week 10 MongoDB fundamentals content ([6523eaa](https://github.com/gameguild-gg/gameguild/commit/6523eaa7c8497d1efe81f62a4b006734e87e3bb6))
+* **courses/ai4games2:** Introduce Behavior Trees module ([ce84638](https://github.com/gameguild-gg/gameguild/commit/ce8463872533bf73843b9dad6cf4f24f9fcd2215))
+* **sql:** add week 02 to databases course ([e727526](https://github.com/gameguild-gg/gameguild/commit/e727526b496c7c37bbbfdfcb791196998ce77d46))
+
 # [2.34.0](https://github.com/gameguild-gg/gameguild/compare/v2.33.0...v2.34.0) (2026-01-07)
 
 
