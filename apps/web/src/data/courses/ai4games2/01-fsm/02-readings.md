@@ -1,4 +1,4 @@
-# Week 01-02 Readings — FSM, Behavior Trees & Decision Architectures
+# Week 01 Readings — FSM, Behavior Trees & Decision Architectures
 
 ---
 

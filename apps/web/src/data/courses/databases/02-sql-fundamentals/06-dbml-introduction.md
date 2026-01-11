@@ -4,17 +4,18 @@
 
 ## Why DBML?
 
-| Challenge with Raw DDL | DBML Solution |
-|------------------------|---------------|
-| Verbose syntax | Concise, readable format |
-| No visual representation | Integrates with diagram tools |
-| Database-specific | Generates SQL for multiple databases |
-| Hard to collaborate on | Human-readable, git-friendly |
-| Documentation separate | Inline notes and comments |
+| Challenge with Raw DDL   | DBML Solution                        |
+| ------------------------ | ------------------------------------ |
+| Verbose syntax           | Concise, readable format             |
+| No visual representation | Integrates with diagram tools        |
+| Database-specific        | Generates SQL for multiple databases |
+| Hard to collaborate on   | Human-readable, git-friendly         |
+| Documentation separate   | Inline notes and comments            |
 
 ## DBML vs SQL DDL Comparison
 
 **SQL DDL:**
+
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -33,6 +34,7 @@ CREATE TABLE posts (
 ```
 
 **DBML Equivalent:**
+
 ```dbml
 Table users {
   id serial [pk]
@@ -62,7 +64,17 @@ Table table_name {
 }
 ```
 
+Will render something similar to:
+
+```mermaid
+erDiagram
+    table_name {
+        data_type column_name
+    }
+```
+
 **Example:**
+
 ```dbml
 Table products {
   id serial [pk]
@@ -73,18 +85,31 @@ Table products {
 }
 ```
 
+will translate to:
+
+```mermaid
+erDiagram
+    products {
+        serial id PK
+        varchar(100) name
+        decimal price
+        text description
+        timestamp created_at
+    }
+```
+
 ### Data Types
 
 DBML supports common SQL data types:
 
-| Category | Types |
-|----------|-------|
-| **Numeric** | `integer`, `serial`, `bigint`, `decimal(p,s)`, `float`, `double` |
-| **Text** | `varchar(n)`, `char(n)`, `text` |
-| **Date/Time** | `date`, `time`, `timestamp`, `timestamptz` |
-| **Boolean** | `boolean`, `bool` |
-| **Binary** | `blob`, `bytea` |
-| **Special** | `uuid`, `json`, `jsonb` |
+| Category      | Types                                                            |
+| ------------- | ---------------------------------------------------------------- |
+| **Numeric**   | `integer`, `serial`, `bigint`, `decimal(p,s)`, `float`, `double` |
+| **Text**      | `varchar(n)`, `char(n)`, `text`                                  |
+| **Date/Time** | `date`, `time`, `timestamp`, `timestamptz`                       |
+| **Boolean**   | `boolean`, `bool`                                                |
+| **Binary**    | `blob`, `bytea`                                                  |
+| **Special**   | `uuid`, `json`, `jsonb`                                          |
 
 ### Column Constraints
 
@@ -100,14 +125,14 @@ Table users {
 }
 ```
 
-| Constraint | Syntax | Description |
-|------------|--------|-------------|
+| Constraint  | Syntax                    | Description       |
+| ----------- | ------------------------- | ----------------- |
 | Primary Key | `[pk]` or `[primary key]` | Unique identifier |
-| Not Null | `[not null]` | Required field |
-| Unique | `[unique]` | No duplicates |
-| Default | `[default: value]` | Default value |
-| Note | `[note: 'text']` | Documentation |
-| Increment | `[increment]` | Auto-increment |
+| Not Null    | `[not null]`              | Required field    |
+| Unique      | `[unique]`                | No duplicates     |
+| Default     | `[default: value]`        | Default value     |
+| Note        | `[note: 'text']`          | Documentation     |
+| Increment   | `[increment]`             | Auto-increment    |
 
 ### Composite Primary Keys
 
@@ -116,7 +141,7 @@ Table order_items {
   order_id integer [not null]
   product_id integer [not null]
   quantity integer [not null, default: 1]
-  
+
   indexes {
     (order_id, product_id) [pk]  // Composite primary key
   }
@@ -129,12 +154,12 @@ Table order_items {
 
 DBML uses `ref:` to define foreign key relationships. The symbols indicate cardinality:
 
-| Symbol | Meaning | Relationship |
-|--------|---------|--------------|
-| `>` | Many-to-One | Many of this → One of that |
-| `<` | One-to-Many | One of this → Many of that |
-| `-` | One-to-One | One of this → One of that |
-| `<>` | Many-to-Many | Many of this ↔ Many of that |
+| Symbol | Meaning      | Relationship                |
+| ------ | ------------ | --------------------------- |
+| `>`    | Many-to-One  | Many of this → One of that  |
+| `<`    | One-to-Many  | One of this → Many of that  |
+| `-`    | One-to-One   | One of this → One of that   |
+| `<>`   | Many-to-Many | Many of this ↔ Many of that |
 
 ### Inline References
 
@@ -166,6 +191,7 @@ Ref: posts.author_id > users.id
 ### Relationship Examples
 
 **One-to-Many (Most Common):**
+
 ```dbml
 // One user has many posts
 Table users {
@@ -179,6 +205,7 @@ Table posts {
 ```
 
 **One-to-One:**
+
 ```dbml
 // One user has one profile
 Table users {
@@ -192,6 +219,7 @@ Table profiles {
 ```
 
 **Many-to-Many (Junction Table):**
+
 ```dbml
 Table students {
   id serial [pk]
@@ -209,7 +237,7 @@ Table enrollments {
   student_id integer [ref: > students.id]
   course_id integer [ref: > courses.id]
   enrolled_at timestamp [default: `now()`]
-  
+
   indexes {
     (student_id, course_id) [unique]  // Prevent duplicate enrollments
   }
@@ -224,13 +252,13 @@ Ref: comments.post_id > posts.id [delete: set null]
 Ref: order_items.order_id > orders.id [delete: restrict]
 ```
 
-| Action | Behavior |
-|--------|----------|
-| `cascade` | Delete/update child rows |
-| `set null` | Set FK to NULL |
-| `set default` | Set FK to default value |
-| `restrict` | Prevent delete/update |
-| `no action` | Similar to restrict |
+| Action        | Behavior                 |
+| ------------- | ------------------------ |
+| `cascade`     | Delete/update child rows |
+| `set null`    | Set FK to NULL           |
+| `set default` | Set FK to default value  |
+| `restrict`    | Prevent delete/update    |
+| `no action`   | Similar to restrict      |
 
 ---
 
@@ -243,7 +271,7 @@ Table users {
   first_name varchar(50)
   last_name varchar(50)
   created_at timestamp
-  
+
   indexes {
     email                              // Single column index
     (first_name, last_name)            // Composite index
@@ -313,7 +341,7 @@ Table users [note: 'Stores all registered users'] {
 Table transactions {
   id serial [pk]
   amount decimal(10,2)
-  
+
   Note: '''
     Financial transactions table.
     - All amounts stored in cents
@@ -346,7 +374,7 @@ Table users {
   last_name varchar(50)
   created_at timestamp [default: `now()`]
   updated_at timestamp
-  
+
   Note: 'Customer accounts'
 }
 
@@ -378,7 +406,7 @@ Table products {
   category_id integer [ref: > categories.id]
   is_active boolean [default: true]
   created_at timestamp [default: `now()`]
-  
+
   indexes {
     sku
     category_id
@@ -395,7 +423,7 @@ Table orders {
   total_amount decimal(10,2) [not null]
   created_at timestamp [default: `now()`]
   updated_at timestamp
-  
+
   indexes {
     user_id
     status
@@ -409,7 +437,7 @@ Table order_items {
   product_id integer [not null, ref: > products.id]
   quantity integer [not null, default: 1]
   unit_price decimal(10,2) [not null]
-  
+
   indexes {
     (order_id, product_id) [unique]
   }
@@ -455,12 +483,14 @@ npm install -g @dbml/cli
 ```
 
 **Convert DBML to SQL:**
+
 ```bash
 dbml2sql schema.dbml --postgres -o schema.sql
 dbml2sql schema.dbml --mysql -o schema.sql
 ```
 
 **Convert SQL to DBML:**
+
 ```bash
 sql2dbml schema.sql --postgres -o schema.dbml
 ```
@@ -468,6 +498,7 @@ sql2dbml schema.sql --postgres -o schema.dbml
 ### VS Code Extension
 
 Install the **DBML Language** extension for:
+
 - Syntax highlighting
 - Auto-completion
 - Error checking
@@ -478,6 +509,7 @@ Install the **DBML Language** extension for:
 ## Workflow Integration
 
 ### 1. Design Phase
+
 ```
 1. Write DBML schema
 2. Visualize in dbdiagram.io
@@ -486,6 +518,7 @@ Install the **DBML Language** extension for:
 ```
 
 ### 2. Implementation Phase
+
 ```
 1. Export DBML to SQL
 2. Apply migrations to database
@@ -494,6 +527,7 @@ Install the **DBML Language** extension for:
 ```
 
 ### 3. Documentation
+
 ```
 1. Store .dbml files in version control
 2. Generate diagrams for documentation
@@ -506,21 +540,27 @@ Install the **DBML Language** extension for:
 ## Practice Exercises
 
 ### Exercise 1: Blog Platform
+
 Design a DBML schema for a blog platform with:
+
 - Users (authors and readers)
 - Posts with categories and tags (many-to-many)
 - Comments with nested replies (self-referencing)
 - User follows (users follow other users)
 
 ### Exercise 2: Library System
+
 Create a DBML schema for a library with:
+
 - Books with multiple authors (many-to-many)
 - Members with borrowing history
 - Reservations and due dates
 - Fines for late returns
 
 ### Exercise 3: Convert Existing SQL
+
 Take the following SQL and convert it to DBML:
+
 ```sql
 CREATE TABLE departments (
     id SERIAL PRIMARY KEY,
@@ -541,7 +581,9 @@ CREATE TABLE employees (
 ```
 
 ### Exercise 4: Identify Improvements
+
 Review this DBML and suggest improvements:
+
 ```dbml
 Table users {
   id integer
@@ -561,6 +603,7 @@ Table orders {
 <summary>Hint for Exercise 4</summary>
 
 Consider:
+
 - Missing primary keys
 - Missing constraints (not null, unique)
 - Wrong data types (date as varchar, total as varchar)

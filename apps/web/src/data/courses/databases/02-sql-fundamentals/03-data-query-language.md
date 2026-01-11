@@ -2,8 +2,6 @@
 
 DQL (Data Query Language) is the subset of SQL used to retrieve data from the database. The primary statement is `SELECT`.
 
-[![SELECT meme](https://programmerhumor.io/wp-content/uploads/2022/01/programmerhumor-io-databases-memes-backend-memes-40c0efb5da11c6a.jpg)](https://programmerhumor.io/)
-
 ## SELECT Statement
 
 The `SELECT` statement is the foundation of data retrieval in SQL.
@@ -41,6 +39,7 @@ SELECT name, price, price * 0.9 AS discounted_price FROM products;
 ::: warning
 
 Avoid using `SELECT *` in production code. Always specify the columns you need for:
+
 - Better performance
 - Clearer intent
 - Protection against schema changes
@@ -72,14 +71,14 @@ Filters rows based on conditions.
 
 ### Comparison Operators
 
-| Operator | Description |
-|----------|-------------|
-| `=` | Equal to |
-| `<>` or `!=` | Not equal to |
-| `<` | Less than |
-| `>` | Greater than |
-| `<=` | Less than or equal |
-| `>=` | Greater than or equal |
+| Operator     | Description           |
+| ------------ | --------------------- |
+| `=`          | Equal to              |
+| `<>` or `!=` | Not equal to          |
+| `<`          | Less than             |
+| `>`          | Greater than          |
+| `<=`         | Less than or equal    |
+| `>=`         | Greater than or equal |
 
 ::: example "WHERE with comparisons"
 
@@ -98,29 +97,29 @@ SELECT * FROM users WHERE status <> 'inactive';
 
 ### Logical Operators
 
-| Operator | Description |
-|----------|-------------|
-| `AND` | Both conditions must be true |
-| `OR` | At least one condition must be true |
-| `NOT` | Negates the condition |
+| Operator | Description                         |
+| -------- | ----------------------------------- |
+| `AND`    | Both conditions must be true        |
+| `OR`     | At least one condition must be true |
+| `NOT`    | Negates the condition               |
 
 ::: example "WHERE with logical operators"
 
 ```sql
 -- AND
-SELECT * FROM products 
+SELECT * FROM products
 WHERE category = 'Electronics' AND price < 500;
 
 -- OR
-SELECT * FROM products 
+SELECT * FROM products
 WHERE category = 'Electronics' OR category = 'Computers';
 
 -- NOT
 SELECT * FROM users WHERE NOT is_deleted;
 
 -- Combined
-SELECT * FROM products 
-WHERE (category = 'Electronics' OR category = 'Computers') 
+SELECT * FROM products
+WHERE (category = 'Electronics' OR category = 'Computers')
   AND price < 1000;
 ```
 
@@ -128,22 +127,22 @@ WHERE (category = 'Electronics' OR category = 'Computers')
 
 ### Special Operators
 
-| Operator | Description |
-|----------|-------------|
-| `IN` | Matches any value in a list |
-| `BETWEEN` | Within a range (inclusive) |
-| `LIKE` | Pattern matching |
-| `IS NULL` | Checks for NULL values |
+| Operator  | Description                 |
+| --------- | --------------------------- |
+| `IN`      | Matches any value in a list |
+| `BETWEEN` | Within a range (inclusive)  |
+| `LIKE`    | Pattern matching            |
+| `IS NULL` | Checks for NULL values      |
 
 ::: example "Special operators"
 
 ```sql
 -- IN
-SELECT * FROM products 
+SELECT * FROM products
 WHERE category IN ('Electronics', 'Computers', 'Phones');
 
 -- BETWEEN
-SELECT * FROM orders 
+SELECT * FROM orders
 WHERE order_date BETWEEN '2024-01-01' AND '2024-12-31';
 
 -- LIKE (% = any characters, _ = single character)
@@ -175,8 +174,8 @@ SELECT * FROM products ORDER BY price DESC;
 SELECT * FROM products ORDER BY category ASC, price DESC;
 
 -- By expression
-SELECT name, price * quantity AS total 
-FROM order_items 
+SELECT name, price * quantity AS total
+FROM order_items
 ORDER BY total DESC;
 
 -- By column position (not recommended)
@@ -241,7 +240,7 @@ SELECT DISTINCT category, brand FROM products;
 
 ```sql
 -- Arithmetic
-SELECT name, price, quantity, price * quantity AS total 
+SELECT name, price, quantity, price * quantity AS total
 FROM order_items;
 
 -- String concatenation
@@ -249,7 +248,7 @@ SELECT first_name || ' ' || last_name AS full_name FROM users;
 
 -- CASE expression
 SELECT name, price,
-    CASE 
+    CASE
         WHEN price < 10 THEN 'Budget'
         WHEN price < 100 THEN 'Standard'
         ELSE 'Premium'
@@ -289,6 +288,7 @@ SELECT price * 0.9 AS discounted FROM products WHERE price * 0.9 < 50;
 ## Practice
 
 Write queries to:
+
 1. Get all products with price between $10 and $50
 2. Find users whose email ends with '@company.com'
 3. List the 5 most expensive products

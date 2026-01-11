@@ -168,6 +168,7 @@ CREATE TABLE orders (
 **Which of the following is a valid way to define a foreign key relationship when creating a table?**
 
 - [ ] A.
+
 ```sql
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
@@ -177,6 +178,7 @@ CREATE TABLE orders (
 ```
 
 - [ ] B.
+
 ```sql
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
@@ -185,6 +187,7 @@ CREATE TABLE orders (
 ```
 
 - [ ] C.
+
 ```sql
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
@@ -194,6 +197,7 @@ CREATE TABLE orders (
 ```
 
 - [ ] D.
+
 ```sql
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
@@ -229,7 +233,8 @@ CREATE TABLE orders (
 
 **Which statement correctly defines a composite primary key?**
 
-- [ ] A. 
+- [ ] A.
+
 ```sql
 CREATE TABLE order_items (
     order_id INT PRIMARY KEY,
@@ -239,6 +244,7 @@ CREATE TABLE order_items (
 ```
 
 - [ ] B.
+
 ```sql
 CREATE TABLE order_items (
     order_id INT,
@@ -249,6 +255,7 @@ CREATE TABLE order_items (
 ```
 
 - [ ] C.
+
 ```sql
 CREATE TABLE order_items (
     order_id INT UNIQUE,
@@ -258,6 +265,7 @@ CREATE TABLE order_items (
 ```
 
 - [ ] D.
+
 ```sql
 CREATE TABLE order_items (
     order_id INT NOT NULL,
@@ -360,35 +368,35 @@ CREATE TABLE users (
 
 ### Part A: True or False
 
-| Q | Answer | Explanation |
-|:-:|:------:|-------------|
-| 1 | **False** | A table can only have ONE primary key. Multiple columns can form a composite PK, but you cannot define separate PKs. |
-| 2 | **True** | In PostgreSQL, `UNIQUE` allows multiple `NULL` values because `NULL` is considered distinct from other `NULL`s. (SQL standard behavior varies) |
-| 3 | **False** | `VARCHAR(100)` stores variable length up to 100 chars. `CHAR(100)` pads shorter values with spaces to exactly 100 chars. |
-| 4 | **False** | Foreign keys do NOT automatically create indexes. You should manually create indexes on FK columns for performance. |
-| 5 | **True** | `DECIMAL(5, 2)` means 5 total digits with 2 after decimal = max 999.99. 1000.00 needs 6 total digits. |
-| 6 | **False** | `DEFAULT` and `NOT NULL` work together perfectly. If no value provided, the default is used, satisfying NOT NULL. |
-| 7 | **False** | `SERIAL` is a pseudo-type/shorthand that creates an `INTEGER` column with a sequence and default. It's not a true data type. |
-| 8 | **False** | `CHECK` constraints can only reference columns within the same row of the same table. Use triggers for cross-table validation. |
-| 9 | **False** | `TIMESTAMPTZ` converts and stores timestamps in UTC. It does NOT store the original timezone, just the UTC value. |
-| 10 | **True** | In PostgreSQL, `TEXT` and unbounded `VARCHAR` are stored identically with no performance difference. |
+|  Q  |  Answer   | Explanation                                                                                                                                    |
+| :-: | :-------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+|  1  | **False** | A table can only have ONE primary key. Multiple columns can form a composite PK, but you cannot define separate PKs.                           |
+|  2  | **True**  | In PostgreSQL, `UNIQUE` allows multiple `NULL` values because `NULL` is considered distinct from other `NULL`s. (SQL standard behavior varies) |
+|  3  | **False** | `VARCHAR(100)` stores variable length up to 100 chars. `CHAR(100)` pads shorter values with spaces to exactly 100 chars.                       |
+|  4  | **False** | Foreign keys do NOT automatically create indexes. You should manually create indexes on FK columns for performance.                            |
+|  5  | **True**  | `DECIMAL(5, 2)` means 5 total digits with 2 after decimal = max 999.99. 1000.00 needs 6 total digits.                                          |
+|  6  | **False** | `DEFAULT` and `NOT NULL` work together perfectly. If no value provided, the default is used, satisfying NOT NULL.                              |
+|  7  | **False** | `SERIAL` is a pseudo-type/shorthand that creates an `INTEGER` column with a sequence and default. It's not a true data type.                   |
+|  8  | **False** | `CHECK` constraints can only reference columns within the same row of the same table. Use triggers for cross-table validation.                 |
+|  9  | **False** | `TIMESTAMPTZ` converts and stores timestamps in UTC. It does NOT store the original timezone, just the UTC value.                              |
+| 10  | **True**  | In PostgreSQL, `TEXT` and unbounded `VARCHAR` are stored identically with no performance difference.                                           |
 
 ### Part B: Multiple Choice
 
-| Q | Answer | Explanation |
-|:-:|:------:|-------------|
-| 11 | **C** | `DECIMAL(12, 2)` provides exact precision for currency. `FLOAT`/`REAL` have rounding errors. |
-| 12 | **D** | Incorrect! `status` has `DEFAULT 'pending'`, so it will be 'pending' not `NULL` if omitted. |
-| 13 | **B** | PostgreSQL raises an error for strings exceeding the defined length. It does NOT silently truncate. |
-| 14 | **C** | `UNIQUE NOT NULL` ensures both uniqueness and that the value exists. `UNIQUE` alone allows NULLs. |
-| 15 | **B** | Inline `REFERENCES` syntax is valid. Option A has incorrect syntax (missing parentheses around column). |
-| 16 | **C** | `UUID` is designed for distributed systems. `SERIAL`/`BIGSERIAL` can have conflicts across multiple servers. |
-| 17 | **B** | PostgreSQL BOOLEAN accepts many string representations including 'yes', 'no', '1', '0', 't', 'f', 'true', 'false'. |
-| 18 | **B** | Composite PKs use `PRIMARY KEY (col1, col2)` at table level. Option A has invalid syntax (two PKs). |
-| 19 | **B** | `SMALLINT` = 2 bytes (-32,768 to 32,767), `INT` = 4 bytes (~±2.1 billion), `BIGINT` = 8 bytes (~±9.2 quintillion). |
-| 20 | **B** | `TIMESTAMP WITH TIME ZONE` (TIMESTAMPTZ) handles timezone conversion for global applications. |
-| 21 | **B** | 4-byte signed INT range: -2,147,483,648 to 2,147,483,647. Option A is SMALLINT, C is BIGINT. |
-| 22 | **A** | Primary key columns are implicitly NOT NULL. You don't need to specify both. |
-| 23 | **C** | `CHECK` constraint with comparison operators validates the value range. Other options don't enforce 0-100 range. |
-| 24 | **A** | Only A succeeds: `age` can be NULL (CHECK only validates non-NULL values), `role` defaults to 'user'. B fails CHECK, C fails NOT NULL on username, D fails NOT NULL on username. |
-| 25 | **C** | `DECIMAL(9, 6)` provides 6 decimal places (needed for ~0.1m accuracy) with 3 digits for the integer part (enough for ±180). FLOAT works but has precision issues. |
+|  Q  | Answer | Explanation                                                                                                                                                                      |
+| :-: | :----: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 11  | **C**  | `DECIMAL(12, 2)` provides exact precision for currency. `FLOAT`/`REAL` have rounding errors.                                                                                     |
+| 12  | **D**  | Incorrect! `status` has `DEFAULT 'pending'`, so it will be 'pending' not `NULL` if omitted.                                                                                      |
+| 13  | **B**  | PostgreSQL raises an error for strings exceeding the defined length. It does NOT silently truncate.                                                                              |
+| 14  | **C**  | `UNIQUE NOT NULL` ensures both uniqueness and that the value exists. `UNIQUE` alone allows NULLs.                                                                                |
+| 15  | **B**  | Inline `REFERENCES` syntax is valid. Option A has incorrect syntax (missing parentheses around column).                                                                          |
+| 16  | **C**  | `UUID` is designed for distributed systems. `SERIAL`/`BIGSERIAL` can have conflicts across multiple servers.                                                                     |
+| 17  | **B**  | PostgreSQL BOOLEAN accepts many string representations including 'yes', 'no', '1', '0', 't', 'f', 'true', 'false'.                                                               |
+| 18  | **B**  | Composite PKs use `PRIMARY KEY (col1, col2)` at table level. Option A has invalid syntax (two PKs).                                                                              |
+| 19  | **B**  | `SMALLINT` = 2 bytes (-32,768 to 32,767), `INT` = 4 bytes (~±2.1 billion), `BIGINT` = 8 bytes (~±9.2 quintillion).                                                               |
+| 20  | **B**  | `TIMESTAMP WITH TIME ZONE` (TIMESTAMPTZ) handles timezone conversion for global applications.                                                                                    |
+| 21  | **B**  | 4-byte signed INT range: -2,147,483,648 to 2,147,483,647. Option A is SMALLINT, C is BIGINT.                                                                                     |
+| 22  | **A**  | Primary key columns are implicitly NOT NULL. You don't need to specify both.                                                                                                     |
+| 23  | **C**  | `CHECK` constraint with comparison operators validates the value range. Other options don't enforce 0-100 range.                                                                 |
+| 24  | **A**  | Only A succeeds: `age` can be NULL (CHECK only validates non-NULL values), `role` defaults to 'user'. B fails CHECK, C fails NOT NULL on username, D fails NOT NULL on username. |
+| 25  | **C**  | `DECIMAL(9, 6)` provides 6 decimal places (needed for ~0.1m accuracy) with 3 digits for the integer part (enough for ±180). FLOAT works but has precision issues.                |
