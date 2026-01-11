@@ -14,6 +14,7 @@ import { CreateProjectDialog } from "@/components/editor/extras/editor/create-pr
 import { SizeDetailsDialog } from "@/components/editor/extras/editor/size-details-dialog"
 import { SyncStatusDialog } from "@/components/editor/extras/editor/sync-status-dialog"
 import { AutoSaveToggle } from "@/components/editor/extras/editor/auto-save-toggle"
+import { ProjectSizeIndicator } from "@/components/editor/extras/editor/project-size-indicator"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -947,16 +948,13 @@ export default function Page() {
                     disabled={!isDbInitialized}
                   />
 
-                  <button
+                  <ProjectSizeIndicator
+                    currentProjectSize={currentProjectSize}
+                    currentProjectAssetsSize={currentProjectAssetsSize}
+                    formatSize={formatSize}
+                    getSizeIndicatorColor={getSizeIndicatorColor}
                     onClick={() => setShowSizeDetails(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-                    title="Click to see size details"
-                  >
-                    <HardDrive className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                    <span className={`text-sm font-medium ${getSizeIndicatorColor()}`}>
-                      {formatSize(currentProjectSize + currentProjectAssetsSize)}
-                    </span>
-                  </button>
+                  />
 
                   {syncStats && (
                     <button
