@@ -398,7 +398,7 @@ export function CodeStudioEditor({
           file.isModified = false
           
           // Update Monaco file system with resolved content
-          const resolvedContent = resolvedContentsMap[originalFile.id]
+          const resolvedContent = resolvedContentsMap[originalFile.id] || originalFile.content
           updateMonacoFile(file.path, resolvedContent, draft.id)
         }
       })
