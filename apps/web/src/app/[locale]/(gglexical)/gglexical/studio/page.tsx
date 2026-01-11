@@ -16,6 +16,7 @@ import { SyncStatusDialog } from "@/components/editor/extras/editor/sync-status-
 import { AutoSaveToggle } from "@/components/editor/extras/editor/auto-save-toggle"
 import { ProjectSizeIndicator } from "@/components/editor/extras/editor/project-size-indicator"
 import { SyncStatusIndicator } from "@/components/editor/extras/editor/sync-status-indicator"
+import { EditableProjectTitle } from "@/components/editor/extras/editor/editable-project-title"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -1003,31 +1004,18 @@ export default function Page() {
             <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
               {/* Title Bar */}
               <div className="flex items-center justify-center border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-4 py-3">
-                {isEditingTitle ? (
-                  <input
-                    type="text"
-                    value={editingProjectName}
-                    onChange={(e) => setEditingProjectName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleTitleSave()
-                      else if (e.key === "Escape") {
-                        setIsEditingTitle(false)
-                        setEditingProjectName(currentProjectName)
-                      }
-                    }}
-                    onBlur={handleTitleSave}
-                    className="w-full max-w-md bg-transparent px-2 py-1 text-center text-xl font-semibold text-gray-900 outline-none dark:text-gray-100"
-                    autoFocus
-                  />
-                ) : (
-                  <h2
-                    className="cursor-pointer px-2 py-1 text-xl font-semibold text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800"
-                    onClick={handleTitleEdit}
-                    title="Click to edit project name"
-                  >
-                    {currentProjectName || "Untitled Project"}
-                  </h2>
-                )}
+                <EditableProjectTitle
+                  projectName={currentProjectName}
+                  isEditing={isEditingTitle}
+                  editingName={editingProjectName}
+                  onEditStart={handleTitleEdit}
+                  onEditEnd={() => {
+                    setIsEditingTitle(false)
+                    setEditingProjectName(currentProjectName)
+                  }}
+                  onNameChange={setEditingProjectName}
+                  onSave={handleTitleSave}
+                />
               </div>
               
               {/* Editor Content */}
