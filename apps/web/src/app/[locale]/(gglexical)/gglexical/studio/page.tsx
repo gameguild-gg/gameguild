@@ -17,6 +17,7 @@ import { AutoSaveToggle } from "@/components/editor/extras/editor/auto-save-togg
 import { ProjectSizeIndicator } from "@/components/editor/extras/editor/project-size-indicator"
 import { SyncStatusIndicator } from "@/components/editor/extras/editor/sync-status-indicator"
 import { EditableProjectTitle } from "@/components/editor/extras/editor/editable-project-title"
+import { ProjectStorageInfo } from "@/components/editor/extras/editor/project-storage-info"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -846,15 +847,7 @@ export default function Page() {
                   
                   {/* Project Info Display */}
                   {currentProjectId && (
-                    <div className="ml-6 flex items-center gap-4 pl-6 border-l border-gray-300 dark:border-gray-600">
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Storage:</span>
-                        <span className="font-medium text-gray-800 dark:text-gray-200 capitalize bg-gray-100 dark:bg-gray-800 px-3 py-1 flex items-center gap-1">
-                          <HardDrive className="h-3 w-3" />
-                          {currentProjectStorageType}
-                        </span>
-                      </div>
-                    </div>
+                    <ProjectStorageInfo storageType={currentProjectStorageType} />
                   )}
                 </div>
                 <div className="flex items-center gap-2">
