@@ -2,11 +2,10 @@
 
 Constraints are rules enforced by the database to maintain data integrity. They prevent invalid data from being inserted and ensure relationships between tables remain consistent.
 
-[![Constraints meme](https://programmerhumor.io/wp-content/uploads/2023/01/programmerhumor-io-databases-memes-backend-memes-4c2b8ee0f5a98a0.png)](https://programmerhumor.io)
-
 ## Why Constraints Matter
 
 Without constraints:
+
 - Duplicate records can exist where they shouldn't
 - Required fields can be left empty
 - Orphaned records can reference non-existent data
@@ -16,20 +15,21 @@ Constraints act as the **last line of defense** for data quality.
 
 ## Overview of Constraints
 
-| Constraint | Purpose |
-|------------|---------|
-| `PRIMARY KEY` | Uniquely identifies each row |
+| Constraint    | Purpose                               |
+| ------------- | ------------------------------------- |
+| `PRIMARY KEY` | Uniquely identifies each row          |
 | `FOREIGN KEY` | Enforces relationships between tables |
-| `NOT NULL` | Prevents NULL values |
-| `UNIQUE` | Ensures all values are different |
-| `CHECK` | Validates values against a condition |
-| `DEFAULT` | Sets a value when none is provided |
+| `NOT NULL`    | Prevents NULL values                  |
+| `UNIQUE`      | Ensures all values are different      |
+| `CHECK`       | Validates values against a condition  |
+| `DEFAULT`     | Sets a value when none is provided    |
 
 ## PRIMARY KEY (PK)
 
 [![Database Keys](https://dataedo-website.s3.amazonaws.com/cartoon/database_keys.png?1686657387)](https://dataedo.com)
 
 A primary key uniquely identifies each row in a table. It combines:
+
 - `NOT NULL` — cannot be empty
 - `UNIQUE` — no duplicates allowed
 
@@ -64,12 +64,12 @@ CREATE TABLE order_items (
 
 ### Primary Key Strategies
 
-| Strategy | Example | Pros | Cons |
-|----------|---------|------|------|
-| `SERIAL` | 1, 2, 3, ... | Simple, compact, fast | Predictable, not distributed-friendly |
-| `UUID` | `550e8400-e29b-...` | Globally unique, secure | Larger storage, slower indexing |
-| `IDENTITY` | 1, 2, 3, ... | SQL standard | PostgreSQL 10+ only |
-| Natural Key | email, SSN | Meaningful | Can change, privacy concerns |
+| Strategy    | Example             | Pros                    | Cons                                  |
+| ----------- | ------------------- | ----------------------- | ------------------------------------- |
+| `SERIAL`    | 1, 2, 3, ...        | Simple, compact, fast   | Predictable, not distributed-friendly |
+| `UUID`      | `550e8400-e29b-...` | Globally unique, secure | Larger storage, slower indexing       |
+| `IDENTITY`  | 1, 2, 3, ...        | SQL standard            | PostgreSQL 10+ only                   |
+| Natural Key | email, SSN          | Meaningful              | Can change, privacy concerns          |
 
 ::: note
 
@@ -101,7 +101,7 @@ CREATE TABLE products (
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     customer_id INTEGER NOT NULL,
-    CONSTRAINT fk_orders_customer 
+    CONSTRAINT fk_orders_customer
         FOREIGN KEY (customer_id) REFERENCES customers(id)
 );
 ```
@@ -112,13 +112,13 @@ CREATE TABLE orders (
 
 What happens when the referenced row is deleted or updated?
 
-| Action | ON DELETE | ON UPDATE |
-|--------|-----------|-----------|
-| `NO ACTION` | Error if referenced (default) | Error if referenced |
-| `RESTRICT` | Same as NO ACTION | Same as NO ACTION |
-| `CASCADE` | Delete child rows | Update child FK values |
-| `SET NULL` | Set FK to NULL | Set FK to NULL |
-| `SET DEFAULT` | Set FK to default value | Set FK to default value |
+| Action        | ON DELETE                     | ON UPDATE               |
+| ------------- | ----------------------------- | ----------------------- |
+| `NO ACTION`   | Error if referenced (default) | Error if referenced     |
+| `RESTRICT`    | Same as NO ACTION             | Same as NO ACTION       |
+| `CASCADE`     | Delete child rows             | Update child FK values  |
+| `SET NULL`    | Set FK to NULL                | Set FK to NULL          |
+| `SET DEFAULT` | Set FK to default value       | Set FK to default value |
 
 ::: example "Referential actions"
 
@@ -127,7 +127,7 @@ What happens when the referenced row is deleted or updated?
 CREATE TABLE products (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    category_id INTEGER REFERENCES categories(id) 
+    category_id INTEGER REFERENCES categories(id)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -135,7 +135,7 @@ CREATE TABLE products (
 -- SET NULL: deleting a user sets their orders' user_id to NULL
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) 
+    user_id INTEGER REFERENCES users(id)
         ON DELETE SET NULL
 );
 
@@ -143,7 +143,7 @@ CREATE TABLE orders (
 CREATE TABLE products (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    category_id INTEGER REFERENCES categories(id) 
+    category_id INTEGER REFERENCES categories(id)
         ON DELETE RESTRICT
 );
 ```
@@ -250,12 +250,12 @@ CREATE TABLE products (
 
 ### UNIQUE vs PRIMARY KEY
 
-| Feature | PRIMARY KEY | UNIQUE |
-|---------|-------------|--------|
-| NULL values | ❌ Not allowed | ✅ Allowed (one NULL) |
-| Per table | One only | Multiple allowed |
-| Creates index | ✅ Always | ✅ Always |
-| Identifies row | ✅ Yes | Not necessarily |
+| Feature        | PRIMARY KEY    | UNIQUE                |
+| -------------- | -------------- | --------------------- |
+| NULL values    | ❌ Not allowed | ✅ Allowed (one NULL) |
+| Per table      | One only       | Multiple allowed      |
+| Creates index  | ✅ Always      | ✅ Always             |
+| Identifies row | ✅ Yes         | Not necessarily       |
 
 ::: note
 
@@ -367,7 +367,7 @@ ALTER TABLE users ADD CONSTRAINT uq_users_email UNIQUE (email);
 ALTER TABLE products ADD CONSTRAINT chk_price CHECK (price >= 0);
 
 -- Add FOREIGN KEY
-ALTER TABLE orders ADD CONSTRAINT fk_orders_user 
+ALTER TABLE orders ADD CONSTRAINT fk_orders_user
     FOREIGN KEY (user_id) REFERENCES users(id);
 
 -- Add PRIMARY KEY
@@ -391,12 +391,12 @@ ALTER TABLE users DROP CONSTRAINT users_pkey;
 
 Use consistent naming for easier maintenance:
 
-| Constraint | Convention | Example |
-|------------|------------|---------|
-| PRIMARY KEY | `pk_<table>` | `pk_users` |
-| FOREIGN KEY | `fk_<table>_<column>` | `fk_orders_user_id` |
-| UNIQUE | `uq_<table>_<column>` | `uq_users_email` |
-| CHECK | `chk_<table>_<description>` | `chk_products_price_positive` |
+| Constraint  | Convention                  | Example                       |
+| ----------- | --------------------------- | ----------------------------- |
+| PRIMARY KEY | `pk_<table>`                | `pk_users`                    |
+| FOREIGN KEY | `fk_<table>_<column>`       | `fk_orders_user_id`           |
+| UNIQUE      | `uq_<table>_<column>`       | `uq_users_email`              |
+| CHECK       | `chk_<table>_<description>` | `chk_products_price_positive` |
 
 ## Performance Considerations
 
