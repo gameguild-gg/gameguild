@@ -29,6 +29,8 @@ import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
+import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
+import type { SerializedEditorState } from "lexical"
 
 export type ProjectLayoutType = "type1" | "type2"
 
@@ -128,6 +130,8 @@ export default function Page() {
   // Add these state variables after the existing state declarations:
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [editingProjectName, setEditingProjectName] = useState("")
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewState, setPreviewState] = useState<SerializedEditorState | null>(null)
 
   const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
     if (event.ctrlKey || event.metaKey || event.button === 1) {
@@ -558,6 +562,52 @@ export default function Page() {
     setExitDialogOpen(false)
   }
 
+  const handlePreview = () => {
+    if (!currentProjectId) {
+      toast.error("No project loaded", {
+        description: "Please load or create a project first",
+        duration: 3000,
+      })
+      return
+    }
+
+    try {
+      // Get the current editor state based on layout type
+      let stateToPreview: string
+      if (currentLayoutType === "type1") {
+        if (!editorState) {
+          toast.error("No content", {
+            description: "Editor is empty",
+            duration: 3000,
+          })
+          return
+        }
+        stateToPreview = editorState
+      } else {
+        if (!leftEditorState && !rightEditorState) {
+          toast.error("No content", {
+            description: "Editors are empty",
+            duration: 3000,
+          })
+          return
+        }
+        // For type2, preview the left editor (or combine both if needed)
+        stateToPreview = leftEditorState || rightEditorState
+      }
+
+      // Parse the state
+      const parsed = JSON.parse(stateToPreview)
+      setPreviewState(parsed)
+      setPreviewOpen(true)
+    } catch (error) {
+      console.error("Failed to parse editor state:", error)
+      toast.error("Preview error", {
+        description: "Failed to load preview",
+        duration: 3000,
+      })
+    }
+  }
+
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -727,6 +777,17 @@ export default function Page() {
                     }}
                     currentProjectName={currentProjectName}
                   />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreview}
+                    className="gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+                    disabled={!currentProjectId}
+                    title="Preview in new tab"
+                  >
+                    <Eye className="h-4 w-4" />
+                    Preview
+                  </Button>
                 </div>
 
                 {/* Status Indicators */}
@@ -864,6 +925,16 @@ export default function Page() {
         showSaveAndExit={true}
         onSaveAndExit={handleSaveAndExit}
       />
+
+      {/* Preview Dialog */}
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Preview</DialogTitle>
+          </DialogHeader>
+          {previewState && <PreviewRenderer serializedState={previewState} />}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
