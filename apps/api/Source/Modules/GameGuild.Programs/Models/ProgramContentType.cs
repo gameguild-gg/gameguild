@@ -33,4 +33,6 @@ public enum ProgramContentType {
   [Description("Student reflections on learning or experiences")] Reflection,
 
   [Description("Data collection activity without grading")] Survey,
+  
+  [Description("Reveal")] Reveal,
 }

@@ -2,7 +2,7 @@
 
 import MarkdownRenderer, { RendererType } from '@/components/markdown-renderer/markdown-renderer';
 import { Card, CardContent } from '@/components/ui/card';
-import { ProgramContentDto } from '@/lib/api/generated/types.gen';
+import { ProgramContentDto, ProgramContentType } from '@/lib/api/generated/types.gen';
 
 interface CourseContentPageClientProps {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,24 +14,13 @@ interface CourseContentPageClientProps {
 }
 
 /**
- * Detects if content has frontmatter specifying renderer type
- * Frontmatter format: ---\nrenderer: reveal\n---
+ * Determines the renderer type based on content type
  */
-function detectRendererType(content: string): { renderer: RendererType; cleanContent: string } {
-    const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
-    const match = content.match(frontmatterRegex);
-
-    if (match && match[1] != null) {
-        const frontmatter = match[1];
-        const rendererMatch = frontmatter.match(/renderer:\s*(reveal|markdown)/i);
-        if (rendererMatch && rendererMatch[1]?.toLowerCase() === 'reveal') {
-            // Remove frontmatter from content for reveal
-            const cleanContent = content.replace(frontmatterRegex, '');
-            return { renderer: 'reveal', cleanContent };
-        }
+function getRendererType(contentType: ProgramContentType | undefined): RendererType {
+    if (contentType === ProgramContentType.REVEAL) {
+        return 'reveal';
     }
-
-    return { renderer: 'markdown', cleanContent: content };
+    return 'markdown';
 }
 
 export function CourseContentPageClient({
@@ -43,7 +32,7 @@ export function CourseContentPageClient({
 }: CourseContentPageClientProps) {
 
     const bodyContent = typeof content.body === 'string' ? content.body : '';
-    const { renderer, cleanContent } = detectRendererType(bodyContent);
+    const renderer = getRendererType(content.type);
     const isReveal = renderer === 'reveal';
 
     return (
@@ -56,7 +45,7 @@ export function CourseContentPageClient({
                         {content.body !== undefined && content.body !== null && (
                             <div className={isReveal ? "" : "prose max-w-none"}>
                                 {typeof content.body === 'string' ? (
-                                    <MarkdownRenderer content={cleanContent} renderer={renderer} />
+                                    <MarkdownRenderer content={bodyContent} renderer={renderer} />
                                 ) : (
                                     <pre className="whitespace-pre-wrap">
                                         {String(content.body)}
@@ -65,21 +54,23 @@ export function CourseContentPageClient({
                             </div>
                         )}
 
-                        {/* Content Metadata */}
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground border-t pt-4">
-                            {content.estimatedMinutes && (
-                                <span>Estimated time: {content.estimatedMinutes} minutes</span>
-                            )}
-                            {content.maxPoints && (
-                                <span>Points: {content.maxPoints}</span>
-                            )}
-                            {content.isRequired && (
-                                <span className="text-orange-600">Required</span>
-                            )}
-                        </div>
+                        {/* Content Metadata - Hidden in reveal mode */}
+                        {!isReveal && (
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground border-t pt-4">
+                                {content.estimatedMinutes != null && content.estimatedMinutes > 0 && (
+                                    <span>Estimated time: {content.estimatedMinutes} minutes</span>
+                                )}
+                                {content.maxPoints != null && content.maxPoints > 0 && (
+                                    <span>Points: {content.maxPoints}</span>
+                                )}
+                                {content.isRequired === true && (
+                                    <span className="text-orange-600">Required</span>
+                                )}
+                            </div>
+                        )}
 
                         {/* Children Content */}
-                        {children && (
+                        {children != null && (
                             <div className="space-y-4">
                                 {children}
                             </div>
