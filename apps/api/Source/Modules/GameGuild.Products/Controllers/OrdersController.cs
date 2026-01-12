@@ -1,7 +1,6 @@
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using AuthPermissions = GameGuild.Identity.Authorization.Permissions;
 
 namespace GameGuild.Products;
 
@@ -17,7 +16,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// Create a new order with idempotency protection
     /// </summary>
     [HttpPost]
-    [RequirePermission(AuthPermissions.OrdersCreate)]
+    [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<ActionResult<OrderDto>> CreateOrder(
         [FromBody] CreateOrderRequest request,
         CancellationToken cancellationToken = default)
@@ -51,7 +50,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// Add a product to an existing order
     /// </summary>
     [HttpPost("{orderId:guid}/items")]
-    [RequirePermission(AuthPermissions.OrdersCreate)]
+    [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<ActionResult<OrderDto>> AddProductToOrder(
         Guid orderId,
         [FromBody] AddOrderItemRequest request,
@@ -71,7 +70,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// Complete an order (process payment, grant entitlements)
     /// </summary>
     [HttpPost("{orderId:guid}/complete")]
-    [RequirePermission(AuthPermissions.OrdersCreate)]
+    [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<ActionResult<OrderDto>> CompleteOrder(
         Guid orderId,
         [FromBody] CompleteOrderRequest? request = null,
@@ -95,7 +94,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// Cancel a pending order
     /// </summary>
     [HttpPost("{orderId:guid}/cancel")]
-    [RequirePermission(AuthPermissions.OrdersCreate)]
+    [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<IActionResult> CancelOrder(
         Guid orderId,
         [FromBody] CancelOrderRequest? request = null,
@@ -118,7 +117,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// Process a refund for a completed order
     /// </summary>
     [HttpPost("{orderId:guid}/refund")]
-    [RequirePermission(AuthPermissions.OrdersRefund)]
+    [RequirePermission(OrdersPermission.Keys.Refund)]
     public async Task<ActionResult<OrderDto>> RefundOrder(
         Guid orderId,
         [FromBody] RefundOrderRequest request,
@@ -142,7 +141,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// Get an order by ID
     /// </summary>
     [HttpGet("{orderId:guid}")]
-    [RequirePermission(AuthPermissions.OrdersRead)]
+    [RequirePermission(OrdersPermission.Keys.Read)]
     public async Task<ActionResult<OrderDto>> GetOrder(
         Guid orderId,
         CancellationToken cancellationToken = default)
@@ -163,7 +162,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// Get orders for the current user
     /// </summary>
     [HttpGet("my-orders")]
-    [RequirePermission(AuthPermissions.OrdersRead)]
+    [RequirePermission(OrdersPermission.Keys.Read)]
     public async Task<ActionResult<IEnumerable<OrderDto>>> GetMyOrders(
         [FromQuery] OrderStatus? status = null,
         CancellationToken cancellationToken = default)

@@ -2,7 +2,6 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using AuthPermissions = GameGuild.Identity.Authorization.Permissions;
 
 namespace GameGuild.Products;
 
@@ -68,7 +67,7 @@ public class ProductsController(IMediator mediator) : ControllerBase
     /// <param name="request">Product creation request</param>
     /// <returns>Created product</returns>
     [HttpPost]
-    [RequirePermission(AuthPermissions.ProductsCreate)]
+    [RequirePermission(ProductsPermission.Keys.Create)]
     public async Task<ActionResult<ProductDto>> CreateProduct([FromBody] CreateProductRequest request)
     {
         var command = new CreateProductCommand(
@@ -97,7 +96,7 @@ public class ProductsController(IMediator mediator) : ControllerBase
     /// <param name="request">Product update request</param>
     /// <returns>Updated product</returns>
     [HttpPut("{productId:guid}")]
-    [RequirePermission(AuthPermissions.ProductsUpdate)]
+    [RequirePermission(ProductsPermission.Keys.Update)]
     public async Task<ActionResult<ProductDto>> UpdateProduct(Guid productId, [FromBody] UpdateProductRequest request)
     {
         var command = new UpdateProductCommand(
@@ -127,7 +126,7 @@ public class ProductsController(IMediator mediator) : ControllerBase
     /// <param name="reason">Deletion reason</param>
     /// <returns>No content</returns>
     [HttpDelete("{productId:guid}")]
-    [RequirePermission(AuthPermissions.ProductsDelete)]
+    [RequirePermission(ProductsPermission.Keys.Delete)]
     public async Task<ActionResult> DeleteProduct(
         Guid productId,
         [FromQuery] bool softDelete = true,

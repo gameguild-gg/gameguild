@@ -2,7 +2,6 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using AuthPermissions = GameGuild.Identity.Authorization.Permissions;
 
 namespace GameGuild.Products;
 
@@ -12,7 +11,7 @@ namespace GameGuild.Products;
 [ApiController]
 [Route("api/promo-codes")]
 [Authorize]
-[RequirePermission(AuthPermissions.PromoCodesRead)]
+[RequirePermission(PromoCodesPermission.Keys.Read)]
 public class PromoCodesController(IMediator mediator) : ControllerBase
 {
     /// <summary>
@@ -70,7 +69,7 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
     /// Create a new promo code
     /// </summary>
     [HttpPost]
-    [RequirePermission(AuthPermissions.PromoCodesCreate)]
+    [RequirePermission(PromoCodesPermission.Keys.Create)]
     public async Task<ActionResult<PromoCodeDto>> CreatePromoCode(
         [FromBody] CreatePromoCodeRequest request,
         CancellationToken cancellationToken = default)
@@ -103,7 +102,7 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
     /// Update an existing promo code
     /// </summary>
     [HttpPut("{id:guid}")]
-    [RequirePermission(AuthPermissions.PromoCodesUpdate)]
+    [RequirePermission(PromoCodesPermission.Keys.Update)]
     public async Task<ActionResult<PromoCodeDto>> UpdatePromoCode(
         Guid id,
         [FromBody] UpdatePromoCodeRequest request,
@@ -136,7 +135,7 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
     /// Delete a promo code
     /// </summary>
     [HttpDelete("{id:guid}")]
-    [RequirePermission(AuthPermissions.PromoCodesDelete)]
+    [RequirePermission(PromoCodesPermission.Keys.Delete)]
     public async Task<IActionResult> DeletePromoCode(
         Guid id,
         CancellationToken cancellationToken = default)

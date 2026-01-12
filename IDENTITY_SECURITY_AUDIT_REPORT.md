@@ -19,8 +19,8 @@
 - Clear separation between domain concepts (User/Tenant entities vs security context)
 
 ⚠️ **Critical Risks:**
-- ✅ **FIXED: Dual context model tech debt**: Legacy `IUserContext`/`ITenantContext`/`IPermissionsContext` interfaces marked `[Obsolete]` with migration guides. All production handlers migrated to `IActorContextAccessor`. Adapters maintained for backward compatibility only.
-- ✅ **FIXED: Stringly-typed security:** Permission keys now use strongly-typed `Permission` class hierarchy with compile-time safety. See [docs/security/STRONGLY_TYPED_PERMISSIONS.md](docs/security/STRONGLY_TYPED_PERMISSIONS.md). Tenant roles use `TenantRole` class. ISP-compliant `IPermissionChecker`/`IPermissionContextInfo` interfaces created.
+- ✅ **FIXED: Dual context model tech debt**: Legacy `IUserContext`/`ITenantContext`/`IPermissionsContext` interfaces **DELETED**. All production code now uses `IActorContextAccessor`. `IIdentityContext` and `IdentityContext` also **DELETED**. Migration complete.
+- ✅ **FIXED: Stringly-typed security:** Permission keys now use strongly-typed `Permission` class hierarchy with **nested `Keys` class pattern** for attribute compatibility. Controllers use `[RequirePermission(ProductsPermission.Keys.Create)]`. Runtime checks use `actor.HasPermission(ProductsPermission.Create)`. See [docs/security/STRONGLY_TYPED_PERMISSIONS.md](docs/security/STRONGLY_TYPED_PERMISSIONS.md). Tenant roles use `TenantRole` class. ISP-compliant `IPermissionChecker`/`IPermissionContextInfo` interfaces created.
 - ✅ **FIXED: Inconsistent tenant resolution:** Tenant resolution now validated via membership check in `TenantMiddleware`. Fail-closed error handling returns 403 if user not a member.
 - ✅ **FIXED: Middleware ordering hazards:** ~~Critical security middleware (ActorContext, Tenant, Permission caching) has unclear/undocumented ordering requirements~~ Now enforced via `MiddlewareOrderValidator`
 - **Caching complexity without clear invalidation:** Multiple cache layers (IMemoryCache, tenant version store) but invalidation strategy is fragmented
@@ -128,8 +128,8 @@ DEPENDENCY DIRECTIONS:
 - Explicit `ActorKind` enum prevents ambiguity (User vs Service vs System)
 
 ⚠️ **Concerns:**
-- ✅ **FIXED: Dual model confusion:** Both `IIdentityContext` and `ActorContext` exist. Legacy interfaces (`IUserContext`, `ITenantContext`, `IPermissionsContext`) now marked `[Obsolete]`. All production handlers migrated to `IActorContextAccessor`. Adapter shims maintained for backward compatibility only.
-- ✅ **FIXED: Migration complete:** All production code now uses `IActorContextAccessor`. Legacy interfaces deprecated with clear migration guidance in obsolete message. Target removal: v2.0.
+- ✅ **FIXED: Dual model confusion:** ~~Both `IIdentityContext` and `ActorContext` exist.~~ Legacy interfaces (`IUserContext`, `ITenantContext`, `IPermissionsContext`, `IIdentityContext`) **DELETED**. All production code now uses `IActorContextAccessor` exclusively.
+- ✅ **FIXED: Migration complete:** All production code now uses `IActorContextAccessor`. Legacy interfaces and adapter shims have been **removed from codebase**.
 - ✅ **FIXED: Attributes dictionary:** ~~`ActorContext.Attributes` is `IReadOnlyDictionary<string, string>` (stringly-typed).~~ Created strongly-typed `ActorAttributes` class with typed properties (Email, EmailVerified, MfaVerified, Department, TenantRole, etc.). Legacy `Attributes` property marked `[Obsolete]`, replaced by `TypedAttributes`. See [ActorAttributes.cs](apps/api/Source/Modules/GameGuild.Identity.Context/Actors/ActorAttributes.cs)
 - **No built-in audit logging:** ActorContext doesn't emit audit events when accessed (could help detect privilege escalation attempts).
 
@@ -636,7 +636,7 @@ public static T Create<T>(Action<T>? configure = null)
 |-------|----------|------|-----|
 | ✅ **FIXED: Stringly-typed permissions** | ~~Permissions.cs, all handlers~~ **IMPLEMENTED** | ~~Typo = security bypass~~ | ~~Generate constants via T4 template or source generator~~ Created strongly-typed `Permission` class hierarchy. See [docs/security/STRONGLY_TYPED_PERMISSIONS.md](docs/security/STRONGLY_TYPED_PERMISSIONS.md) |
 | ✅ **FIXED: Middleware ordering not enforced** | ~~Startup/Program.cs~~ **IMPLEMENTED** | ~~Wrong order = broken security~~ | ~~Add startup validation~~ Created `MiddlewareOrderValidator` |
-| ✅ **FIXED: Dual context model tech debt** | ~~Authorization module~~ **COMPLETE** | ~~Confusion, bugs, maintenance burden~~ | ~~Complete migration to ActorContext, deprecate legacy interfaces~~ Legacy interfaces marked `[Obsolete]`. All production handlers migrated to `IActorContextAccessor`. Adapters kept for backward compatibility. |
+| ✅ **FIXED: Dual context model tech debt** | ~~Authorization module~~ **DELETED** | ~~Confusion, bugs, maintenance burden~~ | ~~Complete migration to ActorContext, deprecate legacy interfaces~~ Legacy interfaces **DELETED** from codebase. `IUserContext`, `ITenantContext`, `IPermissionsContext`, `IIdentityContext`, and all adapters **removed**. Only `IActorContextAccessor` remains. |
 | ✅ **FIXED: Missing tenant membership validation** | ~~TenantMiddleware~~ **IMPLEMENTED** | ~~User could access wrong tenant's data~~ | ~~Validate resolved tenant~~ Added validation with fail-closed design |
 | ✅ **FIXED: Fail-open permission fetch** | ~~ActorContextMiddleware~~ **IMPLEMENTED** | ~~If DB fails, user gets stale JWT permissions~~ | ~~Explicit error handling with fail-closed policy~~ Created `PermissionFetchException` and fail-closed handling. See [docs/security/ACTORCONTEXT_FAILCLOSED_ERROR_HANDLING.md](docs/security/ACTORCONTEXT_FAILCLOSED_ERROR_HANDLING.md) |
 
@@ -705,7 +705,7 @@ public static T Create<T>(Action<T>? configure = null)
 
 | # | Issue | Why (Risk/Benefit) | Where | Minimal Approach | Impact |
 |---|-------|-------------------|-------|------------------|--------|
-| **5** | ✅ **DONE: Complete ActorContext migration** | ~~Dual context model (legacy + new) is confusing and creates maintenance burden.~~ All production handlers migrated to `IActorContextAccessor`. | ~~Authorization module~~ **COMPLETE** | ~~1. Mark legacy interfaces `[Obsolete]`~~ **DONE!** ~~2. Update all handlers to use `IActorContextAccessor`.~~ **DONE!** Migrated: Projects (4 files), Features (1 file), Resources (1 file), Identity.Users (1 file), Identity.Authorization (9 files including queries, commands, behaviors, middleware, filters). Legacy adapters kept for backward compatibility. | ✅ Reduces complexity, improves maintainability |
+| **5** | ✅ **DONE: Complete ActorContext migration** | ~~Dual context model (legacy + new) is confusing and creates maintenance burden.~~ **DELETED**: All legacy interfaces removed from codebase. | ~~Authorization module~~ **DELETED** | ~~1. Mark legacy interfaces `[Obsolete]`~~ **DONE!** ~~2. Update all handlers to use `IActorContextAccessor`.~~ **DONE!** **3. DELETE legacy interfaces.** **DONE!** Deleted: `IUserContext`, `ITenantContext`, `IPermissionsContext`, `IIdentityContext`, `IdentityContext`, and all adapter shims. Only `IActorContextAccessor` remains. | ✅ Tech debt eliminated, clean architecture |
 | **6** | **Add Authorization integration tests** | Authorization is high-risk code with insufficient test coverage. Authentication has 40+ tests. | Tests/GameGuild.Identity.Authorization.IntegrationTests | Create 40+ tests covering: permission grant/revoke, ACL evaluation, ABAC policies, resource ownership checks, cache invalidation. Use AuthN TestEntityFactory pattern. | ⚠️ Catch bugs before production |
 | **7** | ✅ **DONE: Merge AuthUser + User** | ~~Two user entities (AuthUser in Authentication, User in Users) create sync issues.~~ Merged into single `User` aggregate. | ~~Identity.Authentication, Identity.Users~~ **COMPLETE** | ~~Option A: Merge into single `User` entity with password hash, OAuth IDs, profile fields.~~ **IMPLEMENTED!** Password hash, OAuth provider IDs, and profile fields now unified in `User` entity. AuthUser entity removed. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete) | ✅ Reduced duplication, prevented sync bugs |
 | **8** | **Distributed cache for permissions** | `IMemoryCache` breaks in multi-instance deployments. Permissions could differ between instances. | Authorization/Services | Add Redis distributed cache. Update `CachedAccessControlListService` to use `IDistributedCache`. Keep `IMemoryCache` as L1 cache for perf. | ⚠️ Enables horizontal scaling |
@@ -954,8 +954,8 @@ public interface IUserContext { ... }
 
 ### Top 3 Risks
 
-1. ✅ **FIXED: Stringly-typed security** - ~~Typo in permission string = bypass~~ Now using typed `Permission` classes
-2. ⚠️ **IN PROGRESS: Dual context model tech debt** - ~~Confusing, maintenance burden~~ Legacy interfaces deprecated, Projects module migrated
+1. ✅ **FIXED: Stringly-typed security** - ~~Typo in permission string = bypass~~ Now using typed `Permission` classes with nested `Keys` for attributes
+2. ✅ **FIXED: Dual context model tech debt** - ~~Confusing, maintenance burden~~ Legacy interfaces **DELETED**. Only `IActorContextAccessor` remains.
 3. **Missing authorization tests** - High-risk code under-tested
 
 ### Recommended Next Steps
@@ -966,9 +966,9 @@ public interface IUserContext { ... }
 3. ✅ **DONE:** ~~Add error handling to ActorContextMiddleware permission fetch~~ Created `PermissionFetchException` with fail-closed handling
 
 **Next 2 Weeks:**
-4. Generate Permissions constants from source (no more magic strings)
+4. ✅ **DONE:** ~~Generate Permissions constants from source (no more magic strings)~~ Created strongly-typed `Permission` classes with nested `Keys` pattern. Use `[RequirePermission(ProductsPermission.Keys.Create)]` in attributes, `actor.HasPermission(ProductsPermission.Create)` at runtime.
 5. Add 40+ Authorization integration tests
-6. Complete ActorContext migration (update 40-50 handlers)
+6. ✅ **DONE:** ~~Complete ActorContext migration (update 40-50 handlers)~~ All handlers migrated. Legacy interfaces **DELETED**.
 
 **Next 1-2 Months:**
 7. Add Redis distributed cache for permissions
@@ -1003,8 +1003,9 @@ public interface IUserContext { ... }
 - [MfaService.cs] - MFA operations
 
 ### Constants
-- [Permissions.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authorization\Permissions.cs) - Permission string constants
-- [Policies.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authorization\Policies.cs) - Policy name constants
+- [Permissions.cs](d:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Identity.Authorization\\Permissions.cs) - Facade class exposing all permission key constants from TypedPermissions
+- [TypedPermissions.cs](d:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Identity.Authorization\\Models\\TypedPermissions.cs) - Strongly-typed permission classes with nested `Keys` for attribute usage
+- [Policies.cs](d:\\repositories\\game-guild\\game-guild\\apps\\api\\Source\\Modules\\GameGuild.Identity.Authorization\\Policies.cs) - Policy name constants
 
 ### Documentation
 - [AUTHORIZATION_ARCHITECTURE.md](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authentication\AUTHORIZATION_ARCHITECTURE.md) - Comprehensive authorization design

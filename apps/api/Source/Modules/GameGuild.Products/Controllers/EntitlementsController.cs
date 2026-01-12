@@ -16,7 +16,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     /// Check if current user has access to a product
     /// </summary>
     [HttpGet("check/{productId:guid}")]
-    [RequirePermission(EntitlementsPermission.ReadSelf)]
+    [RequirePermission(EntitlementsPermission.Keys.ReadSelf)]
     public async Task<ActionResult<EntitlementCheckResult>> CheckAccess(
         Guid productId,
         CancellationToken cancellationToken = default)
@@ -33,7 +33,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     /// Check if current user has access to multiple products
     /// </summary>
     [HttpPost("check-multiple")]
-    [RequirePermission(EntitlementsPermission.ReadSelf)]
+    [RequirePermission(EntitlementsPermission.Keys.ReadSelf)]
     public async Task<ActionResult<IDictionary<Guid, bool>>> CheckMultipleAccess(
         [FromBody] CheckMultipleAccessRequest request,
         CancellationToken cancellationToken = default)
@@ -50,7 +50,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     /// Get current user's entitlements
     /// </summary>
     [HttpGet("my-entitlements")]
-    [RequirePermission(EntitlementsPermission.ReadSelf)]
+    [RequirePermission(EntitlementsPermission.Keys.ReadSelf)]
     public async Task<ActionResult<IEnumerable<EntitlementInfoDto>>> GetMyEntitlements(
         CancellationToken cancellationToken = default)
     {
@@ -65,7 +65,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     /// Get entitlements for a specific user (admin only)
     /// </summary>
     [HttpGet("user/{userId:guid}")]
-    [RequirePermission(EntitlementsPermission.ReadAll)]
+    [RequirePermission(EntitlementsPermission.Keys.ReadAll)]
     public async Task<ActionResult<IEnumerable<EntitlementInfoDto>>> GetUserEntitlements(
         Guid userId,
         CancellationToken cancellationToken = default)
@@ -81,7 +81,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     /// Grant entitlement to a user (admin only)
     /// </summary>
     [HttpPost("grant")]
-    [RequirePermission(EntitlementsPermission.Grant)]
+    [RequirePermission(EntitlementsPermission.Keys.Grant)]
     public async Task<ActionResult<EntitlementInfoDto>> GrantEntitlement(
         [FromBody] GrantEntitlementRequest request,
         CancellationToken cancellationToken = default)
@@ -112,7 +112,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     /// Revoke entitlement from a user (admin only)
     /// </summary>
     [HttpPost("revoke")]
-    [RequirePermission(EntitlementsPermission.Revoke)]
+    [RequirePermission(EntitlementsPermission.Keys.Revoke)]
     public async Task<IActionResult> RevokeEntitlement(
         [FromBody] RevokeEntitlementRequest request,
         CancellationToken cancellationToken = default)
@@ -135,7 +135,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     /// Get entitlements expiring soon (admin only)
     /// </summary>
     [HttpGet("expiring")]
-    [RequirePermission(EntitlementsPermission.ReadAll)]
+    [RequirePermission(EntitlementsPermission.Keys.ReadAll)]
     public async Task<ActionResult<IEnumerable<EntitlementInfoDto>>> GetExpiringEntitlements(
         [FromQuery] int days = 7,
         CancellationToken cancellationToken = default)

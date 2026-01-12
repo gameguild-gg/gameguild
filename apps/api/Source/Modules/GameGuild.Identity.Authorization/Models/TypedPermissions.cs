@@ -6,65 +6,148 @@ namespace GameGuild.Identity.Authorization;
 ///     Strongly-typed permissions for admin operations.
 ///     Provides compile-time safety for permission checks.
 /// </summary>
+/// <remarks>
+///     <para>
+///         Use <see cref="Keys"/> for attribute usage: [RequirePermission(AdminPermission.Keys.Wildcard)]
+///     </para>
+///     <para>
+///         Use the static readonly fields for runtime checks: actor.HasPermission(AdminPermission.Wildcard)
+///     </para>
+/// </remarks>
 public sealed class AdminPermission : Permission
 {
-    private AdminPermission(string resource, string action, string? scope, string description)
-        : base(resource, action, scope, description)
+    private AdminPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Contains(':') ? key.Split(':')[1] : key,
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
     {
     }
 
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    /// <example>
+    ///     [RequirePermission(AdminPermission.Keys.Wildcard)]
+    ///     public IActionResult AdminAction() { }
+    /// </example>
+    public static class Keys
+    {
+        /// <summary>Full admin access (wildcard)</summary>
+        public const string Wildcard = "admin:*";
+
+        /// <summary>Admin permission</summary>
+        public const string Admin = "admin:admin";
+
+        /// <summary>Tenant admin permission</summary>
+        public const string TenantAdmin = "tenant:admin";
+    }
+
     /// <summary>Full admin access (wildcard)</summary>
-    public static readonly AdminPermission Wildcard = new("admin", "*", null, "Full admin access (wildcard)");
+    public static readonly AdminPermission Wildcard = new(Keys.Wildcard, "Full admin access (wildcard)");
 
     /// <summary>Admin permission</summary>
-    public static readonly AdminPermission Admin = new("admin", "admin", null, "Admin permission");
+    public static readonly AdminPermission Admin = new(Keys.Admin, "Admin permission");
 
     /// <summary>Tenant admin permission</summary>
-    public static readonly AdminPermission TenantAdmin = new("tenant", "admin", null, "Tenant admin permission");
+    public static readonly AdminPermission TenantAdmin = new(Keys.TenantAdmin, "Tenant admin permission");
 }
 
 /// <summary>
 ///     Strongly-typed permissions for user operations.
 ///     Provides compile-time safety for permission checks.
 /// </summary>
+/// <remarks>
+///     <para>
+///         Use <see cref="Keys"/> for attribute usage: [RequirePermission(UsersPermission.Keys.Read)]
+///     </para>
+///     <para>
+///         Use the static readonly fields for runtime checks: actor.HasPermission(UsersPermission.Read)
+///     </para>
+/// </remarks>
 public sealed class UsersPermission : Permission
 {
-    private UsersPermission(string resource, string action, string? scope, string description)
-        : base(resource, action, scope, description)
+    private UsersPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
     {
+    }
+
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    /// <example>
+    ///     [RequirePermission(UsersPermission.Keys.Read)]
+    ///     public IActionResult GetUsers() { }
+    /// </example>
+    public static class Keys
+    {
+        /// <summary>Read user data</summary>
+        public const string Read = "users:read";
+
+        /// <summary>Create new users</summary>
+        public const string Create = "users:create";
+
+        /// <summary>Update existing users</summary>
+        public const string Update = "users:update";
+
+        /// <summary>Soft-delete users</summary>
+        public const string Delete = "users:delete";
+
+        /// <summary>Administrative operations on users</summary>
+        public const string Admin = "users:admin";
+
+        /// <summary>Permanently delete users (dangerous)</summary>
+        public const string Purge = "users:purge";
+
+        /// <summary>Edit own profile</summary>
+        public const string EditSelf = "users:edit:self";
+
+        /// <summary>Delete own account</summary>
+        public const string DeleteSelf = "users:delete:self";
+
+        /// <summary>Read own data</summary>
+        public const string ReadSelf = "users:read:self";
+
+        /// <summary>Manage any user</summary>
+        public const string Manage = "users:manage";
     }
 
     // CRUD Operations
     /// <summary>Read user data</summary>
-    public static readonly UsersPermission Read = new("users", "read", null, "Read user data");
+    public static readonly UsersPermission Read = new(Keys.Read, "Read user data");
 
     /// <summary>Create new users</summary>
-    public static readonly UsersPermission Create = new("users", "create", null, "Create new users");
+    public static readonly UsersPermission Create = new(Keys.Create, "Create new users");
 
     /// <summary>Update existing users</summary>
-    public static readonly UsersPermission Update = new("users", "update", null, "Update existing users");
+    public static readonly UsersPermission Update = new(Keys.Update, "Update existing users");
 
     /// <summary>Soft-delete users</summary>
-    public static readonly UsersPermission Delete = new("users", "delete", null, "Soft-delete users");
+    public static readonly UsersPermission Delete = new(Keys.Delete, "Soft-delete users");
 
     /// <summary>Administrative operations on users</summary>
-    public static readonly UsersPermission Admin = new("users", "admin", null, "Administrative operations on users");
+    public static readonly UsersPermission Admin = new(Keys.Admin, "Administrative operations on users");
 
     /// <summary>Permanently delete users (dangerous)</summary>
-    public static readonly UsersPermission Purge = new("users", "purge", null, "Permanently delete users (dangerous)");
+    public static readonly UsersPermission Purge = new(Keys.Purge, "Permanently delete users (dangerous)");
 
     // Self Operations
     /// <summary>Edit own profile</summary>
-    public static readonly UsersPermission EditSelf = new("users", "edit", "self", "Edit own profile");
+    public static readonly UsersPermission EditSelf = new(Keys.EditSelf, "Edit own profile");
 
     /// <summary>Delete own account</summary>
-    public static readonly UsersPermission DeleteSelf = new("users", "delete", "self", "Delete own account");
+    public static readonly UsersPermission DeleteSelf = new(Keys.DeleteSelf, "Delete own account");
 
     /// <summary>Read own data</summary>
-    public static readonly UsersPermission ReadSelf = new("users", "read", "self", "Read own data");
+    public static readonly UsersPermission ReadSelf = new(Keys.ReadSelf, "Read own data");
 
     /// <summary>Manage any user</summary>
-    public static readonly UsersPermission Manage = new("users", "manage", null, "Manage any user");
+    public static readonly UsersPermission Manage = new(Keys.Manage, "Manage any user");
 }
 
 /// <summary>
@@ -73,19 +156,38 @@ public sealed class UsersPermission : Permission
 /// </summary>
 public sealed class ContentPermission : Permission
 {
-    private ContentPermission(string resource, string action, string? scope, string description)
-        : base(resource, action, scope, description)
+    private ContentPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
     {
     }
 
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    public static class Keys
+    {
+        /// <summary>Read content</summary>
+        public const string Read = "content:read";
+
+        /// <summary>Write/edit content</summary>
+        public const string Write = "content:write";
+
+        /// <summary>Admin access to content</summary>
+        public const string Admin = "content:admin";
+    }
+
     /// <summary>Read content</summary>
-    public static readonly ContentPermission Read = new("content", "read", null, "Read content");
+    public static readonly ContentPermission Read = new(Keys.Read, "Read content");
 
     /// <summary>Write/edit content</summary>
-    public static readonly ContentPermission Write = new("content", "write", null, "Write/edit content");
+    public static readonly ContentPermission Write = new(Keys.Write, "Write/edit content");
 
     /// <summary>Admin access to content</summary>
-    public static readonly ContentPermission Admin = new("content", "admin", null, "Admin access to content");
+    public static readonly ContentPermission Admin = new(Keys.Admin, "Admin access to content");
 }
 
 /// <summary>
@@ -94,19 +196,38 @@ public sealed class ContentPermission : Permission
 /// </summary>
 public sealed class ProjectPermission : Permission
 {
-    private ProjectPermission(string resource, string action, string? scope, string description)
-        : base(resource, action, scope, description)
+    private ProjectPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
     {
     }
 
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    public static class Keys
+    {
+        /// <summary>Read projects</summary>
+        public const string Read = "project:read";
+
+        /// <summary>Write/edit projects</summary>
+        public const string Write = "project:write";
+
+        /// <summary>Admin access to projects</summary>
+        public const string Admin = "project:admin";
+    }
+
     /// <summary>Read projects</summary>
-    public static readonly ProjectPermission Read = new("project", "read", null, "Read projects");
+    public static readonly ProjectPermission Read = new(Keys.Read, "Read projects");
 
     /// <summary>Write/edit projects</summary>
-    public static readonly ProjectPermission Write = new("project", "write", null, "Write/edit projects");
+    public static readonly ProjectPermission Write = new(Keys.Write, "Write/edit projects");
 
     /// <summary>Admin access to projects</summary>
-    public static readonly ProjectPermission Admin = new("project", "admin", null, "Admin access to projects");
+    public static readonly ProjectPermission Admin = new(Keys.Admin, "Admin access to projects");
 }
 
 /// <summary>
@@ -115,16 +236,32 @@ public sealed class ProjectPermission : Permission
 /// </summary>
 public sealed class CoursePermission : Permission
 {
-    private CoursePermission(string resource, string action, string? scope, string description)
-        : base(resource, action, scope, description)
+    private CoursePermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
     {
     }
 
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    public static class Keys
+    {
+        /// <summary>Read courses</summary>
+        public const string Read = "course:read";
+
+        /// <summary>Manage courses</summary>
+        public const string Manage = "course:manage";
+    }
+
     /// <summary>Read courses</summary>
-    public static readonly CoursePermission Read = new("course", "read", null, "Read courses");
+    public static readonly CoursePermission Read = new(Keys.Read, "Read courses");
 
     /// <summary>Manage courses</summary>
-    public static readonly CoursePermission Manage = new("course", "manage", null, "Manage courses");
+    public static readonly CoursePermission Manage = new(Keys.Manage, "Manage courses");
 }
 
 /// <summary>
@@ -133,28 +270,56 @@ public sealed class CoursePermission : Permission
 /// </summary>
 public sealed class ProductsPermission : Permission
 {
-    private ProductsPermission(string resource, string action, string? scope, string description)
-        : base(resource, action, scope, description)
+    private ProductsPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
     {
     }
 
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    public static class Keys
+    {
+        /// <summary>Read product data</summary>
+        public const string Read = "products:read";
+
+        /// <summary>Create new products</summary>
+        public const string Create = "products:create";
+
+        /// <summary>Update existing products</summary>
+        public const string Update = "products:update";
+
+        /// <summary>Delete products</summary>
+        public const string Delete = "products:delete";
+
+        /// <summary>Full management access to products</summary>
+        public const string Manage = "products:manage";
+
+        /// <summary>Manage product pricing</summary>
+        public const string PricingManage = "products:pricing:manage";
+    }
+
     /// <summary>Read product data</summary>
-    public static readonly ProductsPermission Read = new("products", "read", null, "Read product data");
+    public static readonly ProductsPermission Read = new(Keys.Read, "Read product data");
 
     /// <summary>Create new products</summary>
-    public static readonly ProductsPermission Create = new("products", "create", null, "Create new products");
+    public static readonly ProductsPermission Create = new(Keys.Create, "Create new products");
 
     /// <summary>Update existing products</summary>
-    public static readonly ProductsPermission Update = new("products", "update", null, "Update existing products");
+    public static readonly ProductsPermission Update = new(Keys.Update, "Update existing products");
 
     /// <summary>Delete products</summary>
-    public static readonly ProductsPermission Delete = new("products", "delete", null, "Delete products");
+    public static readonly ProductsPermission Delete = new(Keys.Delete, "Delete products");
 
     /// <summary>Full management access to products</summary>
-    public static readonly ProductsPermission Manage = new("products", "manage", null, "Full management access to products");
+    public static readonly ProductsPermission Manage = new(Keys.Manage, "Full management access to products");
 
     /// <summary>Manage product pricing</summary>
-    public static readonly ProductsPermission PricingManage = new("products", "pricing", "manage", "Manage product pricing");
+    public static readonly ProductsPermission PricingManage = new(Keys.PricingManage, "Manage product pricing");
 }
 
 /// <summary>
@@ -163,25 +328,50 @@ public sealed class ProductsPermission : Permission
 /// </summary>
 public sealed class PromoCodesPermission : Permission
 {
-    private PromoCodesPermission(string resource, string action, string? scope, string description)
-        : base(resource, action, scope, description)
+    private PromoCodesPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
     {
     }
 
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    public static class Keys
+    {
+        /// <summary>Read promo codes</summary>
+        public const string Read = "promocodes:read";
+
+        /// <summary>Create promo codes</summary>
+        public const string Create = "promocodes:create";
+
+        /// <summary>Update promo codes</summary>
+        public const string Update = "promocodes:update";
+
+        /// <summary>Delete promo codes</summary>
+        public const string Delete = "promocodes:delete";
+
+        /// <summary>Full management access to promo codes</summary>
+        public const string Manage = "promocodes:manage";
+    }
+
     /// <summary>Read promo codes</summary>
-    public static readonly PromoCodesPermission Read = new("promocodes", "read", null, "Read promo codes");
+    public static readonly PromoCodesPermission Read = new(Keys.Read, "Read promo codes");
 
     /// <summary>Create promo codes</summary>
-    public static readonly PromoCodesPermission Create = new("promocodes", "create", null, "Create promo codes");
+    public static readonly PromoCodesPermission Create = new(Keys.Create, "Create promo codes");
 
     /// <summary>Update promo codes</summary>
-    public static readonly PromoCodesPermission Update = new("promocodes", "update", null, "Update promo codes");
+    public static readonly PromoCodesPermission Update = new(Keys.Update, "Update promo codes");
 
     /// <summary>Delete promo codes</summary>
-    public static readonly PromoCodesPermission Delete = new("promocodes", "delete", null, "Delete promo codes");
+    public static readonly PromoCodesPermission Delete = new(Keys.Delete, "Delete promo codes");
 
     /// <summary>Full management access to promo codes</summary>
-    public static readonly PromoCodesPermission Manage = new("promocodes", "manage", null, "Full management access to promo codes");
+    public static readonly PromoCodesPermission Manage = new(Keys.Manage, "Full management access to promo codes");
 }
 
 /// <summary>
@@ -190,25 +380,50 @@ public sealed class PromoCodesPermission : Permission
 /// </summary>
 public sealed class OrdersPermission : Permission
 {
-    private OrdersPermission(string resource, string action, string? scope, string description)
-        : base(resource, action, scope, description)
+    private OrdersPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
     {
     }
 
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    public static class Keys
+    {
+        /// <summary>Read orders (own orders)</summary>
+        public const string Read = "orders:read";
+
+        /// <summary>Read all orders (admin)</summary>
+        public const string ReadAll = "orders:read:all";
+
+        /// <summary>Create orders</summary>
+        public const string Create = "orders:create";
+
+        /// <summary>Process refunds</summary>
+        public const string Refund = "orders:refund";
+
+        /// <summary>Full management access to orders</summary>
+        public const string Manage = "orders:manage";
+    }
+
     /// <summary>Read orders (own orders)</summary>
-    public static readonly OrdersPermission Read = new("orders", "read", null, "Read orders (own orders)");
+    public static readonly OrdersPermission Read = new(Keys.Read, "Read orders (own orders)");
 
     /// <summary>Read all orders (admin)</summary>
-    public static readonly OrdersPermission ReadAll = new("orders", "read", "all", "Read all orders (admin)");
+    public static readonly OrdersPermission ReadAll = new(Keys.ReadAll, "Read all orders (admin)");
 
     /// <summary>Create orders</summary>
-    public static readonly OrdersPermission Create = new("orders", "create", null, "Create orders");
+    public static readonly OrdersPermission Create = new(Keys.Create, "Create orders");
 
     /// <summary>Process refunds</summary>
-    public static readonly OrdersPermission Refund = new("orders", "refund", null, "Process refunds");
+    public static readonly OrdersPermission Refund = new(Keys.Refund, "Process refunds");
 
     /// <summary>Full management access to orders</summary>
-    public static readonly OrdersPermission Manage = new("orders", "manage", null, "Full management access to orders");
+    public static readonly OrdersPermission Manage = new(Keys.Manage, "Full management access to orders");
 }
 
 /// <summary>
@@ -217,23 +432,48 @@ public sealed class OrdersPermission : Permission
 /// </summary>
 public sealed class EntitlementsPermission : Permission
 {
-    private EntitlementsPermission(string resource, string action, string? scope, string description)
-        : base(resource, action, scope, description)
+    private EntitlementsPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
     {
     }
 
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    public static class Keys
+    {
+        /// <summary>View own entitlements</summary>
+        public const string ReadSelf = "entitlements:read:self";
+
+        /// <summary>View all entitlements (admin)</summary>
+        public const string ReadAll = "entitlements:read:all";
+
+        /// <summary>Grant entitlements</summary>
+        public const string Grant = "entitlements:grant";
+
+        /// <summary>Revoke entitlements</summary>
+        public const string Revoke = "entitlements:revoke";
+
+        /// <summary>Full management access to entitlements</summary>
+        public const string Manage = "entitlements:manage";
+    }
+
     /// <summary>View own entitlements</summary>
-    public static readonly EntitlementsPermission ReadSelf = new("entitlements", "read", "self", "View own entitlements");
+    public static readonly EntitlementsPermission ReadSelf = new(Keys.ReadSelf, "View own entitlements");
 
     /// <summary>View all entitlements (admin)</summary>
-    public static readonly EntitlementsPermission ReadAll = new("entitlements", "read", "all", "View all entitlements (admin)");
+    public static readonly EntitlementsPermission ReadAll = new(Keys.ReadAll, "View all entitlements (admin)");
 
     /// <summary>Grant entitlements</summary>
-    public static readonly EntitlementsPermission Grant = new("entitlements", "grant", null, "Grant entitlements");
+    public static readonly EntitlementsPermission Grant = new(Keys.Grant, "Grant entitlements");
 
     /// <summary>Revoke entitlements</summary>
-    public static readonly EntitlementsPermission Revoke = new("entitlements", "revoke", null, "Revoke entitlements");
+    public static readonly EntitlementsPermission Revoke = new(Keys.Revoke, "Revoke entitlements");
 
     /// <summary>Full management access to entitlements</summary>
-    public static readonly EntitlementsPermission Manage = new("entitlements", "manage", null, "Full management access to entitlements");
+    public static readonly EntitlementsPermission Manage = new(Keys.Manage, "Full management access to entitlements");
 }
