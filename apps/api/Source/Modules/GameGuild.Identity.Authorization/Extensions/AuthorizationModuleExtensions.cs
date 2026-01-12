@@ -204,6 +204,9 @@ public static class AuthorizationModuleExtensions
         services.AddScoped<IUserContext, UserContext>();
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IPermissionsContext, PermissionsContext>();
+        // ISP-compliant segregated interfaces (clients can depend on only what they need)
+        services.AddScoped<IPermissionChecker>(sp => sp.GetRequiredService<IPermissionsContext>());
+        services.AddScoped<IPermissionContextInfo>(sp => sp.GetRequiredService<IPermissionsContext>());
         services.AddScoped<ILocalizationContext, LocalizationContext>();
 
         // CQRS Authorization Behavior

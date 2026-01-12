@@ -235,7 +235,7 @@ User (Identity.Users)  ──[UserId]──▶  TenantMember (Identity.Tenants)
 - ✅ **FIXED: Middleware ordering enforced:** ~~TenantMiddleware must run BEFORE ActorContextMiddleware, but this is not validated at startup~~ Now enforced via `MiddlewareOrderValidator`. See [docs/security/MIDDLEWARE_ORDER.md](docs/security/MIDDLEWARE_ORDER.md)
 - ✅ **FIXED: Tenant membership validation:** ~~Multiple resolution sources create attack surface. An attacker could inject tenant ID via query string if header is not present.~~ Now validates tenant membership after resolution. See [docs/security/TENANT_MEMBERSHIP_VALIDATION.md](docs/security/TENANT_MEMBERSHIP_VALIDATION.md)
 - ✅ **FIXED: Fail-closed policy:** ~~If tenant resolution fails, what happens? Code doesn't show explicit 403/401 response.~~ Now returns 403 Forbidden if user is not a member of resolved tenant.
-- **TenantMember.Role is stringly-typed:** No enum/constants for roles like "Admin", "Member", "Guest". Typos could grant incorrect access.
+- ✅ **FIXED: TenantMember.Role is stringly-typed:** ~~No enum/constants for roles like "Admin", "Member", "Guest". Typos could grant incorrect access.~~ Created `TenantRole` class with strongly-typed constants (Owner, Admin, Moderator, Member, Guest, Contributor, Viewer). See [TenantRole.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/TenantRole.cs)
 - **Hierarchical members (ParentMemberId):** Unclear how this affects permission inheritance. No documentation on intended use case.
 
 **Tenant Resolution Flow:**
@@ -335,10 +335,10 @@ Request → TenantMiddleware
 - **DIP:** ✅ Controllers depend on IMediator, not concrete handlers
 
 **Security Risks:**
-- ⚠️ **User enumeration:** Does sign-up/sign-in reveal if email exists? (UserEnumerationProtectionService exists but implementation unclear)
-- ⚠️ **Token storage:** Refresh tokens hashed in DB? (Good practice)
-- ⚠️ **MFA bypass:** Backup codes can bypass TOTP. Are they rate-limited? Single-use?
-- ⚠️ **Weak password policy?** No evidence of password strength validation (min length, complexity)
+- ✅ **VERIFIED: User enumeration protection:** `UserEnumerationProtectionService` implements timing protection via `AddTimingProtectionDelayAsync()`, consistent error messages via `GetGenericErrorMessage()`, and simulates authentication work for non-existent users to prevent timing attacks.
+- ✅ **FIXED: Token storage:** Refresh tokens now hashed using SHA-256 before database storage via `IRefreshTokenHasher`. Plaintext tokens never stored. See [RefreshTokenHasher.cs](apps/api/Source/Modules/GameGuild.Identity.Authentication/Services/RefreshTokenHasher.cs)
+- ✅ **VERIFIED: MFA backup codes:** Backup codes are single-use (removed from list after successful use) and protected by lockout mechanism (`IsLockedOut` check, `FailedAttempts` counter). Codes are stored hashed.
+- ✅ **VERIFIED: Password policy:** `PasswordHasher.ValidatePasswordStrengthAsync()` enforces: min 8 chars, uppercase, lowercase, digit, special char, common password blocklist, and calculates strength score (0-100).
 
 ---
 
@@ -424,7 +424,7 @@ Authorization checks in handlers:
 - **SRP:** ⚠️ `PermissionService` does many things (grant, revoke, check, bulk operations). Could split.
 - **OCP:** ✅ New policy types can be added via `IPolicyDefinitionStore`
 - **LSP:** ✅ Policy stores are substitutable (InMemory, Database, Cached)
-- **ISP:** ⚠️ `IPermissionsContext` has many methods (10+). Could split into `IPermissionChecker`, `IPermissionManager`.
+- **ISP:** ✅ `IPermissionsContext` split into `IPermissionChecker` (permission operations) and `IPermissionContextInfo` (identity properties). Clients can depend on focused interfaces.
 - **DIP:** ✅ Depends on abstractions (`IPermissionService`, `IPolicyDefinitionStore`)
 
 **Security Risks:**
@@ -608,7 +608,7 @@ public static T Create<T>(Action<T>? configure = null)
 #### Interface Segregation Principle (ISP)
 
 **Violations:**
-- ⚠️ `IPermissionsContext`: 10+ methods (HasTenantPermissionAsync, HasResourcePermissionAsync, GetEffectivePermissionsAsync, IsOwner, IsSystemAdmin, IsTenantAdmin, ...). Clients forced to depend on methods they don't use.
+- ✅ **FIXED: `IPermissionsContext`:** Split into `IPermissionChecker` (HasTenantPermissionAsync, HasResourcePermissionAsync, GetEffectivePermissionsAsync, IsOwner) and `IPermissionContextInfo` (UserId, TenantId, IsAuthenticated, IsSystemAdmin, IsTenantAdmin). Clients can now depend on focused interfaces. `IPermissionsContext` inherits from both for backward compatibility.
 - ⚠️ `IAuthorizationPermissionService`: Large interface with many methods
 
 **Good ISP:**
@@ -657,7 +657,7 @@ public static T Create<T>(Action<T>? configure = null)
 | **Anemic domain model** | User, Tenant entities | Logic scattered in handlers | Move business logic to entity methods |
 | **God Object: Tenant** | Identity.Tenants | Hard to test, violates SRP | Split into Tenant, TenantMembership, TenantConfiguration aggregates |
 | **Duplicate tenant resolution** | TenantMiddleware, TenantContext, ActorContextMiddleware | Not DRY, inconsistency risk | Shared ITenantResolver service |
-| **Large interfaces** | IPermissionsContext (10+ methods) | Violates ISP | Split into IPermissionChecker, IPermissionManager |
+| ✅ **FIXED: Large interfaces** | ~~IPermissionsContext (10+ methods)~~ **SPLIT** | ~~Violates ISP~~ | ~~Split into IPermissionChecker, IPermissionManager~~ Created `IPermissionChecker` (permission operations) and `IPermissionContextInfo` (identity properties). `IPermissionsContext` now inherits from both. DI registers all three interfaces. |
 | **No rate limiting** | Permission check endpoints | DoS risk | Add rate limiting middleware |
 
 ---
@@ -667,12 +667,12 @@ public static T Create<T>(Action<T>? configure = null)
 | Capability | Present? | Evidence | Gaps | Risk if Left |
 |------------|----------|----------|------|--------------|
 | **Tenant resolution** | ✅ Yes | TenantMiddleware.cs | ~~No membership validation~~ ✅ Fixed | ~~🚨 Cross-tenant data leak~~ ✅ Prevented |
-| **Tenant membership (roles/permissions)** | ✅ Yes | TenantMember.Role, TenantPermission | Roles are stringly-typed | ⚠️ Typo = wrong access |
+| **Tenant membership (roles/permissions)** | ✅ Yes | TenantMember.Role, TenantPermission | ~~Roles are stringly-typed~~ ✅ Fixed via TenantRole class | ~~⚠️ Typo = wrong access~~ ✅ Prevented |
 | **JWT auth** | ✅ Yes | JwtTokenService, ASP.NET JWT middleware | ✅ Token versioning implemented via JTI + revocation service | ✅ Immediate token revocation supported |
 | **Cookie/session auth** | ⚠️ Partial | UserSession entity exists | No cookie-based authentication flow | Low (JWT is primary) |
 | **External login providers** | ✅ Yes | OAuthService (Google, GitHub) | Limited to 2 providers | Low (can add more) |
 | **MFA** | ✅ Yes | MfaService (TOTP, backup codes, trusted devices) | No WebAuthn/FIDO2 | Medium (TOTP sufficient for now) |
-| **Refresh tokens** | ✅ Yes | RefreshToken entity, rotation logic | No family tracking for theft detection | ⚠️ Token theft harder to detect |
+| **Refresh tokens** | ✅ Yes | RefreshToken entity, rotation logic | ✅ Tokens now hashed via SHA-256. No family tracking for theft detection | ~~⚠️ Plaintext storage~~ ✅ Now hashed |
 | **Session revocation** | ✅ Yes | UserSession entity, RevokeTokenCommand | No WebSocket push for client logout | Low (clients check on next request) |
 | **Permission-based authorization** | ✅ Yes | TenantPermission, ResourcePermission, ActorContext.HasPermission() | ~~Stringly-typed~~ ✅ Typed Permission classes | ~~🚨 Typo = bypass~~ ✅ Prevented |
 | **Resource-based authorization** | ✅ Yes | AccessControlListEntry, ResourcePermissionService | No ownership auto-grant (must explicitly grant) | Medium (could be feature) |

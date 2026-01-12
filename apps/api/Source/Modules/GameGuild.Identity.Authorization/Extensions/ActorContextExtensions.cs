@@ -33,6 +33,9 @@ public static class ActorContextExtensions
             services.AddScoped<IUserContext, ActorBasedUserContext>();
             services.AddScoped<ITenantContext, ActorBasedTenantContext>();
             services.AddScoped<IPermissionsContext, ActorBasedPermissionsContext>();
+            // ISP-compliant segregated interfaces (clients can depend on only what they need)
+            services.AddScoped<IPermissionChecker>(sp => sp.GetRequiredService<IPermissionsContext>());
+            services.AddScoped<IPermissionContextInfo>(sp => sp.GetRequiredService<IPermissionsContext>());
 #pragma warning restore CS0618
         }
 
