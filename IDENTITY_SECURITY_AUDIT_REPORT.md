@@ -19,9 +19,9 @@
 - Clear separation between domain concepts (User/Tenant entities vs security context)
 
 ⚠️ **Critical Risks:**
-- ⚠️ **MIGRATION IN PROGRESS: Dual context model tech debt**: Legacy `IUserContext`/`ITenantContext` interfaces are now marked `[Obsolete]` with migration guides. Projects module migrated to `IActorContextAccessor`. Adapters maintained for backward compatibility.
-- **Stringly-typed security:** Permission keys, policy names, claim types are magic strings scattered across modules (high risk of typos, no compile-time safety)
-- **Inconsistent tenant resolution:** Multiple resolution strategies (header, claim, query, route) with unclear precedence in some paths
+- ✅ **FIXED: Dual context model tech debt**: Legacy `IUserContext`/`ITenantContext`/`IPermissionsContext` interfaces marked `[Obsolete]` with migration guides. All production handlers migrated to `IActorContextAccessor`. Adapters maintained for backward compatibility only.
+- ✅ **FIXED: Stringly-typed security:** Permission keys now use strongly-typed `Permission` class hierarchy with compile-time safety. See [docs/security/STRONGLY_TYPED_PERMISSIONS.md](docs/security/STRONGLY_TYPED_PERMISSIONS.md). Tenant roles use `TenantRole` class. ISP-compliant `IPermissionChecker`/`IPermissionContextInfo` interfaces created.
+- ✅ **FIXED: Inconsistent tenant resolution:** Tenant resolution now validated via membership check in `TenantMiddleware`. Fail-closed error handling returns 403 if user not a member.
 - ✅ **FIXED: Middleware ordering hazards:** ~~Critical security middleware (ActorContext, Tenant, Permission caching) has unclear/undocumented ordering requirements~~ Now enforced via `MiddlewareOrderValidator`
 - **Caching complexity without clear invalidation:** Multiple cache layers (IMemoryCache, tenant version store) but invalidation strategy is fragmented
 - **Missing authorization tests:** Authorization module lacks the comprehensive test coverage that Authentication has
@@ -128,9 +128,9 @@ DEPENDENCY DIRECTIONS:
 - Explicit `ActorKind` enum prevents ambiguity (User vs Service vs System)
 
 ⚠️ **Concerns:**
-- **Dual model confusion:** Both `IIdentityContext` and `ActorContext` exist. Adapter shims (`ActorBasedUserAdapter`, `ActorBasedTenantAdapter`) bridge the gap but create indirection.
-- **Migration incomplete:** Some code uses `IIdentityContext`, some uses `IActorContextAccessor`. No clear deprecation timeline.
-- **Attributes dictionary:** `ActorContext.Attributes` is `IReadOnlyDictionary<string, string>` (stringly-typed). Consider strongly-typed claims object.
+- ✅ **FIXED: Dual model confusion:** Both `IIdentityContext` and `ActorContext` exist. Legacy interfaces (`IUserContext`, `ITenantContext`, `IPermissionsContext`) now marked `[Obsolete]`. All production handlers migrated to `IActorContextAccessor`. Adapter shims maintained for backward compatibility only.
+- ✅ **FIXED: Migration complete:** All production code now uses `IActorContextAccessor`. Legacy interfaces deprecated with clear migration guidance in obsolete message. Target removal: v2.0.
+- **Attributes dictionary:** `ActorContext.Attributes` is `IReadOnlyDictionary<string, string>` (stringly-typed). Consider strongly-typed claims object for future improvement.
 - **No built-in audit logging:** ActorContext doesn't emit audit events when accessed (could help detect privilege escalation attempts).
 
 **Patterns Used:**
