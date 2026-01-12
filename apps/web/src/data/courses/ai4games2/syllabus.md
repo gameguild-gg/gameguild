@@ -113,7 +113,6 @@ This is a work in progress schedule. It is subject to change. Every change will 
 - Instructor introduction
 - Syllabus review, course outcomes, grading breakdown
 - **Final project overview** (introduced now, work begins after midterm)
-- Industry AI landscape: what shipped games actually use
 - GitHub setup walkthrough
 
 **Thursday 2026/01/15** - FSM Deep Dive

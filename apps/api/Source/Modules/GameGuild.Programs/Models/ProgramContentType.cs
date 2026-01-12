@@ -37,5 +37,7 @@ public enum ProgramContentType
 
   [Description("Reveal Presentation")] Reveal,
 
-  [Description("Marp Presentation")] Marp
+  [Description("Marp Presentation")] Marp,
+
+  [Description("Remark Presentation")] Remark,
 }
