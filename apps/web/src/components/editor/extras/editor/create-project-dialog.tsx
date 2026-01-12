@@ -20,7 +20,7 @@ interface ProjectData {
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive") => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: "type1" | "type2") => Promise<void>
 }
 
 interface CreateProjectDialogProps {
@@ -29,7 +29,7 @@ interface CreateProjectDialogProps {
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
   availableTags: Array<{ name: string }>
-  onProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive" }) => void
+  onProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive"; type: "type1" | "type2" }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
   generateProjectId: () => string
@@ -51,6 +51,7 @@ export function CreateProjectDialog({
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [storageOption, setStorageOption] = useState<StorageOption>("local")
+  const [projectType, setProjectType] = useState<"type1" | "type2">("type1")
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -124,7 +125,7 @@ export function CreateProjectDialog({
 
     try {
       const newProjectId = generateProjectId()
-      await storageAdapter.save(newProjectId, newCreateProjectName, emptyState, projectTags, storageOption)
+      await storageAdapter.save(newProjectId, newCreateProjectName, emptyState, projectTags, storageOption, undefined, projectType)
 
       // Call the callback to update parent state
       onProjectCreate({
@@ -132,6 +133,7 @@ export function CreateProjectDialog({
         name: newCreateProjectName,
         tags: projectTags,
         storageType: storageOption,
+        type: projectType,
       })
 
       // Reset form state
@@ -140,6 +142,7 @@ export function CreateProjectDialog({
       setTagInput("")
       setShowTagDropdown(false)
       setStorageOption("local")
+      setProjectType("type1")
       onOpenChange(false)
 
       // Update lists
@@ -187,6 +190,20 @@ export function CreateProjectDialog({
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleCreate()}
               className="mt-1"
             />
+          </div>
+
+          {/* Project Type Section */}
+          <div>
+            <Label htmlFor="project-type">Project Type</Label>
+            <select
+              id="project-type"
+              value={projectType}
+              onChange={(e) => setProjectType(e.target.value as "type1" | "type2")}
+              className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+            >
+              <option value="type1">Type 1 - Single Editor (Vertical Layout)</option>
+              <option value="type2">Type 2 - Dual Editors (Horizontal Layout)</option>
+            </select>
           </div>
 
           {/* Tags Section */}

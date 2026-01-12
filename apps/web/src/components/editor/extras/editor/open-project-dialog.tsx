@@ -53,7 +53,7 @@ interface OpenProjectDialogProps {
   setLoadingRef: React.RefObject<((loading: boolean) => void) | null>
   onProjectLoad: (projectData: ProjectData) => void
   onProjectsListUpdate: () => void
-  onCreateNew: () => void
+  onCreateNew: (type: "type1" | "type2") => void
   currentProjectName: string
 }
 
@@ -278,7 +278,7 @@ export function OpenProjectDialog({
                   variant="ghost"
                   onClick={() => {
                     onOpenChange(false)
-                    onCreateNew()
+                    onCreateNew("type1")
                   }}
                   className="gap-2"
                   disabled={!isDbInitialized}
