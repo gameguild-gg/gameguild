@@ -21,10 +21,10 @@ function detectRendererType(content: string): { renderer: RendererType; cleanCon
     const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
     const match = content.match(frontmatterRegex);
 
-    if (match) {
+    if (match && match[1] != null) {
         const frontmatter = match[1];
         const rendererMatch = frontmatter.match(/renderer:\s*(reveal|markdown)/i);
-        if (rendererMatch && rendererMatch[1].toLowerCase() === 'reveal') {
+        if (rendererMatch && rendererMatch[1]?.toLowerCase() === 'reveal') {
             // Remove frontmatter from content for reveal
             const cleanContent = content.replace(frontmatterRegex, '');
             return { renderer: 'reveal', cleanContent };
