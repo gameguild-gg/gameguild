@@ -130,7 +130,7 @@ DEPENDENCY DIRECTIONS:
 ⚠️ **Concerns:**
 - ✅ **FIXED: Dual model confusion:** Both `IIdentityContext` and `ActorContext` exist. Legacy interfaces (`IUserContext`, `ITenantContext`, `IPermissionsContext`) now marked `[Obsolete]`. All production handlers migrated to `IActorContextAccessor`. Adapter shims maintained for backward compatibility only.
 - ✅ **FIXED: Migration complete:** All production code now uses `IActorContextAccessor`. Legacy interfaces deprecated with clear migration guidance in obsolete message. Target removal: v2.0.
-- **Attributes dictionary:** `ActorContext.Attributes` is `IReadOnlyDictionary<string, string>` (stringly-typed). Consider strongly-typed claims object for future improvement.
+- ✅ **FIXED: Attributes dictionary:** ~~`ActorContext.Attributes` is `IReadOnlyDictionary<string, string>` (stringly-typed).~~ Created strongly-typed `ActorAttributes` class with typed properties (Email, EmailVerified, MfaVerified, Department, TenantRole, etc.). Legacy `Attributes` property marked `[Obsolete]`, replaced by `TypedAttributes`. See [ActorAttributes.cs](apps/api/Source/Modules/GameGuild.Identity.Context/Actors/ActorAttributes.cs)
 - **No built-in audit logging:** ActorContext doesn't emit audit events when accessed (could help detect privilege escalation attempts).
 
 **Patterns Used:**

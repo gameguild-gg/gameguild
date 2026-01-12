@@ -19,8 +19,6 @@ namespace GameGuild.Identity.Context.Actors;
 public sealed record ActorContext
 {
     private static readonly IReadOnlySet<string> EmptyStringSet = new HashSet<string>();
-    private static readonly IReadOnlyDictionary<string, string> EmptyAttributes = 
-        new Dictionary<string, string>();
 
     /// <summary>
     ///     An empty/anonymous actor context for unauthenticated requests.
@@ -32,7 +30,7 @@ public sealed record ActorContext
         TenantId = null,
         Roles = EmptyStringSet,
         Permissions = EmptyStringSet,
-        Attributes = EmptyAttributes,
+        TypedAttributes = ActorAttributes.Empty,
         AuthScheme = null,
         IsAuthenticated = false
     };
@@ -91,7 +89,23 @@ public sealed record ActorContext
     ///     Useful for ABAC (Attribute-Based Access Control) scenarios.
     ///     Common attributes: email, email_verified, mfa_verified, department, etc.
     /// </remarks>
-    public IReadOnlyDictionary<string, string> Attributes { get; init; } = EmptyAttributes;
+    [Obsolete("Use TypedAttributes for strongly-typed access. This property is maintained for backward compatibility.")]
+    public IReadOnlyDictionary<string, string> Attributes => TypedAttributes.ToDictionary();
+
+    /// <summary>
+    ///     Gets strongly-typed attributes/claims about the actor.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Provides compile-time safe access to common actor attributes for ABAC scenarios.
+    ///         Replaces the stringly-typed <see cref="Attributes"/> dictionary.
+    ///     </para>
+    ///     <para>
+    ///         Common attributes: Email, EmailVerified, MfaVerified, Department, TenantRole, etc.
+    ///         For custom/domain-specific attributes, use <see cref="ActorAttributes.Custom"/>.
+    ///     </para>
+    /// </remarks>
+    public ActorAttributes TypedAttributes { get; init; } = ActorAttributes.Empty;
 
     /// <summary>
     ///     Gets the authentication scheme used (e.g., "Bearer", "ApiKey", "mTLS").

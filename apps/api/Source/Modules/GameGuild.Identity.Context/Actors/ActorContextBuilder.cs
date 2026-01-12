@@ -236,10 +236,29 @@ public sealed class ActorContextBuilder
             TenantId = _tenantId,
             Roles = _roles.ToHashSet().AsReadOnly(),
             Permissions = _permissions.ToHashSet().AsReadOnly(),
-            Attributes = new Dictionary<string, string>(_attributes).AsReadOnly(),
+            TypedAttributes = ActorAttributes.FromDictionary(
+                new Dictionary<string, string>(_attributes).AsReadOnly()),
             AuthScheme = _authScheme,
             IsAuthenticated = _isAuthenticated
         };
+    }
+
+    /// <summary>
+    ///     Sets strongly-typed attributes directly.
+    /// </summary>
+    /// <param name="attributes">The typed attributes.</param>
+    /// <returns>The builder for chaining.</returns>
+    public ActorContextBuilder WithTypedAttributes(ActorAttributes attributes)
+    {
+        ArgumentNullException.ThrowIfNull(attributes);
+        
+        // Merge typed attributes into the dictionary for backward compatibility
+        foreach (var kvp in attributes.ToDictionary())
+        {
+            _attributes[kvp.Key] = kvp.Value;
+        }
+        
+        return this;
     }
 }
 
