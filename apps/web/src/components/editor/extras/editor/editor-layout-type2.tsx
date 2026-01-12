@@ -31,33 +31,37 @@ export function EditorLayoutType2({
 }: EditorLayoutType2Props) {
   return (
     <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      {/* Dual Editor Content - Horizontal Layout */}
-      <div className="grid grid-cols-2 gap-4 p-4">
+      {/* Dual Editor Content - Side by side */}
+      <div className="flex">
         {/* Left Editor */}
-        <div className="border-r border-gray-200 dark:border-gray-700 pr-4">
-          <div className="mb-2 flex items-center justify-center">
+        <div className="flex-1 border-r border-gray-200 dark:border-gray-700">
+          <div className="p-2 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Left Panel</span>
           </div>
-          <Editor
-            editorRef={leftEditorRef}
-            initialState={leftEditorState}
-            onChange={onLeftEditorChange}
-            onLoadingChange={onLoadingChange}
-            projectId={projectId}
-          />
+          <div className="p-4 sm:p-6 md:p-8 lg:p-12">
+            <Editor
+              editorRef={leftEditorRef}
+              initialState={leftEditorState}
+              onChange={onLeftEditorChange}
+              onLoadingChange={onLoadingChange}
+              projectId={projectId}
+            />
+          </div>
         </div>
 
         {/* Right Editor */}
-        <div className="pl-4">
-          <div className="mb-2 flex items-center justify-center">
+        <div className="flex-1">
+          <div className="p-2 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Right Panel</span>
           </div>
-          <Editor
-            editorRef={rightEditorRef}
-            initialState={rightEditorState}
-            onChange={onRightEditorChange}
-            projectId={projectId}
-          />
+          <div className="p-4 sm:p-6 md:p-8 lg:p-12">
+            <Editor
+              editorRef={rightEditorRef}
+              initialState={rightEditorState}
+              onChange={onRightEditorChange}
+              projectId={projectId}
+            />
+          </div>
         </div>
       </div>
     </div>

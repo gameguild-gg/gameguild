@@ -647,8 +647,8 @@ export default function Page() {
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-        <div className="container mx-auto py-10">
-          <div className="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto py-8">
+          <div className={`mx-auto space-y-6 px-4 sm:px-4 lg:px-4 ${currentLayoutType === "type1" ? "max-w-4xl" : "max-w-9xl"}`}>
             {/* Professional Header */}
             <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
               <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
