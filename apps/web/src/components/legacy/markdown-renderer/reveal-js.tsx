@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import 'highlight.js/styles/monokai.css';
 import { Maximize2, Minimize2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 import 'reveal.js/dist/reveal.css';
 import 'reveal.js/dist/theme/white.css';
-import 'highlight.js/styles/monokai.css';
 
 interface RevealJSProps {
   content: string;
@@ -45,6 +45,8 @@ const RevealJS: React.FC<RevealJSProps> = ({ content }) => {
           margin: 0.04,
           embedded: true,
           hash: false,
+          hashOneBasedIndex: false,
+          respondToHashChanges: false,
           mouseWheel: true,
           transition: 'none',
           controls: true,

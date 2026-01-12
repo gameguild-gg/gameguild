@@ -357,3 +357,8 @@
 .katex .sqrt > .root {
   color: hsl(var(--foreground)) !important;
 }
+
+/* Hide Reveal.js resume presentation overlay */
+.reveal-container .pause-overlay {
+  display: none !important;
+}
