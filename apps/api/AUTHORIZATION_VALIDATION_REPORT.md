@@ -324,6 +324,37 @@ Legacy policies continue to work:
 - `ResourceType` base class with implicit `string` conversion
 - Legacy `Permissions` class marked `[Obsolete]` with migration guidance
 
+### ✅ HttpContext.Items Keys (IMPLEMENTED)
+
+**Problem**: Magic strings like `"CurrentTenant"`, `"TenantId"` in HttpContext.Items cause runtime errors on typos.
+
+**Solution**: `HttpContextKeys` constants class with validation.
+
+| Old (Magic String) | New (Type-Safe) | Purpose |
+|-------------------|-----------------|---------|
+| `"ActorContext"` | `HttpContextKeys.ActorContext` | Security context |
+| `"AuthorizationTenantId"` | `HttpContextKeys.AuthorizationTenantId` | Tenant ID |
+| `"LocalizationContext"` | `HttpContextKeys.LocalizationContext` | Localization |
+| `"CurrentTenant"` | `HttpContextKeys.CurrentTenant` | Tenant object |
+
+**Location**: `Authorization/Abstractions/HttpContextKeys.cs`
+
+### ⚠️ AuthUser + User Entity Sync (DOCUMENTED)
+
+**Problem**: Two user entities (`AuthUser` in Authentication, `User` in Users) create sync issues.
+
+**Current Status**: Documented sync strategy with planned v2.0 merge.
+
+**Documentation**: [User Entity Sync Strategy](../../docs/security/USER_ENTITY_SYNC_STRATEGY.md)
+
+**Interim Strategy**:
+1. Use same ID for both entities
+2. Publish domain events for cross-module sync
+3. Use transactions when updating both
+4. Query by ID (not email)
+
+**v2.0 Plan**: Merge into single `UnifiedUser` entity with auth + profile fields.
+
 ### ✅ Multi-Tenancy
 - Tenant context properly isolated
 - Global vs tenant-specific policies supported
@@ -387,6 +418,19 @@ Legacy policies continue to work:
    - Add API documentation for rule types
    - Create examples for each rule evaluator
    - Document policy migration guide (legacy → rule-based)
+
+---
+
+## P1 Issue Tracker
+
+| # | Issue | Description | Status | Notes |
+|---|-------|-------------|--------|-------|
+| 5 | ActorContext Migration | Complete migration from legacy contexts | ✅ DONE | All handlers migrated |
+| 6 | Authorization Integration Tests | Add integration tests for auth flows | ⚠️ PENDING | Scheduled for next sprint |
+| 7 | Merge AuthUser + User | Two user entities create sync issues | ⚠️ DOCUMENTED | Option B: Sync strategy documented. Merge planned for v2.0. See [USER_ENTITY_SYNC_STRATEGY.md](../../docs/security/USER_ENTITY_SYNC_STRATEGY.md) |
+| 8 | Distributed Cache | Add distributed caching for permissions | ⚠️ PENDING | Redis integration planned |
+| 9 | Token Versioning | Add version field for token revocation | ⚠️ PENDING | Requires DB migration |
+| 10 | Middleware Order | Document middleware execution order | ✅ DONE | See Permission Evaluation Policy |
 
 ---
 

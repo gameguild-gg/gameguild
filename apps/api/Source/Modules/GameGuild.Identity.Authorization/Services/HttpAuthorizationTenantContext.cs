@@ -7,8 +7,6 @@ namespace GameGuild.Identity.Authorization;
 /// </summary>
 public sealed class HttpAuthorizationTenantContext : IAuthorizationTenantContext
 {
-    private const string TenantIdKey = "AuthorizationTenantId";
-
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     /// <summary>
@@ -22,12 +20,12 @@ public sealed class HttpAuthorizationTenantContext : IAuthorizationTenantContext
     /// <inheritdoc />
     public string? TenantId
     {
-        get => _httpContextAccessor.HttpContext?.Items[TenantIdKey] as string;
+        get => _httpContextAccessor.HttpContext?.Items[HttpContextKeys.AuthorizationTenantId] as string;
         set
         {
             if (_httpContextAccessor.HttpContext is not null)
             {
-                _httpContextAccessor.HttpContext.Items[TenantIdKey] = value;
+                _httpContextAccessor.HttpContext.Items[HttpContextKeys.AuthorizationTenantId] = value;
             }
         }
     }

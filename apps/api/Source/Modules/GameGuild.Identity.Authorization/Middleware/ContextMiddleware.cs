@@ -17,8 +17,8 @@ public class ContextMiddleware(RequestDelegate next)
         var actor = actorContextAccessor.ActorContext;
 
         // Store ActorContext in HttpContext.Items for easy access by legacy code
-        httpContext.Items["ActorContext"] = actor;
-        httpContext.Items["LocalizationContext"] = localizationContext;
+        httpContext.Items[HttpContextKeys.ActorContext] = actor;
+        httpContext.Items[HttpContextKeys.LocalizationContext] = localizationContext;
 
         // Set culture and UI culture for the request (set both thread and CultureInfo static props to be robust in async test environments)
         var cultureCode = localizationContext.CultureCode ?? "en-US";
