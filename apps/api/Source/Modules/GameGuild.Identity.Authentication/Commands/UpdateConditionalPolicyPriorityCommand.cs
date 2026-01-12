@@ -1,0 +1,10 @@
+﻿using GameGuild.CQRS;
+
+namespace GameGuild.Identity.Authentication;
+
+public record UpdateConditionalPolicyPriorityCommand : ICommand
+{
+    public Guid PolicyId { get; set; }
+
+    public int NewPriority { get; init; }
+}

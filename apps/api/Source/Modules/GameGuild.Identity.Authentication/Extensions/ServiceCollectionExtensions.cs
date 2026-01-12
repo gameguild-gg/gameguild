@@ -1,0 +1,212 @@
+using System.Text.Json;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace GameGuild.Identity.Authentication;
+
+/// <summary>
+///     Service collection extensions for Authentication Presentation layer
+///     Provides comprehensive registration of all authentication and authorization services
+/// </summary>
+public static class ServiceCollectionExtensions
+{
+    /// <summary>
+    ///     Add Authentication Presentation layer services
+    /// </summary>
+    public static IServiceCollection AddAuthenticationPresentation(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Configure authentication options
+        services.Configure<AuthenticationModuleOptions>(configuration.GetSection(AuthenticationModuleOptions.SectionName));
+
+        // Register presentation services
+        RegisterPresentationServices(services);
+
+        // Register authorization services
+        RegisterAuthorizationServices(services);
+
+        // Register policy evaluation services
+        RegisterPolicyEvaluationServices(services);
+
+        // Register access review services
+        RegisterAccessReviewServices(services);
+
+        // Register caching services
+        RegisterCachingServices(services);
+
+        // Register audit services
+        RegisterAuditServices(services);
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Register core presentation services
+    /// </summary>
+    private static void RegisterPresentationServices(IServiceCollection services)
+    {
+        // Register API controllers
+        services.AddControllers()
+            .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                    options.JsonSerializerOptions.WriteIndented = true;
+                }
+            );
+
+        // TODO: Implement these services
+        // Register model validation
+        // services.AddScoped<IModelValidationService, ModelValidationService>();
+
+        // Register response formatting
+        // services.AddScoped<IResponseFormattingService, ResponseFormattingService>();
+
+        // Register error handling
+        // services.AddScoped<IErrorHandlingService, ErrorHandlingService>();
+    }
+
+    /// <summary>
+    ///     Register authorization services
+    /// </summary>
+    private static void RegisterAuthorizationServices(IServiceCollection services)
+    {
+        _ = services; // TODO: Implement service registrations below
+        // Register permission services
+        // services.AddScoped<IPermissionAuthorizationService, PermissionAuthorizationService>();
+        // services.AddScoped<IPermissionHierarchyService, PermissionHierarchyService>();
+        // services.AddScoped<IPermissionTemplateService, PermissionTemplateService>();
+
+        // Register bulk operation services
+        // services.AddScoped<IBulkPermissionService, BulkPermissionService>();
+        // services.AddScoped<IBulkOperationResultService, BulkOperationResultService>();
+
+        // Register permission analytics
+        // services.AddScoped<IPermissionAnalyticsService, PermissionAnalyticsService>();
+        // services.AddScoped<IPermissionAuditService, PermissionAuditService>();
+    }
+
+    /// <summary>
+    ///     Register policy evaluation services
+    /// </summary>
+    private static void RegisterPolicyEvaluationServices(IServiceCollection services)
+    {
+        _ = services; // TODO: Implement service registrations below
+        // Register ABAC services
+        // services.AddScoped<IAbacPolicyEvaluationService, AbacPolicyEvaluationService>();
+        // services.AddScoped<IAbacExpressionValidationService, AbacExpressionValidationService>();
+        // services.AddScoped<IAbacPolicyConflictDetectionService, AbacPolicyConflictDetectionService>();
+        // services.AddScoped<IAbacPolicyTemplateService, AbacPolicyTemplateService>();
+
+        // Register conditional policy services
+        // services.AddScoped<IConditionalPolicyEvaluationService, ConditionalPolicyEvaluationService>();
+        // services.AddScoped<IConditionalPolicyValidationService, ConditionalPolicyValidationService>();
+        // services.AddScoped<IConditionalPolicySimulationService, ConditionalPolicySimulationService>();
+        // services.AddScoped<IConditionalPolicyTemplateService, ConditionalPolicyTemplateService>();
+
+        // Register policy analytics
+        // services.AddScoped<IPolicyAnalyticsService, PolicyAnalyticsService>();
+        // services.AddScoped<IPolicyUsageTrackingService, PolicyUsageTrackingService>();
+    }
+
+    /// <summary>
+    ///     Register access review services
+    /// </summary>
+    private static void RegisterAccessReviewServices(IServiceCollection services)
+    {
+        _ = services; // TODO: Implement service registrations below
+        // Register campaign management
+        // services.AddScoped<IAccessReviewOrchestrationService, AccessReviewOrchestrationService>();
+        // services.AddScoped<IAccessReviewCampaignService, AccessReviewCampaignService>();
+        // services.AddScoped<IAccessReviewItemService, AccessReviewItemService>();
+
+        // Register periodic reviews
+        // services.AddScoped<IPeriodicAccessReviewService, PeriodicAccessReviewService>();
+        // services.AddScoped<IAccessReviewSchedulingService, AccessReviewSchedulingService>();
+
+        // Register access revocation
+        // services.AddScoped<IAccessRevocationService, AccessRevocationService>();
+        // services.AddScoped<IBulkAccessRevocationService, BulkAccessRevocationService>();
+
+        // Register compliance and reporting
+        // services.AddScoped<IComplianceReportingService, ComplianceReportingService>();
+        // services.AddScoped<IAccessReviewAnalyticsService, AccessReviewAnalyticsService>();
+        // services.AddScoped<IAccessReviewTemplateService, AccessReviewTemplateService>();
+
+        // Register notification services
+        // services.AddScoped<IReviewReminderService, ReviewReminderService>();
+        // services.AddScoped<IAccessReviewNotificationService, AccessReviewNotificationService>();
+    }
+
+    /// <summary>
+    ///     Register caching services
+    /// </summary>
+    private static void RegisterCachingServices(IServiceCollection services)
+    {
+        _ = services; // TODO: Implement service registrations below
+        // Register permission caching
+        // services.AddScoped<IPermissionCacheService, PermissionCacheService>();
+        // services.AddScoped<IPermissionCacheStatsService, PermissionCacheStatsService>();
+
+        // Register policy caching
+        // services.AddScoped<IPolicyCacheService, PolicyCacheService>();
+        // services.AddScoped<IPolicyEvaluationCacheService, PolicyEvaluationCacheService>();
+
+        // Register cache invalidation
+        // services.AddScoped<ICacheInvalidationService, CacheInvalidationService>();
+        // services.AddScoped<ICacheWarmupService, CacheWarmupService>();
+    }
+
+    /// <summary>
+    ///     Register audit services
+    /// </summary>
+    private static void RegisterAuditServices(IServiceCollection services)
+    {
+        _ = services; // TODO: Implement service registrations below
+        // Register audit logging
+        // services.AddScoped<IPermissionAuditLogger, PermissionAuditLogger>();
+        // services.AddScoped<IPolicyAuditLogger, PolicyAuditLogger>();
+        // services.AddScoped<IAccessReviewAuditLogger, AccessReviewAuditLogger>();
+
+        // Register audit trail services
+        // services.AddScoped<IAuditTrailService, AuditTrailService>();
+        // services.AddScoped<IAuditReportingService, AuditReportingService>();
+
+        // Register compliance monitoring
+        // services.AddScoped<IComplianceMonitoringService, ComplianceMonitoringService>();
+        // services.AddScoped<ISecurityEventService, SecurityEventService>();
+    }
+
+    /// <summary>
+    ///     Configure health checks for authentication services
+    /// </summary>
+    public static IServiceCollection AddAuthenticationHealthChecks(this IServiceCollection services, IConfiguration configuration)
+    {
+        // TODO: Implement health check services
+        services.AddHealthChecks();
+        // .AddCheck<PermissionServiceHealthCheck>("permission-service")
+        // .AddCheck<AbacPolicyServiceHealthCheck>("abac-policy-service")
+        // .AddCheck<ConditionalPolicyServiceHealthCheck>("conditional-policy-service")
+        // .AddCheck<AccessReviewServiceHealthCheck>("access-review-service")
+        // .AddCheck<PermissionCacheHealthCheck>("permission-cache");
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Configure metrics collection for authentication services
+    /// </summary>
+    public static IServiceCollection AddAuthenticationMetrics(this IServiceCollection services)
+    {
+        // TODO: Implement metrics collection services
+        // Register metrics collectors
+        // services.AddScoped<IPermissionMetricsCollector, PermissionMetricsCollector>();
+        // services.AddScoped<IPolicyEvaluationMetricsCollector, PolicyEvaluationMetricsCollector>();
+        // services.AddScoped<IAccessReviewMetricsCollector, AccessReviewMetricsCollector>();
+        // services.AddScoped<ICachePerformanceMetricsCollector, CachePerformanceMetricsCollector>();
+
+        // Register performance monitoring
+        // services.AddScoped<IPerformanceMonitoringService, PerformanceMonitoringService>();
+        // services.AddScoped<IMetricsAggregationService, MetricsAggregationService>();
+
+        return services;
+    }
+}

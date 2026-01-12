@@ -1,0 +1,158 @@
+using System.Text.Json;
+
+using Microsoft.AspNetCore.Authorization;
+
+namespace GameGuild.Identity.Authorization;
+
+/// <summary>
+///     Default implementation of policy merger that combines base and tenant policies.
+/// </summary>
+public sealed class DefaultPolicyMerger : IPolicyMerger
+{
+    /// <inheritdoc />
+    public PolicyDefinition Merge(PolicyDefinition basePolicy, PolicyDefinition? tenantOverride)
+    {
+        if (tenantOverride is null)
+            return basePolicy;
+
+        // Tenant override takes precedence, with fallback to base
+        return new PolicyDefinition
+        {
+            PolicyName = basePolicy.PolicyName,
+            RequireAuthentication = tenantOverride.RequireAuthentication || basePolicy.RequireAuthentication,
+            AuthenticationSchemes = MergeCollections(
+                basePolicy.AuthenticationSchemes,
+                tenantOverride.AuthenticationSchemes),
+            RequiredPermissions = MergeCollections(
+                basePolicy.RequiredPermissions,
+                tenantOverride.RequiredPermissions),
+            RequiredRoles = MergeCollections(
+                basePolicy.RequiredRoles,
+                tenantOverride.RequiredRoles),
+            RequireAccessControlListAccess = tenantOverride.RequireAccessControlListAccess || basePolicy.RequireAccessControlListAccess,
+            ResourceType = tenantOverride.ResourceType ?? basePolicy.ResourceType,
+            MinimumAccessLevel = tenantOverride.MinimumAccessLevel ?? basePolicy.MinimumAccessLevel,
+            IsTenantScoped = true,
+            Version = Math.Max(basePolicy.Version, tenantOverride.Version),
+            UseRuleBasedEvaluation = tenantOverride.UseRuleBasedEvaluation || basePolicy.UseRuleBasedEvaluation,
+            Rules = MergeRules(basePolicy.Rules, tenantOverride.Rules)
+        };
+    }
+
+    /// <summary>
+    ///     Merges rules from base and tenant policies.
+    /// </summary>
+    private static IReadOnlyList<PolicyRule>? MergeRules(
+        IReadOnlyList<PolicyRule>? baseRules,
+        IReadOnlyList<PolicyRule>? tenantRules)
+    {
+        if (tenantRules is { Count: > 0 })
+            return tenantRules; // Tenant override takes precedence
+        return baseRules;
+    }
+
+    /// <inheritdoc />
+    public AuthorizationPolicy Build(PolicyDefinition definition)
+    {
+        var builder = new AuthorizationPolicyBuilder();
+
+        if (definition.RequireAuthentication)
+        {
+            builder.RequireAuthenticatedUser();
+        }
+
+        if (definition.AuthenticationSchemes.Count > 0)
+        {
+            builder.AddAuthenticationSchemes(definition.AuthenticationSchemes.ToArray());
+        }
+
+        // All policies must use rule-based evaluation
+        if (definition.UseRuleBasedEvaluation && definition.Rules is { Count: > 0 })
+        {
+            var ruleset = new PolicyRuleset
+            {
+                Name = definition.PolicyName,
+                Description = null,
+                RequireAuthentication = definition.RequireAuthentication,
+                Rules = ConvertToRuleDefinitions(definition.Rules),
+                Version = definition.Version,
+                IsActive = true
+            };
+
+            builder.AddRequirements(new RulesetRequirement(definition.PolicyName, ruleset));
+        }
+        else if (definition.RequiredRoles.Count > 0)
+        {
+            // Fallback for simple role-based policies without rules
+            builder.RequireRole(definition.RequiredRoles.ToArray());
+        }
+        else if (definition.RequiredPermissions.Count > 0)
+        {
+            // Fallback for simple permission-based policies without rules
+            foreach (var permission in definition.RequiredPermissions)
+            {
+                builder.AddRequirements(new PermissionRequirement(permission));
+            }
+        }
+
+        return builder.Build();
+    }
+
+    private static IReadOnlyList<T> MergeCollections<T>(
+        IReadOnlyList<T> baseList,
+        IReadOnlyList<T> overrideList)
+    {
+        if (overrideList.Count == 0)
+            return baseList;
+        if (baseList.Count == 0)
+            return overrideList;
+        return baseList.Concat(overrideList).Distinct().ToList();
+    }
+
+    /// <summary>
+    ///     Converts PolicyRule objects to RuleDefinition objects.
+    /// </summary>
+    private static IReadOnlyList<RuleDefinition> ConvertToRuleDefinitions(IReadOnlyList<PolicyRule>? policyRules)
+    {
+        if (policyRules is null or { Count: 0 })
+            return Array.Empty<RuleDefinition>();
+
+        var ruleDefinitions = new List<RuleDefinition>(policyRules.Count);
+
+        foreach (var policyRule in policyRules)
+        {
+            var ruleDefinition = new RuleDefinition
+            {
+                Type = policyRule.Type,
+                Description = policyRule.Description,
+                Params = ConvertParams(policyRule.Params),
+                Enabled = policyRule.Enabled
+            };
+
+            ruleDefinitions.Add(ruleDefinition);
+        }
+
+        return ruleDefinitions;
+    }
+
+    /// <summary>
+    ///     Converts parameter dictionary from object to JsonElement.
+    /// </summary>
+    private static Dictionary<string, JsonElement>? ConvertParams(IReadOnlyDictionary<string, object>? sourceParams)
+    {
+        if (sourceParams is null or { Count: 0 })
+            return null;
+
+        var result = new Dictionary<string, JsonElement>(sourceParams.Count);
+
+        foreach (var (key, value) in sourceParams)
+        {
+            // Serialize to JSON and deserialize as JsonElement
+            var json = JsonSerializer.Serialize(value);
+            var element = JsonSerializer.Deserialize<JsonElement>(json);
+            result[key] = element;
+        }
+
+        return result;
+    }
+}

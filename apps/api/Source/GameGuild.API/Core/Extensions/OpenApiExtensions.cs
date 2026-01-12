@@ -94,9 +94,9 @@ public static class OpenApiExtensions
                 }
 
                 // Configure schema ID generator to use module + type name for guaranteed uniqueness
-                // e.g., "GameGuild.Tenants.TenantSettingsDto" -> "Tenants_TenantSettingsDto"
-                // e.g., "GameGuild.Users.UserDto" -> "Users_UserDto"
-                // e.g., "GameGuild.Authentication.UserDto" -> "Authentication_UserDto"
+                // e.g., "GameGuild.Identity.Tenants.TenantSettingsDto" -> "Tenants_TenantSettingsDto"
+                // e.g., "GameGuild.Identity.Users.UserDto" -> "Users_UserDto"
+                // e.g., "GameGuild.Identity.Authentication.UserDto" -> "Authentication_UserDto"
                 c.CustomSchemaIds(type =>
                 {
                     var fullName = type.FullName ?? type.Name;
@@ -118,7 +118,7 @@ public static class OpenApiExtensions
                     }
                     
                     // For GameGuild types, use Module_TypeName pattern
-                    // e.g., GameGuild.Users.UserDto -> Users_UserDto
+                    // e.g., GameGuild.Identity.Users.UserDto -> Users_UserDto
                     if (parts.Length >= 3 && parts[0] == "GameGuild")
                     {
                         var moduleName = parts[1]; // e.g., "Users", "Authentication", "Tenants"

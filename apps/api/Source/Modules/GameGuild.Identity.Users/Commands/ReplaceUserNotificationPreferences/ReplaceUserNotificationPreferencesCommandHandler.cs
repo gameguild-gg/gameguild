@@ -1,0 +1,25 @@
+using GameGuild.CQRS;
+
+namespace GameGuild.Identity.Users;
+
+public class ReplaceUserNotificationPreferencesCommandHandler(IUserRepository userRepository, IUserPreferencesRepository preferencesRepository) : ICommandHandler<ReplaceUserNotificationPreferencesCommand>
+{
+    public async Task<Unit> Handle(ReplaceUserNotificationPreferencesCommand request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
+        if (user == null) throw new UserNotFoundException(request.UserId);
+
+        var preferences = await preferencesRepository.GetByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
+        if (preferences == null)
+        {
+            preferences = UserPreferences.Create(request.UserId);
+            await preferencesRepository.AddAsync(preferences, cancellationToken).ConfigureAwait(false);
+        }
+
+        preferences.SetNotificationPreferences(request.Request.NotificationPreferences);
+        await preferencesRepository.UpdateAsync(preferences, cancellationToken).ConfigureAwait(false);
+        return Unit.Value;
+    }
+}

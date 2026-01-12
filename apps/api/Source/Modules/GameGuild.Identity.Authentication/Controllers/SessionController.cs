@@ -1,0 +1,387 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace GameGuild.Identity.Authentication;
+
+/// <summary>
+///     Sessions API Controller - RESTful API for session and device management
+/// </summary>
+[ApiController]
+[ApiVersion("1.0")]
+[Tags("authentication/sessions")]
+[Authorize]
+public sealed class SessionController(ISessionManagementService sessionService) : AuthControllerBase
+{
+    #region Collection Operations - /v1/auth/sessions
+
+    /// <summary>
+    ///     Get current user's active sessions
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of active sessions with device and location information</returns>
+    [HttpGet("v{version:apiVersion}/auth/sessions")]
+    [EndpointSummary("Get active sessions")]
+    [EndpointDescription("Retrieves a list of all active sessions for the current user, including device and location information.")]
+    [ProducesResponseType<List<SessionResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetSessions(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var sessions = await sessionService.GetUserSessionsAsync(userId);
+
+        var response = sessions.Select(s => new SessionResponse
+            {
+                Id = s.Id,
+                DeviceInfo = ParseDeviceInfo(s.DeviceInfo),
+                Location = ParseLocation(s.Location),
+                IpAddress = s.IpAddress,
+                CreatedAt = s.CreatedAt,
+                LastUsedAt = s.LastUsedAt,
+                ExpiresAt = s.ExpiresAt,
+                IsTrustedDevice = s.IsTrustedDevice,
+                IsCurrent = IsCurrentSession(s.Id)
+            })
+            .ToList();
+
+        return Ok(response);
+    }
+
+    #endregion
+
+    #region Security Analysis - /v1/auth/sessions/security-analysis
+
+    /// <summary>
+    ///     Get session security analysis
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Security analysis with risk assessment and recommendations</returns>
+    [HttpGet("v{version:apiVersion}/auth/sessions/security-analysis")]
+    [EndpointSummary("Get session security analysis")]
+    [EndpointDescription("Analyzes the current session for security risks and provides recommendations.")]
+    [ProducesResponseType<SessionSecurityAnalysis>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetSecurityAnalysis(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+        SessionSecurityAnalysis analysis = await sessionService.AnalyzeSessionSecurityAsync(userId, ipAddress, userAgent);
+
+        return Ok(analysis);
+    }
+
+    #endregion
+
+    #region Single Session Operations - /v1/auth/sessions/{sessionId}
+
+    /// <summary>
+    ///     Terminate a specific session
+    /// </summary>
+    /// <param name="sessionId">Session identifier to terminate</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success confirmation</returns>
+    [HttpDelete("v{version:apiVersion}/auth/sessions/{sessionId:guid}")]
+    [EndpointSummary("Terminate a session")]
+    [EndpointDescription("Terminates a specific session by its identifier. The session must belong to the current user.")]
+    [ProducesResponseType<SessionSuccessResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> TerminateSession(Guid sessionId, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var session = await sessionService.GetSessionAsync(sessionId);
+
+        if (session == null || session.UserId != userId)
+        {
+            return NotFound(new SessionErrorResponse { Error = "Session not found" });
+        }
+
+        var success = await sessionService.TerminateSessionAsync(sessionId, SessionTerminationReason.UserLogout);
+
+        if (!success)
+        {
+            return BadRequest(new SessionErrorResponse { Error = "Failed to terminate session" });
+        }
+
+        return Ok(new SessionSuccessResponse { Message = "Session terminated successfully" });
+    }
+
+    #endregion
+
+    #region Bulk Operations - /v1/auth/sessions:action
+
+    /// <summary>
+    ///     Terminate all sessions except the current one
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Number of terminated sessions</returns>
+    [HttpPost("v{version:apiVersion}/auth/sessions:terminate-others")]
+    [EndpointSummary("Terminate other sessions")]
+    [EndpointDescription("Terminates all active sessions except the current one.")]
+    [ProducesResponseType<SessionTerminationResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> TerminateOtherSessions(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var currentSessionId = GetCurrentSessionId();
+
+        var terminatedCount = await sessionService.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.UserLogout, currentSessionId);
+
+        return Ok(new SessionTerminationResponse
+        {
+            Message = "Other sessions terminated successfully",
+            TerminatedCount = terminatedCount
+        });
+    }
+
+    /// <summary>
+    ///     Terminate all sessions (including current)
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Number of terminated sessions</returns>
+    [HttpPost("v{version:apiVersion}/auth/sessions:terminate-all")]
+    [EndpointSummary("Terminate all sessions")]
+    [EndpointDescription("Terminates all active sessions including the current one. User will need to sign in again.")]
+    [ProducesResponseType<SessionTerminationResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> TerminateAllSessions(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+
+        var terminatedCount = await sessionService.TerminateAllUserSessionsAsync(userId, SessionTerminationReason.UserLogout);
+
+        return Ok(new SessionTerminationResponse
+        {
+            Message = "All sessions terminated successfully",
+            TerminatedCount = terminatedCount
+        });
+    }
+
+    /// <summary>
+    ///     Refresh the current session
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success confirmation</returns>
+    [HttpPost("v{version:apiVersion}/auth/sessions:refresh")]
+    [EndpointSummary("Refresh current session")]
+    [EndpointDescription("Extends the current session's expiration time.")]
+    [ProducesResponseType<SessionSuccessResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RefreshSession(CancellationToken ct)
+    {
+        var currentSessionId = GetCurrentSessionId();
+
+        if (currentSessionId == null)
+        {
+            return BadRequest(new SessionErrorResponse { Error = "No active session found" });
+        }
+
+        var success = await sessionService.RefreshSessionAsync(currentSessionId.Value);
+
+        if (!success)
+        {
+            return BadRequest(new SessionErrorResponse { Error = "Failed to refresh session" });
+        }
+
+        return Ok(new SessionSuccessResponse { Message = "Session refreshed successfully" });
+    }
+
+    #endregion
+
+    #region Trusted Devices - /v1/auth/sessions/trusted-devices
+
+    /// <summary>
+    ///     Get trusted devices for the current user
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of trusted devices</returns>
+    [HttpGet("v{version:apiVersion}/auth/sessions/trusted-devices")]
+    [EndpointSummary("Get trusted devices")]
+    [EndpointDescription("Retrieves a list of devices that have been marked as trusted for the current user.")]
+    [ProducesResponseType<List<TrustedDeviceResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetTrustedDevices(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var devices = await sessionService.GetTrustedDevicesAsync(userId);
+
+        var response = devices.Select(d => new TrustedDeviceResponse
+            {
+                Id = d.Id,
+                DeviceName = d.DeviceName,
+                DeviceInfo = ParseDeviceInfo(d.DeviceInfo),
+                TrustedAt = d.TrustedAt,
+                LastUsedAt = d.LastUsedAt,
+                ExpiresAt = d.ExpiresAt
+            })
+            .ToList();
+
+        return Ok(response);
+    }
+
+    /// <summary>
+    ///     Trust the current device
+    /// </summary>
+    /// <param name="body">Device trust request with optional device name</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success confirmation</returns>
+    [HttpPost("v{version:apiVersion}/auth/sessions/trusted-devices")]
+    [EndpointSummary("Trust current device")]
+    [EndpointDescription("Marks the current device as trusted, allowing faster authentication in the future.")]
+    [ProducesResponseType<SessionSuccessResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> TrustCurrentDevice([FromBody] TrustDeviceRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var userId = GetCurrentUserId();
+        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
+
+        var deviceFingerprint = GenerateDeviceFingerprint(ipAddress, userAgent);
+        var success = await sessionService.TrustDeviceAsync(userId, deviceFingerprint, body.DeviceName);
+
+        if (!success)
+        {
+            return BadRequest(new SessionErrorResponse { Error = "Failed to trust device" });
+        }
+
+        return Ok(new SessionSuccessResponse { Message = "Device trusted successfully" });
+    }
+
+    /// <summary>
+    ///     Revoke trust for a specific device
+    /// </summary>
+    /// <param name="deviceId">Device identifier to revoke trust for</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success confirmation</returns>
+    [HttpDelete("v{version:apiVersion}/auth/sessions/trusted-devices/{deviceId:guid}")]
+    [EndpointSummary("Revoke device trust")]
+    [EndpointDescription("Removes a device from the trusted devices list.")]
+    [ProducesResponseType<SessionSuccessResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RevokeTrustedDevice(Guid deviceId, CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var success = await sessionService.RevokeTrustedDeviceAsync(userId, deviceId);
+
+        if (!success)
+        {
+            return NotFound(new SessionErrorResponse { Error = "Trusted device not found" });
+        }
+
+        return Ok(new SessionSuccessResponse { Message = "Device trust revoked successfully" });
+    }
+
+    #endregion
+
+    #region Private Helpers
+
+    private Guid? GetCurrentSessionId()
+    {
+        var sessionIdClaim = User.FindFirst("session_id")?.Value;
+
+        if (string.IsNullOrEmpty(sessionIdClaim) || !Guid.TryParse(sessionIdClaim, out var sessionId))
+        {
+            return null;
+        }
+
+        return sessionId;
+    }
+
+    private bool IsCurrentSession(Guid sessionId)
+    {
+        var currentSessionId = GetCurrentSessionId();
+        return currentSessionId == sessionId;
+    }
+
+    private static DeviceInfo? ParseDeviceInfo(string? deviceInfoJson)
+    {
+        if (string.IsNullOrEmpty(deviceInfoJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<DeviceInfo>(deviceInfoJson);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static LocationInfo? ParseLocation(string? locationJson)
+    {
+        if (string.IsNullOrEmpty(locationJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<LocationInfo>(locationJson);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string GenerateDeviceFingerprint(string ipAddress, string userAgent)
+    {
+        using var sha256 = SHA256.Create();
+        var input = $"{ipAddress}:{userAgent}";
+        var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+        return Convert.ToBase64String(hash);
+    }
+
+    #endregion
+}
+
+/// <summary>
+///     Success response for session operations
+/// </summary>
+public sealed record SessionSuccessResponse
+{
+    /// <summary>
+    ///     Success message
+    /// </summary>
+    public required string Message { get; init; }
+}
+
+/// <summary>
+///     Error response for session operations
+/// </summary>
+public sealed record SessionErrorResponse
+{
+    /// <summary>
+    ///     Error message
+    /// </summary>
+    public required string Error { get; init; }
+}
+
+/// <summary>
+///     Response for session termination operations
+/// </summary>
+public sealed record SessionTerminationResponse
+{
+    /// <summary>
+    ///     Success message
+    /// </summary>
+    public required string Message { get; init; }
+
+    /// <summary>
+    ///     Number of sessions terminated
+    /// </summary>
+    public required int TerminatedCount { get; init; }
+}

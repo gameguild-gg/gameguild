@@ -1,0 +1,210 @@
+using FluentAssertions;
+using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Authentication;
+using GameGuild.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Moq;
+using Xunit;
+
+namespace GameGuild.Identity.Authentication.UnitTests.Services;
+
+/// <summary>
+/// Unit tests for JwtTokenService
+/// </summary>
+public class JwtTokenServiceTests
+{
+    private readonly Mock<ILogger<JwtTokenService>> _loggerMock;
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
+    private readonly Mock<IOptions<JwtOptions>> _jwtOptionsMock;
+    private readonly JwtTokenService _service;
+    private readonly JwtOptions _jwtOptions;
+
+    public JwtTokenServiceTests()
+    {
+        _loggerMock = new Mock<ILogger<JwtTokenService>>();
+        _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
+        
+        _jwtOptions = new JwtOptions
+        {
+            SecretKey = "ThisIsAVerySecureSecretKeyForTestingPurposesOnly12345",
+            Issuer = "TestIssuer",
+            Audience = "TestAudience",
+            AccessTokenExpirationMinutes = 15,
+            RefreshTokenExpirationDays = 7
+        };
+
+        _jwtOptionsMock = new Mock<IOptions<JwtOptions>>();
+        _jwtOptionsMock.Setup(x => x.Value).Returns(_jwtOptions);
+
+        _service = new JwtTokenService(
+            _loggerMock.Object,
+            _refreshTokenRepositoryMock.Object,
+            _jwtOptionsMock.Object
+        );
+    }
+
+    [Fact]
+    public async Task GenerateAccessTokenAsync_WithValidData_ShouldReturnToken()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var email = "test@example.com";
+        var roles = new[] { "User", "Admin" };
+        var tenantId = Guid.NewGuid();
+
+        // Act
+        var token = await _service.GenerateAccessTokenAsync(
+            userId, 
+            email, 
+            roles, 
+            tenantId, 
+            CancellationToken.None
+        );
+
+        // Assert
+        token.Should().NotBeNullOrEmpty();
+        token.Split('.').Should().HaveCount(3); // JWT has 3 parts
+    }
+
+    [Fact]
+    public async Task GenerateAccessTokenAsync_WithoutTenantId_ShouldReturnToken()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var email = "test@example.com";
+        var roles = new[] { "User" };
+
+        // Act
+        var token = await _service.GenerateAccessTokenAsync(
+            userId, 
+            email, 
+            roles, 
+            null, 
+            CancellationToken.None
+        );
+
+        // Assert
+        token.Should().NotBeNullOrEmpty();
+        token.Split('.').Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task GenerateAccessTokenAsync_WithNullRoles_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var email = "test@example.com";
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => _service.GenerateAccessTokenAsync(userId, email, null!, null, CancellationToken.None)
+        );
+    }
+
+    [Fact]
+    public async Task GenerateRefreshTokenAsync_WithValidData_ShouldReturnToken()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var deviceInfo = new DeviceInfo
+        {
+            Fingerprint = "device-123",
+            DeviceName = "Test Device",
+            IpAddress = "127.0.0.1",
+            UserAgent = "Test User Agent"
+        };
+
+        _refreshTokenRepositoryMock
+            .Setup(x => x.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((RefreshToken rt, CancellationToken _) => rt);
+
+        // Act
+        var token = await _service.GenerateRefreshTokenAsync(
+            userId, 
+            deviceInfo, 
+            CancellationToken.None
+        );
+
+        // Assert
+        token.Should().NotBeNullOrEmpty();
+        
+        _refreshTokenRepositoryMock.Verify(
+            x => x.CreateAsync(It.Is<RefreshToken>(rt => 
+                rt.UserId == userId && 
+                rt.Token == token &&
+                !rt.IsRevoked), 
+            It.IsAny<CancellationToken>()), 
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GenerateRefreshTokenAsync_WithNullDeviceInfo_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+
+        // Act & Assert
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => _service.GenerateRefreshTokenAsync(userId, null!, CancellationToken.None)
+        );
+    }
+
+    [Fact]
+    public async Task GenerateRefreshTokenAsync_ShouldSetCorrectExpiration()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var deviceInfo = new DeviceInfo
+        {
+            Fingerprint = "device-123",
+            DeviceName = "Test Device",
+            IpAddress = "127.0.0.1",
+            UserAgent = "Test User Agent"
+        };
+
+        RefreshToken? capturedToken = null;
+
+        _refreshTokenRepositoryMock
+            .Setup(x => x.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
+            .Callback<RefreshToken, CancellationToken>((token, _) => capturedToken = token)
+            .ReturnsAsync((RefreshToken rt, CancellationToken _) => rt);
+
+        // Act
+        await _service.GenerateRefreshTokenAsync(userId, deviceInfo, CancellationToken.None);
+
+        // Assert
+        capturedToken.Should().NotBeNull();
+        capturedToken!.ExpiresAt.Should().BeCloseTo(
+            DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays), 
+            TimeSpan.FromMinutes(1)
+        );
+    }
+
+    [Fact]
+    public async Task GenerateRefreshTokenAsync_ShouldGenerateUniqueTokens()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var deviceInfo = new DeviceInfo
+        {
+            Fingerprint = "device-123",
+            DeviceName = "Test Device",
+            IpAddress = "127.0.0.1",
+            UserAgent = "Test User Agent"
+        };
+
+        _refreshTokenRepositoryMock
+            .Setup(x => x.CreateAsync(It.IsAny<RefreshToken>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((RefreshToken rt, CancellationToken _) => rt);
+
+        // Act
+        var token1 = await _service.GenerateRefreshTokenAsync(userId, deviceInfo, CancellationToken.None);
+        var token2 = await _service.GenerateRefreshTokenAsync(userId, deviceInfo, CancellationToken.None);
+
+        // Assert
+        token1.Should().NotBe(token2);
+    }
+}

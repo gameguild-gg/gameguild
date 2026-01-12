@@ -1,0 +1,314 @@
+using System.Security.Claims;
+using GameGuild.CQRS;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Identity.Tenants;
+
+/// <summary>
+///     Middleware that resolves and validates the current tenant for multi-tenant requests.
+///     Resolution priority: X-Tenant-Id header > Host domain > Query string > Default tenant.
+///     Stores the resolved tenant in HttpContext.Items for downstream access.
+///     Uses CQRS queries via IMediator for tenant resolution.
+///     
+///     <para>
+///         <b>Security:</b> Enforces tenant membership validation - authenticated users can only
+///         access tenants they are members of. Returns 403 Forbidden for unauthorized tenant access.
+///     </para>
+///     <para>
+///         See also: <c>docs/security/TENANT_MEMBERSHIP_VALIDATION.md</c>
+///     </para>
+/// </summary>
+public class TenantMiddleware(
+    RequestDelegate next,
+    ILogger<TenantMiddleware> logger)
+{
+    /// <summary>
+    ///     The header name for the tenant ID.
+    /// </summary>
+    public const string TenantIdHeader = "X-Tenant-Id";
+
+    /// <summary>
+    ///     The query string key for the tenant ID.
+    /// </summary>
+    public const string TenantIdQueryKey = "tenantId";
+
+    /// <summary>
+    ///     The HttpContext.Items key for the resolved tenant.
+    /// </summary>
+    public const string TenantItemKey = "CurrentTenant";
+
+    /// <summary>
+    ///     The HttpContext.Items key for the tenant ID.
+    /// </summary>
+    public const string TenantIdItemKey = "TenantId";
+
+    /// <summary>
+    ///     Paths that should bypass tenant resolution (e.g., health checks, swagger).
+    /// </summary>
+    private static readonly string[] BypassPaths =
+    [
+        "/health",
+        "/ready",
+        "/live",
+        "/swagger",
+        "/documentation",
+        "/openapi",
+        "/.well-known"
+    ];
+    
+    /// <summary>
+    ///     Exact paths that should bypass tenant resolution.
+    /// </summary>
+    private static readonly string[] ExactBypassPaths =
+    [
+        "/"
+    ];
+
+    public async Task InvokeAsync(
+        HttpContext context,
+        IMediator mediator,
+        ITenantDomainsRepository tenantDomainsRepository,
+        ITenantMemberRepository tenantMemberRepository)
+    {
+        var path = context.Request.Path.Value?.ToLowerInvariant() ?? string.Empty;
+
+        // Skip tenant resolution for system endpoints
+        if (ShouldBypassTenantResolution(path))
+        {
+            await next(context);
+            return;
+        }
+
+        var (tenant, resolutionSource) = await ResolveTenantAsync(
+            context,
+            mediator,
+            tenantDomainsRepository,
+            context.RequestAborted);
+
+        if (tenant is not null)
+        {
+            // SECURITY: Validate tenant membership for authenticated users
+            var userId = GetAuthenticatedUserId(context);
+            if (userId.HasValue)
+            {
+                var isMember = await ValidateTenantMembershipAsync(
+                    userId.Value,
+                    tenant.Id,
+                    tenantMemberRepository,
+                    context.RequestAborted);
+
+                if (!isMember)
+                {
+                    logger.LogWarning(
+                        "User {UserId} attempted to access tenant {TenantId} ({TenantName}) without membership",
+                        userId.Value,
+                        tenant.Id,
+                        tenant.Name);
+
+                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        error = "Forbidden",
+                        message = "You are not a member of the requested tenant"
+                    }, context.RequestAborted);
+                    return;
+                }
+
+                logger.LogDebug(
+                    "Tenant membership validated: User {UserId} is member of tenant {TenantId}",
+                    userId.Value,
+                    tenant.Id);
+            }
+
+            // Store tenant in HttpContext.Items for access throughout the request
+            context.Items[TenantItemKey] = tenant;
+            context.Items[TenantIdItemKey] = tenant.Id;
+
+            // Add to logging scope for structured logging
+            using (logger.BeginScope(new Dictionary<string, object>
+            {
+                ["TenantId"] = tenant.Id,
+                ["TenantSlug"] = tenant.Slug,
+                ["TenantResolutionSource"] = resolutionSource
+            }))
+            {
+                logger.LogDebug(
+                    "Tenant resolved: {TenantName} ({TenantId}) via {ResolutionSource}",
+                    tenant.Name,
+                    tenant.Id,
+                    resolutionSource);
+
+                await next(context);
+            }
+        }
+        else
+        {
+            // No tenant resolved - continue without tenant context
+            // Individual endpoints can require tenant via [RequireTenant] attribute or check ITenantContext
+            logger.LogDebug("No tenant resolved for request to {Path}", path);
+            await next(context);
+        }
+    }
+
+    private static bool ShouldBypassTenantResolution(string path)
+    {
+        // Check for exact match paths (like root "/")
+        if (ExactBypassPaths.Any(bypassPath =>
+            path.Equals(bypassPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
+        
+        // Check for prefix match paths
+        return BypassPaths.Any(bypassPath =>
+            path.StartsWith(bypassPath, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task<(Tenant? Tenant, string ResolutionSource)> ResolveTenantAsync(
+        HttpContext context,
+        IMediator mediator,
+        ITenantDomainsRepository tenantDomainsRepository,
+        CancellationToken cancellationToken)
+    {
+        // 1. Try X-Tenant-Id header (explicit tenant selection)
+        if (context.Request.Headers.TryGetValue(TenantIdHeader, out var tenantIdHeader)
+            && Guid.TryParse(tenantIdHeader, out var tenantIdFromHeader))
+        {
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromHeader), cancellationToken);
+            if (tenant is not null && tenant.IsActive)
+            {
+                return (tenant, "Header");
+            }
+
+            logger.LogWarning(
+                "Tenant ID {TenantId} from header not found or inactive",
+                tenantIdFromHeader);
+        }
+
+        // 2. Try host domain resolution
+        var host = context.Request.Host.Host;
+        if (!string.IsNullOrWhiteSpace(host) && !IsLocalhost(host))
+        {
+            var tenantDomain = await tenantDomainsRepository.GetByDomainAsync(host, cancellationToken);
+            if (tenantDomain?.Tenant is not null && tenantDomain.Tenant.IsActive)
+            {
+                return (tenantDomain.Tenant, "Domain");
+            }
+        }
+
+        // 3. Try query string
+        if (context.Request.Query.TryGetValue(TenantIdQueryKey, out var tenantIdQuery)
+            && Guid.TryParse(tenantIdQuery, out var tenantIdFromQuery))
+        {
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromQuery), cancellationToken);
+            if (tenant is not null && tenant.IsActive)
+            {
+                return (tenant, "QueryString");
+            }
+        }
+
+        // 4. Try route value
+        if (context.Request.RouteValues.TryGetValue(TenantIdQueryKey, out var tenantIdRoute)
+            && Guid.TryParse(tenantIdRoute?.ToString(), out var tenantIdFromRoute))
+        {
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromRoute), cancellationToken);
+            if (tenant is not null && tenant.IsActive)
+            {
+                return (tenant, "RouteValue");
+            }
+        }
+
+        // 5. Fall back to default tenant
+        var defaultTenant = await mediator.Send(new GetDefaultTenantQuery(), cancellationToken);
+        if (defaultTenant is not null && defaultTenant.IsActive)
+        {
+            return (defaultTenant, "Default");
+        }
+
+        return (null, "None");
+    }
+
+    private static bool IsLocalhost(string host)
+    {
+        return host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            || host.Equals("127.0.0.1", StringComparison.Ordinal)
+            || host.Equals("::1", StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    ///     Extracts the authenticated user ID from the HttpContext claims.
+    /// </summary>
+    /// <param name="context">The HTTP context</param>
+    /// <returns>The user ID if authenticated, null otherwise</returns>
+    private static Guid? GetAuthenticatedUserId(HttpContext context)
+    {
+        if (!context.User.Identity?.IsAuthenticated ?? true)
+        {
+            return null;
+        }
+
+        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrWhiteSpace(userIdClaim))
+        {
+            return null;
+        }
+
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+    }
+
+    /// <summary>
+    ///     Validates that the user is a member of the specified tenant.
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <param name="tenantId">The tenant ID</param>
+    /// <param name="memberRepository">The tenant member repository</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if the user is an active member of the tenant, false otherwise</returns>
+    private async Task<bool> ValidateTenantMembershipAsync(
+        Guid userId,
+        Guid tenantId,
+        ITenantMemberRepository memberRepository,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var membership = await memberRepository.GetByUserAndTenantAsync(
+                userId,
+                tenantId,
+                cancellationToken);
+
+            // User must have an active membership
+            return membership is not null && membership.IsActive;
+        }
+        catch (Exception ex)
+        {
+            // FAIL-CLOSED: If membership check fails, deny access
+            logger.LogError(
+                ex,
+                "Failed to validate tenant membership for user {UserId} in tenant {TenantId}",
+                userId,
+                tenantId);
+            return false;
+        }
+    }
+}
+
+/// <summary>
+///     Extension methods for adding TenantMiddleware to the application pipeline.
+/// </summary>
+public static class TenantMiddlewareExtensions
+{
+    /// <summary>
+    ///     Adds the tenant resolution middleware to the application pipeline.
+    ///     Should be placed after routing but before authentication.
+    /// </summary>
+    /// <param name="app">The application builder</param>
+    /// <returns>The application builder for chaining</returns>
+    public static IApplicationBuilder UseTenantResolution(this IApplicationBuilder app)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        return app.UseMiddleware<TenantMiddleware>();
+    }
+}

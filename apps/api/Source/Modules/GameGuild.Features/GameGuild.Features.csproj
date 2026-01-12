@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="FluentValidation"/>
+        <!-- Entity Framework Core -->
+        <PackageReference Include="Microsoft.EntityFrameworkCore"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Relational"/>
+
+        <!-- OpenFeature -->
+        <PackageReference Include="OpenFeature"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
+        <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj"/>
+        <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj"/>
+        <ProjectReference Include="..\GameGuild.Subscriptions\GameGuild.Subscriptions.csproj"/>
+    </ItemGroup>
+
+</Project>

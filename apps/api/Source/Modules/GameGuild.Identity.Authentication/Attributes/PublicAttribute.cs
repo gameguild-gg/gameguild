@@ -1,0 +1,13 @@
+namespace GameGuild.Identity.Authentication;
+
+/// <summary>
+///     Attribute to mark endpoints as public (bypasses authentication)
+/// </summary>
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
+public class PublicAttribute(bool isPublic = true) : Attribute
+{
+    /// <summary>
+    ///     Gets whether the endpoint is public
+    /// </summary>
+    public bool IsPublic { get; } = isPublic;
+}

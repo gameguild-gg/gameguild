@@ -1,0 +1,263 @@
+
+
+using GameGuild.Configuration.PresentationLayer.Authorization;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace GameGuild.Identity.Authorization;
+
+/// <summary>
+///     Extension methods for registering authorization module services.
+/// </summary>
+public static class AuthorizationModuleExtensions
+{
+    /// <summary>
+    ///     Registers authorization configuration options.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The configuration.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddAuthorizationOptions(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.Configure<TenancyOptions>(
+            configuration.GetSection(TenancyOptions.SectionName));
+
+        services.Configure<AuthorizationCacheOptions>(
+            configuration.GetSection(AuthorizationCacheOptions.SectionName));
+
+        services.Configure<AuthorizationTokenOptions>(
+            configuration.GetSection(AuthorizationTokenOptions.SectionName));
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Registers authorization application layer services (core business logic).
+    ///     Always uses database as the source of truth with optional caching layer.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="enableCaching">If true, wraps stores with caching layer (recommended for production).</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddAuthorizationApplication(
+        this IServiceCollection services, 
+        bool enableCaching = true)
+    {
+        // Policy cache for compiled AuthorizationPolicy objects (always enabled)
+        services.AddSingleton<IPolicyCache, MemoryPolicyCache>();
+        services.AddSingleton<IPolicyMerger, DefaultPolicyMerger>();
+
+        // Database as primary storage (source of truth)
+        // Register the database implementations first
+        services.AddScoped<DatabasePolicyDefinitionStore>();
+        services.AddScoped<DatabaseAccessControlListService>();
+        services.AddScoped<DatabaseTenantSecurityVersionStore>();
+
+        // Tenant security version store (used for cache invalidation)
+        services.AddScoped<ITenantSecurityVersionStore, DatabaseTenantSecurityVersionStore>();
+
+        if (enableCaching)
+        {
+            // Cached wrappers around database stores for fast reads
+            services.AddScoped<IPolicyDefinitionStore>(sp =>
+            {
+                var innerStore = sp.GetRequiredService<DatabasePolicyDefinitionStore>();
+                var cache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                var versionStore = sp.GetRequiredService<ITenantSecurityVersionStore>();
+                var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AuthorizationCacheOptions>>();
+                return new CachedPolicyDefinitionStore(innerStore, cache, versionStore, options);
+            });
+
+            services.AddScoped<IAccessControlListService>(sp =>
+            {
+                var innerService = sp.GetRequiredService<DatabaseAccessControlListService>();
+                var cache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                var versionStore = sp.GetRequiredService<ITenantSecurityVersionStore>();
+                var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AuthorizationCacheOptions>>();
+                return new CachedAccessControlListService(innerService, cache, versionStore, options);
+            });
+        }
+        else
+        {
+            // Direct database access without caching (useful for debugging)
+            services.AddScoped<IPolicyDefinitionStore, DatabasePolicyDefinitionStore>();
+            services.AddScoped<IAccessControlListService, DatabaseAccessControlListService>();
+        }
+
+        // Permission service adapter
+        services.AddScoped<IAuthorizationPermissionService, AuthorizationPermissionServiceAdapter>();
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Registers authorization repository implementations for database-backed storage.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddAuthorizationRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<IPolicyDefinitionRepository, PolicyDefinitionRepository>();
+        services.AddScoped<IAccessControlListEntryRepository, AccessControlListEntryRepository>();
+        services.AddScoped<ITenantSecurityVersionRepository, TenantSecurityVersionRepository>();
+
+        // Policy seeder for default policy definitions
+        services.AddScoped<PolicyDefinitionSeeder>();
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Registers authorization presentation layer services (HTTP/ASP.NET integration).
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddAuthorizationPresentation(this IServiceCollection services)
+    {
+        // Tenant context and resolver (scoped per request)
+        services.AddScoped<HttpAuthorizationTenantContext>();
+        services.AddScoped<IAuthorizationTenantContext>(sp => sp.GetRequiredService<HttpAuthorizationTenantContext>());
+        services.AddScoped<IAuthorizationTenantResolver, AuthorizationTenantResolver>();
+
+        // Authorization handlers
+        services.AddScoped<IAuthorizationHandler, TenantMatchHandler>();
+        services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+        services.AddScoped<IAuthorizationHandler, EnvironmentHandler>();
+        services.AddScoped<IAuthorizationHandler, ResourceAccessHandler>();
+
+        // Resource permission authorization filter for controller attributes
+        services.AddResourcePermissionAuthorization();
+
+        // Dynamic policy provider (Singleton - required by ASP.NET Core MVC infrastructure)
+        // Uses IServiceScopeFactory to resolve scoped services when needed
+        services.AddSingleton<IAuthorizationPolicyProvider, DbAuthorizationPolicyProvider>();
+
+        // Register TimeProvider for environment handler
+        services.AddSingleton(TimeProvider.System);
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Registers rule-based authorization services for DB-driven, tenant-configurable policies.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddRuleBasedAuthorization(this IServiceCollection services)
+    {
+        // Ruleset provider (loads rules from database)
+        services.AddScoped<IRulesetProvider, RulesetProvider>();
+
+        // Register stateless rule evaluators as singletons
+        services.AddSingleton<RequireMfaRuleEvaluator>();
+        services.AddSingleton<RequireTimeWindowRuleEvaluator>();
+
+        // Register scoped evaluators that need per-request dependencies
+        services.AddScoped<TenantMatchRuleEvaluator>();
+        services.AddScoped<RequireAllPermissionsRuleEvaluator>();
+        services.AddScoped<RequireAnyPermissionRuleEvaluator>();
+        services.AddScoped<SelfOrPermissionRuleEvaluator>();
+        services.AddScoped<OwnerOrAclRuleEvaluator>();
+        services.AddScoped<RequireIpAllowListRuleEvaluator>();
+
+        // Rule evaluator registry (maps rule types to stateless singleton evaluators)
+        services.AddSingleton<IRuleEvaluatorRegistry>(sp =>
+        {
+            var evaluators = new List<IRuleEvaluator>
+            {
+                sp.GetRequiredService<RequireMfaRuleEvaluator>(),
+                sp.GetRequiredService<RequireTimeWindowRuleEvaluator>()
+            };
+            return new RuleEvaluatorRegistry(evaluators);
+        });
+
+        // Scoped evaluator factory (resolves scoped evaluators dynamically - no hard-coded switch)
+        services.AddScoped<IScopedRuleEvaluatorFactory, ScopedRuleEvaluatorFactory>();
+
+        // Ruleset authorization handler (evaluates all rules in a policy)
+        services.AddScoped<IAuthorizationHandler, RulesetAuthorizationHandler>();
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Registers permission management services (tenant permissions, templates, audit).
+    ///     These services were migrated from GameGuild.Permissions module.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddPermissionServices(this IServiceCollection services)
+    {
+        // Core permission service
+        services.AddScoped<IPermissionService, PermissionService>();
+        
+        // Permission audit service
+        services.AddScoped<IPermissionAuditService, PermissionAuditService>();
+        
+        // Repositories
+        services.AddScoped<ITenantPermissionRepository, TenantPermissionRepository>();
+        services.AddScoped<IPermissionAuditLogRepository, PermissionAuditLogRepository>();
+
+        // Identity contexts
+        services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<ITenantContext, TenantContext>();
+        services.AddScoped<IPermissionsContext, PermissionsContext>();
+        services.AddScoped<ILocalizationContext, LocalizationContext>();
+
+        // CQRS Authorization Behavior
+        services.AddScoped(typeof(GameGuild.CQRS.IPipelineBehavior<,>), typeof(AuthorizationBehavior<,>));
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Registers advanced permission services (JIT elevation, delegation, SoD, access reviews).
+    ///     These services were migrated from GameGuild.Permissions module.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddAdvancedPermissionServices(this IServiceCollection services)
+    {
+        // JIT Elevation
+        services.AddScoped<IJitElevationService, JitElevationService>();
+        services.AddScoped<IJitElevationRequestRepository, JitElevationRequestRepository>();
+
+        // Permission Delegation
+        services.AddScoped<IPermissionDelegationService, PermissionDelegationService>();
+        services.AddScoped<IPermissionDelegationRepository, PermissionDelegationRepository>();
+
+        // Separation of Duties (SoD)
+        services.AddScoped<ISoDService, SoDService>();
+        services.AddScoped<ISoDRuleRepository, SoDRuleRepository>();
+        services.AddScoped<ISoDViolationRepository, SoDViolationRepository>();
+
+        // Access Review
+        services.AddScoped<IAccessReviewService, AccessReviewService>();
+        services.AddScoped<IAccessReviewCampaignRepository, AccessReviewCampaignRepository>();
+        services.AddScoped<IAccessReviewItemRepository, AccessReviewItemRepository>();
+
+        // Delegated Administration
+        services.AddScoped<IDelegatedAdminService, DelegatedAdminService>();
+        services.AddScoped<IDelegatedAdminScopeRepository, DelegatedAdminScopeRepository>();
+
+        // Analytics
+        services.AddScoped<IPermissionAnalyticsService, PermissionAnalyticsService>();
+
+        // Resource Permissions
+        services.AddScoped<IResourcePermissionService, ResourcePermissionService>();
+
+        // Advanced repositories
+        services.AddScoped<IAbacPolicyRepository, AbacPolicyRepository>();
+        services.AddScoped<IConditionalPolicyRepository, ConditionalPolicyRepository>();
+        services.AddScoped<IDataMaskingRuleRepository, DataMaskingRuleRepository>();
+        services.AddScoped<IPolicyBundleRepository, PolicyBundleRepository>();
+        services.AddScoped<IPolicyBundleDeploymentRepository, PolicyBundleDeploymentRepository>();
+        services.AddScoped<IPermissionTemplateVersionRepository, PermissionTemplateVersionRepository>();
+        services.AddScoped<IPermissionTemplateMigrationRepository, PermissionTemplateMigrationRepository>();
+        services.AddScoped<IPolicyRegistryAuditLogRepository, PolicyRegistryAuditLogRepository>();
+
+        return services;
+    }
+}

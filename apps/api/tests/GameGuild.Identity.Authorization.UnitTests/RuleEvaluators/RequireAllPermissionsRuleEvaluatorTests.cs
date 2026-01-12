@@ -1,0 +1,184 @@
+using System.Security.Claims;
+using FluentAssertions;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Authorization;
+using Microsoft.AspNetCore.Authorization;
+using Moq;
+using Xunit;
+
+namespace GameGuild.Identity.Authorization.UnitTests.RuleEvaluators;
+
+public class RequireAllPermissionsRuleEvaluatorTests
+{
+    private readonly Mock<IAuthorizationPermissionService> _mockPermissionService;
+    private readonly Mock<IAuthorizationTenantContext> _mockTenantContext;
+    private readonly RequireAllPermissionsRuleEvaluator _evaluator;
+
+    public RequireAllPermissionsRuleEvaluatorTests()
+    {
+        _mockPermissionService = new Mock<IAuthorizationPermissionService>();
+        _mockTenantContext = new Mock<IAuthorizationTenantContext>();
+        _evaluator = new RequireAllPermissionsRuleEvaluator(_mockPermissionService.Object, _mockTenantContext.Object);
+    }
+
+    [Fact]
+    public void RuleType_ReturnsRequireAllPermissions()
+    {
+        // Assert
+        _evaluator.RuleType.Should().Be(RuleTypes.RequireAllPermissions);
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_WithNoPermissionsParameter_ReturnsSuccess()
+    {
+        // Arrange
+        var user = new ClaimsPrincipal(new ClaimsIdentity("TestAuth"));
+        var context = new AuthorizationHandlerContext([], user, null);
+        var parameters = RuleParameters.FromJson("{}");
+
+        // Act
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+    }
+    
+    [Fact]
+    public async Task EvaluateAsync_WithEmptyPermissionsParameter_ReturnsSuccess()
+    {
+        // Arrange
+        var user = new ClaimsPrincipal(new ClaimsIdentity("TestAuth"));
+        var context = new AuthorizationHandlerContext([], user, null);
+        var parameters = RuleParameters.FromJson("{\"permissions\": []}");
+
+        // Act
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_UserNotAuthenticated_ReturnsFail()
+    {
+        // Arrange
+        var user = new ClaimsPrincipal(new ClaimsIdentity()); // Not authenticated
+        var context = new AuthorizationHandlerContext([], user, null);
+        var parameters = RuleParameters.FromJson("{\"permissions\": [\"read\"]}");
+
+        // Act
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.FailureReason.Should().Contain("not authenticated");
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_UserAuthenticated_NoUserId_ReturnsFail()
+    {
+        // Arrange
+        var user = new ClaimsPrincipal(new ClaimsIdentity("TestAuth"));
+        var context = new AuthorizationHandlerContext([], user, null);
+        var parameters = RuleParameters.FromJson("{\"permissions\": [\"read\"]}");
+
+        // Act
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.FailureReason.Should().Contain("Could not determine user ID");
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_UserAuthenticated_NoTenantId_ReturnsFail()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString())
+        };
+        var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+        var context = new AuthorizationHandlerContext([], user, null);
+        var parameters = RuleParameters.FromJson("{\"permissions\": [\"read\"]}");
+
+        _mockTenantContext.Setup(x => x.TenantId).Returns((string?)null);
+
+        // Act
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.FailureReason.Should().Contain("Could not determine tenant ID");
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_HasAllPermissions_ReturnsSuccess()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimNames.TenantId, tenantId.ToString())
+        };
+        var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+        var context = new AuthorizationHandlerContext([], user, null);
+        var parameters = RuleParameters.FromJson("{\"permissions\": [\"read\", \"write\"]}");
+        var permissions = new[] { "read", "write" };
+
+        _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId.ToString());
+        
+        _mockPermissionService
+            .Setup(x => x.HasAllPermissionsAsync(
+                userId, 
+                tenantId, 
+                It.Is<IEnumerable<string>>(p => p.SequenceEqual(permissions)), 
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PermissionCheckResult.AllPresent(permissions));
+
+        // Act
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_MissingPermissions_ReturnsFail()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimNames.TenantId, tenantId.ToString())
+        };
+        var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+        var context = new AuthorizationHandlerContext([], user, null);
+        var parameters = RuleParameters.FromJson("{\"permissions\": [\"read\", \"write\"]}");
+        var permissions = new[] { "read", "write" };
+
+        _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId.ToString());
+        
+        _mockPermissionService
+            .Setup(x => x.HasAllPermissionsAsync(
+                userId, 
+                tenantId, 
+                It.Is<IEnumerable<string>>(p => p.SequenceEqual(permissions)), 
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PermissionCheckResult.Partial(["read"], ["write"]));
+
+        // Act
+        var result = await _evaluator.EvaluateAsync(context, parameters);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.FailureReason.Should().Contain("Missing required permissions");
+        result.FailureReason.Should().Contain("write");
+    }
+}

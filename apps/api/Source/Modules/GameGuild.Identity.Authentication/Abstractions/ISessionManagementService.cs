@@ -1,0 +1,36 @@
+
+namespace GameGuild.Identity.Authentication;
+
+/// <summary>
+///     Service for managing user sessions and device tracking
+/// </summary>
+public interface ISessionManagementService
+{
+    Task<UserSession> CreateSessionAsync(Guid userId, string ipAddress, string userAgent, string? deviceFingerprint = null, CancellationToken cancellationToken = default);
+
+    Task<UserSession?> GetSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
+
+    Task<UserSession?> GetSessionByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
+
+    Task<List<UserSession>> GetUserSessionsAsync(Guid userId, bool activeOnly = true, CancellationToken cancellationToken = default);
+
+    Task<bool> ValidateSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
+
+    Task<bool> RefreshSessionAsync(Guid sessionId, CancellationToken cancellationToken = default);
+
+    Task<bool> TerminateSessionAsync(Guid sessionId, SessionTerminationReason reason, CancellationToken cancellationToken = default);
+
+    Task<int> TerminateAllUserSessionsAsync(Guid userId, SessionTerminationReason reason, Guid? exceptSessionId = null, CancellationToken cancellationToken = default);
+
+    Task<bool> TrustDeviceAsync(Guid userId, string deviceFingerprint, string deviceName, CancellationToken cancellationToken = default);
+
+    Task<bool> IsDeviceTrustedAsync(Guid userId, string deviceFingerprint, CancellationToken cancellationToken = default);
+
+    Task<List<TrustedDevice>> GetTrustedDevicesAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    Task<bool> RevokeTrustedDeviceAsync(Guid userId, Guid deviceId, CancellationToken cancellationToken = default);
+
+    Task CleanupExpiredSessionsAsync(CancellationToken cancellationToken = default);
+
+    Task<SessionSecurityAnalysis> AnalyzeSessionSecurityAsync(Guid userId, string ipAddress, string userAgent, CancellationToken cancellationToken = default);
+}

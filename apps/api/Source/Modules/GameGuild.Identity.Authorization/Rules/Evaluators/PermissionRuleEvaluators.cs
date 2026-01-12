@@ -1,0 +1,138 @@
+
+using Microsoft.AspNetCore.Authorization;
+
+namespace GameGuild.Identity.Authorization;
+
+/// <summary>
+///     Rule that requires ALL specified permissions.
+///     Parameters:
+///     - permissions: string[] - List of permission keys that are ALL required
+/// </summary>
+public sealed class RequireAllPermissionsRuleEvaluator : IRuleEvaluator
+{
+    private readonly IAuthorizationPermissionService _permissionService;
+    private readonly IAuthorizationTenantContext _tenantContext;
+
+    public RequireAllPermissionsRuleEvaluator(
+        IAuthorizationPermissionService permissionService,
+        IAuthorizationTenantContext tenantContext)
+    {
+        _permissionService = permissionService;
+        _tenantContext = tenantContext;
+    }
+
+    public string RuleType => RuleTypes.RequireAllPermissions;
+
+    public async Task<RuleEvaluationResult> EvaluateAsync(
+        AuthorizationHandlerContext context,
+        RuleParameters parameters,
+        CancellationToken cancellationToken = default)
+    {
+        var user = context.User;
+
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+            return RuleEvaluationResult.Fail("User is not authenticated");
+        }
+
+        var requiredPermissions = parameters.GetStringArray("permissions");
+
+        if (requiredPermissions.Count == 0)
+        {
+            // No permissions required - pass
+            return RuleEvaluationResult.Success();
+        }
+
+        // Extract user ID from claims using centralized helper
+        if (!ClaimNames.TryGetUserId(user, out var userId))
+        {
+            return RuleEvaluationResult.Fail("Could not determine user ID from claims");
+        }
+
+        // Extract tenant ID from context or claims
+        var tenantIdStr = _tenantContext.TenantId ?? ClaimNames.GetTenantId(user);
+        if (!Guid.TryParse(tenantIdStr, out var tenantId))
+        {
+            return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
+        }
+
+        // Use batch permission check (single DB call)
+        var result = await _permissionService.HasAllPermissionsAsync(
+            userId, tenantId, requiredPermissions, cancellationToken);
+
+        if (!result.HasAllRequired)
+        {
+            return RuleEvaluationResult.Fail(
+                $"Missing required permissions: {string.Join(", ", result.MissingPermissions)}");
+        }
+
+        return RuleEvaluationResult.Success();
+    }
+}
+
+/// <summary>
+///     Rule that requires ANY of the specified permissions (OR logic).
+///     Parameters:
+///     - permissions: string[] - List of permission keys where at least one is required
+/// </summary>
+public sealed class RequireAnyPermissionRuleEvaluator : IRuleEvaluator
+{
+    private readonly IAuthorizationPermissionService _permissionService;
+    private readonly IAuthorizationTenantContext _tenantContext;
+
+    public RequireAnyPermissionRuleEvaluator(
+        IAuthorizationPermissionService permissionService,
+        IAuthorizationTenantContext tenantContext)
+    {
+        _permissionService = permissionService;
+        _tenantContext = tenantContext;
+    }
+
+    public string RuleType => RuleTypes.RequireAnyPermission;
+
+    public async Task<RuleEvaluationResult> EvaluateAsync(
+        AuthorizationHandlerContext context,
+        RuleParameters parameters,
+        CancellationToken cancellationToken = default)
+    {
+        var user = context.User;
+
+        if (!user.Identity?.IsAuthenticated ?? true)
+        {
+            return RuleEvaluationResult.Fail("User is not authenticated");
+        }
+
+        var allowedPermissions = parameters.GetStringArray("permissions");
+
+        if (allowedPermissions.Count == 0)
+        {
+            // No permissions specified - pass
+            return RuleEvaluationResult.Success();
+        }
+
+        // Extract user ID from claims using centralized helper
+        if (!ClaimNames.TryGetUserId(user, out var userId))
+        {
+            return RuleEvaluationResult.Fail("Could not determine user ID from claims");
+        }
+
+        // Extract tenant ID from context or claims
+        var tenantIdStr = _tenantContext.TenantId ?? ClaimNames.GetTenantId(user);
+        if (!Guid.TryParse(tenantIdStr, out var tenantId))
+        {
+            return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
+        }
+
+        // Use batch permission check (single DB call)
+        var result = await _permissionService.HasAnyPermissionAsync(
+            userId, tenantId, allowedPermissions, cancellationToken);
+
+        if (!result.HasAnyRequired)
+        {
+            return RuleEvaluationResult.Fail(
+                $"None of the required permissions found: {string.Join(", ", allowedPermissions)}");
+        }
+
+        return RuleEvaluationResult.Success();
+    }
+}
