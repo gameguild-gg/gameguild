@@ -86,6 +86,9 @@ public static class DataDependencyInjection
         services.AddScoped<IEncryptionService, EncryptionService>();
         services.AddScoped<ISiemIntegrationService, SiemIntegrationService>();
 
+        // Refresh token hashing service (singleton - stateless)
+        services.AddSingleton<IRefreshTokenHasher, RefreshTokenHasher>();
+
         // Note: These services have interface mismatches and need interface updates
         // to match GameGuild implementation signatures before registering with interfaces
     }

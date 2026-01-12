@@ -180,10 +180,7 @@ DEPENDENCY DIRECTIONS:
 ⚠️ **Concerns:**
 - **Anemic in places:** Some behavior is in commands/handlers instead of entity methods
 - **No navigation to Tenants:** Documented as intentional (cross-module decoupling), but forces manual joins via repository queries
-- **User vs AuthUser split:** `GameGuild.Identity.Users.User` is separate from `GameGuild.Identity.Authentication.AuthUser`. This duality is confusing and could lead to sync issues.
-  - `AuthUser` has password hash, external provider IDs
-  - `User` has profile data, preferences
-  - Risk: Updates to one may not propagate to the other
+- ✅ **FIXED: User vs AuthUser split:** ~~`GameGuild.Identity.Users.User` is separate from `GameGuild.Identity.Authentication.AuthUser`. This duality is confusing and could lead to sync issues.~~ **Merged into single `User` aggregate.** Password hash, OAuth IDs, and profile data now in unified entity. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete)
 
 **Entity Coupling:**
 ```
@@ -304,7 +301,7 @@ Request → TenantMiddleware
 - **Session tracking:** Concurrent sessions, device fingerprinting
 
 ⚠️ **Concerns:**
-- **AuthUser vs User duality:** As noted in Users module, having two user entities is confusing and risky
+- ✅ **FIXED: AuthUser vs User duality:** ~~As noted in Users module, having two user entities is confusing and risky.~~ **Merged into single `User` aggregate.** See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete)
 - **Middleware placement unclear:** `PermissionCachingMiddleware`, `AbacPolicyMiddleware`, `AccessReviewMiddleware` are in the Authentication module but perform authorization logic. Should these be in Authorization module?
 - **Stringly-typed policies and permissions:** AUTHORIZATION_ARCHITECTURE.md describes 5 authorization layers, but policy names are magic strings  
   [AUTHORIZATION_ARCHITECTURE.md](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authentication\AUTHORIZATION_ARCHITECTURE.md#L1-L100)
@@ -647,11 +644,11 @@ public static T Create<T>(Action<T>? configure = null)
 
 | Smell | Location | Risk | Fix |
 |-------|----------|------|-----|
-| **AuthUser vs User duality** | Identity.Users, Identity.Authentication | Sync issues, confusion | Merge into single User aggregate or document sync strategy |
+| ✅ **FIXED: AuthUser vs User duality** | ~~Identity.Users, Identity.Authentication~~ **MERGED** | ~~Sync issues, confusion~~ | ~~Merge into single User aggregate or document sync strategy~~ Merged `AuthUser` into `User` entity. Password hash, OAuth IDs, profile data now unified. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete) |
 | **No authorization tests** | Authorization module | Untested security code | Add 40+ integration tests like Authentication has |
 | **Cache invalidation fragmented** | Multiple services | Stale permissions after revoke | Unified cache coherence strategy with distributed cache |
 | **God Service: PermissionService** | Authorization/Services | Hard to maintain, test | Split into PermissionGrantService, PermissionCheckService |
-| **Magic string cache keys** | "CurrentTenant", "TenantId" in HttpContext.Items | Typo = runtime error | Constants class for context item keys |
+| ✅ **FIXED: Magic string cache keys** | ~~"CurrentTenant", "TenantId" in HttpContext.Items~~ **IMPLEMENTED** | ~~Typo = runtime error~~ | ~~Constants class for context item keys~~ Created `HttpContextKeys` constants class. All middleware now uses typed constants. |
 
 ### ⚠️ P2 (Medium Priority)
 
@@ -671,7 +668,7 @@ public static T Create<T>(Action<T>? configure = null)
 |------------|----------|----------|------|--------------|
 | **Tenant resolution** | ✅ Yes | TenantMiddleware.cs | ~~No membership validation~~ ✅ Fixed | ~~🚨 Cross-tenant data leak~~ ✅ Prevented |
 | **Tenant membership (roles/permissions)** | ✅ Yes | TenantMember.Role, TenantPermission | Roles are stringly-typed | ⚠️ Typo = wrong access |
-| **JWT auth** | ✅ Yes | JwtTokenService, ASP.NET JWT middleware | No token versioning for revocation | ⚠️ Can't immediately revoke tokens |
+| **JWT auth** | ✅ Yes | JwtTokenService, ASP.NET JWT middleware | ✅ Token versioning implemented via JTI + revocation service | ✅ Immediate token revocation supported |
 | **Cookie/session auth** | ⚠️ Partial | UserSession entity exists | No cookie-based authentication flow | Low (JWT is primary) |
 | **External login providers** | ✅ Yes | OAuthService (Google, GitHub) | Limited to 2 providers | Low (can add more) |
 | **MFA** | ✅ Yes | MfaService (TOTP, backup codes, trusted devices) | No WebAuthn/FIDO2 | Medium (TOTP sufficient for now) |
@@ -710,13 +707,13 @@ public static T Create<T>(Action<T>? configure = null)
 |---|-------|-------------------|-------|------------------|--------|
 | **5** | ✅ **DONE: Complete ActorContext migration** | ~~Dual context model (legacy + new) is confusing and creates maintenance burden.~~ All production handlers migrated to `IActorContextAccessor`. | ~~Authorization module~~ **COMPLETE** | ~~1. Mark legacy interfaces `[Obsolete]`~~ **DONE!** ~~2. Update all handlers to use `IActorContextAccessor`.~~ **DONE!** Migrated: Projects (4 files), Features (1 file), Resources (1 file), Identity.Users (1 file), Identity.Authorization (9 files including queries, commands, behaviors, middleware, filters). Legacy adapters kept for backward compatibility. | ✅ Reduces complexity, improves maintainability |
 | **6** | **Add Authorization integration tests** | Authorization is high-risk code with insufficient test coverage. Authentication has 40+ tests. | Tests/GameGuild.Identity.Authorization.IntegrationTests | Create 40+ tests covering: permission grant/revoke, ACL evaluation, ABAC policies, resource ownership checks, cache invalidation. Use AuthN TestEntityFactory pattern. | ⚠️ Catch bugs before production |
-| **7** | **Merge AuthUser + User** | Two user entities (AuthUser in Authentication, User in Users) create sync issues. | Identity.Authentication, Identity.Users | Option A: Merge into single `User` entity with password hash, OAuth IDs, profile fields. Option B: Document sync strategy with event-driven updates. Prefer A. | ⚠️ Reduces duplication, prevents sync bugs |
+| **7** | ✅ **DONE: Merge AuthUser + User** | ~~Two user entities (AuthUser in Authentication, User in Users) create sync issues.~~ Merged into single `User` aggregate. | ~~Identity.Authentication, Identity.Users~~ **COMPLETE** | ~~Option A: Merge into single `User` entity with password hash, OAuth IDs, profile fields.~~ **IMPLEMENTED!** Password hash, OAuth provider IDs, and profile fields now unified in `User` entity. AuthUser entity removed. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete) | ✅ Reduced duplication, prevented sync bugs |
 | **8** | **Distributed cache for permissions** | `IMemoryCache` breaks in multi-instance deployments. Permissions could differ between instances. | Authorization/Services | Add Redis distributed cache. Update `CachedAccessControlListService` to use `IDistributedCache`. Keep `IMemoryCache` as L1 cache for perf. | ⚠️ Enables horizontal scaling |
-| **9** | **Token versioning for revocation** | JWT tokens can't be immediately revoked (must wait for expiry). | JwtTokenService | Add `jti` (JWT ID) claim to tokens. On revoke, add JTI to revocation list (Redis). Validate JTI in authentication middleware. | ⚠️ Enables immediate logout |
+| **9** | ✅ **DONE: Token versioning for revocation** | ~~JWT tokens can't be immediately revoked (must wait for expiry).~~ JTI-based revocation implemented. | ~~JwtTokenService~~ **COMPLETE** | ~~Add `jti` (JWT ID) claim to tokens. On revoke, add JTI to revocation list (Redis). Validate JTI in authentication middleware.~~ **IMPLEMENTED!** Created `ITokenRevocationService` (Redis-ready), `InMemoryTokenRevocationService`, `TokenRevocationMiddleware`. JWT already has `jti` claim. `LogoutCommand`/`LogoutHandler` for immediate logout. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.3](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#93-p1-9---token-versioning-for-immediate-revocation-complete) | ✅ Immediate logout enabled |
 | **10** | ✅ **DONE: Document middleware order** | ~~No documentation on required middleware order.~~ | ~~docs/~~ **IMPLEMENTED** | ~~Create `MIDDLEWARE_ORDER.md` with: Required order, why each step is needed, what breaks if order is wrong. Add diagram.~~ Created comprehensive [docs/security/MIDDLEWARE_ORDER.md](docs/security/MIDDLEWARE_ORDER.md) with diagrams, examples, troubleshooting. | ✅ Prevents ops mistakes |
 
-**Estimated Effort:** ~~1-2 weeks~~ **Complete: 2 of 6 items!** Remaining: 4 items  
-**Expected Impact:** Reduces tech debt, enables scaling, improves security
+**Estimated Effort:** ~~1-2 weeks~~ **Complete: 4 of 6 items!** Remaining: 2 items (#6 Authorization tests, #8 Distributed cache)  
+**Expected Impact:** ✅ Reduced tech debt, enabled immediate revocation, improved security. Remaining: Authorization tests and Redis cache.
 
 ---
 

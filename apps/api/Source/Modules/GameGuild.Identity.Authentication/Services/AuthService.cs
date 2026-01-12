@@ -12,6 +12,7 @@ public class AuthService(
     IRefreshTokenRepository refreshTokenRepository,
     IAuthenticationAttemptRepository authenticationAttemptRepository,
     IJwtTokenService jwtTokenService,
+    IRefreshTokenHasher refreshTokenHasher,
     IOAuthService oauthService,
     IConfiguration configuration,
     IWeb3Service web3Service,
@@ -258,7 +259,10 @@ public class AuthService(
         var httpContext = httpContextAccessor.HttpContext;
         var ipAddress = GetClientIpAddress(httpContext);
         var userAgent = httpContext?.Request.Headers.UserAgent.ToString();
-        var storedToken = await refreshTokenRepository.GetByTokenAsync(request.RefreshToken);
+
+        // Hash the incoming token to match against stored hash
+        var hashedToken = refreshTokenHasher.HashToken(request.RefreshToken);
+        var storedToken = await refreshTokenRepository.GetByTokenAsync(hashedToken);
 
         logger.LogInformation("🔥 [AUTHSERVICE] Repository lookup result - storedToken is null: {IsNull}", storedToken == null);
 
@@ -322,7 +326,9 @@ public class AuthService(
 
     public async Task RevokeRefreshTokenAsync(string token, string ipAddress, CancellationToken cancellationToken = default)
     {
-        var refreshToken = await refreshTokenRepository.GetByTokenAsync(token);
+        // Hash the incoming token to match against stored hash
+        var hashedToken = refreshTokenHasher.HashToken(token);
+        var refreshToken = await refreshTokenRepository.GetByTokenAsync(hashedToken);
 
         if (refreshToken == null || !refreshToken.IsActive) { throw new ArgumentException("Invalid token"); }
 

@@ -14,7 +14,11 @@ namespace GameGuild.Identity.Authentication;
 ///     JWT token service for generating and validating access tokens and refresh tokens.
 ///     Supports RS256 (asymmetric) and HS256 (symmetric) algorithms.
 /// </summary>
-public sealed class JwtTokenService(ILogger<JwtTokenService> logger, IRefreshTokenRepository refreshTokenRepository, IOptions<JwtOptions> jwtOptions) : IJwtTokenService
+public sealed class JwtTokenService(
+    ILogger<JwtTokenService> logger,
+    IRefreshTokenRepository refreshTokenRepository,
+    IRefreshTokenHasher refreshTokenHasher,
+    IOptions<JwtOptions> jwtOptions) : IJwtTokenService
 {
     private readonly JwtOptions _jwtOptions = jwtOptions.Value;
 
@@ -93,12 +97,15 @@ public sealed class JwtTokenService(ILogger<JwtTokenService> logger, IRefreshTok
                 var combinedBytes = tokenBytes.Concat(entropyBytes).ToArray();
                 var tokenString = Convert.ToBase64String(combinedBytes);
 
-                // Create refresh token entity
+                // Hash the token for secure storage (never store plaintext)
+                var hashedToken = refreshTokenHasher.HashToken(tokenString);
+
+                // Create refresh token entity with HASHED token
                 var refreshToken = new RefreshToken
                 {
                     Id = Guid.NewGuid(),
                     UserId = userId,
-                    Token = tokenString,
+                    Token = hashedToken, // Store hash, not plaintext
                     CreatedByIp = "0.0.0.0", // TODO: Extract from request context
                     CreatedAt = DateTime.UtcNow,
                     ExpiresAt = DateTime.UtcNow.AddDays(_jwtOptions.RefreshTokenExpirationDays),
@@ -237,7 +244,9 @@ public sealed class JwtTokenService(ILogger<JwtTokenService> logger, IRefreshTok
 
         try
         {
-            var refreshToken = await refreshTokenRepository.GetByTokenAsync(token, cancellationToken).ConfigureAwait(false);
+            // Hash the incoming token to match against stored hash
+            var hashedToken = refreshTokenHasher.HashToken(token);
+            var refreshToken = await refreshTokenRepository.GetByTokenAsync(hashedToken, cancellationToken).ConfigureAwait(false);
 
             if (refreshToken == null)
             {
