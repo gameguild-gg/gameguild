@@ -84,8 +84,8 @@ Supports **ACID transactions** for data integrity
 ┌──────────────────────┐         ┌──────────────────────┐
 │        USERS         │         │        ORDERS        │
 ├──────────────────────┤         ├──────────────────────┤
-│ 🔑 id (PK)           │         │ 🔑 id (PK)           │
-│    name              │         │ 🔗 user_id (FK)      │
+│    id (PK)           │         │    id (PK)           │
+│    name              │         │    user_id (FK)      │
 │    email             │         │    amount            │
 │    created_at        │         │    order_date        │
 └──────────────────────┘         └──────────────────────┘
@@ -322,23 +322,16 @@ Easy to traverse complex connections
 ## How Data Looks
 
 ```
-     NODES (Entities)           EDGES (Relationships)
-    ┌─────────────────┐      ┌──────────────────────────┐
-    │  👤 Alice       │      │  Alice ─FOLLOWS─► Bob    │
-    │  👤 Bob         │      │  Alice ─FOLLOWS─► Carol  │
-    │  👤 Carol       │      │  Bob ───WORKS_AT─► TechCo│
-    │  🏢 TechCo      │      │  Carol ─WORKS_AT─► TechCo│
-    └─────────────────┘      └──────────────────────────┘
-
-                    👤 Alice
-                    /      \
+    | NODES (Entities) |      | EDGES (Relationships)   |
+    │     Alice        │      │ Alice ─FOLLOWS─> Bob    │
+    │     Bob          │      │ Alice ─FOLLOWS─> Carol  │
+    │     Carol        │      │ Bob ───WORKS_AT─> TechCo│
+    │     TechCo       │      │ Carol ─WORKS_AT─> TechCo│
+                      Alice
               FOLLOWS      FOLLOWS
-                /              \
-           👤 Bob            👤 Carol
-               \              /
+          Bob                   Carol
             WORKS_AT      WORKS_AT
-                 \          /
-                  🏢 TechCo
+                    TechCo
 ```
 
 ---
