@@ -37,8 +37,8 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
 
   if (renderer === 'reveal') {
     return (
-      <div className="gameguild-revealjs-wrapper">
-        <RevealJS content={content} />
+      <div className="gameguild-revealjs-wrapper relative w-full h-full min-h-[50vh] sm:min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh]">
+        <RevealJS content={content}  />
       </div>
     );
   }
