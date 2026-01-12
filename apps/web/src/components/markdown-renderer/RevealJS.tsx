@@ -1,20 +1,22 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
 import { Maximize2, Minimize2 } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
 // Import RevealJS styles with scoping to prevent global layout issues
+import 'highlight.js/styles/monokai.css';
 import 'reveal.js/dist/reveal.css';
 import 'reveal.js/dist/theme/white.css';
-import 'highlight.js/styles/monokai.css';
 
 interface RevealJSProps {
   content: string;
+  height?: string;
 }
 
-const RevealJS: React.FC<RevealJSProps> = ({ content }) => {
+const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const slidesRef = useRef<HTMLDivElement>(null);
   const revealInstanceRef = useRef<any>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -25,13 +27,29 @@ const RevealJS: React.FC<RevealJSProps> = ({ content }) => {
 
   useEffect(() => {
     if (!isClient) return;
-    
+
     let Reveal: any;
     let Markdown: any;
     let Highlight: any;
 
     const loadRevealJS = async () => {
       try {
+        // Wait for the container to have actual dimensions
+        if (!containerRef.current || !slidesRef.current) return;
+
+        // Check if container has dimensions, if not wait for next frame
+        const containerRect = containerRef.current.getBoundingClientRect();
+        if (containerRect.height === 0 || containerRect.width === 0) {
+          // Use requestAnimationFrame to wait for layout
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              // Double RAF to ensure layout is complete
+              loadRevealJS();
+            });
+          });
+          return;
+        }
+
         // Importação dinâmica
         const revealModule = await import('reveal.js');
         const markdownModule = await import(
@@ -49,7 +67,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content }) => {
 
         slidesRef.current.innerHTML = `<section data-markdown><textarea data-template>${content}</textarea></section>`;
 
-        // Inicializa o Reveal.js
+        // Initialize Reveal.js with markdown and auto-resize support
         const revealInstance = new Reveal(containerRef.current, {
           plugins: [Markdown, Highlight],
           width: '100%',
@@ -67,14 +85,52 @@ const RevealJS: React.FC<RevealJSProps> = ({ content }) => {
           touch: true,
           minScale: 0.2,
           maxScale: 2.0,
+          slideNumber: 'c/t', // Show current/total slide count
           highlight: {
             highlightOnLoad: true,
             escapeHTML: false,
+          },
+          markdown: {
+            animateLists: false,
+            smartypants: true,
           },
         });
 
         await revealInstance.initialize();
         revealInstanceRef.current = revealInstance;
+
+        // Force layout after initialization to ensure proper sizing
+        setTimeout(() => {
+          if (revealInstanceRef.current) {
+            revealInstanceRef.current.layout();
+            // Ensure we're on the first slide
+            revealInstanceRef.current.slide(0);
+            // Force sync to make sure markdown is rendered
+            revealInstanceRef.current.sync();
+          }
+        }, 100);
+
+        // Additional sync after a longer delay to handle any late rendering
+        setTimeout(() => {
+          if (revealInstanceRef.current) {
+            revealInstanceRef.current.layout();
+          }
+        }, 300);
+
+        // Setup ResizeObserver to auto-resize presentation when container changes
+        if (containerRef.current) {
+          if (resizeObserverRef.current) {
+            resizeObserverRef.current.disconnect();
+          }
+
+          resizeObserverRef.current = new ResizeObserver(() => {
+            if (revealInstanceRef.current) {
+              revealInstanceRef.current.layout();
+            }
+          });
+
+          resizeObserverRef.current.observe(containerRef.current);
+        }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : String(err);
         setError(`Error initializing Reveal.js: ${errorMessage}`);
@@ -87,6 +143,10 @@ const RevealJS: React.FC<RevealJSProps> = ({ content }) => {
       if (revealInstanceRef.current) {
         revealInstanceRef.current.destroy();
         revealInstanceRef.current = null;
+      }
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
       }
     };
   }, [isClient]);
@@ -113,12 +173,24 @@ const RevealJS: React.FC<RevealJSProps> = ({ content }) => {
       setIsFullscreen(true);
       if (revealInstanceRef.current) {
         revealInstanceRef.current.configure({ embedded: false });
+        // Force layout recalculation in fullscreen
+        setTimeout(() => {
+          if (revealInstanceRef.current) {
+            revealInstanceRef.current.layout();
+          }
+        }, 100);
       }
     } else {
       document.exitFullscreen();
       setIsFullscreen(false);
       if (revealInstanceRef.current) {
         revealInstanceRef.current.configure({ embedded: true });
+        // Force layout recalculation when exiting fullscreen
+        setTimeout(() => {
+          if (revealInstanceRef.current) {
+            revealInstanceRef.current.layout();
+          }
+        }, 100);
       }
     }
   };
@@ -136,14 +208,16 @@ const RevealJS: React.FC<RevealJSProps> = ({ content }) => {
       ref={containerRef}
       className="reveal-container relative w-full"
       style={{
-        height: '600px',
-        maxHeight: '600px',
-        overflow: 'hidden',
+        height: height,
+        width: '100%',
+        overflow: 'visible',
         border: '1px solid #e5e7eb',
         borderRadius: '0.5rem',
+        position: 'relative',
+        paddingBottom: '40px', // Add space for slide numbers
       }}
     >
-      <div className="reveal">
+      <div className="reveal" style={{ height: '100%' }}>
         <div className="slides" ref={slidesRef}></div>
       </div>
       <button

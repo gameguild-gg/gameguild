@@ -1,7 +1,3 @@
----
-renderer: reveal
----
-
 # The Database Zoo
 
 Welcome to the database zoo!
@@ -10,9 +6,7 @@ Just like a real zoo houses different animals adapted to different environments,
 
 ---
 
-<div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-<img src="https://i.programmerhumor.io/2022/10/programmerhumor-io-databases-memes-backend-memes-4713ea9c8ef8767.jpg" alt="Database Zoo meme" style="max-height: 500px; width: auto; object-fit: contain;" />
-</div>
+<img src="https://i.programmerhumor.io/2022/10/programmerhumor-io-databases-memes-backend-memes-4713ea9c8ef8767.jpg" alt="Database Zoo meme" />
 
 ---
 
