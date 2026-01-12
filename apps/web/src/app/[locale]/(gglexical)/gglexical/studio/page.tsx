@@ -527,18 +527,26 @@ export default function Page() {
   }
 
   const handleTitleSave = async () => {
+    // Prepare the correct state and ref based on layout type
+    const stateToUse = currentLayoutType === "type1" 
+      ? editorState 
+      : JSON.stringify({ left: leftEditorState, right: rightEditorState })
+    
+    const refToUse = currentLayoutType === "type1" ? editorRef : leftEditorRef
+    
     await titleSave({
       editingProjectName,
       currentProjectName,
       currentProjectId,
-      editorState,
-      editorRef,
+      editorState: stateToUse,
+      editorRef: refToUse,
       projectTags,
       storageAdapter,
       setCurrentProjectName,
       setEditingProjectName,
       setIsEditingTitle,
       loadSavedProjectsList,
+      layoutType: currentLayoutType,
     })
   }
 
@@ -615,20 +623,40 @@ export default function Page() {
           <div className="mx-auto max-w-4xl space-y-6 px-4 sm:px-6 lg:px-8">
             {/* Professional Header */}
             <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
-              <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 dark:bg-blue-900/30">
-                    <Blocks className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 shrink-0">
+                    <Blocks className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <div>
-                    <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Content Studio</h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Create your documents with the rich text editor</p>
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <h1 className="text-base font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap shrink-0">Content Studio</h1>
+                    <div className="h-4 w-px bg-gray-300 dark:bg-gray-600 shrink-0"></div>
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      {currentProjectId ? (
+                        <div className="min-w-0 flex-1">
+                          <EditableProjectTitle
+                            projectName={currentProjectName}
+                            isEditing={isEditingTitle}
+                            editingName={editingProjectName}
+                            onEditStart={handleTitleEdit}
+                            onEditEnd={() => {
+                              setIsEditingTitle(false)
+                              setEditingProjectName(currentProjectName)
+                            }}
+                            onNameChange={setEditingProjectName}
+                            onSave={handleTitleSave}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-500 dark:text-gray-400 italic">Untitled Project</span>
+                      )}
+                      {currentProjectId && (
+                        <div className="shrink-0">
+                          <ProjectStorageInfo storageType={currentProjectStorageType} />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  
-                  {/* Project Info Display */}
-                  {currentProjectId && (
-                    <ProjectStorageInfo storageType={currentProjectStorageType} />
-                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Link href="/gglexical" passHref>
@@ -869,16 +897,6 @@ export default function Page() {
             {/* Editor Container - Render based on layout type */}
             {currentLayoutType === "type1" ? (
               <EditorLayoutType1
-                projectName={currentProjectName}
-                isEditing={isEditingTitle}
-                editingName={editingProjectName}
-                onEditStart={handleTitleEdit}
-                onEditEnd={() => {
-                  setIsEditingTitle(false)
-                  setEditingProjectName(currentProjectName)
-                }}
-                onNameChange={setEditingProjectName}
-                onSave={handleTitleSave}
                 editorRef={editorRef}
                 editorState={editorState}
                 onEditorChange={setEditorState}
@@ -889,16 +907,6 @@ export default function Page() {
               />
             ) : (
               <EditorLayoutType2
-                projectName={currentProjectName}
-                isEditing={isEditingTitle}
-                editingName={editingProjectName}
-                onEditStart={handleTitleEdit}
-                onEditEnd={() => {
-                  setIsEditingTitle(false)
-                  setEditingProjectName(currentProjectName)
-                }}
-                onNameChange={setEditingProjectName}
-                onSave={handleTitleSave}
                 leftEditorRef={leftEditorRef}
                 rightEditorRef={rightEditorRef}
                 leftEditorState={leftEditorState}

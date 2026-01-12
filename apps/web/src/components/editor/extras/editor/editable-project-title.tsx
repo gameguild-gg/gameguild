@@ -36,17 +36,17 @@ export function EditableProjectTitle({
             }
           }}
           onBlur={onSave}
-          className="w-full max-w-md bg-transparent px-2 py-1 text-center text-xl font-semibold text-gray-900 outline-none dark:text-gray-100"
+          className="w-full bg-transparent px-2 py-0.5 text-sm font-medium text-gray-900 outline-none dark:text-gray-100"
           autoFocus
         />
       ) : (
-        <h2
-          className="cursor-pointer px-2 py-1 text-xl font-semibold text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800"
+        <span
+          className="cursor-pointer px-2 py-0.5 text-sm font-medium text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800 rounded truncate block"
           onClick={onEditStart}
-          title="Click to edit project name"
+          title={projectName || "Click to edit project name"}
         >
           {projectName || "Untitled Project"}
-        </h2>
+        </span>
       )}
     </>
   )

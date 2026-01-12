@@ -8,7 +8,7 @@ interface ProjectData {
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags?: string[]) => Promise<void>
+  save: (id: string, name: string, data: string, tags?: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: "type1" | "type2") => Promise<void>
   list: () => Promise<ProjectData[]>
 }
 
@@ -31,6 +31,7 @@ export interface TitleSaveParams {
   setEditingProjectName: (name: string) => void
   setIsEditingTitle: (editing: boolean) => void
   loadSavedProjectsList: () => Promise<void>
+  layoutType: "type1" | "type2"
 }
 
 export function handleTitleEdit(params: TitleEditParams) {
@@ -61,6 +62,7 @@ export async function handleTitleSave(params: TitleSaveParams) {
     setEditingProjectName,
     setIsEditingTitle,
     loadSavedProjectsList,
+    layoutType,
   } = params
 
   if (!editingProjectName.trim()) {
@@ -101,7 +103,7 @@ export async function handleTitleSave(params: TitleSaveParams) {
     }
 
     if (stateToSave) {
-      await storageAdapter.save(currentProjectId, editingProjectName.trim(), stateToSave, projectTags)
+      await storageAdapter.save(currentProjectId, editingProjectName.trim(), stateToSave, projectTags, undefined, undefined, layoutType)
       setCurrentProjectName(editingProjectName.trim())
       await loadSavedProjectsList()
 
