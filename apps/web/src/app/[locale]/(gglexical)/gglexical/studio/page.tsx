@@ -1020,7 +1020,7 @@ export default function Page() {
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent 
-          className={previewLayoutType === "type2" ? "!max-w-none p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
+          className={previewLayoutType === "type2" ? "max-w-none! p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
           style={previewLayoutType === "type2" ? { width: '95vw', maxWidth: '95vw' } : undefined}
         >
           <DialogHeader>
