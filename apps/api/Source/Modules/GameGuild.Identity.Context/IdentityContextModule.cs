@@ -25,9 +25,6 @@ public static class IdentityContextModule
     {
         // Register the Actor context accessor (singleton using AsyncLocal)
         services.AddSingleton<IActorContextAccessor, ActorContextAccessor>();
-
-        // Register the legacy Identity Context
-        services.AddScoped<IIdentityContext, IdentityContext>();
         
         return services;
     }

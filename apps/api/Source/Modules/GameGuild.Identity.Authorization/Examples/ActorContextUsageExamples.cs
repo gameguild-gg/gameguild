@@ -69,14 +69,14 @@ public class UpdateProjectCommandHandler
         }
 
         // Check permission using pre-evaluated permissions
-        if (!actor.HasPermission(Permissions.ProjectWrite))
+        if (!actor.HasPermission(ProjectPermission.Write))
         {
-            return Result.Forbidden($"Missing permission: {Permissions.ProjectWrite}");
+            return Result.Forbidden($"Missing permission: {ProjectPermission.Write}");
         }
 
         // Check if user is project owner
         var isOwner = actor.SubjectIdAsGuid == command.ProjectOwnerId;
-        var canEditAny = actor.HasPermission(Permissions.ProjectAdmin);
+        var canEditAny = actor.HasPermission(ProjectPermission.Admin);
 
         if (!isOwner && !canEditAny)
         {

@@ -270,13 +270,11 @@ public sealed record ActorContext
     /// <returns>The attribute value, or null if not found.</returns>
     public string? GetAttribute(string key)
     {
-        return Attributes.TryGetValue(key, out var value) ? value : null;
+        return TypedAttributes.GetCustomAttribute(key);
     }
 
     /// <summary>
     ///     Checks if the actor has MFA verified in the current session.
     /// </summary>
-    public bool IsMfaVerified =>
-        Attributes.TryGetValue("mfa_verified", out var mfa) &&
-        bool.TryParse(mfa, out var verified) && verified;
+    public bool IsMfaVerified => TypedAttributes.MfaVerified;
 }
