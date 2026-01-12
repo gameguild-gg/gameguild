@@ -470,11 +470,32 @@ export default function Page() {
 
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSaveEnabled || !currentProjectId || !editorState || !isDbInitialized) return
+    if (!autoSaveEnabled || !currentProjectId || !isDbInitialized) return
+
+    // Check if we have any content to save
+    const hasContent = currentLayoutType === "type1" 
+      ? editorState 
+      : (leftEditorState || rightEditorState)
+    
+    if (!hasContent) return
 
     const autoSaveTimer = setTimeout(async () => {
       try {
-        await storageAdapter.save(currentProjectId, currentProjectName, editorState, projectTags)
+        // Prepare the correct state based on layout type
+        const dataToSave = currentLayoutType === "type1" 
+          ? editorState 
+          : JSON.stringify({ left: leftEditorState, right: rightEditorState })
+        
+        await storageAdapter.save(
+          currentProjectId, 
+          currentProjectName, 
+          dataToSave, 
+          projectTags,
+          currentProjectStorageType,
+          undefined,
+          currentLayoutType
+        )
+        
         // Show a very subtle auto-save notification
         toast.success("Auto-saved", {
           description: "Changes saved automatically",
@@ -497,7 +518,7 @@ export default function Page() {
     }, 2000) // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(autoSaveTimer)
-  }, [editorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized])
+  }, [editorState, leftEditorState, rightEditorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayoutType, currentProjectStorageType])
 
 
 
