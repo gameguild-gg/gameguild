@@ -34,7 +34,6 @@ export function EditorToolbar() {
       >
         <ArrowUp className="h-4 w-4" />
       </Button>
-      <PreviewPlugin />
     </div>
   )
 }
