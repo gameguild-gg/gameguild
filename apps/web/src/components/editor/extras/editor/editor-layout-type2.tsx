@@ -1,18 +1,10 @@
 "use client"
 
 import { Editor } from "@/components/editor/lexical-editor"
-import { EditableProjectTitle } from "./editable-project-title"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
 
 interface EditorLayoutType2Props {
-  projectName: string
-  isEditing: boolean
-  editingName: string
-  onEditStart: () => void
-  onEditEnd: () => void
-  onNameChange: (name: string) => void
-  onSave: () => void
   leftEditorRef: React.MutableRefObject<LexicalEditor | null>
   rightEditorRef: React.MutableRefObject<LexicalEditor | null>
   leftEditorState: string
@@ -28,13 +20,6 @@ interface EditorLayoutType2Props {
  * This layout displays two editors side by side (left and right)
  */
 export function EditorLayoutType2({
-  projectName,
-  isEditing,
-  editingName,
-  onEditStart,
-  onEditEnd,
-  onNameChange,
-  onSave,
   leftEditorRef,
   rightEditorRef,
   leftEditorState,
@@ -46,19 +31,6 @@ export function EditorLayoutType2({
 }: EditorLayoutType2Props) {
   return (
     <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      {/* Title Bar */}
-      <div className="flex items-center justify-center border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-4 py-3">
-        <EditableProjectTitle
-          projectName={projectName}
-          isEditing={isEditing}
-          editingName={editingName}
-          onEditStart={onEditStart}
-          onEditEnd={onEditEnd}
-          onNameChange={onNameChange}
-          onSave={onSave}
-        />
-      </div>
-      
       {/* Dual Editor Content - Horizontal Layout */}
       <div className="grid grid-cols-2 gap-4 p-4">
         {/* Left Editor */}
