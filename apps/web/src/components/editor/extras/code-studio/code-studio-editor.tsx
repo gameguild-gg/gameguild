@@ -241,6 +241,28 @@ export function CodeStudioEditor({
     }
   }, [localData.files, localData.id])
 
+  // Register asset usage for all files with asset:// references
+  useEffect(() => {
+    if (!projectId || localData.files.length === 0) return
+
+    const registerAssets = async () => {
+      await assetManager.init()
+      
+      for (const file of localData.files) {
+        if (file.content.startsWith('asset://')) {
+          const assetId = file.content.replace('asset://', '')
+          try {
+            await assetManager.registerAssetUsage(assetId, projectId, localData.id)
+          } catch (error) {
+            console.error('Failed to register asset usage for file:', file.name, error)
+          }
+        }
+      }
+    }
+
+    registerAssets()
+  }, [localData.files, projectId, localData.id])
+
   // Sincronizar com mudanças externas apenas na primeira montagem
   useEffect(() => {
     if (!initializedRef.current) {
@@ -475,6 +497,15 @@ export function CodeStudioEditor({
     if (!localData.layout) return
     const activeDisplay = getActiveDisplay()
     if (!activeDisplay) return
+
+    // Register asset usage with this project
+    if (projectId && assetId) {
+      assetManager.init().then(() => {
+        assetManager.registerAssetUsage(assetId, projectId, localData.id).catch((error) => {
+          console.error('Failed to register asset usage:', error)
+        })
+      })
+    }
 
     setLocalData(draft => {
       FileOps.addFileFromAsset(draft, path, assetId, fileName, content, activeDisplay.id)
@@ -829,6 +860,8 @@ export function CodeStudioEditor({
             fileName: file.name,
             author: "Code Studio Collection Export",
             type: "bundler",
+            projectId: projectId,
+            nodeId: localData.id, // Use code-studio's own ID as nodeId
           })
 
           if (result.success && result.assetId) {
@@ -913,6 +946,8 @@ export function CodeStudioEditor({
               fileName: file.name,
               author: "Code Studio Collection Export",
               type: "bundler",
+              projectId: projectId,
+              nodeId: localData.id,
             })
 
             if (result.success && result.assetId) {
