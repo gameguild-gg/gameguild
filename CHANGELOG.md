@@ -1,3 +1,11 @@
+# [2.37.0](https://github.com/gameguild-gg/gameguild/compare/v2.36.0...v2.37.0) (2026-01-12)
+
+
+### Features
+
+* **content:** Add Reveal content type and enhance presentation rendering ([6b8070d](https://github.com/gameguild-gg/gameguild/commit/6b8070d975b359f651c6240d4c93a2d1ba901ab7))
+* **program-content:** Introduce Marp presentation content type ([66d467b](https://github.com/gameguild-gg/gameguild/commit/66d467b822fdf05ce6e68f68f5cf8e23051f0372))
+
 # [2.36.0](https://github.com/gameguild-gg/gameguild/compare/v2.35.0...v2.36.0) (2026-01-12)
 
 
