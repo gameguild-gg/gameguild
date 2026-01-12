@@ -1,3 +1,4 @@
+using GameGuild.Identity.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -17,7 +18,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.Id).IsRequired();
 
         // ========================
-        // NAVIGATION PROPERTIES
+        // SAME-MODULE NAVIGATION
         // ========================
 
         // User → UserProfile (1:1 optional)
@@ -42,6 +43,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasMany(x => x.Notifications)
             .WithOne(n => n.User)
             .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ========================
+        // CROSS-MODULE NAVIGATION
+        // ========================
+
+        // User → TenantMemberships (1:many, cross-module to Identity.Tenants)
+        builder.HasMany(x => x.TenantMemberships)
+            .WithOne()
+            .HasForeignKey(m => m.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // ========================

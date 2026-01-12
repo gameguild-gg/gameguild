@@ -1,18 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Entities;
+using GameGuild.Identity.Tenants;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Users;
 
 /// <summary>
-///     Represents a unified user in the system combining identity, authentication, and profile.
+///     Represents a unified user in the system combining identity and authentication.
 ///     Inherits from EntityBase to provide GUID IDs, version control, timestamps, and soft delete functionality.
 /// </summary>
 /// <remarks>
 ///     <para>
-///         <b>Unified Entity:</b> This entity combines the former AuthUser (authentication) and User (profile)
-///         entities into a single source of truth. PasswordHash is nullable to support OAuth-only users.
+///         <b>Unified Entity:</b> This entity combines identity and authentication concerns.
+///         PasswordHash is nullable to support OAuth-only users.
 ///     </para>
 ///     <para>
 ///         <b>Related Entities (Same Module):</b> User has 1:1 relationships with:
@@ -25,12 +26,7 @@ namespace GameGuild.Identity.Users;
 ///     </para>
 ///     <para>
 ///         <b>Cross-Module Relationship:</b> Users can belong to multiple tenants via the
-///         <c>TenantMember</c> entity in the <c>GameGuild.Tenants</c> module.
-///         To keep modules decoupled, there is no navigation property to TenantMember. Instead, query
-///         user memberships through <c>ITenantMemberRepository.GetByUserIdAsync(userId)</c>.
-///     </para>
-///     <para>
-///         See also: <c>GameGuild.Identity.Tenants.Entities.TenantMember</c>
+///         <see cref="TenantMemberships"/> navigation property linking to <see cref="TenantMember"/>.
 ///     </para>
 /// </remarks>
 [Table("Users")]
@@ -157,6 +153,12 @@ public class User : EntityBase, IUser
     /// </summary>
     public virtual ICollection<UserNotification> Notifications { get; set; } = new List<UserNotification>();
 
+    /// <summary>
+    ///     Collection of tenant memberships for this user.
+    ///     Provides direct navigation to all tenants the user belongs to.
+    /// </summary>
+    public virtual ICollection<TenantMember> TenantMemberships { get; set; } = new List<TenantMember>();
+
     // ========================
     // AUTHENTICATION METHODS
     // ========================
@@ -282,6 +284,90 @@ public class User : EntityBase, IUser
     {
         PhoneNumber = phoneNumber;
         Touch();
+    }
+
+    // ========================
+    // LIFECYCLE METHODS
+    // ========================
+
+    /// <summary>
+    ///     Marks the user for deletion (soft delete).
+    ///     User can be restored within the retention period.
+    /// </summary>
+    public void MarkDeleted()
+    {
+        SoftDelete();
+        Deactivate();
+    }
+
+    /// <summary>
+    ///     Restores a soft-deleted user.
+    ///     Re-activates the user and clears deletion timestamp.
+    /// </summary>
+    public void RestoreUser()
+    {
+        Restore();
+        Activate();
+    }
+
+    /// <summary>
+    ///     Validates that the user can be permanently purged.
+    ///     Throws if the user has active tenant memberships or other constraints.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">If user cannot be purged due to constraints</exception>
+    public void ValidatePurge()
+    {
+        if (!IsDeleted)
+            throw new InvalidOperationException("User must be soft-deleted before purging.");
+
+        if (TenantMemberships.Any(m => m.IsActive))
+            throw new InvalidOperationException("User has active tenant memberships. Remove memberships before purging.");
+    }
+
+    /// <summary>
+    ///     Checks if user can perform actions (active and not suspended)
+    /// </summary>
+    public bool CanPerformActions => Status.CanPerformActions;
+
+    /// <summary>
+    ///     Checks if user can sign in (active, even if suspended for warning display)
+    /// </summary>
+    public bool CanSignIn => Status.CanSignIn;
+
+    // ========================
+    // TENANT MEMBERSHIP METHODS
+    // ========================
+
+    /// <summary>
+    ///     Gets the user's role in a specific tenant
+    /// </summary>
+    /// <param name="tenantId">The tenant to check</param>
+    /// <returns>Role string if member, null otherwise</returns>
+    public string? GetRoleInTenant(Guid tenantId)
+    {
+        return TenantMemberships
+            .FirstOrDefault(m => m.TenantId == tenantId && m.IsActive)?
+            .Role;
+    }
+
+    /// <summary>
+    ///     Checks if user is a member of a specific tenant
+    /// </summary>
+    /// <param name="tenantId">The tenant to check</param>
+    /// <returns>True if active member</returns>
+    public bool IsMemberOfTenant(Guid tenantId)
+    {
+        return TenantMemberships.Any(m => m.TenantId == tenantId && m.IsActive);
+    }
+
+    /// <summary>
+    ///     Gets all active tenant IDs for this user
+    /// </summary>
+    public IEnumerable<Guid> GetActiveTenantIds()
+    {
+        return TenantMemberships
+            .Where(m => m.IsActive)
+            .Select(m => m.TenantId);
     }
 
     // ========================

@@ -177,17 +177,23 @@ DEPENDENCY DIRECTIONS:
 - Unique email constraint enforced at DB level
 - Soft-delete support via `EntityBase`
 
-⚠️ **Concerns (ADDRESSED):**
-- ✅ **REVIEWED: "Anemic in places":** Analysis shows User entity has 12+ behavior methods (`SetPasswordHash()`, `RecordLogin()`, `VerifyEmail()`, `Activate()`, `Deactivate()`, `Suspend()`, `Unsuspend()`, `UpdateName()`, `UpdatePhoneNumber()`, `UpdateInfo()`, `RecordActivity()`) plus 3 factory methods. Handlers properly delegate to entity methods - this is correct CQRS, NOT anemic. No fix needed.
-- ✅ **ACCEPTED: No navigation to Tenants:** This is intentional cross-module decoupling. Documented in both `User` and `TenantMember` entity XML docs. Use `ITenantMemberRepository.GetByUserIdAsync(userId)` for queries. No fix needed.
-- ✅ **IMPROVED: SRP concerns:** Added `UserStatus` value object to encapsulate IsActive/IsSuspended state machine with proper transitions. Added navigation properties to related entities (UserProfile, UserMetadata, UserPreferences, UserNotification). See [UserStatus.cs](apps/api/Source/Modules/GameGuild.Identity.Users/ValueObjects/UserStatus.cs)
-- ✅ **FIXED: User vs AuthUser split:** ~~`GameGuild.Identity.Users.User` is separate from `GameGuild.Identity.Authentication.AuthUser`. This duality is confusing and could lead to sync issues.~~ **Merged into single `User` aggregate.** Password hash, OAuth IDs, and profile data now in unified entity. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete)
+✅ **All Concerns FIXED:**
+- ✅ **FIXED: Anemic Domain Model:** Added lifecycle methods (`MarkDeleted()`, `RestoreUser()`, `ValidatePurge()`), tenant membership methods (`GetRoleInTenant()`, `IsMemberOfTenant()`, `GetActiveTenantIds()`), and convenience properties (`CanPerformActions`, `CanSignIn`). Handlers now delegate to entity methods. User entity has 20+ behavior methods.
+- ✅ **FIXED: No navigation to Tenants:** Added `TenantMemberships` navigation property (1:many to `TenantMember`). Project reference added from `GameGuild.Identity.Users` → `GameGuild.Identity.Tenants`. EF Core relationship configured in `UserConfiguration.cs`.
+- ✅ **FIXED: SRP Violation:** Core User entity now focused on Identity + Auth + Status (legitimately coupled). Extended concerns properly split to separate entities:
+  - `UserProfile` - Bio, avatar, social links, display preferences
+  - `UserMetadata` - Custom fields, tags, external references  
+  - `UserPreferences` - Notification, privacy, localization settings
+  - `UserStatus` value object - Encapsulates IsActive/IsSuspended state machine
+- ✅ **FIXED: User vs AuthUser split:** **Merged into single `User` aggregate.** See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete)
 
 **Entity Coupling:**
 ```
-User (Identity.Users)  ──[UserId]──▶  TenantMember (Identity.Tenants)
-                                           ↓
-                                      (role, permissions)
+User (Identity.Users)
+           │
+           ├──[1:N]──▶ TenantMemberships (cross-module navigation to Identity.Tenants)
+           │                  ↓
+           │             (role, permissions per tenant)
            │
            ├──[1:1]──▶ UserProfile (bio, avatar, social links)
            ├──[1:1]──▶ UserMetadata (tags, external refs, custom fields)
@@ -197,11 +203,11 @@ User (Identity.Users)  ──[UserId]──▶  TenantMember (Identity.Tenants)
 
 **Patterns Used:**
 - ✅ **Repository Pattern:** `IUserRepository` abstracts data access
-- ✅ **Rich Domain Model:** Entity has 15+ behavior methods (NOT anemic)
-- ✅ **Value Objects:** `UserStatus` for status state machine, `EmailAddress` and `PhoneNumber` available in SharedKernel
+- ✅ **Rich Domain Model:** Entity has 20+ behavior methods (lifecycle, status, tenant, profile, factory)
+- ✅ **Value Objects:** `UserStatus` for status state machine
 
 **SOLID Compliance:**
-- **SRP:** ✅ Core User entity has Identity + Auth + Status (legitimately coupled). Extended concerns split to UserProfile, UserMetadata, UserPreferences entities.
+- **SRP:** ✅ Core User entity = Identity + Auth + Status. Extended concerns in separate entities.
 - **OCP:** ✅ Extensible via UserMetadata JSON column
 - **LSP:** ✅ Inherits from `EntityBase` correctly
 - **ISP:** ✅ No fat interfaces

@@ -11,10 +11,11 @@ public class RestoreUserCommandHandler(IUserRepository userRepository, IPublishe
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken).ConfigureAwait(false) ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
+        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken).ConfigureAwait(false) 
+            ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
 
-        // Restore the user (undelete)
-        user.Restore();
+        // Use domain method for restore
+        user.RestoreUser();
         await userRepository.UpdateAsync(user, cancellationToken).ConfigureAwait(false);
 
         // Publish domain event

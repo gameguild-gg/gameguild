@@ -20,6 +20,8 @@
         <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
+        <!-- Cross-module reference: Required for User ↔ TenantMember navigation -->
+        <ProjectReference Include="..\GameGuild.Identity.Tenants\GameGuild.Identity.Tenants.csproj" />
     </ItemGroup>
 
 </Project>

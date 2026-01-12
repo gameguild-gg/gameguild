@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Users;
 
@@ -11,7 +12,16 @@ public class PurgeUserCommandHandler(IUserRepository userRepository, IPublisher 
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken).ConfigureAwait(false) ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
+        // Include tenant memberships for validation
+        var user = await userRepository.GetQueryable()
+            .IgnoreQueryFilters()
+            .Include(u => u.TenantMemberships)
+            .FirstOrDefaultAsync(u => u.Id == request.UserId, cancellationToken)
+            .ConfigureAwait(false) 
+            ?? throw new UserNotFoundException($"User with ID {request.UserId} not found");
+
+        // Validate using domain method (throws if constraints violated)
+        user.ValidatePurge();
 
         // Store user info for event before deletion
         var userId = user.Id;
@@ -19,15 +29,8 @@ public class PurgeUserCommandHandler(IUserRepository userRepository, IPublisher 
         var userName = user.Name;
         var strategy = request.Strategy.ToString();
 
-        // TODO: Implement strategy-based purging logic
-        // - Immediate: Delete right away
-        // - Scheduled: Schedule for future deletion
-        // - GracePeriod: Mark for deletion after grace period
-
-        // TODO: Implement hard delete functionality in repository
-        // For now, use soft delete - need to add PurgeAsync method to IUserRepository
-        // that performs actual hard delete from database
-        await userRepository.DeleteAsync(user, cancellationToken).ConfigureAwait(false);
+        // Perform hard delete
+        await userRepository.PurgeAsync(user, cancellationToken).ConfigureAwait(false);
 
         // Publish domain event
         await publisher.Publish(new UserPurgedNotification(userId, userEmail, userName, strategy), cancellationToken).ConfigureAwait(false);
