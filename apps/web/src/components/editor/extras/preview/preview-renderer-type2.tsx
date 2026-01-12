@@ -20,49 +20,69 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     setIsDragging(true)
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
   }
 
   useEffect(() => {
+    let animationFrameId: number | null = null
+
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !containerRef.current) return
 
-      const container = containerRef.current
-      const containerRect = container.getBoundingClientRect()
-      const containerWidth = containerRect.width
-      const mouseX = e.clientX - containerRect.left
-      
-      // Calculate percentage
-      let percentage = (mouseX / containerWidth) * 100
-      
-      // Clamp between 10% and 90%
-      percentage = Math.max(10, Math.min(90, percentage))
-      
-      // Check for collapse thresholds
-      if (percentage < 15) {
-        setIsLeftCollapsed(true)
-        setIsRightCollapsed(false)
-      } else if (percentage > 85) {
-        setIsRightCollapsed(true)
-        setIsLeftCollapsed(false)
-      } else {
-        setIsLeftCollapsed(false)
-        setIsRightCollapsed(false)
-        setLeftWidth(percentage)
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId)
       }
+
+      animationFrameId = requestAnimationFrame(() => {
+        if (!containerRef.current) return
+
+        const container = containerRef.current
+        const containerRect = container.getBoundingClientRect()
+        const containerWidth = containerRect.width
+        const mouseX = e.clientX - containerRect.left
+        
+        // Calculate percentage with smooth interpolation
+        let percentage = (mouseX / containerWidth) * 100
+        
+        // Clamp between 5% and 95% for more freedom
+        percentage = Math.max(5, Math.min(95, percentage))
+        
+        // Check for collapse thresholds (more aggressive)
+        if (percentage < 8) {
+          setIsLeftCollapsed(true)
+          setIsRightCollapsed(false)
+        } else if (percentage > 92) {
+          setIsRightCollapsed(true)
+          setIsLeftCollapsed(false)
+        } else {
+          setIsLeftCollapsed(false)
+          setIsRightCollapsed(false)
+          setLeftWidth(percentage)
+        }
+      })
     }
 
     const handleMouseUp = () => {
       setIsDragging(false)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId)
+      }
     }
 
     if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mousemove", handleMouseMove, { passive: true })
       document.addEventListener("mouseup", handleMouseUp)
     }
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseup", handleMouseUp)
+      if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId)
+      }
     }
   }, [isDragging])
 
@@ -94,8 +114,12 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
     <div ref={containerRef} className="flex flex-col lg:flex-row w-full h-full relative select-none">
       {/* Left Panel */}
       <div
-        className="relative border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 transition-all duration-300 ease-in-out overflow-hidden"
-        style={{ width: getLeftWidth() }}
+        className="relative border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden"
+        style={{ 
+          width: getLeftWidth(),
+          transition: isLeftCollapsed || isRightCollapsed ? 'width 0.3s ease-in-out' : 'none',
+          willChange: isDragging ? 'width' : 'auto'
+        }}
       >
         {!isLeftCollapsed && (
           <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
@@ -120,8 +144,9 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
         <div
           className="hidden lg:flex w-1 bg-gray-300 dark:bg-gray-700 cursor-col-resize hover:bg-blue-500 dark:hover:bg-blue-500 transition-colors duration-150 relative group"
           onMouseDown={handleMouseDown}
+          style={{ willChange: isDragging ? 'background-color' : 'auto' }}
         >
-          <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
+          <div className="absolute inset-y-0 -left-2 -right-2 group-hover:bg-blue-500/10" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-12 bg-gray-400 dark:bg-gray-600 rounded-full group-hover:bg-blue-500 transition-colors duration-150" />
         </div>
       )}
@@ -139,8 +164,12 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
 
       {/* Right Panel */}
       <div
-        className="relative border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:border-l-0 transition-all duration-300 ease-in-out overflow-hidden"
-        style={{ width: getRightWidth() }}
+        className="relative border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:border-l-0 overflow-hidden"
+        style={{ 
+          width: getRightWidth(),
+          transition: isLeftCollapsed || isRightCollapsed ? 'width 0.3s ease-in-out' : 'none',
+          willChange: isDragging ? 'width' : 'auto'
+        }}
       >
         {!isRightCollapsed && (
           <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
@@ -151,3 +180,4 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
     </div>
   )
 }
+
