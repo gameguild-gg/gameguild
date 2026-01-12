@@ -40,6 +40,21 @@ export function SerializedContentRenderer({
 }: SerializedContentRendererProps) {
   let headingCounter = 0
 
+  // Validate serializedState structure
+  if (!serializedState || !serializedState.root || !serializedState.root.children) {
+    console.error("Invalid serializedState:", serializedState)
+    return (
+      <div className="p-8 text-center border border-red-200 bg-red-50 dark:border-red-700 dark:bg-red-900/20">
+        <p className="text-red-600 dark:text-red-400 font-medium">
+          Unable to render content: Invalid data structure
+        </p>
+        <p className="text-sm text-red-500 dark:text-red-500 mt-2">
+          The editor state is missing required properties (root.children)
+        </p>
+      </div>
+    )
+  }
+
   const renderNode = (node: any, index = 0, parentPath = "") => {
     // Create unique key using path and index
     const uniqueKey = `${parentPath}-${node.type}-${index}-${node.version || 0}`

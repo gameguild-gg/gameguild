@@ -1,13 +1,18 @@
 import { toast } from "sonner"
+import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 
 export interface ProjectData {
   id: string
   name: string
+  type: "type1" | "type2" // Layout type
   data: string
   tags: string[]
   size: number
   createdAt: string
   updatedAt: string
+  storageType?: "local" | "gameguild-cloud" | "google-drive"
+  isLocallyAvailable?: boolean
+  preferences?: ProjectPreferences
 }
 
 export interface CheckSelectedProjectPreviewParams {

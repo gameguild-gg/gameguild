@@ -8,8 +8,8 @@ import { OpenProjectDialogPreview } from "@/components/editor/extras/preview/ope
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import Link from "next/link"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
-import { PreviewTableOfContents } from "@/components/editor/extras/preview/preview-table-of-contents"
-import { ProjectSidebarList } from "@/components/editor/extras/preview/project-sidebar-list-improved"
+import { PreviewRendererType1 } from "@/components/editor/extras/preview/preview-renderer-type1"
+import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
 import { useRouter } from "next/navigation"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { checkSelectedProject as checkProjectPreview } from "@/components/editor/extras/preview/preview-load-operations"
@@ -159,7 +159,57 @@ export default function PreviewPage() {
     }
   }
 
+  const getLeftRightStates = (): { left: SerializedEditorState | null; right: SerializedEditorState | null } => {
+    if (!currentProject || currentProject.type !== "type2") {
+      return { left: null, right: null }
+    }
+
+    try {
+      const parsed = JSON.parse(currentProject.data)
+      
+      // Debug log to understand the data structure
+      console.log("Type2 parsed data:", parsed)
+      
+      // Check if parsed data has left and right properties
+      if (!parsed.left || !parsed.right) {
+        console.error("Type2 project data missing left or right states:", parsed)
+        return { left: null, right: null }
+      }
+      
+      // Parse the left and right states (they are stored as JSON strings)
+      let leftState: SerializedEditorState | null = null
+      let rightState: SerializedEditorState | null = null
+      
+      try {
+        leftState = typeof parsed.left === "string" ? JSON.parse(parsed.left) : parsed.left
+        rightState = typeof parsed.right === "string" ? JSON.parse(parsed.right) : parsed.right
+      } catch (parseError) {
+        console.error("Failed to parse left/right editor states:", parseError)
+        return { left: null, right: null }
+      }
+      
+      // Validate that left and right have root property
+      if (!leftState?.root || !rightState?.root) {
+        console.error("Type2 states missing root property:", {
+          leftHasRoot: !!leftState?.root,
+          rightHasRoot: !!rightState?.root
+        })
+        return { left: null, right: null }
+      }
+      
+      return {
+        left: leftState,
+        right: rightState,
+      }
+    } catch (error) {
+      console.error("Failed to parse type2 project data:", error)
+      return { left: null, right: null }
+    }
+  }
+
   const serializedState = getSerializedState()
+  const { left: leftState, right: rightState } = getLeftRightStates()
+  const currentLayoutType = currentProject?.type || "type1"
 
   return (
     <>
@@ -167,7 +217,7 @@ export default function PreviewPage() {
         <div className="container mx-auto py-10">
           <div
             className={`mx-auto space-y-4 px-4 sm:px-6 lg:px-8 ${
-              currentProject && serializedState ? "max-w-full" : "max-w-4xl"
+              currentProject && (serializedState || (leftState && rightState)) ? "max-w-full" : "max-w-4xl"
             }`}
           >
             {/* Professional Header */}
@@ -223,7 +273,7 @@ export default function PreviewPage() {
               {/* Action Bar */}
               <div className="flex items-center justify-between gap-4 p-4 bg-white dark:bg-gray-900">
                 <div className="flex items-center gap-3">
-                  {currentProject && serializedState && (
+                  {currentProject && (serializedState || (leftState && rightState)) && currentLayoutType === "type1" && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -273,70 +323,45 @@ export default function PreviewPage() {
               </div>
             </div>
 
-            {currentProject && serializedState ? (
-              <div className="flex flex-col lg:flex-row lg:gap-8">
-                {/* Desktop Sidebar */}
-                <aside className="hidden lg:block lg:w-1/3 xl:w-1/4">
-                  <ProjectSidebarList
+            {currentProject && (serializedState || (leftState && rightState)) ? (
+              <>
+                {currentLayoutType === "type1" && serializedState ? (
+                  <PreviewRendererType1
+                    serializedState={serializedState as any}
+                    currentProject={currentProject}
                     storageAdapter={storageAdapter}
                     availableTags={availableTags}
-                    currentProject={currentProject}
-                    onProjectSelect={handleProjectLoad}
                     isDbInitialized={isDbInitialized}
-                    isSticky={true}
+                    onProjectSelect={handleProjectLoad}
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
                   />
-                </aside>
-
-                {/* Mobile Sidebar Overlay */}
-                {sidebarOpen && (
-                  <div className="fixed inset-0 z-50 flex lg:hidden">
-                    <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
-                    <div className="relative h-full w-80 bg-white shadow-xl dark:bg-gray-900">
-                      <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Documents</h3>
+                ) : currentLayoutType === "type2" && leftState && rightState ? (
+                  <PreviewRendererType2 leftState={leftState as any} rightState={rightState as any} />
+                ) : (
+                  <div className="border border-red-200 bg-red-50 shadow-sm dark:border-red-700 dark:bg-red-900/20">
+                    <div className="p-6 px-12 py-12">
+                      <div className="py-16 text-center">
+                        <Eye className="mx-auto mb-4 h-16 w-16 text-red-300 dark:text-red-600" />
+                        <h3 className="mb-2 text-xl font-semibold text-red-900 dark:text-red-100">
+                          Invalid Project Data
+                        </h3>
+                        <p className="mb-6 text-red-600 dark:text-red-400">
+                          This project's data structure is incompatible with the viewer.
+                          <br />
+                          Type: {currentLayoutType} | Has Left: {leftState ? "Yes" : "No"} | Has Right: {rightState ? "Yes" : "No"}
+                        </p>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSidebarOpen(false)}
-                          className="h-8 w-8 p-0"
+                          onClick={() => setCurrentProject(null)}
+                          className="bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
                         >
-                          <X className="h-4 w-4" />
+                          Close Project
                         </Button>
-                      </div>
-                      <div className="h-full">
-                        <ProjectSidebarList
-                          storageAdapter={storageAdapter}
-                          availableTags={availableTags}
-                          currentProject={currentProject}
-                          onProjectSelect={(project) => {
-                            handleProjectLoad(project)
-                            setSidebarOpen(false)
-                          }}
-                          isDbInitialized={isDbInitialized}
-                        />
                       </div>
                     </div>
                   </div>
                 )}
-
-                <main className="flex-1 lg:w-3/4 xl:w-3/4">
-                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-7">
-                    <div className="xl:col-span-5">
-                      <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                        <div className="p-6 sm:p-8 md:p-12">
-                          <PreviewRenderer serializedState={serializedState as any} />
-                        </div>
-                      </div>
-                    </div>
-
-                    <aside className="xl:col-span-2">
-                      <div className="sticky top-24">
-                        <PreviewTableOfContents serializedState={serializedState} />
-                      </div>
-                    </aside>
-                  </div>
-                </main>
-              </div>
+              </>
             ) : (
               <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div className="p-6 px-12 py-12">
