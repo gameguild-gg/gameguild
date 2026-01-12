@@ -81,6 +81,8 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
+    projectType?: "type1" | "type2",
+    projectPreferences?: any
   ) => {
     try {
       // Generate hash for the project
@@ -90,13 +92,15 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
       const exportProjectData: ExportProjectData = {
         id: projectId,
         name: projectName,
+        type: projectType || "type1",
         data: projectData,
         tags: projectTags,
         size: new Blob([projectData]).size,
         createdAt: createdAt,
         updatedAt: updatedAt,
         hash: hash,
-        storageType: "local"
+        storageType: "local",
+        preferences: projectPreferences
       }
 
       // Use ProjectExporter to create the ZIP file

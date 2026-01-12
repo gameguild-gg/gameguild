@@ -11,6 +11,7 @@ import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
 export interface ProjectData {
   id: string
   name: string
+  type: "type1" | "type2"
   data: string
   tags: string[]
   size: number
@@ -18,11 +19,13 @@ export interface ProjectData {
   updatedAt: string
   hash?: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
+  preferences?: any
 }
 
 export interface ProjectMetadata {
   id: string
   name: string
+  type: "type1" | "type2"
   tags: string[]
   size: number
   hash: string
@@ -32,16 +35,19 @@ export interface ProjectMetadata {
   version: string
   exportedAt?: string
   assetsCount?: number
+  preferences?: any
 }
 
 export interface ImportedProjectData {
   id: string
   name: string
+  type: "type1" | "type2"
   data: string
   tags: string[]
   metadata: ProjectMetadata | null
   assets?: Record<string, AssetData>
   assetIndex?: Record<string, AssetUsage[]>
+  preferences?: any
 }
 
 export interface FolderStructureData {
@@ -158,11 +164,13 @@ export class ProjectImporter {
       return {
         id: metadata.id,
         name: metadata.name,
+        type: metadata.type || "type1",
         data: dataContent,
         tags: metadata.tags,
         metadata,
         assets: Object.keys(assets).length > 0 ? assets : undefined,
         assetIndex: Object.keys(assetIndex).length > 0 ? assetIndex : undefined,
+        preferences: metadata.preferences,
       }
     } catch (error) {
       throw new Error(`Failed to parse project data: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -186,6 +194,7 @@ export class ProjectImporter {
     return {
       id: '',
       name: baseName || 'Imported Project',
+      type: "type1",
       data: content,
       tags: [],
       metadata: null
@@ -212,9 +221,11 @@ export class ProjectImporter {
       return {
         id: metadata.id,
         name: metadata.name,
+        type: metadata.type || "type1",
         data: folderData.dataContent,
         tags: metadata.tags,
-        metadata
+        metadata,
+        preferences: metadata.preferences,
       }
     } catch (error) {
       throw new Error(`Failed to import from folder structure: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -234,13 +245,49 @@ export class ProjectImporter {
     return {
       id: newId || importedData.id || '',
       name: importedData.name,
+      type: importedData.type || "type1",
       data: importedData.data,
       tags: importedData.tags,
       size: new Blob([importedData.data]).size,
       createdAt: importedData.metadata?.createdAt || now,
       updatedAt: now, // Always update to current time on import
       hash: importedData.metadata?.hash,
-      storageType: newStorageType || (importedData.metadata?.storageType as "local" | "gameguild-cloud" | "google-drive") || "local"
+      storageType: newStorageType || (importedData.metadata?.storageType as "local" | "gameguild-cloud" | "google-drive") || "local",
+      preferences: importedData.preferences || importedData.metadata?.preferences,
+    }
+  }
+
+  /**
+   * Import assets into AssetManager for the target project
+   * Returns stats about imported assets
+   */
+  static async importProjectAssets(
+    importedData: ImportedProjectData,
+    targetProjectId: string
+  ): Promise<{ imported: number; skipped: number; updated: number }> {
+    if (!importedData.assets || !importedData.assetIndex) {
+      console.log('[ProjectImporter] No assets to import')
+      return { imported: 0, skipped: 0, updated: 0 }
+    }
+
+    console.log('[ProjectImporter] Importing assets:', {
+      assetsCount: Object.keys(importedData.assets).length,
+      indexCount: Object.keys(importedData.assetIndex).length,
+      targetProjectId
+    })
+
+    try {
+      const result = await assetManager.importProjectAssets(
+        importedData.assets,
+        importedData.assetIndex,
+        targetProjectId
+      )
+
+      console.log('[ProjectImporter] Assets imported successfully:', result)
+      return result
+    } catch (error) {
+      console.error('[ProjectImporter] Failed to import assets:', error)
+      throw error
     }
   }
 

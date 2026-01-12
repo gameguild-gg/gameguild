@@ -452,7 +452,9 @@ export default function HomePage() {
     projectData: string,
     projectTags: string[],
     createdAt: string,
-    updatedAt: string
+    updatedAt: string,
+    projectType?: "type1" | "type2",
+    projectPreferences?: any
   ) => {
     projectActions.handleDownload(
       projectId,
@@ -460,7 +462,9 @@ export default function HomePage() {
       projectData,
       projectTags,
       createdAt,
-      updatedAt
+      updatedAt,
+      projectType,
+      projectPreferences
     )
   }, [projectActions])
 

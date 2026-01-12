@@ -42,6 +42,8 @@ interface ProjectListProps {
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
+    projectType?: "type1" | "type2",
+    projectPreferences?: any
   ) => void
   showDeleteButton?: boolean
   showStudioViewerButtons?: boolean
@@ -97,6 +99,8 @@ export function ProjectList({
           downloadDialog.project.tags,
           downloadDialog.project.createdAt,
           downloadDialog.project.updatedAt,
+          downloadDialog.project.type,
+          downloadDialog.project.preferences
         )
       } else {
         // If no onDownload provided, implement download locally

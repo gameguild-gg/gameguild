@@ -14,16 +14,18 @@ import { ProjectImporter, type ImportedProjectData } from "@/lib/interopAdapter/
 interface ProjectData {
   id: string
   name: string
+  type: "type1" | "type2"
   data: string
   tags: string[]
   size: number
   createdAt: string
   updatedAt: string
+  preferences?: any
 }
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[]) => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: any, preferences?: any, type?: "type1" | "type2") => Promise<void>
 }
 
 interface ImportProjectDialogProps {
@@ -196,14 +198,23 @@ export function ImportProjectDialog({
 
     try {
       const newProjectId = generateProjectId()
-      await storageAdapter.save(newProjectId, projectName.trim(), importedProject.data, projectTags)
+      
+      // Save project with type and preferences
+      await storageAdapter.save(
+        newProjectId, 
+        projectName.trim(), 
+        importedProject.data, 
+        projectTags,
+        undefined, // storageType
+        importedProject.preferences || importedProject.metadata?.preferences,
+        importedProject.type || "type1"
+      )
 
       // Import assets if present
       if (importedProject.assets && importedProject.assetIndex) {
-        const { assetManager } = await import("@/lib/storage/assets/asset-manager")
-        const importResult = await assetManager.importProjectAssets(
-          importedProject.assets,
-          importedProject.assetIndex,
+        const { ProjectImporter } = await import("@/lib/interopAdapter/project-importer")
+        const importResult = await ProjectImporter.importProjectAssets(
+          importedProject,
           newProjectId
         )
 
