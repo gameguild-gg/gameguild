@@ -67,11 +67,15 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
 
         slidesRef.current.innerHTML = `<section data-markdown><textarea data-template>${content}</textarea></section>`;
 
+        // Get container dimensions for Reveal.js
+        const containerWidth = containerRef.current.offsetWidth;
+        const containerHeight = containerRef.current.offsetHeight;
+
         // Initialize Reveal.js with markdown and auto-resize support
         const revealInstance = new Reveal(containerRef.current, {
           plugins: [Markdown, Highlight],
-          width: '100%',
-          height: '100%',
+          width: containerWidth || 960,
+          height: containerHeight || 700,
           margin: 0.04,
           embedded: true,
           hash: false,
@@ -83,7 +87,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
           controlsLayout: 'bottom-right',
           center: true,
           touch: true,
-          minScale: 0.2,
+          minScale: 0.1,
           maxScale: 2.0,
           slideNumber: 'c/t', // Show current/total slide count
           highlight: {
@@ -123,8 +127,13 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
             resizeObserverRef.current.disconnect();
           }
 
-          resizeObserverRef.current = new ResizeObserver(() => {
-            if (revealInstanceRef.current) {
+          resizeObserverRef.current = new ResizeObserver((entries) => {
+            if (revealInstanceRef.current && entries[0]) {
+              const { width, height } = entries[0].contentRect;
+              revealInstanceRef.current.configure({
+                width: width || 960,
+                height: height || 700,
+              });
               revealInstanceRef.current.layout();
             }
           });
@@ -206,18 +215,9 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
   return (
     <div
       ref={containerRef}
-      className="reveal-container relative w-full"
-      style={{
-        height: height,
-        width: '100%',
-        overflow: 'visible',
-        border: '1px solid #e5e7eb',
-        borderRadius: '0.5rem',
-        position: 'relative',
-        paddingBottom: '40px', // Add space for slide numbers
-      }}
+      className="reveal-container w-full min-h-[50vh] sm:min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh] overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg"
     >
-      <div className="reveal" style={{ height: '100%' }}>
+      <div className="reveal w-full min-h-[50vh] sm:min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh]">
         <div className="slides" ref={slidesRef}></div>
       </div>
       <button

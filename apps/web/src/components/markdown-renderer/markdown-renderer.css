@@ -239,6 +239,23 @@
   background: hsl(var(--background)) !important;
 }
 
+/* Ensure images inside reveal slides respect container bounds */
+.reveal .slides img {
+  max-width: 100% !important;
+  max-height: 70vh !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+.reveal .slides section img {
+  max-width: 100% !important;
+  max-height: 60vh !important;
+  object-fit: contain !important;
+}
+
 /* Ensure slide number and progress bar are visible */
 .reveal .slide-number {
   display: block !important;
