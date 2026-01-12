@@ -200,13 +200,8 @@ public static class AuthorizationModuleExtensions
         services.AddScoped<ITenantPermissionRepository, TenantPermissionRepository>();
         services.AddScoped<IPermissionAuditLogRepository, PermissionAuditLogRepository>();
 
-        // Identity contexts
-        services.AddScoped<IUserContext, UserContext>();
-        services.AddScoped<ITenantContext, TenantContext>();
-        services.AddScoped<IPermissionsContext, PermissionsContext>();
-        // ISP-compliant segregated interfaces (clients can depend on only what they need)
-        services.AddScoped<IPermissionChecker>(sp => sp.GetRequiredService<IPermissionsContext>());
-        services.AddScoped<IPermissionContextInfo>(sp => sp.GetRequiredService<IPermissionsContext>());
+        // Actor context is the primary identity abstraction
+        // IActorContextAccessor is registered via AddActorContextIntegration()
         services.AddScoped<ILocalizationContext, LocalizationContext>();
 
         // CQRS Authorization Behavior

@@ -24,13 +24,8 @@ public static class ActorContextConfigurationExample
     /// </summary>
     public static void ConfigureServices(IServiceCollection services)
     {
-        // Option 1: Full actor-based contexts (recommended for new projects)
-        // This replaces IUserContext/ITenantContext with actor-based adapters
-        services.AddActorContextIntegration(useActorBasedContexts: true);
-
-        // Option 2: Just add actor context without replacing existing contexts
-        // Useful for gradual migration
-        // services.AddActorContextIntegration(useActorBasedContexts: false);
+        // Register Actor context as the primary identity abstraction
+        services.AddActorContextIntegration();
     }
 
     /// <summary>
