@@ -15,11 +15,18 @@ namespace GameGuild.Identity.Users;
 ///         entities into a single source of truth. PasswordHash is nullable to support OAuth-only users.
 ///     </para>
 ///     <para>
-///         <b>Cross-Module Relationship:</b> Users can belong to multiple tenants via the
-///         <c>TenantMember</c> entity in the <c>GameGuild.Tenants</c> module.
+///         <b>Related Entities (Same Module):</b> User has 1:1 relationships with:
+///         <list type="bullet">
+///             <item><see cref="UserProfile"/> - Extended profile information (bio, avatar, social links)</item>
+///             <item><see cref="UserMetadata"/> - Custom fields, tags, external references</item>
+///             <item><see cref="UserPreferences"/> - Notification, privacy, localization settings</item>
+///         </list>
+///         And 1:many with <see cref="UserNotification"/> for notification history.
 ///     </para>
 ///     <para>
-///         To keep modules decoupled, there is no navigation property here. Instead, query
+///         <b>Cross-Module Relationship:</b> Users can belong to multiple tenants via the
+///         <c>TenantMember</c> entity in the <c>GameGuild.Tenants</c> module.
+///         To keep modules decoupled, there is no navigation property to TenantMember. Instead, query
 ///         user memberships through <c>ITenantMemberRepository.GetByUserIdAsync(userId)</c>.
 ///     </para>
 ///     <para>
@@ -101,6 +108,13 @@ public class User : EntityBase, IUser
     /// </summary>
     public bool IsSuspended { get; set; }
 
+    /// <summary>
+    ///     Gets the current user status as a value object for rich status operations.
+    ///     Not mapped to database - computed from IsActive and IsSuspended.
+    /// </summary>
+    [NotMapped]
+    public UserStatus Status => new(IsActive, IsSuspended);
+
     // ========================
     // PROFILE FIELDS
     // ========================
@@ -115,6 +129,33 @@ public class User : EntityBase, IUser
     ///     Date and time when the user was last seen/logged in
     /// </summary>
     public DateTime? LastSeenAt { get; set; }
+
+    // ========================
+    // NAVIGATION PROPERTIES
+    // ========================
+
+    /// <summary>
+    ///     Extended profile information (bio, avatar, social links).
+    ///     Lazy loaded, nullable if profile not yet created.
+    /// </summary>
+    public virtual UserProfile? Profile { get; set; }
+
+    /// <summary>
+    ///     Custom metadata (tags, external references, custom fields).
+    ///     Lazy loaded, nullable if metadata not yet created.
+    /// </summary>
+    public virtual UserMetadata? Metadata { get; set; }
+
+    /// <summary>
+    ///     User preferences (notifications, privacy, localization).
+    ///     Lazy loaded, nullable if preferences not yet created.
+    /// </summary>
+    public virtual UserPreferences? Preferences { get; set; }
+
+    /// <summary>
+    ///     Collection of notifications for this user.
+    /// </summary>
+    public virtual ICollection<UserNotification> Notifications { get; set; } = new List<UserNotification>();
 
     // ========================
     // AUTHENTICATION METHODS

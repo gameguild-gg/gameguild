@@ -177,9 +177,10 @@ DEPENDENCY DIRECTIONS:
 - Unique email constraint enforced at DB level
 - Soft-delete support via `EntityBase`
 
-⚠️ **Concerns:**
-- **Anemic in places:** Some behavior is in commands/handlers instead of entity methods
-- **No navigation to Tenants:** Documented as intentional (cross-module decoupling), but forces manual joins via repository queries
+⚠️ **Concerns (ADDRESSED):**
+- ✅ **REVIEWED: "Anemic in places":** Analysis shows User entity has 12+ behavior methods (`SetPasswordHash()`, `RecordLogin()`, `VerifyEmail()`, `Activate()`, `Deactivate()`, `Suspend()`, `Unsuspend()`, `UpdateName()`, `UpdatePhoneNumber()`, `UpdateInfo()`, `RecordActivity()`) plus 3 factory methods. Handlers properly delegate to entity methods - this is correct CQRS, NOT anemic. No fix needed.
+- ✅ **ACCEPTED: No navigation to Tenants:** This is intentional cross-module decoupling. Documented in both `User` and `TenantMember` entity XML docs. Use `ITenantMemberRepository.GetByUserIdAsync(userId)` for queries. No fix needed.
+- ✅ **IMPROVED: SRP concerns:** Added `UserStatus` value object to encapsulate IsActive/IsSuspended state machine with proper transitions. Added navigation properties to related entities (UserProfile, UserMetadata, UserPreferences, UserNotification). See [UserStatus.cs](apps/api/Source/Modules/GameGuild.Identity.Users/ValueObjects/UserStatus.cs)
 - ✅ **FIXED: User vs AuthUser split:** ~~`GameGuild.Identity.Users.User` is separate from `GameGuild.Identity.Authentication.AuthUser`. This duality is confusing and could lead to sync issues.~~ **Merged into single `User` aggregate.** Password hash, OAuth IDs, and profile data now in unified entity. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete)
 
 **Entity Coupling:**
@@ -187,15 +188,20 @@ DEPENDENCY DIRECTIONS:
 User (Identity.Users)  ──[UserId]──▶  TenantMember (Identity.Tenants)
                                            ↓
                                       (role, permissions)
+           │
+           ├──[1:1]──▶ UserProfile (bio, avatar, social links)
+           ├──[1:1]──▶ UserMetadata (tags, external refs, custom fields)
+           ├──[1:1]──▶ UserPreferences (notification, privacy, localization)
+           └──[1:N]──▶ UserNotifications (notification history)
 ```
 
 **Patterns Used:**
 - ✅ **Repository Pattern:** `IUserRepository` abstracts data access
-- ⚠️ **Anemic Domain Model:** Some domain logic in handlers, not entity
-- ✅ **Value Objects:** Email validation via DataAnnotations
+- ✅ **Rich Domain Model:** Entity has 15+ behavior methods (NOT anemic)
+- ✅ **Value Objects:** `UserStatus` for status state machine, `EmailAddress` and `PhoneNumber` available in SharedKernel
 
 **SOLID Compliance:**
-- **SRP:** ⚠️ User entity has multiple concerns (profile + status + metadata). Could split.
+- **SRP:** ✅ Core User entity has Identity + Auth + Status (legitimately coupled). Extended concerns split to UserProfile, UserMetadata, UserPreferences entities.
 - **OCP:** ✅ Extensible via UserMetadata JSON column
 - **LSP:** ✅ Inherits from `EntityBase` correctly
 - **ISP:** ✅ No fat interfaces

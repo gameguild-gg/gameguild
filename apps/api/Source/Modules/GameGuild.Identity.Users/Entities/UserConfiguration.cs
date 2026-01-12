@@ -16,30 +16,39 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // Configure Id property
         builder.Property(x => x.Id).IsRequired();
 
-        // TODO: Add specific property configurations for User
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        // ========================
+        // NAVIGATION PROPERTIES
+        // ========================
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        // User → UserProfile (1:1 optional)
+        builder.HasOne(x => x.Profile)
+            .WithOne(p => p.User)
+            .HasForeignKey<UserProfile>(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_user_tenant_id");
+        // User → UserMetadata (1:1 optional)
+        builder.HasOne(x => x.Metadata)
+            .WithOne(m => m.User)
+            .HasForeignKey<UserMetadata>(m => m.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        // User → UserPreferences (1:1 optional)
+        builder.HasOne(x => x.Preferences)
+            .WithOne(p => p.User)
+            .HasForeignKey<UserPreferences>(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // User → UserNotifications (1:many)
+        builder.HasMany(x => x.Notifications)
+            .WithOne(n => n.User)
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ========================
+        // IGNORED PROPERTIES
+        // ========================
+
+        // Status is a computed NotMapped property
+        builder.Ignore(x => x.Status);
     }
 }
