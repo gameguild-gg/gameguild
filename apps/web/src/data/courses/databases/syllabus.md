@@ -63,7 +63,7 @@ By the end of this course, students will be able to:
 | **Integration**         | Multi-database architecture, combining paradigms for real-world solutions          | Final Project                       |
 | **Inquiry**             | Requirements analysis, architecture decisions, problem formulation                 | Final Project Proposal, Checkpoints |
 
-## Phylosophy
+## Philosophy
 
 This course takes a top-down, DevOps-first approach to database management. Students learn by doing. Every concept is reinforced through hands-on coding assignments automatically tested via GitHub Actions. The course emphasizes:
 
