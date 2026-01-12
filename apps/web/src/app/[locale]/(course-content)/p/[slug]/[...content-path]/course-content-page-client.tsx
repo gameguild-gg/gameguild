@@ -1,6 +1,6 @@
 'use client';
 
-import MarkdownRenderer from '@/components/markdown-renderer/markdown-renderer';
+import MarkdownRenderer, { RendererType } from '@/components/markdown-renderer/markdown-renderer';
 import { Card, CardContent } from '@/components/ui/card';
 import { ProgramContentDto } from '@/lib/api/generated/types.gen';
 
@@ -13,6 +13,27 @@ interface CourseContentPageClientProps {
     children?: React.ReactNode;
 }
 
+/**
+ * Detects if content has frontmatter specifying renderer type
+ * Frontmatter format: ---\nrenderer: reveal\n---
+ */
+function detectRendererType(content: string): { renderer: RendererType; cleanContent: string } {
+    const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+    const match = content.match(frontmatterRegex);
+
+    if (match) {
+        const frontmatter = match[1];
+        const rendererMatch = frontmatter.match(/renderer:\s*(reveal|markdown)/i);
+        if (rendererMatch && rendererMatch[1].toLowerCase() === 'reveal') {
+            // Remove frontmatter from content for reveal
+            const cleanContent = content.replace(frontmatterRegex, '');
+            return { renderer: 'reveal', cleanContent };
+        }
+    }
+
+    return { renderer: 'markdown', cleanContent: content };
+}
+
 export function CourseContentPageClient({
     programData: _programData, // eslint-disable-line @typescript-eslint/no-unused-vars
     content,
@@ -21,17 +42,21 @@ export function CourseContentPageClient({
     children
 }: CourseContentPageClientProps) {
 
+    const bodyContent = typeof content.body === 'string' ? content.body : '';
+    const { renderer, cleanContent } = detectRendererType(bodyContent);
+    const isReveal = renderer === 'reveal';
+
     return (
         <div className="flex-1 flex flex-col min-h-0">
-            <div className="mx-auto max-w-4xl w-full">
+            <div className={isReveal ? "w-full" : "mx-auto max-w-4xl w-full"}>
                 {/* Content */}
-                <Card className="transition-all duration-300 py-0">
-                    <CardContent className="px-6 py-6">
+                <Card className={`transition-all duration-300 py-0 ${isReveal ? 'border-0 shadow-none' : ''}`}>
+                    <CardContent className={isReveal ? "px-0 py-0" : "px-6 py-6"}>
                         {/* Content Body */}
                         {content.body !== undefined && content.body !== null && (
-                            <div className="prose max-w-none">
+                            <div className={isReveal ? "" : "prose max-w-none"}>
                                 {typeof content.body === 'string' ? (
-                                    <MarkdownRenderer content={content.body} />
+                                    <MarkdownRenderer content={cleanContent} renderer={renderer} />
                                 ) : (
                                     <pre className="whitespace-pre-wrap">
                                         {String(content.body)}

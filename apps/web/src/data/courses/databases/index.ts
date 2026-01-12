@@ -1,4 +1,4 @@
-import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/generated';
+import { Product, ProductProgram, Program, ProgramContent, ProgramContentType } from '@/lib/api/generated';
 
 // Markdown content imports
 import week01Intro from './01-introduction/01-intro.md';
@@ -167,7 +167,7 @@ export const week01DbZooContent: ProgramContent = {
     parentId: 'databases-week-01-intro',
     title: 'Database Zoo',
     description: 'Overview of different database types and paradigms',
-    type: 0, // Page
+    type: ProgramContentType.PAGE,
     body: week01DbZoo,
     sortOrder: 2,
     isRequired: true,
@@ -180,7 +180,7 @@ export const week01DbZooContent: ProgramContent = {
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
-    updatedAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z'
 };
 
 export const week01DecisionMatrixContent: ProgramContent = {
