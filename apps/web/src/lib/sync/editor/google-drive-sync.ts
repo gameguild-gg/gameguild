@@ -3,6 +3,7 @@ import { GoogleDriveService } from "../../../services/editor/google-drive-servic
 interface ProjectData {
   id: string
   name: string
+  type: "type1" | "type2"
   data: string
   tags: string[]
   size: number
@@ -89,6 +90,7 @@ export class GoogleDriveSync {
         return {
           id: project.id,
           name: project.name,
+          type: project.type || "type1",
           data: project.data,
           tags: project.tags,
           size: project.size,
@@ -120,6 +122,7 @@ export class GoogleDriveSync {
       return projects.map((project: any) => ({
         id: project.id,
         name: project.name,
+        type: project.type || "type1",
         data: project.data,
         tags: project.tags,
         size: project.size,
