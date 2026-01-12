@@ -7,6 +7,13 @@ import { Label } from "@/components/ui/label"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
+import { 
+  type ProjectMode, 
+  type ProjectLayoutType,
+  PROJECT_MODES, 
+  NODE_RESTRICTIONS,
+  canSelectLayoutType 
+} from "@/lib/storage/editor/project-modes"
 
 interface ProjectData {
   id: string
@@ -29,7 +36,14 @@ interface CreateProjectDialogProps {
   isDbInitialized: boolean
   storageAdapter: StorageAdapter
   availableTags: Array<{ name: string }>
-  onProjectCreate: (projectData: { id: string; name: string; tags: string[]; storageType: "local" | "gameguild-cloud" | "google-drive"; type: "type1" | "type2" }) => void
+  onProjectCreate: (projectData: { 
+    id: string
+    name: string
+    tags: string[]
+    storageType: "local" | "gameguild-cloud" | "google-drive"
+    type: "type1" | "type2"
+    mode: ProjectMode
+  }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
   generateProjectId: () => string
@@ -51,7 +65,8 @@ export function CreateProjectDialog({
   const [tagInput, setTagInput] = useState("")
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [storageOption, setStorageOption] = useState<StorageOption>("local")
-  const [projectType, setProjectType] = useState<"type1" | "type2">("type1")
+  const [projectMode, setProjectMode] = useState<ProjectMode>("free-page")
+  const [projectType, setProjectType] = useState<ProjectLayoutType>("type1")
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -125,7 +140,33 @@ export function CreateProjectDialog({
 
     try {
       const newProjectId = generateProjectId()
-      await storageAdapter.save(newProjectId, newCreateProjectName, emptyState, projectTags, storageOption, undefined, projectType)
+      
+      // Determine layout type based on mode
+      const finalLayoutType = canSelectLayoutType(projectMode) 
+        ? projectType 
+        : PROJECT_MODES[projectMode].layoutType
+      
+      // Get restrictions for the mode
+      const restrictions = NODE_RESTRICTIONS[projectMode]
+      
+      // Create preferences with mode and restrictions
+      const preferences = {
+        global: {
+          mode: projectMode,
+          restrictions: restrictions
+        },
+        nodes: {}
+      }
+      
+      await storageAdapter.save(
+        newProjectId, 
+        newCreateProjectName, 
+        emptyState, 
+        projectTags, 
+        storageOption, 
+        preferences,
+        finalLayoutType
+      )
 
       // Call the callback to update parent state
       onProjectCreate({
@@ -133,7 +174,8 @@ export function CreateProjectDialog({
         name: newCreateProjectName,
         tags: projectTags,
         storageType: storageOption,
-        type: projectType,
+        type: finalLayoutType,
+        mode: projectMode,
       })
 
       // Reset form state
@@ -142,6 +184,7 @@ export function CreateProjectDialog({
       setTagInput("")
       setShowTagDropdown(false)
       setStorageOption("local")
+      setProjectMode("free-page")
       setProjectType("type1")
       onOpenChange(false)
 
@@ -170,6 +213,8 @@ export function CreateProjectDialog({
     setTagInput("")
     setShowTagDropdown(false)
     setStorageOption("local")
+    setProjectMode("free-page")
+    setProjectType("type1")
     onOpenChange(false)
   }
 
@@ -192,19 +237,46 @@ export function CreateProjectDialog({
             />
           </div>
 
-          {/* Project Type Section */}
+          {/* Project Mode Section */}
           <div>
-            <Label htmlFor="project-type">Project Type</Label>
+            <Label htmlFor="project-mode">Project Mode</Label>
             <select
-              id="project-type"
-              value={projectType}
-              onChange={(e) => setProjectType(e.target.value as "type1" | "type2")}
+              id="project-mode"
+              value={projectMode}
+              onChange={(e) => {
+                const newMode = e.target.value as ProjectMode
+                setProjectMode(newMode)
+                // Set default layout type for non-free modes
+                if (!canSelectLayoutType(newMode)) {
+                  setProjectType(PROJECT_MODES[newMode].layoutType)
+                }
+              }}
               className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
-              <option value="type1">Type 1 - Single Editor (Vertical Layout)</option>
-              <option value="type2">Type 2 - Dual Editors (Horizontal Layout)</option>
+              <option value="free-page">Free Page - No restrictions, flexible layout</option>
+              <option value="code-page">Code Page - Dual layout with code studio</option>
+              <option value="quiz-page">Quiz Page - Dual layout with quiz nodes</option>
             </select>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {PROJECT_MODES[projectMode].description}
+            </p>
           </div>
+
+          {/* Layout Type Selection (only for free-page mode) */}
+          {canSelectLayoutType(projectMode) && (
+            <div>
+              <Label htmlFor="project-type">Layout Type</Label>
+              <select
+                id="project-type"
+                value={projectType}
+                onChange={(e) => setProjectType(e.target.value as ProjectLayoutType)}
+                className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              >
+                <option value="type1">Single Editor (Vertical Layout)</option>
+                <option value="type2">Dual Editors (Horizontal Layout)</option>
+              </select>
+            </div>
+          )}
 
           {/* Tags Section */}
           <div className="space-y-3">

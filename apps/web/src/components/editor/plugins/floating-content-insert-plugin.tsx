@@ -57,6 +57,8 @@ import type { VegaLiteData } from "../nodes/vega-lite-node"
 import type { TableData } from "../nodes/table-node"
 import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
 import type { CodeStudioMode } from "../extras/code-studio/types"
+import type { ProjectMode } from "@/lib/storage/editor/project-modes"
+import { isNodeAllowed } from "@/lib/storage/editor/project-modes"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
 const IMAGE_INSERTION_MODE = 0
@@ -98,7 +100,12 @@ export const INSERT_MERMAID_COMMAND = createCommand<MermaidData>("INSERT_MERMAID
 export const INSERT_VEGA_LITE_COMMAND = createCommand<VegaLiteData>("INSERT_VEGA_LITE_COMMAND")
 export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TABLE_COMMAND")
 
-export function FloatingContentInsertPlugin() {
+interface FloatingContentInsertPluginProps {
+  mode?: ProjectMode
+  panel?: "left" | "right"
+}
+
+export function FloatingContentInsertPlugin({ mode = "free-page", panel }: FloatingContentInsertPluginProps = {}) {
   const [editor] = useLexicalComposerContext()
   const [show, setShow] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -367,7 +374,24 @@ export function FloatingContentInsertPlugin() {
     setShowMenu(false)
   }
 
-  const primaryOptions = [
+  // Mapeamento de nodes para validação
+  const nodeTypeMap: Record<string, string> = {
+    "Image": "image",
+    "Gallery": "gallery",
+    "Video": "video",
+    "Audio": "audio",
+    "Quiz": "quiz",
+    "Markdown": "markdown",
+    "Divider": "divider",
+    "Button": "button",
+    "Admonition": "admonition",
+    "Mermaid Diagram": "mermaid",
+    "Code Studio": "code-studio",
+    "Vega-Lite Chart": "vega-lite",
+    "Table": "table",
+  }
+
+  const allPrimaryOptions = [
     /*
     {
       icon: Heading,
@@ -567,6 +591,19 @@ export function FloatingContentInsertPlugin() {
     { icon: Music3, label: "SoundCloud", action: () => console.log("SoundCloud clicked") },
     { icon: MoreHorizontal, label: "Other...", action: () => console.log("Other clicked") },
   ]
+
+  // Filtrar opções baseado nas restrições do modo
+  const primaryOptions = allPrimaryOptions.filter((option) => {
+    const nodeType = nodeTypeMap[option.label]
+    
+    // Se não há mapeamento ou não há panel (type1), permitir todos
+    if (!nodeType || !panel) {
+      return true
+    }
+    
+    // Verificar se o node é permitido neste panel para este modo
+    return isNodeAllowed(nodeType, panel, mode)
+  })
 
   if (
     !show &&

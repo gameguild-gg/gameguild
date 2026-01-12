@@ -99,6 +99,7 @@ import { useState } from "react"
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
+import type { ProjectMode } from "@/lib/storage/editor/project-modes"
 
 // Create and export the EditorLoadingContext
 export const EditorLoadingContext = createContext<boolean>(false)
@@ -345,6 +346,8 @@ interface EditorProps {
   editorRef?: React.MutableRefObject<LexicalEditor | null>
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId?: string | null
+  mode?: ProjectMode
+  panel?: "left" | "right"
 }
 
 // Criar um plugin para gerenciar a referência do editor:
@@ -402,7 +405,7 @@ const MATCHERS: LinkMatcher[] = [
 ]
 
 // Atualizar a função Editor para incluir o EditorRefPlugin:
-export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId }: EditorProps) {
+export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId, mode, panel }: EditorProps) {
   const [isLoadingProject, setIsLoadingProject] = useState(false)
 
   useEffect(() => {
@@ -433,7 +436,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
               }
               ErrorBoundary={LexicalErrorBoundary}
             />
-            <FloatingContentInsertPlugin />
+            <FloatingContentInsertPlugin mode={mode} panel={panel} />
             <FloatingTextFormatToolbarPlugin />
             <LinkPlugin />
             <AutoLinkPlugin matchers={MATCHERS} />
