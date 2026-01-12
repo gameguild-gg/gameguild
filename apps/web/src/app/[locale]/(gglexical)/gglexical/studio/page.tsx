@@ -24,7 +24,7 @@ import { calculateProjectAssetsSize as calculateAssets } from "@/components/edit
 import { checkSelectedProject as checkProject } from "@/components/editor/extras/editor/project-load-operations"
 import { EditorLayoutType1 } from "@/components/editor/extras/editor/editor-layout-type1"
 import { EditorLayoutType2 } from "@/components/editor/extras/editor/editor-layout-type2"
-import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
+import { EnhancedStorageAdapter, type ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
@@ -221,7 +221,7 @@ export default function Page() {
   }, [currentProjectId, isDbInitialized, editorState, leftEditorState, rightEditorState])
 
   const storageAdapter = {
-    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", type: "type1" | "type2" = "type1") => {
+    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: "type1" | "type2" = "type1") => {
       if (!id || !name || !data) {
         console.warn("Invalid id, name or data")
         return
@@ -235,7 +235,7 @@ export default function Page() {
       console.log(`Saving project "${name}" (${id}) to ${storageType} - Size: ${formatSize(originalSize)}`)
 
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType, undefined, type)
+        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type)
         console.log(`Saved project "${name}" (${id}) to ${storageType} successfully`)
       } catch (error) {
         console.error("Failed to save project:", error)
@@ -640,13 +640,77 @@ export default function Page() {
                     storageAdapter={storageAdapter}
                     availableTags={availableTags}
                     editorRef={editorRef}
+                    leftEditorRef={leftEditorRef}
+                    rightEditorRef={rightEditorRef}
                     setLoadingRef={setLoadingRef}
                     onProjectLoad={(projectData) => {
+                      const layoutType = projectData.type || "type1"
+                      
+                      // Update project metadata
                       setCurrentProjectId(projectData.id)
                       setCurrentProjectName(projectData.name)
                       setCurrentProjectStorageType(projectData.storageType || "local")
                       setProjectTags(projectData.tags || [])
+                      setCurrentLayoutType(layoutType)
                       setIsFirstTime(false)
+                      
+                      // Load editor data based on layout type
+                      setTimeout(() => {
+                        try {
+                          if (layoutType === "type1" && editorRef.current) {
+                            // Type1: Single editor
+                            let parsedData
+                            try {
+                              parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
+                            } catch (parseError) {
+                              throw new Error("Project data is not valid JSON")
+                            }
+
+                            if (!parsedData || typeof parsedData !== 'object' || !parsedData.root) {
+                              throw new Error("Invalid Lexical format")
+                            }
+
+                            const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
+                            editorRef.current.setEditorState(editorState)
+                            setEditorState(JSON.stringify(parsedData))
+
+                          } else if (layoutType === "type2" && leftEditorRef.current && rightEditorRef.current) {
+                            // Type2: Dual editors
+                            let parsedData
+                            try {
+                              parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
+                            } catch (parseError) {
+                              throw new Error("Project data is not valid JSON")
+                            }
+
+                            if (!parsedData || !parsedData.left || !parsedData.right) {
+                              throw new Error("Type2 project must have left and right properties")
+                            }
+
+                            // Load left editor
+                            const leftParsed = typeof parsedData.left === 'string' ? JSON.parse(parsedData.left) : parsedData.left
+                            if (!leftParsed.root) throw new Error("Invalid left editor format")
+                            const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(leftParsed))
+                            leftEditorRef.current.setEditorState(leftEditorState)
+                            setLeftEditorState(JSON.stringify(leftParsed))
+
+                            // Load right editor
+                            const rightParsed = typeof parsedData.right === 'string' ? JSON.parse(parsedData.right) : parsedData.right
+                            if (!rightParsed.root) throw new Error("Invalid right editor format")
+                            const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(rightParsed))
+                            rightEditorRef.current.setEditorState(rightEditorState)
+                            setRightEditorState(JSON.stringify(rightParsed))
+                          }
+                        } catch (error) {
+                          console.error("Failed to load editor data:", error)
+                          toast.error("Erro ao carregar dados do editor", {
+                            description: error instanceof Error ? error.message : "Unknown error",
+                            duration: 4000,
+                            icon: "❌",
+                          })
+                        }
+                      }, 100) // Give React time to render new layout type
+                      
                       // Update URL hash with project ID
                       window.history.pushState(null, '', `#${projectData.id}`)
                     }}
