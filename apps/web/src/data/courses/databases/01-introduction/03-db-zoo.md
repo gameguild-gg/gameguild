@@ -80,21 +80,18 @@ Supports **ACID transactions** for data integrity
 
 ## Entity Relationship Diagram
 
-``` mermaid
-erDiagram
-    USERS {
-        INTEGER id PK
-        VARCHAR name
-        VARCHAR email
-        TIMESTAMP created_at
-    }
-    ORDERS {
-        INTEGER id PK
-        INTEGER user_id FK
-        DECIMAL amount
-        TIMESTAMP order_date
-    }
-    USERS ||--o{ ORDERS : places
+```
+┌──────────────────────┐         ┌──────────────────────┐
+│        USERS         │         │        ORDERS        │
+├──────────────────────┤         ├──────────────────────┤
+│ 🔑 id (PK)           │         │ 🔑 id (PK)           │
+│    name              │         │ 🔗 user_id (FK)      │
+│    email             │         │    amount            │
+│    created_at        │         │    order_date        │
+└──────────────────────┘         └──────────────────────┘
+           │                              │
+           │          places              │
+           └──────────── 1:N ─────────────┘
 ```
 
 ---
@@ -324,17 +321,24 @@ Easy to traverse complex connections
 
 ## How Data Looks
 
-```mermaid
-graph TD
-    Alice["👤 Alice<br/>(Person)"]
-    Bob["👤 Bob<br/>(Person)"]
-    Carol["👤 Carol<br/>(Person)"]
-    TechCo["🏢 TechCo<br/>(Company)"]
+```
+     NODES (Entities)           EDGES (Relationships)
+    ┌─────────────────┐      ┌──────────────────────────┐
+    │  👤 Alice       │      │  Alice ─FOLLOWS─► Bob    │
+    │  👤 Bob         │      │  Alice ─FOLLOWS─► Carol  │
+    │  👤 Carol       │      │  Bob ───WORKS_AT─► TechCo│
+    │  🏢 TechCo      │      │  Carol ─WORKS_AT─► TechCo│
+    └─────────────────┘      └──────────────────────────┘
 
-    Alice -->|FOLLOWS| Bob
-    Alice -->|FOLLOWS| Carol
-    Bob -->|WORKS_AT| TechCo
-    Carol -->|WORKS_AT| TechCo
+                    👤 Alice
+                    /      \
+              FOLLOWS      FOLLOWS
+                /              \
+           👤 Bob            👤 Carol
+               \              /
+            WORKS_AT      WORKS_AT
+                 \          /
+                  🏢 TechCo
 ```
 
 ---
