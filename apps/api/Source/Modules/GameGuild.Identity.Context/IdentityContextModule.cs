@@ -26,6 +26,10 @@ public static class IdentityContextModule
         // Register the Actor context accessor (singleton using AsyncLocal)
         services.AddSingleton<IActorContextAccessor, ActorContextAccessor>();
         
+        // Register the security audit logger for tracking security-relevant events
+        // This logs unauthorized access attempts, privilege escalations, etc.
+        services.AddSingleton<ISecurityAuditLogger, SecurityAuditLogger>();
+        
         return services;
     }
 

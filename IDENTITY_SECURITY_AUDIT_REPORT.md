@@ -23,7 +23,7 @@
 - ✅ **FIXED: Stringly-typed security:** Permission keys now use strongly-typed `Permission` class hierarchy with **nested `Keys` class pattern** for attribute compatibility. Controllers use `[RequirePermission(ProductsPermission.Keys.Create)]`. Runtime checks use `actor.HasPermission(ProductsPermission.Create)`. See [docs/security/STRONGLY_TYPED_PERMISSIONS.md](docs/security/STRONGLY_TYPED_PERMISSIONS.md). Tenant roles use `TenantRole` class. ISP-compliant `IPermissionChecker`/`IPermissionContextInfo` interfaces created.
 - ✅ **FIXED: Inconsistent tenant resolution:** Tenant resolution now validated via membership check in `TenantMiddleware`. Fail-closed error handling returns 403 if user not a member.
 - ✅ **FIXED: Middleware ordering hazards:** ~~Critical security middleware (ActorContext, Tenant, Permission caching) has unclear/undocumented ordering requirements~~ Now enforced via `MiddlewareOrderValidator`
-- **Caching complexity without clear invalidation:** Multiple cache layers (IMemoryCache, tenant version store) but invalidation strategy is fragmented
+- ✅ **FIXED: Caching complexity:** ~~Multiple cache layers (IMemoryCache, tenant version store) but invalidation strategy is fragmented~~ Documented unified cache invalidation strategy via `ITenantSecurityVersionStore`. Version-based cache keys ensure stale data is never returned. See [docs/security/CACHING_STRATEGY.md](docs/security/CACHING_STRATEGY.md)
 - **Missing authorization tests:** Authorization module lacks the comprehensive test coverage that Authentication has
 
 🚨 **P0 Issues (Address Immediately):**
@@ -93,8 +93,10 @@ DEPENDENCY DIRECTIONS:
   Authentication → Context (uses IIdentityContext - legacy)
   Context → [NO dependencies] (pure abstractions)
   
-  ⚠️ Users ↔ Tenants have circular references via TenantMember
-     (documented as cross-module relationship, uses Guid FKs, no nav props)
+  ✅ Users ↔ Tenants bidirectional navigation via TenantMember
+     (INTENTIONAL DESIGN: User.TenantMemberships ↔ TenantMember.UserId enables
+      efficient queries in both directions. Module decoupling maintained via
+      Guid FKs. See TenantMember.cs and User.cs for documentation.)
 ```
 
 ---
@@ -131,7 +133,7 @@ DEPENDENCY DIRECTIONS:
 - ✅ **FIXED: Dual model confusion:** ~~Both `IIdentityContext` and `ActorContext` exist.~~ Legacy interfaces (`IUserContext`, `ITenantContext`, `IPermissionsContext`, `IIdentityContext`) **DELETED**. All production code now uses `IActorContextAccessor` exclusively.
 - ✅ **FIXED: Migration complete:** All production code now uses `IActorContextAccessor`. Legacy interfaces and adapter shims have been **removed from codebase**.
 - ✅ **FIXED: Attributes dictionary:** ~~`ActorContext.Attributes` is `IReadOnlyDictionary<string, string>` (stringly-typed).~~ Created strongly-typed `ActorAttributes` class with typed properties (Email, EmailVerified, MfaVerified, Department, TenantRole, etc.). Legacy `Attributes` property marked `[Obsolete]`, replaced by `TypedAttributes`. See [ActorAttributes.cs](apps/api/Source/Modules/GameGuild.Identity.Context/Actors/ActorAttributes.cs)
-- **No built-in audit logging:** ActorContext doesn't emit audit events when accessed (could help detect privilege escalation attempts).
+- ✅ **FIXED: No built-in audit logging:** ~~ActorContext doesn't emit audit events when accessed.~~ Created `ISecurityAuditLogger` interface and `SecurityAuditLogger` implementation for logging security-relevant events (unauthorized access attempts, privilege escalations, cross-tenant access). Events are logged at authorization decision points, not on every context access. See [SecurityAuditLogger.cs](apps/api/Source/Modules/GameGuild.Identity.Context/Actors/SecurityAuditLogger.cs)
 
 **Patterns Used:**
 - ✅ **Accessor Pattern:** `IActorContextAccessor` provides safe access to shared context
@@ -248,7 +250,7 @@ User (Identity.Users)
 - ✅ **FIXED: Tenant membership validation:** ~~Multiple resolution sources create attack surface. An attacker could inject tenant ID via query string if header is not present.~~ Now validates tenant membership after resolution. See [docs/security/TENANT_MEMBERSHIP_VALIDATION.md](docs/security/TENANT_MEMBERSHIP_VALIDATION.md)
 - ✅ **FIXED: Fail-closed policy:** ~~If tenant resolution fails, what happens? Code doesn't show explicit 403/401 response.~~ Now returns 403 Forbidden if user is not a member of resolved tenant.
 - ✅ **FIXED: TenantMember.Role is stringly-typed:** ~~No enum/constants for roles like "Admin", "Member", "Guest". Typos could grant incorrect access.~~ Created `TenantRole` class with strongly-typed constants (Owner, Admin, Moderator, Member, Guest, Contributor, Viewer). See [TenantRole.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/TenantRole.cs)
-- **Hierarchical members (ParentMemberId):** Unclear how this affects permission inheritance. No documentation on intended use case.
+- ✅ **FIXED: Hierarchical members (ParentMemberId):** ~~Unclear how this affects permission inheritance. No documentation on intended use case.~~ Added comprehensive XML documentation to `TenantMember` entity explaining that hierarchy is for **organizational purposes only** (teams, departments, reporting chains) and does **NOT** affect permission inheritance. Each member's permissions are determined independently by their assigned role. See [TenantMember.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/TenantMember.cs)
 
 **Tenant Resolution Flow:**
 ```
@@ -270,10 +272,10 @@ Request → TenantMiddleware
 **Patterns Used:**
 - ✅ **Middleware Pattern:** Tenant resolution in request pipeline
 - ✅ **Strategy Pattern:** Multiple tenant resolution strategies (header, domain, query)
-- ⚠️ **God Object Risk:** `Tenant` entity has many navigation properties (members, domains, settings, statistics, usage). Could split into aggregates.
+- ✅ **Aggregate Root Pattern:** `Tenant` entity is the aggregate root for related entities (members, domains, settings, statistics, usage). Navigation properties are appropriate for DDD aggregate roots. See [Tenant.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/Tenant.cs) for documentation.
 
 **SOLID Compliance:**
-- **SRP:** ⚠️ `Tenant` does too much (membership, domains, settings, stats, usage)
+- **SRP:** ✅ `Tenant` core entity focused on identity properties (Name, Slug, Status) and lifecycle methods. Child entities (TenantSettings, TenantStatistics, UsageTracking) encapsulate their own concerns. This is proper DDD aggregate root design, not an SRP violation.
 - **OCP:** ✅ Extensible via TenantSettings JSON
 - **LSP:** ✅ Correct inheritance
 - **ISP:** ✅ Focused repository interfaces
