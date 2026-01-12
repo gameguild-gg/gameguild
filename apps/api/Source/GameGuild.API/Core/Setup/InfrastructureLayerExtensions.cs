@@ -1,0 +1,378 @@
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using GameGuild.Abstractions;
+using GameGuild.API.Database;
+using GameGuild.Authentication;
+using GameGuild.Authorization;
+using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
+using GameGuild.Configuration.InfrastructureLayer;
+using Microsoft.EntityFrameworkCore;
+
+namespace GameGuild.API.Setup;
+
+/// <summary>
+///     Extension methods for configuring the infrastructure layer services.
+///     Includes repositories, external service integrations, and data access components.
+/// </summary>
+public static class InfrastructureLayerExtensions
+{
+    #region WebApplicationBuilder Extensions
+
+    /// <summary>
+    ///     Adds the infrastructure layer services with default options.
+    /// </summary>
+    /// <param name="builder">The WebApplicationBuilder instance</param>
+    /// <returns>The WebApplicationBuilder for method chaining</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the builder is null</exception>
+    public static WebApplicationBuilder AddInfrastructureLayer(this WebApplicationBuilder builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+
+        var logger = CreateStartupLogger();
+        builder.Services.AddInfrastructureLayer(builder.Configuration, logger);
+
+        return builder;
+    }
+
+    /// <summary>
+    ///     Adds the infrastructure layer services with custom options.
+    /// </summary>
+    /// <param name="builder">The WebApplicationBuilder instance</param>
+    /// <param name="configureOptions">Action to configure infrastructure layer options</param>
+    /// <returns>The WebApplicationBuilder for method chaining</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the builder or configureOptions is null</exception>
+    public static WebApplicationBuilder AddInfrastructureLayer(this WebApplicationBuilder builder,
+        Action<InfrastructureLayerSetupOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var logger = CreateStartupLogger();
+        builder.Services.AddInfrastructureLayer(builder.Configuration, logger, configureOptions);
+
+        return builder;
+    }
+
+    #endregion
+
+    #region IServiceCollection Extensions
+
+    /// <summary>
+    ///     Adds infrastructure layer services to the service collection with default options.
+    /// </summary>
+    /// <param name="services">The service collection to configure</param>
+    /// <param name="configuration">The application configuration</param>
+    /// <param name="logger">Logger for diagnostics</param>
+    /// <returns>The service collection for chaining</returns>
+    public static IServiceCollection AddInfrastructureLayer(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        ILogger logger)
+    {
+        return services.AddInfrastructureLayer(configuration, logger, _ => { });
+    }
+
+    /// <summary>
+    ///     Adds infrastructure layer services to the service collection with custom options.
+    /// </summary>
+    /// <param name="services">The service collection to configure</param>
+    /// <param name="configuration">The application configuration</param>
+    /// <param name="logger">Logger for diagnostics</param>
+    /// <param name="configureOptions">Action to configure infrastructure layer options</param>
+    /// <returns>The service collection for chaining</returns>
+    public static IServiceCollection AddInfrastructureLayer(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        ILogger logger,
+        Action<InfrastructureLayerSetupOptions> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configuration);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var setupOptions = new InfrastructureLayerSetupOptions();
+        configureOptions(setupOptions);
+
+        var stopwatch = Stopwatch.StartNew();
+        logger.LogInformation("Starting infrastructure layer setup...");
+
+        var options = InfrastructureLayerOptionsBuilder.CreateWithValidation(configuration);
+        options.Validate();
+
+        // Infrastructure layer services registration order matters for some services.
+
+        // 01. Database (ApplicationDbContext with PostgreSQL)
+        var stepStopwatch = Stopwatch.StartNew();
+        if (options.EnableDatabase)
+        {
+            services.AddDatabase(configuration, options.Database);
+            logger.LogInformation("Database registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+        }
+
+        // 02. Memory Caching (foundation for other services)
+        if (options.EnableMemoryCaching)
+        {
+            stepStopwatch.Restart();
+            services.SetupMemoryCaching(configuration, options.MemoryCaching);
+            logger.LogInformation("MemoryCaching registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+        }
+
+        // 03. HTTP Client (required for OAuth and external API calls)
+        stepStopwatch.Restart();
+        services.AddHttpClient();
+        logger.LogInformation("HttpClient registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 03a. Authentication Application (command handlers, validators, core auth services)
+        stepStopwatch.Restart();
+        services.AddAuthenticationApplication();
+        logger.LogInformation("Authentication Application registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 03b. Authentication Data (repositories, JWT services, security services)
+        stepStopwatch.Restart();
+        services.AddAuthenticationData(configuration);
+        logger.LogInformation("Authentication Data registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 04. Authorization Application (policy infrastructure, Access Control List service, Permission Services)
+        stepStopwatch.Restart();
+        services.AddAuthorizationApplication();
+        logger.LogInformation("Authorization Application registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 05. Authorization Repositories
+        stepStopwatch.Restart();
+        services.AddAuthorizationRepositories();
+        logger.LogInformation("Authorization Repositories registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 07. Advanced Permission Services (JIT elevation, delegation, SoD, access reviews, delegated admin)
+        stepStopwatch.Restart();
+        services.AddAdvancedPermissionServices();
+        logger.LogInformation("Advanced Permission Services registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 08. Rule-based Authorization
+        stepStopwatch.Restart();
+        services.AddRuleBasedAuthorization();
+        logger.LogInformation("Rule-based Authorization registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 09. Permission Services (audit, templates)
+        stepStopwatch.Restart();
+        services.AddPermissionServices();
+        logger.LogInformation("Permission Services registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10. Repositories
+        services.AddRepositories(logger);
+
+        stopwatch.Stop();
+        logger.LogInformation("Completed infrastructure layer setup in {ElapsedMs}ms", stopwatch.ElapsedMilliseconds);
+
+        return services;
+    }
+
+    #endregion
+
+    #region Private Methods
+
+    /// <summary>
+    ///     Registers ApplicationDbContext with PostgreSQL
+    /// </summary>
+    private static void AddDatabase(this IServiceCollection services, IConfiguration configuration,
+        DatabaseOptions? databaseOptions = null)
+    {
+        databaseOptions ??= DatabaseOptions.CreateDefault();
+
+        var connectionString = configuration.GetConnectionString(databaseOptions.ConnectionStringName)
+                               ?? throw new InvalidOperationException(
+                                   $"Connection string '{databaseOptions.ConnectionStringName}' not found. " +
+                                   $"Add 'ConnectionStrings:{databaseOptions.ConnectionStringName}' to appsettings.json.");
+
+        services.AddDbContext<ApplicationDbContext>(options =>
+        {
+            options.UseNpgsql(connectionString, npgsqlOptions =>
+            {
+                npgsqlOptions.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName);
+
+                if (databaseOptions.EnableRetryOnFailure)
+                {
+                    npgsqlOptions.EnableRetryOnFailure(
+                        maxRetryCount: databaseOptions.MaxRetryCount,
+                        maxRetryDelay: TimeSpan.FromSeconds((double)databaseOptions.MaxRetryDelaySeconds),
+                        errorCodesToAdd: null);
+                }
+
+                npgsqlOptions.CommandTimeout(databaseOptions.CommandTimeoutSeconds);
+            });
+
+            if (databaseOptions.EnableSensitiveDataLogging)
+            {
+                options.EnableSensitiveDataLogging();
+            }
+
+            if (databaseOptions.EnableDetailedErrors)
+            {
+                options.EnableDetailedErrors();
+            }
+        });
+
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+
+        // Register DbContext as ApplicationDbContext for modules that depend on the abstract DbContext type
+        services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+    }
+
+    /// <summary>
+    ///     Registers repository implementations by convention from module assemblies.
+    ///     Discovers interfaces matching I*Repository pattern and their implementations.
+    /// </summary>
+    private static void AddRepositories(this IServiceCollection services, ILogger logger)
+    {
+        var totalStopwatch = Stopwatch.StartNew();
+
+        logger.LogInformation("Starting repository and service discovery...");
+
+        // Only register repositories/services from enabled modules
+        var enabledModules = ModuleConfiguration.DefaultEnabledModules;
+
+        // Discover module assemblies - load from disk to ensure all modules are available
+        var allAssemblies = DependencyInjection.GetAssembliesByPattern("GameGuild.", loadFromDisk: true)
+            .Where(a => !a.FullName?.Contains("Test", StringComparison.OrdinalIgnoreCase) ?? true)
+            .Where(a => !a.FullName?.Contains("API", StringComparison.OrdinalIgnoreCase) ?? true)
+            .ToArray();
+
+        // Filter to only enabled modules
+        var assemblies = allAssemblies
+            .Where(a => enabledModules.Any(m => a.GetName().Name?.EndsWith(m, StringComparison.OrdinalIgnoreCase) ?? false))
+            .ToArray();
+
+        logger.LogInformation("Discovered {TotalCount} module assemblies, {EnabledCount} enabled ({Modules})",
+            allAssemblies.Length, assemblies.Length, string.Join(", ", enabledModules));
+
+        // Collect all registrations first
+        var repositoryRegistrations = new List<(Type interfaceType, Type implementationType)>();
+        var serviceRegistrations = new List<(Type interfaceType, Type implementationType)>();
+
+        foreach (var assembly in assemblies)
+        {
+            // Get all concrete types from the assembly
+            var types = assembly.GetTypes()
+                .Where(t => t.IsClass && !t.IsAbstract && t.IsPublic)
+                .ToList();
+
+            foreach (var implementationType in types)
+            {
+                // Find interfaces this type implements
+                var interfaces = implementationType.GetInterfaces();
+
+                foreach (var interfaceType in interfaces)
+                {
+                    var interfaceName = interfaceType.Name;
+
+                    // Skip generic interface definitions and system interfaces
+                    if (interfaceType.IsGenericType || interfaceName.StartsWith("IDisposable") || interfaceName.StartsWith("IAsyncDisposable"))
+                        continue;
+
+                    // Match repository pattern: I{Name}Repository -> {Name}Repository
+                    if (interfaceName.StartsWith("I") && interfaceName.EndsWith("Repository"))
+                    {
+                        var expectedImplName = interfaceName.Substring(1); // Remove 'I' prefix
+                        if (implementationType.Name == expectedImplName)
+                        {
+                            repositoryRegistrations.Add((interfaceType, implementationType));
+                        }
+                    }
+                    // Match service pattern: I{Name}Service -> {Name}Service (but not IApplicationDbContext etc.)
+                    else if (interfaceName.StartsWith("I") && interfaceName.EndsWith("Service")
+                             && !interfaceName.Contains("DbContext"))
+                    {
+                        var expectedImplName = interfaceName.Substring(1); // Remove 'I' prefix
+                        if (implementationType.Name == expectedImplName)
+                        {
+                            serviceRegistrations.Add((interfaceType, implementationType));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Register and log repositories individually
+        logger.LogInformation("Setting up repositories...");
+        var stepStopwatch = Stopwatch.StartNew();
+
+        foreach (var (interfaceType, implementationType) in repositoryRegistrations)
+        {
+            stepStopwatch.Restart();
+
+            // Check if the implementation takes IApplicationDbContext
+            var constructor = implementationType.GetConstructors().FirstOrDefault();
+            if (constructor != null)
+            {
+                var parameters = constructor.GetParameters();
+                if (parameters.Length == 1 && parameters[0].ParameterType == typeof(IApplicationDbContext))
+                {
+                    // Register with factory that injects ApplicationDbContext
+                    services.AddScoped(interfaceType, provider =>
+                    {
+                        var context = provider.GetRequiredService<ApplicationDbContext>();
+                        return Activator.CreateInstance(implementationType, context)!;
+                    });
+                }
+                else
+                {
+                    services.AddScoped(interfaceType, implementationType);
+                }
+            }
+            else
+            {
+                services.AddScoped(interfaceType, implementationType);
+            }
+
+            logger.LogInformation("Registered {Repository} in {ElapsedMs}ms",
+                FormatInterfaceName(interfaceType.Name), stepStopwatch.ElapsedMilliseconds);
+        }
+
+        logger.LogInformation("Completed repository setup in {ElapsedMs}ms", totalStopwatch.ElapsedMilliseconds);
+
+        // Register and log services individually
+        logger.LogInformation("Setting up services...");
+        var serviceStopwatch = Stopwatch.StartNew();
+
+        foreach (var (interfaceType, implementationType) in serviceRegistrations)
+        {
+            stepStopwatch.Restart();
+            services.AddScoped(interfaceType, implementationType);
+            logger.LogInformation("Registered {Service} in {ElapsedMs}ms",
+                FormatInterfaceName(interfaceType.Name), stepStopwatch.ElapsedMilliseconds);
+        }
+
+        totalStopwatch.Stop();
+        logger.LogInformation("Completed service setup in {ElapsedMs}ms", serviceStopwatch.ElapsedMilliseconds);
+        logger.LogInformation("Completed registration of {RepoCount} repositories and {ServiceCount} services in {ElapsedMs}ms",
+            repositoryRegistrations.Count, serviceRegistrations.Count, totalStopwatch.ElapsedMilliseconds);
+    }
+
+    /// <summary>
+    ///     Formats an interface name from IUserRepository to "User Repository".
+    /// </summary>
+    private static string FormatInterfaceName(string interfaceName)
+    {
+        // Remove the 'I' prefix if present
+        var name = interfaceName.StartsWith("I", StringComparison.Ordinal) && interfaceName.Length > 1 && char.IsUpper(interfaceName[1])
+            ? interfaceName[1..]
+            : interfaceName;
+
+        // Insert space before each uppercase letter (except the first)
+        var formatted = Regex.Replace(name, "([a-z])([A-Z])", "$1 $2");
+        // Also handle consecutive uppercase letters
+        formatted = Regex.Replace(formatted, "([A-Z]+)([A-Z][a-z])", "$1 $2");
+        return formatted;
+    }
+
+    /// <summary>
+    ///     Creates a logger for startup diagnostics.
+    /// </summary>
+    private static ILogger CreateStartupLogger()
+    {
+        using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
+        return loggerFactory.CreateLogger("GameGuild.API.Startup");
+    }
+
+    #endregion
+}
