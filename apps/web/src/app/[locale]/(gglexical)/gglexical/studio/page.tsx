@@ -18,6 +18,7 @@ import { ProjectSizeIndicator } from "@/components/editor/extras/editor/project-
 import { SyncStatusIndicator } from "@/components/editor/extras/editor/sync-status-indicator"
 import { EditableProjectTitle } from "@/components/editor/extras/editor/editable-project-title"
 import { ProjectStorageInfo } from "@/components/editor/extras/editor/project-storage-info"
+import { ProjectModeIndicator } from "@/components/editor/extras/editor/project-mode-indicator"
 import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/components/editor/extras/editor/project-title-operations"
 import { handleSave as saveProject, handleSaveAs as saveAsProject } from "@/components/editor/extras/editor/project-save-operations"
 import { calculateProjectAssetsSize as calculateAssets } from "@/components/editor/extras/editor/project-assets-operations"
@@ -27,6 +28,7 @@ import { EditorLayoutType2 } from "@/components/editor/extras/editor/editor-layo
 import { EnhancedStorageAdapter, type ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
+import { type ProjectMode, NODE_RESTRICTIONS, PROJECT_MODES } from "@/lib/storage/editor/project-modes"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
@@ -53,6 +55,7 @@ interface ProjectData {
   createdAt: string
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
+  preferences?: ProjectPreferences
 }
 
 // Generate unique ID for projects
@@ -133,6 +136,7 @@ export default function Page() {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewState, setPreviewState] = useState<SerializedEditorState | null>(null)
   const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
+  const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>("free-page")
 
   const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
     if (event.ctrlKey || event.metaKey || event.button === 1) {
@@ -679,7 +683,8 @@ export default function Page() {
                         <span className="text-sm text-gray-500 dark:text-gray-400 italic">Untitled Project</span>
                       )}
                       {currentProjectId && (
-                        <div className="shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
+                          <ProjectModeIndicator mode={currentProjectMode} />
                           <ProjectStorageInfo storageType={currentProjectStorageType} />
                         </div>
                       )}
@@ -752,12 +757,16 @@ export default function Page() {
                     onProjectLoad={(projectData) => {
                       const layoutType = projectData.type || "type1"
                       
+                      // Extract mode from preferences or default to free-page
+                      const projectMode = projectData.preferences?.global?.mode || "free-page"
+                      
                       // Update project metadata
                       setCurrentProjectId(projectData.id)
                       setCurrentProjectName(projectData.name)
                       setCurrentProjectStorageType(projectData.storageType || "local")
                       setProjectTags(projectData.tags || [])
                       setCurrentLayoutType(layoutType)
+                      setCurrentProjectMode(projectMode)
                       setIsFirstTime(false)
                       
                       // Mark project load time to prevent auto-save for 1 second
@@ -889,8 +898,9 @@ export default function Page() {
                 const emptyState =
                   '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
                 
-                // Set the layout type from the project data
+                // Set the layout type and mode from the project data
                 setCurrentLayoutType(projectData.type)
+                setCurrentProjectMode(projectData.mode)
                 
                 // Mark project creation time to prevent auto-save for 1 second
                 setLastProjectLoadTime(Date.now())
@@ -938,6 +948,7 @@ export default function Page() {
                   setLoadingRef.current = setLoading
                 }}
                 projectId={currentProjectId}
+                mode={currentProjectMode}
               />
             ) : (
               <EditorLayoutType2
@@ -951,6 +962,7 @@ export default function Page() {
                   setLoadingRef.current = setLoading
                 }}
                 projectId={currentProjectId}
+                mode={currentProjectMode}
               />
             )}
           </div>
