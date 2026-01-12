@@ -765,7 +765,7 @@ export default function Page() {
                       window.history.pushState(null, '', `#${projectData.id}`)
                     }}
                     onProjectsListUpdate={loadSavedProjectsList}
-                    onCreateNew={() => {
+                    onCreateNew={(type: "type1" | "type2") => {
                       // Reset current project data when creating new
                       setCurrentProjectId("")
                       setCurrentProjectName("")
@@ -827,18 +827,36 @@ export default function Page() {
               storageAdapter={storageAdapter}
               availableTags={availableTags}
               onProjectCreate={(projectData) => {
-                if (editorRef.current) {
-                  const emptyState =
-                    '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
-                  editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyState))
-                }
+                const emptyState =
+                  '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+                
+                // Set the layout type from the project data
+                setCurrentLayoutType(projectData.type)
+                
+                // Wait for layout to render, then initialize editors
+                setTimeout(() => {
+                  if (projectData.type === "type1") {
+                    if (editorRef.current) {
+                      editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyState))
+                    }
+                    setEditorState(emptyState)
+                  } else {
+                    // type2 - initialize both editors
+                    if (leftEditorRef.current) {
+                      leftEditorRef.current.setEditorState(leftEditorRef.current.parseEditorState(emptyState))
+                    }
+                    if (rightEditorRef.current) {
+                      rightEditorRef.current.setEditorState(rightEditorRef.current.parseEditorState(emptyState))
+                    }
+                    setLeftEditorState(emptyState)
+                    setRightEditorState(emptyState)
+                  }
+                }, 100)
+                
                 setCurrentProjectId(projectData.id)
                 setCurrentProjectName(projectData.name)
                 setCurrentProjectStorageType(projectData.storageType)
                 setProjectTags(projectData.tags)
-                setEditorState(
-                  '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
-                )
                 setIsFirstTime(false)
                 // Update URL hash with project ID
                 window.history.pushState(null, '', `#${projectData.id}`)
