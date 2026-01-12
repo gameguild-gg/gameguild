@@ -47,7 +47,7 @@ Supports **ACID transactions** for data integrity
 
 ---
 
-## Key Characteristics
+## Key Characteristics (RDBMS)
 
 - **Structured schema**: Data must conform to a predefined schema
 - **ACID compliance**: Strong consistency guarantees
@@ -56,7 +56,7 @@ Supports **ACID transactions** for data integrity
 
 ---
 
-## How Data Looks
+## How Data Looks (RDBMS)
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -72,7 +72,7 @@ Supports **ACID transactions** for data integrity
 
 ---
 
-## Entity Relationship Diagram
+## Entity Relationship Diagram (RDBMS)
 
 ```
 ┌──────────────────────┐         ┌──────────────────────┐
@@ -90,7 +90,7 @@ Supports **ACID transactions** for data integrity
 
 ---
 
-## Popular Examples
+## Popular Examples (RDBMS)
 
 | Database       | Known For                               |
 | -------------- | --------------------------------------- |
@@ -102,7 +102,7 @@ Supports **ACID transactions** for data integrity
 
 ---
 
-## Best Use Cases
+## Best Use Cases (RDBMS)
 
 - 💳 Financial transactions and banking systems
 - 🛒 E-commerce platforms with complex orders
@@ -111,7 +111,7 @@ Supports **ACID transactions** for data integrity
 
 ---
 
-## Example Query
+## Example Query (RDBMS)
 
 ```sql
 -- Find all orders with customer names
@@ -140,7 +140,7 @@ Each document can have a **different structure**
 
 ---
 
-## Key Characteristics
+## Key Characteristics (Document DBs)
 
 - **Schema-less**: Documents can have different fields
 - **Nested data**: Natural representation of hierarchical data
@@ -149,7 +149,7 @@ Each document can have a **different structure**
 
 ---
 
-## How Data Looks
+## How Data Looks (Document DBs)
 
 ```json
 {
@@ -167,7 +167,7 @@ Each document can have a **different structure**
 
 ---
 
-## Popular Examples
+## Popular Examples (Document DBs)
 
 | Database              | Known For                                     |
 | --------------------- | --------------------------------------------- |
@@ -178,7 +178,7 @@ Each document can have a **different structure**
 
 ---
 
-## Best Use Cases
+## Best Use Cases (Document DBs)
 
 - 📱 Mobile app backends with varying data structures
 - 📝 Content management systems (CMS)
@@ -207,7 +207,7 @@ db.users.find(
 
 ---
 
-# 3. Key-Value Stores
+# 3. Key-Value Stores (KVS)
 
 **The Speed Demon** ⚡
 
@@ -223,7 +223,7 @@ Like a giant **hash map** or dictionary
 
 ---
 
-## Key Characteristics
+## Key Characteristics (KVS)
 
 - **Simple model**: Just keys and values
 - **Blazing fast**: O(1) lookups
@@ -232,7 +232,7 @@ Like a giant **hash map** or dictionary
 
 ---
 
-## How Data Looks
+## How Data Looks (KVS)
 
 ```
 ┌─────────────────────────┬───────────────────────────┐
@@ -248,7 +248,7 @@ Like a giant **hash map** or dictionary
 
 ---
 
-## Popular Examples
+## Popular Examples (KVS)
 
 | Database            | Known For                                |
 | ------------------- | ---------------------------------------- |
@@ -259,7 +259,7 @@ Like a giant **hash map** or dictionary
 
 ---
 
-## Best Use Cases
+## Best Use Cases (KVS)
 
 - ⚡ Caching frequently accessed data
 - 🔐 Session management
@@ -304,7 +304,7 @@ Easy to traverse complex connections
 
 ---
 
-## Key Characteristics
+## Key Characteristics (Graph DBs)
 
 - **Nodes and edges**: Natural representation of connections
 - **Relationship traversal**: Efficient path queries
@@ -313,7 +313,7 @@ Easy to traverse complex connections
 
 ---
 
-## How Data Looks
+## How Data Looks (Graph DBs)
 
 ```
     | NODES (Entities) |      | EDGES (Relationships)   |
@@ -330,7 +330,7 @@ Easy to traverse complex connections
 
 ---
 
-## Popular Examples
+## Popular Examples (Graph DBs)
 
 | Database           | Known For                           |
 | ------------------ | ----------------------------------- |
@@ -341,7 +341,7 @@ Easy to traverse complex connections
 
 ---
 
-## Best Use Cases
+## Best Use Cases (Graph DBs)
 
 - 👥 Social networks (friends, followers, connections)
 - 🎯 Recommendation engines
@@ -382,7 +382,7 @@ Excel at storing, compressing, and querying **temporal data**
 
 ---
 
-## Key Characteristics
+## Key Characteristics (Time Series DBs)
 
 - **Time-indexed**: Data organized by timestamp
 - **High write throughput**: Handle millions of data points
@@ -392,7 +392,7 @@ Excel at storing, compressing, and querying **temporal data**
 
 ---
 
-## How Data Looks
+## How Data Looks (Time Series DBs)
 
 ```
 ┌─────────────────────────┬──────────┬───────────┬───────────┐
@@ -407,7 +407,7 @@ Excel at storing, compressing, and querying **temporal data**
 
 ---
 
-## Popular Examples
+## Popular Examples (Time Series DBs)
 
 | Database        | Known For                            |
 | --------------- | ------------------------------------ |
@@ -418,7 +418,7 @@ Excel at storing, compressing, and querying **temporal data**
 
 ---
 
-## Best Use Cases
+## Best Use Cases (Time Series DBs)
 
 - 📈 IoT sensor data
 - 🖥️ Application metrics and monitoring
@@ -460,7 +460,7 @@ Almost instant search across **billions of documents**
 
 ---
 
-## Key Characteristics
+## Key Characteristics (Search Engines)
 
 - **Inverted index**: Maps words to documents
 - **Full-text search**: Find documents by content
@@ -470,7 +470,7 @@ Almost instant search across **billions of documents**
 
 ---
 
-## Inverted Index Example
+## Inverted Index Example (Search Engines)
 
 ```
 Document Storage:
@@ -490,7 +490,7 @@ Inverted Index:
 
 ---
 
-## Popular Examples
+## Popular Examples (Search Engines)
 
 | Database          | Known For                         |
 | ----------------- | --------------------------------- |
@@ -501,7 +501,7 @@ Inverted Index:
 
 ---
 
-## Best Use Cases
+## Best Use Cases (Search Engines)
 
 - 🔍 Site search and product search
 - 📝 Log analysis and monitoring
@@ -548,7 +548,7 @@ Enable **similarity search** for AI applications
 
 ---
 
-## Key Characteristics
+## Key Characteristics (Vector DBs)
 
 - **Embedding storage**: Store high-dimensional vectors
 - **Similarity search**: Find nearest neighbors
@@ -558,7 +558,7 @@ Enable **similarity search** for AI applications
 
 ---
 
-## How Similarity Search Works
+## How Similarity Search Works (Vector DBs)
 
 ```
 Query: "How do I reset my password?"
@@ -573,7 +573,7 @@ Results:
 
 ---
 
-## Popular Examples
+## Popular Examples (Vector DBs)
 
 | Database     | Known For                          |
 | ------------ | ---------------------------------- |
@@ -585,7 +585,7 @@ Results:
 
 ---
 
-## Best Use Cases
+## Best Use Cases (Vector DBs)
 
 - 🤖 Retrieval-Augmented Generation (RAG)
 - 🔍 Semantic search (meaning, not keywords)
@@ -632,7 +632,7 @@ Built for **massive scale** and **high availability**
 
 ---
 
-## Key Characteristics
+## Key Characteristics (Wide-Column Stores)
 
 - **Column families**: Groups of related columns
 - **Sparse columns**: Rows can have different columns
@@ -642,7 +642,7 @@ Built for **massive scale** and **high availability**
 
 ---
 
-## How Data Looks
+## How Data Looks (Wide-Column Stores)
 
 ```
 ┌─────────────┬──────────────────────────────────────────┐
@@ -656,7 +656,7 @@ Built for **massive scale** and **high availability**
 
 ---
 
-## Popular Examples
+## Popular Examples (Wide-Column Stores)
 
 | Database             | Known For                                    |
 | -------------------- | -------------------------------------------- |
@@ -667,7 +667,7 @@ Built for **massive scale** and **high availability**
 
 ---
 
-## Best Use Cases
+## Best Use Cases (Wide-Column Stores)
 
 - 📝 Write-heavy workloads
 - ⏰ Time-series data at massive scale
@@ -712,7 +712,7 @@ Multiple consumers can read **independently**
 
 ---
 
-## Key Characteristics
+## Key Characteristics (Event Streaming)
 
 - **Append-only log**: Events are immutable
 - **Topics and partitions**: Organized message streams
@@ -722,7 +722,7 @@ Multiple consumers can read **independently**
 
 ---
 
-## How Data Looks
+## How Data Looks (Event Streaming)
 
 ```
 Topic: order_events
@@ -739,7 +739,7 @@ Event: { "event_type": "order_placed",
 
 ---
 
-## Popular Examples
+## Popular Examples (Event Streaming)
 
 | Platform           | Known For                            |
 | ------------------ | ------------------------------------ |
@@ -750,7 +750,7 @@ Event: { "event_type": "order_placed",
 
 ---
 
-## Best Use Cases
+## Best Use Cases (Event Streaming)
 
 - 🔄 Real-time data pipelines
 - 📡 Event sourcing architectures
