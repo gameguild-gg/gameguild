@@ -6,6 +6,7 @@ import { syncConfig } from "./sync-config"
 interface ProjectData {
   id: string
   name: string
+  type: "type1" | "type2"
   data: string
   tags: string[]
   size: number
@@ -123,7 +124,8 @@ export class SyncManager {
         console.log("Downloaded project from server:", project.name)
       }
 
-      return project
+      // Ensure type field exists with default value
+      return project ? { ...project, type: project.type || "type1" } : null
     } catch (error) {
       if (syncConfig.getConfig().debugMode) {
         if (error instanceof Error) {
