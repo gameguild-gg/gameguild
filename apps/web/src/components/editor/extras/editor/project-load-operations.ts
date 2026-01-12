@@ -55,71 +55,86 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
         const projectData = await storageAdapter.load(hash)
         if (projectData && projectData.data) {
           const layoutType = projectData.type || "type1"
+          
+          // Set layout type first
           setCurrentLayoutType(layoutType)
           
-          if (layoutType === "type1" && editorRef.current) {
-            try {
-              // Validate JSON format first
-              let parsedData
-              try {
-                parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
-              } catch (parseError) {
-                throw new Error("Project data is not valid JSON")
-              }
-              
-              // Validate Lexical editor state structure
-              if (!parsedData || typeof parsedData !== 'object' || !parsedData.root) {
-                throw new Error("Project data is not in expected Lexical format")
-              }
-              
-              const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
-              editorRef.current.setEditorState(editorState)
-              setEditorState(JSON.stringify(parsedData))
-            } catch (validationError: any) {
-              throw validationError
-            }
-          } else if (layoutType === "type2" && leftEditorRef.current && rightEditorRef.current) {
-            try {
-              // Parse type2 data (has left and right properties)
-              let parsedData
-              try {
-                parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
-              } catch (parseError) {
-                throw new Error("Project data is not valid JSON")
-              }
-              
-              // Validate type2 structure
-              if (!parsedData || typeof parsedData !== 'object' || !parsedData.left || !parsedData.right) {
-                throw new Error("Project data is not in expected Type2 format")
-              }
-              
-              // Parse and set left editor
-              const leftParsed = typeof parsedData.left === 'string' ? JSON.parse(parsedData.left) : parsedData.left
-              if (!leftParsed.root) {
-                throw new Error("Left editor data is not valid Lexical format")
-              }
-              const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(leftParsed))
-              leftEditorRef.current.setEditorState(leftEditorState)
-              setLeftEditorState(JSON.stringify(leftParsed))
-              
-              // Parse and set right editor
-              const rightParsed = typeof parsedData.right === 'string' ? JSON.parse(parsedData.right) : parsedData.right
-              if (!rightParsed.root) {
-                throw new Error("Right editor data is not valid Lexical format")
-              }
-              const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(rightParsed))
-              rightEditorRef.current.setEditorState(rightEditorState)
-              setRightEditorState(JSON.stringify(rightParsed))
-            } catch (validationError: any) {
-              throw validationError
-            }
-          }
-          
-          // Set current project info
+          // Set project metadata immediately
           setCurrentProjectId(projectData.id)
           setCurrentProjectName(projectData.name)
           setCurrentProjectStorageType(projectData.storageType || "local")
           setProjectTags(projectData.tags || [])
+          setIsFirstTime(false)
+          
+          // Wait for layout to render before loading editor data
+          setTimeout(() => {
+            try {
+              if (layoutType === "type1" && editorRef.current) {
+                try {
+                  // Validate JSON format first
+                  let parsedData
+                  try {
+                    parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
+                  } catch (parseError) {
+                    throw new Error("Project data is not valid JSON")
+                  }
+                  
+                  // Validate Lexical editor state structure
+                  if (!parsedData || typeof parsedData !== 'object' || !parsedData.root) {
+                    throw new Error("Project data is not in expected Lexical format")
+                  }
+                  
+                  const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
+                  editorRef.current.setEditorState(editorState)
+                  setEditorState(JSON.stringify(parsedData))
+                } catch (validationError: any) {
+                  throw validationError
+                }
+              } else if (layoutType === "type2" && leftEditorRef.current && rightEditorRef.current) {
+                try {
+                  // Parse type2 data (has left and right properties)
+                  let parsedData
+                  try {
+                    parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
+                  } catch (parseError) {
+                    throw new Error("Project data is not valid JSON")
+                  }
+                  
+                  // Validate type2 structure
+                  if (!parsedData || typeof parsedData !== 'object' || !parsedData.left || !parsedData.right) {
+                    throw new Error("Project data is not in expected Type2 format")
+                  }
+                  
+                  // Parse and set left editor
+                  const leftParsed = typeof parsedData.left === 'string' ? JSON.parse(parsedData.left) : parsedData.left
+                  if (!leftParsed.root) {
+                    throw new Error("Left editor data is not valid Lexical format")
+                  }
+                  const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(leftParsed))
+                  leftEditorRef.current.setEditorState(leftEditorState)
+                  setLeftEditorState(JSON.stringify(leftParsed))
+                  
+                  // Parse and set right editor
+                  const rightParsed = typeof parsedData.right === 'string' ? JSON.parse(parsedData.right) : parsedData.right
+                  if (!rightParsed.root) {
+                    throw new Error("Right editor data is not valid Lexical format")
+                  }
+                  const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(rightParsed))
+                  rightEditorRef.current.setEditorState(rightEditorState)
+                  setRightEditorState(JSON.stringify(rightParsed))
+                } catch (validationError: any) {
+                  throw validationError
+                }
+              }
+            } catch (error) {
+              console.error("Failed to load editor data:", error)
+              toast.error("Erro ao carregar dados do editor", {
+                description: error instanceof Error ? error.message : "Unknown error",
+                duration: 4000,
+                icon: "❌",
+              })
+            }
+          }, 100) // Give React time to render the new layout
           
           // Update URL hash if not already set
           if (window.location.hash !== `#${projectData.id}`) {
@@ -132,7 +147,6 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
             icon: "📂",
           })
           
-          setIsFirstTime(false)
           return // Exit early, don't show first time dialog
         } else {
           toast.error("Projeto não encontrado", {
