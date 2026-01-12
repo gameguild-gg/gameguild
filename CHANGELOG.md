@@ -1,3 +1,12 @@
+# [2.38.0](https://github.com/gameguild-gg/gameguild/compare/v2.37.0...v2.38.0) (2026-01-12)
+
+
+### Features
+
+* **apps/web:** Add Marp and RemarkJS presentation support ([a1beb8f](https://github.com/gameguild-gg/gameguild/commit/a1beb8f9d1ce3ba403c84cdfbb5cd71cc64c62bf))
+* **apps/web:** Integrate Marp Core for presentation authoring ([b2fa44c](https://github.com/gameguild-gg/gameguild/commit/b2fa44c8598fbf3046ed2746bad234a87f1a0dd0))
+* **markdown-renderer:** Enable Reveal.js presentations with optimized settings ([066c00f](https://github.com/gameguild-gg/gameguild/commit/066c00f14714ea48b394dda3bc7fbc9d6eddc732))
+
 # [2.37.0](https://github.com/gameguild-gg/gameguild/compare/v2.36.0...v2.37.0) (2026-01-12)
 
 
