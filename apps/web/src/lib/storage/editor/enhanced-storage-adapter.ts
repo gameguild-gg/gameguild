@@ -8,6 +8,7 @@ export type { ProjectPreferences } from "./project-preferences"
 export interface ProjectData {
   id: string
   name: string
+  type: "type1" | "type2" // Layout type
   data: string
   tags: string[]
   size: number
@@ -29,6 +30,7 @@ interface TagData {
 interface ProjectMetadata {
   id: string
   name: string
+  type: "type1" | "type2" // Layout type
   tags: string[]
   size: number
   hash: string
@@ -139,6 +141,7 @@ export class EnhancedStorageAdapter {
             const metadata: ProjectMetadata = {
               id: project.id,
               name: project.name,
+              type: project.type || "type1",
               tags: project.tags,
               size: project.size,
               hash: project.hash || "",
@@ -164,7 +167,7 @@ export class EnhancedStorageAdapter {
     }
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences): Promise<void> {
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: "type1" | "type2" = "type1"): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
@@ -177,6 +180,7 @@ export class EnhancedStorageAdapter {
     const projectData: ProjectData = {
       id,
       name,
+      type: type || existing?.type || "type1", // Preserve existing type or use provided
       data,
       tags,
       size: this.estimateSize(data),
@@ -239,6 +243,7 @@ export class EnhancedStorageAdapter {
       const metadata: ProjectMetadata = {
         id: projectData.id,
         name: projectData.name,
+        type: projectData.type,
         tags: projectData.tags,
         size: projectData.size,
         hash: projectData.hash!,
@@ -275,12 +280,14 @@ export class EnhancedStorageAdapter {
           // Save downloaded project locally
           await this.saveToIndexedDB({
             ...googleDriveProject,
+            type: googleDriveProject.type || "type1",
             hash,
             syncStatus: "synced",
             storageType: "google-drive",
           })
           return {
             ...googleDriveProject,
+            type: googleDriveProject.type || "type1",
             hash,
             storageType: "google-drive" as const,
           }
@@ -296,12 +303,14 @@ export class EnhancedStorageAdapter {
         // Save downloaded project locally
         await this.saveToIndexedDB({
           ...serverProject,
+          type: serverProject.type || "type1",
           hash,
           syncStatus: "synced",
           storageType: "gameguild-cloud", // Server projects are cloud-based
         })
         return {
           ...serverProject,
+          type: serverProject.type || "type1",
           hash,
           storageType: "gameguild-cloud" as const,
         }
@@ -323,12 +332,14 @@ export class EnhancedStorageAdapter {
             // Update local copy with newer version from Google Drive
             await this.saveToIndexedDB({
               ...googleDriveProject,
+              type: googleDriveProject.type || "type1",
               hash,
               syncStatus: "synced",
               storageType: "google-drive",
             })
             return {
               ...googleDriveProject,
+              type: googleDriveProject.type || "type1",
               hash,
               storageType: "google-drive" as const,
             }
@@ -348,12 +359,14 @@ export class EnhancedStorageAdapter {
         // Update local project with server version, preserving storage type
         await this.saveToIndexedDB({
           ...syncedProject,
+          type: syncedProject.type || localProject.type || "type1",
           hash,
           syncStatus: "synced",
           storageType: localProject.storageType,
         })
         return {
           ...syncedProject,
+          type: syncedProject.type || localProject.type || "type1",
           hash,
           storageType: localProject.storageType,
         }
