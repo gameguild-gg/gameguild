@@ -32,6 +32,7 @@ import { type ProjectMode, NODE_RESTRICTIONS, PROJECT_MODES } from "@/lib/storag
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
+import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
 import type { SerializedEditorState } from "lexical"
 
 export type ProjectLayoutType = "type1" | "type2"
@@ -135,6 +136,9 @@ export default function Page() {
   const [editingProjectName, setEditingProjectName] = useState("")
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewState, setPreviewState] = useState<SerializedEditorState | null>(null)
+  const [previewLeftState, setPreviewLeftState] = useState<SerializedEditorState | null>(null)
+  const [previewRightState, setPreviewRightState] = useState<SerializedEditorState | null>(null)
+  const [previewLayoutType, setPreviewLayoutType] = useState<ProjectLayoutType>("type1")
   const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
   const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>("free-page")
 
@@ -612,8 +616,7 @@ export default function Page() {
     }
 
     try {
-      // Get the current editor state based on layout type
-      let stateToPreview: string
+      // Handle preview based on layout type
       if (currentLayoutType === "type1") {
         if (!editorState) {
           toast.error("No content", {
@@ -622,8 +625,14 @@ export default function Page() {
           })
           return
         }
-        stateToPreview = editorState
+        
+        // Parse and set type1 preview state
+        const parsed = JSON.parse(editorState)
+        setPreviewState(parsed)
+        setPreviewLayoutType("type1")
+        setPreviewOpen(true)
       } else {
+        // Type2: Both editors
         if (!leftEditorState && !rightEditorState) {
           toast.error("No content", {
             description: "Editors are empty",
@@ -631,14 +640,24 @@ export default function Page() {
           })
           return
         }
-        // For type2, preview the left editor (or combine both if needed)
-        stateToPreview = leftEditorState || rightEditorState
+        
+        // Parse both editor states for type2
+        const leftParsed = leftEditorState ? JSON.parse(leftEditorState) : null
+        const rightParsed = rightEditorState ? JSON.parse(rightEditorState) : null
+        
+        if (!leftParsed || !rightParsed) {
+          toast.error("Invalid content", {
+            description: "Both editors must have content",
+            duration: 3000,
+          })
+          return
+        }
+        
+        setPreviewLeftState(leftParsed)
+        setPreviewRightState(rightParsed)
+        setPreviewLayoutType("type2")
+        setPreviewOpen(true)
       }
-
-      // Parse the state
-      const parsed = JSON.parse(stateToPreview)
-      setPreviewState(parsed)
-      setPreviewOpen(true)
     } catch (error) {
       console.error("Failed to parse editor state:", error)
       toast.error("Preview error", {
@@ -1000,11 +1019,21 @@ export default function Page() {
 
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent 
+          className={previewLayoutType === "type2" ? "!max-w-none p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
+          style={previewLayoutType === "type2" ? { width: '95vw', maxWidth: '95vw' } : undefined}
+        >
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
           </DialogHeader>
-          {previewState && <PreviewRenderer serializedState={previewState} />}
+          {previewLayoutType === "type1" && previewState && (
+            <PreviewRenderer serializedState={previewState} />
+          )}
+          {previewLayoutType === "type2" && previewLeftState && previewRightState && (
+            <div className="w-full max-h-[80vh] overflow-y-auto">
+              <PreviewRendererType2 leftState={previewLeftState} rightState={previewRightState} />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
