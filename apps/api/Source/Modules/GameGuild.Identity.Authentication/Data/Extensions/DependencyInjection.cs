@@ -46,7 +46,7 @@ public static class DataDependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
 
         // Register repositories
-        services.AddScoped<IAuthUserRepository, AuthUserRepository>();
+        // NOTE: IUserRepository is registered by the Users module - no need to register here
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IUserSessionRepository, UserSessionRepository>();
         services.AddScoped<IUserMfaConfigurationRepository, UserMfaConfigurationRepository>();

@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -6,7 +7,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for local sign-up command
 /// </summary>
-public class LocalSignUpHandler(IAuthService authService, IAuthUserRepository authUserRepository, ILogger<LocalSignUpHandler> logger) : IRequestHandler<LocalSignUpCommand, SignInResponse>
+public class LocalSignUpHandler(IAuthService authService, IUserRepository userRepository, ILogger<LocalSignUpHandler> logger) : IRequestHandler<LocalSignUpCommand, SignInResponse>
 {
     public async Task<SignInResponse> Handle(LocalSignUpCommand command, CancellationToken cancellationToken)
     {
@@ -20,6 +21,6 @@ public class LocalSignUpHandler(IAuthService authService, IAuthUserRepository au
         logger.LogInformation("User successfully signed up via local authentication");
 
         // Map from Domain response to Application DTO
-        return await domainResult.ToDto(authUserRepository, cancellationToken);
+        return await domainResult.ToDto(userRepository, cancellationToken);
     }
 }

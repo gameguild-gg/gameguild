@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using GameGuild.CQRS;
+using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -9,7 +10,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public class PolymorphicSignInHandler(
     IAuthService authService,
-    IAuthUserRepository authUserRepository,
+    IUserRepository userRepository,
     ILogger<PolymorphicSignInHandler> logger,
     FluentValidation.IValidator<PolymorphicSignInCommand>? validator = null
 ) : IRequestHandler<PolymorphicSignInCommand, SignInResponse>
@@ -47,7 +48,7 @@ public class PolymorphicSignInHandler(
         logger.LogInformation("Polymorphic sign-in successful");
 
         // Map from Domain response to Application DTO
-        return await domainResult.ToDto(authUserRepository, cancellationToken).ConfigureAwait(false);
+        return await domainResult.ToDto(userRepository, cancellationToken).ConfigureAwait(false);
     }
 
     private static CredentialType DetectCredentialType(string credential)

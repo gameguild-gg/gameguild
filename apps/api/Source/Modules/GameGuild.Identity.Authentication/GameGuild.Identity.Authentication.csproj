@@ -13,6 +13,7 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Relational"/>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj"/>
+        <ProjectReference Include="..\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj"/>
     </ItemGroup>
 
 </Project>

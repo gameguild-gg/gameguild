@@ -138,4 +138,44 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
     {
         return context.Set<User>().AsQueryable();
     }
+
+    // ========================
+    // AUTHENTICATION OPERATIONS (Merged from AuthUserRepository)
+    // ========================
+
+    public async Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(username)) return null;
+        return await context.Set<User>()
+            .FirstOrDefaultAsync(u => u.Username != null && u.Username.ToLower() == username.ToLower() && u.DeletedAt == null, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(username)) return false;
+        return await context.Set<User>()
+            .AnyAsync(u => u.Username != null && u.Username.ToLower() == username.ToLower() && u.DeletedAt == null, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public async Task UpdatePasswordHashAsync(Guid userId, string passwordHash, CancellationToken cancellationToken = default)
+    {
+        var user = await GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (user != null)
+        {
+            user.SetPasswordHash(passwordHash);
+            await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public async Task RecordLoginAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        var user = await GetByIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (user != null)
+        {
+            user.RecordLogin();
+            await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+    }
 }

@@ -339,21 +339,33 @@ Legacy policies continue to work:
 
 **Location**: `Authorization/Abstractions/HttpContextKeys.cs`
 
-### ⚠️ AuthUser + User Entity Sync (DOCUMENTED)
+### ✅ AuthUser + User Entity Merge (IMPLEMENTED)
 
-**Problem**: Two user entities (`AuthUser` in Authentication, `User` in Users) create sync issues.
+**Problem**: Two user entities (`AuthUser` in Authentication, `User` in Users) created sync issues.
 
-**Current Status**: Documented sync strategy with planned v2.0 merge.
+**Solution Implemented**:
+1. **Extended `User` entity** with authentication fields:
+   - `Username` (unique, indexed)
+   - `PasswordHash` (nullable for OAuth users)
+   - `IsEmailVerified` (default: false)
+   - `LastLoginAt` (nullable)
+   - Helper methods: `SetPasswordHash()`, `RecordLogin()`, `VerifyEmail()`
+   - Factory methods: `CreateWithPassword()`, `CreateOAuthUser()`
 
-**Documentation**: [User Entity Sync Strategy](../../docs/security/USER_ENTITY_SYNC_STRATEGY.md)
+2. **Extended `IUserRepository`** with auth operations:
+   - `GetByUsernameAsync()`
+   - `ExistsByUsernameAsync()`
+   - `UpdatePasswordHashAsync()`
+   - `RecordLoginAsync()`
 
-**Interim Strategy**:
-1. Use same ID for both entities
-2. Publish domain events for cross-module sync
-3. Use transactions when updating both
-4. Query by ID (not email)
+3. **Marked as `[Obsolete]`**:
+   - `AuthUser` entity
+   - `IAuthUserRepository` interface
+   - `AuthUserRepository` class
 
-**v2.0 Plan**: Merge into single `UnifiedUser` entity with auth + profile fields.
+**Migration Path**: New code should use `User` entity and `IUserRepository`. Existing code using `AuthUser` will show deprecation warnings.
+
+**Location**: [User.cs](Source/Modules/GameGuild.Identity.Users/Entities/User.cs)
 
 ### ✅ Multi-Tenancy
 - Tenant context properly isolated
@@ -427,7 +439,7 @@ Legacy policies continue to work:
 |---|-------|-------------|--------|-------|
 | 5 | ActorContext Migration | Complete migration from legacy contexts | ✅ DONE | All handlers migrated |
 | 6 | Authorization Integration Tests | Add integration tests for auth flows | ⚠️ PENDING | Scheduled for next sprint |
-| 7 | Merge AuthUser + User | Two user entities create sync issues | ⚠️ DOCUMENTED | Option B: Sync strategy documented. Merge planned for v2.0. See [USER_ENTITY_SYNC_STRATEGY.md](../../docs/security/USER_ENTITY_SYNC_STRATEGY.md) |
+| 7 | Merge AuthUser + User | Two user entities create sync issues | ✅ DONE | User entity extended with auth fields. AuthUser, IAuthUserRepository, AuthUserRepository marked [Obsolete]. See [User.cs](Source/Modules/GameGuild.Identity.Users/Entities/User.cs) |
 | 8 | Distributed Cache | Add distributed caching for permissions | ⚠️ PENDING | Redis integration planned |
 | 9 | Token Versioning | Add version field for token revocation | ⚠️ PENDING | Requires DB migration |
 | 10 | Middleware Order | Document middleware execution order | ✅ DONE | See Permission Evaluation Policy |

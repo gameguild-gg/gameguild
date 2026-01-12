@@ -6,10 +6,14 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.Identity.Users;
 
 /// <summary>
-///     Represents a user in the system
-///     Inherits from EntityBase to provide GUID IDs, version control, timestamps, and soft delete functionality
+///     Represents a unified user in the system combining identity, authentication, and profile.
+///     Inherits from EntityBase to provide GUID IDs, version control, timestamps, and soft delete functionality.
 /// </summary>
 /// <remarks>
+///     <para>
+///         <b>Unified Entity:</b> This entity combines the former AuthUser (authentication) and User (profile)
+///         entities into a single source of truth. PasswordHash is nullable to support OAuth-only users.
+///     </para>
 ///     <para>
 ///         <b>Cross-Module Relationship:</b> Users can belong to multiple tenants via the
 ///         <c>TenantMember</c> entity in the <c>GameGuild.Tenants</c> module.
@@ -24,6 +28,7 @@ namespace GameGuild.Identity.Users;
 /// </remarks>
 [Table("Users")]
 [Index(nameof(Email), IsUnique = true)]
+[Index(nameof(Username), IsUnique = true)]
 public class User : EntityBase, IUser
 {
     /// <summary>
@@ -37,6 +42,10 @@ public class User : EntityBase, IUser
     /// <param name="partial">Partial user data</param>
     public User(object partial) : base(partial) { }
 
+    // ========================
+    // IDENTITY FIELDS
+    // ========================
+
     /// <summary>
     ///     Email address of the user (unique)
     /// </summary>
@@ -46,11 +55,41 @@ public class User : EntityBase, IUser
     public string Email { get; set; } = string.Empty;
 
     /// <summary>
+    ///     Optional username for display (unique if set)
+    /// </summary>
+    [MaxLength(256)]
+    public string? Username { get; set; }
+
+    /// <summary>
     ///     Full name of the user
     /// </summary>
     [Required]
     [MaxLength(100)]
     public string Name { get; set; } = string.Empty;
+
+    // ========================
+    // AUTHENTICATION FIELDS
+    // ========================
+
+    /// <summary>
+    ///     BCrypt password hash. Null for OAuth-only users.
+    /// </summary>
+    [MaxLength(512)]
+    public string? PasswordHash { get; set; }
+
+    /// <summary>
+    ///     Whether the user's email has been verified
+    /// </summary>
+    public bool IsEmailVerified { get; set; }
+
+    /// <summary>
+    ///     Date and time of the user's last login
+    /// </summary>
+    public DateTime? LastLoginAt { get; set; }
+
+    // ========================
+    // STATUS FIELDS
+    // ========================
 
     /// <summary>
     ///     Whether this user is currently active
@@ -62,6 +101,10 @@ public class User : EntityBase, IUser
     /// </summary>
     public bool IsSuspended { get; set; }
 
+    // ========================
+    // PROFILE FIELDS
+    // ========================
+
     /// <summary>
     ///     Optional phone number
     /// </summary>
@@ -72,6 +115,49 @@ public class User : EntityBase, IUser
     ///     Date and time when the user was last seen/logged in
     /// </summary>
     public DateTime? LastSeenAt { get; set; }
+
+    // ========================
+    // AUTHENTICATION METHODS
+    // ========================
+
+    /// <summary>
+    ///     Set the password hash for the user
+    /// </summary>
+    /// <param name="passwordHash">BCrypt hash of the password</param>
+    public void SetPasswordHash(string passwordHash)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+        PasswordHash = passwordHash;
+        Touch();
+    }
+
+    /// <summary>
+    ///     Check if the user has a password set (vs OAuth-only)
+    /// </summary>
+    public bool HasPassword => !string.IsNullOrEmpty(PasswordHash);
+
+    /// <summary>
+    ///     Record a successful login
+    /// </summary>
+    public void RecordLogin()
+    {
+        LastLoginAt = DateTime.UtcNow;
+        LastSeenAt = DateTime.UtcNow;
+        Touch();
+    }
+
+    /// <summary>
+    ///     Mark email as verified
+    /// </summary>
+    public void VerifyEmail()
+    {
+        IsEmailVerified = true;
+        Touch();
+    }
+
+    // ========================
+    // STATUS METHODS
+    // ========================
 
     /// <summary>
     ///     Activate the user
@@ -109,6 +195,10 @@ public class User : EntityBase, IUser
         Touch();
     }
 
+    // ========================
+    // PROFILE METHODS
+    // ========================
+
     /// <summary>
     ///     Update user information
     /// </summary>
@@ -133,21 +223,6 @@ public class User : EntityBase, IUser
     }
 
     /// <summary>
-    ///     Static factory method to create a new user
-    /// </summary>
-    /// <param name="email">User's email address</param>
-    /// <param name="name">User's full name</param>
-    /// <param name="phoneNumber">Optional phone number</param>
-    /// <returns>New User instance</returns>
-    public static User Create(string email, string name, string? phoneNumber = null)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(email);
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-
-        return new User { Email = email, Name = name, PhoneNumber = phoneNumber, IsActive = true };
-    }
-
-    /// <summary>
     ///     Update the user's name
     /// </summary>
     /// <param name="name">New name</param>
@@ -166,5 +241,69 @@ public class User : EntityBase, IUser
     {
         PhoneNumber = phoneNumber;
         Touch();
+    }
+
+    // ========================
+    // FACTORY METHODS
+    // ========================
+
+    /// <summary>
+    ///     Static factory method to create a new user with password authentication
+    /// </summary>
+    /// <param name="email">User's email address</param>
+    /// <param name="name">User's full name</param>
+    /// <param name="passwordHash">BCrypt password hash</param>
+    /// <param name="username">Optional username</param>
+    /// <returns>New User instance</returns>
+    public static User CreateWithPassword(string email, string name, string passwordHash, string? username = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
+
+        return new User
+        {
+            Email = email.ToLowerInvariant(),
+            Name = name,
+            Username = username,
+            PasswordHash = passwordHash,
+            IsActive = true
+        };
+    }
+
+    /// <summary>
+    ///     Static factory method to create a new OAuth-only user
+    /// </summary>
+    /// <param name="email">User's email address</param>
+    /// <param name="name">User's full name</param>
+    /// <returns>New User instance without password</returns>
+    public static User CreateOAuthUser(string email, string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        return new User
+        {
+            Email = email.ToLowerInvariant(),
+            Name = name,
+            PasswordHash = null, // OAuth-only user
+            IsActive = true,
+            IsEmailVerified = true // OAuth emails are pre-verified
+        };
+    }
+
+    /// <summary>
+    ///     Static factory method to create a new user (legacy compatibility)
+    /// </summary>
+    /// <param name="email">User's email address</param>
+    /// <param name="name">User's full name</param>
+    /// <param name="phoneNumber">Optional phone number</param>
+    /// <returns>New User instance</returns>
+    public static User Create(string email, string name, string? phoneNumber = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        return new User { Email = email.ToLowerInvariant(), Name = name, PhoneNumber = phoneNumber, IsActive = true };
     }
 }

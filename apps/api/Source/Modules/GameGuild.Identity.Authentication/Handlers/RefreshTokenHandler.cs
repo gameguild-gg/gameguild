@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -6,12 +7,12 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for refresh token command
 /// </summary>
-public class RefreshTokenHandler(IAuthService authService, IAuthUserRepository authUserRepository, ILogger<RefreshTokenHandler> logger, FluentValidation.IValidator<RefreshTokenCommand> validator)
+public class RefreshTokenHandler(IAuthService authService, IUserRepository userRepository, ILogger<RefreshTokenHandler> logger, FluentValidation.IValidator<RefreshTokenCommand> validator)
     : IRequestHandler<RefreshTokenCommand, SignInResponse>
 {
     private readonly IAuthService _authService = authService ?? throw new ArgumentNullException(nameof(authService));
 
-    private readonly IAuthUserRepository _authUserRepository = authUserRepository ?? throw new ArgumentNullException(nameof(authUserRepository));
+    private readonly IUserRepository _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
 
     private readonly ILogger<RefreshTokenHandler> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -38,7 +39,7 @@ public class RefreshTokenHandler(IAuthService authService, IAuthUserRepository a
             _logger.LogInformation("Refresh token processed successfully");
 
             // Map from Domain response to Application DTO
-            return await domainResponse.ToDto(_authUserRepository, cancellationToken).ConfigureAwait(false);
+            return await domainResponse.ToDto(_userRepository, cancellationToken).ConfigureAwait(false);
         }
         catch (UnauthorizedAccessException ex)
         {

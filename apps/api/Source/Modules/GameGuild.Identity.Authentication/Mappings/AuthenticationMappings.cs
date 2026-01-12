@@ -1,3 +1,5 @@
+using GameGuild.Identity.Users;
+
 namespace GameGuild.Identity.Authentication;
 
 using Authentication_RefreshTokenResponse = RefreshTokenResponse;
@@ -14,11 +16,11 @@ public static class AuthenticationMappings
     /// <summary>
     ///     Maps Domain SignInResponse to Application SignInResponse DTO
     /// </summary>
-    public static async Task<Authentication_SignInResponse> ToDto(this Responses_SignInResponse domainResponse, IAuthUserRepository authUserRepository, CancellationToken cancellationToken = default)
+    public static async Task<Authentication_SignInResponse> ToDto(this Responses_SignInResponse domainResponse, IUserRepository userRepository, CancellationToken cancellationToken = default)
     {
         // Try to fetch user details from repository
         // Note: In some scenarios (e.g., tests with separate DbContext scopes), the user might not be available yet
-        var user = await authUserRepository.GetByIdAsync(domainResponse.UserId, cancellationToken);
+        var user = await userRepository.GetByIdAsync(domainResponse.UserId, cancellationToken);
 
         return new Authentication_SignInResponse
         {
@@ -32,13 +34,13 @@ public static class AuthenticationMappings
                 Id = domainResponse.UserId,
                 Email = user?.Email ?? domainResponse.Email,
                 Username = user?.Username ?? domainResponse.Email,
-                FirstName = null, // AuthUser doesn't have these fields
-                LastName = null,
+                FirstName = user?.Name?.Split(' ').FirstOrDefault(),
+                LastName = user?.Name?.Split(' ').Skip(1).FirstOrDefault(),
                 PhoneNumber = null,
-                EmailVerified = false, // Not stored in AuthUser
+                EmailVerified = user?.IsEmailVerified ?? false,
                 PhoneNumberVerified = false,
                 CreatedAt = user?.CreatedAt ?? DateTime.UtcNow,
-                LastLoginAt = null // Not stored in AuthUser
+                LastLoginAt = user?.LastLoginAt
             },
             TenantId = domainResponse.TenantId,
             RequiresMfa = domainResponse.RequiresMfa,

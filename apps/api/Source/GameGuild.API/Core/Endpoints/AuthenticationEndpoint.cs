@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using GameGuild.API.Database;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -91,19 +92,21 @@ public static class AuthenticationEndpoint
         }
     }
 
-    private static async Task<IResult> SignIn(SignInRequest request, ApplicationDbContext dbContext, IPasswordHasher<AuthUser> passwordHasher, IConfiguration configuration, ILogger<Program> logger)
+    private static async Task<IResult> SignIn(SignInRequest request, ApplicationDbContext dbContext, IPasswordHasher<User> passwordHasher, IConfiguration configuration, ILogger<Program> logger)
     {
         try
         {
-            // Find user
-            var user = await dbContext.Set<AuthUser>().FirstOrDefaultAsync(u => u.Email == request.Email);
+            // Find user by email
+            var user = await dbContext.Set<User>().FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            if (user == null) { return Results.Unauthorized(); }
+            if (user == null || !user.HasPassword) { return Results.Unauthorized(); }
 
-            // Verify password
-            var verificationResult = passwordHasher.VerifyHashedPassword(user, user.PasswordHash, request.Password);
+            // Verify password using BCrypt directly (User entity uses BCrypt)
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash)) { return Results.Unauthorized(); }
 
-            if (verificationResult == PasswordVerificationResult.Failed) { return Results.Unauthorized(); }
+            // Record login
+            user.RecordLogin();
+            await dbContext.SaveChangesAsync();
 
             // Generate tokens
             var tokens = GenerateTokens(user, configuration);
@@ -163,7 +166,7 @@ public static class AuthenticationEndpoint
         );
     }
 
-    private static TokenResponse GenerateTokens(AuthUser user, IConfiguration configuration)
+    private static TokenResponse GenerateTokens(User user, IConfiguration configuration)
     {
         var jwtSecret = configuration["Jwt:Secret"] ?? "default-secret-key-for-development-only-min-32-chars";
         var jwtIssuer = configuration["Jwt:Issuer"] ?? "GameGuild";

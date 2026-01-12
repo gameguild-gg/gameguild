@@ -29,8 +29,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // Apply Users module configurations
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(User).Assembly, type => type.Namespace?.StartsWith("GameGuild.Users") == true);
 
-        // Apply Authentication module configurations
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AuthUser).Assembly, type => type.Namespace?.StartsWith("GameGuild.Authentication") == true);
+        // Apply Authentication module configurations (excluding AuthUser which has been removed)
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(RefreshToken).Assembly, type => 
+            type.Namespace?.StartsWith("GameGuild.Authentication") == true && 
+            !type.Name.Contains("AuthUser"));
 
         // Apply Authorization module configurations
         AuthorizationModule.ConfigureAuthorizationModel(modelBuilder);
@@ -135,7 +137,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     #region Authentication Module
 
-    public DbSet<AuthUser> AuthUsers { get => Set<AuthUser>(); }
+    // NOTE: AuthUsers table has been removed. User authentication data is now stored in the Users table.
+    // The User entity includes: Username, PasswordHash, IsEmailVerified, LastLoginAt fields.
 
     public DbSet<AuthenticationAttempt> AuthenticationAttempts { get => Set<AuthenticationAttempt>(); }
 

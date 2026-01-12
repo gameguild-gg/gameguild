@@ -156,4 +156,47 @@ public interface IUserRepository
     /// </summary>
     /// <returns>IQueryable of users</returns>
     IQueryable<User> GetQueryable();
+
+    // ========================
+    // AUTHENTICATION OPERATIONS (Merged from IAuthUserRepository)
+    // ========================
+
+    /// <summary>
+    ///     Gets a user by username for authentication
+    /// </summary>
+    /// <param name="username">Username</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>User if found, null otherwise</returns>
+    Task<User?> GetByUsernameAsync(string username, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Checks if a user with the given email exists (for registration validation)
+    /// </summary>
+    /// <param name="email">Email address</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if user exists</returns>
+    Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Checks if a user with the given username exists
+    /// </summary>
+    /// <param name="username">Username</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>True if username is taken</returns>
+    Task<bool> ExistsByUsernameAsync(string username, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Updates the user's password hash
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="passwordHash">New BCrypt password hash</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task UpdatePasswordHashAsync(Guid userId, string passwordHash, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Records a successful login for the user
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task RecordLoginAsync(Guid userId, CancellationToken cancellationToken = default);
 }

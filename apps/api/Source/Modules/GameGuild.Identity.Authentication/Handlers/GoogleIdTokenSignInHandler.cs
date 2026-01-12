@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -6,7 +7,7 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Handler for Google ID token sign-in command
 /// </summary>
-public class GoogleIdTokenSignInHandler(IAuthService authService, IAuthUserRepository authUserRepository, ILogger<GoogleIdTokenSignInHandler> logger, FluentValidation.IValidator<GoogleIdTokenSignInCommand> validator)
+public class GoogleIdTokenSignInHandler(IAuthService authService, IUserRepository userRepository, ILogger<GoogleIdTokenSignInHandler> logger, FluentValidation.IValidator<GoogleIdTokenSignInCommand> validator)
     : IRequestHandler<GoogleIdTokenSignInCommand, SignInResponse>
 {
     public async Task<SignInResponse> Handle(GoogleIdTokenSignInCommand command, CancellationToken cancellationToken)
@@ -30,6 +31,6 @@ public class GoogleIdTokenSignInHandler(IAuthService authService, IAuthUserRepos
         logger.LogInformation("Google ID token sign-in successful");
 
         // Map from Domain response to Application DTO
-        return await domainResult.ToDto(authUserRepository, cancellationToken).ConfigureAwait(false);
+        return await domainResult.ToDto(userRepository, cancellationToken).ConfigureAwait(false);
     }
 }

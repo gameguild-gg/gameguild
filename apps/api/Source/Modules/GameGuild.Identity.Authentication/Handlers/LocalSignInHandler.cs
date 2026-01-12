@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +10,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public class LocalSignInHandler(
     IAuthService authService,
-    IAuthUserRepository authUserRepository,
+    IUserRepository userRepository,
     IHttpContextAccessor httpContextAccessor,
     ILogger<LocalSignInHandler> logger,
     FluentValidation.IValidator<LocalSignInCommand> validator
@@ -37,7 +38,7 @@ public class LocalSignInHandler(
         logger.LogInformation("User successfully signed in via local authentication from IP {IpAddress}", ipAddress);
 
         // Map from Domain response to Application DTO
-        return await domainResult.ToDto(authUserRepository, cancellationToken).ConfigureAwait(false);
+        return await domainResult.ToDto(userRepository, cancellationToken).ConfigureAwait(false);
     }
 
     private static string? GetClientIpAddress(HttpContext? httpContext)

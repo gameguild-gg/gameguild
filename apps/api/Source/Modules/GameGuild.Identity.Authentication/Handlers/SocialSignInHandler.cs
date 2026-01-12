@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -8,7 +9,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public class SocialSignInHandler(
     IAuthService authService,
-    IAuthUserRepository authUserRepository,
+    IUserRepository userRepository,
     ILogger<SocialSignInHandler> logger,
     FluentValidation.IValidator<SocialSignInCommand>? validator = null
 ) : IRequestHandler<SocialSignInCommand, SignInResponse>
@@ -44,6 +45,6 @@ public class SocialSignInHandler(
         logger.LogInformation("Social sign-in successful for provider: {Provider}", command.Provider);
 
         // Map from Domain response to Application DTO
-        return await domainResult.ToDto(authUserRepository, cancellationToken).ConfigureAwait(false);
+        return await domainResult.ToDto(userRepository, cancellationToken).ConfigureAwait(false);
     }
 }

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -7,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authentication;
 
 public class AuthService(
-    IAuthUserRepository authUserRepository,
+    IUserRepository userRepository,
     IRefreshTokenRepository refreshTokenRepository,
     IAuthenticationAttemptRepository authenticationAttemptRepository,
     IJwtTokenService jwtTokenService,
@@ -56,7 +57,7 @@ public class AuthService(
 
             // Lookup user from database
             var normalizedEmail = request.Email.ToLowerInvariant();
-            var user = await authUserRepository.GetByEmailAsync(normalizedEmail, cancellationToken);
+            var user = await userRepository.GetByEmailAsync(normalizedEmail, cancellationToken);
             userExists = user != null;
 
             // Verify password if user exists
@@ -169,7 +170,7 @@ public class AuthService(
         try
         {
             // Check for existing user
-            var emailExists = await authUserRepository.ExistsAsync(request.Email.ToLowerInvariant(), cancellationToken);
+            var emailExists = await userRepository.ExistsByEmailAsync(request.Email.ToLowerInvariant(), cancellationToken);
 
             if (emailExists)
             {
@@ -182,14 +183,18 @@ public class AuthService(
             // Hash password using BCrypt
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
 
-            // Create new user
-            var newUser = new AuthUser { Id = Guid.NewGuid(), Email = request.Email.ToLowerInvariant(), Username = request.Username, PasswordHash = passwordHash };
+            // Create new user using the unified User entity
+            var newUser = User.CreateWithPassword(
+                request.Email.ToLowerInvariant(),
+                request.Username ?? request.Email.Split('@')[0],
+                passwordHash);
 
             // Save to database
-            var user = await authUserRepository.CreateAsync(newUser, cancellationToken);
-            var userId = user.Id;
+            await userRepository.AddAsync(newUser, cancellationToken);
+            await userRepository.SaveChangesAsync(cancellationToken);
+            var userId = newUser.Id;
 
-            logger.LogInformation("Created new user with ID: {UserId} and Email: {Email}", userId, user.Email);
+            logger.LogInformation("Created new user with ID: {UserId} and Email: {Email}", userId, newUser.Email);
 
             // Create device info for refresh token
             var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
@@ -462,22 +467,15 @@ public class AuthService(
             var email = googleUser.Email ?? throw new UnauthorizedAccessException("Email not found in ID token");
 
             // Find or create user
-            var user = await authUserRepository.GetByEmailAsync(email, cancellationToken);
+            var user = await userRepository.GetByEmailAsync(email, cancellationToken);
 
             if (user == null)
             {
-                // Create new user for OAuth sign-in
-                user = new AuthUser
-                {
-                    Id = Guid.NewGuid(),
-                    Email = email,
-                    Username = googleUser.Name ?? email.Split('@')[0],
-                    PasswordHash = string.Empty, // OAuth users don't have password
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
+                // Create new user for OAuth sign-in using the unified User entity
+                user = User.CreateOAuthUser(email, googleUser.Name ?? email.Split('@')[0]);
 
-                user = await authUserRepository.CreateAsync(user, cancellationToken);
+                await userRepository.AddAsync(user, cancellationToken);
+                await userRepository.SaveChangesAsync(cancellationToken);
                 logger.LogInformation("Created new user from Google sign-in: {Email}", email);
             }
 
