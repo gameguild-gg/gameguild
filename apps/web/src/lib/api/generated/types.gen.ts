@@ -1801,6 +1801,7 @@ export type ContentStatsDto = {
     Reflection?: number;
     Survey?: number;
     Reveal?: number;
+    Marp?: number;
   } | null;
   contentByVisibility?: {
     Public?: number;
@@ -3551,6 +3552,10 @@ export enum ProgramContentType {
    * Reveal
    */
   REVEAL = 9,
+  /**
+   * Marp
+   */
+  MARP = 10,
 }
 
 export enum ProgramDifficulty {
