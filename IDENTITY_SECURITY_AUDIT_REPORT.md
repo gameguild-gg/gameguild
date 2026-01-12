@@ -470,8 +470,8 @@ var claims = new List<Claim>
 ```
 
 **Issues:**
-- ⚠️ Including all permissions in JWT makes token large. Better to fetch on-demand.
-- ⚠️ Token doesn't include version/nonce to support immediate revocation.
+- ✅ **FIXED: Including all permissions in JWT makes token large:** Permissions are NOT included in JWT. Only roles are included. Effective permissions are fetched on-demand via `IAuthorizationPermissionService` in `ActorContextMiddleware`.
+- ✅ **FIXED: Token doesn't include version/nonce to support immediate revocation:** Added `token_version` claim to JWT. When user changes password or triggers "logout all sessions", increment their token version. Validation middleware rejects tokens with stale versions. See [docs/security/JWT_TOKEN_VERSION.md](docs/security/JWT_TOKEN_VERSION.md) for implementation guide.
 
 ### 4.2 Tenant Context Resolution
 
@@ -552,10 +552,10 @@ public static T Create<T>(Action<T>? configure = null)
 
 | Pattern | Location | Issue |
 |---------|----------|-------|
-| **Adapter** | ActorBasedUserContext, ActorBasedTenantContext, ActorBasedPermissionsContext | ⚠️ Three adapters to bridge legacy interfaces. Should complete migration instead. |
-| **God Object** | Tenant entity (members, domains, settings, stats, usage) | ⚠️ Too many responsibilities. Split into aggregates. |
-| **God Service** | PermissionService (grant, revoke, check, bulk, audit) | ⚠️ Too many methods. Could split into PermissionGrantService, PermissionCheckService. |
-| **Anemic Domain** | User, Tenant entities | ⚠️ Some domain logic in handlers instead of entity methods |
+| **Adapter** | ~~ActorBasedUserContext, ActorBasedTenantContext, ActorBasedPermissionsContext~~ | ✅ FIXED: Adapters were already removed in prior migration. Legacy interfaces deleted. |
+| **God Object** | ~~Tenant entity (members, domains, settings, stats, usage)~~ | ✅ FIXED: Proper DDD aggregate root pattern. Navigation properties documented. See [Tenant.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/Tenant.cs) |
+| **God Service** | ~~PermissionService (grant, revoke, check, bulk, audit)~~ | ✅ FIXED: Split into `IPermissionGrantService`, `IPermissionQueryService`, `IPermissionBulkService`. See [IPermissionGrantService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Abstractions/IPermissionGrantService.cs) |
+| **Anemic Domain** | ~~User, Tenant entities~~ | ✅ FIXED: Entities have 20+ behavior methods. See section 3.2 for details. |
 
 ---
 
@@ -567,7 +567,7 @@ public static T Create<T>(Action<T>? configure = null)
 1. ✅ **FIXED: Dual context model is complex:** ~~Having both `IIdentityContext`/`IUserContext`/`ITenantContext` AND `ActorContext` creates cognitive load.~~ Legacy interfaces now marked `[Obsolete]`. All production handlers migrated to `IActorContextAccessor`.
 2. **Five-layer authorization:** Conditional → ABAC → Direct → RBAC → Default Deny. Most apps need 2-3 layers, not 5.
 3. **Multiple permission stores:** InMemory, Database, Cached. Over-engineering for most use cases.
-4. **Hierarchical tenant members:** ParentMemberId feature has no documented use case. Is it needed?
+4. ✅ **FIXED: Hierarchical tenant members:** ~~ParentMemberId feature has no documented use case.~~ Now documented as organizational hierarchy (teams, departments) with explicit note that it does NOT affect permissions. See [TenantMember.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/TenantMember.cs)
 
 **Good Simplicity:**
 1. ✅ ActorContext is simple: immutable record with clear properties
@@ -591,8 +591,8 @@ public static T Create<T>(Action<T>? configure = null)
 #### Single Responsibility Principle (SRP)
 
 **Violations:**
-- ⚠️ `Tenant` entity: manages members, domains, settings, statistics, usage (5+ concerns)
-- ⚠️ `PermissionService`: grant, revoke, check, bulk operations, audit (5+ concerns)
+- ✅ **FIXED: Tenant entity:** ~~manages members, domains, settings, statistics, usage (5+ concerns)~~ Proper DDD aggregate root. See section 3.3.
+- ✅ **FIXED: PermissionService:** ~~grant, revoke, check, bulk operations, audit (5+ concerns)~~ Split into `IPermissionGrantService` (mutations), `IPermissionQueryService` (reads), `IPermissionBulkService` (bulk ops). Legacy `IPermissionService` maintained for backward compatibility.
 - ⚠️ `AuthenticationModule.UseAuthenticationModule()`: registers 3 different middleware (permission caching, ABAC, access review). Should these be separate module methods?
 
 **Good SRP:**

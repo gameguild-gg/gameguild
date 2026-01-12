@@ -190,8 +190,13 @@ public static class AuthorizationModuleExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddPermissionServices(this IServiceCollection services)
     {
-        // Core permission service
+        // Core permission service (legacy - contains all operations)
         services.AddScoped<IPermissionService, PermissionService>();
+        
+        // SRP-compliant focused services (new - recommended for new code)
+        services.AddScoped<IPermissionGrantService, PermissionGrantService>();
+        services.AddScoped<IPermissionQueryService, PermissionQueryService>();
+        services.AddScoped<IPermissionBulkService, PermissionBulkService>();
         
         // Permission audit service
         services.AddScoped<IPermissionAuditService, PermissionAuditService>();

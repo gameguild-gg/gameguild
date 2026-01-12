@@ -38,7 +38,11 @@ public sealed class JwtTokenService(
                 new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email, email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64)
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
+                // Token version for immediate revocation support
+                // When user changes password/signs out all sessions, increment their token version
+                // Validation middleware can check current version vs token version and reject stale tokens
+                new Claim("token_version", "1") // TODO: Fetch from user entity or UserTokenVersion table
             };
 
             // Add roles
