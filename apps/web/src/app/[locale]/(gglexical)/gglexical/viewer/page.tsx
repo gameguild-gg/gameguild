@@ -337,7 +337,7 @@ export default function PreviewPage() {
                     setSidebarOpen={setSidebarOpen}
                   />
                 ) : currentLayoutType === "type2" && leftState && rightState ? (
-                  <PreviewRendererType2 leftState={leftState as any} rightState={rightState as any} />
+                  <PreviewRendererType2 leftState={leftState as any} rightState={rightState as any} projectId={currentProject.id} />
                 ) : (
                   <div className="border border-red-200 bg-red-50 shadow-sm dark:border-red-700 dark:bg-red-900/20">
                     <div className="p-6 px-12 py-12">
