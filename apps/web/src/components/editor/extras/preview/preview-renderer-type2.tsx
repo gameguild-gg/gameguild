@@ -15,6 +15,7 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
   const [isDragging, setIsDragging] = useState(false)
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false)
   const [isRightCollapsed, setIsRightCollapsed] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -87,25 +88,29 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
   }, [isDragging])
 
   const expandLeft = () => {
+    setIsAnimating(true)
     setIsLeftCollapsed(false)
     setIsRightCollapsed(false)
     setLeftWidth(50)
+    setTimeout(() => setIsAnimating(false), 250)
   }
 
   const expandRight = () => {
+    setIsAnimating(true)
     setIsRightCollapsed(false)
     setIsLeftCollapsed(false)
     setLeftWidth(50)
+    setTimeout(() => setIsAnimating(false), 250)
   }
 
   const getLeftWidth = () => {
-    if (isLeftCollapsed) return "0%"
+    if (isLeftCollapsed) return "3%"
     if (isRightCollapsed) return "100%"
     return `${leftWidth}%`
   }
 
   const getRightWidth = () => {
-    if (isRightCollapsed) return "0%"
+    if (isRightCollapsed) return "3%"
     if (isLeftCollapsed) return "100%"
     return `${100 - leftWidth}%`
   }
@@ -117,11 +122,19 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
         className="relative border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 overflow-hidden"
         style={{ 
           width: getLeftWidth(),
-          transition: isLeftCollapsed || isRightCollapsed ? 'width 0.3s ease-in-out' : 'none',
-          willChange: isDragging ? 'width' : 'auto'
+          transition: (isLeftCollapsed || isRightCollapsed || isAnimating) ? 'width 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+          willChange: (isDragging || isAnimating) ? 'width' : 'auto'
         }}
       >
-        {!isLeftCollapsed && (
+        {isLeftCollapsed ? (
+          <div 
+            className="h-full w-full bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 cursor-col-resize hover:from-blue-400 hover:to-blue-500 dark:hover:from-blue-600 dark:hover:to-blue-700 transition-colors duration-150 flex items-center justify-center"
+            onMouseDown={handleMouseDown}
+            title="Drag to expand"
+          >
+            <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          </div>
+        ) : (
           <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
             <PreviewRenderer serializedState={leftState} />
           </div>
@@ -132,8 +145,8 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
       {isLeftCollapsed && (
         <button
           onClick={expandLeft}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 p-2 rounded-r-md shadow-lg transition-colors duration-200"
-          title="Expand left panel"
+          className="absolute left-0 top-4 z-20 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 p-2 rounded-r-md shadow-lg transition-all duration-200 hover:scale-110"
+          title="Click to expand (or drag the panel)"
         >
           <ChevronRight className="w-4 h-4 text-gray-700 dark:text-gray-300" />
         </button>
@@ -155,8 +168,8 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
       {isRightCollapsed && (
         <button
           onClick={expandRight}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 p-2 rounded-l-md shadow-lg transition-colors duration-200"
-          title="Expand right panel"
+          className="absolute right-0 top-4 z-20 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 p-2 rounded-l-md shadow-lg transition-all duration-200 hover:scale-110"
+          title="Click to expand (or drag the panel)"
         >
           <ChevronLeft className="w-4 h-4 text-gray-700 dark:text-gray-300" />
         </button>
@@ -167,11 +180,19 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
         className="relative border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:border-l-0 overflow-hidden"
         style={{ 
           width: getRightWidth(),
-          transition: isLeftCollapsed || isRightCollapsed ? 'width 0.3s ease-in-out' : 'none',
-          willChange: isDragging ? 'width' : 'auto'
+          transition: (isLeftCollapsed || isRightCollapsed || isAnimating) ? 'width 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+          willChange: (isDragging || isAnimating) ? 'width' : 'auto'
         }}
       >
-        {!isRightCollapsed && (
+        {isRightCollapsed ? (
+          <div 
+            className="h-full w-full bg-gradient-to-l from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 cursor-col-resize hover:from-blue-400 hover:to-blue-500 dark:hover:from-blue-600 dark:hover:to-blue-700 transition-colors duration-150 flex items-center justify-center"
+            onMouseDown={handleMouseDown}
+            title="Drag to expand"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          </div>
+        ) : (
           <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
             <PreviewRenderer serializedState={rightState} />
           </div>
