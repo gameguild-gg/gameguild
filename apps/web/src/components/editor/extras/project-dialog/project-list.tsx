@@ -11,6 +11,7 @@ import { ProjectListView } from "./project-list-view"
 interface ProjectData {
   id: string
   name: string
+  type: "type1" | "type2"
   data: string
   tags: string[]
   size: number
@@ -18,6 +19,7 @@ interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
+  preferences?: any
 }
 
 interface ProjectListProps {
@@ -105,24 +107,37 @@ export function ProjectList({
             import("@/lib/interopAdapter/project-exporter")
           ])
 
+          console.log('[Download] Starting download for project:', downloadDialog.project.id)
+
           // Generate hash for the project
           const hash = await HashManager.generateHash(downloadDialog.project.data)
+          console.log('[Download] Generated hash:', hash)
 
           // Prepare project data for export using ProjectExporter
           const exportProjectData = {
             id: downloadDialog.project.id,
             name: downloadDialog.project.name,
+            type: downloadDialog.project.type || "type1" as "type1" | "type2",
             data: downloadDialog.project.data,
             tags: downloadDialog.project.tags,
             size: new Blob([downloadDialog.project.data]).size,
             createdAt: downloadDialog.project.createdAt,
             updatedAt: downloadDialog.project.updatedAt,
             hash: hash,
-            storageType: "local" as const
+            storageType: "local" as const,
+            preferences: downloadDialog.project.preferences
           }
+
+          console.log('[Download] Export project data prepared:', {
+            id: exportProjectData.id,
+            name: exportProjectData.name,
+            type: exportProjectData.type,
+            hasPreferences: !!exportProjectData.preferences
+          })
 
           // Use ProjectExporter to create the ZIP file
           const zipBlob = await ProjectExporter.createZipFile(exportProjectData, hash)
+          console.log('[Download] ZIP file created, size:', zipBlob.size)
 
           // Create download link
           const url = URL.createObjectURL(zipBlob)
@@ -131,6 +146,8 @@ export function ProjectList({
           link.download = ProjectExporter.getDownloadFilename(exportProjectData)
           document.body.appendChild(link)
           link.click()
+
+          console.log('[Download] Download initiated:', link.download)
 
           // Cleanup
           document.body.removeChild(link)

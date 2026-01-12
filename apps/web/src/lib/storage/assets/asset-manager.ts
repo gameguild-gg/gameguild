@@ -748,6 +748,41 @@ export class AssetManager {
   }
 
   /**
+   * Register usage of an existing asset with a project/node
+   * This is useful when importing assets from collections
+   */
+  async registerAssetUsage(assetId: string, projectId: string, nodeId: string): Promise<void> {
+    if (!this.isInitialized) {
+      await this.init()
+    }
+
+    console.log(`AssetManager: Registering asset usage - asset:${assetId}, project:${projectId}, node:${nodeId}`)
+
+    const index = await this.loadIndex()
+    let usageList = index.assets[assetId] || []
+    const existingUsage = usageList.find((u) => u.projectId === projectId)
+    
+    if (existingUsage) {
+      if (!existingUsage.nodeIds.includes(nodeId)) {
+        existingUsage.nodeIds.push(nodeId)
+        console.log(`AssetManager: Added nodeId to existing usage`)
+      } else {
+        console.log(`AssetManager: Usage already registered`)
+      }
+    } else {
+      usageList.push({
+        projectId,
+        nodeIds: [nodeId],
+      })
+      console.log(`AssetManager: Created new usage entry`)
+    }
+    
+    index.assets[assetId] = usageList
+    await this.saveIndex(index)
+    console.log(`AssetManager: Asset usage registered successfully`)
+  }
+
+  /**
    * Export assets for a specific project
    * Returns a map of assetId -> AssetData for all assets used by the project
    */
