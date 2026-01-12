@@ -24,6 +24,7 @@ export function EditorToolbar() {
   }
 
   return (
+    {/*
     <div className="rounded-t-lg flex items-center justify-center gap-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-2">
       <Button 
         variant="ghost" 
@@ -35,5 +36,6 @@ export function EditorToolbar() {
         <ArrowUp className="h-4 w-4" />
       </Button>
     </div>
+    */}
   )
 }
