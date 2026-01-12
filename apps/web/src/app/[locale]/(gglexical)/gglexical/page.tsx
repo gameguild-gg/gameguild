@@ -82,6 +82,10 @@ export default function HomePage() {
   const [collectionToEdit, setCollectionToEdit] = useState<{ id: string; name: string } | null>(null)
   const [newCollectionName, setNewCollectionName] = useState("")
 
+  // New project type selection
+  const [newProjectDialogOpen, setNewProjectDialogOpen] = useState(false)
+  const [selectedProjectType, setSelectedProjectType] = useState<"type1" | "type2">("type1")
+
 
 
   // Storage adapter - MEMOIZADO para evitar recriação
@@ -813,6 +817,19 @@ export default function HomePage() {
     (activeContext === 'projects' ? additionalFilteredProjects.length : activeContext === 'assets' ? filteredAssets.length : filteredCollections.length) / itemsPerPage
   )
 
+  // Handle new project creation with type selection
+  const handleCreateNewProject = useCallback(() => {
+    setNewProjectDialogOpen(true)
+  }, [])
+
+  const handleConfirmNewProject = useCallback(() => {
+    // Store the selected project type in localStorage
+    localStorage.setItem('newProjectType', selectedProjectType)
+    setNewProjectDialogOpen(false)
+    // Redirect to studio
+    window.location.href = '/gglexical/studio'
+  }, [selectedProjectType])
+
   return (
     <>
       <ManagerLayout
@@ -826,7 +843,7 @@ export default function HomePage() {
       onListColumnsChange={setListColumns}
       onCreateNew={() => {
         if (activeContext === 'projects') {
-          window.location.href = '/gglexical/studio'
+          handleCreateNewProject()
         } else {
           setUploadDialogOpen(true)
         }
@@ -918,6 +935,60 @@ export default function HomePage() {
         )
       )}
     </ManagerLayout>
+
+    {/* New Project Type Selection Dialog */}
+    <Dialog open={newProjectDialogOpen} onOpenChange={setNewProjectDialogOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create New Project</DialogTitle>
+          <DialogDescription>
+            Choose the layout type for your new project
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-3">
+            <button
+              onClick={() => setSelectedProjectType("type1")}
+              className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                selectedProjectType === "type1"
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+              }`}
+            >
+              <div className="font-semibold mb-1">Type 1 - Single Vertical Editor</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Traditional layout with a single editor panel for focused content creation
+              </div>
+            </button>
+            
+            <button
+              onClick={() => setSelectedProjectType("type2")}
+              className={`w-full p-4 rounded-lg border-2 text-left transition-all ${
+                selectedProjectType === "type2"
+                  ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                  : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+              }`}
+            >
+              <div className="font-semibold mb-1">Type 2 - Dual Horizontal Editors</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Side-by-side layout with left and right editor panels for comparative or parallel work
+              </div>
+            </button>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setNewProjectDialogOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleConfirmNewProject}>
+            Create Project
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     {/* Delete Confirmation Dialog */}
     <DeleteConfirmDialog
