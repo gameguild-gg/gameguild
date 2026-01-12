@@ -376,6 +376,53 @@ Legacy policies continue to work:
 
 **Location**: [User.cs](Source/Modules/GameGuild.Identity.Users/Entities/User.cs)
 
+### 9.3. ✅ P1 #9 - Token Versioning for Immediate Revocation (COMPLETE)
+
+**Problem**: JWT tokens can't be immediately revoked (must wait for expiry), preventing instant logout.
+
+**Solution Implemented**:
+
+1. **Token Revocation Service** (`ITokenRevocationService`):
+   - `RevokeTokenAsync(jti, expiresAt)` - Revoke individual token by JTI
+   - `RevokeAllUserTokensAsync(userId)` - Revoke all tokens for a user (logout everywhere)
+   - `IsRevokedAsync(jti)` - Check if token is revoked
+   - `IsUserTokenRevokedAsync(userId, tokenIssuedAt)` - Check user-level revocation
+
+2. **In-Memory Implementation** (`InMemoryTokenRevocationService`):
+   - Thread-safe using `ConcurrentDictionary`
+   - Automatic cleanup of expired entries
+   - Ready for Redis migration (same interface)
+
+3. **Validation Middleware** (`TokenRevocationMiddleware`):
+   - Runs after authentication, before authorization
+   - Extracts JTI from token claims
+   - Rejects requests with revoked tokens (401 Unauthorized)
+   - Extension method: `app.UseTokenRevocation()`
+
+4. **Logout Command** (`LogoutCommand` / `LogoutHandler`):
+   - Single token revocation (current session)
+   - "Logout everywhere" (all user sessions)
+   - Revokes both access tokens (JTI) and refresh tokens (database)
+
+**JWT Already Has JTI**: The `JwtTokenService.GenerateAccessTokenAsync()` already includes:
+```csharp
+new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+```
+
+**Usage**:
+```csharp
+// In Program.cs / Startup.cs
+app.UseAuthentication();
+app.UseTokenRevocation();  // Add after authentication
+app.UseAuthorization();
+```
+
+**Locations**:
+- [ITokenRevocationService.cs](Source/Modules/GameGuild.Identity.Authentication/Abstractions/ITokenRevocationService.cs)
+- [InMemoryTokenRevocationService.cs](Source/Modules/GameGuild.Identity.Authentication/Services/InMemoryTokenRevocationService.cs)
+- [TokenRevocationMiddleware.cs](Source/Modules/GameGuild.Identity.Authentication/Middleware/TokenRevocationMiddleware.cs)
+- [LogoutHandler.cs](Source/Modules/GameGuild.Identity.Authentication/Handlers/LogoutHandler.cs)
+
 ### ✅ Multi-Tenancy
 - Tenant context properly isolated
 - Global vs tenant-specific policies supported
@@ -400,6 +447,8 @@ Legacy policies continue to work:
 - [x] Backward compatibility maintained
 - [x] Security validations in place
 - [x] Multi-tenancy supported
+- [x] Immediate token revocation (P1 #9)
+- [x] Unified User entity (P1 #7)
 
 ---
 
@@ -450,7 +499,7 @@ Legacy policies continue to work:
 | 6 | Authorization Integration Tests | Add integration tests for auth flows | ⚠️ PENDING | Scheduled for next sprint |
 | 7 | Merge AuthUser + User | Two user entities create sync issues | ✅ DONE | **COMPLETE REMOVAL**: AuthUser entity, IAuthUserRepository, AuthUserRepository, AuthUserConfiguration all deleted. User entity has auth fields (Username, PasswordHash, IsEmailVerified, LastLoginAt). All authentication handlers migrated to IUserRepository. EF Migration `MergeAuthUserIntoUser` created. |
 | 8 | Distributed Cache | Add distributed caching for permissions | ⚠️ PENDING | Redis integration planned |
-| 9 | Token Versioning | Add version field for token revocation | ⚠️ PENDING | Requires DB migration |
+| 9 | Token Versioning | Add JTI claim for immediate token revocation | ✅ DONE | **IMPLEMENTED**: `ITokenRevocationService` interface with `InMemoryTokenRevocationService` (Redis-ready). `TokenRevocationMiddleware` validates JTI in auth pipeline. `LogoutCommand`/`LogoutHandler` for immediate logout. JWT already has `jti` claim. See Section 9.3. |
 | 10 | Middleware Order | Document middleware execution order | ✅ DONE | See Permission Evaluation Policy |
 
 ---

@@ -62,6 +62,10 @@ public static class DataDependencyInjection
         services.AddScoped<IOAuthService, OAuthService>();
         services.AddScoped<IWeb3Service, Web3Service>();
 
+        // Token revocation service (singleton for in-memory, scoped for Redis)
+        // NOTE: Replace with Redis implementation for distributed deployments
+        services.AddSingleton<ITokenRevocationService, InMemoryTokenRevocationService>();
+
         // MFA services
         services.AddScoped<IMfaService, MfaService>();
 
@@ -118,5 +122,8 @@ public static class DataDependencyInjection
         services.AddScoped<IRequestHandler<LocalSignInCommand, SignInResponse>, LocalSignInHandler>();
         services.AddScoped<IRequestHandler<RefreshTokenCommand, SignInResponse>, RefreshTokenHandler>();
         services.AddScoped<IRequestHandler<GoogleIdTokenSignInCommand, SignInResponse>, GoogleIdTokenSignInHandler>();
+        
+        // Logout handler with immediate token revocation
+        services.AddScoped<IRequestHandler<LogoutCommand, LogoutResponse>, LogoutHandler>();
     }
 }
