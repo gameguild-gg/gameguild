@@ -1,7 +1,9 @@
 "use client"
 
+import { useState, useRef, useEffect } from "react"
 import type { SerializedEditorState } from "lexical"
 import { PreviewRenderer } from "./preview-renderer"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface PreviewRendererType2Props {
   leftState: SerializedEditorState
@@ -9,23 +11,142 @@ interface PreviewRendererType2Props {
 }
 
 export function PreviewRendererType2({ leftState, rightState }: PreviewRendererType2Props) {
+  const [leftWidth, setLeftWidth] = useState(50) // Percentage
+  const [isDragging, setIsDragging] = useState(false)
+  const [isLeftCollapsed, setIsLeftCollapsed] = useState(false)
+  const [isRightCollapsed, setIsRightCollapsed] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging || !containerRef.current) return
+
+      const container = containerRef.current
+      const containerRect = container.getBoundingClientRect()
+      const containerWidth = containerRect.width
+      const mouseX = e.clientX - containerRect.left
+      
+      // Calculate percentage
+      let percentage = (mouseX / containerWidth) * 100
+      
+      // Clamp between 10% and 90%
+      percentage = Math.max(10, Math.min(90, percentage))
+      
+      // Check for collapse thresholds
+      if (percentage < 15) {
+        setIsLeftCollapsed(true)
+        setIsRightCollapsed(false)
+      } else if (percentage > 85) {
+        setIsRightCollapsed(true)
+        setIsLeftCollapsed(false)
+      } else {
+        setIsLeftCollapsed(false)
+        setIsRightCollapsed(false)
+        setLeftWidth(percentage)
+      }
+    }
+
+    const handleMouseUp = () => {
+      setIsDragging(false)
+    }
+
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
+    }
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [isDragging])
+
+  const expandLeft = () => {
+    setIsLeftCollapsed(false)
+    setIsRightCollapsed(false)
+    setLeftWidth(50)
+  }
+
+  const expandRight = () => {
+    setIsRightCollapsed(false)
+    setIsLeftCollapsed(false)
+    setLeftWidth(50)
+  }
+
+  const getLeftWidth = () => {
+    if (isLeftCollapsed) return "0%"
+    if (isRightCollapsed) return "100%"
+    return `${leftWidth}%`
+  }
+
+  const getRightWidth = () => {
+    if (isRightCollapsed) return "0%"
+    if (isLeftCollapsed) return "100%"
+    return `${100 - leftWidth}%`
+  }
+
   return (
-    <div className="flex flex-col lg:flex-row lg:gap-0 w-full">
+    <div ref={containerRef} className="flex flex-col lg:flex-row w-full h-full relative select-none">
       {/* Left Panel */}
-      <div className="w-full lg:w-1/2 border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <div className="p-6 sm:p-8 md:p-12">
-          <PreviewRenderer serializedState={leftState} />
-        </div>
+      <div
+        className="relative border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 transition-all duration-300 ease-in-out overflow-hidden"
+        style={{ width: getLeftWidth() }}
+      >
+        {!isLeftCollapsed && (
+          <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
+            <PreviewRenderer serializedState={leftState} />
+          </div>
+        )}
       </div>
 
-      {/* Vertical Divider */}
-      <div className="hidden lg:block w-px bg-gray-300 dark:bg-gray-700" />
+      {/* Collapsed Left Button */}
+      {isLeftCollapsed && (
+        <button
+          onClick={expandLeft}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-20 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 p-2 rounded-r-md shadow-lg transition-colors duration-200"
+          title="Expand left panel"
+        >
+          <ChevronRight className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+        </button>
+      )}
+
+      {/* Draggable Divider */}
+      {!isLeftCollapsed && !isRightCollapsed && (
+        <div
+          className="hidden lg:flex w-1 bg-gray-300 dark:bg-gray-700 cursor-col-resize hover:bg-blue-500 dark:hover:bg-blue-500 transition-colors duration-150 relative group"
+          onMouseDown={handleMouseDown}
+        >
+          <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-500/20" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-12 bg-gray-400 dark:bg-gray-600 rounded-full group-hover:bg-blue-500 transition-colors duration-150" />
+        </div>
+      )}
+
+      {/* Collapsed Right Button */}
+      {isRightCollapsed && (
+        <button
+          onClick={expandRight}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-20 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 p-2 rounded-l-md shadow-lg transition-colors duration-200"
+          title="Expand right panel"
+        >
+          <ChevronLeft className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+        </button>
+      )}
 
       {/* Right Panel */}
-      <div className="w-full lg:w-1/2 border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:border-l-0">
-        <div className="p-6 sm:p-8 md:p-12">
-          <PreviewRenderer serializedState={rightState} />
-        </div>
+      <div
+        className="relative border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:border-l-0 transition-all duration-300 ease-in-out overflow-hidden"
+        style={{ width: getRightWidth() }}
+      >
+        {!isRightCollapsed && (
+          <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
+            <PreviewRenderer serializedState={rightState} />
+          </div>
+        )}
       </div>
     </div>
   )
