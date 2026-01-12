@@ -16,10 +16,12 @@ import './markdown-renderer.css';
 import { MarkdownCodeActivity } from './MarkdownCodeActivity';
 import { MarkdownErrorBoundary } from './MarkdownErrorBoundary';
 import { MarkdownQuizActivity } from './MarkdownQuizActivity';
+import Marp from './Marp';
 import Mermaid from './Mermaid';
+import RemarkJS from './RemarkJS';
 import RevealJS from './RevealJS';
 
-export type RendererType = 'markdown' | 'reveal';
+export type RendererType = 'markdown' | 'reveal' | 'marp' | 'remark';
 
 export interface MarkdownRendererProps {
   content: string;
@@ -39,6 +41,22 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
     return (
       <div className="gameguild-revealjs-wrapper relative w-full h-full min-h-[50vh] sm:min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh]">
         <RevealJS content={content}  />
+      </div>
+    );
+  }
+
+  if (renderer === 'marp') {
+    return (
+      <div className="gameguild-marp-wrapper">
+        <Marp content={content} />
+      </div>
+    );
+  }
+
+  if (renderer === 'remark') {
+    return (
+      <div className="gameguild-remarkjs-wrapper">
+        <RemarkJS content={content} />
       </div>
     );
   }
