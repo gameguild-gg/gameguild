@@ -6,6 +6,7 @@ import { ProjectCard } from "./project-card"
 interface ProjectData {
   id: string
   name: string
+  type: "type1" | "type2"
   data: string
   tags: string[]
   size: number
@@ -13,6 +14,7 @@ interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
+  preferences?: any
 }
 
 interface ProjectGridViewProps {

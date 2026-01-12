@@ -8,6 +8,7 @@ import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
 interface ProjectData {
   id: string
   name: string
+  type: "type1" | "type2"
   data: string
   tags: string[]
   size: number
@@ -15,6 +16,7 @@ interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
+  preferences?: any
 }
 
 interface ProjectCardProps {
