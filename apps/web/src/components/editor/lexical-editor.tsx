@@ -422,7 +422,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
         <EditorLoadingProvider value={isLoadingProject}>
         <div className={cn("rounded-lg border-2 border-gray-300 dark:border-gray-700", className)}>
           <YouTubeAudioStyle />
-          <EditorToolbar />
+          {/*<EditorToolbar />*/}
           <div className="relative">
             <RichTextPlugin
               contentEditable={<ContentEditable className="min-h-[450px] p-3 outline-none text-gray-900 dark:text-gray-100" />}
