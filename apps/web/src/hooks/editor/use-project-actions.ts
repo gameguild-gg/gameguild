@@ -131,6 +131,8 @@ export function useProjectActions({
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
+    projectType?: "type1" | "type2",
+    projectPreferences?: any
   ) => {
     try {
       // Dynamic imports to avoid issues if these aren't available
@@ -148,13 +150,15 @@ export function useProjectActions({
       const exportProjectData = {
         id: projectId,
         name: projectName,
+        type: projectType || "type1" as "type1" | "type2",
         data: projectData,
         tags: projectTags,
         size: new Blob([projectData]).size,
         createdAt: createdAt,
         updatedAt: updatedAt,
         hash: hash,
-        storageType: "local" as const
+        storageType: "local" as const,
+        preferences: projectPreferences
       }
 
       // Use ProjectExporter to create the ZIP file
