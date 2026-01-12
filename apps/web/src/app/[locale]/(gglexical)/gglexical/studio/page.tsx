@@ -132,6 +132,7 @@ export default function Page() {
   const [editingProjectName, setEditingProjectName] = useState("")
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewState, setPreviewState] = useState<SerializedEditorState | null>(null)
+  const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
 
   const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
     if (event.ctrlKey || event.metaKey || event.button === 1) {
@@ -479,6 +480,12 @@ export default function Page() {
     
     if (!hasContent) return
 
+    // Wait 1 second after project load before enabling auto-save
+    const timeSinceLoad = Date.now() - lastProjectLoadTime
+    if (timeSinceLoad < 1000) {
+      return
+    }
+
     const autoSaveTimer = setTimeout(async () => {
       try {
         // Prepare the correct state based on layout type
@@ -518,7 +525,7 @@ export default function Page() {
     }, 2000) // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(autoSaveTimer)
-  }, [editorState, leftEditorState, rightEditorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayoutType, currentProjectStorageType])
+  }, [editorState, leftEditorState, rightEditorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayoutType, currentProjectStorageType, lastProjectLoadTime])
 
 
 
@@ -753,6 +760,9 @@ export default function Page() {
                       setCurrentLayoutType(layoutType)
                       setIsFirstTime(false)
                       
+                      // Mark project load time to prevent auto-save for 1 second
+                      setLastProjectLoadTime(Date.now())
+                      
                       // Load editor data based on layout type
                       setTimeout(() => {
                         try {
@@ -881,6 +891,9 @@ export default function Page() {
                 
                 // Set the layout type from the project data
                 setCurrentLayoutType(projectData.type)
+                
+                // Mark project creation time to prevent auto-save for 1 second
+                setLastProjectLoadTime(Date.now())
                 
                 // Wait for layout to render, then initialize editors
                 setTimeout(() => {
