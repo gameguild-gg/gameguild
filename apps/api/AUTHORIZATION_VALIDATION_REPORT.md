@@ -288,10 +288,41 @@ Legacy policies continue to work:
 - Short-circuit on first failure (performance + security)
 - Disabled rules skipped automatically
 
+### ✅ Permission Evaluation Policy (DOCUMENTED)
+- **Rule Layer**: AND-logic (all rules must pass, short-circuit on first failure)
+- **ABAC Layer**: Deny-wins with priority ordering
+- **DAC Layer**: Allow-wins (additive permission merge)
+- **Inter-Layer**: Stricter layer wins (deny from any layer = overall deny)
+- See: [Permission Evaluation Policy](../../docs/security/PERMISSION_EVALUATION_POLICY.md)
+
 ### ✅ Validation
 - Rule types validated against whitelist
 - Required parameters checked
 - Invalid configurations rejected before evaluation
+
+### ✅ Magic String Mitigation (IMPLEMENTED)
+
+**Problem**: Magic strings for policies, claims, permissions, and resource types create typo risk.
+
+**Solution**: Strongly-typed constants and validation methods:
+
+| Category | Old (Magic String) | New (Type-Safe) | Location |
+|----------|-------------------|-----------------|----------|
+| Policies | `"TenantMember"` | `Policies.TenantMember` | `Policies.cs` |
+| Claims | `"tenant_id"` | `ClaimNames.TenantIdAlt` | `ClaimNames.cs` |
+| Permissions | `"users:read"` | `UsersPermission.Read` | `TypedPermissions.cs` |
+| Resources | `"Project"` | `ResourceTypes.Project` | `ResourceTypes.cs` |
+
+**Validation Methods**:
+- `Policies.IsValid(string)` - Validates policy names
+- `RuleTypes.IsValid(string)` - Validates rule types
+- `ResourceTypes.IsValid(string)` - Validates resource types
+- `ResourceTypes.FromString(string)` - Safely converts strings
+
+**Compile-Time Safety**:
+- `Permission` base class with implicit `string` conversion
+- `ResourceType` base class with implicit `string` conversion
+- Legacy `Permissions` class marked `[Obsolete]` with migration guidance
 
 ### ✅ Multi-Tenancy
 - Tenant context properly isolated

@@ -4,6 +4,12 @@ namespace GameGuild.Identity.Authorization;
 ///     Central registry of all policy names used in the system.
 ///     Use these constants instead of magic strings in [Authorize(Policy = "...")] attributes.
 /// </summary>
+/// <remarks>
+///     <para>
+///         All policy names are registered in <see cref="All"/> for validation.
+///         Use <see cref="IsValid"/> to check if a policy name is valid at runtime.
+///     </para>
+/// </remarks>
 public static class Policies
 {
     // ========================
@@ -113,4 +119,50 @@ public static class Policies
 
     /// <summary>Delete own account OR manage other users (SelfOrPermission)</summary>
     public const string UsersDeleteSelf = "Users.DeleteSelf";
+
+    // ========================
+    // POLICY REGISTRY & VALIDATION
+    // ========================
+
+    /// <summary>
+    ///     All registered policy names for validation.
+    ///     Use this to validate policy names at startup or runtime.
+    /// </summary>
+    public static readonly IReadOnlyList<string> All = new[]
+    {
+        // Authentication
+        Authenticated, Anonymous,
+        // Tenant
+        TenantMember, TenantAdmin,
+        // Project
+        ProjectRead, ProjectEdit, ProjectDelete, ProjectOwner,
+        // Content
+        ContentRead, ContentEdit,
+        // Course
+        CourseRead, CourseManage,
+        // Document
+        DocumentEdit,
+        // Admin
+        Admin, SecureAdmin,
+        // Users - Collection
+        UsersRead, UsersCreate, UsersUpdate, UsersDelete, UsersAdmin, UsersPurge,
+        // Users - Self
+        UsersReadSelf, UsersEditSelf, UsersDeleteSelf
+    };
+
+    /// <summary>
+    ///     Validates if a policy name is registered in the system.
+    /// </summary>
+    /// <param name="policyName">The policy name to validate.</param>
+    /// <returns>True if the policy name is valid and registered.</returns>
+    public static bool IsValid(string policyName) =>
+        All.Contains(policyName, StringComparer.Ordinal);
+
+    /// <summary>
+    ///     Gets all policies matching a prefix (e.g., "Users." returns all user policies).
+    /// </summary>
+    /// <param name="prefix">The prefix to match.</param>
+    /// <returns>All policies starting with the prefix.</returns>
+    public static IEnumerable<string> GetByPrefix(string prefix) =>
+        All.Where(p => p.StartsWith(prefix, StringComparison.Ordinal));
 }

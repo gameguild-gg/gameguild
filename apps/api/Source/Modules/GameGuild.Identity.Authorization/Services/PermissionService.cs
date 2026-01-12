@@ -172,6 +172,26 @@ public class PermissionService(
         return existing.Permissions.ToList();
     }
 
+    /// <summary>
+    /// Get effective permissions for a user in a tenant.
+    /// 
+    /// <para><b>Permission Evaluation Policy: ALLOW-WINS (ADDITIVE)</b></para>
+    /// <para>
+    /// Permissions are merged from three sources in order:
+    /// <list type="number">
+    ///   <item>Global defaults (UserId=null, TenantId=null) - system-wide baseline</item>
+    ///   <item>Tenant defaults (UserId=null, TenantId=X) - tenant-specific baseline</item>
+    ///   <item>Direct grants (UserId=Y, TenantId=X) - explicit user permissions</item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// All permissions are merged using <c>Distinct()</c> - there is no explicit deny.
+    /// Expired permissions are excluded before merging.
+    /// </para>
+    /// <para>
+    /// See: docs/security/PERMISSION_EVALUATION_POLICY.md for complete documentation.
+    /// </para>
+    /// </summary>
     public async Task<List<string>> GetEffectivePermissionsAsync(
         Guid userId,
         Guid? tenantId,
@@ -180,18 +200,21 @@ public class PermissionService(
     {
         var allPermissions = new List<string>();
 
-        // Get global defaults (UserId = null, TenantId = null)
+        // Layer 1: Global defaults (UserId = null, TenantId = null)
+        // These are system-wide baseline permissions for all users
         var globalDefaults = await GetGlobalDefaultPermissionsAsync(cancellationToken);
         allPermissions.AddRange(globalDefaults);
 
-        // Get tenant defaults (UserId = null, TenantId = specific tenant)
+        // Layer 2: Tenant defaults (UserId = null, TenantId = specific tenant)
+        // These are tenant-specific baseline permissions for all tenant members
         if (tenantId.HasValue)
         {
             var tenantDefaults = await GetTenantDefaultPermissionsAsync(tenantId.Value, cancellationToken);
             allPermissions.AddRange(tenantDefaults);
         }
 
-        // Get direct user permissions
+        // Layer 3: Direct user permissions
+        // These are explicit grants to the specific user (excluding expired)
         var userPermissions = await _repository.GetByUserAsync(userId, cancellationToken);
         var directPermissions = userPermissions
             .Where(p => p.TenantId == tenantId)
@@ -199,7 +222,8 @@ public class PermissionService(
             .SelectMany(p => p.Permissions);
         allPermissions.AddRange(directPermissions);
 
-        // Return distinct permissions
+        // Merge: ALLOW-WINS policy - union of all permissions
+        // No explicit deny support; revoking removes the grant
         return allPermissions.Distinct().ToList();
     }
 
