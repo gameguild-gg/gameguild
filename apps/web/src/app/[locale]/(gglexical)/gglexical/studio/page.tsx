@@ -22,16 +22,30 @@ import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/co
 import { handleSave as saveProject, handleSaveAs as saveAsProject } from "@/components/editor/extras/editor/project-save-operations"
 import { calculateProjectAssetsSize as calculateAssets } from "@/components/editor/extras/editor/project-assets-operations"
 import { checkSelectedProject as checkProject } from "@/components/editor/extras/editor/project-load-operations"
+import { EditorLayoutType1 } from "@/components/editor/extras/editor/editor-layout-type1"
+import { EditorLayoutType2 } from "@/components/editor/extras/editor/editor-layout-type2"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 
+export type ProjectLayoutType = "type1" | "type2"
+
+export interface ProjectDataType1 {
+  data: string // Single editor JSON state
+}
+
+export interface ProjectDataType2 {
+  left: string // Left editor JSON state
+  right: string // Right editor JSON state
+}
+
 interface ProjectData {
   id: string
   name: string
-  data: string
+  type: ProjectLayoutType // Layout type
+  data: string // For type1: direct JSON, for type2: stringified {left, right}
   tags: string[]
   size: number
   createdAt: string
@@ -64,7 +78,19 @@ function formatSize(sizeInKB: number): string {
 
 export default function Page() {
   const router = useRouter()
+  // Layout type and state management
+  const [currentLayoutType, setCurrentLayoutType] = useState<ProjectLayoutType>("type1")
+  
+  // Type1 states (single editor)
   const [editorState, setEditorState] = useState<string>("")
+  const editorRef = useRef<LexicalEditor | null>(null)
+  
+  // Type2 states (dual editors)
+  const [leftEditorState, setLeftEditorState] = useState<string>("")
+  const [rightEditorState, setRightEditorState] = useState<string>("")
+  const leftEditorRef = useRef<LexicalEditor | null>(null)
+  const rightEditorRef = useRef<LexicalEditor | null>(null)
+  
   const [currentProjectId, setCurrentProjectId] = useState<string>("")
   const [currentProjectName, setCurrentProjectName] = useState<string>("")
   const [currentProjectStorageType, setCurrentProjectStorageType] = useState<"local" | "gameguild-cloud" | "google-drive">("local")
@@ -86,9 +112,6 @@ export default function Page() {
   // Add these state variables after the existing ones:
   const [syncStats, setSyncStats] = useState<any>(null)
   const [showSyncStatus, setShowSyncStatus] = useState(false)
-
-
-  const editorRef = useRef<LexicalEditor | null>(null)
 
   // Tamanho recomendado em KB (5120KB)
   const RECOMMENDED_SIZE_KB = 5120
@@ -150,11 +173,17 @@ export default function Page() {
       await checkProject({
         storageAdapter,
         editorRef,
+        leftEditorRef,
+        rightEditorRef,
         setCurrentProjectId,
         setCurrentProjectName,
         setCurrentProjectStorageType,
         setProjectTags,
         setIsFirstTime,
+        setCurrentLayoutType,
+        setEditorState,
+        setLeftEditorState,
+        setRightEditorState,
       })
     }
     
@@ -172,11 +201,15 @@ export default function Page() {
 
   // Atualizar informações de armazenamento sempre que o editor mudar
   useEffect(() => {
-    if (editorState) {
+    if (currentLayoutType === "type1" && editorState) {
       const size = estimateSize(editorState)
       setCurrentProjectSize(size)
+    } else if (currentLayoutType === "type2" && (leftEditorState || rightEditorState)) {
+      const combinedData = JSON.stringify({ left: leftEditorState, right: rightEditorState })
+      const size = estimateSize(combinedData)
+      setCurrentProjectSize(size)
     }
-  }, [editorState])
+  }, [editorState, leftEditorState, rightEditorState, currentLayoutType])
 
   // Calculate assets size when project changes or editor content changes
   useEffect(() => {
@@ -185,10 +218,10 @@ export default function Page() {
     } else {
       setCurrentProjectAssetsSize(0)
     }
-  }, [currentProjectId, isDbInitialized, editorState])
+  }, [currentProjectId, isDbInitialized, editorState, leftEditorState, rightEditorState])
 
   const storageAdapter = {
-    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local") => {
+    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", type: "type1" | "type2" = "type1") => {
       if (!id || !name || !data) {
         console.warn("Invalid id, name or data")
         return
@@ -202,7 +235,7 @@ export default function Page() {
       console.log(`Saving project "${name}" (${id}) to ${storageType} - Size: ${formatSize(originalSize)}`)
 
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType)
+        await dbStorage.current.save(id, name, data, tags, storageType, undefined, type)
         console.log(`Saved project "${name}" (${id}) to ${storageType} successfully`)
       } catch (error) {
         console.error("Failed to save project:", error)
@@ -352,12 +385,20 @@ export default function Page() {
   }, [isDbInitialized])
 
   const handleSave = async () => {
+    // Prepare the correct state based on layout type
+    const dataToSave = currentLayoutType === "type1" 
+      ? editorState 
+      : JSON.stringify({ left: leftEditorState, right: rightEditorState })
+    
+    const refToUse = currentLayoutType === "type1" ? editorRef : leftEditorRef
+    
     await saveProject({
       currentProjectId,
       currentProjectName,
       currentProjectStorageType,
-      editorState,
-      editorRef,
+      layoutType: currentLayoutType,
+      editorState: dataToSave,
+      editorRef: refToUse,
       projectTags,
       storageAdapter,
       calculateProjectAssetsSize,
@@ -366,10 +407,18 @@ export default function Page() {
   }
 
   const handleSaveAs = async (storageOption: "local" | "gameguild-cloud" | "google-drive" = "local") => {
+    // Prepare the correct state based on layout type
+    const dataToSave = currentLayoutType === "type1" 
+      ? editorState 
+      : JSON.stringify({ left: leftEditorState, right: rightEditorState })
+    
+    const refToUse = currentLayoutType === "type1" ? editorRef : leftEditorRef
+    
     await saveAsProject({
       newProjectName,
-      editorState,
-      editorRef,
+      layoutType: currentLayoutType,
+      editorState: dataToSave,
+      editorRef: refToUse,
       projectTags,
       storageOption,
       storageAdapter,
@@ -674,37 +723,51 @@ export default function Page() {
               generateProjectId={generateProjectId}
             />
 
-            {/* Editor Container with Integrated Title */}
-            <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-              {/* Title Bar */}
-              <div className="flex items-center justify-center border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-4 py-3">
-                <EditableProjectTitle
-                  projectName={currentProjectName}
-                  isEditing={isEditingTitle}
-                  editingName={editingProjectName}
-                  onEditStart={handleTitleEdit}
-                  onEditEnd={() => {
-                    setIsEditingTitle(false)
-                    setEditingProjectName(currentProjectName)
-                  }}
-                  onNameChange={setEditingProjectName}
-                  onSave={handleTitleSave}
-                />
-              </div>
-              
-              {/* Editor Content */}
-              <div className="p-4 sm:p-6 md:p-8 lg:p-12">
-                <Editor
-                  editorRef={editorRef}
-                  initialState={editorState}
-                  onChange={setEditorState}
-                  onLoadingChange={(setLoading) => {
-                    setLoadingRef.current = setLoading
-                  }}
-                  projectId={currentProjectId}
-                />
-              </div>
-            </div>
+            {/* Editor Container - Render based on layout type */}
+            {currentLayoutType === "type1" ? (
+              <EditorLayoutType1
+                projectName={currentProjectName}
+                isEditing={isEditingTitle}
+                editingName={editingProjectName}
+                onEditStart={handleTitleEdit}
+                onEditEnd={() => {
+                  setIsEditingTitle(false)
+                  setEditingProjectName(currentProjectName)
+                }}
+                onNameChange={setEditingProjectName}
+                onSave={handleTitleSave}
+                editorRef={editorRef}
+                editorState={editorState}
+                onEditorChange={setEditorState}
+                onLoadingChange={(setLoading) => {
+                  setLoadingRef.current = setLoading
+                }}
+                projectId={currentProjectId}
+              />
+            ) : (
+              <EditorLayoutType2
+                projectName={currentProjectName}
+                isEditing={isEditingTitle}
+                editingName={editingProjectName}
+                onEditStart={handleTitleEdit}
+                onEditEnd={() => {
+                  setIsEditingTitle(false)
+                  setEditingProjectName(currentProjectName)
+                }}
+                onNameChange={setEditingProjectName}
+                onSave={handleTitleSave}
+                leftEditorRef={leftEditorRef}
+                rightEditorRef={rightEditorRef}
+                leftEditorState={leftEditorState}
+                rightEditorState={rightEditorState}
+                onLeftEditorChange={setLeftEditorState}
+                onRightEditorChange={setRightEditorState}
+                onLoadingChange={(setLoading) => {
+                  setLoadingRef.current = setLoading
+                }}
+                projectId={currentProjectId}
+              />
+            )}
           </div>
         </div>
       </div>
