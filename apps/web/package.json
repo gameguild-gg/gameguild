@@ -38,6 +38,7 @@
         "@lexical/selection": "^0.38.2",
         "@lexical/table": "^0.38.2",
         "@lexical/utils": "^0.38.2",
+        "@marp-team/marp-core": "^3.9.0",
         "@monaco-editor/react": "^4.7.0",
         "@next/third-parties": "^15.4.10",
         "@octokit/rest": "^22.0.0",
