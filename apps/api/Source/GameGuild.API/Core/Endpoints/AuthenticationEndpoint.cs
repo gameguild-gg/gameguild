@@ -257,19 +257,3 @@ public record TokenResponse
 
     public required DateTime RefreshTokenExpiresAt { get; init; }
 }
-
-// Simple User entity for testing
-public class User
-{
-    public Guid Id { get; set; }
-
-    public required string Email { get; set; }
-
-    public string? Username { get; set; }
-
-    public required string PasswordHash { get; set; }
-
-    public DateTime CreatedAt { get; set; }
-
-    public DateTime UpdatedAt { get; set; }
-}

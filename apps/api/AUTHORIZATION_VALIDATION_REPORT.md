@@ -339,7 +339,7 @@ Legacy policies continue to work:
 
 **Location**: `Authorization/Abstractions/HttpContextKeys.cs`
 
-### ✅ AuthUser + User Entity Merge (IMPLEMENTED)
+### 9.2. ✅ P1 #7 - AuthUser + User Entity Merge (COMPLETE)
 
 **Problem**: Two user entities (`AuthUser` in Authentication, `User` in Users) created sync issues.
 
@@ -358,12 +358,21 @@ Legacy policies continue to work:
    - `UpdatePasswordHashAsync()`
    - `RecordLoginAsync()`
 
-3. **Marked as `[Obsolete]`**:
-   - `AuthUser` entity
-   - `IAuthUserRepository` interface
-   - `AuthUserRepository` class
+3. **DELETED (Complete Removal)**:
+   - `AuthUser.cs` - Entity deleted
+   - `IAuthUserRepository.cs` - Interface deleted
+   - `AuthUserRepository.cs` - Implementation deleted
+   - `AuthUserConfiguration.cs` - EF configuration deleted
 
-**Migration Path**: New code should use `User` entity and `IUserRepository`. Existing code using `AuthUser` will show deprecation warnings.
+4. **Updated all Authentication handlers** to use `IUserRepository`:
+   - `LocalSignUpHandler`, `LocalSignInHandler`, `RefreshTokenHandler`
+   - `GoogleIdTokenSignInHandler`, `SocialSignInHandler`, `PolymorphicSignInHandler`
+   - `AuthService`, `AuthenticationMappings`, `AuthenticationEndpoint`
+
+5. **Created EF Migration** `MergeAuthUserIntoUser`:
+   - Adds `Username`, `PasswordHash`, `IsEmailVerified`, `LastLoginAt` columns to `Users` table
+   - Drops `authuser` table from `gameguild.authentication` schema
+   - Adds unique index on `Username`
 
 **Location**: [User.cs](Source/Modules/GameGuild.Identity.Users/Entities/User.cs)
 
@@ -439,7 +448,7 @@ Legacy policies continue to work:
 |---|-------|-------------|--------|-------|
 | 5 | ActorContext Migration | Complete migration from legacy contexts | ✅ DONE | All handlers migrated |
 | 6 | Authorization Integration Tests | Add integration tests for auth flows | ⚠️ PENDING | Scheduled for next sprint |
-| 7 | Merge AuthUser + User | Two user entities create sync issues | ✅ DONE | User entity extended with auth fields. AuthUser, IAuthUserRepository, AuthUserRepository marked [Obsolete]. See [User.cs](Source/Modules/GameGuild.Identity.Users/Entities/User.cs) |
+| 7 | Merge AuthUser + User | Two user entities create sync issues | ✅ DONE | **COMPLETE REMOVAL**: AuthUser entity, IAuthUserRepository, AuthUserRepository, AuthUserConfiguration all deleted. User entity has auth fields (Username, PasswordHash, IsEmailVerified, LastLoginAt). All authentication handlers migrated to IUserRepository. EF Migration `MergeAuthUserIntoUser` created. |
 | 8 | Distributed Cache | Add distributed caching for permissions | ⚠️ PENDING | Redis integration planned |
 | 9 | Token Versioning | Add version field for token revocation | ⚠️ PENDING | Requires DB migration |
 | 10 | Middleware Order | Document middleware execution order | ✅ DONE | See Permission Evaluation Policy |

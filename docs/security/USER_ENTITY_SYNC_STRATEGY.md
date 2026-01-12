@@ -1,15 +1,18 @@
 # User Entity Sync Strategy
 
 **Date**: January 12, 2026  
-**Status**: 📋 DOCUMENTED (Merge Planned for v2.0)
+**Status**: ✅ COMPLETED - ENTITIES MERGED
 
-This document describes the current dual-entity architecture for users and the planned migration strategy.
+> **⚠️ OBSOLETE DOCUMENT**: This document described the former dual-entity architecture.
+> As of January 12, 2026, the `AuthUser` entity has been **completely removed** and merged into the `User` entity.
+> All authentication handlers now use `IUserRepository` instead of `IAuthUserRepository`.
+> See [AUTHORIZATION_VALIDATION_REPORT.md](../../apps/api/AUTHORIZATION_VALIDATION_REPORT.md) for details.
 
 ---
 
-## Current Architecture
+## Historical Context (Archived)
 
-The system currently has **two separate user entities**:
+The system previously had **two separate user entities** which have now been merged.
 
 ### AuthUser (Authentication Module)
 
