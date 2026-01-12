@@ -3,6 +3,7 @@
 import { Editor } from "@/components/editor/lexical-editor"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
+import type { ProjectMode } from "@/lib/storage/editor/project-modes"
 
 interface EditorLayoutType1Props {
   editorRef: React.MutableRefObject<LexicalEditor | null>
@@ -10,6 +11,7 @@ interface EditorLayoutType1Props {
   onEditorChange: (state: string) => void
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId: string
+  mode?: ProjectMode
 }
 
 /**
@@ -22,6 +24,7 @@ export function EditorLayoutType1({
   onEditorChange,
   onLoadingChange,
   projectId,
+  mode = "free-page",
 }: EditorLayoutType1Props) {
   return (
     <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -33,6 +36,7 @@ export function EditorLayoutType1({
           onChange={onEditorChange}
           onLoadingChange={onLoadingChange}
           projectId={projectId}
+          mode={mode}
         />
       </div>
     </div>

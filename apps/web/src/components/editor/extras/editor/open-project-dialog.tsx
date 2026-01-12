@@ -18,6 +18,7 @@ import { InfoDialog } from "./info-dialog"
 import type { StorageOption } from "./storage-option-selector"
 import { GoogleDriveAuthDialog } from "./google-drive-auth-dialog"
 import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
+import type { ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-adapter"
 
 interface ProjectData {
   id: string
@@ -30,6 +31,7 @@ interface ProjectData {
   updatedAt: string
   storageType?: "local" | "gameguild-cloud" | "google-drive"
   isLocallyAvailable?: boolean
+  preferences?: ProjectPreferences
 }
 
 interface StorageAdapter {
