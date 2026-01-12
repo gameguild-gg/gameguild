@@ -6,17 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { FileText, Calendar, Filter, Pin, PinOff } from "lucide-react"
 import { ProjectSearchFilters } from "../../extras/project-dialog/project-search-filters"
-
-interface ProjectData {
-  id: string
-  name: string
-  data: string
-  tags: string[]
-  size: number
-  createdAt: string
-  updatedAt: string
-  storageType?: "local" | "gameguild-cloud" | "google-drive"
-}
+import type { ProjectData } from "./preview-load-operations"
 
 interface ProjectSidebarListProps {
   storageAdapter: {
