@@ -1511,8 +1511,7 @@ export function CodeStudioEditor({
           className="grid gap-3 w-full"
           style={{
             gridTemplateColumns: `repeat(${actualCols}, 1fr)`,
-            gridTemplateRows: `repeat(${actualRows}, 1fr)`,
-            aspectRatio: `${actualCols}/${actualRows}`,
+            gridTemplateRows: `repeat(${actualRows}, auto)`,
           }}
         >
           {baseDisplay.panels.map(panel => (
@@ -1522,7 +1521,7 @@ export function CodeStudioEditor({
                 gridColumn: `${panel.col + 1} / span ${panel.colSpan}`,
                 gridRow: `${panel.row + 1} / span ${panel.rowSpan}`,
               }}
-              className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-800"
+              className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-auto bg-white dark:bg-gray-800 min-h-[400px]"
             >
               {renderPanelContent(panel, baseDisplay)}
             </div>
