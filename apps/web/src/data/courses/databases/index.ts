@@ -167,7 +167,7 @@ export const week01DbZooContent: ProgramContent = {
     parentId: 'databases-week-01-intro',
     title: 'Database Zoo',
     description: 'Overview of different database types and paradigms',
-    type: ProgramContentType.REVEAL,
+    type: ProgramContentType.REMARK,
     body: week01DbZoo,
     sortOrder: 2,
     isRequired: true,

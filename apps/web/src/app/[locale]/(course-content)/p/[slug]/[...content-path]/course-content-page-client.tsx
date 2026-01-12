@@ -20,6 +20,12 @@ function getRendererType(contentType: ProgramContentType | undefined): RendererT
     if (contentType === ProgramContentType.REVEAL) {
         return 'reveal';
     }
+    if (contentType === ProgramContentType.MARP) {
+        return 'marp';
+    }
+    if (contentType === 11) {
+        return 'remark';
+    }
     return 'markdown';
 }
 
@@ -34,16 +40,19 @@ export function CourseContentPageClient({
     const bodyContent = typeof content.body === 'string' ? content.body : '';
     const renderer = getRendererType(content.type);
     const isReveal = renderer === 'reveal';
+    const isMarp = renderer === 'marp';
+    const isRemark = renderer === 'remark';
+    const isPresentationMode = isReveal || isMarp || isRemark;
 
     return (
         <div className="flex-1 flex flex-col min-h-0">
-            <div className={isReveal ? "w-full" : "mx-auto max-w-4xl w-full"}>
+            <div className={isPresentationMode ? "w-full" : "mx-auto max-w-4xl w-full"}>
                 {/* Content */}
-                <Card className={`transition-all duration-300 py-0 ${isReveal ? 'border-0 shadow-none' : ''}`}>
-                    <CardContent className={isReveal ? "px-0 py-0" : "px-6 py-6"}>
+                <Card className={`transition-all duration-300 py-0 ${isPresentationMode ? 'border-0 shadow-none' : ''}`}>
+                    <CardContent className={isPresentationMode ? "px-0 py-0" : "px-6 py-6"}>
                         {/* Content Body */}
                         {content.body !== undefined && content.body !== null && (
-                            <div className={isReveal ? "" : "prose max-w-none"}>
+                            <div className={isPresentationMode ? "" : "prose max-w-none"}>
                                 {typeof content.body === 'string' ? (
                                     <MarkdownRenderer content={bodyContent} renderer={renderer} />
                                 ) : (
@@ -54,8 +63,8 @@ export function CourseContentPageClient({
                             </div>
                         )}
 
-                        {/* Content Metadata - Hidden in reveal mode */}
-                        {!isReveal && (
+                        {/* Content Metadata - Hidden in presentation mode */}
+                        {!isPresentationMode && (
                             <div className="flex items-center gap-4 text-sm text-muted-foreground border-t pt-4">
                                 {content.estimatedMinutes != null && content.estimatedMinutes > 0 && (
                                     <span>Estimated time: {content.estimatedMinutes} minutes</span>

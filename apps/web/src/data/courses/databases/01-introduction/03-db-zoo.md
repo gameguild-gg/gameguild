@@ -6,7 +6,7 @@ Just like a real zoo houses different animals adapted to different environments,
 
 ---
 
-<img src="https://i.programmerhumor.io/2022/10/programmerhumor-io-databases-memes-backend-memes-4713ea9c8ef8767.jpg" alt="Database Zoo meme" />
+![Database Zoo meme](https://i.programmerhumor.io/2022/10/programmerhumor-io-databases-memes-backend-memes-4713ea9c8ef8767.jpg)
 
 ---
 
