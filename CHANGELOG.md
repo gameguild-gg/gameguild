@@ -1,3 +1,15 @@
+# [2.36.0](https://github.com/gameguild-gg/gameguild/compare/v2.35.0...v2.36.0) (2026-01-12)
+
+
+### Bug Fixes
+
+* **apps/web/course-content:** Prevent null access in frontmatter renderer detection ([baaa2b2](https://github.com/gameguild-gg/gameguild/commit/baaa2b2af94ab3d936d3e725044836496a105e16))
+
+
+### Features
+
+* **apps/web/course-content:** Enable presentation-style markdown via frontmatter ([37784c7](https://github.com/gameguild-gg/gameguild/commit/37784c72e0a41de9538b17f78b3cb8fcf29a8843))
+
 # [2.35.0](https://github.com/gameguild-gg/gameguild/compare/v2.34.0...v2.35.0) (2026-01-11)
 
 
