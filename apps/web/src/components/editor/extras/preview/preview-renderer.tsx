@@ -9,6 +9,7 @@ interface PreviewRendererProps {
   showHeader?: boolean
   projectName?: string
   className?: string
+  projectId?: string
 }
 
 export function PreviewRenderer({
@@ -16,11 +17,12 @@ export function PreviewRenderer({
   showHeader = false,
   projectName,
   className = "prose prose-stone dark:prose-invert max-w-none",
+  projectId,
 }: PreviewRendererProps) {
   return (
     <div className={className}>
       {showHeader && projectName && <PreviewHeader projectName={projectName} />}
-      <SerializedContentRenderer serializedState={serializedState} />
+      <SerializedContentRenderer serializedState={serializedState} projectId={projectId} />
     </div>
   )
 }

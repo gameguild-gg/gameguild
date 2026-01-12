@@ -8,9 +8,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 interface PreviewRendererType2Props {
   leftState: SerializedEditorState
   rightState: SerializedEditorState
+  projectId?: string
 }
 
-export function PreviewRendererType2({ leftState, rightState }: PreviewRendererType2Props) {
+export function PreviewRendererType2({ leftState, rightState, projectId }: PreviewRendererType2Props) {
   const [leftWidth, setLeftWidth] = useState(50) // Percentage
   const [isDragging, setIsDragging] = useState(false)
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false)
@@ -136,7 +137,7 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
           </div>
         ) : (
           <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
-            <PreviewRenderer serializedState={leftState} />
+            <PreviewRenderer serializedState={leftState} projectId={projectId} />
           </div>
         )}
       </div>
@@ -194,7 +195,7 @@ export function PreviewRendererType2({ leftState, rightState }: PreviewRendererT
           </div>
         ) : (
           <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
-            <PreviewRenderer serializedState={rightState} />
+            <PreviewRenderer serializedState={rightState} projectId={projectId} />
           </div>
         )}
       </div>

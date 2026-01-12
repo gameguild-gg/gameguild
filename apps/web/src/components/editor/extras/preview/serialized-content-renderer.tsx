@@ -32,11 +32,13 @@ import { PreviewCodeStudio } from "@/components/editor/plugins/preview-component
 interface SerializedContentRendererProps {
   serializedState: SerializedEditorState
   className?: string
+  projectId?: string
 }
 
 export function SerializedContentRenderer({
   serializedState,
   className = "prose prose-stone dark:prose-invert max-w-none",
+  projectId,
 }: SerializedContentRendererProps) {
   let headingCounter = 0
 
@@ -156,7 +158,7 @@ export function SerializedContentRenderer({
 
     // For CodeStudio nodes
     if (node.type === "code-studio") {
-      return <PreviewCodeStudio key={uniqueKey} data={node.data} />
+      return <PreviewCodeStudio key={uniqueKey} data={node.data} projectId={projectId} />
     }
 
     if (node.children) {
