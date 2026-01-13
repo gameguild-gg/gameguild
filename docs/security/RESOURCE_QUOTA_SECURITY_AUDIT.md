@@ -208,7 +208,7 @@ Read operations correctly do not affect quota state.
 | ~~Reflection for TenantId~~ | ~~Medium~~ | `RecordResourceUsageCommandHandler` | ✅ FIXED - Uses `UsageRecord.CreateDaily()` factory method |
 | ~~EnforceHardLimit = false option~~ | ~~Medium~~ | `RequiresQuotaAttribute` | ✅ FIXED - Deprecated with `[Obsolete]` and ignored |
 | ~~Error swallowing~~ | ~~Medium~~ | `ResourceQuotaBehavior` catch block | ✅ FIXED - Throws `InvalidOperationException` (fail-closed) |
-| ~~String-based metadata~~ | ~~Medium~~ | `ResourceQuota.Metadata` | ⚠️ Acceptable - JSON string with MaxLength validation |
+| ~~String-based metadata~~ | ~~Medium~~ | `ResourceQuota.Metadata` | ✅ FIXED - Strongly-typed `ResourceQuotaMetadata` record with JSON serialization via EF Core `HasConversion` |
 | ~~No audit trail for quota changes~~ | ~~Medium~~ | All quota operations | ✅ FIXED - Domain events `QuotaChangedEvent` and `QuotaExceededEvent` published |
 
 ### 4.4 Low Issues ✅ ALL FIXED
