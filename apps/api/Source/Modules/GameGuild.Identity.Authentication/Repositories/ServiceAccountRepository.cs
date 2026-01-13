@@ -15,14 +15,14 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
     public async Task<ServiceAccount?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await ServiceAccounts
-            .FirstOrDefaultAsync(sa => sa.Id == id && !sa.IsDeleted, cancellationToken);
+            .FirstOrDefaultAsync(sa => sa.Id == id && sa.IsActive, cancellationToken);
     }
 
     /// <inheritdoc />
     public async Task<ServiceAccount?> GetByClientIdAsync(string clientId, CancellationToken cancellationToken = default)
     {
         return await ServiceAccounts
-            .FirstOrDefaultAsync(sa => sa.ClientId == clientId && !sa.IsDeleted, cancellationToken);
+            .FirstOrDefaultAsync(sa => sa.ClientId == clientId, cancellationToken);
     }
 
     /// <inheritdoc />
@@ -31,7 +31,7 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
         CancellationToken cancellationToken = default)
     {
         return await ServiceAccounts
-            .Where(sa => sa.TenantId == tenantId && !sa.IsDeleted)
+            .Where(sa => sa.TenantId == tenantId)
             .OrderByDescending(sa => sa.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -41,16 +41,7 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
         CancellationToken cancellationToken = default)
     {
         return await ServiceAccounts
-            .Where(sa => sa.TenantId == null && !sa.IsDeleted)
-            .OrderByDescending(sa => sa.CreatedAt)
-            .ToListAsync(cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<ServiceAccount>> GetAllActiveAsync(CancellationToken cancellationToken = default)
-    {
-        return await ServiceAccounts
-            .Where(sa => sa.IsActive && !sa.IsDeleted && !sa.IsLockedOut)
+            .Where(sa => sa.TenantId == null)
             .OrderByDescending(sa => sa.CreatedAt)
             .ToListAsync(cancellationToken);
     }
@@ -90,11 +81,9 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
 
         if (serviceAccount != null)
         {
-            // Soft delete
-            serviceAccount.IsDeleted = true;
-            serviceAccount.DeletedAt = DateTime.UtcNow;
-            serviceAccount.UpdatedAt = DateTime.UtcNow;
+            // Soft delete by deactivating
             serviceAccount.IsActive = false;
+            serviceAccount.UpdatedAt = DateTime.UtcNow;
 
             await UpdateAsync(serviceAccount, cancellationToken);
         }
@@ -104,29 +93,6 @@ public class ServiceAccountRepository(IApplicationDbContext context) : IServiceA
     public async Task<bool> ClientIdExistsAsync(string clientId, CancellationToken cancellationToken = default)
     {
         return await ServiceAccounts
-            .AnyAsync(sa => sa.ClientId == clientId && !sa.IsDeleted, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task<int> GetActiveCountByTenantAsync(
-        Guid tenantId,
-        CancellationToken cancellationToken = default)
-    {
-        return await ServiceAccounts
-            .CountAsync(sa => sa.TenantId == tenantId && sa.IsActive && !sa.IsDeleted, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<ServiceAccount>> GetExpiringSecretsAsync(
-        DateTime beforeDate,
-        CancellationToken cancellationToken = default)
-    {
-        return await ServiceAccounts
-            .Where(sa => sa.IsActive &&
-                         !sa.IsDeleted &&
-                         sa.SecretExpiresAt.HasValue &&
-                         sa.SecretExpiresAt.Value <= beforeDate)
-            .OrderBy(sa => sa.SecretExpiresAt)
-            .ToListAsync(cancellationToken);
+            .AnyAsync(sa => sa.ClientId == clientId, cancellationToken);
     }
 }
