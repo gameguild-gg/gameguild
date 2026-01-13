@@ -19,6 +19,10 @@ public static class DependencyInjection
         services.AddScoped<IRequestHandler<RefreshTokenCommand, SignInResponse>, RefreshTokenHandler>();
         services.AddScoped<IRequestHandler<GoogleIdTokenSignInCommand, SignInResponse>, GoogleIdTokenSignInHandler>();
 
+        // Register Permission Template Handlers
+        services.AddScoped<IQueryHandler<GetPermissionTemplatesQuery, IEnumerable<PermissionTemplateDto>>, GetPermissionTemplatesQueryHandler>();
+        services.AddScoped<ICommandHandler<ApplyPermissionTemplateCommand, ApplyPermissionTemplateResult>, ApplyPermissionTemplateCommandHandler>();
+
         // Register validators
         services.AddScoped<FluentValidation.IValidator<LocalSignUpCommand>, LocalSignUpCommandValidator>();
         services.AddScoped<FluentValidation.IValidator<LocalSignInCommand>, LocalSignInCommandValidator>();

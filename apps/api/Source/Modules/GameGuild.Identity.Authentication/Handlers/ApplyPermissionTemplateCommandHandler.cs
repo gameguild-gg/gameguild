@@ -1,6 +1,5 @@
 using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.CQRS.Models;
 using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -39,66 +38,83 @@ public class ApplyPermissionTemplateCommandHandler(
                     $"Permission template {request.TemplateId} not found or inactive");
             }
 
-            // Get existing permissions for this user in this tenant
-            var tenantId = new TenantId(request.TenantId);
-            var existingPermissions = await dbContext.Set<TenantPermission>()
-                .Where(p => p.TenantId == tenantId &&
-                            p.UserId == request.UserId &&
-                            !p.IsRevoked)
-                .Select(p => p.Permission)
-                .ToListAsync(cancellationToken);
+            // Get existing TenantPermission for this user in this tenant
+            var existingPermission = await dbContext.Set<TenantPermission>()
+                .FirstOrDefaultAsync(p =>
+                    p.TenantId == request.TenantId &&
+                    p.UserId == request.UserId &&
+                    p.IsActive,
+                    cancellationToken);
 
-            // Determine which permissions to grant (excluding already granted ones)
-            var permissionsToGrant = template.Permissions
-                .Where(p => !existingPermissions.Contains(p))
-                .ToList();
+            List<string> permissionsToGrant;
 
-            if (permissionsToGrant.Count == 0)
+            if (existingPermission != null)
             {
-                logger.LogInformation(
-                    "User {UserId} already has all permissions from template {TemplateId}",
-                    request.UserId, request.TemplateId);
+                // Merge template permissions with existing ones
+                var existingSet = existingPermission.Permissions.ToHashSet(StringComparer.OrdinalIgnoreCase);
+                permissionsToGrant = template.Permissions
+                    .Where(p => !existingSet.Contains(p))
+                    .ToList();
 
-                return ApplyPermissionTemplateResult.SuccessResult(
-                    request.UserId,
-                    request.TenantId,
-                    request.TemplateId,
-                    template.Name,
-                    new List<string>(),
-                    request.AppliedBy);
-            }
-
-            // Grant each permission from the template
-            var grantedPermissions = new List<string>();
-            foreach (var permission in permissionsToGrant)
-            {
-                var tenantPermission = new TenantPermission
+                if (permissionsToGrant.Count == 0)
                 {
-                    TenantId = tenantId,
+                    logger.LogInformation(
+                        "User {UserId} already has all permissions from template {TemplateId}",
+                        request.UserId, request.TemplateId);
+
+                    return ApplyPermissionTemplateResult.SuccessResult(
+                        request.UserId,
+                        request.TenantId,
+                        request.TemplateId,
+                        template.Name,
+                        new List<string>(),
+                        request.AppliedBy);
+                }
+
+                // Update existing permission with merged set
+                existingPermission.Permissions = existingPermission.Permissions
+                    .Concat(permissionsToGrant)
+                    .ToArray();
+                existingPermission.Reason = request.Reason ?? $"Updated with template: {template.Name}";
+            }
+            else
+            {
+                // Create new permission record with all template permissions
+                permissionsToGrant = template.Permissions.ToList();
+
+                // Parse AppliedBy as Guid if possible
+                Guid? grantedByUserId = null;
+                if (!string.IsNullOrEmpty(request.AppliedBy) && Guid.TryParse(request.AppliedBy, out var parsedGuid))
+                {
+                    grantedByUserId = parsedGuid;
+                }
+
+                var newPermission = new TenantPermission
+                {
+                    TenantId = request.TenantId,
                     UserId = request.UserId,
-                    Permission = permission,
+                    Permissions = template.Permissions,
                     GrantedAt = DateTime.UtcNow,
-                    GrantedBy = request.AppliedBy ?? "System",
+                    GrantedBy = grantedByUserId,
                     Reason = request.Reason ?? $"Applied from template: {template.Name}",
-                    Source = PermissionSource.Template
+                    IsActive = true
                 };
 
-                dbContext.Set<TenantPermission>().Add(tenantPermission);
-                grantedPermissions.Add(permission);
+                dbContext.Set<TenantPermission>().Add(newPermission);
             }
 
             await dbContext.SaveChangesAsync(cancellationToken);
 
             logger.LogInformation(
                 "Applied {Count} permissions from template {TemplateId} to user {UserId}",
-                grantedPermissions.Count, request.TemplateId, request.UserId);
+                permissionsToGrant.Count, request.TemplateId, request.UserId);
 
             return ApplyPermissionTemplateResult.SuccessResult(
                 request.UserId,
                 request.TenantId,
                 request.TemplateId,
                 template.Name,
-                grantedPermissions,
+                permissionsToGrant,
                 request.AppliedBy);
         }
         catch (Exception ex)
