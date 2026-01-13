@@ -250,9 +250,16 @@ public class ResourceQuotaService(
         return results;
     }
 
+    /// <summary>
+    ///     Attempt to consume resources with atomic enforcement.
+    ///     <para>
+    ///     <b>AUTHORITATIVE:</b> Delegates to <see cref="TryAtomicConsumeAsync"/> for atomic enforcement.
+    ///     </para>
+    /// </summary>
+    /// <inheritdoc/>
     public async Task<ResourceLimitCheckResponse> TryConsumeResourceAsync(Guid tenantId, ResourceUsageType type, long amount = 1, Guid? userId = null, string? source = null, CancellationToken cancellationToken = default)
     {
-        // Use atomic consume for thread-safe quota enforcement
+        // AUTHORITATIVE: Use atomic consume for thread-safe quota enforcement
         var (success, currentUsage, hardLimit) = await TryAtomicConsumeAsync(tenantId, type, amount, cancellationToken);
 
         if (success)
@@ -277,6 +284,13 @@ public class ResourceQuotaService(
         };
     }
 
+    /// <summary>
+    ///     Atomically attempts to consume resources with optimistic concurrency.
+    ///     <para>
+    ///     <b>AUTHORITATIVE:</b> This is the core atomic operation for quota enforcement.
+    ///     Uses RowVersion concurrency with retry logic to prevent race conditions.
+    ///     </para>
+    /// </summary>
     /// <inheritdoc/>
     public async Task<(bool Success, long CurrentUsage, long? HardLimit)> TryAtomicConsumeAsync(
         Guid tenantId,

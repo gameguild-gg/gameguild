@@ -126,30 +126,33 @@ Read operations correctly do not affect quota state.
 
 ---
 
-## 2. Quota Enforcement Points Analysis
+## 2. Quota Enforcement Points Analysis ✅ VERIFIED
 
-### 2.1 Authoritative Enforcement Points ✅ FIXED
+### 2.1 Authoritative Enforcement Points ✅ ALL ATOMIC
 
 | Location | Enforcement Type | Atomic? | Notes |
 |----------|------------------|---------|-------|
 | `ResourceQuotaBehavior` | Atomic consume | ✅ Yes | Uses `TryAtomicConsumeAsync` with RowVersion + rollback on failure |
 | `BulkCreateUsersCommandHandler` | Atomic consume | ✅ Yes | Uses `TryAtomicConsumeAsync` + rollback on failure + adjustment for partial success |
-| `CheckResourceQuotaQuery` | Check only | N/A | Advisory only (read-only, no mutation) |
-| `TryConsumeResourceAsync` | Atomic consume | ✅ Yes | Delegates to `TryAtomicConsumeAsync` |
+| `TryConsumeResourceAsync` | Atomic consume | ✅ Yes | **AUTHORITATIVE** - Delegates to `TryAtomicConsumeAsync` (documented via XML) |
+| `TryAtomicConsumeAsync` | Atomic consume | ✅ Yes | **AUTHORITATIVE** - Core atomic operation with RowVersion concurrency |
 | `TenantResourcesController.RecordWithQuotaCheck` | Atomic consume | ✅ Yes | Uses `TryAtomicConsumeAsync` then records audit trail |
+| `UserResourcesController.RecordWithQuotaCheck` | Atomic consume | ✅ Yes | Uses `TryAtomicConsumeAsync` then records audit trail |
 
-### 2.2 Advisory-Only Points (Intentional Design) ✅ DOCUMENTED
+### 2.2 Advisory-Only Points (Intentional Design) ✅ CLEARLY DOCUMENTED
 
 | Location | Purpose | Status |
 |----------|---------|--------|
-| `CheckResourceQuotaQuery` | UI/UX quota status display | ✅ DOCUMENTED - Explicitly marked as advisory-only in code |
-| `CheckLimitsAsync` | Soft limit warnings, pre-flight checks | ✅ DOCUMENTED - Clearly marked with XML docs as advisory-only |
+| `CheckResourceQuotaQuery` | UI/UX quota status display | ✅ DOCUMENTED - Explicit **ADVISORY ONLY** in XML docs |
+| `CheckResourceQuotaQueryHandler` | Query handler | ✅ DOCUMENTED - Explicit **ADVISORY ONLY** in XML docs |
+| `CheckLimitsAsync` | Soft limit warnings, pre-flight checks | ✅ DOCUMENTED - Explicit **ADVISORY ONLY** in XML docs |
 | `RecordUsageAsync` | Legacy/audit purposes | ✅ DEPRECATED - Marked `[Obsolete]`, recommends `TryAtomicConsumeAsync` |
 
 > **Design Decision:** Advisory-only methods are intentional for UX purposes. They enable showing users
-> "approaching limit" warnings without consuming quota. Authoritative enforcement uses `TryAtomicConsumeAsync`.
+> "approaching limit" warnings without consuming quota. All XML documentation now clearly marks methods
+> as either **AUTHORITATIVE** or **ADVISORY ONLY** to prevent misuse.
 
-### 2.3 Database-Level Protection (Last Line of Defense) ✅ DOCUMENTED
+### 2.3 Database-Level Protection (Last Line of Defense) ✅ IMPLEMENTED
 
 | Constraint | SQL | Purpose |
 |------------|-----|---------|
@@ -157,8 +160,9 @@ Read operations correctly do not affect quota state.
 | `CK_ResourceQuota_CurrentUsage_NonNegative` | `CurrentUsage >= 0` | Prevents negative usage |
 | `CK_ResourceQuota_CurrentUsage_LessEqual_MaxUsage` | `HardLimit IS NULL OR CurrentUsage <= HardLimit` | **Enforces quota at DB level** |
 
-> **Design Decision:** Even if application-level enforcement is bypassed (e.g., direct DB access, SQL injection),
-> the database CHECK constraints will reject violations. This provides defense-in-depth.
+> **Defense-in-Depth:** These CHECK constraints are defined in `ResourceQuotaConfiguration.cs` and
+> applied via EF Core migrations. Even if application-level enforcement is bypassed (e.g., direct DB
+> access, SQL injection), the database will reject violations.
 
 ---
 
