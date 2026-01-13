@@ -182,7 +182,7 @@ public sealed class TenantResolver(
 
     public Guid? GetResolvedTenantId(HttpContext context)
     {
-        if (context.Items.TryGetValue(TenantIdItemKey, out var tenantIdObj) && tenantIdObj is Guid tenantId)
+        if (context.Items.TryGetValue(HttpContextKeys.AuthorizationTenantId, out var tenantIdObj) && tenantIdObj is Guid tenantId)
         {
             return tenantId;
         }

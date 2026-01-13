@@ -214,6 +214,11 @@ public static class PermissionScopes
 public static class AuthorizationClaims
 {
     /// <summary>
+    ///     JWT standard subject claim (user ID).
+    /// </summary>
+    public const string Sub = "sub";
+
+    /// <summary>
     ///     Claim indicating MFA has been verified for this session.
     /// </summary>
     public const string MfaVerified = "mfa_verified";
