@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authorization;
@@ -21,15 +22,17 @@ public class PolicyGateService(
         // Block all requests from localhost in production (example)
         context =>
         {
-            // This is a placeholder - in real deployment, check environment
-            if (context.IpAddress == "127.0.0.1" && context.Attributes.TryGetValue("environment", out var env) && env == "production")
+            var sw = Stopwatch.StartNew();
+            if (context.IpAddress == "127.0.0.1" && 
+                context.Attributes?.TryGetValue("environment", out var env) == true && 
+                env?.ToString() == "production")
             {
                 return new GateEvaluationDetail(
                     PolicyGateType.Static,
-                    null,
-                    "LocalhostProductionBlock",
                     false,
-                    "Localhost access blocked in production");
+                    "LocalhostProductionBlock",
+                    "Localhost access blocked in production",
+                    sw.Elapsed);
             }
             return null;
         },
@@ -37,14 +40,17 @@ public class PolicyGateService(
         // Block requests with no user agent (bots, scripts)
         context =>
         {
-            if (string.IsNullOrEmpty(context.UserAgent) && context.Attributes.TryGetValue("require-user-agent", out var required) && required == "true")
+            var sw = Stopwatch.StartNew();
+            if (string.IsNullOrEmpty(context.UserAgent) && 
+                context.Attributes?.TryGetValue("require-user-agent", out var required) == true && 
+                required?.ToString() == "true")
             {
                 return new GateEvaluationDetail(
                     PolicyGateType.Static,
-                    null,
-                    "UserAgentRequired",
                     false,
-                    "User-Agent header is required");
+                    "UserAgentRequired",
+                    "User-Agent header is required",
+                    sw.Elapsed);
             }
             return null;
         }
@@ -66,49 +72,46 @@ public class PolicyGateService(
                 if (!result.Passed)
                 {
                     logger.LogWarning(
-                        "Static gate {GateName} denied access for actor {ActorId}",
-                        result.GateName, context.ActorId);
+                        "Static gate {PolicyId} denied access for actor {ActorId}: {Reason}",
+                        result.PolicyId, context.ActorId, result.Reason);
 
-                    return new PolicyGateResult(
-                        IsAllowed: false,
-                        DeniedByGate: PolicyGateType.Static,
-                        DeniedByPolicyId: null,
-                        DenialReason: result.DenialReason,
-                        GateDetails: details);
+                    return PolicyGateResult.Denied(
+                        PolicyGateType.Static,
+                        result.Reason ?? "Static gate denied access",
+                        result.PolicyId,
+                        details);
                 }
             }
         }
 
         // 2. Evaluate conditional policies (time windows, environment conditions)
+        var conditionalSw = Stopwatch.StartNew();
         var conditionalContext = new ConditionalPolicyContext(
             UserId: context.ActorId,
             TenantId: context.TenantId,
             ResourceType: context.ResourceType,
-            ResourceId: context.ResourceId,
+            ResourceId: context.ResourceId != null ? context.ResourceId.ToString() : null,
             Action: context.Action,
-            UserRoles: context.Attributes.TryGetValue("roles", out var roles) && roles is IReadOnlyList<string> roleList 
-                ? roleList 
-                : [],
+            UserRoles: GetRolesFromAttributes(context.Attributes),
             IpAddress: context.IpAddress,
             UserAgent: context.UserAgent,
             DeviceFingerprint: context.DeviceFingerprint,
             GeoCountry: context.GeoLocation?.Split('/').FirstOrDefault(),
             GeoRegion: context.GeoLocation?.Contains('/') == true ? context.GeoLocation.Split('/').LastOrDefault() : null,
-            AuthenticationTime: context.Attributes.TryGetValue("auth-time", out var authTime) && authTime is DateTime at ? at : null,
-            IsMfaVerified: context.Attributes.TryGetValue("mfa-verified", out var mfa) && mfa is bool m ? m : null,
-            RiskScore: context.Attributes.TryGetValue("risk-score", out var risk) && risk is int r ? r : null,
-            CustomAttributes: context.Attributes
-                .Where(kv => kv.Value is string)
-                .ToDictionary(kv => kv.Key, kv => (string)kv.Value));
+            AuthenticationTime: GetDateTimeFromAttributes(context.Attributes, "auth-time"),
+            IsMfaVerified: GetBoolFromAttributes(context.Attributes, "mfa-verified"),
+            RiskScore: GetIntFromAttributes(context.Attributes, "risk-score"),
+            CustomAttributes: GetStringAttributesFromDict(context.Attributes));
 
         var conditionalResult = await conditionalEvaluator.EvaluateAsync(conditionalContext, ct);
+        conditionalSw.Stop();
 
         details.Add(new GateEvaluationDetail(
             PolicyGateType.Conditional,
-            conditionalResult.DeniedByPolicyId,
-            conditionalResult.DeniedByPolicyName ?? "ConditionalPolicies",
             conditionalResult.IsAllowed,
-            conditionalResult.DenialReason));
+            conditionalResult.DeniedByPolicyId?.ToString(),
+            conditionalResult.DenialReason,
+            conditionalSw.Elapsed));
 
         if (!conditionalResult.IsAllowed)
         {
@@ -116,49 +119,34 @@ public class PolicyGateService(
                 "Conditional policy gate denied access for actor {ActorId}: {Reason}",
                 context.ActorId, conditionalResult.DenialReason);
 
-            return new PolicyGateResult(
-                IsAllowed: false,
-                DeniedByGate: PolicyGateType.Conditional,
-                DeniedByPolicyId: conditionalResult.DeniedByPolicyId,
-                DenialReason: conditionalResult.DenialReason,
-                GateDetails: details);
+            return PolicyGateResult.Denied(
+                PolicyGateType.Conditional,
+                conditionalResult.DenialReason ?? "Conditional policy denied access",
+                conditionalResult.DeniedByPolicyId?.ToString(),
+                details);
         }
 
         // 3. Evaluate ABAC policies
+        var abacSw = Stopwatch.StartNew();
         var abacContext = new AbacRequestContextBuilder()
             .WithSubject(
                 context.ActorId,
                 context.TenantId,
-                context.Attributes.TryGetValue("roles", out var r) && r is IEnumerable<string> rs ? rs : [])
+                GetRolesFromAttributes(context.Attributes))
             .WithResource(context.ResourceType, context.ResourceId)
             .WithAction(context.Action)
             .WithEnvironment(context.IpAddress, context.UserAgent, context.GeoLocation?.Split('/').FirstOrDefault())
             .Build();
 
-        // Add custom attributes
-        foreach (var attr in context.Attributes)
-        {
-            // Subject attributes
-            if (attr.Key.StartsWith("subject.", StringComparison.OrdinalIgnoreCase))
-            {
-                abacContext = abacContext with
-                {
-                    SubjectAttributes = new Dictionary<string, object>(abacContext.SubjectAttributes)
-                    {
-                        [attr.Key] = attr.Value
-                    }
-                };
-            }
-        }
-
         var abacResult = await abacEvaluator.EvaluateAsync(abacContext, ct);
+        abacSw.Stop();
 
         details.Add(new GateEvaluationDetail(
             PolicyGateType.Abac,
-            abacResult.DecidingPolicyId,
-            abacResult.DecidingPolicyName ?? "ABACPolicies",
             abacResult.Decision != AbacDecision.Deny,
-            abacResult.DenialReason));
+            abacResult.DecidingPolicyId?.ToString(),
+            abacResult.DenialReason,
+            abacSw.Elapsed));
 
         if (abacResult.Decision == AbacDecision.Deny)
         {
@@ -166,20 +154,17 @@ public class PolicyGateService(
                 "ABAC gate denied access for actor {ActorId}: {Reason}",
                 context.ActorId, abacResult.DenialReason);
 
-            return new PolicyGateResult(
-                IsAllowed: false,
-                DeniedByGate: PolicyGateType.Abac,
-                DeniedByPolicyId: abacResult.DecidingPolicyId,
-                DenialReason: abacResult.DenialReason,
-                GateDetails: details);
+            return PolicyGateResult.Denied(
+                PolicyGateType.Abac,
+                abacResult.DenialReason ?? "ABAC policy denied access",
+                abacResult.DecidingPolicyId?.ToString(),
+                details);
         }
 
         // All gates passed
         logger.LogDebug("All policy gates passed for actor {ActorId}", context.ActorId);
 
-        return new PolicyGateResult(
-            IsAllowed: true,
-            GateDetails: details);
+        return PolicyGateResult.Allowed(details);
     }
 
     public async Task<PolicyGateResult> EvaluateGateAsync(
@@ -193,7 +178,7 @@ public class PolicyGateService(
             PolicyGateType.Conditional => await EvaluateConditionalGateAsync(context, ct),
             PolicyGateType.Abac => await EvaluateAbacGateAsync(context, ct),
             PolicyGateType.Environment => EvaluateEnvironmentGate(context),
-            _ => new PolicyGateResult(IsAllowed: true)
+            _ => PolicyGateResult.Allowed()
         };
     }
 
@@ -209,43 +194,58 @@ public class PolicyGateService(
                 details.Add(result);
                 if (!result.Passed)
                 {
-                    return new PolicyGateResult(
-                        IsAllowed: false,
-                        DeniedByGate: PolicyGateType.Static,
-                        DenialReason: result.DenialReason,
-                        GateDetails: details);
+                    return PolicyGateResult.Denied(
+                        PolicyGateType.Static,
+                        result.Reason ?? "Static gate denied access",
+                        result.PolicyId,
+                        details);
                 }
             }
         }
 
-        return new PolicyGateResult(IsAllowed: true, GateDetails: details);
+        return PolicyGateResult.Allowed(details);
     }
 
     private async Task<PolicyGateResult> EvaluateConditionalGateAsync(
         PolicyGateContext context,
         CancellationToken ct)
     {
+        var sw = Stopwatch.StartNew();
         var conditionalContext = new ConditionalPolicyContext(
             UserId: context.ActorId,
             TenantId: context.TenantId,
             ResourceType: context.ResourceType,
-            ResourceId: context.ResourceId,
+            ResourceId: context.ResourceId?.ToString(),
             Action: context.Action,
             UserRoles: []);
 
         var result = await conditionalEvaluator.EvaluateAsync(conditionalContext, ct);
+        sw.Stop();
 
-        return new PolicyGateResult(
-            IsAllowed: result.IsAllowed,
-            DeniedByGate: result.IsAllowed ? null : PolicyGateType.Conditional,
-            DeniedByPolicyId: result.DeniedByPolicyId,
-            DenialReason: result.DenialReason);
+        var detail = new GateEvaluationDetail(
+            PolicyGateType.Conditional,
+            result.IsAllowed,
+            result.DeniedByPolicyId?.ToString(),
+            result.DenialReason,
+            sw.Elapsed);
+
+        if (result.IsAllowed)
+        {
+            return PolicyGateResult.Allowed([detail]);
+        }
+
+        return PolicyGateResult.Denied(
+            PolicyGateType.Conditional,
+            result.DenialReason ?? "Conditional policy denied access",
+            result.DeniedByPolicyId?.ToString(),
+            [detail]);
     }
 
     private async Task<PolicyGateResult> EvaluateAbacGateAsync(
         PolicyGateContext context,
         CancellationToken ct)
     {
+        var sw = Stopwatch.StartNew();
         var abacContext = new AbacRequestContextBuilder()
             .WithSubject(context.ActorId, context.TenantId, [])
             .WithResource(context.ResourceType, context.ResourceId)
@@ -253,17 +253,30 @@ public class PolicyGateService(
             .Build();
 
         var result = await abacEvaluator.EvaluateAsync(abacContext, ct);
+        sw.Stop();
 
-        return new PolicyGateResult(
-            IsAllowed: result.Decision != AbacDecision.Deny,
-            DeniedByGate: result.Decision == AbacDecision.Deny ? PolicyGateType.Abac : null,
-            DeniedByPolicyId: result.DecidingPolicyId,
-            DenialReason: result.DenialReason);
+        var detail = new GateEvaluationDetail(
+            PolicyGateType.Abac,
+            result.Decision != AbacDecision.Deny,
+            result.DecidingPolicyId?.ToString(),
+            result.DenialReason,
+            sw.Elapsed);
+
+        if (result.Decision != AbacDecision.Deny)
+        {
+            return PolicyGateResult.Allowed([detail]);
+        }
+
+        return PolicyGateResult.Denied(
+            PolicyGateType.Abac,
+            result.DenialReason ?? "ABAC policy denied access",
+            result.DecidingPolicyId?.ToString(),
+            [detail]);
     }
 
     private PolicyGateResult EvaluateEnvironmentGate(PolicyGateContext context)
     {
-        // Basic environment checks (can be extended)
+        var sw = Stopwatch.StartNew();
         var details = new List<GateEvaluationDetail>();
 
         // Check for suspicious patterns
@@ -274,12 +287,58 @@ public class PolicyGateService(
             // Log but don't deny - could be legitimate API usage
             details.Add(new GateEvaluationDetail(
                 PolicyGateType.Environment,
-                null,
-                "CommandLineToolDetected",
                 true,
-                "Command-line tool detected but allowed"));
+                "CommandLineToolDetected",
+                "Command-line tool detected but allowed",
+                sw.Elapsed));
         }
 
-        return new PolicyGateResult(IsAllowed: true, GateDetails: details);
+        return PolicyGateResult.Allowed(details);
     }
+
+    #region Helper Methods
+
+    private static IReadOnlyList<string> GetRolesFromAttributes(IReadOnlyDictionary<string, object>? attributes)
+    {
+        if (attributes == null) return [];
+        
+        if (attributes.TryGetValue("roles", out var roles))
+        {
+            if (roles is IReadOnlyList<string> roleList) return roleList;
+            if (roles is IEnumerable<string> roleEnum) return roleEnum.ToList();
+        }
+        return [];
+    }
+
+    private static DateTime? GetDateTimeFromAttributes(IReadOnlyDictionary<string, object>? attributes, string key)
+    {
+        if (attributes?.TryGetValue(key, out var value) == true && value is DateTime dt)
+            return dt;
+        return null;
+    }
+
+    private static bool? GetBoolFromAttributes(IReadOnlyDictionary<string, object>? attributes, string key)
+    {
+        if (attributes?.TryGetValue(key, out var value) == true && value is bool b)
+            return b;
+        return null;
+    }
+
+    private static int? GetIntFromAttributes(IReadOnlyDictionary<string, object>? attributes, string key)
+    {
+        if (attributes?.TryGetValue(key, out var value) == true && value is int i)
+            return i;
+        return null;
+    }
+
+    private static Dictionary<string, string> GetStringAttributesFromDict(IReadOnlyDictionary<string, object>? attributes)
+    {
+        if (attributes == null) return [];
+        
+        return attributes
+            .Where(kv => kv.Value is string)
+            .ToDictionary(kv => kv.Key, kv => (string)kv.Value);
+    }
+
+    #endregion
 }

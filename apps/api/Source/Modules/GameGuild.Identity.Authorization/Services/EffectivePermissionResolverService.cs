@@ -84,12 +84,14 @@ public class EffectivePermissionResolverService(
             "Resolved {Count} effective permissions for user {UserId} in tenant {TenantId}",
             allPermissions.Count, userId, tenantId);
 
-        return new EffectivePermissions(
-            userId,
-            tenantId,
-            allPermissions,
-            sources,
-            roleContributions);
+        return new EffectivePermissions
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Permissions = allPermissions,
+            Sources = sources,
+            RoleContributions = roleContributions
+        };
     }
 
     public async Task<bool> HasPermissionAsync(
