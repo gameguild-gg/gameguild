@@ -96,15 +96,19 @@ public class Order : EntityBase
     /// <summary>Order line items</summary>
     public virtual ICollection<OrderLineItem> LineItems { get; set; } = new List<OrderLineItem>();
 
-    /// <summary>Create a new order with idempotency key</summary>
+    /// <summary>Create a new order with idempotency key (TenantId required - fail-closed)</summary>
+    /// <exception cref="ArgumentException">Thrown when tenantId is null or empty</exception>
     public static Order Create(
         Guid userId,
         string idempotencyKey,
+        Guid tenantId,
         string currency = "USD",
-        Guid? tenantId = null,
         string? ipAddress = null,
         string? userAgent = null)
     {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("TenantId is required for financial entities (fail-closed)", nameof(tenantId));
+
         return new Order
         {
             Id = Guid.NewGuid(),
@@ -118,6 +122,42 @@ public class Order : EntityBase
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+    }
+
+    /// <summary>
+    ///     Valid state transitions for orders (monotonic state machine)
+    /// </summary>
+    private static readonly Dictionary<OrderStatus, HashSet<OrderStatus>> ValidTransitions = new()
+    {
+        { OrderStatus.Pending, new HashSet<OrderStatus> { OrderStatus.Processing, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
+        { OrderStatus.Processing, new HashSet<OrderStatus> { OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
+        { OrderStatus.Completed, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } },
+        { OrderStatus.Failed, new HashSet<OrderStatus>() }, // Terminal state
+        { OrderStatus.Cancelled, new HashSet<OrderStatus>() }, // Terminal state
+        { OrderStatus.Refunded, new HashSet<OrderStatus>() }, // Terminal state
+        { OrderStatus.PartiallyRefunded, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.Disputed } },
+        { OrderStatus.Disputed, new HashSet<OrderStatus> { OrderStatus.Completed, OrderStatus.Refunded } }
+    };
+
+    /// <summary>
+    ///     Validates if a state transition is allowed (monotonic enforcement)
+    /// </summary>
+    public bool CanTransitionTo(OrderStatus newStatus)
+    {
+        if (!ValidTransitions.TryGetValue(Status, out var allowed))
+            return false;
+        return allowed.Contains(newStatus);
+    }
+
+    /// <summary>
+    ///     Transitions to a new status with validation
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when transition is not allowed</exception>
+    private void TransitionTo(OrderStatus newStatus)
+    {
+        if (!CanTransitionTo(newStatus))
+            throw new InvalidOperationException($"Invalid order state transition: {Status} -> {newStatus}");
+        Status = newStatus;
     }
 
     /// <summary>Add a line item to the order</summary>
@@ -153,40 +193,45 @@ public class Order : EntityBase
         return lineItem;
     }
 
-    /// <summary>Recalculate order totals from line items</summary>
+    /// <summary>Recalculate order totals from line items (only allowed before completion)</summary>
+    /// <exception cref="InvalidOperationException">Thrown when order is already completed</exception>
     public void RecalculateTotals()
     {
+        if (Status != OrderStatus.Pending && Status != OrderStatus.Processing)
+            throw new InvalidOperationException($"Cannot modify order totals in {Status} status. Financial amounts are immutable after processing.");
+
         Subtotal = LineItems.Sum(li => li.UnitPriceSnapshot * li.Quantity);
         DiscountTotal = LineItems.Sum(li => li.DiscountAmount);
         Total = Subtotal - DiscountTotal + TaxAmount;
         Touch();
     }
 
-    /// <summary>Mark order as paid</summary>
+    /// <summary>Mark order as paid (with state machine validation)</summary>
     public void MarkAsPaid(string? paymentProviderReference = null, string? paymentMethod = null)
     {
-        Status = OrderStatus.Completed;
+        TransitionTo(OrderStatus.Completed);
         PaidAt = DateTime.UtcNow;
         PaymentProviderReference = paymentProviderReference;
         PaymentMethod = paymentMethod;
         Touch();
     }
 
-    /// <summary>Mark order as failed</summary>
+    /// <summary>Mark order as failed (with state machine validation)</summary>
     public void MarkAsFailed(string? reason = null)
     {
-        Status = OrderStatus.Failed;
+        TransitionTo(OrderStatus.Failed);
         Metadata = reason;
         Touch();
     }
 
-    /// <summary>Process refund</summary>
+    /// <summary>Process refund (with state machine validation)</summary>
     public void ProcessRefund(decimal amount, string reason)
     {
+        var newStatus = amount >= Total ? OrderStatus.Refunded : OrderStatus.PartiallyRefunded;
+        TransitionTo(newStatus);
         RefundAmount = amount;
         RefundReason = reason;
         RefundedAt = DateTime.UtcNow;
-        Status = amount >= Total ? OrderStatus.Refunded : OrderStatus.PartiallyRefunded;
         Touch();
     }
 }

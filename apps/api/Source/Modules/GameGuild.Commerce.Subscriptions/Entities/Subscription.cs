@@ -24,11 +24,29 @@ namespace GameGuild.Commerce.Subscriptions;
 public class Subscription : EntityBase, ISubscription
 {
     /// <summary>
-    ///     Creates a new subscription
+    ///     Valid state transitions for subscriptions (monotonic state machine)
     /// </summary>
+    private static readonly Dictionary<SubscriptionStatus, HashSet<SubscriptionStatus>> ValidTransitions = new()
+    {
+        { SubscriptionStatus.PendingActivation, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Trialing, SubscriptionStatus.Cancelled } },
+        { SubscriptionStatus.Trialing, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Cancelled, SubscriptionStatus.Expired } },
+        { SubscriptionStatus.Active, new HashSet<SubscriptionStatus> { SubscriptionStatus.PastDue, SubscriptionStatus.Suspended, SubscriptionStatus.Cancelled } },
+        { SubscriptionStatus.PastDue, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Suspended, SubscriptionStatus.Cancelled } },
+        { SubscriptionStatus.Suspended, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Cancelled } },
+        { SubscriptionStatus.Cancelled, new HashSet<SubscriptionStatus>() }, // Terminal state
+        { SubscriptionStatus.Expired, new HashSet<SubscriptionStatus>() } // Terminal state
+    };
+
+    /// <summary>
+    ///     Creates a new subscription (TenantId required - fail-closed)
+    /// </summary>
+    /// <exception cref="ArgumentException">Thrown when tenantId is empty</exception>
     // ReSharper disable once VirtualMemberCallInConstructor - Setting TenantId is safe as it's a simple property setter
     public Subscription(Guid tenantId, Guid planId, Guid createdByUserId, BillingCycle billingCycle, Money amount, DateTime startDate, DateTime? trialEndDate = null)
     {
+        if (tenantId == Guid.Empty)
+            throw new ArgumentException("TenantId is required for financial entities (fail-closed)", nameof(tenantId));
+
         TenantId = new TenantId(tenantId);
         PlanId = planId;
         CreatedByUserId = createdByUserId;
@@ -45,10 +63,43 @@ public class Subscription : EntityBase, ISubscription
     }
 
     /// <summary>
+    ///     Validates if a state transition is allowed (monotonic enforcement)
+    /// </summary>
+    public bool CanTransitionTo(SubscriptionStatus newStatus)
+    {
+        if (!ValidTransitions.TryGetValue(Status, out var allowed))
+            return false;
+        return allowed.Contains(newStatus);
+    }
+
+    /// <summary>
+    ///     Transitions to a new status with validation
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when transition is not allowed</exception>
+    private void TransitionTo(SubscriptionStatus newStatus)
+    {
+        if (!CanTransitionTo(newStatus))
+            throw new InvalidOperationException($"Invalid subscription state transition: {Status} -> {newStatus}");
+        Status = newStatus;
+    }
+
+    /// <summary>
     ///     Reference to the user who created/manages this subscription
     /// </summary>
     [Required]
     public Guid CreatedByUserId { get; private set; }
+
+    /// <summary>
+    ///     Last processed renewal idempotency key (prevents duplicate charges)
+    /// </summary>
+    [MaxLength(100)]
+    public string? LastRenewalIdempotencyKey { get; private set; }
+
+    /// <summary>
+    ///     Last payment idempotency key (prevents duplicate payment recording)
+    /// </summary>
+    [MaxLength(100)]
+    public string? LastPaymentIdempotencyKey { get; private set; }
 
     /// <summary>
     ///     Trial end date (if applicable)
@@ -207,35 +258,32 @@ public class Subscription : EntityBase, ISubscription
     /// </summary>
     public void Activate()
     {
-        if (Status != SubscriptionStatus.PendingActivation && Status != SubscriptionStatus.Trialing) throw new InvalidOperationException("Can only activate pending or trialing subscriptions");
-
-        Status = SubscriptionStatus.Active;
+        TransitionTo(SubscriptionStatus.Active);
         Raise(new SubscriptionActivatedEvent(Id, TenantId!.Value));
     }
 
     /// <summary>
-    ///     Starts a trial period
+    ///     Starts a trial period (with state machine validation)
     /// </summary>
     public void StartTrial(DateTime trialEndDate)
     {
-        if (Status != SubscriptionStatus.PendingActivation) throw new InvalidOperationException("Can only start trial for pending subscriptions");
-
+        TransitionTo(SubscriptionStatus.Trialing);
         TrialEndDate = trialEndDate;
-        Status = SubscriptionStatus.Trialing;
 
         Raise(new TrialStartedEvent(Id, TenantId!.Value, trialEndDate));
     }
 
     /// <summary>
-    ///     Ends the trial period
+    ///     Ends the trial period (with state machine validation)
     /// </summary>
     public void EndTrial(bool convertToPaid)
     {
-        if (Status != SubscriptionStatus.Trialing) throw new InvalidOperationException("Can only end trial for trialing subscriptions");
+        if (Status != SubscriptionStatus.Trialing)
+            throw new InvalidOperationException("Can only end trial for trialing subscriptions");
 
         if (convertToPaid)
         {
-            Status = SubscriptionStatus.Active;
+            TransitionTo(SubscriptionStatus.Active);
             Raise(new SubscriptionActivatedEvent(Id, TenantId!.Value));
         }
         else
@@ -248,14 +296,14 @@ public class Subscription : EntityBase, ISubscription
     }
 
     /// <summary>
-    ///     Cancels the subscription
+    ///     Cancels the subscription (with state machine validation)
     /// </summary>
     public void Cancel(CancellationReason reason, string? note = null, DateTime? effectiveDate = null)
     {
-        if (Status == SubscriptionStatus.Cancelled) return;
+        if (Status == SubscriptionStatus.Cancelled) return; // Idempotent
 
         var oldStatus = Status;
-        Status = SubscriptionStatus.Cancelled;
+        TransitionTo(SubscriptionStatus.Cancelled);
         CancellationReason = reason;
         CancellationNote = note;
         CancelledAt = DateTime.UtcNow;
@@ -270,9 +318,7 @@ public class Subscription : EntityBase, ISubscription
     /// </summary>
     public void Suspend(string? reason = null)
     {
-        if (Status != SubscriptionStatus.Active) throw new InvalidOperationException("Can only suspend active subscriptions");
-
-        Status = SubscriptionStatus.Suspended;
+        TransitionTo(SubscriptionStatus.Suspended);
         AutoRenew = false;
 
         if (!string.IsNullOrEmpty(reason)) { Metadata = JsonSerializer.Serialize(new { suspensionReason = reason }); }
@@ -281,13 +327,11 @@ public class Subscription : EntityBase, ISubscription
     }
 
     /// <summary>
-    ///     Reactivates a suspended subscription
+    ///     Reactivates a suspended subscription (with state machine validation)
     /// </summary>
     public void Reactivate()
     {
-        if (Status != SubscriptionStatus.Suspended) throw new InvalidOperationException("Can only reactivate suspended subscriptions");
-
-        Status = SubscriptionStatus.Active;
+        TransitionTo(SubscriptionStatus.Active);
         AutoRenew = true;
         Metadata = null;
 
@@ -295,19 +339,49 @@ public class Subscription : EntityBase, ISubscription
     }
 
     /// <summary>
-    ///     Updates the subscription plan
+    ///     Updates the subscription plan with proration calculation
     /// </summary>
-    public void ChangePlan(Guid newPlanId, Money newAmount, DateTime? effectiveDate = null)
+    /// <param name="newPlanId">The new plan ID</param>
+    /// <param name="newAmount">The new amount for the plan</param>
+    /// <param name="effectiveDate">When the change takes effect (null = immediate)</param>
+    /// <returns>Proration details for billing adjustment</returns>
+    public PlanChangeProration ChangePlan(Guid newPlanId, Money newAmount, DateTime? effectiveDate = null)
     {
         if (Status != SubscriptionStatus.Active) throw new InvalidOperationException("Can only change plans for active subscriptions");
 
         var oldPlanId = PlanId;
         var oldAmount = Amount;
 
+        // Calculate proration for the remaining period
+        var proration = CalculateProration(oldAmount, newAmount, effectiveDate ?? DateTime.UtcNow);
+
         PlanId = newPlanId;
         Amount = newAmount;
 
         Raise(new SubscriptionPlanChangedEvent(Id, TenantId!.Value, oldPlanId, newPlanId, oldAmount, newAmount));
+
+        return proration;
+    }
+
+    /// <summary>
+    ///     Calculates proration for plan changes
+    /// </summary>
+    private PlanChangeProration CalculateProration(Money oldAmount, Money newAmount, DateTime effectiveDate)
+    {
+        var totalDaysInPeriod = (CurrentPeriodEnd - CurrentPeriodStart).TotalDays;
+        var remainingDays = Math.Max(0, (CurrentPeriodEnd - effectiveDate).TotalDays);
+
+        if (totalDaysInPeriod <= 0 || remainingDays <= 0)
+            return new PlanChangeProration(0, 0, 0, effectiveDate);
+
+        var dailyRateOld = oldAmount.Amount / (decimal)totalDaysInPeriod;
+        var dailyRateNew = newAmount.Amount / (decimal)totalDaysInPeriod;
+
+        var creditForUnused = dailyRateOld * (decimal)remainingDays;
+        var chargeForNew = dailyRateNew * (decimal)remainingDays;
+        var netAdjustment = chargeForNew - creditForUnused;
+
+        return new PlanChangeProration(creditForUnused, chargeForNew, netAdjustment, effectiveDate);
     }
 
     /// <summary>
@@ -331,18 +405,31 @@ public class Subscription : EntityBase, ISubscription
     }
 
     /// <summary>
-    ///     Processes a renewal (moves to next billing period)
+    ///     Processes a renewal with idempotency key (prevents duplicate charges)
     /// </summary>
-    public SubscriptionRenewalResult ProcessRenewal(Money newAmount)
+    /// <param name="newAmount">The amount for the new billing period</param>
+    /// <param name="idempotencyKey">Unique key for this renewal (e.g., "{subscriptionId}:{billingCycle}:{periodStart}")</param>
+    /// <returns>Result indicating success or failure with reason</returns>
+    public SubscriptionRenewalResult ProcessRenewal(Money newAmount, string idempotencyKey)
     {
-        if (Status != SubscriptionStatus.Active) return SubscriptionRenewalResult.Failed(Id, "Subscription is not active");
+        if (string.IsNullOrEmpty(idempotencyKey))
+            return SubscriptionRenewalResult.Failed(Id, "Idempotency key is required for renewal processing");
 
-        if (!AutoRenew) return SubscriptionRenewalResult.Failed(Id, "Auto-renewal is disabled");
+        // Idempotency check - if same key was already processed, return success (idempotent)
+        if (LastRenewalIdempotencyKey == idempotencyKey)
+            return SubscriptionRenewalResult.CreateSuccess(Id, BillingCycleCount, Amount);
+
+        if (Status != SubscriptionStatus.Active)
+            return SubscriptionRenewalResult.Failed(Id, "Subscription is not active");
+
+        if (!AutoRenew)
+            return SubscriptionRenewalResult.Failed(Id, "Auto-renewal is disabled");
 
         try
         {
             Amount = newAmount;
             BillingCycleCount++;
+            LastRenewalIdempotencyKey = idempotencyKey;
 
             (var periodStart, var periodEnd, var nextBilling) = CalculateBillingDates(NextBillingDate, BillingCycle);
             CurrentPeriodStart = periodStart;
@@ -368,11 +455,24 @@ public class Subscription : EntityBase, ISubscription
     }
 
     /// <summary>
-    ///     Records a successful payment
+    ///     Records a successful payment with idempotency key (prevents duplicate recording)
     /// </summary>
-    public void RecordPayment(decimal amount, string currency, DateTime paymentDate)
+    /// <param name="amount">Payment amount</param>
+    /// <param name="currency">Currency code</param>
+    /// <param name="paymentDate">When payment was processed</param>
+    /// <param name="idempotencyKey">Unique payment key (e.g., external payment ID from provider)</param>
+    /// <returns>True if payment was recorded, false if already processed (idempotent)</returns>
+    public bool RecordPayment(decimal amount, string currency, DateTime paymentDate, string idempotencyKey)
     {
+        if (string.IsNullOrEmpty(idempotencyKey))
+            throw new ArgumentException("Idempotency key is required for payment recording", nameof(idempotencyKey));
+
+        // Idempotency check - if same payment already recorded, skip (idempotent)
+        if (LastPaymentIdempotencyKey == idempotencyKey)
+            return false;
+
         LastPaymentAt = paymentDate;
+        LastPaymentIdempotencyKey = idempotencyKey;
 
         // Calculate next billing date based on billing cycle
         NextBillingDate = BillingCycle switch
@@ -389,14 +489,18 @@ public class Subscription : EntityBase, ISubscription
         BillingCycleCount++;
 
         Raise(new SubscriptionPaymentProcessedEvent(Id, TenantId ?? Guid.Empty, amount, currency, paymentDate));
+        return true;
     }
 
     /// <summary>
-    ///     Records a payment failure
+    ///     Records a payment failure (uses state machine for transition)
     /// </summary>
     public void RecordPaymentFailure(string reason, DateTime failureDate)
     {
-        if (Status == SubscriptionStatus.Active) { Status = SubscriptionStatus.PastDue; }
+        if (Status == SubscriptionStatus.Active)
+        {
+            TransitionTo(SubscriptionStatus.PastDue);
+        }
 
         Raise(new SubscriptionPaymentFailedEvent(Id, TenantId ?? Guid.Empty, reason, failureDate));
     }
