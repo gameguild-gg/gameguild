@@ -105,6 +105,13 @@ public class User : EntityBase, IUser
     public bool IsSuspended { get; set; }
 
     /// <summary>
+    ///     Token version for immediate session invalidation.
+    ///     Increment this when: user changes password, signs out all sessions,
+    ///     or admin forces logout. JWT tokens with older versions are rejected.
+    /// </summary>
+    public int TokenVersion { get; set; } = 1;
+
+    /// <summary>
     ///     Gets the current user status as a value object for rich status operations.
     ///     Not mapped to database - computed from IsActive and IsSuspended.
     /// </summary>
@@ -171,7 +178,18 @@ public class User : EntityBase, IUser
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(passwordHash);
         PasswordHash = passwordHash;
+        // Invalidate all existing tokens when password changes
+        IncrementTokenVersion();
         Touch();
+    }
+
+    /// <summary>
+    ///     Increments the token version to invalidate all existing JWT tokens.
+    ///     Call this when: user changes password, signs out all sessions, or admin forces logout.
+    /// </summary>
+    public void IncrementTokenVersion()
+    {
+        TokenVersion++;
     }
 
     /// <summary>

@@ -25,7 +25,7 @@ public sealed class JwtTokenService(
     /// <summary>
     ///     Generates a JWT access token with user claims.
     /// </summary>
-    public Task<string> GenerateAccessTokenAsync(Guid userId, string email, string[ ] roles, Guid? tenantId, CancellationToken cancellationToken = default)
+    public Task<string> GenerateAccessTokenAsync(Guid userId, string email, string[ ] roles, Guid? tenantId, int tokenVersion = 1, CancellationToken cancellationToken = default)
     {
         if (roles == null) throw new ArgumentNullException(nameof(roles));
 
@@ -41,8 +41,8 @@ public sealed class JwtTokenService(
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture), ClaimValueTypes.Integer64),
                 // Token version for immediate revocation support
                 // When user changes password/signs out all sessions, increment their token version
-                // Validation middleware can check current version vs token version and reject stale tokens
-                new Claim("token_version", "1") // TODO: Fetch from user entity or UserTokenVersion table
+                // Validation middleware checks current version vs token version and rejects stale tokens
+                new Claim("token_version", tokenVersion.ToString(CultureInfo.InvariantCulture))
             };
 
             // Add roles
@@ -288,7 +288,7 @@ public sealed class JwtTokenService(
     /// <summary>
     ///     Generates a JWT access token with user claims (synchronous version).
     /// </summary>
-    public string GenerateAccessToken(Guid userId, string email, string[ ] roles) { return GenerateAccessTokenAsync(userId, email, roles, null, CancellationToken.None).GetAwaiter().GetResult(); }
+    public string GenerateAccessToken(Guid userId, string email, string[ ] roles) { return GenerateAccessTokenAsync(userId, email, roles, null, tokenVersion: 1, CancellationToken.None).GetAwaiter().GetResult(); }
 
     /// <summary>
     ///     Generates a JWT access token with additional claims (synchronous version).
@@ -297,7 +297,7 @@ public sealed class JwtTokenService(
     {
         // For now, we'll use the base method and ignore additional claims
         // TODO: Implement proper additional claims support
-        return GenerateAccessTokenAsync(userId, email, roles, null, CancellationToken.None).GetAwaiter().GetResult();
+        return GenerateAccessTokenAsync(userId, email, roles, null, tokenVersion: 1, CancellationToken.None).GetAwaiter().GetResult();
     }
 
     /// <summary>

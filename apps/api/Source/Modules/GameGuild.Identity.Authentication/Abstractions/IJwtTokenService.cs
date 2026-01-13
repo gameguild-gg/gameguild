@@ -19,7 +19,7 @@ public interface IJwtTokenService
     ClaimsPrincipal ValidateToken(string token);
 
     // Async methods
-    Task<string> GenerateAccessTokenAsync(Guid userId, string email, string[ ] roles, Guid? tenantId, CancellationToken cancellationToken = default);
+    Task<string> GenerateAccessTokenAsync(Guid userId, string email, string[ ] roles, Guid? tenantId, int tokenVersion = 1, CancellationToken cancellationToken = default);
 
     Task<string> GenerateRefreshTokenAsync(Guid userId, DeviceInfo deviceInfo, CancellationToken cancellationToken = default);
 }

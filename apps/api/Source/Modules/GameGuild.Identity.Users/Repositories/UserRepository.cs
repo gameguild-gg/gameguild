@@ -178,4 +178,14 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
             await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
+
+    /// <inheritdoc />
+    public async Task<int?> GetTokenVersionAsync(Guid userId, CancellationToken cancellationToken = default)
+    {
+        return await context.Set<User>()
+            .Where(u => u.Id == userId && u.DeletedAt == null)
+            .Select(u => (int?)u.TokenVersion)
+            .FirstOrDefaultAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

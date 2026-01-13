@@ -199,4 +199,13 @@ public interface IUserRepository
     /// <param name="userId">User ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
     Task RecordLoginAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Gets the token version for a user (optimized query for authentication validation).
+    ///     Returns only the TokenVersion field without loading the full user entity.
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Token version if user exists, null otherwise</returns>
+    Task<int?> GetTokenVersionAsync(Guid userId, CancellationToken cancellationToken = default);
 }

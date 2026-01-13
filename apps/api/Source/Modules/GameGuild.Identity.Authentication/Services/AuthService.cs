@@ -113,8 +113,12 @@ public class AuthService(
             // Create device info for refresh token
             var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
 
+            // Fetch user again to get token version (user variable may be null at this point due to scoping)
+            var authenticatedUser = await userRepository.GetByIdAsync(userId!.Value, cancellationToken);
+            var tokenVersion = authenticatedUser?.TokenVersion ?? 1;
+
             // Create tokens and response
-            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(userId!.Value, request.Email, ["User"], request.TenantId, cancellationToken);
+            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(userId!.Value, request.Email, ["User"], request.TenantId, tokenVersion, cancellationToken);
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId.Value, deviceInfo, cancellationToken);
 
             // Expiries
@@ -200,8 +204,8 @@ public class AuthService(
             // Create device info for refresh token
             var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };
 
-            // Create tokens
-            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(userId, request.Email, ["User"], request.TenantId, cancellationToken);
+            // Create tokens (new users have TokenVersion = 1)
+            var accessToken = await jwtTokenService.GenerateAccessTokenAsync(userId, request.Email, ["User"], request.TenantId, newUser.TokenVersion, cancellationToken);
             var refreshToken = await jwtTokenService.GenerateRefreshTokenAsync(userId, deviceInfo, cancellationToken);
 
             var refreshTokenExpiryDays = int.Parse(configuration["Jwt:RefreshTokenExpiryInDays"] ?? "7");
