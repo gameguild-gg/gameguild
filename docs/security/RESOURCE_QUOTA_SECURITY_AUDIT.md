@@ -20,6 +20,7 @@ The Resources module provides quota management and enforcement for multi-tenant 
 | Lifecycle Enforcement | 2 | 2 ✅ | 0 |
 | Tenant Scoping | 2 | 2 ✅ | 0 |
 | Design Quality | 4 | 4 ✅ | 0 |
+| Quota Coverage | 7 | 7 ✅ | 0 |
 | Test Coverage | 5 | 0 | 5 (tests needed) |
 
 ### Fixes Applied
@@ -37,6 +38,8 @@ The Resources module provides quota management and enforcement for multi-tenant 
 11. **✅ Duplicate namespace imports removed** - All test files cleaned up from repeated `using GameGuild.Resources;` statements
 12. **✅ UpdateAsync added to IUsageRecordRepository** - TODO comment resolved; usage record updates now persisted correctly
 13. **✅ XML documentation improved** - All quota methods now clearly marked as **AUTHORITATIVE** or **ADVISORY ONLY** in XML docs
+14. **✅ ResourceUsageType enum extended** - Added `Programs`, `Courses`, `FeatureFlags`, `SubscriptionPlans`, `Products`, `TestingSessions`, `Roles`
+15. **✅ [RequiresQuota] added to critical commands** - `CreateProjectCommand`, `CreateProgramCommand`, `CreateProductCommand`, `CreateSubscriptionPlanCommand`, `CreateFeatureFlagCommand`, `CreateTestingSessionCommand`, `CreateRoleCommand` now decorated
 
 ---
 
@@ -164,6 +167,25 @@ Read operations correctly do not affect quota state.
 > **Defense-in-Depth:** These CHECK constraints are defined in `ResourceQuotaConfiguration.cs` and
 > applied via EF Core migrations. Even if application-level enforcement is bypassed (e.g., direct DB
 > access, SQL injection), the database will reject violations.
+
+### 2.4 Commands with `[RequiresQuota]` Attribute ✅ ALL CRITICAL COMMANDS COVERED
+
+The `[RequiresQuota]` attribute enables declarative quota enforcement via `ResourceQuotaBehavior` pipeline.
+
+| Command | Module | Resource Type | Status |
+|---------|--------|---------------|--------|
+| `CreateUserCommand` | `GameGuild.Identity.Users` | `Users` | ✅ Decorated |
+| `CreateProjectCommand` | `GameGuild.Projects` | `Projects` | ✅ Decorated |
+| `CreateProgramCommand` | `GameGuild.Programs` | `Programs` | ✅ Decorated |
+| `CreateProductCommand` | `GameGuild.Commerce.Products` | `Products` | ✅ Decorated |
+| `CreateSubscriptionPlanCommand` | `GameGuild.Commerce.Subscriptions` | `SubscriptionPlans` | ✅ Decorated |
+| `CreateFeatureFlagCommand` | `GameGuild.Features` | `FeatureFlags` | ✅ Decorated |
+| `CreateTestingSessionCommand` | `GameGuild.TestingLab` | `TestingSessions` | ✅ Decorated |
+| `CreateRoleCommand` | `GameGuild.Identity.Authentication` | `Roles` | ✅ Decorated |
+
+**ResourceUsageType Enum Extended:** Now includes all quota-controlled resource types:
+- `Users`, `Projects`, `Storage`, `ApiCalls` (original)
+- `Programs`, `Courses`, `FeatureFlags`, `SubscriptionPlans`, `Products`, `TestingSessions`, `Roles` (added)
 
 ---
 
