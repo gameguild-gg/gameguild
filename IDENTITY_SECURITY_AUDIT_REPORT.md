@@ -316,9 +316,8 @@ Request → TenantMiddleware
 
 ⚠️ **Concerns:**
 - ✅ **FIXED: AuthUser vs User duality:** ~~As noted in Users module, having two user entities is confusing and risky.~~ **Merged into single `User` aggregate.** See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete)
-- **Middleware placement unclear:** `PermissionCachingMiddleware`, `AbacPolicyMiddleware`, `AccessReviewMiddleware` are in the Authentication module but perform authorization logic. Should these be in Authorization module?
-- **Stringly-typed policies and permissions:** AUTHORIZATION_ARCHITECTURE.md describes 5 authorization layers, but policy names are magic strings  
-  [AUTHORIZATION_ARCHITECTURE.md](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authentication\AUTHORIZATION_ARCHITECTURE.md#L1-L100)
+- ✅ **FIXED: Middleware placement:** ~~`PermissionCachingMiddleware`, `AbacPolicyMiddleware`, `AccessReviewMiddleware` are in the Authentication module but perform authorization logic.~~ **Moved to Authorization module.** Old middleware deleted from Authentication module. `AuthenticationModule.cs` now references `GameGuild.Identity.Authorization` middleware. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.4](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#94-solid-compliance-fixes-complete)
+- ✅ **FIXED: Stringly-typed policies and permissions:** ~~AUTHORIZATION_ARCHITECTURE.md describes 5 authorization layers, but policy names are magic strings.~~ **Created `AuthorizationPolicies.cs`** with type-safe constants for policy names, permission scopes, and claim types. See [AuthorizationPolicies.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Abstractions/AuthorizationPolicies.cs)
 - **RBAC marked as "PLANNED - NOT YET IMPLEMENTED":** Role management exists (Role entity, RoleRepository, RoleController), but doc says planned?  
   Contradiction between IMPLEMENTATION_STATUS.md (says "FULLY IMPLEMENTED") and AUTHORIZATION_ARCHITECTURE.md (says "PLANNED")
 
