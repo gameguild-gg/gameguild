@@ -6,7 +6,7 @@ Install any GIT client of your choice. I recommend [git-fork](https://git-fork.c
 
 ## Repo Setup
 
-Go to [the course repository](https://github.com/gameguild-gg/networking). Follow the instructions there.
+Go to [the course repository](https://github.com/gameguild-gg/network). Follow the instructions there.
 
 ## IDE Setup
 
@@ -40,9 +40,9 @@ On JetBrains IDEs, you can disable:
 
 - Each assignment is in its own folder named `assignment-<number>`, e.g., `assignment-1`, `assignment-2`, etc.
 - Each assignment folder contains:
-    - `README.md`: Instructions for the assignment;
-    - `docker-compose.yml`: Docker Compose file to set up the required environment;
-    - Other files and folders as needed for the assignment, refer to the `README.md` in each assignment folder for details.
+  - `README.md`: Instructions for the assignment;
+  - `docker-compose.yml`: Docker Compose file to set up the required environment;
+  - Other files and folders as needed for the assignment, refer to the `README.md` in each assignment folder for details.
 - `.github/workflows/`: Contains GitHub Actions workflows for automated testing of assignments. **Do not modify these files**.
 - `.gitignore`: Specifies files and folders to be ignored by Git. You may modify this file if needed.
 - `scripts/`: Contains helper scripts for running tests and other tasks. Do not modify these files.
