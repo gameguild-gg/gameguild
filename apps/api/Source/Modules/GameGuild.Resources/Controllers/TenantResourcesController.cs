@@ -110,16 +110,45 @@ public sealed class TenantResourcesController(ISender sender, IResourceQuotaServ
     {
         ArgumentNullException.ThrowIfNull(body);
 
-        // Check quota before recording
-        var quotaCheck = await sender.Send(new CheckResourceQuotaQuery(tenantId, body.ResourceUsageType, body.Count), ct).ConfigureAwait(false);
+        // ATOMIC: Use TryAtomicConsumeAsync to avoid TOCTOU race condition
+        // This performs an atomic check-and-increment operation
+        var (success, currentUsage, hardLimit) = await quotaService.TryAtomicConsumeAsync(
+            tenantId,
+            body.ResourceUsageType,
+            body.Count,
+            ct).ConfigureAwait(false);
 
-        if (!quotaCheck.IsAllowed) { return StatusCode(StatusCodes.Status429TooManyRequests, new { error = "Quota exceeded", details = quotaCheck }); }
+        if (!success)
+        {
+            return StatusCode(StatusCodes.Status429TooManyRequests, new
+            {
+                error = "Quota exceeded",
+                details = new
+                {
+                    isAllowed = false,
+                    currentUsage,
+                    hardLimit,
+                    requested = body.Count
+                }
+            });
+        }
 
-        // Record usage
+        // Quota was atomically consumed - now create the usage record for audit trail
         var metadata = body.Metadata != null ? System.Text.Json.JsonSerializer.Serialize(body.Metadata) : null;
-        var id = await sender.Send(new RecordResourceUsageCommand(tenantId, body.ResourceUsageType, body.Count, body.PeriodStart, body.PeriodEnd, metadata), ct).ConfigureAwait(false);
+        var id = await sender.Send(
+            new RecordResourceUsageCommand(tenantId, body.ResourceUsageType, body.Count, body.PeriodStart, body.PeriodEnd, metadata, SkipQuotaIncrement: true),
+            ct).ConfigureAwait(false);
 
-        return CreatedAtAction(nameof(GetUsageRecords), new { tenantId }, new { id, quotaInfo = quotaCheck });
+        return CreatedAtAction(nameof(GetUsageRecords), new { tenantId }, new
+        {
+            id,
+            quotaInfo = new
+            {
+                isAllowed = true,
+                currentUsage,
+                hardLimit
+            }
+        });
     }
 
     /// <summary>

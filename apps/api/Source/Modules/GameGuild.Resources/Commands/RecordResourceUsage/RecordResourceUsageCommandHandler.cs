@@ -5,6 +5,7 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for recording resource usage and updating quotas.
 ///     This handler enforces hard limits - if recording would exceed the quota, it throws QuotaExceededException.
+///     When SkipQuotaIncrement is true (quota was already atomically consumed), only creates the audit record.
 /// </summary>
 public class RecordResourceUsageCommandHandler(IUsageRecordRepository usageRecordRepository, IResourceQuotaRepository resourceQuotaRepository) : ICommandHandler<RecordResourceUsageCommand, Guid>
 {
@@ -12,31 +13,37 @@ public class RecordResourceUsageCommandHandler(IUsageRecordRepository usageRecor
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // First, check if this recording would exceed the quota (FAIL-CLOSED)
-        var quota = await resourceQuotaRepository.GetByTenantAndTypeAsync(request.TenantId, request.ResourceUsageType, cancellationToken).ConfigureAwait(false);
+        ResourceQuota? quota = null;
 
-        if (quota != null && quota.IsActive)
+        // Only check and update quota if not skipping (quota wasn't already atomically consumed)
+        if (!request.SkipQuotaIncrement)
         {
-            // Check if quota needs reset
-            if (quota.ShouldReset()) { quota.ResetUsage(); }
+            // First, check if this recording would exceed the quota (FAIL-CLOSED)
+            quota = await resourceQuotaRepository.GetByTenantAndTypeAsync(request.TenantId, request.ResourceUsageType, cancellationToken).ConfigureAwait(false);
 
-            // Validate against hard limit BEFORE recording
-            if (quota.HardLimit.HasValue)
+            if (quota != null && quota.IsActive)
             {
-                var projectedUsage = quota.CurrentUsage + request.Count;
-                if (projectedUsage > quota.HardLimit.Value)
+                // Check if quota needs reset
+                if (quota.ShouldReset()) { quota.ResetUsage(); }
+
+                // Validate against hard limit BEFORE recording
+                if (quota.HardLimit.HasValue)
                 {
-                    throw new QuotaExceededException(
-                        $"Cannot record {request.Count} units of {request.ResourceUsageType}. Would exceed hard limit.",
-                        request.ResourceUsageType,
-                        quota.CurrentUsage,
-                        quota.HardLimit.Value,
-                        request.TenantId);
+                    var projectedUsage = quota.CurrentUsage + request.Count;
+                    if (projectedUsage > quota.HardLimit.Value)
+                    {
+                        throw new QuotaExceededException(
+                            $"Cannot record {request.Count} units of {request.ResourceUsageType}. Would exceed hard limit.",
+                            request.ResourceUsageType,
+                            quota.CurrentUsage,
+                            quota.HardLimit.Value,
+                            request.TenantId);
+                    }
                 }
             }
         }
 
-        // Create usage record
+        // Create usage record (audit trail)
         var usageRecord = new UsageRecord
         {
             Id = Guid.NewGuid(), Type = request.ResourceUsageType, Count = request.Count, PeriodStart = request.PeriodStart, PeriodEnd = request.PeriodEnd, Metadata = request.Metadata, CreatedAt = DateTime.UtcNow
@@ -48,8 +55,8 @@ public class RecordResourceUsageCommandHandler(IUsageRecordRepository usageRecor
 
         await usageRecordRepository.CreateAsync(usageRecord, cancellationToken).ConfigureAwait(false);
 
-        // Update quota if exists
-        if (quota != null)
+        // Update quota if exists and not skipping
+        if (!request.SkipQuotaIncrement && quota != null)
         {
             quota.AddUsage(request.Count);
             quota.UpdatedAt = DateTime.UtcNow;

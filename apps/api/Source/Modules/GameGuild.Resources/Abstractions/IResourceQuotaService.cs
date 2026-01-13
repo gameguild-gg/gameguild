@@ -29,8 +29,13 @@ public interface IResourceQuotaService
 
     // Usage Tracking
     /// <summary>
-    ///     Record resource usage
+    ///     Record resource usage. This method now enforces hard limits.
     /// </summary>
+    /// <remarks>
+    ///     DEPRECATED: Prefer using TryAtomicConsumeAsync for atomic operations with concurrency safety.
+    ///     This method enforces hard limits but is NOT atomic under concurrent access.
+    /// </remarks>
+    [Obsolete("Use TryAtomicConsumeAsync for atomic, concurrency-safe quota consumption. This method is not atomic.")]
     Task<bool> RecordUsageAsync(
         Guid tenantId,
         ResourceUsageType type,

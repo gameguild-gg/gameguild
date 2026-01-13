@@ -59,6 +59,10 @@ public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsa
         return deleted;
     }
 
+    /// <remarks>
+    /// DEPRECATED: Prefer using TryAtomicConsumeAsync for atomic operations with concurrency safety.
+    /// This method now enforces hard limits but is not atomic under concurrent access.
+    /// </remarks>
     public async Task<bool> RecordUsageAsync(
         Guid tenantId,
         ResourceUsageType type,
@@ -78,6 +82,20 @@ public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsa
             {
                 // Check if quota needs reset
                 if (quota.ShouldReset()) { quota.ResetUsage(); }
+
+                // SECURITY FIX: Enforce hard limit before recording
+                if (quota.HardLimit.HasValue)
+                {
+                    var projectedUsage = quota.CurrentUsage + amount;
+                    if (projectedUsage > quota.HardLimit.Value)
+                    {
+                        logger.LogWarning(
+                            "RecordUsageAsync rejected: would exceed hard limit for tenant {TenantId}, type {Type}. " +
+                            "Current: {CurrentUsage}, Requested: {Amount}, Limit: {HardLimit}",
+                            tenantId, type, quota.CurrentUsage, amount, quota.HardLimit.Value);
+                        return false;
+                    }
+                }
 
                 quota.CurrentUsage += amount;
                 quota.UpdatedAt = DateTime.UtcNow;
