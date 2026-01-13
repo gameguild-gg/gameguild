@@ -440,7 +440,7 @@ Authorization checks in handlers:
 - ✅ **FIXED: Fail-closed error handling:** ~~If `IAuthorizationPermissionService` throws exception, does ActorContext get built with empty permissions?~~ Now explicitly handles errors with `PermissionFetchException`, sets ActorContext to Anonymous, and returns HTTP 500.
 - ✅ **FIXED: Cache poisoning:** ~~If tenant version isn't incremented correctly, users could retain stale permissions.~~ `PermissionService` now injects `ITenantSecurityVersionStore` and calls `IncrementVersionAsync()` on all mutations (Grant, Revoke, SetGlobalDefaults, SetTenantDefaults). Cache invalidation is guaranteed. See [PermissionService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/PermissionService.cs)
 - ✅ **FIXED: String-based permission checks:** ~~Typo in `"users:write"` vs `"user:write"` grants unintended access.~~ Now using strongly-typed `Permission` classes. See [docs/security/STRONGLY_TYPED_PERMISSIONS.md](docs/security/STRONGLY_TYPED_PERMISSIONS.md)
-- ⚠️ **No rate limiting on permission checks:** Malicious user could spam permission queries to DoS the system.
+- ⚠️ **Rate limiting infrastructure exists but policies not configured:** `UseRateLimiter` middleware registered, but actual rate limit policies (FixedWindow, SlidingWindow) have TODOs in code. Malicious user could still spam permission queries.
 
 ---
 
@@ -694,7 +694,7 @@ public static T Create<T>(Action<T>? configure = null)
 | ✅ **CLARIFIED: Tenant aggregate** | ~~Identity.Tenants~~ **DOCUMENTED** | ~~Hard to test, violates SRP~~ | ~~Split into aggregates~~ Tenant is an **aggregate root** by design (DDD pattern), not a god object. See entity XML docs explaining the design rationale. Added rich domain methods for validation. |
 | ✅ **FIXED: Duplicate tenant resolution** | ~~TenantMiddleware, TenantContext, ActorContextMiddleware~~ **UNIFIED** | ~~Not DRY, inconsistency risk~~ | ~~Shared ITenantResolver service~~ Created `ITenantResolver` interface with `TenantResolver` implementation. Provides centralized resolution with priority: Header → Domain → Query → Route → Claims → Default. See [ITenantResolver.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Abstractions/ITenantResolver.cs) |
 | ✅ **FIXED: Large interfaces** | ~~IPermissionsContext (10+ methods)~~ **SPLIT** | ~~Violates ISP~~ | ~~Split into IPermissionChecker, IPermissionManager~~ Created `IPermissionChecker` (permission operations) and `IPermissionContextInfo` (identity properties). `IPermissionsContext` now inherits from both. DI registers all three interfaces. |
-| **No rate limiting** | Permission check endpoints | DoS risk | Add rate limiting middleware |
+| ⚠️ **PARTIAL: Rate limiting** | Permission check endpoints | DoS risk (infrastructure scaffolded) | ~~Add rate limiting middleware~~ `UseRateLimiter` registered, but policies not configured (TODO in code). Need to add actual rate limit policies. |
 
 ---
 
@@ -714,10 +714,10 @@ public static T Create<T>(Action<T>? configure = null)
 | **Resource-based authorization** | ✅ Yes | AccessControlListEntry, ResourcePermissionService | No ownership auto-grant (must explicitly grant) | Medium (could be feature) |
 | **Dynamic policies from DB** | ✅ Yes | PolicyDefinitionStore, AbacPolicy, ConditionalAccessPolicy | Complex evaluation, hard to debug | Medium (needs logging) |
 | **Cache + invalidation** | ✅ Yes | CachedAccessControlListService, TenantSecurityVersionStore, IHybridPermissionCache | ✅ Distributed cache implemented (optional Redis L2) | ✅ Horizontal scaling ready |
-| **Audit logging hooks** | ✅ Yes | PermissionAuditService, AuthenticationAttempt | No centralized audit log viewer | Medium (ops issue) |
+| **Audit logging hooks** | ✅ Yes | PermissionAuditService, AuthenticationAttempt, SecurityAuditController, SecurityAuditAggregator | ~~No centralized audit log viewer~~ ✅ Centralized viewer at `/api/admin/security-audit` | ~~Medium~~ ✅ Full ops visibility |
 | **Impersonation/delegation** | ✅ Yes | PermissionDelegation entity | No UI for granting delegation | Low (admin can SQL) |
-| **Service accounts / machine identities** | ⚠️ Partial | ActorKind.Service, client_credentials grant type | No ServiceActor entity, no service-specific permissions | Medium (can use User entity for now) |
-| **Rate limiting / abuse controls** | ❌ No | N/A | No rate limiting on authn or authz endpoints | ⚠️ DoS risk |
+| **Service accounts / machine identities** | ⚠️ Partial | ActorKind.Service, ServiceActor record, ActorKindResolver | ~~No ServiceActor entity~~ ✅ ServiceActor record exists. Still missing: persistence entity, management endpoints, client_credentials token endpoint | Medium (actor model complete, persistence needed) |
+| **Rate limiting / abuse controls** | ⚠️ Partial | System.Threading.RateLimiting package, UseRateLimiter middleware | Infrastructure scaffolded but policies not configured (TODO in code) | ⚠️ DoS risk until policies defined |
 
 ---
 
@@ -760,14 +760,14 @@ public static T Create<T>(Action<T>? configure = null)
 | **11** | ✅ **DONE: Split God services** (PermissionService) | ~~Extract `PermissionGrantService`, `PermissionCheckService`, `PermissionAuditService` from `PermissionService`.~~ **IMPLEMENTED!** Split into `IPermissionGrantService` (mutations), `IPermissionQueryService` (reads), `IPermissionBulkService` (bulk ops). See [IPermissionGrantService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Abstractions/IPermissionGrantService.cs) | ✅ Better SRP, easier testing |
 | **12** | ✅ **NOT NEEDED: Split God entities** (Tenant) | ~~Extract `TenantConfiguration`, `TenantMembership`, `TenantUsage` as separate aggregates.~~ **VERIFIED:** Tenant is a proper DDD aggregate root. Navigation properties to child entities (Settings, Statistics, Usage) are appropriate. Documented in [Tenant.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/Tenant.cs). | ✅ Proper DDD pattern confirmed |
 | **13** | ✅ **DONE: Shared tenant resolver** | ~~Create `ITenantResolver` interface.~~ **IMPLEMENTED!** Created `TenantIdExtractor` utility with methods for all resolution sources. Used by `TenantMiddleware`, `FeatureContextFactory`, `SerilogExtensions`. | ✅ DRY compliance |
-| **14** | **Rate limiting** | Add ASP.NET rate limiting middleware for `/auth/*` and `/permissions/*` endpoints. Config: 10 req/min for authn, 100 req/min for authz. | ⚠️ DoS protection |
+| **14** | ⚠️ **PARTIAL: Rate limiting** | ~~Add ASP.NET rate limiting middleware for `/auth/*` and `/permissions/*` endpoints.~~ Infrastructure scaffolded: `System.Threading.RateLimiting` package, `UseRateLimiter` middleware registered. **Missing:** Actual policy definitions (TODO in code), `[EnableRateLimiting]` attributes on controllers. | ⚠️ DoS protection (needs policy config) |
 | **15** | ✅ **DONE: Enrich domain models** | ~~Move business logic from handlers to entity methods.~~ **IMPLEMENTED!** User entity has 20+ behavior methods (`Activate()`, `MarkDeleted()`, `GetRoleInTenant()`, etc.). TenantMember has lifecycle and hierarchy methods. See section 3.2. | ✅ Richer domain model |
-| **16** | **Centralized audit log viewer** | Create `/admin/audit` endpoint to view `PermissionAuditLog`, `AuthenticationAttempt`, etc. Paginated, filterable. | ⚠️ Ops visibility |
-| **17** | **WebAuthn/FIDO2 support** | Add passwordless authentication option. Integrate `Fido2NetLib` package. | ⚠️ Modern security, better UX |
-| **18** | **Permission templates** | Create predefined permission sets ("Editor", "Viewer", "Admin"). Apply via single endpoint instead of granting 10+ permissions individually. | ⚠️ Simplified admin UX |
+| **16** | ✅ **DONE: Centralized audit log viewer** | ~~Create `/admin/audit` endpoint.~~ **IMPLEMENTED!** `SecurityAuditController` at `/api/admin/security-audit` with endpoints for unified logs, authentication-specific, permission-specific, and CSV export. `SecurityAuditAggregator` service aggregates `PermissionAuditLog`, `AuthenticationAttempt`, `AccessReviewLog`. Admin-only access. | ✅ Full ops visibility |
+| **17** | ✅ **DONE: WebAuthn/FIDO2 support** | ~~Add passwordless authentication.~~ **IMPLEMENTED!** `WebAuthnController` at `/api/auth/webauthn/*` with full registration/authentication flow. `WebAuthnService` using `Fido2NetLib` v4.0.0. `UserWebAuthnCredential` entity with repository. Platform authenticators (Touch ID, Windows Hello) and security keys supported. | ✅ Modern security, passwordless UX |
+| **18** | ⚠️ **PARTIAL: Permission templates** | ~~Create predefined permission sets.~~ **Partial implementation:** `PermissionTemplate` entity and DTO exist. Controller endpoints at `/v1/permissions/templates` and `/v1/permissions/templates/apply` defined. **Missing:** `GetPermissionTemplatesQueryHandler` and `ApplyPermissionTemplateCommandHandler` not implemented (listed as TODO in tests). | ⚠️ Needs handlers to be functional |
 
-**Estimated Effort:** ~~1-2 months~~ **Complete: 4 of 8 items!** Remaining: #14 Rate limiting, #16 Audit viewer, #17 WebAuthn, #18 Permission templates  
-**Expected Impact:** ✅ Architecture improvements complete. Remaining: Operational and UX enhancements.
+**Estimated Effort:** ~~1-2 months~~ **Complete: 6 of 8 items!** ✅ #16 Audit viewer, ✅ #17 WebAuthn fully done. ⚠️ #14 Rate limiting (infrastructure only), ⚠️ #18 Permission templates (handlers missing)  
+**Expected Impact:** ✅ Architecture improvements complete. ✅ Ops visibility and modern auth complete. Remaining: Rate limiting policies and permission template handlers.
 
 ---
 
