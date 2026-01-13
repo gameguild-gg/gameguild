@@ -195,4 +195,101 @@ public class Tenant : EntityBase, ITenant
         // Add domain event
         AddDomainEvent(new TenantRestoredEvent(Id, Name));
     }
+
+    // ========================
+    // DOMAIN LOGIC METHODS
+    // ========================
+
+    /// <summary>
+    ///     Validates that a user can be added as a member to this tenant.
+    /// </summary>
+    /// <param name="userId">The user ID to add.</param>
+    /// <returns>Validation result.</returns>
+    public TenantMembershipResult ValidateForMemberAddition(Guid userId)
+    {
+        if (!IsActive)
+            return TenantMembershipResult.Failure("Tenant is inactive.");
+
+        if (IsArchived)
+            return TenantMembershipResult.Failure("Tenant is archived.");
+
+        if (TenantMembers.Any(m => m.UserId == userId && m.IsActive))
+            return TenantMembershipResult.Failure("User is already a member of this tenant.");
+
+        return TenantMembershipResult.Success();
+    }
+
+    /// <summary>
+    ///     Validates that the tenant can accept new members.
+    /// </summary>
+    /// <returns>True if the tenant can accept new members.</returns>
+    public bool CanAcceptMembers => IsActive && !IsArchived;
+
+    /// <summary>
+    ///     Validates that the tenant configuration is complete and valid.
+    /// </summary>
+    /// <returns>Validation result.</returns>
+    public TenantValidationResult ValidateConfiguration()
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(Name))
+            errors.Add("Tenant name is required.");
+
+        if (string.IsNullOrWhiteSpace(Slug))
+            errors.Add("Tenant slug is required.");
+
+        if (!IsValidSlug(Slug))
+            errors.Add("Tenant slug must contain only lowercase letters, numbers, and hyphens.");
+
+        if (errors.Count > 0)
+            return TenantValidationResult.Failure(errors);
+
+        return TenantValidationResult.Success();
+    }
+
+    /// <summary>
+    ///     Gets the count of active members in this tenant.
+    /// </summary>
+    public int ActiveMemberCount => TenantMembers.Count(m => m.IsActive);
+
+    /// <summary>
+    ///     Checks if the tenant has any active members.
+    /// </summary>
+    public bool HasActiveMembers => TenantMembers.Any(m => m.IsActive);
+
+    /// <summary>
+    ///     Checks if the tenant can be safely archived (no active operations).
+    /// </summary>
+    /// <returns>Validation result.</returns>
+    public TenantArchiveResult ValidateForArchive()
+    {
+        if (IsArchived)
+            return TenantArchiveResult.Failure("Tenant is already archived.");
+
+        // Allow archiving even with active members - they'll lose access
+        return TenantArchiveResult.Success(ActiveMemberCount);
+    }
+
+    /// <summary>
+    ///     Checks if the tenant can be safely deleted.
+    /// </summary>
+    /// <returns>Validation result.</returns>
+    public TenantDeleteResult ValidateForDeletion()
+    {
+        if (!IsArchived)
+            return TenantDeleteResult.Failure("Tenant must be archived before deletion.");
+
+        if (HasActiveMembers)
+            return TenantDeleteResult.Failure($"Tenant has {ActiveMemberCount} active members. Remove members before deletion.");
+
+        return TenantDeleteResult.Success();
+    }
+
+    private static bool IsValidSlug(string slug)
+    {
+        if (string.IsNullOrEmpty(slug)) return false;
+        return slug.All(c => char.IsLetterOrDigit(c) || c == '-') && 
+               slug == slug.ToLowerInvariant();
+    }
 }

@@ -671,16 +671,16 @@ public static T Create<T>(Action<T>? configure = null)
 | ✅ **FIXED: AuthUser vs User duality** | ~~Identity.Users, Identity.Authentication~~ **MERGED** | ~~Sync issues, confusion~~ | ~~Merge into single User aggregate or document sync strategy~~ Merged `AuthUser` into `User` entity. Password hash, OAuth IDs, profile data now unified. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete) |
 | **No authorization tests** | Authorization module | Untested security code | Add 40+ integration tests like Authentication has |
 | **Cache invalidation fragmented** | Multiple services | Stale permissions after revoke | Unified cache coherence strategy with distributed cache |
-| **God Service: PermissionService** | Authorization/Services | Hard to maintain, test | Split into PermissionGrantService, PermissionCheckService |
+| ✅ **FIXED: God Service: PermissionService** | ~~Authorization/Services~~ **SPLIT** | ~~Hard to maintain, test~~ | ~~Split into PermissionGrantService, PermissionCheckService~~ Already implemented via `IPermissionGrantService`, `IPermissionQueryService`, `IPermissionBulkService` adapters in [FocusedPermissionServices.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/FocusedPermissionServices.cs) |
 | ✅ **FIXED: Magic string cache keys** | ~~"CurrentTenant", "TenantId" in HttpContext.Items~~ **IMPLEMENTED** | ~~Typo = runtime error~~ | ~~Constants class for context item keys~~ Created `HttpContextKeys` constants class. All middleware now uses typed constants. |
 
 ### ⚠️ P2 (Medium Priority)
 
 | Smell | Location | Risk | Fix |
 |-------|----------|------|-----|
-| **Anemic domain model** | User, Tenant entities | Logic scattered in handlers | Move business logic to entity methods |
-| **God Object: Tenant** | Identity.Tenants | Hard to test, violates SRP | Split into Tenant, TenantMembership, TenantConfiguration aggregates |
-| **Duplicate tenant resolution** | TenantMiddleware, TenantContext, ActorContextMiddleware | Not DRY, inconsistency risk | Shared ITenantResolver service |
+| ✅ **FIXED: Anemic domain model** | ~~User, Tenant entities~~ **ENRICHED** | ~~Logic scattered in handlers~~ | ~~Move business logic to entity methods~~ Added rich domain methods: `User.ValidateForAuthentication()`, `User.ValidateForRegistration()`, `Tenant.ValidateForMemberAddition()`, `Tenant.ValidateConfiguration()`, etc. See [UserDomainResults.cs](apps/api/Source/Modules/GameGuild.Identity.Users/Entities/UserDomainResults.cs) and [TenantDomainResults.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/TenantDomainResults.cs) |
+| ✅ **CLARIFIED: Tenant aggregate** | ~~Identity.Tenants~~ **DOCUMENTED** | ~~Hard to test, violates SRP~~ | ~~Split into aggregates~~ Tenant is an **aggregate root** by design (DDD pattern), not a god object. See entity XML docs explaining the design rationale. Added rich domain methods for validation. |
+| ✅ **FIXED: Duplicate tenant resolution** | ~~TenantMiddleware, TenantContext, ActorContextMiddleware~~ **UNIFIED** | ~~Not DRY, inconsistency risk~~ | ~~Shared ITenantResolver service~~ Created `ITenantResolver` interface with `TenantResolver` implementation. Provides centralized resolution with priority: Header → Domain → Query → Route → Claims → Default. See [ITenantResolver.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Abstractions/ITenantResolver.cs) |
 | ✅ **FIXED: Large interfaces** | ~~IPermissionsContext (10+ methods)~~ **SPLIT** | ~~Violates ISP~~ | ~~Split into IPermissionChecker, IPermissionManager~~ Created `IPermissionChecker` (permission operations) and `IPermissionContextInfo` (identity properties). `IPermissionsContext` now inherits from both. DI registers all three interfaces. |
 | **No rate limiting** | Permission check endpoints | DoS risk | Add rate limiting middleware |
 

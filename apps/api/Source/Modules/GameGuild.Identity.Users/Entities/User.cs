@@ -353,6 +353,86 @@ public class User : EntityBase, IUser
     public bool CanSignIn => Status.CanSignIn;
 
     // ========================
+    // DOMAIN LOGIC METHODS
+    // ========================
+
+    /// <summary>
+    ///     Validates that the user can authenticate with the provided token version.
+    ///     Returns a result indicating success or the reason for failure.
+    /// </summary>
+    /// <param name="tokenVersion">The token version from the JWT.</param>
+    /// <returns>Authentication validation result.</returns>
+    public UserAuthenticationResult ValidateForAuthentication(int tokenVersion)
+    {
+        if (!IsActive)
+            return UserAuthenticationResult.Fail(UserAuthenticationFailure.Inactive);
+
+        if (IsSuspended)
+            return UserAuthenticationResult.Fail(UserAuthenticationFailure.Suspended);
+
+        if (TokenVersion != tokenVersion)
+            return UserAuthenticationResult.Fail(UserAuthenticationFailure.TokenRevoked);
+
+        return UserAuthenticationResult.Success();
+    }
+
+    /// <summary>
+    ///     Validates that the user can be registered.
+    ///     This method performs domain-level validation only; uniqueness is enforced at persistence level.
+    /// </summary>
+    /// <returns>Registration validation result.</returns>
+    public UserRegistrationResult ValidateForRegistration()
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(Email))
+            errors.Add("Email is required.");
+
+        if (!Email.Contains('@'))
+            errors.Add("Email format is invalid.");
+
+        if (string.IsNullOrWhiteSpace(Name))
+            errors.Add("Name is required.");
+
+        if (Name.Length < 2)
+            errors.Add("Name must be at least 2 characters.");
+
+        if (errors.Count > 0)
+            return UserRegistrationResult.Failure(errors);
+
+        return UserRegistrationResult.Success();
+    }
+
+    /// <summary>
+    ///     Validates that the user can join a new tenant.
+    /// </summary>
+    /// <param name="tenantId">The tenant to join.</param>
+    /// <returns>True if the user can join, false with reason if not.</returns>
+    public UserTenantJoinResult ValidateForTenantJoin(Guid tenantId)
+    {
+        if (!IsActive)
+            return UserTenantJoinResult.Failure("User account is inactive.");
+
+        if (IsSuspended)
+            return UserTenantJoinResult.Failure("User account is suspended.");
+
+        if (IsMemberOfTenant(tenantId))
+            return UserTenantJoinResult.Failure("User is already a member of this tenant.");
+
+        return UserTenantJoinResult.Success();
+    }
+
+    /// <summary>
+    ///     Checks if the user requires email verification before performing an action.
+    /// </summary>
+    /// <param name="requiresVerification">Whether the action requires email verification.</param>
+    /// <returns>True if verification is required but not completed.</returns>
+    public bool RequiresEmailVerification(bool requiresVerification = true)
+    {
+        return requiresVerification && !IsEmailVerified;
+    }
+
+    // ========================
     // TENANT MEMBERSHIP METHODS
     // ========================
 
