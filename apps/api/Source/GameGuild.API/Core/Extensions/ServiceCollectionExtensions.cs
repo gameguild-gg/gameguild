@@ -24,6 +24,7 @@ using GameGuild.Configuration.PresentationLayer.SignalIR;
 using GameGuild.Endpoints;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Products;
+using GameGuild.Subscriptions;
 using GameGuild.Transformers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;

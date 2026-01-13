@@ -237,6 +237,34 @@ public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsa
         return exceedingQuotas.Select(q => q.TenantId!.Value).Distinct();
     }
 
+    public async Task<bool> DecrementUsageAsync(
+        Guid tenantId,
+        ResourceUsageType type,
+        long amount = 1,
+        Guid? userId = null,
+        string? source = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var decremented = await quotaRepository.DecrementUsageAsync(tenantId, type, amount, cancellationToken);
+
+            if (decremented)
+            {
+                logger.LogInformation(
+                    "Decremented {Amount} {Type} usage for tenant {TenantId} (source: {Source})",
+                    amount, type, tenantId, source ?? "unknown");
+            }
+
+            return decremented;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error decrementing usage for tenant {TenantId}, type {Type}", tenantId, type);
+            return false;
+        }
+    }
+
     public async Task<int> ResetExpiredQuotasAsync(CancellationToken cancellationToken = default)
     {
         var quotasDueForReset = await quotaRepository.GetQuotasDueForResetAsync(cancellationToken);

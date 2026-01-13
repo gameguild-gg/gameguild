@@ -77,11 +77,24 @@ No quota impact (correct behavior).
 | `ResourceQuotaBehavior.Handle()` | Pipeline behavior | ⚠️ Advisory (races possible) |
 | `TryConsumeResourceAsync()` | Service method | ⚠️ Advisory (check-then-act) |
 
-### 2.2 Where Enforcement MUST Happen But Currently Doesn't
+### 2.2 Current `[RequiresQuota]` Usage
+
+**CRITICAL: Only 1 command in the entire codebase uses the `[RequiresQuota]` attribute:**
+
+| Command | File | Status |
+|---------|------|--------|
+| `CreateUserCommand` | `GameGuild.Identity.Users/Commands/CreateUser/CreateUserCommand.cs` | ✅ Uses `[RequiresQuota]` |
+| `CreatePostCommand` | `GameGuild.Posts/Commands/CreatePost/...` | ❌ **MISSING** |
+| `CreateCourseCommand` | `GameGuild.Courses/Commands/...` | ❌ **MISSING** |
+| `CreateProjectCommand` | `GameGuild.Projects/Commands/...` | ❌ **MISSING** |
+| All other create commands | Various | ❌ **MISSING** |
+
+### 2.3 Where Enforcement MUST Happen But Currently Doesn't
 
 | Missing Point | Impact | Severity |
 |---------------|--------|----------|
 | Delete operations | Quota never freed | **Critical** |
+| Most create operations | No quota enforcement at all | **Critical** |
 | Bulk operations | Each item should count | **High** |
 | Rollback/failure paths | Quota recorded but resource not created | **High** |
 | Background jobs | May bypass pipeline | **Medium** |
