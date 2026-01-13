@@ -46,12 +46,14 @@ public sealed class ActorContextMiddleware
         HttpContext context,
         IActorContextAccessor actorContextAccessor,
         IAuthorizationTenantResolver tenantResolver,
+        IClaimsPrincipalAccessor claimsPrincipalAccessor,
         IAuthorizationPermissionService? permissionService = null)
     {
         try
         {
             var actorContext = await BuildActorContextAsync(
                 context, 
+                claimsPrincipalAccessor,
                 tenantResolver, 
                 permissionService,
                 context.RequestAborted);
@@ -96,18 +98,20 @@ public sealed class ActorContextMiddleware
 
     private static async Task<ActorContext> BuildActorContextAsync(
         HttpContext httpContext,
+        IClaimsPrincipalAccessor claimsPrincipalAccessor,
         IAuthorizationTenantResolver tenantResolver,
         IAuthorizationPermissionService? permissionService,
         CancellationToken cancellationToken)
     {
-        var user = httpContext.User;
-        var isAuthenticated = ClaimsExtractor.IsAuthenticated(user);
+        var user = claimsPrincipalAccessor.ClaimsPrincipal;
+        var isAuthenticated = user != null && ClaimsExtractor.IsAuthenticated(user);
 
-        if (!isAuthenticated)
+        if (!isAuthenticated || user is null)
         {
             return ActorContext.Anonymous;
         }
 
+        // At this point, user is guaranteed to be non-null
         // Determine actor kind from claims
         var actorKind = DetermineActorKind(user);
 
@@ -132,8 +136,8 @@ public sealed class ActorContextMiddleware
         // Extract attributes from claims
         var attributes = ExtractAttributes(user, tenantId);
 
-        // Determine auth scheme
-        var authScheme = httpContext.User.Identity?.AuthenticationType;
+        // Determine auth scheme (use user.Identity from the abstraction, not httpContext.User)
+        var authScheme = user.Identity?.AuthenticationType;
 
         var builder = ActorContextBuilder.Create()
             .WithActorKind(actorKind)

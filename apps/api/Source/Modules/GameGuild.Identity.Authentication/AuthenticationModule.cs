@@ -1,3 +1,4 @@
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,14 +37,10 @@ public static class AuthenticationModule
         app.UseAuthentication();
         app.UseAuthorization();
 
-        // Configure permission caching middleware
-        app.UseMiddleware<PermissionCachingMiddleware>();
-
-        // Configure ABAC policy evaluation middleware
-        app.UseMiddleware<AbacPolicyMiddleware>();
-
-        // Configure access review middleware for compliance
-        app.UseMiddleware<AccessReviewMiddleware>();
+        // Configure authorization middleware (from Authorization module)
+        app.UseMiddleware<Authorization.PermissionCachingMiddleware>();
+        app.UseMiddleware<Authorization.AbacPolicyMiddleware>();
+        app.UseMiddleware<Authorization.AccessReviewMiddleware>();
 
         return app;
     }

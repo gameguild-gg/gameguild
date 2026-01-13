@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants.Utilities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -38,12 +39,16 @@ public class TenantMiddleware(
     /// <summary>
     ///     The HttpContext.Items key for the resolved tenant.
     /// </summary>
-    public const string TenantItemKey = "CurrentTenant";
+    /// <remarks>⚠️ Prefer using <see cref="HttpContextKeys.CurrentTenant"/> directly.</remarks>
+    [Obsolete("Use HttpContextKeys.CurrentTenant instead for consistency across modules.")]
+    public const string TenantItemKey = HttpContextKeys.CurrentTenant;
 
     /// <summary>
     ///     The HttpContext.Items key for the tenant ID.
     /// </summary>
-    public const string TenantIdItemKey = "TenantId";
+    /// <remarks>⚠️ Prefer using <see cref="HttpContextKeys.AuthorizationTenantId"/> directly.</remarks>
+    [Obsolete("Use HttpContextKeys.AuthorizationTenantId instead for consistency across modules.")]
+    public const string TenantIdItemKey = HttpContextKeys.AuthorizationTenantId;
 
     /// <summary>
     ///     Paths that should bypass tenant resolution (e.g., health checks, swagger).
@@ -124,8 +129,8 @@ public class TenantMiddleware(
             }
 
             // Store tenant in HttpContext.Items for access throughout the request
-            context.Items[TenantItemKey] = tenant;
-            context.Items[TenantIdItemKey] = tenant.Id;
+            context.Items[HttpContextKeys.CurrentTenant] = tenant;
+            context.Items[HttpContextKeys.AuthorizationTenantId] = tenant.Id;
 
             // Add to logging scope for structured logging
             using (logger.BeginScope(new Dictionary<string, object>

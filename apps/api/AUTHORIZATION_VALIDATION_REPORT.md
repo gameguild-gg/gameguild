@@ -501,6 +501,124 @@ app.UseAuthorization();
 | 8 | Distributed Cache | Add distributed caching for permissions | ⚠️ PENDING | Redis integration planned |
 | 9 | Token Versioning | Add JTI claim for immediate token revocation | ✅ DONE | **IMPLEMENTED**: `ITokenRevocationService` interface with `InMemoryTokenRevocationService` (Redis-ready). `TokenRevocationMiddleware` validates JTI in auth pipeline. `LogoutCommand`/`LogoutHandler` for immediate logout. JWT already has `jti` claim. See Section 9.3. |
 | 10 | Middleware Order | Document middleware execution order | ✅ DONE | See Permission Evaluation Policy |
+| 11 | SOLID Compliance | Fix ISP/DIP violations in authorization services | ✅ DONE | See Section 9.4 below |
+
+---
+
+## 9.4. ✅ SOLID Compliance Fixes (COMPLETE)
+
+**Date**: January 12, 2026
+
+### Compiler Warnings Fixed
+
+1. **CS0618 (obsolete `PermissionService`)**: Added `#pragma warning disable/restore CS0618` around intentional backward-compatible registration
+2. **CS9113 (unused `logger` parameter)**: Removed unused logger parameter from `PermissionQueryService` constructor
+
+### Interface Segregation Principle (ISP) - Split `IAuthorizationPermissionService`
+
+The large interface was split into focused interfaces:
+
+| Interface | Purpose | Methods |
+|-----------|---------|---------|
+| `IAuthorizationSinglePermissionChecker` | Single permission checks | `HasPermissionAsync()` |
+| `IAuthorizationPermissionResolver` | Get all permissions | `GetPermissionsAsync()` |
+| `IAuthorizationBatchPermissionChecker` | Batch permission checks | `HasAllPermissionsAsync()`, `HasAnyPermissionAsync()` |
+| `IAuthorizationPermissionService` | Composite (backward compat) | Inherits all above |
+
+**Location**: [IAuthorizationPermissionService.cs](Source/Modules/GameGuild.Identity.Authorization/Abstractions/IAuthorizationPermissionService.cs)
+
+### Dependency Inversion Principle (DIP) - `IClaimsPrincipalAccessor`
+
+Created abstraction for ClaimsPrincipal access:
+
+```csharp
+public interface IClaimsPrincipalAccessor
+{
+    ClaimsPrincipal? ClaimsPrincipal { get; }
+    Guid? GetUserId();
+    Guid? GetTenantId();
+    bool IsAuthenticated { get; }
+}
+```
+
+**Implementations**:
+- `HttpContextClaimsPrincipalAccessor` - For HTTP requests
+- `StaticClaimsPrincipalAccessor` - For testing
+
+**Location**: [IClaimsPrincipalAccessor.cs](Source/Modules/GameGuild.Identity.Authorization/Abstractions/IClaimsPrincipalAccessor.cs)
+
+**ActorContextMiddleware Updated**: Now injects `IClaimsPrincipalAccessor` instead of directly accessing `httpContext.User`:
+
+```csharp
+public async Task InvokeAsync(
+    HttpContext context,
+    IActorContextAccessor actorContextAccessor,
+    IAuthorizationTenantResolver tenantResolver,
+    IClaimsPrincipalAccessor claimsPrincipalAccessor,  // NEW: DIP-compliant
+    IAuthorizationPermissionService? permissionService = null)
+```
+
+### Dependency Inversion Principle (DIP) - `TenantMiddleware` Magic Strings
+
+**Problem**: `TenantMiddleware` stored tenant in `HttpContext.Items` using local magic strings `"CurrentTenant"` and `"TenantId"`.
+
+**Solution**: Updated to use `HttpContextKeys` constants:
+
+```csharp
+// Old (magic strings)
+context.Items["CurrentTenant"] = tenant;
+context.Items["TenantId"] = tenant.Id;
+
+// New (type-safe constants)
+context.Items[HttpContextKeys.CurrentTenant] = tenant;
+context.Items[HttpContextKeys.AuthorizationTenantId] = tenant.Id;
+```
+
+Local constants marked `[Obsolete]` with migration guidance.
+
+### Magic String Elimination - Type-Safe Constants
+
+Created `AuthorizationPolicies.cs` with:
+
+| Class | Purpose | Examples |
+|-------|---------|----------|
+| `AuthorizationPolicies` | Policy names | `RequireMfa`, `TenantMember`, `SystemAdmin` |
+| `PermissionScopes` | Permission scopes | `Users.Read`, `Tenants.Write`, `Roles.Assign` |
+| `AuthorizationClaims` | Claim types | `Sub`, `MfaVerified`, `TenantId` |
+
+**Location**: [AuthorizationPolicies.cs](Source/Modules/GameGuild.Identity.Authorization/Abstractions/AuthorizationPolicies.cs)
+
+### Middleware Module Placement
+
+Authorization middleware moved from Authentication to Authorization module:
+
+| Middleware | Old Location | New Location |
+|------------|--------------|--------------|
+| `PermissionCachingMiddleware` | ❌ Deleted | `Authorization/Middleware/` |
+| `AbacPolicyMiddleware` | ❌ Deleted | `Authorization/Middleware/` |
+| `AccessReviewMiddleware` | ❌ Deleted | `Authorization/Middleware/` |
+
+**AuthenticationModule.cs** updated to use `GameGuild.Identity.Authorization` middleware.
+
+### Files Created
+
+- `Authorization/Abstractions/IClaimsPrincipalAccessor.cs`
+- `Authorization/Abstractions/AuthorizationPolicies.cs`
+- `Authorization/Middleware/PermissionCachingMiddleware.cs`
+- `Authorization/Middleware/AbacPolicyMiddleware.cs`
+- `Authorization/Middleware/AccessReviewMiddleware.cs`
+
+### DI Registrations Added
+
+```csharp
+// IClaimsPrincipalAccessor
+services.AddScoped<IClaimsPrincipalAccessor, HttpContextClaimsPrincipalAccessor>();
+
+// ISP-compliant focused interfaces
+services.AddScoped<IAuthorizationSinglePermissionChecker>(sp => sp.GetRequiredService<IAuthorizationPermissionService>());
+services.AddScoped<IAuthorizationPermissionResolver>(sp => sp.GetRequiredService<IAuthorizationPermissionService>());
+services.AddScoped<IAuthorizationBatchPermissionChecker>(sp => sp.GetRequiredService<IAuthorizationPermissionService>());
+```
 
 ---
 
