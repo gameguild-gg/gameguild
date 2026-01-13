@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +9,16 @@ namespace GameGuild.Resources;
 /// </summary>
 public class ResourceQuotaConfiguration : IEntityTypeConfiguration<ResourceQuota>
 {
+    /// <summary>
+    ///     JSON serializer options for metadata serialization.
+    ///     Uses camelCase property naming for consistency.
+    /// </summary>
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false
+    };
+
     public void Configure(EntityTypeBuilder<ResourceQuota> builder)
     {
         // Configure table name
@@ -38,6 +49,16 @@ public class ResourceQuotaConfiguration : IEntityTypeConfiguration<ResourceQuota
         builder.Property(x => x.CreatedAt).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP").HasComment("When the quota was created");
 
         builder.Property(x => x.UpdatedAt).IsRequired().HasDefaultValueSql("CURRENT_TIMESTAMP").HasComment("When the quota was last updated");
+
+        // Configure Metadata as JSON with strongly-typed serialization
+        // This provides type safety while storing as JSON in the database
+        builder.Property(x => x.Metadata)
+            .HasConversion(
+                v => v == null ? null : JsonSerializer.Serialize(v, JsonOptions),
+                v => v == null ? null : JsonSerializer.Deserialize<ResourceQuotaMetadata>(v, JsonOptions))
+            .HasMaxLength(2000)
+            .HasColumnType("varchar(2000)")
+            .HasComment("Additional metadata stored as JSON");
 
         // Configure optimistic concurrency control via RowVersion
         // This ensures concurrent updates are detected and handled properly
