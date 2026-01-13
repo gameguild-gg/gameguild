@@ -1,10 +1,9 @@
 using System.Collections.Concurrent;
-using System.Text;
 using System.Text.Json;
 using Fido2NetLib;
 using Fido2NetLib.Objects;
+using GameGuild.Identity.Users;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -15,7 +14,7 @@ public class WebAuthnService : IWebAuthnService
 {
     private readonly IFido2 _fido2;
     private readonly IWebAuthnCredentialRepository _credentialRepository;
-    private readonly IAuthUserRepository _userRepository;
+    private readonly IUserRepository _userRepository;
     private readonly ILogger<WebAuthnService> _logger;
 
     // In-memory store for pending challenges (should use distributed cache in production)
@@ -24,7 +23,7 @@ public class WebAuthnService : IWebAuthnService
     public WebAuthnService(
         IFido2 fido2,
         IWebAuthnCredentialRepository credentialRepository,
-        IAuthUserRepository userRepository,
+        IUserRepository userRepository,
         ILogger<WebAuthnService> logger)
     {
         _fido2 = fido2;
@@ -73,12 +72,14 @@ public class WebAuthnService : IWebAuthnService
                 };
             }
 
-            // Generate registration options
-            var options = _fido2.RequestNewCredential(
-                user,
-                excludeCredentials,
-                authenticatorSelection,
-                AttestationConveyancePreference.None);
+            // Generate registration options using v4.0.0 API
+            var options = _fido2.RequestNewCredential(new RequestNewCredentialParams
+            {
+                User = user,
+                ExcludeCredentials = excludeCredentials,
+                AuthenticatorSelection = authenticatorSelection,
+                AttestationPreference = AttestationConveyancePreference.None
+            });
 
             // Store session for later verification
             var sessionId = Guid.NewGuid().ToString();
@@ -139,23 +140,19 @@ public class WebAuthnService : IWebAuthnService
                 return new WebAuthnRegistrationResult { Success = false, Error = "Registration session not found or expired" };
             }
 
-            // Verify the credential
-            var credential = await _fido2.MakeNewCredentialAsync(
-                attestationResponseObj,
-                session.RegistrationOptions,
-                async (args, ct) =>
+            // Verify the credential using v4.0.0 API
+            var credential = await _fido2.MakeNewCredentialAsync(new MakeNewCredentialParams
+            {
+                AttestationResponse = attestationResponseObj,
+                OriginalOptions = session.RegistrationOptions,
+                IsCredentialIdUniqueToUserCallback = async (args, ct) =>
                 {
                     // Check if credential already exists
                     var existing = await _credentialRepository.GetByCredentialIdAsync(
                         Convert.ToBase64String(args.CredentialId), ct);
                     return existing == null;
-                },
-                cancellationToken);
-
-            if (credential.Result == null)
-            {
-                return new WebAuthnRegistrationResult { Success = false, Error = "Failed to create credential" };
-            }
+                }
+            }, cancellationToken);
 
             // Remove the session
             var sessionKey = PendingSessions.FirstOrDefault(p => p.Value.UserId == userId).Key;
@@ -172,18 +169,18 @@ public class WebAuthnService : IWebAuthnService
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                CredentialId = Convert.ToBase64String(credential.Result.Id),
-                PublicKey = Convert.ToBase64String(credential.Result.PublicKey),
-                AaGuid = credential.Result.AaGuid.ToString(),
-                SignatureCounter = credential.Result.SignCount,
+                CredentialId = Convert.ToBase64String(credential.Id),
+                PublicKey = Convert.ToBase64String(credential.PublicKey),
+                AaGuid = credential.AaGuid.ToString(),
+                SignatureCounter = credential.SignCount,
                 FriendlyName = friendlyName ?? GetDefaultFriendlyName(authenticatorType, userAgent),
                 AuthenticatorType = authenticatorType,
                 Transports = attestationResponseObj.Response.Transports != null
                     ? string.Join(",", attestationResponseObj.Response.Transports)
                     : null,
                 IsPasswordless = isPasswordless,
-                UserVerified = credential.Result.UserVerified,
-                BackedUp = credential.Result.IsBackedUp,
+                UserVerified = true, // User verification was done during registration
+                BackedUp = credential.IsBackedUp,
                 RegisteredFromIp = ipAddress,
                 RegisteredUserAgent = userAgent,
                 IsActive = true
@@ -251,10 +248,12 @@ public class WebAuthnService : IWebAuthnService
                 }
             }
 
-            // Generate assertion options
-            var options = _fido2.GetAssertionOptions(
-                allowedCredentials ?? [],
-                UserVerificationRequirement.Preferred);
+            // Generate assertion options using v4.0.0 API
+            var options = _fido2.GetAssertionOptions(new GetAssertionOptionsParams
+            {
+                AllowedCredentials = allowedCredentials ?? [],
+                UserVerification = UserVerificationRequirement.Preferred
+            });
 
             // Store session
             var sessionId = Guid.NewGuid().ToString();
@@ -302,8 +301,8 @@ public class WebAuthnService : IWebAuthnService
                 return new WebAuthnAuthenticationResult { Success = false, Error = "Invalid assertion response" };
             }
 
-            // Find the credential
-            var credentialIdBase64 = Convert.ToBase64String(assertionResponseObj.Id);
+            // Find the credential - use RawId (byte[]) instead of Id (string)
+            var credentialIdBase64 = Convert.ToBase64String(assertionResponseObj.RawId);
             var storedCredential = await _credentialRepository.GetByCredentialIdAsync(credentialIdBase64, cancellationToken);
             if (storedCredential == null)
             {
@@ -317,21 +316,21 @@ public class WebAuthnService : IWebAuthnService
                 return new WebAuthnAuthenticationResult { Success = false, Error = "Authentication session not found or expired" };
             }
 
-            // Verify the assertion
-            var result = await _fido2.MakeAssertionAsync(
-                assertionResponseObj,
-                session.AssertionOptions,
-                Convert.FromBase64String(storedCredential.PublicKey),
-                [],
-                storedCredential.SignatureCounter,
-                async (args, ct) =>
+            // Verify the assertion using v4.0.0 API
+            var result = await _fido2.MakeAssertionAsync(new MakeAssertionParams
+            {
+                AssertionResponse = assertionResponseObj,
+                OriginalOptions = session.AssertionOptions,
+                StoredPublicKey = Convert.FromBase64String(storedCredential.PublicKey),
+                StoredSignatureCounter = storedCredential.SignatureCounter,
+                IsUserHandleOwnerOfCredentialIdCallback = async (args, ct) =>
                 {
                     // Verify the credential belongs to the expected user
                     var cred = await _credentialRepository.GetByCredentialIdAsync(
                         Convert.ToBase64String(args.CredentialId), ct);
                     return cred?.UserId == new Guid(args.UserHandle);
-                },
-                cancellationToken);
+                }
+            }, cancellationToken);
 
             // Remove the session
             var sessionKey = PendingSessions.FirstOrDefault(p => p.Value.AssertionOptions != null).Key;

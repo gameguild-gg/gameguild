@@ -31,7 +31,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         // Apply Authentication module configurations (excluding AuthUser which has been removed)
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(RefreshToken).Assembly, type => 
-            type.Namespace?.StartsWith("GameGuild.Authentication") == true && 
+            (type.Namespace?.StartsWith("GameGuild.Authentication") == true || 
+             type.Namespace?.StartsWith("GameGuild.Identity.Authentication") == true) && 
             !type.Name.Contains("AuthUser"));
 
         // Apply Authorization module configurations
@@ -151,6 +152,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<MfaAttempt> MfaAttempts { get => Set<MfaAttempt>(); }
 
     public DbSet<UserMfaConfiguration> UserMfaConfigurations { get => Set<UserMfaConfiguration>(); }
+
+    public DbSet<UserWebAuthnCredential> UserWebAuthnCredentials { get => Set<UserWebAuthnCredential>(); }
 
     public DbSet<Role> Roles { get => Set<Role>(); }
 

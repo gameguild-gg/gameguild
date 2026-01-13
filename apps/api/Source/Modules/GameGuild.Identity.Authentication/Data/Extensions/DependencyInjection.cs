@@ -1,3 +1,4 @@
+using Fido2NetLib;
 using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Configuration;
@@ -71,6 +72,39 @@ public static class DataDependencyInjection
 
         // Session management
         services.AddScoped<ISessionManagementService, SessionManagementService>();
+
+        // WebAuthn/FIDO2 services
+        RegisterWebAuthnServices(services, configuration);
+    }
+
+    /// <summary>
+    ///     Register WebAuthn/FIDO2 services for passwordless authentication
+    /// </summary>
+    private static void RegisterWebAuthnServices(IServiceCollection services, IConfiguration configuration)
+    {
+        // Get WebAuthn configuration
+        var webAuthnSection = configuration.GetSection("WebAuthn");
+        var serverDomain = webAuthnSection["ServerDomain"] ?? "localhost";
+        var serverName = webAuthnSection["ServerName"] ?? "GameGuild";
+        var origins = webAuthnSection.GetSection("Origins").Get<HashSet<string>>()
+            ?? new HashSet<string> { "https://localhost:3000", "https://localhost:5000" };
+
+        // Register Fido2Configuration
+        var fido2Config = new Fido2Configuration
+        {
+            ServerDomain = serverDomain,
+            ServerName = serverName,
+            Origins = origins,
+            TimestampDriftTolerance = 60000 // 60 seconds
+        };
+
+        // Register Fido2 as singleton
+        services.AddSingleton(fido2Config);
+        services.AddSingleton<IFido2>(sp => new Fido2(sp.GetRequiredService<Fido2Configuration>()));
+
+        // Register WebAuthn repository and service
+        services.AddScoped<IWebAuthnCredentialRepository, WebAuthnCredentialRepository>();
+        services.AddScoped<IWebAuthnService, WebAuthnService>();
     }
 
     /// <summary>
