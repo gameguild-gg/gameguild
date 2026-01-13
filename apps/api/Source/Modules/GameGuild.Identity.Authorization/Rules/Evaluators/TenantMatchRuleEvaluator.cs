@@ -30,7 +30,7 @@ public sealed class TenantMatchRuleEvaluator : IRuleEvaluator
         }
 
         // Get tenant from user claims using centralized helper
-        var userTenantClaim = ClaimNames.GetTenantId(user);
+        var userTenantClaim = Utilities.ClaimsExtractor.GetTenantId(user);
 
         if (string.IsNullOrEmpty(userTenantClaim))
         {

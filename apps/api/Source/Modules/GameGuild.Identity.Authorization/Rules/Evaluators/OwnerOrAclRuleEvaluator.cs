@@ -38,8 +38,8 @@ public sealed class OwnerOrAclRuleEvaluator(IAccessControlListService aclService
         // Check ownership first (if enabled)
         if (allowOwner && resource is IOwnedResource ownedResource)
         {
-            if (ClaimNames.TryGetUserId(user, out var userGuid) &&
-                ownedResource.OwnerId == userGuid)
+            var userId = Utilities.ClaimsExtractor.GetUserIdAsGuid(user);
+            if (userId.HasValue && ownedResource.OwnerId == userId.Value)
             {
                 return RuleEvaluationResult.Success();
             }
@@ -57,14 +57,15 @@ public sealed class OwnerOrAclRuleEvaluator(IAccessControlListService aclService
             var subject = BuildAclSubject(user);
 
             // Get tenant ID from claims
-            if (!ClaimNames.TryGetTenantId(user, out var tenantId))
+            var tenantId = Utilities.ClaimsExtractor.GetTenantIdAsGuid(user);
+            if (!tenantId.HasValue)
             {
                 return RuleEvaluationResult.Fail("Could not determine tenant for ACL check");
             }
 
             var hasAccess = await aclService.HasAccessAsync(
                 subject,
-                tenantId,
+                tenantId.Value,
                 aclResource.ResourceType,
                 aclResource.ResourceId,
                 minimumAccessLevel,
@@ -84,7 +85,7 @@ public sealed class OwnerOrAclRuleEvaluator(IAccessControlListService aclService
 
     private static AclSubject BuildAclSubject(System.Security.Claims.ClaimsPrincipal user)
     {
-        ClaimNames.TryGetUserId(user, out var userGuid);
+        var userGuid = Utilities.ClaimsExtractor.GetUserIdAsGuid(user);
 
         var roleIds = user.FindAll(ClaimNames.Role)
             .Select(c => Guid.TryParse(c.Value, out var rid) ? rid : (Guid?)null)

@@ -577,14 +577,16 @@ public static T Create<T>(Action<T>? configure = null)
 ### DRY (Don't Repeat Yourself)
 
 **Violations:**
-1. **Duplicate claim extraction:** Both `IdentityContext` and `ActorContextMiddleware` extract claims from ClaimsPrincipal. Could share a `ClaimsExtractor` utility.
-2. **Duplicate tenant resolution:** `TenantMiddleware` resolves tenant, but `TenantContext` and `ActorContextMiddleware` also have tenant resolution logic. Not DRY.
-3. **Permission string constants duplicated:** `Permissions.cs` has constants, but handlers still use magic strings in some places.
+1. ✅ **FIXED: Duplicate claim extraction:** ~~Both `IdentityContext` and `ActorContextMiddleware` extract claims from ClaimsPrincipal.~~ Created `ClaimsExtractor` utility with methods for all common claim extractions (UserId, Email, Roles, TenantId, TokenVersion, etc.). Refactored `ActorContextMiddleware`, `TenantMiddleware`, `TokenRevocationMiddleware`, and all rule evaluators to use it. Deprecated `ClaimNames` helper methods with `[Obsolete]` attributes pointing to new utility.
+2. ✅ **FIXED: Duplicate tenant resolution:** ~~`TenantMiddleware` resolves tenant, but `TenantContext` and `ActorContextMiddleware` also have tenant resolution logic.~~ Created `TenantIdExtractor` utility with methods for extracting tenant ID from headers, query params, route values, and domains. Refactored `TenantMiddleware`, `FeatureContextFactory`, and `SerilogExtensions` to use it. Centralized localhost detection and subdomain extraction.
+3. ✅ **FIXED: Permission string constants:** ~~Handlers use magic strings in some places.~~ Verified all handlers use strongly-typed permission constants from `XXXPermission.Keys` classes (e.g., `PromoCodesPermission.Keys.Read`, `UsersPermission.Keys.Create`). No magic permission strings found in codebase.
 
 **Good DRY:**
 1. ✅ `EntityBase` centralizes audit fields (CreatedAt, UpdatedAt, Version)
 2. ✅ Repository pattern prevents SQL duplication
 3. ✅ CQRS pipeline behaviors (validation, logging) are reusable
+4. ✅ `ClaimsExtractor` utility eliminates duplicate claim parsing logic
+5. ✅ `TenantIdExtractor` utility eliminates duplicate tenant ID extraction
 
 ### SOLID Principles
 

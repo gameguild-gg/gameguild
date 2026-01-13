@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameGuild.CQRS;
+using GameGuild.Identity.Tenants.Utilities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -173,10 +174,10 @@ public class TenantMiddleware(
         CancellationToken cancellationToken)
     {
         // 1. Try X-Tenant-Id header (explicit tenant selection)
-        if (context.Request.Headers.TryGetValue(TenantIdHeader, out var tenantIdHeader)
-            && Guid.TryParse(tenantIdHeader, out var tenantIdFromHeader))
+        var tenantIdFromHeader = TenantIdExtractor.FromHeader(context, TenantIdHeader);
+        if (tenantIdFromHeader.HasValue)
         {
-            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromHeader), cancellationToken);
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromHeader.Value), cancellationToken);
             if (tenant is not null && tenant.IsActive)
             {
                 return (tenant, "Header");
@@ -188,8 +189,8 @@ public class TenantMiddleware(
         }
 
         // 2. Try host domain resolution
-        var host = context.Request.Host.Host;
-        if (!string.IsNullOrWhiteSpace(host) && !IsLocalhost(host))
+        var host = TenantIdExtractor.GetHost(context);
+        if (!string.IsNullOrWhiteSpace(host) && !TenantIdExtractor.IsLocalhost(host))
         {
             var tenantDomain = await tenantDomainsRepository.GetByDomainAsync(host, cancellationToken);
             if (tenantDomain?.Tenant is not null && tenantDomain.Tenant.IsActive)
@@ -199,10 +200,10 @@ public class TenantMiddleware(
         }
 
         // 3. Try query string
-        if (context.Request.Query.TryGetValue(TenantIdQueryKey, out var tenantIdQuery)
-            && Guid.TryParse(tenantIdQuery, out var tenantIdFromQuery))
+        var tenantIdFromQuery = TenantIdExtractor.FromQuery(context, TenantIdQueryKey);
+        if (tenantIdFromQuery.HasValue)
         {
-            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromQuery), cancellationToken);
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromQuery.Value), cancellationToken);
             if (tenant is not null && tenant.IsActive)
             {
                 return (tenant, "QueryString");
@@ -210,10 +211,10 @@ public class TenantMiddleware(
         }
 
         // 4. Try route value
-        if (context.Request.RouteValues.TryGetValue(TenantIdQueryKey, out var tenantIdRoute)
-            && Guid.TryParse(tenantIdRoute?.ToString(), out var tenantIdFromRoute))
+        var tenantIdFromRoute = TenantIdExtractor.FromRoute(context, TenantIdQueryKey);
+        if (tenantIdFromRoute.HasValue)
         {
-            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromRoute), cancellationToken);
+            var tenant = await mediator.Send(new GetTenantByIdQuery(tenantIdFromRoute.Value), cancellationToken);
             if (tenant is not null && tenant.IsActive)
             {
                 return (tenant, "RouteValue");
@@ -230,13 +231,6 @@ public class TenantMiddleware(
         return (null, "None");
     }
 
-    private static bool IsLocalhost(string host)
-    {
-        return host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-            || host.Equals("127.0.0.1", StringComparison.Ordinal)
-            || host.Equals("::1", StringComparison.Ordinal);
-    }
-
     /// <summary>
     ///     Extracts the authenticated user ID from the HttpContext claims.
     /// </summary>
@@ -244,18 +238,12 @@ public class TenantMiddleware(
     /// <returns>The user ID if authenticated, null otherwise</returns>
     private static Guid? GetAuthenticatedUserId(HttpContext context)
     {
-        if (!context.User.Identity?.IsAuthenticated ?? true)
+        if (!Authorization.Utilities.ClaimsExtractor.IsAuthenticated(context.User))
         {
             return null;
         }
 
-        var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (string.IsNullOrWhiteSpace(userIdClaim))
-        {
-            return null;
-        }
-
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : null;
+        return Authorization.Utilities.ClaimsExtractor.GetUserIdAsGuid(context.User);
     }
 
     /// <summary>

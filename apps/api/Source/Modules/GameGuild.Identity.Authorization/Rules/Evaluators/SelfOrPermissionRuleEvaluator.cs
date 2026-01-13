@@ -39,13 +39,13 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
         }
 
         // Extract user ID and tenant ID using centralized helpers
-        var currentUserIdStr = ClaimNames.GetUserId(user);
+        var currentUserIdStr = Utilities.ClaimsExtractor.GetUserId(user);
         if (!Guid.TryParse(currentUserIdStr, out var currentUserId))
         {
             return RuleEvaluationResult.Fail("Could not determine current user ID");
         }
 
-        var tenantIdStr = _tenantContext.TenantId ?? ClaimNames.GetTenantId(user);
+        var tenantIdStr = _tenantContext.TenantId ?? Utilities.ClaimsExtractor.GetTenantId(user);
         if (!Guid.TryParse(tenantIdStr, out var tenantId))
         {
             return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");

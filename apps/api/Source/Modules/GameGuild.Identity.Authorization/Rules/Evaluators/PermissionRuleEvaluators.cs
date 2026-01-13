@@ -44,13 +44,14 @@ public sealed class RequireAllPermissionsRuleEvaluator : IRuleEvaluator
         }
 
         // Extract user ID from claims using centralized helper
-        if (!ClaimNames.TryGetUserId(user, out var userId))
+        var userId = Utilities.ClaimsExtractor.GetUserIdAsGuid(user);
+        if (!userId.HasValue)
         {
             return RuleEvaluationResult.Fail("Could not determine user ID from claims");
         }
 
         // Extract tenant ID from context or claims
-        var tenantIdStr = _tenantContext.TenantId ?? ClaimNames.GetTenantId(user);
+        var tenantIdStr = _tenantContext.TenantId ?? Utilities.ClaimsExtractor.GetTenantId(user);
         if (!Guid.TryParse(tenantIdStr, out var tenantId))
         {
             return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
@@ -58,7 +59,7 @@ public sealed class RequireAllPermissionsRuleEvaluator : IRuleEvaluator
 
         // Use batch permission check (single DB call)
         var result = await _permissionService.HasAllPermissionsAsync(
-            userId, tenantId, requiredPermissions, cancellationToken);
+            userId.Value, tenantId, requiredPermissions, cancellationToken);
 
         if (!result.HasAllRequired)
         {
@@ -111,13 +112,14 @@ public sealed class RequireAnyPermissionRuleEvaluator : IRuleEvaluator
         }
 
         // Extract user ID from claims using centralized helper
-        if (!ClaimNames.TryGetUserId(user, out var userId))
+        var userId = Utilities.ClaimsExtractor.GetUserIdAsGuid(user);
+        if (!userId.HasValue)
         {
             return RuleEvaluationResult.Fail("Could not determine user ID from claims");
         }
 
         // Extract tenant ID from context or claims
-        var tenantIdStr = _tenantContext.TenantId ?? ClaimNames.GetTenantId(user);
+        var tenantIdStr = _tenantContext.TenantId ?? Utilities.ClaimsExtractor.GetTenantId(user);
         if (!Guid.TryParse(tenantIdStr, out var tenantId))
         {
             return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
@@ -125,7 +127,7 @@ public sealed class RequireAnyPermissionRuleEvaluator : IRuleEvaluator
 
         // Use batch permission check (single DB call)
         var result = await _permissionService.HasAnyPermissionAsync(
-            userId, tenantId, allowedPermissions, cancellationToken);
+            userId.Value, tenantId, allowedPermissions, cancellationToken);
 
         if (!result.HasAnyRequired)
         {

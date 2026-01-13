@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using GameGuild.Identity.Authorization.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
@@ -33,14 +34,14 @@ public sealed class TokenRevocationMiddleware
     public async Task InvokeAsync(HttpContext context, ITokenRevocationService revocationService)
     {
         // Skip if not authenticated
-        if (context.User.Identity?.IsAuthenticated != true)
+        if (!ClaimsExtractor.IsAuthenticated(context.User))
         {
             await _next(context);
             return;
         }
 
         // Extract JTI from claims
-        var jti = context.User.FindFirstValue(JwtRegisteredClaimNames.Jti);
+        var jti = ClaimsExtractor.GetJti(context.User);
         
         if (!string.IsNullOrEmpty(jti))
         {
@@ -55,26 +56,20 @@ public sealed class TokenRevocationMiddleware
         }
 
         // Extract user ID and token issued time for user-level revocation check
-        var userIdClaim = context.User.FindFirstValue(ClaimTypes.NameIdentifier) 
-            ?? context.User.FindFirstValue(JwtRegisteredClaimNames.Sub);
-        var iatClaim = context.User.FindFirstValue(JwtRegisteredClaimNames.Iat);
+        var userId = ClaimsExtractor.GetUserIdAsGuid(context.User);
+        var tokenIssuedAt = ClaimsExtractor.GetIssuedAtDateTime(context.User);
 
-        if (!string.IsNullOrEmpty(userIdClaim) && Guid.TryParse(userIdClaim, out var userId) && !string.IsNullOrEmpty(iatClaim))
+        if (userId.HasValue && tokenIssuedAt.HasValue)
         {
-            if (long.TryParse(iatClaim, out var iatSeconds))
+            // Check if all user tokens were revoked after this token was issued
+            if (await revocationService.IsUserTokenRevokedAsync(userId.Value, tokenIssuedAt.Value, context.RequestAborted))
             {
-                var tokenIssuedAt = DateTimeOffset.FromUnixTimeSeconds(iatSeconds).UtcDateTime;
-                
-                // Check if all user tokens were revoked after this token was issued
-                if (await revocationService.IsUserTokenRevokedAsync(userId, tokenIssuedAt, context.RequestAborted))
-                {
-                    _logger.LogWarning(
-                        "Rejected request with user-revoked token: UserId={UserId}, IssuedAt={IssuedAt}",
-                        userId, tokenIssuedAt);
-                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                    await context.Response.WriteAsJsonAsync(new { error = "All user sessions have been revoked" });
-                    return;
-                }
+                _logger.LogWarning(
+                    "Rejected request with user-revoked token: UserId={UserId}, IssuedAt={IssuedAt}",
+                    userId, tokenIssuedAt);
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                await context.Response.WriteAsJsonAsync(new { error = "All user sessions have been revoked" });
+                return;
             }
         }
 

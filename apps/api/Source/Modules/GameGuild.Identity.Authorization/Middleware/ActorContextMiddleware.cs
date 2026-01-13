@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using GameGuild.Identity.Authorization.Utilities;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -100,7 +101,7 @@ public sealed class ActorContextMiddleware
         CancellationToken cancellationToken)
     {
         var user = httpContext.User;
-        var isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+        var isAuthenticated = ClaimsExtractor.IsAuthenticated(user);
 
         if (!isAuthenticated)
         {
@@ -111,14 +112,14 @@ public sealed class ActorContextMiddleware
         var actorKind = DetermineActorKind(user);
 
         // Extract subject ID
-        var subjectId = ClaimNames.GetUserId(user);
+        var subjectId = ClaimsExtractor.GetUserId(user);
 
         // Resolve tenant ID
         var tenantIdStr = await tenantResolver.ResolveTenantIdAsync(httpContext, cancellationToken);
         Guid? tenantId = Guid.TryParse(tenantIdStr, out var tid) ? tid : null;
 
         // Extract roles from claims
-        var roles = ExtractRoles(user);
+        var roles = ClaimsExtractor.GetRoles(user);
 
         // Extract permissions - either from claims or fetch from database
         var permissions = await ExtractOrFetchPermissionsAsync(
@@ -150,14 +151,14 @@ public sealed class ActorContextMiddleware
     private static ActorKind DetermineActorKind(ClaimsPrincipal user)
     {
         // Check for service/client credentials flow
-        var grantType = user.FindFirst("grant_type")?.Value;
+        var grantType = ClaimsExtractor.GetGrantType(user);
         if (grantType == "client_credentials")
         {
             return ActorKind.Service;
         }
 
         // Check for explicit actor type claim
-        var actorTypeClaim = user.FindFirst("actor_type")?.Value;
+        var actorTypeClaim = ClaimsExtractor.GetActorType(user);
         if (!string.IsNullOrEmpty(actorTypeClaim))
         {
             return actorTypeClaim.ToLowerInvariant() switch
@@ -171,30 +172,13 @@ public sealed class ActorContextMiddleware
         }
 
         // Check for system subject
-        var subjectId = ClaimNames.GetUserId(user);
+        var subjectId = ClaimsExtractor.GetUserId(user);
         if (subjectId == SystemActor.SystemSubjectId)
         {
             return ActorKind.System;
         }
 
         return ActorKind.User;
-    }
-
-    private static HashSet<string> ExtractRoles(ClaimsPrincipal user)
-    {
-        var roles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var claim in user.Claims)
-        {
-            if (claim.Type == ClaimTypes.Role || 
-                claim.Type == ClaimNames.Role || 
-                claim.Type == "roles")
-            {
-                roles.Add(claim.Value);
-            }
-        }
-
-        return roles;
     }
 
     private static async Task<HashSet<string>> ExtractOrFetchPermissionsAsync(
@@ -204,16 +188,8 @@ public sealed class ActorContextMiddleware
         IAuthorizationPermissionService? permissionService,
         CancellationToken cancellationToken)
     {
-        var permissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        // First, extract permissions from claims (if present in token)
-        foreach (var claim in user.Claims)
-        {
-            if (claim.Type == "permission" || claim.Type == "permissions")
-            {
-                permissions.Add(claim.Value);
-            }
-        }
+        // Extract permissions from claims (if present in token)
+        var permissions = ClaimsExtractor.GetPermissions(user);
 
         // If we have a permission service and a valid subject/tenant, fetch from database
         // This ensures we always have the latest permissions even if not in token

@@ -76,6 +76,7 @@ public static class ClaimNames
     /// </summary>
     /// <param name="user">The claims principal.</param>
     /// <returns>The user ID claim value, or null if not found.</returns>
+    [Obsolete("Use ClaimsExtractor.GetUserId instead for consistent claim extraction.")]
     public static string? GetUserId(System.Security.Claims.ClaimsPrincipal user) =>
         user.FindFirst(Subject)?.Value
         ?? user.FindFirst(UserId)?.Value
@@ -86,6 +87,7 @@ public static class ClaimNames
     /// </summary>
     /// <param name="user">The claims principal.</param>
     /// <returns>The tenant ID claim value, or null if not found.</returns>
+    [Obsolete("Use ClaimsExtractor.GetTenantId instead for consistent claim extraction.")]
     public static string? GetTenantId(System.Security.Claims.ClaimsPrincipal user) =>
         user.FindFirst(TenantId)?.Value
         ?? user.FindFirst(TenantIdAlt)?.Value;
@@ -96,6 +98,7 @@ public static class ClaimNames
     /// <param name="user">The claims principal.</param>
     /// <param name="userId">The parsed user ID.</param>
     /// <returns>True if the user ID was found and parsed successfully.</returns>
+    [Obsolete("Use ClaimsExtractor.GetUserIdAsGuid instead for consistent claim extraction.")]
     public static bool TryGetUserId(System.Security.Claims.ClaimsPrincipal user, out Guid userId)
     {
         userId = Guid.Empty;
@@ -109,6 +112,7 @@ public static class ClaimNames
     /// <param name="user">The claims principal.</param>
     /// <param name="tenantId">The parsed tenant ID.</param>
     /// <returns>True if the tenant ID was found and parsed successfully.</returns>
+    [Obsolete("Use ClaimsExtractor.GetTenantIdAsGuid instead for consistent claim extraction.")]
     public static bool TryGetTenantId(System.Security.Claims.ClaimsPrincipal user, out Guid tenantId)
     {
         tenantId = Guid.Empty;
