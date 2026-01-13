@@ -578,7 +578,10 @@ public static T Create<T>(Action<T>? configure = null)
 
 **Violations:**
 1. ✅ **FIXED: Dual context model is complex:** ~~Having both `IIdentityContext`/`IUserContext`/`ITenantContext` AND `ActorContext` creates cognitive load.~~ Legacy interfaces now marked `[Obsolete]`. All production handlers migrated to `IActorContextAccessor`.
-2. **Five-layer authorization:** Conditional → ABAC → Direct → RBAC → Default Deny. Most apps need 2-3 layers, not 5.
+2. ✅ **FIXED: Five-layer authorization complexity:** Consolidated to 3-layer architecture with clear precedence. See [Section 6.1](#61-authorization-layer-simplification-plan---implemented).
+   - **Layer 1: Policy Gates (DENY-WINS):** `IPolicyGateService` + `PolicyGateService` - evaluates Conditional, ABAC, and Environment gates
+   - **Layer 2: Permission Resolution (ALLOW-WINS):** `IEffectivePermissionResolver` + `EffectivePermissionResolverService` - merges RBAC, Global, Tenant, Direct grants
+   - **Layer 3: Permission Check:** Binary allow/deny check on resolved permissions
 3. ✅ **FIXED: Multiple permission stores:** ~~InMemory, Database, Cached. Over-engineering for most use cases.~~ Deleted unused `InMemoryPolicyDefinitionStore` and `InMemoryTenantSecurityVersionStore`. Remaining architecture uses **Decorator pattern**: `DatabasePolicyDefinitionStore` (source of truth) wrapped by `CachedPolicyDefinitionStore` (L1+L2 cache). Single toggle: `enableCaching=true` for production, `false` for debugging. This is correct cache-aside architecture, not over-engineering.
 4. ✅ **FIXED: Hierarchical tenant members:** ~~ParentMemberId feature has no documented use case.~~ Now documented as organizational hierarchy (teams, departments) with explicit note that it does NOT affect permissions. See [TenantMember.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/TenantMember.cs)
 
@@ -586,6 +589,171 @@ public static T Create<T>(Action<T>? configure = null)
 1. ✅ ActorContext is simple: immutable record with clear properties
 2. ✅ CQRS handlers are focused and easy to understand
 3. ✅ Middleware pipeline is straightforward (when documented)
+
+### 6.1 Authorization Layer Simplification Plan - IMPLEMENTED
+
+#### Current State Analysis - ✅ COMPLETED
+
+All layers are now fully implemented with database-backed dynamic policies:
+
+| Layer | Component | Status | Purpose |
+|-------|-----------|--------|---------|
+| **1. Policy Gates** | `IPolicyGateService`, `PolicyGateService` | ✅ **Fully implemented** | DENY-WINS evaluation of all gates |
+| **1a. Conditional** | `ConditionalPolicyEvaluator`, `ConditionalPolicy` entities | ✅ **Fully implemented** | Time/IP/MFA/environment conditions |
+| **1b. ABAC** | `AbacPolicyEvaluator`, `AbacPolicy` entities | ✅ **Fully implemented** | Attribute-based access control with combining algorithms |
+| **2. Permission Resolution** | `IEffectivePermissionResolver`, `EffectivePermissionResolverService` | ✅ **Fully implemented** | ALLOW-WINS merging of all permission sources |
+| **2a. RBAC** | `RbacPermissionResolver`, `DynamicRole`, `DynamicRoleAssignment` | ✅ **Fully implemented** | Role→Permission with hierarchy support |
+| **2b. Direct** | `TenantPermission`, `PermissionGrantService` | ✅ **Fully implemented** | Explicit user→permission grants |
+| **3. Permission Check** | `AuthorizationPermissionServiceAdapter` | ✅ **Fully implemented** | Binary allow/deny check |
+
+#### Implemented Files
+
+**New Entities:**
+- [DynamicRoleEntities.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Entities/DynamicRoleEntities.cs) - Dynamic roles with hierarchy, permissions, constraints
+- [ConditionalPolicyEntities.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Entities/ConditionalPolicyEntities.cs) - Time windows, conditions, JIT access
+- [AbacPolicyEntities.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Entities/AbacPolicyEntities.cs) - Full ABAC with targets, rules, combining algorithms
+
+**New Interfaces:**
+- [IPolicyGateService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Abstractions/IPolicyGateService.cs) - Unified policy gate interface (DENY-WINS)
+- [IEffectivePermissionResolver.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Abstractions/IEffectivePermissionResolver.cs) - Unified permission resolver (ALLOW-WINS)
+
+**New Services:**
+- [PolicyGateService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/PolicyGateService.cs) - Evaluates all policy gates
+- [EffectivePermissionResolverService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/EffectivePermissionResolverService.cs) - Resolves all permissions
+- [RbacPermissionResolver.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/RbacPermissionResolver.cs) - RBAC with hierarchy
+- [ConditionalPolicyEvaluator.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/ConditionalPolicyEvaluator.cs) - Conditional access evaluation
+- [AbacPolicyEvaluator.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/AbacPolicyEvaluator.cs) - ABAC policy evaluation
+
+**DI Registration:**
+- [AuthorizationModuleExtensions.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Extensions/AuthorizationModuleExtensions.cs) - `AddUnifiedAuthorizationLayer()` method
+
+#### ✅ Implemented Architecture: 3 Conceptual Layers
+
+The implementation consolidates to 3 conceptual layers with clear precedence:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    AUTHORIZATION FLOW                       │
+├─────────────────────────────────────────────────────────────┤
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  LAYER 1: POLICY GATES (First-Fail-Deny)             │   │
+│  │  ─────────────────────────────────────────────────   │   │
+│  │  • Conditional: Time windows, IP ranges, expiration  │   │
+│  │  • ABAC: Attribute matching (subject/resource/env)   │   │
+│  │  • Environment: MFA required, device trust           │   │
+│  │                                                      │   │
+│  │  Result: DENY immediately if any gate fails          │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                          ↓ PASS                             │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  LAYER 2: PERMISSION RESOLUTION (Allow-Wins)         │   │
+│  │  ─────────────────────────────────────────────────   │   │
+│  │  Merge permissions from (additive):                  │   │
+│  │  1. Role → Permissions (RBAC)                        │   │
+│  │  2. Global defaults                                  │   │
+│  │  3. Tenant defaults                                  │   │
+│  │  4. Direct user grants                               │   │
+│  │                                                      │   │
+│  │  Result: Set of effective permissions                │   │
+│  └──────────────────────────────────────────────────────┘   │
+│                          ↓                                  │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  LAYER 3: PERMISSION CHECK                           │   │
+│  │  ─────────────────────────────────────────────────   │   │
+│  │  Does user have required permission(s)?              │   │
+│  │                                                      │   │
+│  │  Result: ALLOW if permission exists, else DENY       │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Conflict Resolution Policy:**
+- **Layer 1 (Gates):** DENY-WINS - any gate failure stops evaluation
+- **Layer 2 (Resolution):** ALLOW-WINS - permissions are additive
+- **Layer 3 (Check):** Binary - has permission or doesn't
+
+#### ✅ All Phases Complete
+
+##### Phase 1: Conditional Policy Layer ✅ DONE
+
+**Implemented Features:**
+- Time windows (TimeWindowStart, TimeWindowEnd with timezone support)
+- Date ranges (DateStart, DateEnd)
+- Day of week restrictions
+- IP address and CIDR range matching
+- Geographic location restrictions (country, region)
+- Device fingerprint conditions
+- User agent pattern matching
+- MFA status verification
+- Session age limits
+- Risk score thresholds
+- Custom attribute matching
+- JIT access request entities (JitAccessRequest, JitAccessStatus)
+
+**Files Created:**
+- `ConditionalPolicyEntities.cs` - Entities with all condition types
+- `ConditionalPolicyEvaluator.cs` - Full evaluation engine
+
+##### Phase 2: RBAC Full Implementation ✅ DONE
+
+**Implemented Features:**
+- Role hierarchy (ParentRoleId, ChildRoles navigation)
+- Role-permission mapping (Permissions[] array per role)
+- Static role permissions (hard-coded non-negotiable for Owner, Admin, etc.)
+- Dynamic role permissions (database-backed, runtime-creatable)
+- Role constraints (MutuallyExclusiveRoleIds, PrerequisiteRoleIds, MaxAssignments)
+- Time-bound role assignments (StartsAt, ExpiresAt)
+
+**Files Created:**
+- `DynamicRoleEntities.cs` - DynamicRole, DynamicRoleAssignment, StaticRolePermissions
+- `RbacPermissionResolver.cs` - Full hierarchy resolution
+
+##### Phase 3: ABAC Full Implementation ✅ DONE
+
+**Implemented Features:**
+- Subject attributes (user ID, roles, tenant, email, MFA, department, clearance)
+- Resource attributes (type, ID, owner, tenant, classification, tags, status)
+- Action attributes (action ID, action type)
+- Environment attributes (time, date, IP, user agent, geo location, risk score)
+- Policy combining algorithms:
+  - DenyOverrides (any deny = deny)
+  - PermitOverrides (any permit = permit)
+  - FirstApplicable (first match wins)
+  - OnlyOneApplicable (exactly one must match)
+  - DenyUnlessPermit (all must permit)
+  - PermitUnlessDeny (none must deny)
+- Match functions: String operations, integer comparisons, boolean, date/time, set operations, IP ranges
+- Logical condition composition (AND, OR, NOT nodes)
+
+**Files Created:**
+- `AbacPolicyEntities.cs` - Full ABAC entity model
+- `AbacPolicyEvaluator.cs` - Full evaluation engine with all functions
+
+##### Phase 4: Unified Services ✅ DONE
+
+**Created unified interfaces:**
+- `IPolicyGateService` - Evaluates all policy gates (deny-focused)
+- `IEffectivePermissionResolver` - Resolves all permissions (allow-focused)
+
+**Created implementations:**
+- `PolicyGateService` - Orchestrates static gates, conditional, and ABAC evaluation
+- `EffectivePermissionResolverService` - Merges static, RBAC, tenant, global, direct permissions
+
+**DI Registration:**
+- `AddUnifiedAuthorizationLayer()` extension method in `AuthorizationModuleExtensions.cs`
+
+#### Implementation Summary
+
+| Priority | Layer | Effort | Status |
+|----------|-------|--------|--------|
+| **P1** | RBAC Full Implementation | 2-3 days | ✅ **DONE** |
+| **P2** | Conditional Policy Evaluator | 1-2 days | ✅ **DONE** |
+| **P2** | Unified Services | 1-2 days | ✅ **DONE** |
+| **P3** | ABAC Full Implementation | 3-5 days | ✅ **DONE** |
+
+**Total Effort:** All phases completed
+
+---
 
 ### DRY (Don't Repeat Yourself)
 

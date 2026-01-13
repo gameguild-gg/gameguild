@@ -286,4 +286,78 @@ public static class AuthorizationModuleExtensions
 
         return services;
     }
+
+    /// <summary>
+    ///     Registers the unified 3-layer authorization architecture services.
+    ///     Layer 1: Policy Gates (DENY-WINS) - Conditional, ABAC, Environment
+    ///     Layer 2: Permission Resolution (ALLOW-WINS) - RBAC, Global, Tenant, Direct
+    ///     Layer 3: Permission Check (binary allow/deny)
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddUnifiedAuthorizationLayer(this IServiceCollection services)
+    {
+        // Dynamic Role repositories (RBAC with hierarchy)
+        services.AddScoped<IDynamicRoleRepository, DynamicRoleRepository>();
+        services.AddScoped<IDynamicRoleAssignmentRepository, DynamicRoleAssignmentRepository>();
+
+        // Layer 1: Policy Gate evaluators
+        services.AddScoped<IConditionalPolicyEvaluator, ConditionalPolicyEvaluator>();
+        services.AddScoped<IAbacPolicyEvaluator, AbacPolicyEvaluator>();
+
+        // Layer 1: Unified Policy Gate Service (DENY-WINS)
+        services.AddScoped<IPolicyGateService, PolicyGateService>();
+
+        // Layer 2: Permission resolvers
+        services.AddScoped<IRbacPermissionResolver, RbacPermissionResolver>();
+
+        // Layer 2: Permission stores (interfaces defined in EffectivePermissionResolverService)
+        // These are adapters to existing stores
+        services.AddScoped<ITenantPermissionStore>(sp =>
+        {
+            // Adapt existing TenantPermissionRepository
+            var repo = sp.GetRequiredService<ITenantPermissionRepository>();
+            return new TenantPermissionStoreAdapter(repo);
+        });
+        services.AddScoped<IResourcePermissionStore>(sp =>
+        {
+            // Adapt existing ResourcePermissionService
+            var resourcePermissionService = sp.GetRequiredService<IResourcePermissionService>();
+            return new ResourcePermissionStoreAdapter(resourcePermissionService);
+        });
+
+        // Layer 2: Unified Permission Resolver (ALLOW-WINS)
+        services.AddScoped<IEffectivePermissionResolver, EffectivePermissionResolverService>();
+
+        return services;
+    }
+}
+
+/// <summary>
+///     Adapter to bridge ITenantPermissionRepository to ITenantPermissionStore.
+/// </summary>
+internal class TenantPermissionStoreAdapter(ITenantPermissionRepository repository) : ITenantPermissionStore
+{
+    public async Task<TenantPermission?> GetPermissionAsync(Guid tenantId, CancellationToken ct = default)
+        => await repository.GetByTenantIdAsync(tenantId, ct);
+
+    public async Task<IReadOnlyList<TenantPermission>> GetAllPermissionsAsync(Guid tenantId, CancellationToken ct = default)
+        => await repository.GetAllByTenantIdAsync(tenantId, ct);
+}
+
+/// <summary>
+///     Adapter to bridge IResourcePermissionService to IResourcePermissionStore.
+/// </summary>
+internal class ResourcePermissionStoreAdapter(IResourcePermissionService service) : IResourcePermissionStore
+{
+    public async Task<IReadOnlyList<ResourcePermission>> GetUserPermissionsAsync(
+        Guid userId,
+        Guid tenantId,
+        CancellationToken ct = default)
+        => await service.GetByUserIdAsync(userId, tenantId, ct);
+
+    public async Task<IReadOnlyList<ResourcePermission>> GetResourcePermissionsAsync(
+        Guid resourceId,
+        CancellationToken ct = default)
+        => await service.GetByResourceIdAsync(resourceId, ct);
 }
