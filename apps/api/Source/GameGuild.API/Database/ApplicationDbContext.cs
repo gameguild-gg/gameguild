@@ -1,7 +1,7 @@
 using GameGuild.Abstractions;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
-using GameGuild.Products;
+using GameGuild.Commerce.Products;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;

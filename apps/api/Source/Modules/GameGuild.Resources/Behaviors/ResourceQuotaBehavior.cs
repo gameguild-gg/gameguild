@@ -45,14 +45,17 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
             return await next();
         }
 
-        // Ensure we have a tenant context
+        // Ensure we have a tenant context - FAIL-CLOSED: reject if missing
         if (!Actor.TenantId.HasValue)
         {
-            _logger.LogWarning(
-                "Command {CommandType} requires quota validation but no tenant context is available. Skipping quota check.",
+            _logger.LogError(
+                "Command {CommandType} requires quota validation but no tenant context is available. " +
+                "Rejecting request to prevent quota bypass. Ensure X-Tenant-Id header is provided.",
                 typeof(TRequest).Name
             );
-            return await next();
+            throw new InvalidOperationException(
+                $"Quota-controlled command {typeof(TRequest).Name} requires tenant context. " +
+                "Ensure X-Tenant-Id header is provided for multi-tenant operations.");
         }
 
         var tenantId = Actor.TenantId.Value;
@@ -181,14 +184,17 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
         {
             _logger.LogError(
                 ex,
-                "Error checking or recording quota for tenant {TenantId}, resource {ResourceType}",
+                "Error checking or recording quota for tenant {TenantId}, resource {ResourceType}. " +
+                "Rejecting request to prevent potential quota bypass.",
                 tenantId,
                 resourceType
             );
 
-            // Don't fail the operation due to quota service errors
-            // This ensures the business operation can proceed even if quota service has issues
-            return await next();
+            // FAIL-CLOSED: Don't allow operations when quota service fails
+            // This prevents quota bypass attacks when the quota service is unavailable
+            throw new InvalidOperationException(
+                $"Unable to verify resource quota for {resourceType}. " +
+                "Request rejected for safety. Please try again later.", ex);
         }
     }
 

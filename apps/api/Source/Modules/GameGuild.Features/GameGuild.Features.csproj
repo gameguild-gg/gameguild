@@ -18,7 +18,7 @@
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
         <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj"/>
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj"/>
-        <ProjectReference Include="..\GameGuild.Subscriptions\GameGuild.Subscriptions.csproj"/>
+        <ProjectReference Include="..\GameGuild.Commerce.Subscriptions\GameGuild.Commerce.Subscriptions.csproj"/>
     </ItemGroup>
 
 </Project>

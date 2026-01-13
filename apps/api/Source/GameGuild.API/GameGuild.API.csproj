@@ -23,16 +23,16 @@
         <ProjectReference Include="..\Modules\GameGuild.Audit\GameGuild.Audit.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authentication\GameGuild.Identity.Authentication.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
-        <ProjectReference Include="..\Modules\GameGuild.Billing\GameGuild.Billing.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Features\GameGuild.Features.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Monitoring.SLA\GameGuild.Monitoring.SLA.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Notifications\GameGuild.Notifications.csproj" />
-        <ProjectReference Include="..\Modules\GameGuild.Payments\GameGuild.Payments.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Programs\GameGuild.Programs.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
-        <ProjectReference Include="..\Modules\GameGuild.Subscriptions\GameGuild.Subscriptions.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Commerce.Subscriptions\GameGuild.Commerce.Subscriptions.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Tenants\GameGuild.Identity.Tenants.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj" />
     </ItemGroup>

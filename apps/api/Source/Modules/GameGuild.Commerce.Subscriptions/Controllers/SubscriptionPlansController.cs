@@ -1,6 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
-using GameGuild.Payments;
+using GameGuild.Commerce.Payments;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

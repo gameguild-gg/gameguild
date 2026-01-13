@@ -1,6 +1,6 @@
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
-using GameGuild.Subscriptions;
+using GameGuild.Commerce.Subscriptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
