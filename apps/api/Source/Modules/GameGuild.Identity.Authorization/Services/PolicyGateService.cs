@@ -90,7 +90,7 @@ public class PolicyGateService(
             UserId: context.ActorId,
             TenantId: context.TenantId,
             ResourceType: context.ResourceType,
-            ResourceId: context.ResourceId != null ? context.ResourceId.ToString() : null,
+            ResourceId: context.ResourceId,
             Action: context.Action,
             UserRoles: GetRolesFromAttributes(context.Attributes),
             IpAddress: context.IpAddress,
@@ -215,7 +215,7 @@ public class PolicyGateService(
             UserId: context.ActorId,
             TenantId: context.TenantId,
             ResourceType: context.ResourceType,
-            ResourceId: context.ResourceId?.ToString(),
+            ResourceId: context.ResourceId,
             Action: context.Action,
             UserRoles: []);
 
