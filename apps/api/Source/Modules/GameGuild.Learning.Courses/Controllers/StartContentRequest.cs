@@ -1,5 +1,5 @@
 
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 /// <summary> Request DTOs for ContentInteraction endpoints </summary>
 public record StartContentRequest(Guid ProgramUserId, Guid ContentId) {

@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Represents a peer review assignment for grading activities </summary>
 [Table("peer_reviews")]

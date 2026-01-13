@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Represents a report submitted by a user for content or behavior issues </summary>
 [Table("content_reports")]

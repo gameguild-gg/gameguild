@@ -3,7 +3,7 @@ using GameGuild.Enums;
 using System.ComponentModel.DataAnnotations;
 ﻿using GameGuild.Programs;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Extension methods to convert from entity to DTO </summary>
 public static class ContentInteractionExtensions {

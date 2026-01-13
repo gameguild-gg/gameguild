@@ -1,7 +1,7 @@
 using GameGuild.Enums;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Interface for program enrollment services </summary>
 public interface IProgramEnrollmentService {

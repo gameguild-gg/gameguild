@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 using GameGuild.Enums;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Query to get all programs with pagination and filtering </summary>
 public record GetAllProgramsQuery(

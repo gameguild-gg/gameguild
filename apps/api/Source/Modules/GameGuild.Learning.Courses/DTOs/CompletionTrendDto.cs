@@ -2,7 +2,7 @@ using GameGuild.Enums;
 
 
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record CompletionTrendDto(DateTime Date, int CompletedCount, int TotalCount, decimal Rate) {
   public DateTime Date { get; init; } = Date;

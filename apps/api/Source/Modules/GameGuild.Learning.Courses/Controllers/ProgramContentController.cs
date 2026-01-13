@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Controller for managing program content with 3-layer DAC permissions Supports tenant-level, content-type-level, and resource-level permissions </summary>
 [ApiController]

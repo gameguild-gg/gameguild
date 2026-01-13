@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 /// <summary> Type of report </summary>
 public enum ReportType {

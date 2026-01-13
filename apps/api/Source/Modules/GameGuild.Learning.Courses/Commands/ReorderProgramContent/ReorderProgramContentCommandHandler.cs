@@ -4,7 +4,7 @@ using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Command handler for ReorderProgramContentCommand

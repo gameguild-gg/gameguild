@@ -2,7 +2,7 @@ using GameGuild.Enums;
 
 
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record RevenueAnalyticsDto(Guid ProgramId, decimal TotalRevenue, decimal MonthlyRevenue, int TotalPurchases, int MonthlyPurchases, decimal AverageRevenuePerUser, decimal ConversionRate, List<RevenueChartDto> RevenueChart) {
   public Guid ProgramId { get; init; } = ProgramId;

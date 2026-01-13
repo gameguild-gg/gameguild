@@ -2,7 +2,7 @@ using GameGuild.Enums;
 
 
 using System.ComponentModel.DataAnnotations;
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> DTO for creating new program content </summary>
 public class CreateProgramContentDto {

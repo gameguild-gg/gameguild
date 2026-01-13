@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 using GameGuild.Resources;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 // Commands for Program management using CQRS pattern
 // All commands implement ICommand pattern for GameGuild.CQRS handling

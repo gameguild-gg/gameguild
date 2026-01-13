@@ -2,7 +2,7 @@
 using GameGuild.CQRS;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Command to update an existing program </summary>
 public record UpdateProgramCommand(

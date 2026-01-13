@@ -3,7 +3,7 @@
 using System.Text.Json;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Extension methods for mapping between ProgramContent entities and DTOs </summary>
 public static class ProgramContentMappingExtensions {

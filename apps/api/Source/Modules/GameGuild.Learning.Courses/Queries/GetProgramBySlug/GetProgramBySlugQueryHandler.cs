@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Query handler for GetProgramBySlugQuery

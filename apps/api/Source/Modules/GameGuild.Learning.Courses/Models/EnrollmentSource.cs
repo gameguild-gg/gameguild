@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Identity.Users;
 ﻿using System.ComponentModel;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Represents how a user was enrolled in a program

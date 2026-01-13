@@ -2,7 +2,7 @@ using GameGuild.Enums;
 
 
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 /// <summary> Simplified program user information to avoid circular references </summary>
 public class ProgramUserSummaryDto {

@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 /// <summary> Content completion statistics </summary>
 public class ContentCompletionStats {

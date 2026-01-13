@@ -1,5 +1,5 @@
 
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 /// <summary> Interface for program user enrollment and progress services </summary>
 public interface IProgramUserService {

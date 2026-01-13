@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 // using GameGuild.Modules.Feedbacks.Entities; // Module not yet implemented
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Represents a user's enrollment in a learning program with progress tracking and completion status

@@ -2,7 +2,7 @@ using GameGuild.Enums;
 
 
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record RevenueChartDto(DateTime Date, decimal Revenue, int Purchases) {
   public DateTime Date { get; init; } = Date;

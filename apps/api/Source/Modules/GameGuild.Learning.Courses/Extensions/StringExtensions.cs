@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// String extension methods for the Programs module

@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 public class GetProgramByIdQueryValidator : AbstractValidator<GetProgramByIdQuery> {
     public GetProgramByIdQueryValidator() {

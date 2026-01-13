@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using GameGuild.Identity.Users;
 ﻿using System.ComponentModel;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Content types defining the nature and interaction model of program materials

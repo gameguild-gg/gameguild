@@ -1,5 +1,5 @@
 
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record UpdateTimeSpentRequest(Guid ProgramUserId, Guid ContentId, int AdditionalMinutes) {
   public Guid ProgramUserId { get; init; } = ProgramUserId;

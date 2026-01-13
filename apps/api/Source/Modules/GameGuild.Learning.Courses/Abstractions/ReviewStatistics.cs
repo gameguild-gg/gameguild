@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 /// <summary> Review statistics </summary>
 public class ReviewStatistics {

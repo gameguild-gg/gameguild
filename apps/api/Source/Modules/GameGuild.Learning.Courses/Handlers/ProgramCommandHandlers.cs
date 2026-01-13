@@ -9,7 +9,7 @@ using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// CQRS command handlers for comprehensive program management operations

@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Validator for UnpublishProgramCommand </summary>
 public class UnpublishProgramCommandValidator : AbstractValidator<UnpublishProgramCommand> {

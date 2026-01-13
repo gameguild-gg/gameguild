@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 /// <summary> Enrollment statistics for a program </summary>
 public class ProgramEnrollmentStats {

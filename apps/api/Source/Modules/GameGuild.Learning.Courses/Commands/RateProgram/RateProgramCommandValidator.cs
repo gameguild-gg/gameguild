@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Validator for RateProgramCommand </summary>
 public class RateProgramCommandValidator : AbstractValidator<RateProgramCommand> {

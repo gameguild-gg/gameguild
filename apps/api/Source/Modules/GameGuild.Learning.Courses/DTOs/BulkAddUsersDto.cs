@@ -2,7 +2,7 @@ using GameGuild.Enums;
 
 
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record BulkAddUsersDto(Guid ProgramId, List<Guid> UserIds) {
   public Guid ProgramId { get; init; } = ProgramId;

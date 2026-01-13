@@ -6,7 +6,7 @@ using GameGuild.Identity.Users;
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 public enum ProgramRoleType {
   [Description("Standard learner role with access to content and ability to submit assignments")] Student,

@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Validator for ArchiveProgramCommand </summary>
 public class ArchiveProgramCommandValidator : AbstractValidator<ArchiveProgramCommand> {

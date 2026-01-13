@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using GameGuild.Identity.Users;
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 public class ProgramRatingConfiguration : IEntityTypeConfiguration<ProgramRating> {
   public void Configure(EntityTypeBuilder<ProgramRating> builder) {

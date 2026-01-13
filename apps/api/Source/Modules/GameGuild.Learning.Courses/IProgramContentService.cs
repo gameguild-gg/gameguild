@@ -1,4 +1,4 @@
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Interface for program content management services </summary>
 public interface IProgramContentService {

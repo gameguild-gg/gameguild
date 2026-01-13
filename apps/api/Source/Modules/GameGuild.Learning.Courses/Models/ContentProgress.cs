@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 // using ContentEntity = GameGuild.Modules.Contents.Models.Content; // Module not yet implemented
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Tracks user progress through individual content items in a program </summary>
 [Table("content_progress")]

@@ -1,5 +1,5 @@
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Interface for content progress tracking services </summary>
 public interface IContentProgressService {

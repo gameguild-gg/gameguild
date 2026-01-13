@@ -1,5 +1,5 @@
 
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record UpdateProgressRequest(Guid ProgramUserId, Guid ContentId, decimal CompletionPercentage) {
   public Guid ProgramUserId { get; init; } = ProgramUserId;

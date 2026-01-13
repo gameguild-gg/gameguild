@@ -6,7 +6,7 @@ using GameGuild.Identity.Users;
 ﻿using System.ComponentModel;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Learning difficulty levels for appropriate program selection and progression

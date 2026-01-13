@@ -2,7 +2,7 @@ using GameGuild.Enums;
 
 
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record EngagementMetricsDto(Guid ProgramId, int DailyActiveUsers, int WeeklyActiveUsers, int MonthlyActiveUsers, TimeSpan AverageSessionDuration, int TotalSessions, decimal RetentionRate, Dictionary<string, int> ContentEngagement) {
   public Guid ProgramId { get; init; } = ProgramId;

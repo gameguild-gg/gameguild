@@ -1,4 +1,4 @@
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 /// <summary> Consensus calculation result </summary>
 public class ConsensusResult {

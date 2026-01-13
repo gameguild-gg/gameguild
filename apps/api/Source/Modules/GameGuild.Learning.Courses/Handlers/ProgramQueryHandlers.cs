@@ -8,7 +8,7 @@ using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Query handlers for Program data retrieval operations Implements data access logic for program queries with proper filtering and authorization </summary>
 public class ProgramQueryHandlers(IApplicationDbContext context, ILogger<ProgramQueryHandlers> logger) : IRequestHandler<GetAllProgramsQuery, IEnumerable<Program>>,

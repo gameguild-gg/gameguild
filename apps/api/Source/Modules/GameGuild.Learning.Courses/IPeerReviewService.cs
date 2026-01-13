@@ -1,5 +1,5 @@
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Interface for peer review services </summary>
 public interface IPeerReviewService {

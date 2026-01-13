@@ -1,5 +1,5 @@
 
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record SubmitContentRequest(Guid ProgramUserId, Guid ContentId, string SubmissionData) {
   public Guid ProgramUserId { get; init; } = ProgramUserId;

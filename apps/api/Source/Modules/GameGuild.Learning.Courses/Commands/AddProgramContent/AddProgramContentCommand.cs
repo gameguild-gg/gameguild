@@ -1,6 +1,6 @@
 using GameGuild.CQRS;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Command to add content to a program </summary>
 public record AddProgramContentCommand(Guid ProgramId, Guid ContentId, int Order, bool IsRequired = true, int? PointsReward = null) : ICommand<ProgramContent>;

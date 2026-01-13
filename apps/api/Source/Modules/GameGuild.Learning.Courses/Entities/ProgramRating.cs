@@ -6,7 +6,7 @@ using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Represents a user's rating and review for a program </summary>
 [Table("program_ratings")]

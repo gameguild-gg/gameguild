@@ -1,4 +1,4 @@
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 public record ProgramUserProgress(
     Guid ProgramId,

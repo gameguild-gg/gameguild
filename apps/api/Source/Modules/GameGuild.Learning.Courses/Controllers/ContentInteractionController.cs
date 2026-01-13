@@ -4,7 +4,7 @@ using GameGuild.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// REST API controller for ContentInteraction operations

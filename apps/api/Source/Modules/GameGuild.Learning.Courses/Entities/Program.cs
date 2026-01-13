@@ -13,7 +13,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 // using GameGuild.Modules.Contents.Models;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Represents a learning program with structured content, enrollment management, and progress tracking

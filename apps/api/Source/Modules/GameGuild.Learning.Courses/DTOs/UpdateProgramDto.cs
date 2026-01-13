@@ -2,7 +2,7 @@ using GameGuild.Enums;
 
 
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record UpdateProgramDto(string? Title = null, string? Description = null, string? Thumbnail = null) {
   public string? Title { get; init; } = Title;

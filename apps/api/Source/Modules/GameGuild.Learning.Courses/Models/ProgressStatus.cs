@@ -1,5 +1,5 @@
 using GameGuild.Enums;
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Represents the progress status of a content item

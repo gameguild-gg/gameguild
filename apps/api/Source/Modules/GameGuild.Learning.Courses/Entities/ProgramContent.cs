@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 // using GameGuild.Modules.Contents.Models;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Represents structured content within a learning program with hierarchical organization and progress tracking

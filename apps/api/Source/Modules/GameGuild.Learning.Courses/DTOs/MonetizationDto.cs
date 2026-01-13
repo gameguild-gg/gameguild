@@ -2,7 +2,7 @@ using GameGuild.Enums;
 
 
 using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Programs;
+﻿namespace GameGuild.Learning.Courses;
 
 public record MonetizationDto(decimal Price, string Currency = "USD", bool IsSubscription = false, int? SubscriptionDurationDays = null) {
   public decimal Price { get; init; } = Price;
