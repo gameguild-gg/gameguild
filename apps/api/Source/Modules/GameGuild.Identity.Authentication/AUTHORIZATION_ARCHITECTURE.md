@@ -142,6 +142,54 @@ Examples:
   - *:read           (read all resources)
 ```
 
+### PermissionRegistry (Auto-Discovery)
+
+The `PermissionRegistry` class provides **automatic discovery** of all permission scopes at startup. Instead of manually registering permissions, simply create a class that inherits from `Permission`:
+
+```csharp
+// 1. Define your permission class (auto-discovered at startup)
+public sealed class MyFeaturePermission : Permission
+{
+    // Compile-time constants for use in attributes
+    public static class Keys
+    {
+        public const string Read = "myfeature:read";
+        public const string Write = "myfeature:write";
+    }
+    
+    // Runtime permission instances with metadata
+    public static readonly MyFeaturePermission Read = new(Keys.Read, "Read my feature data");
+    public static readonly MyFeaturePermission Write = new(Keys.Write, "Write my feature data");
+    
+    private MyFeaturePermission(string key, string description) : base(key, description) { }
+}
+
+// 2. Use the registry for validation
+if (!PermissionRegistry.IsValidKey(permissionKey))
+    throw new ArgumentException($"Unknown permission: {permissionKey}");
+
+// 3. Get all permissions for a resource
+var userPermissions = PermissionRegistry.GetByResource("users");
+
+// 4. Get all registered scopes (for documentation/admin UI)
+foreach (var scope in PermissionRegistry.Scopes)
+{
+    Console.WriteLine($"Resource: {scope.Resource}");
+    Console.WriteLine($"  Wildcard: {scope.Wildcard}");
+    foreach (var perm in scope.Permissions)
+        Console.WriteLine($"  - {perm.Key}: {perm.Description}");
+}
+```
+
+**Key Benefits:**
+- **OCP Compliant**: Add new permissions without modifying existing code
+- **Single Source of Truth**: All permissions discovered from code
+- **Compile-Time Safety**: Use `Keys` constants in attributes (e.g., `[Authorize(Policy = Policies.HasPermission, ...)]`)
+- **Runtime Validation**: `IsValidKey()` validates permission strings including wildcards
+- **Self-Documenting**: Each permission carries its description for admin UIs
+
+See [PermissionRegistry.cs](../GameGuild.Identity.Authorization/PermissionRegistry.cs) for implementation.
+
 ### Use Cases
 - **Common Access Patterns**: Define standard roles for common job functions
 - **Department-Based Access**: Engineering, Marketing, Sales roles

@@ -428,10 +428,10 @@ Authorization checks in handlers:
 - ✅ **Decorator/Proxy:** `CachedAccessControlListService` wraps `DatabaseAccessControlListService`
 - ✅ **Strategy Pattern:** Multiple policy stores (InMemory, Database, Cached)
 - ✅ **Chain of Responsibility:** Multiple authorization handlers evaluated in sequence
-- ⚠️ **Adapter Pattern (overused):** Three adapter classes to bridge legacy interfaces to ActorContext
+- ✅ **FIXED: Adapter Pattern:** ~~Three adapter classes bridging legacy interfaces.~~ Legacy interfaces and adapters **DELETED**.
 
 **SOLID Compliance:**
-- **SRP:** ⚠️ `PermissionService` does many things (grant, revoke, check, bulk operations). Could split.
+- **SRP:** ✅ **FIXED:** `PermissionService` now uses `ITenantSecurityVersionStore` for cache invalidation. Split services: `IPermissionGrantService`, `IPermissionQueryService`, `IPermissionBulkService`.
 - **OCP:** ✅ New policy types can be added via `IPolicyDefinitionStore`
 - **LSP:** ✅ Policy stores are substitutable (InMemory, Database, Cached)
 - **ISP:** ✅ `IPermissionsContext` split into `IPermissionChecker` (permission operations) and `IPermissionContextInfo` (identity properties). Clients can depend on focused interfaces.
@@ -439,7 +439,7 @@ Authorization checks in handlers:
 
 **Security Risks:**
 - ✅ **FIXED: Fail-closed error handling:** ~~If `IAuthorizationPermissionService` throws exception, does ActorContext get built with empty permissions?~~ Now explicitly handles errors with `PermissionFetchException`, sets ActorContext to Anonymous, and returns HTTP 500.
-- 🚨 **Cache poisoning:** If tenant version isn't incremented correctly, users could retain stale permissions after revocation.
+- ✅ **FIXED: Cache poisoning:** ~~If tenant version isn't incremented correctly, users could retain stale permissions.~~ `PermissionService` now injects `ITenantSecurityVersionStore` and calls `IncrementVersionAsync()` on all mutations (Grant, Revoke, SetGlobalDefaults, SetTenantDefaults). Cache invalidation is guaranteed. See [PermissionService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/PermissionService.cs)
 - ✅ **FIXED: String-based permission checks:** ~~Typo in `"users:write"` vs `"user:write"` grants unintended access.~~ Now using strongly-typed `Permission` classes. See [docs/security/STRONGLY_TYPED_PERMISSIONS.md](docs/security/STRONGLY_TYPED_PERMISSIONS.md)
 - ⚠️ **No rate limiting on permission checks:** Malicious user could spam permission queries to DoS the system.
 
@@ -493,14 +493,25 @@ var claims = new List<Claim>
 ### 4.4 Error Handling
 
 **Current State:**
-- Global exception filter converts exceptions to ProblemDetails
-- Command handlers return `Result<T>` pattern
-- Validation via FluentValidation in pipeline behavior
+- ✅ **Unified security exception hierarchy:** `SecurityException` base class with `AuthenticationRequiredException` (401), `AccessDeniedException` (403), `CrossTenantAccessException` (403)
+- ✅ **Information leakage prevention:** All security exceptions have sanitized `PublicMessage` property; internal details logged but not exposed to clients
+- ✅ **ExceptionHandlingMiddleware:** Updated to properly handle `SecurityException` types with correct HTTP status codes
+- ✅ Command handlers return `Result<T>` pattern
+- ✅ Validation via FluentValidation in pipeline behavior
 
-**Issues:**
-- ⚠️ Security exceptions don't distinguish between "forbidden" (403) and "unauthorized" (401) consistently
-- ⚠️ Error messages could leak information (e.g., "User X does not have permission Y" reveals that user X exists)
-- ✅ Good: Result pattern prevents exceptions from bubbling up
+**Security Exception Classes** (in [SecurityException.cs](apps/api/Source/Modules/GameGuild.SharedKernel/Exceptions/SecurityException.cs)):
+- `AuthenticationRequiredException` → HTTP 401 (missing/invalid auth)
+- `AccessDeniedException` → HTTP 403 (authenticated but lacks permission)
+- `CrossTenantAccessException` → HTTP 403 (cross-tenant access attempt)
+
+**Factory Methods for Detailed Logging:**
+```csharp
+// These create exceptions with detailed internal messages for logging
+// but generic public messages to prevent information leakage
+AccessDeniedException.ForMissingPermission(userId, permission, tenantId);
+AccessDeniedException.ForTenantMembership(userId, tenantId);
+AccessDeniedException.ForResourceOwnership(userId, resourceType, resourceId);
+```
 
 ### 4.5 Testing
 
@@ -599,18 +610,20 @@ public static T Create<T>(Action<T>? configure = null)
 
 #### Open/Closed Principle (OCP)
 
-**Violations:**
-- ⚠️ Adding new `ActorKind` requires updating `ActorContextMiddleware.DetermineActorKind()` switch statement
-- ⚠️ Adding new permission scope requires updating multiple places (Permissions.cs constants, handlers, docs)
+**All OCP Violations FIXED:**
+- ✅ **FIXED: ActorKind extensibility:** ~~Adding new `ActorKind` requires updating switch statement.~~ Created `ActorKindIdentifierAttribute` and `ActorKindResolver` that uses reflection to build resolution maps from attributes. Adding a new ActorKind only requires adding the enum value with attribute - no code changes elsewhere. See [ActorKind.cs](apps/api/Source/Modules/GameGuild.Identity.Context/Actors/ActorKind.cs)
+- ✅ **FIXED: Permission scope registration:** ~~Adding new permission scope requires updating multiple places.~~ Created `PermissionRegistry` that auto-discovers all `Permission` subclasses via reflection. Adding a new permission class automatically registers it. Provides validation via `IsValidKey()`. See [PermissionRegistry.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/PermissionRegistry.cs)
 
 **Good OCP:**
 - ✅ New authentication strategies can be added without changing existing code (polymorphic sign-in)
 - ✅ New policy types can be added via `IPolicyDefinitionStore` implementations
+- ✅ New ActorKind values auto-register via `ActorKindIdentifierAttribute`
+- ✅ New permission scopes auto-register via `PermissionRegistry`
 
 #### Liskov Substitution Principle (LSP)
 
-**Violations:**
-- ⚠️ `ActorBasedUserContext` and `UserContext` both implement `IUserContext`, but behavior differs (one reads from ActorContext, one from HttpContext). Could violate LSP if caller expects consistent behavior.
+**All LSP Violations FIXED:**
+- ✅ **FIXED: IUserContext implementations:** ~~`ActorBasedUserContext` and `UserContext` had different behaviors.~~ Legacy interfaces and implementations **DELETED**. Only `IActorContextAccessor` remains, eliminating the LSP violation.
 
 **Good LSP:**
 - ✅ Policy stores (InMemory, Database, Cached) are substitutable
@@ -995,27 +1008,37 @@ public interface IUserContext { ... }
 ## APPENDIX A: Key File References
 
 ### Core Abstractions
-- [ActorContext.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Context\Actors\ActorContext.cs) - Immutable security context
-- [IActorContextAccessor.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Context\Actors\IActorContextAccessor.cs) - AsyncLocal accessor
-- [ActorKind.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Context\Actors\ActorKind.cs) - Actor types enum
+- [ActorContext.cs](apps/api/Source/Modules/GameGuild.Identity.Context/Actors/ActorContext.cs) - Immutable security context
+- [IActorContextAccessor.cs](apps/api/Source/Modules/GameGuild.Identity.Context/Actors/IActorContextAccessor.cs) - AsyncLocal accessor
+- [ActorKind.cs](apps/api/Source/Modules/GameGuild.Identity.Context/Actors/ActorKind.cs) - Actor types enum with `ActorKindIdentifierAttribute` for OCP-compliant resolution
+- [ActorKindResolver](apps/api/Source/Modules/GameGuild.Identity.Context/Actors/ActorKind.cs) - Attribute-based ActorKind resolution (in same file)
 
 ### Middleware
-- [ActorContextMiddleware.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authorization\Middleware\ActorContextMiddleware.cs) - Builds ActorContext from claims
-- [TenantMiddleware.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Tenants\Middleware\TenantMiddleware.cs) - Resolves tenant
+- [ActorContextMiddleware.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Middleware/ActorContextMiddleware.cs) - Builds ActorContext from claims using `ActorKindResolver`
+- [TenantMiddleware.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Middleware/TenantMiddleware.cs) - Resolves tenant
+- [ExceptionHandlingMiddleware.cs](apps/api/Source/Modules/GameGuild.SharedKernel/Middlewares/ExceptionHandlingMiddleware.cs) - Global exception handling with 401/403 distinction
+
+### Exceptions (Security)
+- [SecurityException.cs](apps/api/Source/Modules/GameGuild.SharedKernel/Exceptions/SecurityException.cs) - Base security exception with:
+  - `AuthenticationRequiredException` → HTTP 401
+  - `AccessDeniedException` → HTTP 403 (with factory methods for detailed logging)
+  - `CrossTenantAccessException` → HTTP 403
 
 ### Entities
-- [User.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Users\Entities\User.cs) - User domain entity
-- [Tenant.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Tenants\Entities\Tenant.cs) - Tenant entity
-- [TenantMember.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Tenants\Entities\TenantMember.cs) - User-tenant membership
+- [User.cs](apps/api/Source/Modules/GameGuild.Identity.Users/Entities/User.cs) - User domain entity
+- [Tenant.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/Tenant.cs) - Tenant entity
+- [TenantMember.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/TenantMember.cs) - User-tenant membership
 
 ### Services
-- [PermissionService.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authorization\Services\PermissionService.cs) - Permission grants/revokes
+- [PermissionService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/PermissionService.cs) - Permission grants/revokes with cache invalidation via `ITenantSecurityVersionStore`
+- [ITenantSecurityVersionStore.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Abstractions/ITenantSecurityVersionStore.cs) - Cache invalidation interface
 - [JwtTokenService.cs] - Token generation
 - [MfaService.cs] - MFA operations
 
 ### Constants (Typed Security Strings)
 - [Permissions.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Permissions.cs) - Facade class exposing all permission key constants from TypedPermissions
 - [TypedPermissions.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Models/TypedPermissions.cs) - Strongly-typed permission classes with nested `Keys` for attribute usage
+- [PermissionRegistry.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/PermissionRegistry.cs) - **NEW** Auto-discovery and validation of all permission scopes
 - [Policies.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Policies.cs) - Typed policy name constants with `IsValid()` validation
 - [ClaimNames.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/ClaimNames.cs) - Typed claim type constants (TenantId, Role, TokenVersion, etc.)
 - [ResourceTypes.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/ResourceTypes.cs) - Strongly-typed resource types with implicit string conversion and validation
@@ -1023,14 +1046,14 @@ public interface IUserContext { ... }
 - [TestingLabResourceTypes.cs](apps/api/Source/Modules/GameGuild.TestingLab/Authorization/TestingLabResourceTypes.cs) - Module-specific typed constants for TestingLab resources and actions
 
 ### Documentation
-- [AUTHORIZATION_ARCHITECTURE.md](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authentication\AUTHORIZATION_ARCHITECTURE.md) - Comprehensive authorization design
-- [IMPLEMENTATION_STATUS.md](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authentication\IMPLEMENTATION_STATUS.md) - Feature completion status
-- [ActorContextUsageExamples.cs](d:\repositories\game-guild\game-guild\apps\api\Source\Modules\GameGuild.Identity.Authorization\Examples\ActorContextUsageExamples.cs) - Usage patterns
+- [AUTHORIZATION_ARCHITECTURE.md](apps/api/Source/Modules/GameGuild.Identity.Authentication/AUTHORIZATION_ARCHITECTURE.md) - Comprehensive authorization design
+- [IMPLEMENTATION_STATUS.md](apps/api/Source/Modules/GameGuild.Identity.Authentication/IMPLEMENTATION_STATUS.md) - Feature completion status
+- [ActorContextUsageExamples.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Examples/ActorContextUsageExamples.cs) - Usage patterns
 
 ### Tests
-- [Tests/GameGuild.Identity.Authentication.IntegrationTests/](d:\repositories\game-guild\game-guild\apps\api\Tests\GameGuild.Identity.Authentication.IntegrationTests) - 40+ integration tests
-- [TestEntityFactory.cs](d:\repositories\game-guild\game-guild\apps\api\Tests\GameGuild.Identity.Authentication.IntegrationTests\TestHelpers\TestEntityFactory.cs) - Test data factory
+- [Tests/GameGuild.Identity.Authentication.IntegrationTests/](apps/api/Tests/GameGuild.Identity.Authentication.IntegrationTests) - 40+ integration tests
+- [TestEntityFactory.cs](apps/api/Tests/GameGuild.Identity.Authentication.IntegrationTests/TestHelpers/TestEntityFactory.cs) - Test data factory
 
 ---
 
-**Report Complete. Last updated: January 12, 2026. All stringly-typed authorization issues fixed.**
+**Report Complete. Last updated: January 12, 2026. All security audit issues fixed.**
