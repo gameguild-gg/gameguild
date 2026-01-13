@@ -80,12 +80,13 @@ public static class TestEntityFactory
         Guid tenantId,
         PermissionType permission)
     {
-        var tenantPermission = new TenantPermission(userId, tenantId)
+        var tenantPermission = new TenantPermission
         {
             Id = Guid.NewGuid(),
-            Permissions = ((int)permission).ToString(),
+            UserId = userId,
+            TenantId = tenantId,
+            Permissions = new[] { permission.ToString() },
             GrantedAt = DateTime.UtcNow,
-            IsActive = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

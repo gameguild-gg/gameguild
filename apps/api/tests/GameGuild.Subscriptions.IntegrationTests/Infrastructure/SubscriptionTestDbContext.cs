@@ -2,7 +2,7 @@ using GameGuild.API.Database;
 using GameGuild.Commerce.Subscriptions;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Subscriptions.IntegrationTests.Infrastructure;
+namespace GameGuild.Commerce.Subscriptions.IntegrationTests.Infrastructure;
 
 /// <summary>
 /// Test-specific DbContext that includes Subscription module entities
@@ -32,6 +32,6 @@ public class SubscriptionTestDbContext : ApplicationDbContext
         // Apply Subscriptions module configurations
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(Subscription).Assembly,
-            type => type.Namespace?.StartsWith("GameGuild.Subscriptions.Data.Configurations") == true);
+            type => type.Namespace?.StartsWith("GameGuild.Commerce.Subscriptions.Data.Configurations") == true);
     }
 }

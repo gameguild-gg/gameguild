@@ -1,0 +1,221 @@
+using FluentAssertions;
+using GameGuild.API.Database;
+using GameGuild.Commerce.Subscriptions.IntegrationTests.Infrastructure;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net;
+using System.Net.Http.Json;
+using Xunit;
+
+namespace GameGuild.Commerce.Subscriptions.IntegrationTests;
+
+/// <summary>
+/// Integration tests for Subscription API endpoints
+/// </summary>
+public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
+{
+    private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
+    private readonly HttpClient _client;
+    private static readonly string DatabaseName = $"SubscriptionTestDb_{Guid.NewGuid()}";
+
+    public SubscriptionEndpointsIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
+    {
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
+
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureTestServices(services =>
+            {
+                // Remove ALL existing DbContext and EF Core registrations
+                var descriptorsToRemove = services
+                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
+                                d.ServiceType == typeof(ApplicationDbContext) ||
+                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
+                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
+                    .ToList();
+
+                foreach (var descriptor in descriptorsToRemove)
+                {
+                    services.Remove(descriptor);
+                }
+
+                // Add in-memory database with custom context that includes Subscription entities
+                // Using manual registration to ensure DbContextOptions<ApplicationDbContext> is available for the base class
+                var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                    .UseInMemoryDatabase(DatabaseName)
+                    .Options;
+
+                services.AddSingleton(options);
+                services.AddScoped<SubscriptionTestDbContext>();
+                services.AddScoped<ApplicationDbContext>(p => p.GetRequiredService<SubscriptionTestDbContext>());
+
+                // Add HTTP logging services (required by the pipeline)
+                services.AddHttpLogging(o => { });
+            });
+        });
+
+        _client = _factory.CreateClient();
+    }
+
+    private async Task<Guid> SeedSubscriptionPlanAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        
+        var plan = new GameGuild.Commerce.Subscriptions.SubscriptionPlans.Entities.SubscriptionPlan(
+            name: "Test Plan",
+            slug: "test-plan",
+            monthlyPriceInCents: 2999,
+            currency: "USD",
+            description: "Test subscription plan"
+        );
+        
+        dbContext.Set<GameGuild.Commerce.Subscriptions.SubscriptionPlans.Entities.SubscriptionPlan>().Add(plan);
+        await dbContext.SaveChangesAsync();
+        
+        return plan.Id;
+    }
+
+    [Fact]
+    public async Task CreateSubscription_ShouldReturn201_WithValidCommand()
+    {
+        // Arrange
+        var planId = await SeedSubscriptionPlanAsync();
+        var request = new
+        {
+            TenantId = Guid.NewGuid(),
+            PlanId = planId,
+            CreatedByUserId = Guid.NewGuid(),
+            BillingCycle = 1, // Monthly
+            Amount = 29.99m,
+            Currency = "USD",
+            StartDate = (DateTime?)null,
+            TrialDays = (int?)null
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/subscriptions", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task CreateSubscription_ShouldReturnBadRequest_WithInvalidData()
+    {
+        // Arrange
+        var request = new
+        {
+            TenantId = Guid.Empty, // Invalid
+            PlanId = Guid.NewGuid(),
+            CreatedByUserId = Guid.NewGuid(),
+            BillingCycle = "Monthly",
+            Amount = 29.99m,
+            Currency = "USD",
+            StartDate = DateTime.UtcNow,
+            TrialDays = (int?)null
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/api/v1/subscriptions", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetSubscriptionById_ShouldReturn404_WhenNotFound()
+    {
+        // Arrange
+        var nonExistentId = Guid.NewGuid();
+
+        // Act
+        var response = await _client.GetAsync($"/api/v1/subscriptions/{nonExistentId}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+        [Fact]
+    public async Task CreateAndGetSubscription_ShouldReturnCreatedSubscription()
+    {
+        // Arrange
+        var planId = await SeedSubscriptionPlanAsync();
+        var createRequest = new
+        {
+            TenantId = Guid.NewGuid(),
+            PlanId = planId,
+            CreatedByUserId = Guid.NewGuid(),
+            BillingCycle = 1, // Monthly
+            Amount = 29.99m,
+            Currency = "USD",
+            StartDate = (DateTime?)null,
+            TrialDays = 14
+        };
+
+        // Act
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/subscriptions", createRequest);
+        createResponse.EnsureSuccessStatusCode();
+
+        var responseContent = await createResponse.Content.ReadAsStringAsync();
+        var subscription = System.Text.Json.JsonDocument.Parse(responseContent).RootElement;
+        // Try both "id" and "Id" for case sensitivity
+        var subscriptionId = subscription.TryGetProperty("id", out var idProp) ? idProp.GetGuid() : 
+                           subscription.TryGetProperty("Id", out var idPropCap) ? idPropCap.GetGuid() : 
+                           throw new Exception($"Could not find id property in response: {responseContent}");
+        var getResponse = await _client.GetAsync($"/api/v1/subscriptions/{subscriptionId}");
+
+        // Assert
+        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task CancelSubscription_ShouldReturn200_WhenSubscriptionExists()
+    {
+        // Arrange
+        var planId = await SeedSubscriptionPlanAsync();
+        
+        // Create subscription
+        var createRequest = new
+        {
+            TenantId = Guid.NewGuid(),
+            PlanId = planId,
+            CreatedByUserId = Guid.NewGuid(),
+            BillingCycle = 1, // Monthly
+            Amount = 29.99m,
+            Currency = "USD",
+            StartDate = (DateTime?)null,
+            TrialDays = (int?)null
+        };
+        
+        var createResponse = await _client.PostAsJsonAsync("/api/v1/subscriptions", createRequest);
+        createResponse.EnsureSuccessStatusCode();
+        var responseContent = await createResponse.Content.ReadAsStringAsync();
+        var subscription = System.Text.Json.JsonDocument.Parse(responseContent).RootElement;
+        // Try both "id" and "Id" for case sensitivity
+        var subscriptionId = subscription.TryGetProperty("id", out var idProp) ? idProp.GetGuid() : 
+                           subscription.TryGetProperty("Id", out var idPropCap) ? idPropCap.GetGuid() : 
+                           throw new Exception($"Could not find id property in response: {responseContent}");
+
+        var cancelRequest = new
+        {
+            Reason = "UserRequested"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/api/v1/subscriptions/{subscriptionId}:cancel", cancelRequest);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    public void Dispose()
+    {
+        _client?.Dispose();
+        _factory?.Dispose();
+    }
+}

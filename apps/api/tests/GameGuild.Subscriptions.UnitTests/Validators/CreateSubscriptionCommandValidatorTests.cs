@@ -3,7 +3,7 @@ using FluentAssertions;
 using GameGuild.Commerce.Subscriptions;
 using Xunit;
 
-namespace GameGuild.Subscriptions.UnitTests.Validators;
+namespace GameGuild.Commerce.Subscriptions.UnitTests.Validators;
 
 public class CreateSubscriptionCommandValidatorTests
 {

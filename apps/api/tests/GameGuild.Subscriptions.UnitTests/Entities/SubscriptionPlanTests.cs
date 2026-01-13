@@ -3,7 +3,7 @@ using GameGuild.Commerce.Subscriptions;
 using GameGuild.Commerce.Subscriptions;
 using Xunit;
 
-namespace GameGuild.Subscriptions.UnitTests.Entities;
+namespace GameGuild.Commerce.Subscriptions.UnitTests.Entities;
 
 public class SubscriptionPlanTests
 {

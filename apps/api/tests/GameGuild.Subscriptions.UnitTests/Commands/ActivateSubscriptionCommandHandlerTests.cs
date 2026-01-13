@@ -8,7 +8,7 @@ using GameGuild.Commerce.Subscriptions;
 using Moq;
 using Xunit;
 
-namespace GameGuild.Subscriptions.UnitTests.Commands;
+namespace GameGuild.Commerce.Subscriptions.UnitTests.Commands;
 
 public class ActivateSubscriptionCommandHandlerTests
 {

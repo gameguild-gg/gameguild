@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using GameGuild.Commerce.Subscriptions;
 
-namespace GameGuild.Subscriptions.PerformanceTests;
+namespace GameGuild.Commerce.Subscriptions.PerformanceTests;
 
 /// <summary>
 /// Performance benchmarks for Subscription entity operations
