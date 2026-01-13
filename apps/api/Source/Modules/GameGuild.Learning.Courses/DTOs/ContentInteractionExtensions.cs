@@ -1,7 +1,7 @@
 using GameGuild.Enums;
 
 using System.ComponentModel.DataAnnotations;
-﻿using GameGuild.Programs;
+﻿using GameGuild.Learning.Courses;
 
 namespace GameGuild.Learning.Courses;
 

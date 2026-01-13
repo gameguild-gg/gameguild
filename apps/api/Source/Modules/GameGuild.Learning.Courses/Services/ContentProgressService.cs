@@ -4,7 +4,7 @@ using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Service implementation for content progress tracking </summary>
 public class ContentProgressService : IContentProgressService {

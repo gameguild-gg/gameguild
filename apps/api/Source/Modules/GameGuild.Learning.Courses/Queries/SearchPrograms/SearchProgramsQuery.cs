@@ -2,7 +2,7 @@ using GameGuild.CQRS;
 
 using GameGuild.Enums;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Query to search programs with advanced filtering </summary>
 public record SearchProgramsQuery(

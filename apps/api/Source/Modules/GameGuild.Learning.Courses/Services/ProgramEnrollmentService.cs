@@ -3,7 +3,7 @@ using GameGuild.Abstractions;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Service implementation for program enrollment management </summary>
 public class ProgramEnrollmentService : IProgramEnrollmentService {

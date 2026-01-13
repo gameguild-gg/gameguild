@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 public record GetUserProgramProgressQuery(Guid UserId, Guid ProgramId) : IQuery<ProgramUserProgress?>;

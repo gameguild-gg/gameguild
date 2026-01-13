@@ -3,7 +3,7 @@
 
 using GameGuild.Enums;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Service interface for comprehensive program business logic and operations

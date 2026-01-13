@@ -4,7 +4,7 @@ using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Service implementation for ProgramContent management with full DAC permission support Handles CRUD operations, hierarchical content structure, and content ordering </summary>
 public class ProgramContentService(IApplicationDbContext context) : IProgramContentService {

@@ -5,7 +5,7 @@ using GameGuild.Abstractions;
 using GameGuild.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Service implementation for Program business logic

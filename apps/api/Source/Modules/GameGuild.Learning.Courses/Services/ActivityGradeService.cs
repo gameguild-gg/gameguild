@@ -4,7 +4,7 @@ using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace GameGuild.Programs;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Service implementation for ActivityGrade management with full permission inheritance Handles grading operations following permission chain: ActivityGrade → ContentInteraction → ProgramContent → Program </summary>
 public class ActivityGradeService(IApplicationDbContext context) : IActivityGradeService {
