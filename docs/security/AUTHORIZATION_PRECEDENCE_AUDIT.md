@@ -31,7 +31,7 @@
 | **ActorContextMiddleware Not Registered** | 🔴 CRITICAL | ActorContext not populated in request pipeline | ✅ **FIXED** |
 | **ALLOW-WINS Only Permission Model** | 🔴 HIGH | Global permissions leak into tenants unconditionally | ✅ **FIXED** |
 | **Missing Fail-Closed on Null TenantId in PermissionQueryService** | 🔴 HIGH | Permission resolution with null tenant returns global defaults | ✅ **FIXED** |
-| **Dual Permission Systems (TenantPermission vs ACL)** | 🟡 MEDIUM | Confusion about which system applies when | 📝 Documented |
+| **Dual Permission Systems (TenantPermission vs ACL)** | 🟡 MEDIUM | Clarified: TenantPermission=tenant-level ops, ACL=resource-level access | ✅ **Documented** |
 | **Cache Key Missing User Security Version** | 🟡 MEDIUM | User-level permission changes may not invalidate properly | ✅ **FIXED** |
 | **Magic GUID for System Account** | 🟡 MEDIUM | Hard-coded system account ID in code | ✅ **FIXED** |
 
@@ -64,7 +64,95 @@ The GameGuild authorization system implements a **four-layer architecture**:
 
 **FIXED**: The `TenantPermission` entity now supports `DenyPermissions` field. Permission evaluation uses `EffectivePermissions = AllowSet - DenySet`. Tenants can now prohibit globally-allowed permissions.
 
-> **Note**: The `AccessControlListEntry` entity (resource-level ACL) DOES support deny-first algorithm. However, this is for resource-level access control, not for tenant-scoped RBAC-style permissions.
+> **Permission System Clarification**:
+> 
+> | System | Scope | Purpose | Example |
+> |--------|-------|---------|--------|
+> | **TenantPermission** | Tenant-level | Controls what **operations** a user can perform within a tenant | `courses:create`, `projects:delete`, `users:manage` |
+> | **AccessControlList (ACL)** | Resource-level | Controls **access to specific resources** | User X has `ReadWrite` access to Course #123 |
+>
+> These are **complementary systems**, not redundant:
+> - `TenantPermission` answers: "Can this user create courses in this tenant?"
+> - `ACL` answers: "Can this user edit THIS specific course?"
+>
+> Both use DENY-WINS semantics. A user needs both the tenant permission AND resource access to perform an action.
+
+---
+
+## Dual Permission Systems Architecture
+
+### TenantPermission vs ACL: When to Use Which
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    AUTHORIZATION DECISION FLOW                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  User wants to: "Edit Course #123 in Tenant ABC"                        │
+│                                                                         │
+│  ┌──────────────────────────────────────────────────────────────────┐   │
+│  │ STEP 1: TENANT PERMISSION CHECK                                  │   │
+│  │ ────────────────────────────────────────────────────────────────│   │
+│  │ Q: "Does user have 'courses:edit' permission in Tenant ABC?"    │   │
+│  │                                                                   │   │
+│  │ Source: TenantPermission entity                                  │   │
+│  │ Service: PermissionQueryService.GetEffectivePermissionsAsync()   │   │
+│  │                                                                   │   │
+│  │ Layers checked:                                                   │   │
+│  │   1. Global defaults (TenantId=null, UserId=null)                │   │
+│  │   2. Tenant defaults (TenantId=ABC, UserId=null)                 │   │
+│  │   3. Direct grants (TenantId=ABC, UserId=user)                   │   │
+│  │                                                                   │   │
+│  │ Result: EffectivePermissions = AllowSet - DenySet (DENY-WINS)    │   │
+│  └──────────────────────────────────────────────────────────────────┘   │
+│                              │                                          │
+│                    ┌─────────┴─────────┐                               │
+│                    ▼                   ▼                               │
+│              ✅ Has Permission    ❌ No Permission                     │
+│                    │                   │                               │
+│                    ▼                   ▼                               │
+│  ┌────────────────────────────┐  ┌─────────────────┐                   │
+│  │ STEP 2: RESOURCE ACL CHECK │  │ 403 Forbidden   │                   │
+│  │ ─────────────────────────  │  │ "Missing        │                   │
+│  │ Q: "Does user have access  │  │  permission:    │                   │
+│  │     to Course #123?"       │  │  courses:edit"  │                   │
+│  │                            │  └─────────────────┘                   │
+│  │ Source: AccessControlList  │                                        │
+│  │ Service: ACLService.       │                                        │
+│  │   EvaluateAccessAsync()    │                                        │
+│  │                            │                                        │
+│  │ Checks:                    │                                        │
+│  │   • Explicit user grants   │                                        │
+│  │   • Role-based grants      │                                        │
+│  │   • Group-based grants     │                                        │
+│  │   • Deny entries (first)   │                                        │
+│  └────────────────────────────┘                                        │
+│                 │                                                      │
+│       ┌─────────┴─────────┐                                           │
+│       ▼                   ▼                                           │
+│  ✅ Has Access       ❌ No Access                                     │
+│       │                   │                                           │
+│       ▼                   ▼                                           │
+│  ┌──────────────┐  ┌─────────────────┐                                │
+│  │ 200 OK       │  │ 403 Forbidden   │                                │
+│  │ Edit allowed │  │ "Access denied  │                                │
+│  └──────────────┘  │  to resource"   │                                │
+│                    └─────────────────┘                                │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Summary Table
+
+| Aspect | TenantPermission | AccessControlList (ACL) |
+|--------|------------------|-------------------------|
+| **Scope** | Tenant-level operations | Resource-level access |
+| **Question Answered** | "Can user do X in tenant?" | "Can user access resource Y?" |
+| **Entity** | `TenantPermission.cs` | `AccessControlListEntry.cs` |
+| **Primary Service** | `PermissionQueryService` | `AccessControlListService` |
+| **Deny Support** | ✅ `DenyPermissions[]` | ✅ `IsDenied` flag |
+| **Evaluation** | DENY-WINS subtraction | Deny-first priority |
+| **Caching** | Version-based (tenant + user) | Version-based (tenant + user) |
+| **Examples** | `courses:create`, `users:manage` | `ReadWrite` on Course #123 |
 
 ---
 
@@ -796,11 +884,11 @@ public async Task PermissionDeny_InvalidatesCache()
 
 ### 🟡 MEDIUM Severity
 
-| Issue | Location | Fix |
-|-------|----------|-----|
-| Dual Permission Systems | `TenantPermission` vs `AccessControlListEntry` | Document usage guidelines |
-| Missing User Security Version | `CachedAccessControlListService.cs` | Add user version to cache key |
-| Magic GUID for System Account | `EffectivePermissionResolverService.cs:127` | Move to configuration |
+| Issue | Location | Fix | Status |
+|-------|----------|-----|--------|
+| Dual Permission Systems | `TenantPermission` vs `AccessControlListEntry` | Document usage guidelines | ✅ **Documented** |
+| Missing User Security Version | `CachedAccessControlListService.cs` | Add user version to cache key | ✅ **FIXED** |
+| Magic GUID for System Account | `EffectivePermissionResolverService.cs:127` | Move to configuration | ✅ **FIXED** |
 
 ### 🟢 LOW Severity
 
@@ -831,5 +919,6 @@ public async Task PermissionDeny_InvalidatesCache()
 **Version History**:
 - v1.0 (2026-01-13): Initial audit, identified 4 critical issues
 - v2.0 (2026-01-13): All 4 critical issues fixed and verified
+- v2.1 (2026-01-13): Fixed medium issues (user version cache, system account config), documented dual permission systems (TenantPermission=tenant-level, ACL=resource-level)
 
 **Next Review**: Quarterly security review or after significant authorization changes
