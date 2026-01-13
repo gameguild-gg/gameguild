@@ -283,6 +283,89 @@ public sealed class JwtTokenService(
         }
     }
 
+    /// <summary>
+    ///     Generates a JWT access token for a service account (machine-to-machine).
+    /// </summary>
+    public Task<(string Token, DateTime ExpiresAt)> GenerateServiceAccountTokenAsync(
+        string serviceAccountId,
+        string clientId,
+        string serviceName,
+        IReadOnlySet<string> scopes,
+        Guid? tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation(
+            "Generating service account token for: {ServiceAccountId}, ClientId: {ClientId}",
+            serviceAccountId, clientId);
+
+        try
+        {
+            var expiresAt = DateTime.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationMinutes);
+
+            var claims = new List<Claim>
+            {
+                // Subject is the service account ID
+                new Claim(JwtRegisteredClaimNames.Sub, serviceAccountId),
+                // Client ID for OAuth2 compatibility
+                new Claim("client_id", clientId),
+                // Service name for logging/auditing
+                new Claim("service_name", serviceName),
+                // Unique token identifier
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                // Issued at timestamp
+                new Claim(JwtRegisteredClaimNames.Iat,
+                    DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture),
+                    ClaimValueTypes.Integer64),
+                // Actor kind to distinguish from user tokens
+                new Claim("actor_kind", "Service"),
+                // Grant type for OAuth2 compatibility
+                new Claim("grant_type", "client_credentials")
+            };
+
+            // Add scopes as individual claims
+            foreach (var scope in scopes)
+            {
+                claims.Add(new Claim("scope", scope));
+            }
+
+            // Add tenant claim if multi-tenant
+            if (tenantId.HasValue)
+            {
+                claims.Add(new Claim("tenant_id", tenantId.Value.ToString()));
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey))
+            {
+                KeyId = "GameGuild-jwt-key"
+            };
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _jwtOptions.Issuer,
+                audience: _jwtOptions.Audience,
+                claims: claims,
+                notBefore: DateTime.UtcNow,
+                expires: expiresAt,
+                signingCredentials: credentials);
+
+            var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+            logger.LogInformation(
+                "Service account token generated for: {ServiceAccountId}, Expires: {ExpiresAt}",
+                serviceAccountId, expiresAt);
+
+            return Task.FromResult((tokenString, expiresAt));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex,
+                "Error generating service account token for: {ServiceAccountId}",
+                serviceAccountId);
+
+            throw;
+        }
+    }
+
     #region Synchronous Interface Methods
 
     /// <summary>

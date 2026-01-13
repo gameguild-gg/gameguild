@@ -159,6 +159,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<UserRole> UserRoles { get => Set<UserRole>(); }
 
+    public DbSet<ServiceAccount> ServiceAccounts { get => Set<ServiceAccount>(); }
+
     public DbSet<IdentityVerification> IdentityVerifications { get => Set<IdentityVerification>(); }
 
     public DbSet<BlockchainCertificateAnchor> BlockchainCertificateAnchors { get => Set<BlockchainCertificateAnchor>(); }

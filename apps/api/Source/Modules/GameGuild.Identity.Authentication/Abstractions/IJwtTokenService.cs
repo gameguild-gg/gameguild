@@ -22,4 +22,22 @@ public interface IJwtTokenService
     Task<string> GenerateAccessTokenAsync(Guid userId, string email, string[ ] roles, Guid? tenantId, int tokenVersion = 1, CancellationToken cancellationToken = default);
 
     Task<string> GenerateRefreshTokenAsync(Guid userId, DeviceInfo deviceInfo, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Generates an access token for a service account (client_credentials flow).
+    /// </summary>
+    /// <param name="serviceAccountId">The service account ID.</param>
+    /// <param name="clientId">The client ID.</param>
+    /// <param name="serviceName">The human-readable service name.</param>
+    /// <param name="scopes">The granted scopes.</param>
+    /// <param name="tenantId">Optional tenant ID the service account belongs to.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The access token and expiration time.</returns>
+    Task<(string Token, DateTime ExpiresAt)> GenerateServiceAccountTokenAsync(
+        string serviceAccountId,
+        string clientId,
+        string serviceName,
+        IReadOnlySet<string> scopes,
+        Guid? tenantId,
+        CancellationToken cancellationToken = default);
 }

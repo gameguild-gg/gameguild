@@ -55,6 +55,7 @@ public static class DataDependencyInjection
         services.AddScoped<ITrustedDeviceRepository, TrustedDeviceRepository>();
         services.AddScoped<IMfaAttemptRepository, MfaAttemptRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
+        services.AddScoped<IServiceAccountRepository, ServiceAccountRepository>();
 
         // Core authentication services
         services.AddScoped<IAuthService, AuthService>();
@@ -62,6 +63,7 @@ public static class DataDependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IOAuthService, OAuthService>();
         services.AddScoped<IWeb3Service, Web3Service>();
+        services.AddScoped<IServiceAccountService, ServiceAccountService>();
 
         // Token revocation service (singleton for in-memory, scoped for Redis)
         // NOTE: Replace with Redis implementation for distributed deployments

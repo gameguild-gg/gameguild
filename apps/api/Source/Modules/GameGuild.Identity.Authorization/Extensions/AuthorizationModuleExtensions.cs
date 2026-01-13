@@ -221,6 +221,9 @@ public static class AuthorizationModuleExtensions
         // Permission audit service
         services.AddScoped<IPermissionAuditService, PermissionAuditService>();
         
+        // Policy evaluation debugging service
+        services.AddScoped<IPolicyEvaluationLogger, PolicyEvaluationLogger>();
+        
         // Repositories
         services.AddScoped<ITenantPermissionRepository, TenantPermissionRepository>();
         services.AddScoped<IPermissionAuditLogRepository, PermissionAuditLogRepository>();
