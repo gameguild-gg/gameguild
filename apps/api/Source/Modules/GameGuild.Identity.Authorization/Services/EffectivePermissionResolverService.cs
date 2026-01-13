@@ -23,10 +23,11 @@ public class EffectivePermissionResolverService(
         CancellationToken ct = default)
     {
         var allPermissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var allDenyPermissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var sources = new Dictionary<string, PermissionSource>();
         var roleContributions = new List<RoleContribution>();
 
-        // 1. Static permissions (hard-coded, non-negotiable)
+        // 1. Static permissions (hard-coded, non-negotiable - cannot be denied)
         var staticPerms = GetStaticPermissions(userId);
         foreach (var perm in staticPerms)
         {
@@ -43,17 +44,30 @@ public class EffectivePermissionResolverService(
                 sources[perm] = PermissionSource.Role;
             }
         }
+        // Collect role deny permissions
+        foreach (var perm in rbacResult.DenyPermissions)
+        {
+            allDenyPermissions.Add(perm);
+        }
         roleContributions.AddRange(rbacResult.RoleContributions);
 
         // 3. Tenant default permissions (if tenant context exists)
         if (tenantId.HasValue)
         {
-            var tenantDefaults = await GetTenantDefaultPermissionsAsync(tenantId.Value, ct);
-            foreach (var perm in tenantDefaults)
+            var tenantPermission = await tenantPermissionStore.GetPermissionAsync(tenantId.Value, ct);
+            if (tenantPermission != null)
             {
-                if (allPermissions.Add(perm))
+                foreach (var perm in tenantPermission.Permissions)
                 {
-                    sources[perm] = PermissionSource.TenantDefault;
+                    if (allPermissions.Add(perm))
+                    {
+                        sources[perm] = PermissionSource.TenantDefault;
+                    }
+                }
+                // Collect tenant deny permissions
+                foreach (var perm in tenantPermission.DenyPermissions)
+                {
+                    allDenyPermissions.Add(perm);
                 }
             }
         }
@@ -84,15 +98,38 @@ public class EffectivePermissionResolverService(
             }
         }
 
+        // 6. DENY-WINS: Remove denied permissions from effective set
+        // Static permissions (wildcard for system account) are NOT subject to deny
+        var effectivePermissions = new HashSet<string>(allPermissions, StringComparer.OrdinalIgnoreCase);
+        foreach (var denied in allDenyPermissions)
+        {
+            // Don't deny static permissions (system account protection)
+            if (sources.TryGetValue(denied, out var source) && source == PermissionSource.Static)
+            {
+                logger.LogWarning(
+                    "Attempted to deny static permission {Permission} for user {UserId} - denied permissions cannot override static grants",
+                    denied, userId);
+                continue;
+            }
+            
+            if (effectivePermissions.Remove(denied))
+            {
+                sources.Remove(denied);
+                logger.LogDebug(
+                    "Permission {Permission} denied for user {UserId} in tenant {TenantId}",
+                    denied, userId, tenantId);
+            }
+        }
+
         logger.LogDebug(
-            "Resolved {Count} effective permissions for user {UserId} in tenant {TenantId}",
-            allPermissions.Count, userId, tenantId);
+            "Resolved {Count} effective permissions ({AllowCount} allowed, {DenyCount} denied) for user {UserId} in tenant {TenantId}",
+            effectivePermissions.Count, allPermissions.Count, allDenyPermissions.Count, userId, tenantId);
 
         return new EffectivePermissions
         {
             UserId = userId,
             TenantId = tenantId,
-            Permissions = allPermissions,
+            Permissions = effectivePermissions,
             Sources = sources,
             RoleContributions = roleContributions
         };
@@ -154,29 +191,6 @@ public class EffectivePermissionResolverService(
             "profile:update",
             "notifications:read",
             "notifications:mark-read"
-        ];
-    }
-
-    /// <summary>
-    ///     Gets default permissions for a tenant (tenant-wide grants).
-    /// </summary>
-    private async Task<IReadOnlyList<string>> GetTenantDefaultPermissionsAsync(
-        Guid tenantId,
-        CancellationToken ct)
-    {
-        // Get tenant-wide permission grants
-        var tenantPermission = await tenantPermissionStore.GetPermissionAsync(tenantId, ct);
-        
-        if (tenantPermission != null)
-        {
-            return tenantPermission.Permissions;
-        }
-
-        // Default tenant permissions
-        return
-        [
-            "tenant:read",
-            "content:read"
         ];
     }
 }

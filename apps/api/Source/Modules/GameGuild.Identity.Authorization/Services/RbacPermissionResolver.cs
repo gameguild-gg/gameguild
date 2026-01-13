@@ -174,8 +174,13 @@ public interface IRbacPermissionResolver
 /// <summary>
 ///     Result of RBAC permission resolution.
 /// </summary>
+/// <remarks>
+///     Contains both allowed and denied permissions from all resolved roles.
+///     Caller should apply DENY-WINS semantics: EffectivePermissions = Permissions - DenyPermissions
+/// </remarks>
 public record RbacResolutionResult(
     IReadOnlySet<string> Permissions,
+    IReadOnlySet<string> DenyPermissions,
     IReadOnlyList<RoleContribution> RoleContributions);
 
 /// <summary>
@@ -193,6 +198,7 @@ public class RbacPermissionResolver(
         CancellationToken ct = default)
     {
         var allPermissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var allDenyPermissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var contributions = new List<RoleContribution>();
 
         // Get valid role assignments for the user
@@ -209,6 +215,7 @@ public class RbacPermissionResolver(
             {
                 var isInherited = role.Id != assignment.RoleId;
                 var rolePermissions = new List<string>();
+                var roleDenyPermissions = new List<string>();
 
                 // Add static permissions for built-in roles
                 var staticPerms = StaticRolePermissions.GetStaticPermissions(role.Name);
@@ -216,11 +223,18 @@ public class RbacPermissionResolver(
 
                 // Add dynamic permissions from database
                 rolePermissions.AddRange(role.Permissions);
+                roleDenyPermissions.AddRange(role.DenyPermissions);
 
                 // Add to total permissions
                 foreach (var perm in rolePermissions)
                 {
                     allPermissions.Add(perm);
+                }
+                
+                // Add to total deny permissions
+                foreach (var perm in roleDenyPermissions)
+                {
+                    allDenyPermissions.Add(perm);
                 }
 
                 // Track contribution
@@ -232,11 +246,11 @@ public class RbacPermissionResolver(
                     isInherited ? assignment.RoleId : null));
 
                 logger.LogDebug(
-                    "Resolved {Count} permissions from role {RoleName} (inherited: {IsInherited}) for user {UserId}",
-                    rolePermissions.Count, role.Name, isInherited, userId);
+                    "Resolved {Count} permissions and {DenyCount} denies from role {RoleName} (inherited: {IsInherited}) for user {UserId}",
+                    rolePermissions.Count, roleDenyPermissions.Count, role.Name, isInherited, userId);
             }
         }
 
-        return new RbacResolutionResult(allPermissions, contributions);
+        return new RbacResolutionResult(allPermissions, allDenyPermissions, contributions);
     }
 }

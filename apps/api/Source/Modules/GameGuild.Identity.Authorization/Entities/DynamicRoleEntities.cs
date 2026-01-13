@@ -66,6 +66,17 @@ public class DynamicRole : EntityBase
     public string[] Permissions { get; set; } = Array.Empty<string>();
 
     /// <summary>
+    ///     Permissions explicitly denied by this role.
+    ///     Deny takes precedence over allow (DENY-WINS semantics).
+    /// </summary>
+    /// <remarks>
+    ///     Used to restrict permissions that would otherwise be granted
+    ///     by global defaults or parent roles. Example: A "ReadOnly" role
+    ///     might deny "projects:edit" to prevent inheritance from base roles.
+    /// </remarks>
+    public string[] DenyPermissions { get; set; } = Array.Empty<string>();
+
+    /// <summary>
     ///     Priority for conflict resolution (higher = more important).
     /// </summary>
     public int Priority { get; set; }
