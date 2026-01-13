@@ -32,7 +32,8 @@ public sealed class CachedAccessControlListService : IAccessControlListService
     private readonly IAccessControlListService _innerService;
     private readonly IMemoryCache _l1Cache;
     private readonly IHybridPermissionCache? _hybridCache;
-    private readonly ITenantSecurityVersionStore _versionStore;
+    private readonly ITenantSecurityVersionStore _tenantVersionStore;
+    private readonly IUserSecurityVersionStore _userVersionStore;
     private readonly ICacheMetricsService? _metrics;
     private readonly AuthorizationCacheOptions _options;
     private readonly ConcurrentDictionary<string, HashSet<string>> _tenantCacheKeys = new();
@@ -43,14 +44,16 @@ public sealed class CachedAccessControlListService : IAccessControlListService
     public CachedAccessControlListService(
         IAccessControlListService innerService,
         IMemoryCache cache,
-        ITenantSecurityVersionStore versionStore,
+        ITenantSecurityVersionStore tenantVersionStore,
+        IUserSecurityVersionStore userVersionStore,
         IOptions<AuthorizationCacheOptions> options,
         IHybridPermissionCache? hybridCache = null,
         ICacheMetricsService? metrics = null)
     {
         _innerService = innerService;
         _l1Cache = cache;
-        _versionStore = versionStore;
+        _tenantVersionStore = tenantVersionStore;
+        _userVersionStore = userVersionStore;
         _options = options.Value;
         _hybridCache = hybridCache;
         _metrics = metrics;
@@ -66,8 +69,12 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         string resourceId,
         CancellationToken cancellationToken = default)
     {
-        var version = await _versionStore.GetVersionAsync(tenantId.ToString(), cancellationToken).ConfigureAwait(false);
-        var cacheKey = BuildSubjectCacheKey(subject, tenantId, resourceType, resourceId, version);
+        // Get both tenant and user versions for complete cache key
+        var tenantVersion = await _tenantVersionStore.GetVersionAsync(tenantId.ToString(), cancellationToken).ConfigureAwait(false);
+        var userVersion = subject.UserId.HasValue 
+            ? await _userVersionStore.GetVersionAsync(subject.UserId.Value, cancellationToken).ConfigureAwait(false)
+            : 0;
+        var cacheKey = BuildSubjectCacheKey(subject, tenantId, resourceType, resourceId, tenantVersion, userVersion);
 
         // Try L1 cache first
         if (_l1Cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
@@ -175,8 +182,10 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         string resourceId,
         CancellationToken cancellationToken = default)
     {
-        var version = await _versionStore.GetVersionAsync(tenantId.ToString(), cancellationToken).ConfigureAwait(false);
-        var cacheKey = BuildCacheKey(userId, tenantId, resourceType, resourceId, version);
+        // Get both tenant and user versions for complete cache key
+        var tenantVersion = await _tenantVersionStore.GetVersionAsync(tenantId.ToString(), cancellationToken).ConfigureAwait(false);
+        var userVersion = await _userVersionStore.GetVersionAsync(userId, cancellationToken).ConfigureAwait(false);
+        var cacheKey = BuildCacheKey(userId, tenantId, resourceType, resourceId, tenantVersion, userVersion);
 
         // Try L1 cache first
         if (_l1Cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
@@ -291,18 +300,19 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         }
     }
 
-    private static string BuildCacheKey(Guid userId, Guid tenantId, string resourceType, string resourceId, long version)
+    private static string BuildCacheKey(Guid userId, Guid tenantId, string resourceType, string resourceId, long tenantVersion, long userVersion)
     {
-        return $"acl:{tenantId}:{userId}:{resourceType}:{resourceId}:v{version}";
+        return $"acl:{tenantId}:{userId}:{resourceType}:{resourceId}:tv{tenantVersion}:uv{userVersion}";
     }
 
-    private static string BuildSubjectCacheKey(AclSubject subject, Guid tenantId, string resourceType, string resourceId, long version)
+    private static string BuildSubjectCacheKey(AclSubject subject, Guid tenantId, string resourceType, string resourceId, long tenantVersion, long userVersion)
     {
         // Build a stable cache key from subject principals
+        // Includes both tenant version (for tenant-wide changes) and user version (for user-specific changes)
         var userPart = subject.UserId?.ToString() ?? "anon";
         var rolesPart = subject.RoleIds.Count > 0 ? string.Join(",", subject.RoleIds.OrderBy(r => r)) : "nr";
         var groupsPart = subject.GroupIds.Count > 0 ? string.Join(",", subject.GroupIds.OrderBy(g => g)) : "ng";
-        return $"acl:subj:{tenantId}:{userPart}:{rolesPart}:{groupsPart}:{resourceType}:{resourceId}:v{version}";
+        return $"acl:subj:{tenantId}:{userPart}:{rolesPart}:{groupsPart}:{resourceType}:{resourceId}:tv{tenantVersion}:uv{userVersion}";
     }
 
     /// <summary>

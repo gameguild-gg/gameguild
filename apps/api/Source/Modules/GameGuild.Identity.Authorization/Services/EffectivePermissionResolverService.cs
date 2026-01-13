@@ -1,4 +1,6 @@
+using GameGuild.Configuration.PresentationLayer.Authorization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authorization;
 
@@ -10,9 +12,11 @@ public class EffectivePermissionResolverService(
     IRbacPermissionResolver rbacResolver,
     ITenantPermissionStore tenantPermissionStore,
     IResourcePermissionStore resourcePermissionStore,
+    IOptions<AuthorizationOptions> authorizationOptions,
     ILogger<EffectivePermissionResolverService> logger
 ) : IEffectivePermissionResolver
 {
+    private readonly AuthorizationOptions _authOptions = authorizationOptions.Value;
     public async Task<EffectivePermissions> ResolveAsync(
         Guid userId,
         Guid? tenantId,
@@ -128,13 +132,10 @@ public class EffectivePermissionResolverService(
     ///     Hard-coded static permissions that cannot be changed at runtime.
     ///     These are typically for system accounts or super-admin users.
     /// </summary>
-    private static IReadOnlyList<string> GetStaticPermissions(Guid userId)
+    private IReadOnlyList<string> GetStaticPermissions(Guid userId)
     {
-        // System account with all permissions
-        // In production, this would be configured via settings or environment
-        var systemAccountId = Guid.Parse("00000000-0000-0000-0000-000000000001");
-        
-        if (userId == systemAccountId)
+        // System account with all permissions (configured via AuthorizationOptions)
+        if (userId == _authOptions.SystemAccountId)
         {
             return ["*"]; // Wildcard = all permissions
         }

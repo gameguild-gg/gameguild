@@ -32,7 +32,8 @@
 | **ALLOW-WINS Only Permission Model** | 🔴 HIGH | Global permissions leak into tenants unconditionally | ✅ **FIXED** |
 | **Missing Fail-Closed on Null TenantId in PermissionQueryService** | 🔴 HIGH | Permission resolution with null tenant returns global defaults | ✅ **FIXED** |
 | **Dual Permission Systems (TenantPermission vs ACL)** | 🟡 MEDIUM | Confusion about which system applies when | 📝 Documented |
-| **Cache Key Missing User Security Version** | 🟡 MEDIUM | User-level permission changes may not invalidate properly | ⏳ Pending |
+| **Cache Key Missing User Security Version** | 🟡 MEDIUM | User-level permission changes may not invalidate properly | ✅ **FIXED** |
+| **Magic GUID for System Account** | 🟡 MEDIUM | Hard-coded system account ID in code | ✅ **FIXED** |
 
 ### Fix Summary (January 13, 2026)
 
@@ -45,6 +46,10 @@ The following critical security fixes were implemented:
 3. **FocusedPermissionServices.cs**: Replaced ALLOW-WINS additive algorithm with DENY-WINS subtraction algorithm (`EffectivePermissions = AllowSet - DenySet`).
 
 4. **FocusedPermissionServices.cs**: Added fail-closed behavior - when `tenantId` is null, returns empty permissions instead of global defaults.
+
+5. **CachedAccessControlListService.cs**: Added `IUserSecurityVersionStore` to cache key for proper user-level cache invalidation. Cache keys now include both `tv{tenantVersion}` and `uv{userVersion}`.
+
+6. **EffectivePermissionResolverService.cs**: Moved magic GUID for system account to `AuthorizationOptions.SystemAccountId` configuration property.
 
 ### System Overview
 

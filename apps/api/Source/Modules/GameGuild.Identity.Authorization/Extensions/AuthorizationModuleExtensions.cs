@@ -58,6 +58,9 @@ public static class AuthorizationModuleExtensions
 
         // Tenant security version store (used for cache invalidation)
         services.AddScoped<ITenantSecurityVersionStore, DatabaseTenantSecurityVersionStore>();
+        
+        // User security version store (used for user-specific cache invalidation)
+        services.AddSingleton<IUserSecurityVersionStore, InMemoryUserSecurityVersionStore>();
 
         if (enableCaching)
         {
@@ -80,11 +83,12 @@ public static class AuthorizationModuleExtensions
             {
                 var innerService = sp.GetRequiredService<DatabaseAccessControlListService>();
                 var cache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
-                var versionStore = sp.GetRequiredService<ITenantSecurityVersionStore>();
+                var tenantVersionStore = sp.GetRequiredService<ITenantSecurityVersionStore>();
+                var userVersionStore = sp.GetRequiredService<IUserSecurityVersionStore>();
                 var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AuthorizationCacheOptions>>();
                 var hybridCache = sp.GetService<IHybridPermissionCache>();
                 var metrics = sp.GetService<ICacheMetricsService>();
-                return new CachedAccessControlListService(innerService, cache, versionStore, options, hybridCache, metrics);
+                return new CachedAccessControlListService(innerService, cache, tenantVersionStore, userVersionStore, options, hybridCache, metrics);
             });
         }
         else
