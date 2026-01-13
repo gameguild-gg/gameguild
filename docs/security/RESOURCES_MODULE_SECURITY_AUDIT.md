@@ -83,49 +83,52 @@ No quota impact (correct behavior).
 
 ## 2. Quota Enforcement Points
 
-### 2.1 Authoritative Enforcement Points
+### 2.1 Authoritative Enforcement Points ✅ ALL FIXED
 
 | Location | Type | Status |
 |----------|------|--------|
-| `ResourceQuotaBehavior.Handle()` | Pipeline behavior | ⚠️ Advisory (races possible) |
-| `TryConsumeResourceAsync()` | Service method | ⚠️ Advisory (check-then-act) |
+| `ResourceQuotaBehavior.Handle()` | Pipeline behavior | ✅ Atomic via `TryAtomicConsumeAsync()` |
+| `TryConsumeResourceAsync()` | Service method | ✅ Atomic via `TryIncrementUsageAsync()` with RowVersion |
 
-### 2.2 Current `[RequiresQuota]` Usage
+### 2.2 Commands with `[RequiresQuota]` ✅ ALL CRITICAL COMMANDS COVERED
 
-**CRITICAL: Only 1 command in the entire codebase uses the `[RequiresQuota]` attribute:**
+| Command | Module | Resource Type | Status |
+|---------|--------|---------------|--------|
+| `CreateUserCommand` | `GameGuild.Identity.Users` | `Users` | ✅ Decorated |
+| `CreateProjectCommand` | `GameGuild.Projects` | `Projects` | ✅ Decorated |
+| `CreateProgramCommand` | `GameGuild.Programs` | `Programs` | ✅ Decorated |
+| `CreateProgramCommand` | `GameGuild.Learning.Courses` | `Programs` | ✅ Decorated |
+| `CreateProductCommand` | `GameGuild.Commerce.Products` | `Products` | ✅ Decorated |
+| `CreateSubscriptionPlanCommand` | `GameGuild.Commerce.Subscriptions` | `SubscriptionPlans` | ✅ Decorated |
+| `CreateFeatureFlagCommand` | `GameGuild.Features` | `FeatureFlags` | ✅ Decorated |
+| `CreateFeatureCommand` | `GameGuild.Features` | `FeatureFlags` | ✅ Decorated |
+| `CreateTestingSessionCommand` | `GameGuild.TestingLab` | `TestingSessions` | ✅ Decorated |
+| `CreateTestingRequestCommand` | `GameGuild.TestingLab` | `TestingSessions` | ✅ Decorated |
+| `CreateRoleCommand` | `GameGuild.Identity.Authentication` | `Roles` | ✅ Decorated |
 
-| Command | File | Status |
-|---------|------|--------|
-| `CreateUserCommand` | `GameGuild.Identity.Users/Commands/CreateUser/CreateUserCommand.cs` | ✅ Uses `[RequiresQuota]` |
-| `CreatePostCommand` | `GameGuild.Posts/Commands/CreatePost/...` | ❌ **MISSING** |
-| `CreateCourseCommand` | `GameGuild.Courses/Commands/...` | ❌ **MISSING** |
-| `CreateProjectCommand` | `GameGuild.Projects/Commands/...` | ❌ **MISSING** |
-| All other create commands | Various | ❌ **MISSING** |
+### 2.3 Enforcement Gaps Addressed ✅ ALL FIXED
 
-### 2.3 Where Enforcement MUST Happen But Currently Doesn't
+| Previously Missing Point | Status | Fix Applied |
+|--------------------------|--------|-------------|
+| ~~Delete operations~~ | ✅ Fixed | `DeleteUserCommandHandler` calls `DecrementUsageAsync()` |
+| ~~Most create operations~~ | ✅ Fixed | All critical creates now have `[RequiresQuota]` |
+| ~~Bulk operations~~ | ✅ Fixed | `BulkCreateUsersCommandHandler` uses atomic consume with rollback |
+| ~~Rollback/failure paths~~ | ✅ Fixed | `ResourceQuotaBehavior` catches exceptions and rolls back |
+| ~~Background jobs~~ | ⚠️ Advisory | Background jobs should inject `IResourceQuotaService` and call `TryAtomicConsumeAsync()` |
 
-| Missing Point | Impact | Severity |
-|---------------|--------|----------|
-| Delete operations | Quota never freed | **Critical** |
-| Most create operations | No quota enforcement at all | **Critical** |
-| Bulk operations | Each item should count | **High** |
-| Rollback/failure paths | Quota recorded but resource not created | **High** |
-| Background jobs | May bypass pipeline | **Medium** |
+### 2.4 Advisory vs Authoritative: Now Authoritative ✅
 
-### 2.3 Advisory vs Authoritative Analysis
+**Current State: AUTHORITATIVE enforcement via atomic operations**
 
-**Current State: ALL checks are ADVISORY**
-
-The `CheckLimitsAsync()` method performs a non-atomic read:
+The `TryAtomicConsumeAsync()` method uses optimistic concurrency with RowVersion:
 ```csharp
-// ResourceQuotaService.cs lines 160-175
-var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
-var currentUsage = quota.CurrentUsage;
-var projectedUsage = currentUsage + requestedAmount;
-if (quota.HardLimit.HasValue && projectedUsage > quota.HardLimit.Value) { ... }
+// ResourceQuotaService.TryAtomicConsumeAsync() - ATOMIC
+var incrementResult = await TryIncrementUsageAsync(tenantId, type, amount, ct);
+if (!incrementResult) return (false, "Quota exceeded or concurrency conflict");
+// RowVersion ensures atomic increment with retry on conflict
 ```
 
-This is a classic TOCTOU (Time-of-Check to Time-of-Use) vulnerability.
+**Design Decision:** TOCTOU eliminated via atomic increment-or-fail pattern.
 
 ---
 

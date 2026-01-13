@@ -1,4 +1,4 @@
-using GameGuild.Abstractions;
+using GameGuild.Entities;
 
 namespace GameGuild.Learning.Experience.LearningPaths;
 

@@ -1,4 +1,4 @@
-using GameGuild.Abstractions;
+using GameGuild.Entities;
 
 namespace GameGuild.Learning.Assessments;
 
@@ -21,7 +21,7 @@ public class Assessment : EntityBase
     public DateTime? AvailableFrom { get; private set; }
     public DateTime? AvailableUntil { get; private set; }
 
-    private Cohort() { } // EF Core
+    private Assessment() { } // EF Core
 
     public static Assessment Create(
         Guid courseId,
