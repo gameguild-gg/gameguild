@@ -152,6 +152,25 @@ public static class ResourceTypes
     public static readonly ConcreteResourceType Policy = new("Policy", "Authorization policies");
 
     // ========================
+    // TESTING LAB
+    // ========================
+
+    /// <summary>Testing session resource type</summary>
+    public static readonly ConcreteResourceType TestingSession = new("TestingSession", "Testing lab sessions");
+
+    /// <summary>Testing location resource type</summary>
+    public static readonly ConcreteResourceType TestingLocation = new("TestingLocation", "Testing lab locations");
+
+    /// <summary>Testing feedback resource type</summary>
+    public static readonly ConcreteResourceType TestingFeedback = new("TestingFeedback", "Testing lab feedback");
+
+    /// <summary>Testing request resource type</summary>
+    public static readonly ConcreteResourceType TestingRequest = new("TestingRequest", "Testing lab requests");
+
+    /// <summary>Testing participant resource type</summary>
+    public static readonly ConcreteResourceType TestingParticipant = new("TestingParticipant", "Testing lab participants");
+
+    // ========================
     // VALIDATION
     // ========================
 
@@ -163,7 +182,8 @@ public static class ResourceTypes
         User, Role, Group, Permission, Tenant,
         Project, Content, Document, Course, Program, Post,
         Product, Order, PromoCode, Entitlement,
-        System, Audit, Policy
+        System, Audit, Policy,
+        TestingSession, TestingLocation, TestingFeedback, TestingRequest, TestingParticipant
     };
 
     /// <summary>
