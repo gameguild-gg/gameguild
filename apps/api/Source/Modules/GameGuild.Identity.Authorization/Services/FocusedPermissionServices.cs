@@ -195,6 +195,7 @@ public sealed class PermissionGrantService(
 /// </summary>
 public sealed class PermissionQueryService(
     ITenantPermissionRepository repository,
+    ITenantMembershipChecker membershipChecker,
     ILogger<PermissionQueryService> logger
 ) : IPermissionQueryService
 {
@@ -323,8 +324,9 @@ public sealed class PermissionQueryService(
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
-        var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken);
-        return existing != null && (!existing.ExpiresAt.HasValue || existing.ExpiresAt.Value > DateTime.UtcNow);
+        // SECURITY: Delegate to actual tenant membership check, not permission check
+        // Having permissions in a tenant is NOT the same as being a member
+        return await membershipChecker.IsUserMemberOfTenantAsync(userId, tenantId, cancellationToken);
     }
 }
 

@@ -126,8 +126,19 @@ public interface IPermissionQueryService
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Check if a user is a member of a tenant (has any non-expired permissions).
+    ///     Check if a user is a member of a tenant.
     /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         <b>Important:</b> This checks actual tenant membership (TenantMember entity),
+    ///         not whether the user has permissions in the tenant. A user may have permissions
+    ///         granted globally without being a member of any specific tenant.
+    ///     </para>
+    ///     <para>
+    ///         This method delegates to <see cref="ITenantMembershipChecker"/> which is
+    ///         implemented by the Tenants module using the TenantMember repository.
+    ///     </para>
+    /// </remarks>
     Task<bool> IsUserInTenantAsync(
         Guid userId,
         Guid tenantId,

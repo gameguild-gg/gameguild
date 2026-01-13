@@ -917,10 +917,10 @@ public async Task PermissionDeny_InvalidatesCache()
 
 ### 🟢 LOW Severity
 
-| Issue | Location | Fix |
-|-------|----------|-----|
-| Inconsistent Null Handling | Various | Standardize on `Guid?` with explicit checks |
-| SRP Violation | `PermissionQueryService.IsUserInTenantAsync()` | Move to TenantMembershipService |
+| Issue | Location | Fix | Status |
+|-------|----------|-----|--------|
+| Inconsistent Null Handling | Various | Standardize on `Guid?` with explicit checks | ✅ **VERIFIED** - Codebase uses `Guid?` consistently |
+| SRP Violation | `PermissionQueryService.IsUserInTenantAsync()` | Move to TenantMembershipService | ✅ **FIXED** - Delegates to `ITenantMembershipChecker` |
 
 ---
 
@@ -935,7 +935,8 @@ public async Task PermissionDeny_InvalidatesCache()
 | Caching | `CachedAccessControlListService.cs` |
 | Security Version | `DatabaseTenantSecurityVersionStore.cs` |
 | ACL (Deny-First) | `DatabaseAccessControlListService.cs` |
-| Entities | `TenantPermission.cs`, `AccessControlListEntry.cs` |
+| Tenant Membership | `TenantMembershipChecker.cs` (Tenants module) |
+| Entities | `TenantPermission.cs`, `AccessControlListEntry.cs`, `TenantMember.cs` |
 
 ---
 
@@ -946,5 +947,7 @@ public async Task PermissionDeny_InvalidatesCache()
 - v2.0 (2026-01-13): All 4 critical issues fixed and verified
 - v2.1 (2026-01-13): Fixed medium issues (user version cache, system account config), documented dual permission systems
 - v2.2 (2026-01-13): Fixed `AuthorizationBehavior` to properly use ACL for resource-level checks vs TenantPermission for tenant-level checks
+- v2.3 (2026-01-13): Added RBAC deny support (`DynamicRole.DenyPermissions`), created DB migration
+- v2.4 (2026-01-13): Fixed SRP violation - `IsUserInTenantAsync` now delegates to `ITenantMembershipChecker` (implemented by Tenants module)
 
 **Next Review**: Quarterly security review or after significant authorization changes

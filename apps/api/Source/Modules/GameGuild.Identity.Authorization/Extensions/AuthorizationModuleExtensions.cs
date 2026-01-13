@@ -5,6 +5,7 @@ using GameGuild.Identity.Authorization.Caching;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace GameGuild.Identity.Authorization;
 
@@ -221,6 +222,11 @@ public static class AuthorizationModuleExtensions
         services.AddScoped<IPermissionGrantService, PermissionGrantService>();
         services.AddScoped<IPermissionQueryService, PermissionQueryService>();
         services.AddScoped<IPermissionBulkService, PermissionBulkService>();
+        
+        // Tenant membership checker - default fail-closed implementation
+        // The Tenants module should override this with an actual implementation
+        // Using TryAddScoped so the actual implementation from Tenants module takes precedence
+        services.TryAddScoped<ITenantMembershipChecker, FailClosedTenantMembershipChecker>();
         
         // Permission audit service
         services.AddScoped<IPermissionAuditService, PermissionAuditService>();

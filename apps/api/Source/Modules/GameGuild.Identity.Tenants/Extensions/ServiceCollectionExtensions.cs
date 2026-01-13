@@ -51,6 +51,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUsageTrackingService, UsageTrackingService>();
         logger.LogInformation("Registered Usage Tracking Service in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
+        // Tenant membership checker - overrides the fail-closed default from Authorization module
+        stepStopwatch.Restart();
+        services.AddScoped<GameGuild.Identity.Authorization.ITenantMembershipChecker, TenantMembershipChecker>();
+        logger.LogInformation("Registered Tenant Membership Checker in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
         totalStopwatch.Stop();
         logger.LogInformation("Completed Tenants module setup in {ElapsedMs}ms", totalStopwatch.ElapsedMilliseconds);
 
