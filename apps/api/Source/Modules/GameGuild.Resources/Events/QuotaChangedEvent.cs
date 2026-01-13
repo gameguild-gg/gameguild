@@ -15,7 +15,17 @@ public record QuotaChangedEvent(
     long? HardLimit,
     string? Source,
     Guid? ActorId,
-    DateTime Timestamp) : IDomainEvent;
+    DateTime Timestamp) : IDomainEvent
+{
+    /// <inheritdoc />
+    public Guid EventId { get; init; } = Guid.NewGuid();
+
+    /// <inheritdoc />
+    public DateTime OccurredAt { get; init; } = Timestamp;
+
+    /// <inheritdoc />
+    public int Version { get; init; } = 1;
+}
 
 /// <summary>
 ///     Type of quota change

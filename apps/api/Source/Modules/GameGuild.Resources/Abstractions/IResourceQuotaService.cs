@@ -58,7 +58,15 @@ public interface IResourceQuotaService
 
     // Limit Checking
     /// <summary>
-    ///     Check if a resource usage would exceed limits
+    ///     Check if a resource usage would exceed limits.
+    ///     <para>
+    ///     <b>ADVISORY ONLY:</b> This method is read-only and does not consume quota.
+    ///     Use for UI/UX purposes (e.g., showing "approaching limit" warnings) or soft-limit checks.
+    ///     </para>
+    ///     <para>
+    ///     <b>DO NOT</b> use this for authoritative enforcement - callers can ignore the result.
+    ///     For atomic enforcement, use <see cref="TryAtomicConsumeAsync"/> instead.
+    ///     </para>
     /// </summary>
     Task<ResourceLimitCheckResponse> CheckLimitsAsync(Guid tenantId, ResourceUsageType type, long requestedAmount = 1, CancellationToken cancellationToken = default);
 

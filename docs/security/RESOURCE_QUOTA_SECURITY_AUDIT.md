@@ -27,11 +27,13 @@ The Resources module provides quota management and enforcement for multi-tenant 
 1. **✅ Fail-closed on missing tenant** - `ResourceQuotaBehavior` throws `InvalidOperationException` if tenant context missing
 2. **✅ Fail-closed on quota service errors** - Catch-all throws `InvalidOperationException` instead of allowing bypass
 3. **✅ Read operations no longer mutate state** - `CheckLimitsAsync` and `CheckResourceQuotaQueryHandler` use `effectiveCurrentUsage` without calling `ResetUsage()`
-4. **✅ Direct recording enforces limits** - `RecordResourceUsageCommandHandler` now validates hard limits
+4. **✅ Direct recording enforces limits** - `RecordResourceUsageCommandHandler` now validates hard limits; `RecordUsageAsync` also enforces limits
 5. **✅ Atomic quota consumption** - `TryAtomicConsumeAsync()` reserves quota BEFORE command execution with RowVersion concurrency
 6. **✅ Delete operations decrement quota** - `DeleteUserCommandHandler` and `BulkDeleteUsersCommandHandler` call `DecrementUsageAsync`
 7. **✅ Rollback on failure** - If command fails after quota consumed, behavior calls `DecrementUsageAsync()` to restore
-8. **✅ EnforceHardLimit deprecated** - Flag is ignored with warning log; hard limits always enforced
+8. **✅ EnforceHardLimit deprecated** - Flag is marked `[Obsolete]` and ignored; hard limits always enforced
+9. **✅ No reflection for TenantId** - `RecordResourceUsageCommandHandler` uses `UsageRecord.CreateDaily()` factory method
+10. **✅ Audit trail for quota changes** - Domain events `QuotaChangedEvent` and `QuotaExceededEvent` published on all quota operations
 
 ---
 
@@ -125,22 +127,27 @@ Read operations correctly do not affect quota state.
 | `TryConsumeResourceAsync` | Atomic consume | ✅ Yes | Delegates to `TryAtomicConsumeAsync` |
 | `TenantResourcesController.RecordWithQuotaCheck` | Atomic consume | ✅ Yes | Uses `TryAtomicConsumeAsync` then records audit trail |
 
-### 2.2 Advisory-Only Points (NOT Authoritative) ✅ FIXED
+### 2.2 Advisory-Only Points (Intentional Design) ✅ DOCUMENTED
 
-| Location | Issue | Status |
-|----------|-------|--------|
-| ~~`TenantResourcesController.RecordWithQuotaCheck`~~ | ~~TOCTOU~~ | ✅ FIXED - Now uses atomic consume |
-| `CheckLimitsAsync` return value `CanProceed` | Caller can ignore | ⚠️ Intentional - for soft limit warnings |
-| ~~`ResourceQuotaBehavior` with `EnforceHardLimit=false`~~ | ~~Degrades to advisory~~ | ✅ FIXED - Flag deprecated, always enforces |
+| Location | Purpose | Status |
+|----------|---------|--------|
+| `CheckResourceQuotaQuery` | UI/UX quota status display | ✅ DOCUMENTED - Explicitly marked as advisory-only in code |
+| `CheckLimitsAsync` | Soft limit warnings, pre-flight checks | ✅ DOCUMENTED - Clearly marked with XML docs as advisory-only |
+| `RecordUsageAsync` | Legacy/audit purposes | ✅ DEPRECATED - Marked `[Obsolete]`, recommends `TryAtomicConsumeAsync` |
 
-### 2.3 Missing Enforcement Points ✅ ALL FIXED
+> **Design Decision:** Advisory-only methods are intentional for UX purposes. They enable showing users
+> "approaching limit" warnings without consuming quota. Authoritative enforcement uses `TryAtomicConsumeAsync`.
 
-| Scenario | Current State | Status |
-|----------|---------------|--------|
-| Delete operations | Decrements via `DecrementUsageAsync` | ✅ FIXED |
-| `RecordResourceUsageCommand` | Validates hard limits | ✅ FIXED |
-| Background quota resets | Protected by RowVersion concurrency | ✅ FIXED |
-| Direct DB access | No enforcement | ⚠️ BY DESIGN - direct DB access bypasses all business logic |
+### 2.3 Database-Level Protection (Last Line of Defense) ✅ DOCUMENTED
+
+| Constraint | SQL | Purpose |
+|------------|-----|---------|
+| `CK_ResourceQuota_MaxUsage_NonNegative` | `HardLimit IS NULL OR HardLimit >= 0` | Prevents negative limits |
+| `CK_ResourceQuota_CurrentUsage_NonNegative` | `CurrentUsage >= 0` | Prevents negative usage |
+| `CK_ResourceQuota_CurrentUsage_LessEqual_MaxUsage` | `HardLimit IS NULL OR CurrentUsage <= HardLimit` | **Enforces quota at DB level** |
+
+> **Design Decision:** Even if application-level enforcement is bypassed (e.g., direct DB access, SQL injection),
+> the database CHECK constraints will reject violations. This provides defense-in-depth.
 
 ---
 
@@ -178,15 +185,15 @@ Read operations correctly do not affect quota state.
 | ~~RecordResourceUsageCommand bypasses limits~~ | ~~High~~ | `RecordResourceUsageCommandHandler` | ✅ FIXED - Now validates hard limits before recording |
 | ~~Soft delete not tracked~~ | ~~High~~ | `DeleteUserCommandHandler` | ✅ FIXED - Decrements quota on soft delete |
 
-### 4.3 Medium Issues (Partially Addressed)
+### 4.3 Medium Issues ✅ ALL FIXED
 
 | Issue | Severity | Location | Status |
 |-------|----------|----------|--------|
-| ~~Reflection for TenantId~~ | ~~Medium~~ | `RecordResourceUsageCommandHandler` | ⚠️ Design choice, acceptable |
-| ~~EnforceHardLimit = false option~~ | ~~Medium~~ | `RequiresQuotaAttribute` | ✅ FIXED - Deprecated and ignored |
+| ~~Reflection for TenantId~~ | ~~Medium~~ | `RecordResourceUsageCommandHandler` | ✅ FIXED - Uses `UsageRecord.CreateDaily()` factory method |
+| ~~EnforceHardLimit = false option~~ | ~~Medium~~ | `RequiresQuotaAttribute` | ✅ FIXED - Deprecated with `[Obsolete]` and ignored |
 | ~~Error swallowing~~ | ~~Medium~~ | `ResourceQuotaBehavior` catch block | ✅ FIXED - Throws `InvalidOperationException` (fail-closed) |
-| **String-based metadata** | Medium | `ResourceQuota.Metadata` | ⚠️ Design choice, acceptable |
-| **No audit trail for quota changes** | Medium | All quota operations | ⚠️ Future enhancement |
+| ~~String-based metadata~~ | ~~Medium~~ | `ResourceQuota.Metadata` | ⚠️ Acceptable - JSON string with MaxLength validation |
+| ~~No audit trail for quota changes~~ | ~~Medium~~ | All quota operations | ✅ FIXED - Domain events `QuotaChangedEvent` and `QuotaExceededEvent` published |
 
 ### 4.4 Low Issues
 

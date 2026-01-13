@@ -4,7 +4,15 @@ namespace GameGuild.Resources;
 
 /// <summary>
 ///     Handles checking resource quota enforcement.
-///     This is a read-only query that does NOT mutate state.
+///     <para>
+///     <b>ADVISORY ONLY:</b> This is a read-only query that does NOT mutate state or reserve quota.
+///     The result tells callers whether the operation WOULD be allowed, but does not guarantee
+///     the quota will still be available when the actual operation executes.
+///     </para>
+///     <para>
+///     For authoritative enforcement, commands should use <c>[RequiresQuota]</c> attribute
+///     which uses <c>TryAtomicConsumeAsync</c> for atomic reservation.
+///     </para>
 /// </summary>
 public class CheckResourceQuotaQueryHandler(IResourceQuotaRepository resourceQuotaRepository) : IQueryHandler<CheckResourceQuotaQuery, ResourceQuotaEnforcementResult>
 {

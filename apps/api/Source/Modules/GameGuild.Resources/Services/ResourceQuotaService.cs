@@ -404,8 +404,25 @@ public class ResourceQuotaService(
 
         foreach (var quota in quotasDueForReset.Where(q => q.ShouldReset()))
         {
+            var previousUsage = quota.CurrentUsage;
+            var tenantId = quota.TenantId!.Value;
+
             quota.ResetUsage();
             await quotaRepository.UpdateAsync(quota, cancellationToken);
+
+            // Publish audit event for quota reset
+            await publisher.Publish(new QuotaChangedEvent(
+                TenantId: tenantId,
+                ResourceType: quota.Type,
+                ChangeType: QuotaChangeType.Reset,
+                PreviousUsage: previousUsage,
+                CurrentUsage: 0,
+                SoftLimit: quota.SoftLimit,
+                HardLimit: quota.HardLimit,
+                Source: "ResetExpiredQuotasAsync",
+                ActorId: null,
+                Timestamp: DateTime.UtcNow), cancellationToken);
+
             resetCount++;
         }
 

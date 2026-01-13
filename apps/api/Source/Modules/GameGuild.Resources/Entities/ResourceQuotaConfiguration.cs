@@ -52,6 +52,9 @@ public class ResourceQuotaConfiguration : IEntityTypeConfiguration<ResourceQuota
         builder.HasIndex(x => x.Type).HasDatabaseName("IX_ResourceQuotas_ResourceType");
 
         // Configure check constraints using ToTable
+        // These constraints provide LAST-LINE-OF-DEFENSE protection at the database level.
+        // Even if application-level enforcement is bypassed (e.g., direct DB access),
+        // the database will reject violations with a constraint error.
         builder.ToTable(t =>
             {
                 t.HasCheckConstraint("CK_ResourceQuota_MaxUsage_NonNegative", "\"HardLimit\" IS NULL OR \"HardLimit\" >= 0");
