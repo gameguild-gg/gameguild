@@ -10,8 +10,6 @@ public class DynamicRoleConfiguration : IEntityTypeConfiguration<DynamicRole>
 {
     public void Configure(EntityTypeBuilder<DynamicRole> builder)
     {
-        builder.ToTable("DynamicRoles");
-        
         builder.HasKey(e => e.Id);
         
         // Indexes
@@ -33,29 +31,24 @@ public class DynamicRoleConfiguration : IEntityTypeConfiguration<DynamicRole>
         builder.Property(e => e.Description)
             .HasMaxLength(2000);
         
-        // PostgreSQL native array support for Permissions
+        // PostgreSQL native array support for Permissions (handled automatically by Npgsql)
         builder.Property(e => e.Permissions)
-            .HasColumnType("text[]")
             .IsRequired();
         
-        // PostgreSQL native array support for DenyPermissions
+        // PostgreSQL native array support for DenyPermissions (handled automatically by Npgsql)
         builder.Property(e => e.DenyPermissions)
-            .HasColumnType("text[]")
             .IsRequired();
         
-        // PostgreSQL native array for mutually exclusive role IDs
+        // PostgreSQL native arrays for role IDs (handled automatically by Npgsql)
         builder.Property(e => e.MutuallyExclusiveRoleIds)
-            .HasColumnType("uuid[]")
             .IsRequired();
         
-        // PostgreSQL native array for prerequisite role IDs
         builder.Property(e => e.PrerequisiteRoleIds)
-            .HasColumnType("uuid[]")
             .IsRequired();
         
-        // Metadata as JSONB
-        builder.Property(e => e.Metadata)
-            .HasColumnType("jsonb");
+        // Ignore Metadata for now - Dictionary<string, object> needs explicit JSONB handling
+        // TODO: Add JSONB support when needed
+        builder.Ignore(e => e.Metadata);
         
         // Self-referencing relationship for role hierarchy
         builder.HasOne(e => e.ParentRole)
@@ -72,8 +65,6 @@ public class DynamicRoleAssignmentConfiguration : IEntityTypeConfiguration<Dynam
 {
     public void Configure(EntityTypeBuilder<DynamicRoleAssignment> builder)
     {
-        builder.ToTable("DynamicRoleAssignments");
-        
         builder.HasKey(e => e.Id);
         
         // Indexes
