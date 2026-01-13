@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Resources;
 
 namespace GameGuild.Identity.Tenants;
 
@@ -9,4 +10,5 @@ namespace GameGuild.Identity.Tenants;
 /// <param name="Slug">Tenant slug (unique identifier)</param>
 /// <param name="AdminEmail">Administrator email address</param>
 /// <param name="Description">Optional tenant description</param>
+[RequiresQuota(ResourceUsageType.Tenants, 1, Source = "CreateTenant")]
 public record CreateTenantCommand(string Name, string Slug, string AdminEmail, string? Description = null) : ICommand<Guid>;
