@@ -496,7 +496,7 @@ services.AddAuthorizationCaching(options => options.UseDistributedCache = true);
 ```
 
 **Remaining Issues:**
-- ⚠️ None - distributed cache, TTL configuration, and metrics are now implemented
+- ✅ None - distributed cache, TTL configuration, and metrics are now fully implemented
 
 ### 4.4 Error Handling
 
@@ -682,7 +682,7 @@ public static T Create<T>(Action<T>? configure = null)
 |-------|----------|------|-----|
 | ✅ **FIXED: AuthUser vs User duality** | ~~Identity.Users, Identity.Authentication~~ **MERGED** | ~~Sync issues, confusion~~ | ~~Merge into single User aggregate or document sync strategy~~ Merged `AuthUser` into `User` entity. Password hash, OAuth IDs, profile data now unified. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete) |
 | **No authorization tests** | Authorization module | Untested security code | Add 40+ integration tests like Authentication has |
-| **Cache invalidation fragmented** | Multiple services | Stale permissions after revoke | Unified cache coherence strategy with distributed cache |
+| ✅ **FIXED: Cache invalidation fragmented** | ~~Multiple services~~ **UNIFIED** | ~~Stale permissions after revoke~~ | ~~Unified cache coherence strategy with distributed cache~~ Implemented L1+L2 hybrid caching with `HybridPermissionCache`. L1 (in-memory) provides fast access, L2 (distributed IDistributedCache) ensures cross-instance coherence. TTL configuration via `CacheOptions`. Cache metrics exposed via `ICacheMetrics`. See [HybridPermissionCache.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Caching/HybridPermissionCache.cs) |
 | ✅ **FIXED: God Service: PermissionService** | ~~Authorization/Services~~ **SPLIT** | ~~Hard to maintain, test~~ | Split into `PermissionGrantService`, `PermissionQueryService`, `PermissionBulkService` with actual implementation (not adapters). All handlers refactored to use focused interfaces directly. Legacy `PermissionService` marked `[Obsolete]` as backward-compatible facade. See [FocusedPermissionServices.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/FocusedPermissionServices.cs) |
 | ✅ **FIXED: Magic string cache keys** | ~~"CurrentTenant", "TenantId" in HttpContext.Items~~ **IMPLEMENTED** | ~~Typo = runtime error~~ | ~~Constants class for context item keys~~ Created `HttpContextKeys` constants class. All middleware now uses typed constants. |
 
@@ -707,7 +707,7 @@ public static T Create<T>(Action<T>? configure = null)
 | **JWT auth** | ✅ Yes | JwtTokenService, ASP.NET JWT middleware | ✅ Token versioning implemented via JTI + revocation service | ✅ Immediate token revocation supported |
 | **Cookie/session auth** | ⚠️ Partial | UserSession entity exists | No cookie-based authentication flow | Low (JWT is primary) |
 | **External login providers** | ✅ Yes | OAuthService (Google, GitHub) | Limited to 2 providers | Low (can add more) |
-| **MFA** | ✅ Yes | MfaService (TOTP, backup codes, trusted devices) | No WebAuthn/FIDO2 | Medium (TOTP sufficient for now) |
+| **MFA** | ✅ Yes | MfaService (TOTP, backup codes, trusted devices), WebAuthnService (FIDO2) | ~~No WebAuthn/FIDO2~~ ✅ WebAuthn/FIDO2 implemented via Fido2NetLib | ~~Medium~~ ✅ Full passwordless support |
 | **Refresh tokens** | ✅ Yes | RefreshToken entity, rotation logic | ✅ Tokens now hashed via SHA-256. No family tracking for theft detection | ~~⚠️ Plaintext storage~~ ✅ Now hashed |
 | **Session revocation** | ✅ Yes | UserSession entity, RevokeTokenCommand | No WebSocket push for client logout | Low (clients check on next request) |
 | **Permission-based authorization** | ✅ Yes | TenantPermission, ResourcePermission, ActorContext.HasPermission() | ~~Stringly-typed~~ ✅ Typed Permission classes | ~~🚨 Typo = bypass~~ ✅ Prevented |
