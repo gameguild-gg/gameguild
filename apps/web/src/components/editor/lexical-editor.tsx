@@ -347,7 +347,7 @@ interface EditorProps {
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId?: string | null
   mode?: ProjectMode
-  panel?: "left" | "right"
+  panel?: "left" | "right" | "single"
 }
 
 // Criar um plugin para gerenciar a referência do editor:

@@ -22,7 +22,7 @@ export const INSERT_NODE_COMMAND: LexicalCommand<{ nodeType: string }> = createC
 
 interface NodeValidationPluginProps {
   mode: ProjectMode
-  panel?: "left" | "right"  // Only for type2 layouts
+  panel?: "left" | "right" | "single"  // "single" for type1 layouts
 }
 
 export function NodeValidationPlugin({ mode, panel }: NodeValidationPluginProps) {
