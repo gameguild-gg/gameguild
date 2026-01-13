@@ -8,12 +8,12 @@ namespace GameGuild.Identity.Authorization.UnitTests.Services;
 
 public class AuthorizationPermissionServiceAdapterTests
 {
-    private readonly Mock<IPermissionService> _permissionServiceMock = new();
+    private readonly Mock<IPermissionQueryService> _queryServiceMock = new();
     private readonly AuthorizationPermissionServiceAdapter _adapter;
 
     public AuthorizationPermissionServiceAdapterTests()
     {
-        _adapter = new AuthorizationPermissionServiceAdapter(_permissionServiceMock.Object);
+        _adapter = new AuthorizationPermissionServiceAdapter(_queryServiceMock.Object);
     }
 
     [Fact]
@@ -21,14 +21,14 @@ public class AuthorizationPermissionServiceAdapterTests
     {
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
-        _permissionServiceMock
+        _queryServiceMock
             .Setup(p => p.HasTenantPermissionAsync(userId, tenantId, "perm", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         var result = await _adapter.HasPermissionAsync(userId, tenantId, "perm", CancellationToken.None);
 
         result.Should().BeTrue();
-        _permissionServiceMock.Verify(p => p.HasTenantPermissionAsync(userId, tenantId, "perm", It.IsAny<CancellationToken>()), Times.Once);
+        _queryServiceMock.Verify(p => p.HasTenantPermissionAsync(userId, tenantId, "perm", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class AuthorizationPermissionServiceAdapterTests
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var permissions = new[] { "p1", "p2" };
-        _permissionServiceMock
+        _queryServiceMock
             .Setup(p => p.GetEffectivePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string> { "p1", "p2", "extra" });
 
@@ -65,7 +65,7 @@ public class AuthorizationPermissionServiceAdapterTests
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var permissions = new[] { "p1", "p2" };
-        _permissionServiceMock
+        _queryServiceMock
             .Setup(p => p.GetEffectivePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string> { "p1" });
 
@@ -93,7 +93,7 @@ public class AuthorizationPermissionServiceAdapterTests
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var permissions = new[] { "p1", "p2" };
-        _permissionServiceMock
+        _queryServiceMock
             .Setup(p => p.GetEffectivePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<string> { "p2" });
 
@@ -111,13 +111,13 @@ public class AuthorizationPermissionServiceAdapterTests
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
         var granted = new List<string> { "a", "b" };
-        _permissionServiceMock
+        _queryServiceMock
             .Setup(p => p.GetEffectivePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(granted);
 
         var result = await _adapter.GetPermissionsAsync(userId, tenantId, CancellationToken.None);
 
         result.Should().BeEquivalentTo(granted);
-        _permissionServiceMock.Verify(p => p.GetEffectivePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()), Times.Once);
+        _queryServiceMock.Verify(p => p.GetEffectivePermissionsAsync(userId, tenantId, It.IsAny<CancellationToken>()), Times.Once);
     }
 }
