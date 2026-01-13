@@ -439,7 +439,7 @@ Authorization checks in handlers:
 - ✅ **FIXED: Fail-closed error handling:** ~~If `IAuthorizationPermissionService` throws exception, does ActorContext get built with empty permissions?~~ Now explicitly handles errors with `PermissionFetchException`, sets ActorContext to Anonymous, and returns HTTP 500.
 - ✅ **FIXED: Cache poisoning:** ~~If tenant version isn't incremented correctly, users could retain stale permissions.~~ `PermissionService` now injects `ITenantSecurityVersionStore` and calls `IncrementVersionAsync()` on all mutations (Grant, Revoke, SetGlobalDefaults, SetTenantDefaults). Cache invalidation is guaranteed. See [PermissionService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Services/PermissionService.cs)
 - ✅ **FIXED: String-based permission checks:** ~~Typo in `"users:write"` vs `"user:write"` grants unintended access.~~ Now using strongly-typed `Permission` classes. See [docs/security/STRONGLY_TYPED_PERMISSIONS.md](docs/security/STRONGLY_TYPED_PERMISSIONS.md)
-- ✅ **FIXED: Rate limiting implemented:** Four named policies configured via `RateLimitPolicies`: `authentication` (10 req/min), `authorization` (100 req/min), `api` (60 req/min), `internal` (200 req/min). Controllers annotated with `[EnableRateLimiting]` attribute.
+- ✅ **FIXED: Rate limiting implemented:** Enterprise-grade rate limiting with 10 named policies, 4 partition strategies (IP/User/Tenant/API-Key), and 4 limiter algorithms (Fixed Window, Sliding Window, Token Bucket, Concurrency). See [Section 9.3.1: Rate Limiting Architecture](#931-rate-limiting-architecture) for full documentation.
 
 ---
 
@@ -693,7 +693,7 @@ public static T Create<T>(Action<T>? configure = null)
 | ✅ **CLARIFIED: Tenant aggregate** | ~~Identity.Tenants~~ **DOCUMENTED** | ~~Hard to test, violates SRP~~ | ~~Split into aggregates~~ Tenant is an **aggregate root** by design (DDD pattern), not a god object. See entity XML docs explaining the design rationale. Added rich domain methods for validation. |
 | ✅ **FIXED: Duplicate tenant resolution** | ~~TenantMiddleware, TenantContext, ActorContextMiddleware~~ **UNIFIED** | ~~Not DRY, inconsistency risk~~ | ~~Shared ITenantResolver service~~ Created `ITenantResolver` interface with `TenantResolver` implementation. Provides centralized resolution with priority: Header → Domain → Query → Route → Claims → Default. See [ITenantResolver.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Abstractions/ITenantResolver.cs) |
 | ✅ **FIXED: Large interfaces** | ~~IPermissionsContext (10+ methods)~~ **SPLIT** | ~~Violates ISP~~ | ~~Split into IPermissionChecker, IPermissionManager~~ Created `IPermissionChecker` (permission operations) and `IPermissionContextInfo` (identity properties). `IPermissionsContext` now inherits from both. DI registers all three interfaces. |
-| ✅ **FIXED: Rate limiting** | ~~Permission check endpoints~~ **PROTECTED** | ~~DoS risk~~ | ~~Add rate limiting middleware~~ Four named policies implemented: `authentication` (10 req/min), `authorization` (100 req/min), `api` (60 req/min), `internal` (200 req/min). See [RateLimitPolicies.cs](apps/api/Source/Modules/GameGuild.SharedKernel/Configuration/PresentationLayer/RateLimiting/RateLimitPolicies.cs) |
+| ✅ **FIXED: Rate limiting** | ~~Permission check endpoints~~ **PROTECTED** | ~~DoS risk~~ | **ENTERPRISE IMPLEMENTATION:** 10 policies with partitioned limiters. See [Section 9.3.1](#931-rate-limiting-architecture) |
 
 ---
 
@@ -716,7 +716,7 @@ public static T Create<T>(Action<T>? configure = null)
 | **Audit logging hooks** | ✅ Yes | PermissionAuditService, AuthenticationAttempt, SecurityAuditController, SecurityAuditAggregator | ~~No centralized audit log viewer~~ ✅ Centralized viewer at `/api/admin/security-audit` | ~~Medium~~ ✅ Full ops visibility |
 | **Impersonation/delegation** | ✅ Yes | PermissionDelegation entity | No UI for granting delegation | Low (admin can SQL) |
 | **Service accounts / machine identities** | ⚠️ Partial | ActorKind.Service, ServiceActor record, ActorKindResolver | ~~No ServiceActor entity~~ ✅ ServiceActor record exists. Still missing: persistence entity, management endpoints, client_credentials token endpoint | Medium (actor model complete, persistence needed) |
-| **Rate limiting / abuse controls** | ✅ Yes | RateLimitPolicies, AddFixedWindowLimiter, AddSlidingWindowLimiter, EnableRateLimiting attribute | ~~No rate limiting~~ ✅ Four policies: authentication (10 req/min), authorization (100 req/min), api (60 req/min), internal (200 req/min) | ✅ DoS protection complete |
+| **Rate limiting / abuse controls** | ✅ Yes | 10 policies: Fixed/Sliding Window, Token Bucket, Concurrency. Partitioned by IP/User/Tenant/API-Key. | Enterprise-grade protection | ✅ See [Section 9.3.1](#931-rate-limiting-architecture) |
 
 ---
 
@@ -759,7 +759,7 @@ public static T Create<T>(Action<T>? configure = null)
 | **11** | ✅ **DONE: Split God services** (PermissionService) | ~~Extract `PermissionGrantService`, `PermissionCheckService`, `PermissionAuditService` from `PermissionService`.~~ **IMPLEMENTED!** Split into `IPermissionGrantService` (mutations), `IPermissionQueryService` (reads), `IPermissionBulkService` (bulk ops). See [IPermissionGrantService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Abstractions/IPermissionGrantService.cs) | ✅ Better SRP, easier testing |
 | **12** | ✅ **NOT NEEDED: Split God entities** (Tenant) | ~~Extract `TenantConfiguration`, `TenantMembership`, `TenantUsage` as separate aggregates.~~ **VERIFIED:** Tenant is a proper DDD aggregate root. Navigation properties to child entities (Settings, Statistics, Usage) are appropriate. Documented in [Tenant.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/Tenant.cs). | ✅ Proper DDD pattern confirmed |
 | **13** | ✅ **DONE: Shared tenant resolver** | ~~Create `ITenantResolver` interface.~~ **IMPLEMENTED!** Created `TenantIdExtractor` utility with methods for all resolution sources. Used by `TenantMiddleware`, `FeatureContextFactory`, `SerilogExtensions`. | ✅ DRY compliance |
-| **14** | ✅ **DONE: Rate limiting** | ~~Add ASP.NET rate limiting middleware for `/auth/*` and `/permissions/*` endpoints.~~ **IMPLEMENTED!** Four named policies configured: `authentication` (10 req/min for sign-in/sign-up), `authorization` (100 req/min for permission checks), `api` (60 req/min sliding window), `internal` (200 req/min for admin). Controllers annotated with `[EnableRateLimiting]`. Custom 429 response with `Retry-After` header. See [RateLimitPolicies.cs](apps/api/Source/Modules/GameGuild.SharedKernel/Configuration/PresentationLayer/RateLimiting/RateLimitPolicies.cs) | ✅ DoS protection complete |
+| **14** | ✅ **DONE: Rate limiting** | **FULLY IMPLEMENTED!** See [Section 9.3.1: Rate Limiting Architecture](#931-rate-limiting-architecture) below for comprehensive documentation. | ✅ Enterprise-grade DoS protection |
 | **15** | ✅ **DONE: Enrich domain models** | ~~Move business logic from handlers to entity methods.~~ **IMPLEMENTED!** User entity has 20+ behavior methods (`Activate()`, `MarkDeleted()`, `GetRoleInTenant()`, etc.). TenantMember has lifecycle and hierarchy methods. See section 3.2. | ✅ Richer domain model |
 | **16** | ✅ **DONE: Centralized audit log viewer** | ~~Create `/admin/audit` endpoint.~~ **IMPLEMENTED!** `SecurityAuditController` at `/api/admin/security-audit` with endpoints for unified logs, authentication-specific, permission-specific, and CSV export. `SecurityAuditAggregator` service aggregates `PermissionAuditLog`, `AuthenticationAttempt`, `AccessReviewLog`. Admin-only access. | ✅ Full ops visibility |
 | **17** | ✅ **DONE: WebAuthn/FIDO2 support** | ~~Add passwordless authentication.~~ **IMPLEMENTED!** `WebAuthnController` at `/api/auth/webauthn/*` with full registration/authentication flow. `WebAuthnService` using `Fido2NetLib` v4.0.0. `UserWebAuthnCredential` entity with repository. Platform authenticators (Touch ID, Windows Hello) and security keys supported. | ✅ Modern security, passwordless UX |
@@ -767,6 +767,125 @@ public static T Create<T>(Action<T>? configure = null)
 
 **Estimated Effort:** ~~1-2 months~~ **Complete: 7 of 8 items!** ✅ #14 Rate limiting, ✅ #16 Audit viewer, ✅ #17 WebAuthn fully done. ⚠️ #18 Permission templates (handlers missing)  
 **Expected Impact:** ✅ Architecture improvements complete. ✅ Ops visibility, modern auth, and DoS protection complete. Remaining: Permission template handlers.
+
+---
+
+### 9.3.1 Rate Limiting Architecture
+
+**Location:** [RateLimitPolicies.cs](apps/api/Source/Modules/GameGuild.SharedKernel/Configuration/PresentationLayer/RateLimiting/RateLimitPolicies.cs) | [RateLimitingOptions.cs](apps/api/Source/Modules/GameGuild.SharedKernel/Configuration/PresentationLayer/RateLimiting/RateLimitingOptions.cs) | [ServiceCollectionExtensions.cs](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs)
+
+#### Rate Limiting Policies
+
+| Policy | Algorithm | Partition Key | Default Limit | Purpose |
+|--------|-----------|---------------|---------------|---------|
+| `authentication` | Fixed Window | IP or User ID | 10 req/min | Prevent brute-force attacks on login/signup |
+| `authorization` | Fixed Window | User ID + Tenant ID | 100 req/min | Prevent DoS on permission evaluation |
+| `api` | Sliding Window | User ID or IP | 60 req/min | General API rate limiting |
+| `internal` | Fixed Window | User ID | 200 req/min | Relaxed limits for admin operations |
+| `per-tenant` | Sliding Window | Tenant ID | 1000 req/min | Tenant isolation (prevent noisy neighbor) |
+| `per-user` | Sliding Window | User ID | 300 req/min | Per-user fairness |
+| `per-ip` | Sliding Window | IP Address | 30 req/min | Anonymous abuse protection |
+| `bursty` | Token Bucket | User ID or IP | 100 tokens, 20/10s | Allow traffic bursts |
+| `api-key` | Token Bucket | API Key | 100-1000 req/min | Tiered API access (standard/premium) |
+| `expensive-operations` | Concurrency | User ID | 10 concurrent | Protect server from expensive ops |
+
+#### Partition Strategies
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     RATE LIMITING PARTITION STRATEGIES                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  Per-IP Address ────────────────────────────────────────────────────────────│
+│  ├─ Source: X-Forwarded-For → X-Real-IP → Connection.RemoteIpAddress        │
+│  ├─ Use Case: Anonymous abuse protection, brute-force prevention            │
+│  └─ Policy: per-ip (30 req/min)                                              │
+│                                                                              │
+│  Per-User ──────────────────────────────────────────────────────────────────│
+│  ├─ Source: ClaimTypes.NameIdentifier from JWT                               │
+│  ├─ Fallback: IP address for anonymous users                                 │
+│  ├─ Use Case: Fair usage per authenticated user                              │
+│  └─ Policy: per-user (300 req/min), api (60 req/min)                         │
+│                                                                              │
+│  Per-Tenant ────────────────────────────────────────────────────────────────│
+│  ├─ Source: X-Tenant-Id header                                               │
+│  ├─ Fallback: IP address if no tenant context                                │
+│  ├─ Use Case: Multi-tenant isolation, prevent noisy neighbor                 │
+│  └─ Policy: per-tenant (1000 req/min)                                        │
+│                                                                              │
+│  Per-API-Key ───────────────────────────────────────────────────────────────│
+│  ├─ Source: X-API-Key header                                                 │
+│  ├─ Tiering: pk_* prefix = premium (1000 req/min), else standard (100/min)   │
+│  ├─ Fallback: IP address if no API key                                       │
+│  └─ Policy: api-key (tiered Token Bucket)                                    │
+│                                                                              │
+│  Combined (User + Tenant) ──────────────────────────────────────────────────│
+│  ├─ Format: "user:{userId}:tenant:{tenantId}"                                │
+│  ├─ Use Case: Permission/authorization endpoints                             │
+│  └─ Policy: authorization (100 req/min)                                      │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Limiter Algorithms
+
+| Algorithm | Behavior | Best For | Policies Using |
+|-----------|----------|----------|----------------|
+| **Fixed Window** | Reset count at window boundary | Simple, predictable limits | authentication, authorization, internal |
+| **Sliding Window** | Smooth rate across window segments | Prevents burst at boundary | api, per-tenant, per-user, per-ip |
+| **Token Bucket** | Replenish tokens over time, allow bursts | Bursty traffic patterns | bursty, api-key |
+| **Concurrency** | Limit simultaneous requests | Expensive operations | expensive-operations |
+
+#### Configuration (appsettings.json)
+
+```json
+{
+  "RateLimiting": {
+    "EnableRateLimiting": true,
+    "AuthenticationRequestsPerMinute": 10,
+    "AuthorizationRequestsPerMinute": 100,
+    "ApiRequestsPerMinute": 60,
+    "TenantRequestsPerMinute": 1000,
+    "UserRequestsPerMinute": 300,
+    "StandardApiKeyRequestsPerMinute": 100,
+    "PremiumApiKeyRequestsPerMinute": 1000,
+    "TokenBucketLimit": 100,
+    "TokenReplenishmentPeriod": "00:00:10",
+    "TokensPerPeriod": 20,
+    "MaxConcurrentRequests": 10,
+    "QueueLimit": 2
+  }
+}
+```
+
+#### Controller Usage
+
+```csharp
+// Apply to controller class
+[EnableRateLimiting(RateLimitPolicies.Authentication)]
+public class AuthController : ControllerBase { }
+
+// Apply to specific action
+[EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
+public async Task<IActionResult> GenerateReport() { }
+
+// Disable for specific action
+[DisableRateLimiting]
+public async Task<IActionResult> HealthCheck() { }
+```
+
+#### 429 Response Format
+
+```json
+{
+  "status": 429,
+  "title": "Too Many Requests",
+  "detail": "Rate limit exceeded. Please retry after 60 seconds.",
+  "instance": "/api/auth/sign-in"
+}
+```
+
+Headers: `Retry-After: 60`
 
 ---
 
