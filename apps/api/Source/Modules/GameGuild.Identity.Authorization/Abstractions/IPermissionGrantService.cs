@@ -61,6 +61,39 @@ public interface IPermissionGrantService
         string[] permissions,
         Guid? setBy = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Add deny permissions to a user in a tenant. Deny takes precedence over allow.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Denied permissions are subtracted from allowed permissions during evaluation.
+    ///         Use this to explicitly block specific permissions for a user, even if they
+    ///         are granted via roles or tenant defaults.
+    ///     </para>
+    /// </remarks>
+    Task<TenantPermission> DenyTenantPermissionAsync(
+        Guid? userId,
+        Guid? tenantId,
+        string[] permissions,
+        Guid? deniedBy = null,
+        string? reason = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Remove deny permissions from a user in a tenant.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         This removes permissions from the deny list, potentially allowing them
+    ///         if they are granted via roles or tenant defaults.
+    ///     </para>
+    /// </remarks>
+    Task<bool> RemoveDenyPermissionsAsync(
+        Guid? userId,
+        Guid? tenantId,
+        string[] permissions,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>

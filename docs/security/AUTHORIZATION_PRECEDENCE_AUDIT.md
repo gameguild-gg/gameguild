@@ -949,5 +949,6 @@ public async Task PermissionDeny_InvalidatesCache()
 - v2.2 (2026-01-13): Fixed `AuthorizationBehavior` to properly use ACL for resource-level checks vs TenantPermission for tenant-level checks
 - v2.3 (2026-01-13): Added RBAC deny support (`DynamicRole.DenyPermissions`), created DB migration
 - v2.4 (2026-01-13): Fixed SRP violation - `IsUserInTenantAsync` now delegates to `ITenantMembershipChecker` (implemented by Tenants module)
+- v2.5 (2026-01-13): Added `DenyTenantPermissionAsync()` and `RemoveDenyPermissionsAsync()` methods to `IPermissionGrantService`. Fixed stale "ALLOW-WINS" comment in `EffectivePermissionResolverService`. Added `PermissionOperationType.Deny` enum value.
 
 **Next Review**: Quarterly security review or after significant authorization changes

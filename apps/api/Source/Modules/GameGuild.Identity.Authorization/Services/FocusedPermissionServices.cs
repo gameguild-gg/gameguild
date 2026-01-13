@@ -168,6 +168,114 @@ public sealed class PermissionGrantService(
         await InvalidateTenantCacheAsync(tenantId, cancellationToken);
     }
 
+    public async Task<TenantPermission> DenyTenantPermissionAsync(
+        Guid? userId,
+        Guid? tenantId,
+        string[] permissions,
+        Guid? deniedBy = null,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation(
+            "Adding deny permissions {Permissions} for user {UserId} in tenant {TenantId}",
+            string.Join(", ", permissions),
+            userId,
+            tenantId);
+
+        var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken);
+
+        if (existing != null)
+        {
+            existing.AddDenyPermissions(permissions);
+            await repository.UpdateAsync(existing, cancellationToken);
+
+            // SECURITY: Increment tenant version to invalidate all cached permissions
+            await InvalidateTenantCacheAsync(tenantId, cancellationToken);
+
+            await auditService.LogPermissionChangeAsync(
+                PermissionOperationType.Deny,
+                tenantId,
+                userId ?? Guid.Empty,
+                deniedBy,
+                null, null, null, null,
+                string.Join(",", permissions),
+                reason,
+                true,
+                null, null, null,
+                cancellationToken);
+
+            return existing;
+        }
+
+        // Create new entry with deny permissions only
+        var permission = new TenantPermission
+        {
+            UserId = userId,
+            TenantId = tenantId,
+            Permissions = Array.Empty<string>(),
+            DenyPermissions = permissions,
+            GrantedBy = deniedBy,
+            GrantedAt = DateTime.UtcNow,
+            Reason = reason ?? "Deny permissions added"
+        };
+
+        var result = await repository.CreateAsync(permission, cancellationToken);
+
+        // SECURITY: Increment tenant version to invalidate all cached permissions
+        await InvalidateTenantCacheAsync(tenantId, cancellationToken);
+
+        await auditService.LogPermissionChangeAsync(
+            PermissionOperationType.Deny,
+            tenantId,
+            userId ?? Guid.Empty,
+            deniedBy,
+            null, null, null, null,
+            string.Join(",", permissions),
+            reason,
+            true,
+            null, null, null,
+            cancellationToken);
+
+        return result;
+    }
+
+    public async Task<bool> RemoveDenyPermissionsAsync(
+        Guid? userId,
+        Guid? tenantId,
+        string[] permissions,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation(
+            "Removing deny permissions {Permissions} from user {UserId} in tenant {TenantId}",
+            string.Join(", ", permissions),
+            userId,
+            tenantId);
+
+        var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken);
+
+        if (existing == null) return false;
+
+        existing.RemoveDenyPermissions(permissions);
+        await repository.UpdateAsync(existing, cancellationToken);
+
+        // SECURITY: Increment tenant version to invalidate all cached permissions
+        await InvalidateTenantCacheAsync(tenantId, cancellationToken);
+
+        await auditService.LogPermissionChangeAsync(
+            PermissionOperationType.Revoke,
+            tenantId,
+            userId ?? Guid.Empty,
+            null, null, null, null,
+            string.Join(",", permissions),
+            null,
+            "Deny permissions removed",
+            true,
+            null, null, null,
+            cancellationToken);
+
+        return true;
+    }
+
     private async Task InvalidateTenantCacheAsync(Guid? tenantId, CancellationToken cancellationToken)
     {
         var tenantKey = tenantId?.ToString() ?? "global";

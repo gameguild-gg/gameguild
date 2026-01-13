@@ -41,7 +41,11 @@ public enum PermissionOperationType
     Delegate = 5,
     // ReSharper disable once InconsistentNaming - JIT is a standard abbreviation for Just-In-Time
     ElevateJIT = 6,
-    Review = 7
+    Review = 7,
+    /// <summary>
+    ///     Explicit deny of a permission (takes precedence over allow)
+    /// </summary>
+    Deny = 8
 }
 
 /// <summary>

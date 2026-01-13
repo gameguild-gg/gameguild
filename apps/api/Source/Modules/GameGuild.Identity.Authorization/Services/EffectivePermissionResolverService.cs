@@ -6,8 +6,18 @@ namespace GameGuild.Identity.Authorization;
 
 /// <summary>
 ///     Unified implementation of effective permission resolver.
-///     Aggregates permissions from all sources using ALLOW-WINS precedence.
+///     Aggregates permissions from all sources using <b>DENY-WINS</b> precedence.
 /// </summary>
+/// <remarks>
+///     <para>
+///         Permission evaluation collects allows and denies from all sources (RBAC roles,
+///         tenant defaults, direct grants), then applies DENY-WINS:
+///         <c>EffectivePermissions = AllowSet - DenySet</c>
+///     </para>
+///     <para>
+///         Static permissions (system account wildcard) are protected from deny.
+///     </para>
+/// </remarks>
 public class EffectivePermissionResolverService(
     IRbacPermissionResolver rbacResolver,
     ITenantPermissionStore tenantPermissionStore,
