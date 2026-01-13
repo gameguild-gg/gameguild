@@ -1,7 +1,7 @@
 using FluentAssertions;
-using GameGuild.API.Database;
 using GameGuild.CQRS;
 using GameGuild.Resources;
+using GameGuild.Resources.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -14,17 +14,17 @@ namespace GameGuild.Resources.IntegrationTests;
 /// </summary>
 public class ResourceQuotaIsolationTests : IDisposable
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ResourceQuotaTestDbContext _context;
     private readonly IResourceQuotaRepository _repository;
     private readonly IResourceQuotaService _service;
 
     public ResourceQuotaIsolationTests()
     {
-        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+        var options = new DbContextOptionsBuilder<ResourceQuotaTestDbContext>()
             .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
             .Options;
 
-        _context = new ApplicationDbContext(options);
+        _context = new ResourceQuotaTestDbContext(options);
         _repository = new ResourceQuotaRepository(_context);
         var usageRepository = new UsageRecordRepository(_context);
         var publisherMock = new Mock<IPublisher>();
