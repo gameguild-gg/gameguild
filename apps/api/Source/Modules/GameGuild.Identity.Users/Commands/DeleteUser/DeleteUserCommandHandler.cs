@@ -30,11 +30,14 @@ public class DeleteUserCommandHandler(
         // Decrement quota to maintain accurate resource accounting
         if (Actor.TenantId.HasValue)
         {
+            // Extract user GUID from SubjectId if available
+            Guid? actorUserId = Guid.TryParse(Actor.SubjectId, out var parsedId) ? parsedId : null;
+
             await quotaService.DecrementUsageAsync(
                 Actor.TenantId.Value,
                 ResourceUsageType.Users,
                 1,
-                Actor.UserId,
+                actorUserId,
                 "DeleteUser",
                 cancellationToken).ConfigureAwait(false);
         }

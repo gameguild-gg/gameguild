@@ -31,11 +31,14 @@ public class BulkDeleteUsersCommandHandler(
         // Decrement quota by the number of deleted users
         if (Actor.TenantId.HasValue && deletedCount > 0)
         {
+            // Extract user GUID from SubjectId if available
+            Guid? actorUserId = Guid.TryParse(Actor.SubjectId, out var parsedId) ? parsedId : null;
+
             await quotaService.DecrementUsageAsync(
                 Actor.TenantId.Value,
                 ResourceUsageType.Users,
                 deletedCount,
-                Actor.UserId,
+                actorUserId,
                 "BulkDeleteUsers",
                 cancellationToken).ConfigureAwait(false);
         }
