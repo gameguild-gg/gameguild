@@ -61,14 +61,31 @@ public sealed class GrantTenantPermissionCommandHandler(
             request.UserId,
             request.TenantId);
 
-        // Check if current user is tenant admin
-        if (!Actor.IsTenantAdmin && !Actor.IsSystemAdmin)
+        // SECURITY: Global defaults (tenantId=null or Empty) require ManageGlobalDefaults permission
+        var isGlobalDefault = request.TenantId.Value == Guid.Empty;
+        if (isGlobalDefault)
         {
-            logger.LogWarning(
-                "User {GrantedBy} attempted to grant tenant permissions without admin privileges",
-                request.GrantedBy);
+            if (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin)
+            {
+                logger.LogWarning(
+                    "User {GrantedBy} attempted to modify global default permissions without ManageGlobalDefaults permission",
+                    request.GrantedBy);
 
-            throw new UnauthorizedAccessException("Only tenant or system administrators can grant tenant permissions");
+                throw new UnauthorizedAccessException(
+                    "Modifying global default permissions requires 'system:manage-global-defaults' permission");
+            }
+        }
+        else
+        {
+            // Check if current user is tenant admin for tenant-specific grants
+            if (!Actor.IsTenantAdmin && !Actor.IsSystemAdmin)
+            {
+                logger.LogWarning(
+                    "User {GrantedBy} attempted to grant tenant permissions without admin privileges",
+                    request.GrantedBy);
+
+                throw new UnauthorizedAccessException("Only tenant or system administrators can grant tenant permissions");
+            }
         }
 
         var tenantPermission = await grantService.GrantTenantPermissionAsync(
@@ -141,14 +158,31 @@ public sealed class RevokeTenantPermissionCommandHandler(
             request.TenantId,
             request.Reason ?? "Not specified");
 
-        // Check if current user is tenant admin
-        if (!Actor.IsTenantAdmin && !Actor.IsSystemAdmin)
+        // SECURITY: Global defaults (tenantId=null or Empty) require ManageGlobalDefaults permission
+        var isGlobalDefault = request.TenantId.Value == Guid.Empty;
+        if (isGlobalDefault)
         {
-            logger.LogWarning(
-                "User {RevokedBy} attempted to revoke tenant permissions without admin privileges",
-                request.RevokedBy);
+            if (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin)
+            {
+                logger.LogWarning(
+                    "User {RevokedBy} attempted to modify global default permissions without ManageGlobalDefaults permission",
+                    request.RevokedBy);
 
-            throw new UnauthorizedAccessException("Only tenant or system administrators can revoke tenant permissions");
+                throw new UnauthorizedAccessException(
+                    "Modifying global default permissions requires 'system:manage-global-defaults' permission");
+            }
+        }
+        else
+        {
+            // Check if current user is tenant admin for tenant-specific revocations
+            if (!Actor.IsTenantAdmin && !Actor.IsSystemAdmin)
+            {
+                logger.LogWarning(
+                    "User {RevokedBy} attempted to revoke tenant permissions without admin privileges",
+                    request.RevokedBy);
+
+                throw new UnauthorizedAccessException("Only tenant or system administrators can revoke tenant permissions");
+            }
         }
 
         // Prevent revoking own admin permissions
