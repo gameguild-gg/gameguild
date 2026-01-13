@@ -76,7 +76,16 @@ public class DeleteUserCommandHandlerTests
         user.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
         var command = new DeleteUserCommand(userId);
 
-        var actorContext = new ActorContext(tenantId, userId, null, null, null);
+        var actorContext = new ActorContext
+        {
+            ActorKind = ActorKind.User,
+            SubjectId = userId.ToString(),
+            TenantId = tenantId,
+            Roles = new HashSet<string>(),
+            Permissions = new HashSet<string>(),
+            TypedAttributes = ActorAttributes.Empty,
+            IsAuthenticated = true
+        };
         _actorContextAccessorMock.Setup(x => x.ActorContext).Returns(actorContext);
 
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))

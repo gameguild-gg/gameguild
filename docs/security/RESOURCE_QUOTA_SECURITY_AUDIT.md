@@ -143,34 +143,27 @@ Read operations correctly do not affect quota state.
 | `TenantResourcesController.RecordWithQuotaCheck` | Atomic consume | ✅ Yes | Uses `TryAtomicConsumeAsync` then records audit trail |
 | `UserResourcesController.RecordWithQuotaCheck` | Atomic consume | ✅ Yes | Uses `TryAtomicConsumeAsync` then records audit trail |
 
-### 2.2 Advisory-Only Points (Intentional Design) ✅ CLEARLY DOCUMENTED
+### 2.2 Advisory-Only Points (Intentional Design) ✅ DOCUMENTED
 
-| Location | Purpose | Helper Methods | Status |
-|----------|---------|----------------|--------|
-| `CheckResourceQuotaQuery` | UI/UX quota status display | `ThrowIfNotAllowed()` | ✅ Enhanced with throw helper |
-| `CheckResourceQuotaQueryHandler` | Query handler | - | ✅ Explicit **ADVISORY ONLY** in XML docs |
-| `CheckLimitsAsync` | Soft limit warnings, pre-flight checks | - | ✅ Explicit **ADVISORY ONLY** in XML docs |
-| `ResourceLimitCheckResponse` | Response model | `ThrowIfExceeded()`, `IsSoftLimitWarning`, `RemainingQuota` | ✅ Enhanced with helpers |
-| `ResourceQuotaEnforcementResult` | Query result model | `ThrowIfNotAllowed()`, `RemainingQuota` | ✅ Enhanced with helpers |
-| `RecordUsageAsync` | Legacy/audit purposes | - | ✅ DEPRECATED - Marked `[Obsolete]` |
+| Location | Purpose | Status |
+|----------|---------|--------|
+| `CheckResourceQuotaQuery` | UI/UX quota status display | ✅ DOCUMENTED - Explicitly marked as advisory-only in code |
+| `CheckLimitsAsync` | Soft limit warnings, pre-flight checks | ✅ DOCUMENTED - Clearly marked with XML docs as advisory-only |
+| `RecordUsageAsync` | Legacy/audit purposes | ✅ DEPRECATED - Marked `[Obsolete]`, recommends `TryAtomicConsumeAsync` |
 
-> **Design Decision:** Advisory-only methods are intentional for UX purposes. Response models now include:
-> - `ThrowIfExceeded()` / `ThrowIfNotAllowed()` - For callers who want mandatory enforcement after advisory check
-> - `IsSoftLimitWarning` - Computed property for soft limit warning detection
-> - `RemainingQuota` - Computed property showing remaining quota
-> - `UsagePercentage` - Computed property showing usage percentage
+> **Design Decision:** Advisory-only methods are intentional for UX purposes. They enable showing users
+> "approaching limit" warnings without consuming quota. Authoritative enforcement uses `TryAtomicConsumeAsync`.
 
-### 2.3 Database-Level Protection (Last Line of Defense) ✅ IMPLEMENTED
+### 2.3 Database-Level Protection (Last Line of Defense) ✅ DOCUMENTED
 
 | Constraint | SQL | Purpose |
 |------------|-----|---------|
 | `CK_ResourceQuota_MaxUsage_NonNegative` | `HardLimit IS NULL OR HardLimit >= 0` | Prevents negative limits |
 | `CK_ResourceQuota_CurrentUsage_NonNegative` | `CurrentUsage >= 0` | Prevents negative usage |
-| `CK_ResourceQuota_CurrentUsage_LessEqual_MaxUsage` | `HardLimit IS NULL OR CurrentUsage <= HardLimit` | **Enforces quota at DB level** |
+| `CK_ResourceQuota_CurrentUsage_LessEqual_MaxUsage` | `HardLimit IS NULL OR CurrentUsage <= HardLimit` | Enforces quota at DB level |
 
-> **Defense-in-Depth:** These CHECK constraints are defined in `ResourceQuotaConfiguration.cs` and
-> applied via EF Core migrations. Even if application-level enforcement is bypassed (e.g., direct DB
-> access, SQL injection), the database will reject violations.
+> **Design Decision:** Even if application-level enforcement is bypassed (e.g., direct DB access, SQL injection),
+> the database CHECK constraints will reject violations. This provides defense-in-depth.
 
 ### 2.4 Commands with `[RequiresQuota]` Attribute ✅ ALL CRITICAL COMMANDS COVERED
 
