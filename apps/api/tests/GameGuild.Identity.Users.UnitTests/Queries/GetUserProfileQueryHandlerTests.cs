@@ -1,12 +1,6 @@
 using FluentAssertions;
 using GameGuild.Identity.Users;
 using GameGuild.Social.Profiles;
-using GameGuild.Identity.Users;
-using GameGuild.Social.Profiles;
-using GameGuild.Identity.Users;
-using GameGuild.Social.Profiles;
-using GameGuild.Identity.Users;
-using GameGuild.Social.Profiles;
 using Moq;
 using Xunit;
 
@@ -14,49 +8,46 @@ namespace GameGuild.Identity.Users.UnitTests.Queries;
 
 public class GetUserProfileQueryHandlerTests
 {
-    private readonly Mock<IUserRepository> _userRepositoryMock;
+    private readonly Mock<IUserProfileRepository> _profileRepositoryMock;
     private readonly GetUserProfileQueryHandler _handler;
 
     public GetUserProfileQueryHandlerTests()
     {
-        _userRepositoryMock = new Mock<IUserRepository>();
-        _handler = new GetUserProfileQueryHandler(_userRepositoryMock.Object);
+        _profileRepositoryMock = new Mock<IUserProfileRepository>();
+        _handler = new GetUserProfileQueryHandler(_profileRepositoryMock.Object);
     }
 
     [Fact]
-    public async Task Handle_WithExistingUser_ShouldReturnProfile()
+    public async Task Handle_WithExistingProfile_ShouldReturnProfile()
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var user = User.Create("test@example.com", "Test User", "+1234567890");
+        var profile = UserProfile.Create(userId, "Test User");
         var query = new GetUserProfileQuery(userId);
 
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(user);
+        _profileRepositoryMock
+            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
-        result!.UserId.Should().Be(user.Id);
-        result.DisplayName.Should().Be(user.Name);
-        result.ProfileVisibility.Should().Be("public");
-        result.CreatedAt.Should().Be(user.CreatedAt);
-        result.UpdatedAt.Should().Be(user.UpdatedAt);
+        result!.UserId.Should().Be(userId);
+        result.DisplayName.Should().Be("Test User");
     }
 
     [Fact]
-    public async Task Handle_WithNonExistentUser_ShouldReturnNull()
+    public async Task Handle_WithNonExistentProfile_ShouldReturnNull()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var query = new GetUserProfileQuery(userId);
 
-        _userRepositoryMock
-            .Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((User?)null);
+        _profileRepositoryMock
+            .Setup(x => x.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserProfile?)null);
 
         // Act
         var result = await _handler.Handle(query, CancellationToken.None);

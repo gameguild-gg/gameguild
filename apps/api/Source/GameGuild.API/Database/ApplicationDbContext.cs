@@ -178,11 +178,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<PolicyDefinitionEntity> PolicyDefinitions { get => Set<PolicyDefinitionEntity>(); }
 
-    public DbSet<GameGuild.Identity.Authorization.AbacPolicy> AbacPolicies { get => Set<GameGuild.Identity.Authorization.AbacPolicy>(); }
+    public DbSet<AbacPolicy> AbacPolicies { get => Set<AbacPolicy>(); }
 
-    public DbSet<GameGuild.Identity.Authorization.ConditionalPolicy> ConditionalPolicies { get => Set<GameGuild.Identity.Authorization.ConditionalPolicy>(); }
+    public DbSet<ConditionalPolicy> ConditionalPolicies { get => Set<ConditionalPolicy>(); }
 
-    public DbSet<GameGuild.Identity.Authorization.TenantPermission> TenantPermissions { get => Set<GameGuild.Identity.Authorization.TenantPermission>(); }
+    public DbSet<TenantPermission> TenantPermissions { get => Set<TenantPermission>(); }
 
     public DbSet<JitElevationRequest> JitElevationRequests { get => Set<JitElevationRequest>(); }
 
@@ -194,9 +194,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<SoDViolation> SoDViolations { get => Set<SoDViolation>(); }
 
-    public DbSet<GameGuild.Identity.Authorization.AccessReviewCampaign> AccessReviewCampaigns { get => Set<GameGuild.Identity.Authorization.AccessReviewCampaign>(); }
+    public DbSet<AccessReviewCampaign> AccessReviewCampaigns { get => Set<AccessReviewCampaign>(); }
 
-    public DbSet<GameGuild.Identity.Authorization.AccessReviewItem> AccessReviewItems { get => Set<GameGuild.Identity.Authorization.AccessReviewItem>(); }
+    public DbSet<AccessReviewItem> AccessReviewItems { get => Set<AccessReviewItem>(); }
 
     public DbSet<DelegatedAdminScope> DelegatedAdminScopes { get => Set<DelegatedAdminScope>(); }
 

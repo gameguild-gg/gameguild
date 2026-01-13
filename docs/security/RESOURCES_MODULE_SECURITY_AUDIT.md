@@ -394,7 +394,26 @@ var (successful, failed) = await quotaService.WithBatchQuotaEnforcementAsync(
 
 **Setup:** API endpoint without proper tenant middleware
 
-**Mitigation:** `ResourceQuotaBehavior` now throws `InvalidOperationException` when `Actor.TenantId` is null, blocking the request entirely.
+**Mitigation:** `ResourceQuotaBehavior` now throws `InvalidOperationException` when `Actor.TenantId` is null, blocking the request entirely. This is a **fail-closed** approach - if tenant context is missing, quota-controlled operations are rejected.
+
+**Implementation Details:**
+
+```csharp
+// ResourceQuotaBehavior.Handle()
+if (!Actor.TenantId.HasValue)
+{
+    _logger.LogError(
+        "Command {CommandType} requires quota validation but no tenant context is available. " +
+        "Rejecting request to prevent quota bypass. Ensure X-Tenant-Id header is provided.",
+        typeof(TRequest).Name
+    );
+    throw new InvalidOperationException(
+        $"Quota-controlled command {typeof(TRequest).Name} requires tenant context. " +
+        "Ensure X-Tenant-Id header is provided for multi-tenant operations.");
+}
+```
+
+**Tests:** `ResourceQuotaBehaviorTests.Handle_ThrowsException_WhenTenantIdMissing`
 
 **Status:** ✅ FIXED via fail-closed on missing tenant
 

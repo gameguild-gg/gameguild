@@ -53,7 +53,7 @@ public static class ServiceCollectionExtensions
 
         // Tenant membership checker - overrides the fail-closed default from Authorization module
         stepStopwatch.Restart();
-        services.AddScoped<GameGuild.Identity.Authorization.ITenantMembershipChecker, TenantMembershipChecker>();
+        services.AddScoped<Authorization.ITenantMembershipChecker, TenantMembershipChecker>();
         logger.LogInformation("Registered Tenant Membership Checker in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         totalStopwatch.Stop();

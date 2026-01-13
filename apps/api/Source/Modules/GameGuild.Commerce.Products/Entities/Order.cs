@@ -145,7 +145,7 @@ public class Order : EntityBase
         };
 
         // Set TenantId via reflection to bypass protected setter
-        typeof(OrderLineItem).GetProperty(nameof(OrderLineItem.TenantId))!
+        typeof(OrderLineItem).GetProperty(nameof(TenantId))!
             .SetValue(lineItem, TenantId);
 
         LineItems.Add(lineItem);

@@ -243,7 +243,7 @@ public static class AuthorizationModuleExtensions
         services.AddScoped<ILocalizationContext, LocalizationContext>();
 
         // CQRS Authorization Behavior
-        services.AddScoped(typeof(GameGuild.CQRS.IPipelineBehavior<,>), typeof(AuthorizationBehavior<,>));
+        services.AddScoped(typeof(CQRS.IPipelineBehavior<,>), typeof(AuthorizationBehavior<,>));
 
         return services;
     }

@@ -347,7 +347,7 @@ public static class ServiceCollectionExtensions
                     context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                     context.HttpContext.Response.ContentType = "application/problem+json";
 
-                    var retryAfter = context.Lease.TryGetMetadata(System.Threading.RateLimiting.MetadataName.RetryAfter, out var retryAfterValue)
+                    var retryAfter = context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfterValue)
                         ? retryAfterValue.TotalSeconds
                         : 60;
 
@@ -765,17 +765,17 @@ public static class ServiceCollectionExtensions
         
         controllerStopwatch.Restart();
         services.AddControllers()
-            .AddApplicationPart(typeof(GameGuild.Identity.Users.UsersController).Assembly); // Users module
+            .AddApplicationPart(typeof(Identity.Users.UsersController).Assembly); // Users module
         
         // Log individual controllers from GameGuild.Users
-        LogControllersFromAssembly(typeof(GameGuild.Identity.Users.UsersController).Assembly, logger, controllerStopwatch);
+        LogControllersFromAssembly(typeof(Identity.Users.UsersController).Assembly, logger, controllerStopwatch);
         
         controllerStopwatch.Restart();
         services.AddControllers()
-            .AddApplicationPart(typeof(GameGuild.Identity.Tenants.TenantsController).Assembly); // Tenants module
+            .AddApplicationPart(typeof(Identity.Tenants.TenantsController).Assembly); // Tenants module
         
         // Log individual controllers from GameGuild.Tenants
-        LogControllersFromAssembly(typeof(GameGuild.Identity.Tenants.TenantsController).Assembly, logger, controllerStopwatch);
+        LogControllersFromAssembly(typeof(Identity.Tenants.TenantsController).Assembly, logger, controllerStopwatch);
         
         controllerStopwatch.Restart();
         services.AddControllers()
@@ -793,10 +793,10 @@ public static class ServiceCollectionExtensions
         
         controllerStopwatch.Restart();
         services.AddControllers()
-            .AddApplicationPart(typeof(Commerce.Subscriptions.SubscriptionsController).Assembly); // Subscriptions module
+            .AddApplicationPart(typeof(SubscriptionsController).Assembly); // Subscriptions module
         
         // Log individual controllers from GameGuild.Subscriptions
-        LogControllersFromAssembly(typeof(Commerce.Subscriptions.SubscriptionsController).Assembly, logger, controllerStopwatch);
+        LogControllersFromAssembly(typeof(SubscriptionsController).Assembly, logger, controllerStopwatch);
         
         controllerStopwatch.Restart();
         services.AddControllers()
