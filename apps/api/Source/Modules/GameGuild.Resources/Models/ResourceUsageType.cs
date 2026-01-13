@@ -37,5 +37,43 @@ public enum ResourceUsageType
     TestingSessions = 10,
 
     /// <summary>Roles per tenant</summary>
-    Roles = 11
+    Roles = 11,
+
+    // ========== NEW RESOURCE TYPES (Issue #6, #7 - Expanded quota coverage) ==========
+
+    /// <summary>Tenants created (for platform-level quotas)</summary>
+    Tenants = 12,
+
+    /// <summary>Active subscriptions per tenant</summary>
+    Subscriptions = 13,
+
+    /// <summary>Service Level Objectives per tenant</summary>
+    SLOs = 14,
+
+    /// <summary>Access review campaigns per tenant</summary>
+    AccessReviewCampaigns = 15,
+
+    /// <summary>Separation of Duties rules per tenant</summary>
+    SoDRules = 16,
+
+    /// <summary>ABAC policies per tenant</summary>
+    AbacPolicies = 17,
+
+    /// <summary>Conditional access policies per tenant</summary>
+    ConditionalPolicies = 18,
+
+    /// <summary>Crypto wallets per tenant</summary>
+    Wallets = 19,
+
+    /// <summary>Payment disputes per tenant</summary>
+    Disputes = 20,
+
+    /// <summary>Promotional codes per tenant</summary>
+    PromoCodes = 21,
+
+    /// <summary>Orders per tenant (commerce)</summary>
+    Orders = 22,
+
+    /// <summary>Audit log entries (for compliance modules)</summary>
+    AuditEntries = 23
 }

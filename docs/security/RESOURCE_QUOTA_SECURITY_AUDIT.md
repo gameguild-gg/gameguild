@@ -174,10 +174,13 @@ The `[RequiresQuota]` attribute enables declarative quota enforcement via `Resou
 | `CreateUserCommand` | `GameGuild.Identity.Users` | `Users` | ✅ Decorated |
 | `CreateProjectCommand` | `GameGuild.Projects` | `Projects` | ✅ Decorated |
 | `CreateProgramCommand` | `GameGuild.Programs` | `Programs` | ✅ Decorated |
+| `CreateProgramCommand` | `GameGuild.Learning.Courses` | `Programs` | ✅ Decorated |
 | `CreateProductCommand` | `GameGuild.Commerce.Products` | `Products` | ✅ Decorated |
 | `CreateSubscriptionPlanCommand` | `GameGuild.Commerce.Subscriptions` | `SubscriptionPlans` | ✅ Decorated |
 | `CreateFeatureFlagCommand` | `GameGuild.Features` | `FeatureFlags` | ✅ Decorated |
+| `CreateFeatureCommand` | `GameGuild.Features` | `FeatureFlags` | ✅ Decorated |
 | `CreateTestingSessionCommand` | `GameGuild.TestingLab` | `TestingSessions` | ✅ Decorated |
+| `CreateTestingRequestCommand` | `GameGuild.TestingLab` | `TestingSessions` | ✅ Decorated |
 | `CreateRoleCommand` | `GameGuild.Identity.Authentication` | `Roles` | ✅ Decorated |
 
 **ResourceUsageType Enum Extended:** Now includes all quota-controlled resource types:
