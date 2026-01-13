@@ -150,35 +150,13 @@ public sealed class ActorContextMiddleware
 
     private static ActorKind DetermineActorKind(ClaimsPrincipal user)
     {
-        // Check for service/client credentials flow
+        // OCP-compliant: Uses ActorKindResolver which reads from attributes
+        // Adding new ActorKind values with ActorKindIdentifierAttribute works automatically
         var grantType = ClaimsExtractor.GetGrantType(user);
-        if (grantType == "client_credentials")
-        {
-            return ActorKind.Service;
-        }
-
-        // Check for explicit actor type claim
         var actorTypeClaim = ClaimsExtractor.GetActorType(user);
-        if (!string.IsNullOrEmpty(actorTypeClaim))
-        {
-            return actorTypeClaim.ToLowerInvariant() switch
-            {
-                "service" => ActorKind.Service,
-                "system" => ActorKind.System,
-                "webhook" => ActorKind.Webhook,
-                "external" => ActorKind.External,
-                _ => ActorKind.User
-            };
-        }
-
-        // Check for system subject
         var subjectId = ClaimsExtractor.GetUserId(user);
-        if (subjectId == SystemActor.SystemSubjectId)
-        {
-            return ActorKind.System;
-        }
 
-        return ActorKind.User;
+        return ActorKindResolver.Resolve(grantType, actorTypeClaim, subjectId);
     }
 
     private static async Task<HashSet<string>> ExtractOrFetchPermissionsAsync(

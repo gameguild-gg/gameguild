@@ -3,11 +3,14 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authorization;
 
 /// <summary>
-///     Core permission service for managing tenant permissions
+///     Core permission service for managing tenant permissions.
+///     SECURITY: All permission mutations increment the tenant security version
+///     to ensure cache invalidation and prevent cache poisoning attacks.
 /// </summary>
 public class PermissionService(
     ITenantPermissionRepository repository,
     IPermissionAuditService auditService,
+    ITenantSecurityVersionStore securityVersionStore,
     ILogger<PermissionService> logger
 ) : IPermissionService
 {
@@ -19,6 +22,9 @@ public class PermissionService(
 
     private readonly ITenantPermissionRepository _repository =
         repository ?? throw new ArgumentNullException(nameof(repository));
+
+    private readonly ITenantSecurityVersionStore _securityVersionStore =
+        securityVersionStore ?? throw new ArgumentNullException(nameof(securityVersionStore));
 
     public async Task<TenantPermission> GrantTenantPermissionAsync(
         Guid? userId,
@@ -49,6 +55,10 @@ public class PermissionService(
         };
 
         var result = await _repository.CreateAsync(permission, cancellationToken);
+
+        // SECURITY: Increment tenant version to invalidate all cached permissions
+        // This prevents cache poisoning where users retain stale permissions
+        await InvalidateTenantCacheAsync(tenantId, cancellationToken);
 
         await _auditService.LogPermissionChangeAsync(
             PermissionOperationType.Grant,
@@ -122,6 +132,10 @@ public class PermissionService(
             // Otherwise, update the entity with remaining permissions
             await _repository.UpdateAsync(existing, cancellationToken);
         }
+
+        // SECURITY: Increment tenant version to invalidate all cached permissions
+        // This prevents cache poisoning where users retain revoked permissions
+        await InvalidateTenantCacheAsync(tenantId, cancellationToken);
 
         await _auditService.LogPermissionChangeAsync(
             PermissionOperationType.Revoke,
@@ -305,6 +319,9 @@ public class PermissionService(
             };
             await _repository.CreateAsync(permission, cancellationToken);
         }
+
+        // SECURITY: Global defaults affect all tenants - increment global version
+        await InvalidateTenantCacheAsync(null, cancellationToken);
     }
 
     public async Task<List<string>> GetTenantDefaultPermissionsAsync(
@@ -350,6 +367,37 @@ public class PermissionService(
                 Reason = "Tenant default permissions"
             };
             await _repository.CreateAsync(permission, cancellationToken);
+        }
+
+        // SECURITY: Tenant defaults changed - increment tenant version
+        await InvalidateTenantCacheAsync(tenantId, cancellationToken);
+    }
+
+    /// <summary>
+    ///     Invalidates cached permissions for a tenant by incrementing the security version.
+    ///     SECURITY: This must be called after every permission mutation to prevent cache poisoning.
+    /// </summary>
+    /// <param name="tenantId">The tenant ID, or null for global cache invalidation.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    private async Task InvalidateTenantCacheAsync(Guid? tenantId, CancellationToken cancellationToken)
+    {
+        var tenantKey = tenantId?.ToString() ?? "global";
+        
+        try
+        {
+            var newVersion = await _securityVersionStore.IncrementVersionAsync(tenantKey, cancellationToken);
+            _logger.LogDebug(
+                "Incremented security version for tenant {TenantId} to {Version}",
+                tenantKey,
+                newVersion);
+        }
+        catch (Exception ex)
+        {
+            // Log but don't fail the operation - cache will expire naturally
+            // This is a trade-off between availability and consistency
+            _logger.LogWarning(ex,
+                "Failed to increment security version for tenant {TenantId}. Cache may be stale.",
+                tenantKey);
         }
     }
 }

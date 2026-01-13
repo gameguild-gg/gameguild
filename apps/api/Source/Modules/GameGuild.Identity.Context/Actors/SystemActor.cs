@@ -12,8 +12,14 @@ public sealed record SystemActor(
 {
     /// <summary>
     ///     Well-known subject ID for system actors.
+    ///     This is the compile-time constant used in attributes.
     /// </summary>
-    public const string SystemSubjectId = "system";
+    public const string SystemSubjectIdConstant = "system";
+
+    /// <summary>
+    ///     Well-known subject ID for system actors (runtime alias).
+    /// </summary>
+    public const string SystemSubjectId = SystemSubjectIdConstant;
 
     /// <summary>
     ///     Creates a new system actor for background job operations.
