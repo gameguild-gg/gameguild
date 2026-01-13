@@ -190,11 +190,11 @@ HTTP Request
     │
     ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│ ⚠️ MISSING: ActorContextMiddleware NOT IN PIPELINE              │
+│ ✅ FIXED: ActorContextMiddleware IN PIPELINE                    │
 │    File: Authorization/Middleware/ActorContextMiddleware.cs     │
-│    Extension: UseActorContext() exists but NOT called in        │
-│               PipelineExtensions.cs                             │
-│    Impact: ActorContext never populated from claims + tenant    │
+│    Registration: PipelineExtensions.cs:82 app.UseActorContext() │
+│    Order: After Authentication, Before Authorization            │
+│    Impact: ActorContext properly populated from claims + tenant │
 └─────────────────────────────────────────────────────────────────┘
     │
     ▼
