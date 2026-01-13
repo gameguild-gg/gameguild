@@ -92,7 +92,7 @@ public class AuthenticationPerformanceTests : IDisposable
         stopwatch.Stop();
         _output.WriteLine($"Single SignIn execution time: {stopwatch.ElapsedMilliseconds}ms");
 
-        result.IsSuccess.Should().BeTrue();
+        result.Success.Should().BeTrue();
         stopwatch.ElapsedMilliseconds.Should().BeLessThan(100); // Should complete within 100ms
     }
 
@@ -101,7 +101,7 @@ public class AuthenticationPerformanceTests : IDisposable
     {
         // Arrange
         const int concurrentRequests = 50;
-        var tasks = new List<Task<Result<SignInResponse>>>();
+        var tasks = new List<Task<SignInResponse>>();
         var stopwatch = Stopwatch.StartNew();
 
         // Act
@@ -116,14 +116,14 @@ public class AuthenticationPerformanceTests : IDisposable
             tasks.Add(_handler.Handle(command, CancellationToken.None));
         }
 
-        Result<SignInResponse>[] results = await Task.WhenAll(tasks);
+        SignInResponse[] results = await Task.WhenAll(tasks);
 
         // Assert
         stopwatch.Stop();
         _output.WriteLine($"Concurrent SignIn ({concurrentRequests} requests) execution time: {stopwatch.ElapsedMilliseconds}ms");
         _output.WriteLine($"Average per request: {stopwatch.ElapsedMilliseconds / (double)concurrentRequests:F2}ms");
 
-        results.Should().AllSatisfy(result => result.IsSuccess.Should().BeTrue());
+        results.Should().AllSatisfy(result => result.Success.Should().BeTrue());
         stopwatch.ElapsedMilliseconds.Should().BeLessThan(5000); // Should complete within 5 seconds
     }
 
@@ -241,7 +241,7 @@ public class AuthenticationPerformanceTests : IDisposable
             };
 
             var result = await _handler.Handle(command, CancellationToken.None);
-            result.IsSuccess.Should().BeTrue();
+            result.Success.Should().BeTrue();
 
             // Force garbage collection every 100 iterations
             if (i % 100 == 0)

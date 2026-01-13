@@ -67,6 +67,26 @@ public interface IResourceQuotaService
     /// </summary>
     Task<ResourceLimitCheckResponse> TryConsumeResourceAsync(Guid tenantId, ResourceUsageType type, long amount = 1, Guid? userId = null, string? source = null, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Atomically attempts to consume resources with optimistic concurrency.
+    ///     Unlike TryConsumeResourceAsync, this method performs an atomic check-and-increment
+    ///     operation that is safe under concurrent access.
+    /// </summary>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="type">Resource usage type</param>
+    /// <param name="amount">Amount to consume</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>
+    ///     Tuple containing: Success (true if consume succeeded), CurrentUsage, HardLimit.
+    ///     Returns (true, 0, null) if no quota exists (unlimited).
+    ///     Returns (false, currentUsage, hardLimit) if would exceed hard limit.
+    /// </returns>
+    Task<(bool Success, long CurrentUsage, long? HardLimit)> TryAtomicConsumeAsync(
+        Guid tenantId,
+        ResourceUsageType type,
+        long amount = 1,
+        CancellationToken cancellationToken = default);
+
     // Analytics and Reporting
     /// <summary>
     ///     Get detailed usage information for a specific resource type

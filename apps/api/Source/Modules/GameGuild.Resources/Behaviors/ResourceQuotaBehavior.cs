@@ -70,114 +70,155 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
             amount
         );
 
+        // Track whether we successfully consumed quota (for rollback on failure)
+        var quotaConsumed = false;
+
         try
         {
-            // Check if the tenant can consume the requested amount
-            var limitCheck = await _quotaService.CheckLimitsAsync(
-                tenantId,
-                resourceType,
-                amount,
-                cancellationToken
-            );
-
-            // Handle soft limit exceeded (warning only)
-            if (limitCheck.SoftLimit.HasValue &&
-                (limitCheck.CurrentUsage + amount) > limitCheck.SoftLimit.Value)
+            // ATOMIC APPROACH: Reserve quota BEFORE executing command
+            // This prevents race conditions where multiple concurrent requests
+            // could each pass the check but together exceed the limit
+            if (quotaAttribute.RecordUsage)
             {
-                _logger.LogWarning(
-                    "Tenant {TenantId} is approaching resource quota limit for {ResourceType}. " +
-                    "Current: {CurrentUsage}, Soft Limit: {SoftLimit}, Hard Limit: {HardLimit}",
+                var (success, currentUsage, hardLimit) = await _quotaService.TryAtomicConsumeAsync(
                     tenantId,
                     resourceType,
-                    limitCheck.CurrentUsage,
-                    limitCheck.SoftLimit,
-                    limitCheck.HardLimit
-                );
-            }
-
-            // Handle hard limit exceeded
-            if (!limitCheck.CanProceed)
-            {
-                var errorMessage = $"Resource quota exceeded for {resourceType}. " +
-                                   $"Current usage: {limitCheck.CurrentUsage}, " +
-                                   $"Hard limit: {limitCheck.HardLimit}, " +
-                                   $"Requested: {amount}";
-
-                _logger.LogError(
-                    "Quota exceeded for tenant {TenantId}, resource {ResourceType}. " +
-                    "Current: {CurrentUsage}, Limit: {HardLimit}, Requested: {Amount}",
-                    tenantId,
-                    resourceType,
-                    limitCheck.CurrentUsage,
-                    limitCheck.HardLimit,
-                    amount
+                    amount,
+                    cancellationToken
                 );
 
-                if (quotaAttribute.EnforceHardLimit)
+                if (!success)
                 {
+                    var errorMessage = $"Resource quota exceeded for {resourceType}. " +
+                                       $"Current usage: {currentUsage}, " +
+                                       $"Hard limit: {hardLimit}, " +
+                                       $"Requested: {amount}";
+
+                    _logger.LogError(
+                        "Quota exceeded for tenant {TenantId}, resource {ResourceType}. " +
+                        "Current: {CurrentUsage}, Limit: {HardLimit}, Requested: {Amount}",
+                        tenantId,
+                        resourceType,
+                        currentUsage,
+                        hardLimit,
+                        amount
+                    );
+
+                    // EnforceHardLimit is deprecated - always enforce
+                    #pragma warning disable CS0618 // Type or member is obsolete
+                    if (!quotaAttribute.EnforceHardLimit)
+                    {
+                        _logger.LogWarning(
+                            "EnforceHardLimit=false is deprecated and ignored. " +
+                            "Hard limits are always enforced for security. Resource: {ResourceType}",
+                            resourceType);
+                    }
+                    #pragma warning restore CS0618
+
                     throw new QuotaExceededException(
                         errorMessage,
+                        resourceType,
+                        currentUsage,
+                        hardLimit ?? 0,
+                        tenantId
+                    );
+                }
+
+                quotaConsumed = true;
+
+                // Check soft limit for warning purposes
+                var quota = await _quotaService.GetQuotaAsync(tenantId, resourceType, cancellationToken);
+                if (quota?.SoftLimit.HasValue == true && currentUsage > quota.SoftLimit.Value)
+                {
+                    _logger.LogWarning(
+                        "Tenant {TenantId} is approaching resource quota limit for {ResourceType}. " +
+                        "Current: {CurrentUsage}, Soft Limit: {SoftLimit}, Hard Limit: {HardLimit}",
+                        tenantId,
+                        resourceType,
+                        currentUsage,
+                        quota.SoftLimit,
+                        hardLimit
+                    );
+                }
+
+                _logger.LogDebug(
+                    "Reserved {Amount} {ResourceType} quota for tenant {TenantId}",
+                    amount,
+                    resourceType,
+                    tenantId
+                );
+            }
+            else
+            {
+                // If not recording usage, just do an advisory check
+                var limitCheck = await _quotaService.CheckLimitsAsync(
+                    tenantId,
+                    resourceType,
+                    amount,
+                    cancellationToken
+                );
+
+                if (!limitCheck.CanProceed)
+                {
+                    throw new QuotaExceededException(
+                        $"Resource quota exceeded for {resourceType}.",
                         resourceType,
                         limitCheck.CurrentUsage,
                         limitCheck.HardLimit ?? 0,
                         tenantId
                     );
                 }
-
-                // If not enforcing, just log warning and continue
-                _logger.LogWarning("Hard limit not enforced for {ResourceType}, allowing operation to proceed", resourceType);
             }
 
             // Execute the command
             var response = await next();
 
-            // Record usage after successful execution
-            if (quotaAttribute.RecordUsage)
-            {
-                _logger.LogDebug(
-                    "Recording resource usage for tenant {TenantId}, resource {ResourceType}, amount {Amount}",
-                    tenantId,
-                    resourceType,
-                    amount
-                );
-
-                // Extract user ID if the response contains it
-                Guid? userId = TryExtractUserId(response);
-
-                var recorded = await _quotaService.RecordUsageAsync(
-                    tenantId,
-                    resourceType,
-                    amount,
-                    userId,
-                    source,
-                    metadata: null,
-                    cancellationToken
-                );
-
-                if (!recorded)
-                {
-                    _logger.LogWarning(
-                        "Failed to record resource usage for tenant {TenantId}, resource {ResourceType}",
-                        tenantId,
-                        resourceType
-                    );
-                }
-                else
-                {
-                    _logger.LogInformation(
-                        "Successfully recorded {Amount} {ResourceType} usage for tenant {TenantId}",
-                        amount,
-                        resourceType,
-                        tenantId
-                    );
-                }
-            }
+            _logger.LogInformation(
+                "Successfully completed {CommandType} with {Amount} {ResourceType} quota for tenant {TenantId}",
+                typeof(TRequest).Name,
+                amount,
+                resourceType,
+                tenantId
+            );
 
             return response;
         }
         catch (QuotaExceededException)
         {
-            // Re-throw quota exceptions
+            // Re-throw quota exceptions (quota was not consumed)
+            throw;
+        }
+        catch (Exception ex) when (quotaConsumed)
+        {
+            // Command failed AFTER quota was consumed - rollback the quota
+            _logger.LogWarning(
+                ex,
+                "Command {CommandType} failed after consuming quota. Rolling back {Amount} {ResourceType} for tenant {TenantId}",
+                typeof(TRequest).Name,
+                amount,
+                resourceType,
+                tenantId
+            );
+
+            try
+            {
+                await _quotaService.DecrementUsageAsync(
+                    tenantId,
+                    resourceType,
+                    amount,
+                    cancellationToken: cancellationToken
+                );
+            }
+            catch (Exception rollbackEx)
+            {
+                _logger.LogError(
+                    rollbackEx,
+                    "Failed to rollback quota after command failure. Quota may be inconsistent for tenant {TenantId}, resource {ResourceType}",
+                    tenantId,
+                    resourceType
+                );
+            }
+
             throw;
         }
         catch (Exception ex)

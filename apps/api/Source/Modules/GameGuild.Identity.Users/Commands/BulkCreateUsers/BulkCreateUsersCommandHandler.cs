@@ -6,7 +6,8 @@ using GameGuild.Identity.Context.Actors;
 namespace GameGuild.Identity.Users;
 
 /// <summary>
-///     Command handler for bulk creating users with quota enforcement
+///     Command handler for bulk creating users with atomic quota enforcement.
+///     Uses TryAtomicConsumeAsync to prevent race conditions under concurrent access.
 /// </summary>
 public class BulkCreateUsersCommandHandler(
     IUserRepository userRepository,
@@ -21,70 +22,96 @@ public class BulkCreateUsersCommandHandler(
 
         var userCount = request.Users.Count();
 
-        // Check quota before processing (if tenant context is available)
+        // Track whether quota was consumed (for rollback on failure)
+        var quotaConsumed = false;
+        var quotaAmount = 0;
+
+        // ATOMIC quota enforcement (if tenant context is available)
         if (Actor.TenantId.HasValue && userCount > 0)
         {
-            var limitCheck = await quotaService.CheckLimitsAsync(
+            var (success, currentUsage, hardLimit) = await quotaService.TryAtomicConsumeAsync(
                 Actor.TenantId.Value,
                 ResourceUsageType.Users,
                 userCount,
                 cancellationToken).ConfigureAwait(false);
 
-            if (!limitCheck.CanProceed)
+            if (!success)
             {
                 throw new QuotaExceededException(
-                    $"Cannot create {userCount} users. Quota exceeded.",
+                    $"Cannot create {userCount} users. Quota exceeded. Current: {currentUsage}, Limit: {hardLimit}",
                     ResourceUsageType.Users,
-                    limitCheck.CurrentUsage,
-                    limitCheck.HardLimit ?? 0,
+                    currentUsage,
+                    hardLimit ?? 0,
                     Actor.TenantId.Value);
             }
+
+            quotaConsumed = true;
+            quotaAmount = userCount;
         }
 
-        var createdUserIds = new List<Guid>();
-        var failedEmails = new List<string>();
-        var usersToCreate = new List<User>();
-
-        // Validate all emails don't already exist
-        var emails = request.Users.Select(u => u.Email).ToList();
-        var existingUsers = await userRepository.GetByEmailsAsync(emails, cancellationToken).ConfigureAwait(false);
-        var existingEmails = existingUsers.Select(u => u.Email).ToHashSet();
-
-        foreach (var userRequest in request.Users)
+        try
         {
-            if (existingEmails.Contains(userRequest.Email))
-            {
-                failedEmails.Add(userRequest.Email);
+            var createdUserIds = new List<Guid>();
+            var failedEmails = new List<string>();
+            var usersToCreate = new List<User>();
 
-                continue;
+            // Validate all emails don't already exist
+            var emails = request.Users.Select(u => u.Email).ToList();
+            var existingUsers = await userRepository.GetByEmailsAsync(emails, cancellationToken).ConfigureAwait(false);
+            var existingEmails = existingUsers.Select(u => u.Email).ToHashSet();
+
+            foreach (var userRequest in request.Users)
+            {
+                if (existingEmails.Contains(userRequest.Email))
+                {
+                    failedEmails.Add(userRequest.Email);
+                    continue;
+                }
+
+                try
+                {
+                    // Create new user
+                    var user = User.Create(userRequest.Email, userRequest.Name, userRequest.PhoneNumber);
+                    usersToCreate.Add(user);
+                    createdUserIds.Add(user.Id);
+                }
+                catch { failedEmails.Add(userRequest.Email); }
             }
 
-            try
+            // Add all users to repository
+            foreach (var user in usersToCreate) { await userRepository.AddAsync(user, cancellationToken).ConfigureAwait(false); }
+
+            await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            // Adjust quota if fewer users were created than requested
+            var actualCreated = createdUserIds.Count;
+            if (Actor.TenantId.HasValue && quotaConsumed && actualCreated < quotaAmount)
             {
-                // Create new user
-                var user = User.Create(userRequest.Email, userRequest.Name, userRequest.PhoneNumber);
-                usersToCreate.Add(user);
-                createdUserIds.Add(user.Id);
+                // Decrement the difference (we reserved for userCount but only created actualCreated)
+                var difference = quotaAmount - actualCreated;
+                await quotaService.DecrementUsageAsync(
+                    Actor.TenantId.Value,
+                    ResourceUsageType.Users,
+                    difference,
+                    source: "BulkCreateUsers:Adjustment",
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
             }
-            catch { failedEmails.Add(userRequest.Email); }
+
+            return new BulkCreateUsersResponse(createdUserIds, failedEmails);
         }
-
-        // Add all users to repository
-        foreach (var user in usersToCreate) { await userRepository.AddAsync(user, cancellationToken).ConfigureAwait(false); }
-
-        await userRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        // Record usage after successful creation
-        if (Actor.TenantId.HasValue && createdUserIds.Count > 0)
+        catch (Exception) when (quotaConsumed)
         {
-            await quotaService.RecordUsageAsync(
-                Actor.TenantId.Value,
-                ResourceUsageType.Users,
-                createdUserIds.Count,
-                source: "BulkCreateUsers",
-                cancellationToken: cancellationToken).ConfigureAwait(false);
+            // Rollback quota on failure
+            if (Actor.TenantId.HasValue)
+            {
+                await quotaService.DecrementUsageAsync(
+                    Actor.TenantId.Value,
+                    ResourceUsageType.Users,
+                    quotaAmount,
+                    source: "BulkCreateUsers:Rollback",
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+            }
+            throw;
         }
-
-        return new BulkCreateUsersResponse(createdUserIds, failedEmails);
     }
 }

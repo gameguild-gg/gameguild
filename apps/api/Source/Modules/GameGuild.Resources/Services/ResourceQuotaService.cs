@@ -189,17 +189,47 @@ public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsa
 
     public async Task<ResourceLimitCheckResponse> TryConsumeResourceAsync(Guid tenantId, ResourceUsageType type, long amount = 1, Guid? userId = null, string? source = null, CancellationToken cancellationToken = default)
     {
-        var limitCheck = await CheckLimitsAsync(tenantId, type, amount, cancellationToken);
+        // Use atomic consume for thread-safe quota enforcement
+        var (success, currentUsage, hardLimit) = await TryAtomicConsumeAsync(tenantId, type, amount, cancellationToken);
 
-        if (limitCheck.CanProceed)
+        if (success)
         {
-            await RecordUsageAsync(tenantId, type, amount, userId, source, cancellationToken : cancellationToken);
-
             logger.LogDebug("Successfully consumed {Amount} units of {Type} for tenant {TenantId}", amount, type, tenantId);
         }
-        else { logger.LogWarning("Failed to consume {Amount} units of {Type} for tenant {TenantId}", amount, type, tenantId); }
+        else
+        {
+            logger.LogWarning("Failed to consume {Amount} units of {Type} for tenant {TenantId} - quota exceeded", amount, type, tenantId);
+        }
 
-        return limitCheck;
+        // Get quota for soft limit info
+        var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
+
+        return new ResourceLimitCheckResponse
+        {
+            Type = type,
+            CanProceed = success,
+            CurrentUsage = currentUsage,
+            SoftLimit = quota?.SoftLimit,
+            HardLimit = hardLimit
+        };
+    }
+
+    /// <inheritdoc/>
+    public async Task<(bool Success, long CurrentUsage, long? HardLimit)> TryAtomicConsumeAsync(
+        Guid tenantId,
+        ResourceUsageType type,
+        long amount = 1,
+        CancellationToken cancellationToken = default)
+    {
+        var (success, quota) = await quotaRepository.TryIncrementUsageAsync(tenantId, type, amount, cancellationToken);
+
+        if (quota == null)
+        {
+            // No quota exists = unlimited
+            return (true, 0, null);
+        }
+
+        return (success, quota.CurrentUsage, quota.HardLimit);
     }
 
     public async Task<ResourceUsageResponse> GetResourceUsageDetailsAsync(Guid tenantId, ResourceUsageType type, int historyDays = 30, CancellationToken cancellationToken = default)

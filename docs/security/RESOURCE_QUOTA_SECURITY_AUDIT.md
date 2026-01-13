@@ -151,12 +151,12 @@ Read operations correctly do not affect quota state.
 
 | # | Invariant | Status | Evidence |
 |---|-----------|--------|----------|
-| 1 | Resource cannot exist without tenant context | **FAIL** | `ResourceQuotaBehavior` lines 47-52: Missing TenantId logs warning but continues. No fail-closed. |
-| 2 | Quota violation cannot result in partial resource creation | **FAIL** | Check happens before creation, but if creation partially fails, quota may still be incremented. No transaction wrapping. |
-| 3 | Quota usage is decremented correctly on delete | **FAIL** | `DeleteUserCommandHandler`: No quota decrement. `RemoveUsage()` method exists but is never called. |
-| 4 | Quota usage cannot go negative | **PASS** | `ResourceQuota.RemoveUsage()` uses `Math.Max(0, CurrentUsage - amount)` |
-| 5 | Concurrent creates cannot exceed quota | **FAIL** | No database-level locking. Check and increment are separate operations. Race condition possible. |
-| 6 | Read-only operations never mutate quota state | **FAIL** | `CheckLimitsAsync()` and `CheckResourceQuotaQuery` call `quota.ResetUsage()` and `UpdateAsync()` on read path |
+| 1 | Resource cannot exist without tenant context | **PASS** ✅ | `ResourceQuotaBehavior` throws `InvalidOperationException` if `!Actor.TenantId.HasValue` |
+| 2 | Quota violation cannot result in partial resource creation | **PASS** ✅ | Check happens before creation, usage recorded only on success. `TryIncrementUsageAsync` with retry handles concurrency. |
+| 3 | Quota usage is decremented correctly on delete | **PASS** ✅ | `DeleteUserCommandHandler` and `BulkDeleteUsersCommandHandler` call `DecrementUsageAsync`. |
+| 4 | Quota usage cannot go negative | **PASS** ✅ | `ResourceQuota.RemoveUsage()` uses `Math.Max(0, CurrentUsage - amount)` |
+| 5 | Concurrent creates cannot exceed quota | **PASS** ✅ | `TryIncrementUsageAsync` with `RowVersion` concurrency token and retry logic |
+| 6 | Read-only operations never mutate quota state | **PASS** ✅ | `CheckLimitsAsync()` and `CheckResourceQuotaQuery` use `effectiveCurrentUsage` without mutation |
 | 7 | Cross-tenant resource leakage is impossible | **UNKNOWN** | TenantId filtering appears correct in queries, but no integration tests verify isolation |
 
 ---
