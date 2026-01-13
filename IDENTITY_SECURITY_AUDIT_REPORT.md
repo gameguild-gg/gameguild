@@ -483,11 +483,20 @@ var claims = new List<Claim>
 - ✅ **Version-based cache keys:** Format `{tenant}:{version}:{key}` ensures stale data is never returned
 - ✅ **Automatic invalidation:** Permission grants/revokes increment tenant security version, invalidating all cached data
 - `CachedAccessControlListService`, `CachedPolicyDefinitionStore`, `MemoryPolicyCache` all use same versioning strategy
+- ✅ **FIXED: Hybrid L1+L2 cache:** `IHybridPermissionCache` provides L1 (IMemoryCache) + optional L2 (IDistributedCache/Redis) caching for horizontal scaling
+- ✅ **FIXED: Configuration-driven TTLs:** All cache TTL values now in `AuthorizationCacheOptions` (PermissionTtlSeconds, PolicyTtlSeconds, AccessControlListTtlSeconds, DistributedCacheTtlSeconds)
+- ✅ **FIXED: Cache metrics:** `ICacheMetricsService` provides observability with System.Diagnostics.Metrics (hits, misses, evictions by cache level and type)
+- ✅ **FIXED: Unified cache invalidation:** `ICacheInvalidationService` provides centralized invalidation across L1 and L2 caches
+
+**Redis Configuration (optional):**
+```csharp
+// Enable Redis distributed cache for multi-instance deployments
+services.AddAuthorizationRedisCache("localhost:6379", "gg:auth:");
+services.AddAuthorizationCaching(options => options.UseDistributedCache = true);
+```
 
 **Remaining Issues:**
-- ⚠️ No distributed cache (Redis) for multi-instance deployments (acceptable for single-node deployments)
-- ⚠️ Cache TTL values are hardcoded in some places (consider configuration-driven TTLs)
-- ⚠️ No monitoring/metrics on cache hit rates (add telemetry for observability)
+- ⚠️ None - distributed cache, TTL configuration, and metrics are now implemented
 
 ### 4.4 Error Handling
 
@@ -700,7 +709,7 @@ public static T Create<T>(Action<T>? configure = null)
 | **Permission-based authorization** | ✅ Yes | TenantPermission, ResourcePermission, ActorContext.HasPermission() | ~~Stringly-typed~~ ✅ Typed Permission classes | ~~🚨 Typo = bypass~~ ✅ Prevented |
 | **Resource-based authorization** | ✅ Yes | AccessControlListEntry, ResourcePermissionService | No ownership auto-grant (must explicitly grant) | Medium (could be feature) |
 | **Dynamic policies from DB** | ✅ Yes | PolicyDefinitionStore, AbacPolicy, ConditionalAccessPolicy | Complex evaluation, hard to debug | Medium (needs logging) |
-| **Cache + invalidation** | ✅ Yes | CachedAccessControlListService, TenantSecurityVersionStore | No distributed cache | ⚠️ Breaks in multi-instance |
+| **Cache + invalidation** | ✅ Yes | CachedAccessControlListService, TenantSecurityVersionStore, IHybridPermissionCache | ✅ Distributed cache implemented (optional Redis L2) | ✅ Horizontal scaling ready |
 | **Audit logging hooks** | ✅ Yes | PermissionAuditService, AuthenticationAttempt | No centralized audit log viewer | Medium (ops issue) |
 | **Impersonation/delegation** | ✅ Yes | PermissionDelegation entity | No UI for granting delegation | Low (admin can SQL) |
 | **Service accounts / machine identities** | ⚠️ Partial | ActorKind.Service, client_credentials grant type | No ServiceActor entity, no service-specific permissions | Medium (can use User entity for now) |
@@ -731,12 +740,12 @@ public static T Create<T>(Action<T>? configure = null)
 | **5** | ✅ **DONE: Complete ActorContext migration** | ~~Dual context model (legacy + new) is confusing and creates maintenance burden.~~ **DELETED**: All legacy interfaces removed from codebase. | ~~Authorization module~~ **DELETED** | ~~1. Mark legacy interfaces `[Obsolete]`~~ **DONE!** ~~2. Update all handlers to use `IActorContextAccessor`.~~ **DONE!** **3. DELETE legacy interfaces.** **DONE!** Deleted: `IUserContext`, `ITenantContext`, `IPermissionsContext`, `IIdentityContext`, `IdentityContext`, and all adapter shims. Only `IActorContextAccessor` remains. | ✅ Tech debt eliminated, clean architecture |
 | **6** | **Add Authorization integration tests** | Authorization is high-risk code with insufficient test coverage. Authentication has 40+ tests. | Tests/GameGuild.Identity.Authorization.IntegrationTests | Create 40+ tests covering: permission grant/revoke, ACL evaluation, ABAC policies, resource ownership checks, cache invalidation. Use AuthN TestEntityFactory pattern. | ⚠️ Catch bugs before production |
 | **7** | ✅ **DONE: Merge AuthUser + User** | ~~Two user entities (AuthUser in Authentication, User in Users) create sync issues.~~ Merged into single `User` aggregate. | ~~Identity.Authentication, Identity.Users~~ **COMPLETE** | ~~Option A: Merge into single `User` entity with password hash, OAuth IDs, profile fields.~~ **IMPLEMENTED!** Password hash, OAuth provider IDs, and profile fields now unified in `User` entity. AuthUser entity removed. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.2](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#92-p1-7---authuser--user-entity-merge-complete) | ✅ Reduced duplication, prevented sync bugs |
-| **8** | **Distributed cache for permissions** | `IMemoryCache` breaks in multi-instance deployments. Permissions could differ between instances. | Authorization/Services | Add Redis distributed cache. Update `CachedAccessControlListService` to use `IDistributedCache`. Keep `IMemoryCache` as L1 cache for perf. | ⚠️ Enables horizontal scaling |
+| **8** | ✅ **DONE: Distributed cache for permissions** | ~~`IMemoryCache` breaks in multi-instance deployments. Permissions could differ between instances.~~ **IMPLEMENTED!** | ~~Authorization/Services~~ **COMPLETE** | ~~Add Redis distributed cache. Update `CachedAccessControlListService` to use `IDistributedCache`. Keep `IMemoryCache` as L1 cache for perf.~~ **IMPLEMENTED!** Created `IHybridPermissionCache` with L1 (IMemoryCache) + optional L2 (IDistributedCache/Redis). Added `ICacheMetricsService` for observability, `ICacheInvalidationService` for unified invalidation. All TTLs now configurable via `AuthorizationCacheOptions`. Redis enabled via `services.AddAuthorizationRedisCache()`. See [Caching/HybridPermissionCache.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Caching/HybridPermissionCache.cs) | ✅ Horizontal scaling enabled |
 | **9** | ✅ **DONE: Token versioning for revocation** | ~~JWT tokens can't be immediately revoked (must wait for expiry).~~ JTI-based revocation implemented. | ~~JwtTokenService~~ **COMPLETE** | ~~Add `jti` (JWT ID) claim to tokens. On revoke, add JTI to revocation list (Redis). Validate JTI in authentication middleware.~~ **IMPLEMENTED!** Created `ITokenRevocationService` (Redis-ready), `InMemoryTokenRevocationService`, `TokenRevocationMiddleware`. JWT already has `jti` claim. `LogoutCommand`/`LogoutHandler` for immediate logout. See [AUTHORIZATION_VALIDATION_REPORT.md Section 9.3](apps/api/AUTHORIZATION_VALIDATION_REPORT.md#93-p1-9---token-versioning-for-immediate-revocation-complete) | ✅ Immediate logout enabled |
 | **10** | ✅ **DONE: Document middleware order** | ~~No documentation on required middleware order.~~ | ~~docs/~~ **IMPLEMENTED** | ~~Create `MIDDLEWARE_ORDER.md` with: Required order, why each step is needed, what breaks if order is wrong. Add diagram.~~ Created comprehensive [docs/security/MIDDLEWARE_ORDER.md](docs/security/MIDDLEWARE_ORDER.md) with diagrams, examples, troubleshooting. | ✅ Prevents ops mistakes |
 
-**Estimated Effort:** ~~1-2 weeks~~ **Complete: 4 of 6 items!** Remaining: 2 items (#6 Authorization tests, #8 Distributed cache)  
-**Expected Impact:** ✅ Reduced tech debt, enabled immediate revocation, improved security. Remaining: Authorization tests and Redis cache.
+**Estimated Effort:** ~~1-2 weeks~~ **Complete: 5 of 6 items!** Remaining: 1 item (#6 Authorization tests)  
+**Expected Impact:** ✅ Reduced tech debt, enabled immediate revocation, enabled horizontal scaling, improved security. Remaining: Authorization tests.
 
 ---
 
@@ -991,12 +1000,12 @@ public interface IUserContext { ... }
 6. ✅ **DONE:** ~~Complete ActorContext migration (update 40-50 handlers)~~ All handlers migrated. Legacy interfaces **DELETED**.
 
 **Next 1-2 Months:**
-7. Add Redis distributed cache for permissions (enables horizontal scaling)
+7. ✅ **DONE:** ~~Add Redis distributed cache for permissions (enables horizontal scaling)~~ Created `IHybridPermissionCache` with L1 (IMemoryCache) + L2 (IDistributedCache/Redis), `ICacheMetricsService` for observability, `ICacheInvalidationService` for unified invalidation. Enable Redis via `services.AddAuthorizationRedisCache("connection-string")`.
 8. ✅ **DONE:** ~~Add JWT token versioning for immediate revocation~~ Created `TokenRevocationMiddleware`, `ITokenRevocationService`, version-based JWT validation
 9. ✅ **DONE:** ~~Split PermissionService (SRP)~~ Split into `IPermissionGrantService`, `IPermissionQueryService`, `IPermissionBulkService`
 10. ✅ **VERIFIED:** ~~Split Tenant entity~~ Proper DDD aggregate root, no split needed
 
-**Summary:** All P0 critical fixes complete. 4 of 6 P1 items complete. 4 of 8 P2 items complete. Only remaining high-priority item: Authorization integration tests.
+**Summary:** All P0 critical fixes complete. 5 of 6 P1 items complete. 4 of 8 P2 items complete. Only remaining high-priority item: Authorization integration tests.
 
 ---
 
