@@ -145,16 +145,20 @@ Read operations correctly do not affect quota state.
 
 ### 2.2 Advisory-Only Points (Intentional Design) ✅ CLEARLY DOCUMENTED
 
-| Location | Purpose | Status |
-|----------|---------|--------|
-| `CheckResourceQuotaQuery` | UI/UX quota status display | ✅ DOCUMENTED - Explicit **ADVISORY ONLY** in XML docs |
-| `CheckResourceQuotaQueryHandler` | Query handler | ✅ DOCUMENTED - Explicit **ADVISORY ONLY** in XML docs |
-| `CheckLimitsAsync` | Soft limit warnings, pre-flight checks | ✅ DOCUMENTED - Explicit **ADVISORY ONLY** in XML docs |
-| `RecordUsageAsync` | Legacy/audit purposes | ✅ DEPRECATED - Marked `[Obsolete]`, recommends `TryAtomicConsumeAsync` |
+| Location | Purpose | Helper Methods | Status |
+|----------|---------|----------------|--------|
+| `CheckResourceQuotaQuery` | UI/UX quota status display | `ThrowIfNotAllowed()` | ✅ Enhanced with throw helper |
+| `CheckResourceQuotaQueryHandler` | Query handler | - | ✅ Explicit **ADVISORY ONLY** in XML docs |
+| `CheckLimitsAsync` | Soft limit warnings, pre-flight checks | - | ✅ Explicit **ADVISORY ONLY** in XML docs |
+| `ResourceLimitCheckResponse` | Response model | `ThrowIfExceeded()`, `IsSoftLimitWarning`, `RemainingQuota` | ✅ Enhanced with helpers |
+| `ResourceQuotaEnforcementResult` | Query result model | `ThrowIfNotAllowed()`, `RemainingQuota` | ✅ Enhanced with helpers |
+| `RecordUsageAsync` | Legacy/audit purposes | - | ✅ DEPRECATED - Marked `[Obsolete]` |
 
-> **Design Decision:** Advisory-only methods are intentional for UX purposes. They enable showing users
-> "approaching limit" warnings without consuming quota. All XML documentation now clearly marks methods
-> as either **AUTHORITATIVE** or **ADVISORY ONLY** to prevent misuse.
+> **Design Decision:** Advisory-only methods are intentional for UX purposes. Response models now include:
+> - `ThrowIfExceeded()` / `ThrowIfNotAllowed()` - For callers who want mandatory enforcement after advisory check
+> - `IsSoftLimitWarning` - Computed property for soft limit warning detection
+> - `RemainingQuota` - Computed property showing remaining quota
+> - `UsagePercentage` - Computed property showing usage percentage
 
 ### 2.3 Database-Level Protection (Last Line of Defense) ✅ IMPLEMENTED
 
@@ -199,7 +203,7 @@ The `[RequiresQuota]` attribute enables declarative quota enforcement via `Resou
 | 4 | Quota usage cannot go negative | **PASS** ✅ | `ResourceQuota.RemoveUsage()` uses `Math.Max(0, CurrentUsage - amount)` |
 | 5 | Concurrent creates cannot exceed quota | **PASS** ✅ | `TryIncrementUsageAsync` with `RowVersion` concurrency token and retry logic |
 | 6 | Read-only operations never mutate quota state | **PASS** ✅ | `CheckLimitsAsync()` and `CheckResourceQuotaQuery` use `effectiveCurrentUsage` without mutation |
-| 7 | Cross-tenant resource leakage is impossible | **UNKNOWN** | TenantId filtering appears correct in queries, but no integration tests verify isolation |
+| 7 | Cross-tenant resource leakage is impossible | **PASS** ✅ | All repository queries filter by `TenantId`. Integration tests in `ResourceQuotaIsolationTests.cs` verify: `TenantA_CannotAccessOrAffect_TenantBQuota`, `TenantA_CannotReadOrModify_TenantBQuota`, `SequentialOperations_OnDifferentTenants_AreFullyIsolated`, `DeleteQuota_OnlyAffects_SpecifiedTenant` |
 
 ---
 
