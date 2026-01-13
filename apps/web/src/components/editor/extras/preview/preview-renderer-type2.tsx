@@ -136,7 +136,7 @@ export function PreviewRendererType2({ leftState, rightState, projectId }: Previ
             <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </div>
         ) : (
-          <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
+          <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto overflow-x-hidden break-words">
             <PreviewRenderer serializedState={leftState} projectId={projectId} />
           </div>
         )}
@@ -194,7 +194,7 @@ export function PreviewRendererType2({ leftState, rightState, projectId }: Previ
             <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           </div>
         ) : (
-          <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto">
+          <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto overflow-x-hidden break-words">
             <PreviewRenderer serializedState={rightState} projectId={projectId} />
           </div>
         )}
