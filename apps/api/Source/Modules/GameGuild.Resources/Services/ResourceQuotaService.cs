@@ -157,8 +157,7 @@ public class ResourceQuotaService(
                     usageRecord.PeakUsageDate = DateTime.UtcNow;
                 }
 
-                // No update method in repository, but we can work around this
-                // TODO: Add UpdateAsync method to IUsageRecordRepository
+                await usageRepository.UpdateAsync(usageRecord, cancellationToken);
             }
             else
             {
