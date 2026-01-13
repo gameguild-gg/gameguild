@@ -1,0 +1,181 @@
+using FluentAssertions;
+using GameGuild.API.Database;
+using GameGuild.CQRS;
+using GameGuild.Resources;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
+using Xunit;
+
+namespace GameGuild.Resources.IntegrationTests;
+
+/// <summary>
+/// Integration tests verifying cross-tenant quota isolation
+/// </summary>
+public class ResourceQuotaIsolationTests : IDisposable
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IResourceQuotaRepository _repository;
+    private readonly IResourceQuotaService _service;
+
+    public ResourceQuotaIsolationTests()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}")
+            .Options;
+
+        _context = new ApplicationDbContext(options);
+        _repository = new ResourceQuotaRepository(_context);
+        var usageRepository = new UsageRecordRepository(_context);
+        var publisherMock = new Mock<IPublisher>();
+        _service = new ResourceQuotaService(
+            _repository,
+            usageRepository,
+            publisherMock.Object,
+            NullLogger<ResourceQuotaService>.Instance);
+    }
+
+    [Fact]
+    public async Task TenantA_CannotAccessOrAffect_TenantBQuota()
+    {
+        // Arrange: Create quotas for two different tenants
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+
+        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Users, softLimit: 50, hardLimit: 100);
+        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Users, softLimit: 20, hardLimit: 30);
+
+        // Act: Tenant A consumes quota
+        for (int i = 0; i < 60; i++)
+        {
+            await _service.TryAtomicConsumeAsync(tenantA, ResourceUsageType.Users, 1);
+        }
+
+        // Tenant B consumes quota
+        for (int i = 0; i < 15; i++)
+        {
+            await _service.TryAtomicConsumeAsync(tenantB, ResourceUsageType.Users, 1);
+        }
+
+        // Assert: Verify complete isolation
+        var quotaA = await _service.GetQuotaAsync(tenantA, ResourceUsageType.Users);
+        var quotaB = await _service.GetQuotaAsync(tenantB, ResourceUsageType.Users);
+
+        quotaA.Should().NotBeNull();
+        quotaB.Should().NotBeNull();
+
+        quotaA!.CurrentUsage.Should().Be(60, "Tenant A should have consumed 60");
+        quotaB!.CurrentUsage.Should().Be(15, "Tenant B should have consumed 15");
+
+        quotaA.HardLimit.Should().Be(100);
+        quotaB.HardLimit.Should().Be(30);
+
+        // Verify that Tenant A's high usage doesn't affect Tenant B
+        var (canProceedB, _, _) = await _service.TryAtomicConsumeAsync(tenantB, ResourceUsageType.Users, 1);
+        canProceedB.Should().BeTrue("Tenant B should still be able to consume quota despite Tenant A's usage");
+
+        var quotaBAfter = await _service.GetQuotaAsync(tenantB, ResourceUsageType.Users);
+        quotaBAfter!.CurrentUsage.Should().Be(16);
+    }
+
+    [Fact]
+    public async Task TenantA_CannotReadOrModify_TenantBQuota()
+    {
+        // Arrange
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+
+        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Storage, hardLimit: 1000);
+        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Storage, hardLimit: 2000);
+
+        // Act: Try to get Tenant B's quota using Tenant A's ID (should return null or Tenant A's quota)
+        var quotaA = await _service.GetQuotaAsync(tenantA, ResourceUsageType.Storage);
+        var quotaB = await _service.GetQuotaAsync(tenantB, ResourceUsageType.Storage);
+
+        // Assert: Quotas are completely separate
+        quotaA.Should().NotBeNull();
+        quotaB.Should().NotBeNull();
+        
+        quotaA!.TenantId.Should().Be(tenantA);
+        quotaB!.TenantId.Should().Be(tenantB);
+        
+        quotaA.HardLimit.Should().Be(1000);
+        quotaB.HardLimit.Should().Be(2000);
+
+        // Verify that modifying Tenant A's quota doesn't affect Tenant B
+        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Storage, hardLimit: 500);
+        
+        var updatedQuotaA = await _service.GetQuotaAsync(tenantA, ResourceUsageType.Storage);
+        var unchangedQuotaB = await _service.GetQuotaAsync(tenantB, ResourceUsageType.Storage);
+
+        updatedQuotaA!.HardLimit.Should().Be(500);
+        unchangedQuotaB!.HardLimit.Should().Be(2000, "Tenant B's quota should be unaffected");
+    }
+
+    [Fact]
+    public async Task ConcurrentOperations_OnDifferentTenants_AreFullyIsolated()
+    {
+        // Arrange
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+        var tenantC = Guid.NewGuid();
+
+        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Users, hardLimit: 50);
+        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Users, hardLimit: 50);
+        await _service.SetQuotaAsync(tenantC, ResourceUsageType.Users, hardLimit: 50);
+
+        // Act: Fire concurrent requests to different tenants
+        var tasksA = Enumerable.Range(0, 30).Select(_ => 
+            Task.Run(async () => await _service.TryAtomicConsumeAsync(tenantA, ResourceUsageType.Users, 1)));
+        var tasksB = Enumerable.Range(0, 25).Select(_ => 
+            Task.Run(async () => await _service.TryAtomicConsumeAsync(tenantB, ResourceUsageType.Users, 1)));
+        var tasksC = Enumerable.Range(0, 40).Select(_ => 
+            Task.Run(async () => await _service.TryAtomicConsumeAsync(tenantC, ResourceUsageType.Users, 1)));
+
+        var allTasks = tasksA.Concat(tasksB).Concat(tasksC);
+        await Task.WhenAll(allTasks);
+
+        // Assert: Each tenant's quota is accurate and isolated
+        var quotaA = await _service.GetQuotaAsync(tenantA, ResourceUsageType.Users);
+        var quotaB = await _service.GetQuotaAsync(tenantB, ResourceUsageType.Users);
+        var quotaC = await _service.GetQuotaAsync(tenantC, ResourceUsageType.Users);
+
+        quotaA!.CurrentUsage.Should().Be(30, "Tenant A should have exactly 30");
+        quotaB!.CurrentUsage.Should().Be(25, "Tenant B should have exactly 25");
+        quotaC!.CurrentUsage.Should().Be(40, "Tenant C should have exactly 40");
+
+        // None should affect each other
+        quotaA.CurrentUsage.Should().NotBe(quotaB.CurrentUsage);
+        quotaB.CurrentUsage.Should().NotBe(quotaC.CurrentUsage);
+    }
+
+    [Fact]
+    public async Task DeleteQuota_OnlyAffects_SpecifiedTenant()
+    {
+        // Arrange
+        var tenantA = Guid.NewGuid();
+        var tenantB = Guid.NewGuid();
+
+        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Projects, hardLimit: 10);
+        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Projects, hardLimit: 20);
+
+        // Act: Delete Tenant A's quota
+        var deleted = await _service.DeleteQuotaAsync(tenantA, ResourceUsageType.Projects);
+
+        // Assert
+        deleted.Should().BeTrue();
+
+        var quotaA = await _service.GetQuotaAsync(tenantA, ResourceUsageType.Projects);
+        var quotaB = await _service.GetQuotaAsync(tenantB, ResourceUsageType.Projects);
+
+        quotaA.Should().BeNull("Tenant A's quota should be deleted");
+        quotaB.Should().NotBeNull("Tenant B's quota should still exist");
+        quotaB!.HardLimit.Should().Be(20);
+    }
+
+    public void Dispose()
+    {
+        _context.Database.EnsureDeleted();
+        _context.Dispose();
+    }
+}

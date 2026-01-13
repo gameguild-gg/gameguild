@@ -65,4 +65,38 @@ public class DeleteUserCommandHandlerTests
         await Assert.ThrowsAsync<UserNotFoundException>(
             () => _handler.Handle(command, CancellationToken.None));
     }
+
+    [Fact]
+    public async Task DeleteUser_DecrementsQuota_WhenUserDeleted()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var user = new User { Id = userId, Email = "test@example.com", Name = "Test User" };
+        user.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
+        var command = new DeleteUserCommand(userId);
+
+        var actorContext = new ActorContext(tenantId, userId, null, null, null);
+        _actorContextAccessorMock.Setup(x => x.ActorContext).Returns(actorContext);
+
+        _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        _userRepositoryMock.Setup(x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        _quotaServiceMock
+            .Setup(x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Should().Be(Unit.Value);
+        _userRepositoryMock.Verify(x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+        _quotaServiceMock.Verify(
+            x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, It.IsAny<CancellationToken>()),
+            Times.Once,
+            "quota should be decremented when user is deleted");
+    }
 }
