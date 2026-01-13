@@ -15,7 +15,7 @@ public static class CachingServiceExtensions
     ///     Adds authorization caching services with optional Redis distributed cache.
     /// </summary>
     /// <param name="services">The service collection.</param>
-    /// <param name="options">Optional cache options override.</param>
+    /// <param name="configureOptions">Optional cache options configuration delegate.</param>
     /// <returns>The service collection for chaining.</returns>
     /// <remarks>
     ///     <para>
