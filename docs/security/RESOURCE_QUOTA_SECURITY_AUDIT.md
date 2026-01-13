@@ -206,76 +206,89 @@ Read operations correctly do not affect quota state.
 
 ---
 
-## 5. Attack & Failure Scenarios
+## 5. Attack & Failure Scenarios ✅ ALL MITIGATED
 
-### Scenario 1: Race Condition Exceeding Quota
+All scenarios that were identified during the initial audit have been addressed. This section now documents how each attack vector is mitigated.
+
+### Scenario 1: Race Condition Exceeding Quota ✅ MITIGATED
 
 **Setup:** Tenant has quota of 10 users, currently at 9.
 
-**Attack:**
+**Attack Vector:**
 1. Two concurrent `CreateUserCommand` requests arrive
-2. Both call `CheckLimitsAsync()` → Both see `currentUsage=9, hardLimit=10, CanProceed=true`
-3. Both execute user creation
-4. Both call `RecordUsageAsync()` → `currentUsage` becomes 11
+2. ~~Both call `CheckLimitsAsync()` → Both see `currentUsage=9, hardLimit=10, CanProceed=true`~~
+3. ~~Both execute user creation~~
+4. ~~Both call `RecordUsageAsync()` → `currentUsage` becomes 11~~
 
-**Expected:** Second request should be rejected.  
-**Actual:** Both succeed, quota exceeded.
+**Mitigation Applied:**
+- `ResourceQuotaBehavior` now uses `TryAtomicConsumeAsync()` BEFORE command execution
+- `TryIncrementUsageAsync` in repository uses optimistic concurrency with RowVersion
+- On `DbUpdateConcurrencyException`, it retries up to 3 times with fresh data
+- Second request sees `currentUsage=10` after first succeeds and is rejected
 
-### Scenario 2: Rollback Failure Leaving Quota Inconsistent
+**Result:** Second request receives `QuotaExceededException`. ✅
+
+### Scenario 2: Rollback Failure Leaving Quota Inconsistent ✅ MITIGATED
 
 **Setup:** Create user command with quota check.
 
-**Attack/Failure:**
-1. `CheckLimitsAsync()` passes (quota allows)
-2. User creation in handler throws exception (e.g., duplicate email)
-3. Exception propagates
-4. `RecordUsageAsync()` never called
-5. Quota is correct (no increment) ✓
+**Attack Vector (Old):**
+1. ~~`CheckLimitsAsync()` passes, user creation succeeds, `RecordUsageAsync()` fails~~
+2. ~~User exists, quota not incremented~~
 
-**However, if:**
-1. `CheckLimitsAsync()` passes
-2. User creation succeeds
-3. `RecordUsageAsync()` fails (DB error)
-4. User exists, quota not incremented
+**Mitigation Applied:**
+- Quota is atomically consumed BEFORE command execution via `TryAtomicConsumeAsync()`
+- If command fails after quota consumption, `ResourceQuotaBehavior` catches exception
+- It calls `DecrementUsageAsync()` to rollback the quota
+- Even if rollback fails, it's logged as error for manual reconciliation
 
-**Expected:** Transactional consistency.  
-**Actual:** User exists without quota accounting.
+**Result:** Quota is always incremented before user creation, rolled back on failure. ✅
 
-### Scenario 3: Delete Not Freeing Quota
+### Scenario 3: Delete Not Freeing Quota ✅ MITIGATED
 
 **Setup:** Tenant at 10/10 users quota.
 
-**Attack:**
-1. Delete 5 users
-2. Quota still shows 10/10
-3. Cannot create new users even though only 5 exist
+**Attack Vector:**
+1. ~~Delete 5 users~~
+2. ~~Quota still shows 10/10~~
+3. ~~Cannot create new users even though only 5 exist~~
 
-**Expected:** Quota decrements to 5/10.  
-**Actual:** Quota remains 10/10, tenant blocked until manual reset.
+**Mitigation Applied:**
+- `DeleteUserCommandHandler` calls `DecrementUsageAsync()` after soft delete
+- `BulkDeleteUsersCommandHandler` calls `DecrementUsageAsync()` for each deleted user
 
-### Scenario 4: Direct Recording Bypass
+**Result:** Quota correctly decrements to 5/10. ✅
 
-**Attack:**
-1. Call `POST /v1/tenants/{id}/resources:record` directly
-2. RecordResourceUsageCommand executes
-3. No quota limit check performed
-4. Usage recorded beyond hard limit
+### Scenario 4: Direct Recording Bypass ✅ MITIGATED
 
-**Expected:** Should reject if would exceed limit.  
-**Actual:** Records regardless of limits.
+**Attack Vector:**
+1. ~~Call `POST /v1/tenants/{id}/resources:record` directly~~
+2. ~~RecordResourceUsageCommand executes without quota limit check~~
+3. ~~Usage recorded beyond hard limit~~
 
-### Scenario 5: Missing Tenant Context Bypass
+**Mitigation Applied:**
+- `RecordResourceUsageCommandHandler` validates hard limit BEFORE recording
+- If `projectedUsage > quota.HardLimit`, throws `QuotaExceededException`
+- Additionally, `RecordUsageAsync` service method also enforces hard limits
+
+**Result:** Direct recording is rejected if it would exceed hard limit. ✅
+
+### Scenario 5: Missing Tenant Context Bypass ✅ MITIGATED
 
 **Setup:** Authenticated request without X-Tenant-Id header.
 
-**Attack:**
-1. `CreateUserCommand` decorated with `[RequiresQuota]`
-2. `Actor.TenantId` is null
-3. ResourceQuotaBehavior logs warning but proceeds
-4. User created without any quota check
+**Attack Vector:**
+1. ~~`CreateUserCommand` decorated with `[RequiresQuota]`~~
+2. ~~`Actor.TenantId` is null~~
+3. ~~ResourceQuotaBehavior logs warning but proceeds~~
+4. ~~User created without any quota check~~
 
-**Expected:** Fail-closed, reject request.  
-**Actual:** Quota bypassed entirely.
+**Mitigation Applied:**
+- `ResourceQuotaBehavior` now throws `InvalidOperationException` if `!Actor.TenantId.HasValue`
+- This is a fail-closed approach - no tenant context = no operation
+- Error message clearly states tenant context is required
+
+**Result:** Request is rejected with clear error. Quota cannot be bypassed. ✅
 
 ---
 
