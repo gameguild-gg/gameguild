@@ -4,8 +4,13 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     Middleware for permission caching optimization
+///     Middleware for permission caching optimization.
 /// </summary>
+/// <remarks>
+///     ⚠️ DEPRECATED: This middleware has been moved to GameGuild.Identity.Authorization module.
+///     Use <see cref="Authorization.PermissionCachingMiddleware"/> instead.
+/// </remarks>
+[Obsolete("Use GameGuild.Identity.Authorization.PermissionCachingMiddleware instead. Permission caching is an authorization concern.")]
 public class PermissionCachingMiddleware(RequestDelegate next, ILogger<PermissionCachingMiddleware> logger)
 {
     private readonly ILogger<PermissionCachingMiddleware> _logger = logger;

@@ -194,8 +194,7 @@ public sealed class PermissionGrantService(
 ///     This is the primary implementation - <see cref="PermissionService"/> is a backward-compatible facade.
 /// </summary>
 public sealed class PermissionQueryService(
-    ITenantPermissionRepository repository,
-    ILogger<PermissionQueryService> _
+    ITenantPermissionRepository repository
 ) : IPermissionQueryService
 {
     public async Task<bool> HasTenantPermissionAsync(

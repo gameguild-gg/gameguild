@@ -86,8 +86,14 @@ public static class AuthorizationModuleExtensions
             services.AddScoped<IAccessControlListService, DatabaseAccessControlListService>();
         }
 
-        // Permission service adapter
+        // Permission service adapter (composite interface for backward compatibility)
         services.AddScoped<IAuthorizationPermissionService, AuthorizationPermissionServiceAdapter>();
+        
+        // ISP-compliant focused interfaces (prefer these for new code)
+        // These resolve to the same implementation via the composite interface
+        services.AddScoped<IAuthorizationSinglePermissionChecker>(sp => sp.GetRequiredService<IAuthorizationPermissionService>());
+        services.AddScoped<IAuthorizationPermissionResolver>(sp => sp.GetRequiredService<IAuthorizationPermissionService>());
+        services.AddScoped<IAuthorizationBatchPermissionChecker>(sp => sp.GetRequiredService<IAuthorizationPermissionService>());
 
         return services;
     }
@@ -116,6 +122,9 @@ public static class AuthorizationModuleExtensions
     /// <returns>The service collection for chaining.</returns>
     public static IServiceCollection AddAuthorizationPresentation(this IServiceCollection services)
     {
+        // ClaimsPrincipal abstraction for DIP compliance
+        services.AddScoped<IClaimsPrincipalAccessor, HttpContextClaimsPrincipalAccessor>();
+        
         // Tenant context and resolver (scoped per request)
         services.AddScoped<HttpAuthorizationTenantContext>();
         services.AddScoped<IAuthorizationTenantContext>(sp => sp.GetRequiredService<HttpAuthorizationTenantContext>());
@@ -191,7 +200,10 @@ public static class AuthorizationModuleExtensions
     public static IServiceCollection AddPermissionServices(this IServiceCollection services)
     {
         // Core permission service (legacy - contains all operations)
+        // Suppressed: intentional backward-compatible registration
+        #pragma warning disable CS0618
         services.AddScoped<IPermissionService, PermissionService>();
+        #pragma warning restore CS0618
         
         // SRP-compliant focused services (new - recommended for new code)
         services.AddScoped<IPermissionGrantService, PermissionGrantService>();

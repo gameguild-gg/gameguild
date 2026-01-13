@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -47,12 +48,20 @@ public sealed class TenantResolver(
     /// <summary>
     ///     The HttpContext.Items key for the resolved tenant.
     /// </summary>
-    public const string TenantItemKey = "CurrentTenant";
+    /// <remarks>
+    ///     ⚠️ Prefer using <see cref="HttpContextKeys.CurrentTenant"/> directly.
+    /// </remarks>
+    [Obsolete("Use HttpContextKeys.CurrentTenant instead for consistency across modules.")]
+    public const string TenantItemKey = HttpContextKeys.CurrentTenant;
 
     /// <summary>
     ///     The HttpContext.Items key for the tenant ID.
     /// </summary>
-    public const string TenantIdItemKey = "TenantId";
+    /// <remarks>
+    ///     ⚠️ Prefer using <see cref="HttpContextKeys.AuthorizationTenantId"/> directly.
+    /// </remarks>
+    [Obsolete("Use HttpContextKeys.AuthorizationTenantId instead for consistency across modules.")]
+    public const string TenantIdItemKey = HttpContextKeys.AuthorizationTenantId;
 
     public async Task<TenantResolutionResult> ResolveAsync(
         HttpContext context,
