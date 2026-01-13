@@ -26,6 +26,9 @@ export function EditorLayoutType1({
   projectId,
   mode = "free-page",
 }: EditorLayoutType1Props) {
+  // For non-free modes in type1, use "single" panel to apply restrictions
+  const panel = mode !== "free-page" ? "single" : undefined
+  
   return (
     <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
       {/* Editor Content */}
@@ -37,6 +40,7 @@ export function EditorLayoutType1({
           onLoadingChange={onLoadingChange}
           projectId={projectId}
           mode={mode}
+          panel={panel}
         />
       </div>
     </div>

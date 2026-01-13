@@ -102,7 +102,7 @@ export const INSERT_TABLE_COMMAND = createCommand<Partial<TableData>>("INSERT_TA
 
 interface FloatingContentInsertPluginProps {
   mode?: ProjectMode
-  panel?: "left" | "right"
+  panel?: "left" | "right" | "single"
 }
 
 export function FloatingContentInsertPlugin({ mode = "free-page", panel }: FloatingContentInsertPluginProps = {}) {

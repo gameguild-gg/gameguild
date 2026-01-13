@@ -141,10 +141,8 @@ export function CreateProjectDialog({
     try {
       const newProjectId = generateProjectId()
       
-      // Determine layout type based on mode
-      const finalLayoutType = canSelectLayoutType(projectMode) 
-        ? projectType 
-        : PROJECT_MODES[projectMode].layoutType
+      // Use the selected layout type
+      const finalLayoutType = projectType
       
       // Get restrictions for the mode
       const restrictions = NODE_RESTRICTIONS[projectMode]
@@ -220,7 +218,7 @@ export function CreateProjectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
         </DialogHeader>
@@ -237,33 +235,29 @@ export function CreateProjectDialog({
             />
           </div>
 
-          {/* Project Mode Section */}
-          <div>
-            <Label htmlFor="project-mode">Project Mode</Label>
-            <select
-              id="project-mode"
-              value={projectMode}
-              onChange={(e) => {
-                const newMode = e.target.value as ProjectMode
-                setProjectMode(newMode)
-                // Set default layout type for non-free modes
-                if (!canSelectLayoutType(newMode)) {
-                  setProjectType(PROJECT_MODES[newMode].layoutType)
-                }
-              }}
-              className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-            >
-              <option value="free-page">Free Page - No restrictions, flexible layout</option>
-              <option value="code-page">Code Page - Dual layout with code studio</option>
-              <option value="quiz-page">Quiz Page - Dual layout with quiz nodes</option>
-            </select>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {PROJECT_MODES[projectMode].description}
-            </p>
-          </div>
+          {/* Project Configuration Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Project Mode Section */}
+            <div>
+              <Label htmlFor="project-mode">Project Mode</Label>
+              <select
+                id="project-mode"
+                value={projectMode}
+                onChange={(e) => setProjectMode(e.target.value as ProjectMode)}
+                className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              >
+                <option value="free-page">Free Page</option>
+                <option value="code-page">Code Page</option>
+                <option value="quiz-page">Quiz Page</option>
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {projectMode === "free-page" && "No restrictions, flexible content"}
+                {projectMode === "code-page" && "Code studio on right panel"}
+                {projectMode === "quiz-page" && "Quiz nodes on right panel"}
+              </p>
+            </div>
 
-          {/* Layout Type Selection (only for free-page mode) */}
-          {canSelectLayoutType(projectMode) && (
+            {/* Layout Type Selection (always available) */}
             <div>
               <Label htmlFor="project-type">Layout Type</Label>
               <select
@@ -272,11 +266,14 @@ export function CreateProjectDialog({
                 onChange={(e) => setProjectType(e.target.value as ProjectLayoutType)}
                 className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               >
-                <option value="type1">Single Editor (Vertical Layout)</option>
-                <option value="type2">Dual Editors (Horizontal Layout)</option>
+                <option value="type1">Single Panel</option>
+                <option value="type2">Dual Panel</option>
               </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {projectType === "type1" ? "Vertical single editor" : "Horizontal split layout"}
+              </p>
             </div>
-          )}
+          </div>
 
           {/* Tags Section */}
           <div className="space-y-3">
