@@ -67,7 +67,7 @@ public class AuthenticationPerformanceTests : IDisposable
                        .ReturnsAsync(new SignInResponse
                        {
                            Success = true,
-                           User = new UserDto { Id = Guid.NewGuid(), Email = "test@example.com" },
+                           User = new GameGuild.Identity.Authentication.UserDto { Id = Guid.NewGuid(), Email = "test@example.com" },
                            AccessToken = "jwt-token",
                            RefreshToken = "refresh-token"
                        });

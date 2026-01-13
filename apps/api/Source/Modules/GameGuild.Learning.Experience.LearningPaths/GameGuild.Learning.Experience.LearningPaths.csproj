@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RootNamespace>GameGuild.Learning.Experience.LearningPaths</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FluentValidation" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" />
+    </ItemGroup>
+
+</Project>

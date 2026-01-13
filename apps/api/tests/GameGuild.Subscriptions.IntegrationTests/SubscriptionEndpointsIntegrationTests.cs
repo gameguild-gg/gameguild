@@ -66,7 +66,7 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
         using var scope = _factory.Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         
-        var plan = new GameGuild.Commerce.Subscriptions.SubscriptionPlans.Entities.SubscriptionPlan(
+        var plan = new GameGuild.Commerce.Subscriptions.SubscriptionPlan(
             name: "Test Plan",
             slug: "test-plan",
             monthlyPriceInCents: 2999,
@@ -74,7 +74,7 @@ public class SubscriptionEndpointsIntegrationTests : IClassFixture<WebApplicatio
             description: "Test subscription plan"
         );
         
-        dbContext.Set<GameGuild.Commerce.Subscriptions.SubscriptionPlans.Entities.SubscriptionPlan>().Add(plan);
+        dbContext.Set<GameGuild.Commerce.Subscriptions.SubscriptionPlan>().Add(plan);
         await dbContext.SaveChangesAsync();
         
         return plan.Id;

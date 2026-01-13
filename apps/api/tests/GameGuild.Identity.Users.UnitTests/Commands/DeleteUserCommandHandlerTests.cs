@@ -94,7 +94,7 @@ public class DeleteUserCommandHandlerTests
             .Returns(Task.CompletedTask);
 
         _quotaServiceMock
-            .Setup(x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, It.IsAny<CancellationToken>()))
+            .Setup(x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, null, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -104,7 +104,7 @@ public class DeleteUserCommandHandlerTests
         result.Should().Be(Unit.Value);
         _userRepositoryMock.Verify(x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
         _quotaServiceMock.Verify(
-            x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, It.IsAny<CancellationToken>()),
+            x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, null, null, It.IsAny<CancellationToken>()),
             Times.Once,
             "quota should be decremented when user is deleted");
     }

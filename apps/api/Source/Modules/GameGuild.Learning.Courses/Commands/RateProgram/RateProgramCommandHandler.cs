@@ -1,0 +1,32 @@
+using GameGuild.Abstractions;
+using GameGuild.CQRS;
+
+using GameGuild.Enums;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Programs;
+
+/// <summary>
+/// Command handler for RateProgramCommand
+/// </summary>
+public class RateProgramCommandHandler(IApplicationDbContext context, ILogger<RateProgramCommandHandler> logger)
+    : ICommandHandler<RateProgramCommand, ProgramRating>
+{
+    public async Task<ProgramRating> Handle(RateProgramCommand request, CancellationToken cancellationToken) {
+    logger.LogInformation("Adding rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
+
+    var existingRating = await context.Set<ProgramRating>().Where(pr => pr.ProgramId == request.ProgramId && pr.UserId == request.UserId).FirstOrDefaultAsync(cancellationToken);
+
+    if (existingRating != null) { throw new InvalidOperationException("User has already rated this program"); }
+
+    var rating = new ProgramRating { ProgramId = request.ProgramId, UserId = request.UserId, Rating = request.Rating, Review = request.Review, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow };
+
+    context.Set<ProgramRating>().Add(rating);
+    await context.SaveChangesAsync(cancellationToken);
+
+    logger.LogInformation("Added rating for program {ProgramId} by user {UserId}", request.ProgramId, request.UserId);
+
+    return rating;
+  }
+}
