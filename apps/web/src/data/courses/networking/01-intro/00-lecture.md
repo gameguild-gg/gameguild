@@ -40,7 +40,7 @@ Read the repo through carefully, it contains all the information you need to com
 The **Open Systems Interconnection (OSI)** model provides a framework for understanding how networks communicate:
 
 ```mermaid
-graph TD
+graph LR
     A["<b>Layer 7: Application</b><br/>HTTP, DNS, game protocols"] --> B["<b>Layer 6: Presentation</b><br/>Data formatting, encryption, compression"]
     B --> C["<b>Layer 5: Session</b><br/>Session management, connection coordination"]
     C --> D["<b>Layer 4: Transport</b><br/>TCP/UDP, ports, reliability"]
@@ -54,20 +54,26 @@ graph TD
 The **TCP/IP model** condenses this into 4 layers, combining Session, Presentation, and Application into one:
 
 ```mermaid
-graph TD
+graph LR
     A["<b>Layer 4: Application</b><br/>HTTP, DNS, game protocols, sessions, encryption"] --> B["<b>Layer 3: Transport</b><br/>TCP, UDP, ports"]
     B --> C["<b>Layer 2: Internet</b><br/>IP addressing, routing"]
     C --> D["<b>Layer 1: Link</b><br/>Ethernet, MAC addresses, physical signals"]
 ```
 
+::: tip
+
+Comparing them together:
+
 ![OSI vs TCP/IP](https://www.9tut.com/images/ccna_self_study/TCP_UDP/TCP_UDP.jpg)
+
+:::
 
 ### Encapsulation: How Data Travels Down the Stack
 
 When data is sent, headers are added at each layer as it travels **down** the stack:
 
-``` mermaid
-graph TD
+```mermaid
+graph LR
     A["Application Data"] --> B["TCP/UDP Header + Data"]
     B --> C["IP Header + TCP/UDP Header + Data"]
     C --> D["Ethernet Header + IP Header + TCP/UDP Header + Data"]
