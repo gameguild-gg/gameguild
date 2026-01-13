@@ -1354,4 +1354,683 @@ public interface IUserContext { ... }
 
 ---
 
-**Report Complete. Last updated: January 12, 2026. All security audit issues fixed.**
+# ADDENDUM: DAC Permission Layer Security Audit
+
+**Date**: January 13, 2026  
+**Auditor**: GitHub Copilot (Claude Opus 4.5)  
+**Scope**: DAC (Discretionary Access Control) Permission Resolution  
+**Status**: 🔴 **Critical Issues Found**
+
+---
+
+## A1. Executive Summary - DAC Layer
+
+### 🔴 Critical Findings
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| **No Deny Semantics in DAC** | 🔴 Critical | `TenantPermission` only supports allow permissions. Tenants cannot prohibit globally-allowed permissions. |
+| **Global Permission Leakage** | 🔴 Critical | Additive permission resolution causes global defaults to leak into all tenants without restriction. |
+| **Missing Authorization for Global Defaults** | 🔴 Critical | No explicit check prevents non-system users from modifying global default permissions. |
+
+### ✅ Correctly Implemented
+
+| Feature | Status | Evidence |
+|---------|--------|----------|
+| Layer 1 (Policy Gates) | ✅ Secure | DENY-WINS via `RulesetAuthorizationHandler` and `AbacPolicyEvaluator` |
+| ACL System | ✅ Secure | Proper DENY-FIRST algorithm in `DatabaseAccessControlListService` |
+| Tenant Isolation | ✅ Secure | `TenantMatchHandler` enforces tenant boundary at request level |
+| Cache Invalidation | ✅ Secure | Tenant security versioning provides cache invalidation |
+| Fail-Closed | ✅ Secure | Missing tenant context explicitly denied |
+
+---
+
+## A2. Current DAC Authorization Flow
+
+```
+┌────────────────────────────────────────────────────────────────────────────┐
+│                        REQUEST ENTERS SYSTEM                                │
+└──────────────────────────────┬─────────────────────────────────────────────┘
+                               ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 1: AUTHENTICATION                                                     │
+│ • JWT validation (signature, expiry)                                        │
+│ • Populate ClaimsPrincipal from token                                       │
+│ Result: 401 if invalid → next layer if valid                               │
+└──────────────────────────────┬─────────────────────────────────────────────┘
+                               ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 2: TENANT RESOLUTION                                                  │
+│ • IAuthorizationTenantContext reads HttpContext.Items["TenantId"]          │
+│ • Fallback: X-Tenant-Id header → JWT tenant claim → user default           │
+│ • TenantMatchHandler validates token.tenantId == resolved.tenantId         │
+│ Result: 403 if mismatch (DENY-WINS) → next if match                        │
+└──────────────────────────────┬─────────────────────────────────────────────┘
+                               ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 3: RULE-BASED GATES (RBAC) - DENY-WINS ✅                            │
+│ • RulesetAuthorizationHandler processes PolicyRuleset                       │
+│ • Rules: TenantMatch, RequireAllPermissions, RequireMfa, RequireIpAllowList│
+│ • Evaluation: AND logic - ALL rules must pass                              │
+│ • Short-circuit: First failure → immediate DENY                            │
+│ Result: 403 if any rule fails → next if all pass                           │
+└──────────────────────────────┬─────────────────────────────────────────────┘
+                               ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 4: ABAC POLICY EVALUATION - DENY-WINS ✅                             │
+│ • AbacPolicyEvaluator processes AbacPolicy entities                        │
+│ • Policies: TimeWindow, IP ranges, attribute conditions                    │
+│ • Precedence: DENY policies win over ALLOW policies                        │
+│ Result: 403 if any deny policy matches → next if pass                      │
+└──────────────────────────────┬─────────────────────────────────────────────┘
+                               ▼
+┌────────────────────────────────────────────────────────────────────────────┐
+│ LAYER 5: DAC PERMISSION CHECK - ⚠️ ALLOW-WINS (ADDITIVE) ❌                │
+│ • PermissionQueryService.GetEffectivePermissionsAsync()                    │
+│ • Sources merged:                                                          │
+│   1. Global defaults (UserId=null, TenantId=null)                         │
+│   2. Tenant defaults (UserId=null, TenantId=X)                            │
+│   3. Direct grants (UserId=Y, TenantId=X)                                 │
+│ • ⚠️ NO DENY SEMANTICS - all sources are UNION'd                          │
+│ Result: 403 if permission not in effective set → 200 if found             │
+└────────────────────────────────────────────────────────────────────────────┘
+
+                    ┌───────────────────────────────────┐
+                    │ SEPARATE SYSTEM: ACL EVALUATION   │
+                    │ DatabaseAccessControlListService  │
+                    │ • AccessControlListEntry.IsDenied │
+                    │ • ✅ DENY-FIRST algorithm         │
+                    │ • Used for resource-level access  │
+                    └───────────────────────────────────┘
+```
+
+### Key Observations
+
+1. **Layers 1-4**: Properly implement DENY-WINS semantics ✅
+2. **Layer 5 (DAC)**: Uses ALLOW-WINS (additive) - **security gap** ❌
+3. **ACL System**: Separate from DAC, has proper deny support via `IsDenied` field ✅
+
+---
+
+## A3. Effective Precedence Rules (Pseudocode)
+
+```python
+def check_authorization(request, user, required_permission):
+    # LAYER 1: Authentication
+    if not is_authenticated(user):
+        return DENY(401, "Unauthenticated")
+    
+    # LAYER 2: Tenant Resolution
+    resolved_tenant = resolve_tenant(request)  # HttpContext.Items or header
+    token_tenant = get_claim(user, "tenant_id")
+    
+    if resolved_tenant is None:
+        return DENY(403, "No tenant context")  # ⚠️ FAIL-CLOSED ✅
+    
+    if token_tenant != resolved_tenant:
+        # Exception: non-strict allows fallback to default tenant
+        if not strict_match and resolved_tenant == default_tenant_id:
+            pass  # Allowed
+        else:
+            return DENY(403, "Tenant mismatch")
+    
+    # LAYER 3: Rule-Based Gates (AND logic, first-fail) ✅
+    for rule in policy_ruleset.rules:
+        if rule.enabled:
+            result = evaluate_rule(rule, user, request)
+            if result.is_failure:
+                return DENY(403, f"Rule failed: {rule.type}")
+    
+    # LAYER 4: ABAC Policies (DENY-WINS) ✅
+    deny_policies = get_matching_deny_policies(user, request)
+    if any(deny_policies):
+        return DENY(403, "ABAC deny policy matched")
+    
+    # LAYER 5: DAC Permissions (ALLOW-WINS - ⚠️ SECURITY CONCERN) ❌
+    effective_permissions = []
+    
+    # Global defaults - ALWAYS included ⚠️
+    effective_permissions += get_permissions(user_id=None, tenant_id=None)
+    
+    # Tenant defaults
+    if resolved_tenant:
+        effective_permissions += get_permissions(user_id=None, tenant_id=resolved_tenant)
+    
+    # Direct user grants (excluding expired)
+    effective_permissions += get_permissions(user_id=user.id, tenant_id=resolved_tenant)
+    
+    # ⚠️ NO DENY SUBTRACTION - pure union
+    effective_permissions = distinct(effective_permissions)
+    
+    if required_permission in effective_permissions:
+        return ALLOW(200)
+    else:
+        return DENY(403, f"Missing permission: {required_permission}")
+
+
+# SEPARATE: ACL Evaluation (has proper DENY-FIRST) ✅
+def check_acl_access(subject, tenant_id, resource_type, resource_id, required_level):
+    entries = get_acl_entries(subject, tenant_id, resource_type, resource_id)
+    effective_entries = [e for e in entries if e.is_active and not e.is_expired]
+    
+    deny_entries = [e for e in effective_entries if e.is_denied]
+    allow_entries = [e for e in effective_entries if not e.is_denied]
+    
+    # DENY-FIRST: Any deny caps the maximum access level ✅
+    if deny_entries:
+        highest_deny = max(e.access_level for e in deny_entries)
+        if highest_deny == AccessLevel.NONE:
+            return AccessLevel.NONE
+        
+        if not allow_entries:
+            return AccessLevel.NONE
+        
+        highest_allow = max(e.access_level for e in allow_entries)
+        return min(highest_allow, highest_deny - 1)
+    
+    # No denies - return highest allow
+    return max((e.access_level for e in allow_entries), default=AccessLevel.NONE)
+```
+
+---
+
+## A4. Correctness Check Against Requirements
+
+### User's Required 3-Layer Architecture
+
+| Layer | Required Policy | Required Behavior |
+|-------|-----------------|-------------------|
+| Layer 1 | Policy Gates | DENY-WINS, fail-fast |
+| Layer 2 | Permission Resolution | ALLOW + DENY with explicit deny semantics |
+| Layer 3 | Permission Check | Binary allow/deny |
+
+### Compliance Matrix
+
+| # | Requirement | Status | Evidence |
+|---|-------------|--------|----------|
+| 1 | **Tenant-scoped RBAC**: Permissions evaluated within tenant context | ✅ **PASS** | `TenantMatchHandler` validates tenant claim matches resolved tenant. Cache keys include tenant ID via `IPolicyCache.Get(policyName, tenantId, version)`. |
+| 2 | **Global defaults vs tenant restrictions**: Tenant can override/restrict global defaults | ❌ **FAIL** | `GetEffectivePermissionsAsync()` uses additive union: `global ∪ tenant ∪ direct`. No deny field in `TenantPermission` entity. Tenant cannot prohibit a globally-allowed permission. |
+| 3 | **Tenant defaults**: Tenant can define baseline permissions for all members | ✅ **PASS** | `GetTenantDefaultPermissionsAsync()` loads permissions where `UserId=null, TenantId=X`. These are merged into effective set. |
+| 4 | **Direct user grants with deny**: Explicit deny overrides allow | ❌ **FAIL** | `TenantPermission` entity has only `string[] Permissions` - no `DeniedPermissions` field. ACL system has `IsDenied` but it's for resource access, not permission grants. |
+
+### Layer-by-Layer Verdict
+
+| Layer | Expected | Actual | Verdict |
+|-------|----------|--------|---------|
+| Layer 1 (Policy Gates) | DENY-WINS | DENY-WINS via `RulesetAuthorizationHandler` | ✅ **PASS** |
+| Layer 2 (Permission Resolution) | ALLOW + DENY | ALLOW-WINS only (additive) | ❌ **FAIL** |
+| Layer 3 (Permission Check) | Binary check | Binary check against effective set | ✅ **PASS** |
+
+---
+
+## A5. Counterexamples / Attack Scenarios
+
+### 🔴 Attack 1: Global Permission Leakage into Tenants
+
+**Severity**: Critical  
+**Exploitability**: Easy  
+**Impact**: Cross-tenant policy violation
+
+**Scenario**: System admin grants `courses:delete` as a global default to allow course cleanup. Tenant "SchoolA" wants to prohibit deletion for their users.
+
+```csharp
+// Global default grants delete permission to everyone
+await permissionService.GrantTenantPermissionAsync(
+    userId: null, 
+    tenantId: null, 
+    permission: "courses:delete", 
+    grantedBy: systemAdminId);
+
+// SchoolA cannot prohibit this - no deny mechanism exists
+// Users in SchoolA ALWAYS have courses:delete via global defaults
+```
+
+**Impact**: Tenant cannot enforce stricter policies than global. This violates the principle that tenants should be able to restrict permissions.
+
+**Evidence**: `FocusedPermissionServices.cs` lines 241-272 - additive merge with `Distinct()`.
+
+---
+
+### 🔴 Attack 2: Cross-Tenant Role Bleed via Global Defaults
+
+**Severity**: High  
+**Exploitability**: Medium  
+**Impact**: Privilege escalation across tenants
+
+**Scenario**: User is member of TenantA and TenantB. Global default grants `admin:read`. Malicious user tries to access TenantB's admin dashboard using TenantA's context.
+
+**Mitigation Status**: ⚠️ **Partial** 
+- `TenantMatchHandler` prevents cross-tenant token use ✅
+- BUT if user has legitimate access to both tenants, global defaults apply to both equally ⚠️
+
+---
+
+### 🔴 Attack 3: Stale Cache Privilege Retention
+
+**Severity**: Medium  
+**Exploitability**: Timing-dependent  
+**Impact**: Temporary privilege retention after revocation
+
+**Scenario**: Admin revokes user's `projects:edit` permission. User's cached effective permissions still include the revoked permission until cache expires.
+
+```csharp
+// Permission revoked
+await permissionService.RevokeTenantPermissionAsync(userId, tenantId, "projects:edit", revokedBy);
+
+// BUT: TenantSecurityVersion must be bumped for cache invalidation
+// If version is not incremented, cached policies remain valid
+```
+
+**Mitigation Status**: ✅ **Mitigated** 
+- `IPolicyCache.Get()` validates against `TenantSecurityVersion`
+- Invalidation triggers version bump via `ITenantSecurityVersionRepository`
+
+---
+
+### 🔴 Attack 4: Missing Tenant Context Bypass
+
+**Severity**: High  
+**Exploitability**: Easy  
+**Impact**: Authorization bypass attempt
+
+**Scenario**: Attacker removes `X-Tenant-Id` header hoping for default/fallback behavior.
+
+```csharp
+// TenantMatchHandler.HandleRequirementAsync():
+if (string.IsNullOrEmpty(resolvedTenantId))
+{
+    _logger.LogWarning("No tenant resolved for authorization check");
+    context.Fail(new AuthorizationFailureReason(this, "No tenant context available"));
+    return Task.CompletedTask;
+}
+```
+
+**Mitigation Status**: ✅ **Mitigated** - Handler explicitly fails when tenant is missing. Fail-closed behavior.
+
+---
+
+### 🔴 Attack 5: Type Confusion in Tenant ID
+
+**Severity**: Medium  
+**Exploitability**: Low  
+**Impact**: Potential record mismatch
+
+**Scenario**: `IAuthorizationTenantContext.TenantId` is `string?` while `TenantPermission.TenantId` is `Guid?`. Inconsistent parsing could cause mismatches.
+
+```csharp
+// HttpAuthorizationTenantContext.cs
+public string? TenantId => _httpContextAccessor.HttpContext?.Items["TenantId"] as string;
+
+// PermissionHandler.cs
+if (_tenantContext.HasTenant && Guid.TryParse(_tenantContext.TenantId, out tenantId))
+    return true;
+// If TryParse fails, tenantId is Guid.Empty - could match wrong records
+```
+
+**Mitigation Status**: ⚠️ **Concern** - Failed `Guid.TryParse` sets `tenantId = Guid.Empty`. This could theoretically match unintended records if any exist with empty GUID.
+
+---
+
+### 🔴 Attack 6: Tenant Default Escalation
+
+**Severity**: Critical  
+**Exploitability**: Medium (requires `permissions:manage`)  
+**Impact**: System-wide privilege escalation
+
+**Scenario**: Malicious actor with `permissions:manage` in one tenant tries to set tenant defaults that affect other tenants.
+
+```csharp
+// Current implementation in PermissionGrantService:
+// UserId=null, TenantId=X = tenant defaults for X
+// UserId=null, TenantId=null = GLOBAL defaults (system-wide!)
+
+// Attack: Attacker sets TenantId=null to create global defaults
+await permissionService.GrantTenantPermissionAsync(
+    userId: null,
+    tenantId: null,  // GLOBAL! Not tenant-specific
+    permission: "admin:full-access",
+    grantedBy: attackerId);
+```
+
+**Mitigation Status**: ⚠️ **Concern** - Authorization check for `GrantTenantPermissionAsync` must verify caller has system-level permissions when `tenantId=null`. Need to verify this is enforced at API layer.
+
+---
+
+## A6. Recommended Design Fixes
+
+### Fix 1: Add Deny Support to TenantPermission (P0 - Critical)
+
+**Current Entity** (`TenantPermission.cs`):
+```csharp
+public class TenantPermission : EntityBase
+{
+    public Guid? UserId { get; set; }
+    public Guid? TenantId { get; set; }
+    public string[] Permissions { get; set; } = [];
+    public DateTime? ExpiresAt { get; set; }
+}
+```
+
+**Proposed Change**:
+```csharp
+public class TenantPermission : EntityBase
+{
+    public Guid? UserId { get; set; }
+    public Guid? TenantId { get; set; }
+    public string[] Permissions { get; set; } = [];
+    public string[] DeniedPermissions { get; set; } = [];  // NEW
+    public DateTime? ExpiresAt { get; set; }
+}
+```
+
+**Migration Required**: Yes - add column `DeniedPermissions text[] NOT NULL DEFAULT '{}'`
+
+---
+
+### Fix 2: Modify GetEffectivePermissionsAsync for DENY-WINS (P0 - Critical)
+
+**Current** (`FocusedPermissionServices.cs` lines 241-272):
+```csharp
+// ALLOW-WINS (current - INSECURE)
+var allPermissions = new List<string>();
+allPermissions.AddRange(globalDefaults);
+allPermissions.AddRange(tenantDefaults);
+allPermissions.AddRange(directPermissions);
+return allPermissions.Distinct().ToList();
+```
+
+**Proposed Change**:
+```csharp
+/// <summary>
+///     Get effective permissions for a user in a tenant.
+/// </summary>
+/// <remarks>
+///     <b>Permission Evaluation Policy: DENY-WINS</b>
+///     <para>
+///         Permissions are resolved from three layers. Explicit denies at any layer
+///         remove the permission from the effective set.
+///     </para>
+/// </remarks>
+public async Task<List<string>> GetEffectivePermissionsAsync(
+    Guid userId,
+    Guid? tenantId,
+    CancellationToken cancellationToken = default)
+{
+    var allowedPermissions = new HashSet<string>();
+    var deniedPermissions = new HashSet<string>();
+
+    // Layer 1: Global defaults
+    var globalDefaults = await GetGlobalDefaultsAsync(cancellationToken);
+    allowedPermissions.UnionWith(globalDefaults.Permissions);
+    deniedPermissions.UnionWith(globalDefaults.DeniedPermissions);
+
+    // Layer 2: Tenant defaults (deny overrides global allow)
+    if (tenantId.HasValue)
+    {
+        var tenantDefaults = await GetTenantDefaultsAsync(tenantId.Value, cancellationToken);
+        allowedPermissions.UnionWith(tenantDefaults.Permissions);
+        deniedPermissions.UnionWith(tenantDefaults.DeniedPermissions);
+    }
+
+    // Layer 3: Direct grants (deny overrides all)
+    var directGrants = await GetDirectGrantsAsync(userId, tenantId, cancellationToken);
+    allowedPermissions.UnionWith(directGrants.Permissions);
+    deniedPermissions.UnionWith(directGrants.DeniedPermissions);
+
+    // DENY-WINS: Subtract all denied permissions
+    allowedPermissions.ExceptWith(deniedPermissions);
+    
+    return allowedPermissions.ToList();
+}
+```
+
+---
+
+### Fix 3: Add Authorization Check for Global Default Modification (P0 - Critical)
+
+**Location**: `PermissionGrantService` or API controller
+
+```csharp
+public async Task GrantTenantPermissionAsync(
+    Guid? userId, 
+    Guid? tenantId, 
+    string permission, 
+    Guid grantedBy,
+    CancellationToken cancellationToken = default)
+{
+    // SECURITY: Global defaults require system-level permission
+    if (tenantId == null)
+    {
+        var hasSystemPermission = await _permissionQueryService.HasTenantPermissionAsync(
+            grantedBy, 
+            null, 
+            SystemPermissions.ManageGlobalDefaults, 
+            cancellationToken);
+            
+        if (!hasSystemPermission)
+        {
+            throw new ForbiddenException(
+                "Cannot modify global defaults without system-level permission");
+        }
+    }
+    
+    // ... existing logic
+}
+```
+
+---
+
+### Fix 4: Type Consistency for TenantId (P1 - High)
+
+**Option A**: Use `Guid?` everywhere
+```csharp
+public interface IAuthorizationTenantContext
+{
+    Guid? TenantId { get; }  // Changed from string?
+    bool HasTenant { get; }
+}
+```
+
+**Option B**: Create `TenantId` value object
+```csharp
+public readonly record struct TenantId(Guid Value)
+{
+    public static TenantId? Parse(string? value) => 
+        Guid.TryParse(value, out var g) ? new TenantId(g) : null;
+        
+    public override string ToString() => Value.ToString();
+}
+```
+
+---
+
+### Fix 5: Add Deny Methods to Permission Service (P0 - Critical)
+
+```csharp
+public interface IPermissionGrantService
+{
+    // Existing
+    Task GrantTenantPermissionAsync(...);
+    Task RevokeTenantPermissionAsync(...);
+    
+    // NEW: Explicit deny operations
+    Task DenyTenantPermissionAsync(
+        Guid? userId,
+        Guid? tenantId,
+        string permission,
+        Guid deniedBy,
+        DateTime? expiresAt = null,
+        CancellationToken cancellationToken = default);
+        
+    Task RemoveDenyAsync(
+        Guid? userId,
+        Guid? tenantId,
+        string permission,
+        Guid removedBy,
+        CancellationToken cancellationToken = default);
+}
+```
+
+---
+
+## A7. Test Plan
+
+### Unit Tests
+
+| Test Case | Input | Expected Result |
+|-----------|-------|-----------------|
+| `TenantDeny_OverridesGlobalAllow` | Global allows `read`, tenant denies `read` | Effective = no `read` |
+| `DirectDeny_OverridesAllLayers` | Global+tenant allow `write`, direct denies `write` | Effective excludes `write` |
+| `EmptyTenantId_FailsClosed` | Request with no tenant context | 403 Forbidden |
+| `CacheInvalidation_OnRevoke` | Revoke permission | Cache version incremented, fresh data used |
+| `CrossTenant_TokenMismatch_Denied` | Token for TenantA, request targets TenantB | 403 Forbidden |
+| `GlobalDefaultModification_RequiresSystemPermission` | Non-system user sets global default | 403 Forbidden |
+| `DenyExpiration_RestoresAllow` | Deny expires, allow still valid | Permission restored |
+
+### Integration Tests
+
+```csharp
+[Fact]
+public async Task Tenant_Can_Deny_GloballyAllowedPermission()
+{
+    // Arrange
+    await GrantGlobalDefault("courses:delete");
+    await DenyTenantPermission(tenantId, "courses:delete");
+    
+    // Act
+    var effective = await GetEffectivePermissions(userId, tenantId);
+    
+    // Assert
+    effective.Should().NotContain("courses:delete");
+}
+
+[Fact]
+public async Task DirectDeny_Overrides_TenantAllow()
+{
+    // Arrange
+    await GrantTenantDefault(tenantId, "projects:edit");
+    await DenyDirectPermission(userId, tenantId, "projects:edit");
+    
+    // Act
+    var effective = await GetEffectivePermissions(userId, tenantId);
+    
+    // Assert
+    effective.Should().NotContain("projects:edit");
+}
+
+[Fact]
+public async Task RevokedPermission_NotCached()
+{
+    // Arrange
+    await GrantDirectPermission(userId, tenantId, "test:perm");
+    var _ = await GetEffectivePermissions(userId, tenantId); // Prime cache
+    await RevokeDirectPermission(userId, tenantId, "test:perm");
+    
+    // Act
+    var effective = await GetEffectivePermissions(userId, tenantId);
+    
+    // Assert
+    effective.Should().NotContain("test:perm");
+}
+
+[Fact]
+public async Task GlobalDefaultModification_Without_SystemPermission_Throws()
+{
+    // Arrange
+    var regularUser = await CreateUserWithPermission("permissions:manage", tenantId);
+    
+    // Act & Assert
+    await Assert.ThrowsAsync<ForbiddenException>(() =>
+        permissionService.GrantTenantPermissionAsync(
+            userId: null,
+            tenantId: null,  // Global!
+            permission: "dangerous:permission",
+            grantedBy: regularUser.Id));
+}
+
+[Fact]
+public async Task DenyWins_WhenBothAllowAndDenyExist()
+{
+    // Arrange
+    await GrantDirectPermission(userId, tenantId, "resource:access");
+    await DenyDirectPermission(userId, tenantId, "resource:access");
+    
+    // Act
+    var effective = await GetEffectivePermissions(userId, tenantId);
+    
+    // Assert
+    effective.Should().NotContain("resource:access");
+}
+```
+
+---
+
+## A8. Code Smell Findings
+
+| Issue | Location | Severity | Recommendation |
+|-------|----------|----------|----------------|
+| **Type mismatch** | `IAuthorizationTenantContext.TenantId` is `string?` but `TenantPermission.TenantId` is `Guid?` | Medium | Use `Guid?` consistently or create `TenantId` value object |
+| **Obsolete facade** | `PermissionService` marked `[Obsolete]` but still referenced | Low | Complete migration to split services (`IPermissionGrantService`, `IPermissionQueryService`) |
+| **Inconsistent deny semantics** | ACL has `IsDenied` field, DAC has none | High | Add `DeniedPermissions` to `TenantPermission` for consistency |
+| **Missing authorization guard** | `PermissionGrantService.GrantTenantPermissionAsync` when `tenantId=null` | Critical | Add check requiring `SystemPermissions.ManageGlobalDefaults` |
+| **Implicit fail on parse** | `PermissionHandler.TryGetUserAndTenantIds` returns `Guid.Empty` on parse failure | Medium | Return `false` on parse failure for fail-closed behavior |
+| **Magic string usage** | Permission names scattered as string literals | Low | Create `Permissions` constants class |
+
+---
+
+## A9. Files Analyzed
+
+| File | Path | Key Findings |
+|------|------|--------------|
+| `IPermissionService.cs` | `Source/Modules/GameGuild.Identity.Authorization/Abstractions/` | Core interface with Grant/Revoke/Has/Get methods |
+| `PermissionService.cs` | `Source/Modules/GameGuild.Identity.Authorization/Services/` | Facade (marked obsolete) delegating to split services |
+| `FocusedPermissionServices.cs` | `Source/Modules/GameGuild.Identity.Authorization/Services/` | **CRITICAL**: Contains `PermissionQueryService` with ALLOW-WINS logic |
+| `TenantPermission.cs` | `Source/Modules/GameGuild.Identity.Authorization/Entities/` | **CRITICAL**: Only `string[] Permissions` - no deny field |
+| `AccessControlListEntry.cs` | `Source/Modules/GameGuild.Identity.Authorization/Entities/` | Has `IsDenied` field (ACL has deny support, DAC doesn't) |
+| `DatabaseAccessControlListService.cs` | `Source/Modules/GameGuild.Identity.Authorization/Services/` | Implements DENY-FIRST for ACL (correct) |
+| `PermissionHandler.cs` | `Source/Modules/GameGuild.Identity.Authorization/Handlers/` | Main authorization handler for permission requirements |
+| `TenantMatchHandler.cs` | `Source/Modules/GameGuild.Identity.Authorization/Handlers/` | Tenant isolation enforcement (correct) |
+| `HttpAuthorizationTenantContext.cs` | `Source/Modules/GameGuild.Identity.Authorization/Context/` | Tenant context from HttpContext.Items |
+| `IPolicyCache.cs` | `Source/Modules/GameGuild.Identity.Authorization/Abstractions/` | Cache interface with tenant-aware keys |
+| `IPolicyGateService.cs` | `Source/Modules/GameGuild.Identity.Authorization/Abstractions/` | Policy gates with DENY-WINS semantics |
+| `PERMISSION_EVALUATION_POLICY.md` | `docs/security/` | Documents "No Explicit Deny in DAC" limitation |
+
+---
+
+## A10. Priority Action Items
+
+| Priority | Action | Owner | Effort |
+|----------|--------|-------|--------|
+| **P0** | Add `DeniedPermissions` field to `TenantPermission` entity | Backend | 2 days |
+| **P0** | Modify `GetEffectivePermissionsAsync` for DENY-WINS | Backend | 1 day |
+| **P0** | Add authorization guard for `tenantId=null` in grant operations | Backend | 0.5 day |
+| **P1** | Fix TenantId type consistency (`string?` → `Guid?`) | Backend | 1 day |
+| **P1** | Add `DenyTenantPermissionAsync` and `RemoveDenyAsync` methods | Backend | 1 day |
+| **P2** | Complete migration from obsolete `PermissionService` facade | Backend | 2 days |
+| **P2** | Create `Permissions` constants class | Backend | 0.5 day |
+
+---
+
+## A11. Conclusion
+
+The authorization system has a solid foundation with proper DENY-WINS semantics in policy gates (Layer 1), ABAC evaluation, and ACL-based resource access. However, the **DAC permission layer has a critical security gap**: it uses ALLOW-WINS (additive) logic without any deny semantics.
+
+This means:
+1. **Tenants cannot restrict globally-allowed permissions** - violating tenant sovereignty
+2. **No explicit deny mechanism** - only revocation (removal of allow), which doesn't prevent inheritance
+3. **Potential for privilege escalation** if global defaults are compromised
+
+The recommended fixes are minimal and surgical:
+1. Add `DeniedPermissions` field to existing entity
+2. Modify one method (`GetEffectivePermissionsAsync`) to subtract denies
+3. Add authorization guard for global default modification
+
+These changes maintain backward compatibility (empty `DeniedPermissions` = current behavior) while enabling proper deny semantics when needed.
+
+---
+
+**DAC Security Audit Complete. Last updated: January 13, 2026.**
+
+---
+
+**Full Report Complete. Last updated: January 13, 2026. P0 DAC issues identified and documented.**
