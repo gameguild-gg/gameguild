@@ -207,4 +207,23 @@ public interface IResourcePermissionService
         string resourceType,
         string resourceId,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Automatically grants owner permissions when a resource is created.
+    ///     This should be called immediately after creating any IOwnedResource.
+    /// </summary>
+    /// <param name="tenantId">The tenant ID.</param>
+    /// <param name="ownerId">The user ID of the resource owner/creator.</param>
+    /// <param name="resourceType">The type of resource (e.g., "projects", "courses").</param>
+    /// <param name="resourceId">The unique ID of the resource.</param>
+    /// <param name="ownerPermissions">Optional explicit permissions to grant. If null, grants all permissions (read, write, delete, share, admin).</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>True if owner permissions were granted successfully.</returns>
+    Task<bool> GrantOwnerPermissionsOnCreationAsync(
+        TenantId tenantId,
+        Guid ownerId,
+        string resourceType,
+        string resourceId,
+        string[]? ownerPermissions = null,
+        CancellationToken cancellationToken = default);
 }

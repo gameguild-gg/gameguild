@@ -412,4 +412,74 @@ public class ResourcePermissionService : IResourcePermissionService
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
     }
+
+    /// <summary>
+    ///     Automatically grants owner permissions when a resource is created.
+    ///     This implements the auto-grant on creation pattern.
+    /// </summary>
+    public async Task<bool> GrantOwnerPermissionsOnCreationAsync(
+        TenantId tenantId,
+        Guid ownerId,
+        string resourceType,
+        string resourceId,
+        string[]? ownerPermissions = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            // Default owner permissions - full access
+            var permissions = ownerPermissions ?? new[]
+            {
+                "read", "write", "delete", "share", "admin", "manage_permissions"
+            };
+
+            // Check if permission already exists
+            var existingPermission = await _dbContext.Set<ResourceUserPermission>()
+                .AnyAsync(p =>
+                    p.TenantId == tenantId &&
+                    p.UserId == ownerId &&
+                    p.ResourceType == resourceType &&
+                    p.ResourceId == resourceId &&
+                    p.RevokedAt == null,
+                    cancellationToken);
+
+            if (existingPermission)
+            {
+                _logger.LogDebug(
+                    "Owner permissions already exist for user {UserId} on {ResourceType}/{ResourceId}",
+                    ownerId, resourceType, resourceId);
+                return true;
+            }
+
+            // Create owner permission record
+            var permission = new ResourceUserPermission
+            {
+                TenantId = tenantId,
+                UserId = ownerId,
+                ResourceType = resourceType,
+                ResourceId = resourceId,
+                Permissions = permissions,
+                GrantedAt = DateTime.UtcNow,
+                GrantedByUserId = ownerId, // Self-granted as owner/creator
+                GrantedByUserName = "System (Owner)",
+                IsOwner = true // Mark as owner permission
+            };
+
+            _dbContext.Set<ResourceUserPermission>().Add(permission);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation(
+                "Auto-granted owner permissions for user {UserId} on {ResourceType}/{ResourceId}: [{Permissions}]",
+                ownerId, resourceType, resourceId, string.Join(", ", permissions));
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Failed to auto-grant owner permissions for user {UserId} on {ResourceType}/{ResourceId}",
+                ownerId, resourceType, resourceId);
+            return false;
+        }
+    }
 }

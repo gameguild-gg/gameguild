@@ -78,6 +78,12 @@ public class ResourceUserPermission : EntityBase<Guid>
     public string? RevocationReason { get; set; }
 
     /// <summary>
+    ///     Gets or sets whether this permission was auto-granted as the resource owner/creator.
+    ///     Owner permissions are granted automatically when a resource is created.
+    /// </summary>
+    public bool IsOwner { get; set; }
+
+    /// <summary>
     ///     Gets or sets the date and time the user last accessed this resource.
     /// </summary>
     public DateTime? LastAccessedAt { get; set; }
