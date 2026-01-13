@@ -41,7 +41,7 @@ public class DynamicRole : EntityBase
     ///     The tenant this role belongs to.
     ///     Null = global role (applies to all tenants).
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     ///     Parent role ID for hierarchy.
@@ -125,7 +125,7 @@ public class DynamicRoleAssignment : EntityBase
     /// <summary>
     ///     The tenant ID (for scoped assignments).
     /// </summary>
-    public Guid? TenantId { get; set; }
+    public new Guid? TenantId { get; set; }
 
     /// <summary>
     ///     When the assignment becomes active (null = immediately).

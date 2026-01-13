@@ -192,12 +192,12 @@ public interface ITenantPermissionStore
 /// </summary>
 public interface IResourcePermissionStore
 {
-    Task<IReadOnlyList<ResourcePermission>> GetUserPermissionsAsync(
+    Task<IReadOnlyList<ResourceUserPermission>> GetUserPermissionsAsync(
         Guid userId,
         Guid tenantId,
         CancellationToken ct = default);
     
-    Task<IReadOnlyList<ResourcePermission>> GetResourcePermissionsAsync(
+    Task<IReadOnlyList<ResourceUserPermission>> GetResourcePermissionsAsync(
         Guid resourceId,
         CancellationToken ct = default);
 }

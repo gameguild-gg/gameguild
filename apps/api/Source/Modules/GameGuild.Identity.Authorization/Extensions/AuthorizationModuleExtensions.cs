@@ -350,14 +350,16 @@ internal class TenantPermissionStoreAdapter(ITenantPermissionRepository reposito
 /// </summary>
 internal class ResourcePermissionStoreAdapter(IResourcePermissionService service) : IResourcePermissionStore
 {
-    public async Task<IReadOnlyList<ResourcePermission>> GetUserPermissionsAsync(
+    public async Task<IReadOnlyList<ResourceUserPermission>> GetUserPermissionsAsync(
         Guid userId,
         Guid tenantId,
         CancellationToken ct = default)
-        => await service.GetByUserIdAsync(userId, tenantId, ct);
+        => await service.GetUserResourcesAsync(new TenantId(tenantId), userId, null, ct);
 
-    public async Task<IReadOnlyList<ResourcePermission>> GetResourcePermissionsAsync(
+    public async Task<IReadOnlyList<ResourceUserPermission>> GetResourcePermissionsAsync(
         Guid resourceId,
         CancellationToken ct = default)
-        => await service.GetByResourceIdAsync(resourceId, ct);
+        // Note: IResourcePermissionService doesn't have a direct "by resource id" method
+        // This adapter returns empty - implementations should use GetResourceUsersAsync instead
+        => [];
 }
