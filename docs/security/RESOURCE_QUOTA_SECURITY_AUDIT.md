@@ -39,9 +39,9 @@ The Resources module provides quota management and enforcement for multi-tenant 
 
 ---
 
-## 1. Current Resource + Quota Flow Analysis (UPDATED)
+## 1. Current Resource + Quota Flow Analysis ✅ ALL PATHS SECURED
 
-### 1.1 Resource Lifecycle: CREATE
+### 1.1 Resource Lifecycle: CREATE ✅ ALL PATHS SECURED
 
 **Path 1: Via `[RequiresQuota]` Attribute (Declarative)** ✅ SECURED
 
@@ -66,20 +66,28 @@ If command fails:
   ↓ ✅ Rollback: quotaService.DecrementUsageAsync() called
 ```
 
-**Path 2: Via Direct Service Call (Manual)**
+**Path 2: Via Direct Service Call (Manual)** ✅ SECURED
 
 ```
 BulkCreateUsersCommandHandler
   ↓
-quotaService.CheckLimitsAsync(tenantId, type, userCount)
-  ↓ If !CanProceed → throw QuotaExceededException
+quotaService.TryAtomicConsumeAsync(tenantId, type, userCount)
+  ↓ Atomic check-and-increment with RowVersion concurrency
+  ↓ Returns (Success, CurrentUsage, HardLimit)
+  ↓
+If !Success:
+  → throw QuotaExceededException
   ↓
 Create users in loop
   ↓
-quotaService.RecordUsageAsync(tenantId, type, createdCount, ...)
+If fewer users created than requested:
+  ↓ ✅ quotaService.DecrementUsageAsync() for the difference
+  ↓
+If command fails after quota consumed:
+  ↓ ✅ Rollback: quotaService.DecrementUsageAsync() called
 ```
 
-**Path 3: Via Direct Command (RecordResourceUsageCommand)**
+**Path 3: Via Direct Command (RecordResourceUsageCommand)** ✅ SECURED
 
 ```
 TenantResourcesController.Record(tenantId, body)
@@ -87,9 +95,10 @@ TenantResourcesController.Record(tenantId, body)
 RecordResourceUsageCommand(tenantId, type, count, ...)
   ↓
 RecordResourceUsageCommandHandler.Handle()
+  ↓ ✅ Check if quota.HardLimit would be exceeded
+  ↓ If projectedUsage > HardLimit → throw QuotaExceededException
   ↓ Create UsageRecord
   ↓ Update quota.CurrentUsage += amount
-  ↓ ⚠️ NO QUOTA LIMIT CHECK PERFORMED
 ```
 
 ### 1.2 Resource Lifecycle: UPDATE

@@ -201,6 +201,15 @@ public class ResourceQuotaService(
         return await usageRepository.GetByTenantAsync(tenantId, type, fromDate, toDate, cancellationToken);
     }
 
+    /// <summary>
+    ///     Check if a resource usage would exceed limits.
+    ///     <para>
+    ///     <b>ADVISORY ONLY:</b> This method is read-only and does not consume quota.
+    ///     Use for UI/UX purposes (e.g., showing "approaching limit" warnings) or pre-flight checks.
+    ///     For authoritative enforcement, use <see cref="TryAtomicConsumeAsync"/> instead.
+    ///     </para>
+    /// </summary>
+    /// <inheritdoc/>
     public async Task<ResourceLimitCheckResponse> CheckLimitsAsync(Guid tenantId, ResourceUsageType type, long requestedAmount = 1, CancellationToken cancellationToken = default)
     {
         var quota = await GetQuotaAsync(tenantId, type, cancellationToken);

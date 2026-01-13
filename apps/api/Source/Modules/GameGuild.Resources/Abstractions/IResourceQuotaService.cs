@@ -76,14 +76,27 @@ public interface IResourceQuotaService
     Task<Dictionary<ResourceUsageType, ResourceLimitCheckResponse>> CheckMultipleLimitsAsync(Guid tenantId, Dictionary<ResourceUsageType, long> requestedAmounts, CancellationToken cancellationToken = default);
 
     /// <summary>
-    ///     Attempt to consume resources if within limits
+    ///     Attempt to consume resources with atomic enforcement.
+    ///     <para>
+    ///     <b>AUTHORITATIVE:</b> This method delegates to <see cref="TryAtomicConsumeAsync"/>
+    ///     for atomic check-and-increment operation that is safe under concurrent access.
+    ///     </para>
     /// </summary>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="type">Resource usage type</param>
+    /// <param name="amount">Amount to consume</param>
+    /// <param name="userId">Optional user ID for tracking</param>
+    /// <param name="source">Optional source identifier</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Response containing success status and current quota info</returns>
     Task<ResourceLimitCheckResponse> TryConsumeResourceAsync(Guid tenantId, ResourceUsageType type, long amount = 1, Guid? userId = null, string? source = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Atomically attempts to consume resources with optimistic concurrency.
-    ///     Unlike TryConsumeResourceAsync, this method performs an atomic check-and-increment
-    ///     operation that is safe under concurrent access.
+    ///     <para>
+    ///     <b>AUTHORITATIVE:</b> This is the core atomic operation for quota enforcement.
+    ///     Uses RowVersion concurrency with retry logic to prevent race conditions.
+    ///     </para>
     /// </summary>
     /// <param name="tenantId">Tenant ID</param>
     /// <param name="type">Resource usage type</param>
