@@ -3,7 +3,7 @@ using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authentication;
-using GameGuild.Configuration;
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;

@@ -24,7 +24,7 @@ using GameGuild.Configuration.PresentationLayer.SignalIR;
 using GameGuild.Endpoints;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Products;
-using GameGuild.Subscriptions;
+using GameGuild.Commerce.Subscriptions;
 using GameGuild.Transformers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
@@ -793,10 +793,10 @@ public static class ServiceCollectionExtensions
         
         controllerStopwatch.Restart();
         services.AddControllers()
-            .AddApplicationPart(typeof(Subscriptions.SubscriptionsController).Assembly); // Subscriptions module
+            .AddApplicationPart(typeof(Commerce.Subscriptions.SubscriptionsController).Assembly); // Subscriptions module
         
         // Log individual controllers from GameGuild.Subscriptions
-        LogControllersFromAssembly(typeof(Subscriptions.SubscriptionsController).Assembly, logger, controllerStopwatch);
+        LogControllersFromAssembly(typeof(Commerce.Subscriptions.SubscriptionsController).Assembly, logger, controllerStopwatch);
         
         controllerStopwatch.Restart();
         services.AddControllers()

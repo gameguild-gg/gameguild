@@ -3,27 +3,37 @@
 **Date:** January 13, 2026  
 **Auditor:** AI Security Review  
 **Module:** `GameGuild.Resources`  
-**Severity Classification:** Critical (foundational module)
+**Severity Classification:** Critical (foundational module)  
+**Status:** ✅ FIXES APPLIED
 
 ---
 
 ## Executive Summary
 
-The Resources module provides quota management and enforcement for multi-tenant resource consumption. While the design is conceptually sound, this audit identifies **several critical security gaps** that could lead to quota bypass, data inconsistency, and race condition vulnerabilities.
+The Resources module provides quota management and enforcement for multi-tenant resource consumption. This audit identified **several critical security gaps** and applied fixes to address them.
 
-### Overall Risk Assessment: **HIGH**
+### Overall Risk Assessment: **MEDIUM** (after fixes, was HIGH)
 
-| Category | Issues Found | Severity |
-|----------|-------------|----------|
-| Concurrency Safety | 3 | Critical |
-| Lifecycle Enforcement | 2 | High |
-| Tenant Scoping | 2 | High |
-| Design Quality | 4 | Medium |
-| Test Coverage | 5 | Medium |
+| Category | Issues Found | Fixed | Remaining |
+|----------|-------------|-------|-----------|
+| Concurrency Safety | 3 | 2 | 1 (needs integration testing) |
+| Lifecycle Enforcement | 2 | 2 | 0 |
+| Tenant Scoping | 2 | 2 | 0 |
+| Design Quality | 4 | 2 | 2 (medium priority) |
+| Test Coverage | 5 | 0 | 5 (tests needed) |
+
+### Fixes Applied
+
+1. **✅ Fail-closed on missing tenant** - `ResourceQuotaBehavior` now throws instead of skipping quota check
+2. **✅ Fail-closed on quota service errors** - Errors now block operations instead of allowing bypass
+3. **✅ Read operations no longer mutate state** - `CheckLimitsAsync` and `CheckResourceQuotaQueryHandler` fixed
+4. **✅ Direct recording enforces limits** - `RecordResourceUsageCommandHandler` now validates hard limits
+5. **✅ Atomic increment with retry** - Added `TryIncrementUsageAsync` with concurrency handling
+6. **✅ Delete operations decrement quota** - `DeleteUserCommandHandler` and `BulkDeleteUsersCommandHandler` updated
 
 ---
 
-## 1. Current Resource + Quota Flow Analysis
+## 1. Current Resource + Quota Flow Analysis (UPDATED)
 
 ### 1.1 Resource Lifecycle: CREATE
 
