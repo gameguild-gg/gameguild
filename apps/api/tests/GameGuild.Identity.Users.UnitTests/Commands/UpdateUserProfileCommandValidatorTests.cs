@@ -1,6 +1,6 @@
 using FluentValidation.TestHelper;
 using GameGuild.Identity.Users;
-using GameGuild.Social.Profiles;
+
 using Xunit;
 
 namespace GameGuild.Identity.Users.UnitTests.Commands;

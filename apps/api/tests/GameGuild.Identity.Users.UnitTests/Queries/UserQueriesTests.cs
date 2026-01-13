@@ -1,6 +1,6 @@
 using FluentAssertions;
 using GameGuild.Identity.Users;
-using GameGuild.Social.Profiles;
+
 using Xunit;
 
 namespace GameGuild.Identity.Users.UnitTests.Queries;
@@ -158,16 +158,28 @@ public class UserQueriesTests
     [Trait("Category", "Skipped")]
     public void GetUserAvatarQuery_ShouldInstantiateWithUserId()
     {
-        // Skipped: GetUserAvatarQuery not yet implemented in Social.Profiles
-        // TODO: Implement avatar query in GameGuild.Social.Profiles
+        // Arrange
+        var userId = Guid.NewGuid();
+
+        // Act
+        var query = new GetUserAvatarQuery(userId);
+
+        // Assert
+        query.UserId.Should().Be(userId);
     }
 
     [Fact]
     [Trait("Category", "Skipped")]
     public void GetUserBannerQuery_ShouldInstantiateWithUserId()
     {
-        // Skipped: GetUserBannerQuery not yet implemented in Social.Profiles
-        // TODO: Implement banner query in GameGuild.Social.Profiles
+        // Arrange
+        var userId = Guid.NewGuid();
+
+        // Act
+        var query = new GetUserBannerQuery(userId);
+
+        // Assert
+        query.UserId.Should().Be(userId);
     }
 
 

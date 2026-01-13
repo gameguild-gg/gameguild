@@ -28,7 +28,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj" />
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />

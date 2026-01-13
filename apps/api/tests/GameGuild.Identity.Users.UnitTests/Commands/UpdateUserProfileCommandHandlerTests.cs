@@ -1,13 +1,13 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
-using GameGuild.Social.Profiles;
+
 using GameGuild.Identity.Users;
-using GameGuild.Social.Profiles;
+
 using GameGuild.Identity.Users;
-using GameGuild.Social.Profiles;
+
 using GameGuild.Identity.Users;
-using GameGuild.Social.Profiles;
+
 using Moq;
 using Xunit;
 
