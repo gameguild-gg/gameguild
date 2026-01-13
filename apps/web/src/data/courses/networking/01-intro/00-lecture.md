@@ -41,12 +41,18 @@ The **Open Systems Interconnection (OSI)** model provides a framework for unders
 
 ```mermaid
 graph LR
+    subgraph left["Layers 7 to 4"]
     A["<b>Layer 7: Application</b><br/>HTTP, DNS, game protocols"] --> B["<b>Layer 6: Presentation</b><br/>Data formatting, encryption, compression"]
     B --> C["<b>Layer 5: Session</b><br/>Session management, connection coordination"]
     C --> D["<b>Layer 4: Transport</b><br/>TCP/UDP, ports, reliability"]
-    D --> E["<b>Layer 3: Network</b><br/>IP addresses, routing, packets"]
-    E --> F["<b>Layer 2: Data Link</b><br/>MAC addresses, frames, switching"]
+    end
+
+    subgraph right["Layers 3 to 1"]
+    E["<b>Layer 3: Network</b><br/>IP addresses, routing, packets"] --> F["<b>Layer 2: Data Link</b><br/>MAC addresses, frames, switching"]
     F --> G["<b>Layer 1: Physical</b><br/>Raw bits, cables, signals"]
+    end
+
+    left --> right
 ```
 
 ### The TCP/IP Model (Simplified View)
