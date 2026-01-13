@@ -32,6 +32,13 @@ public class TenantPermission : EntityBase
     public string[] Permissions { get; set; } = Array.Empty<string>();
 
     /// <summary>
+    ///     Array of denied permission strings. These take precedence over allows.
+    ///     When evaluating effective permissions: EffectivePerms = AllowedPerms - DeniedPerms
+    /// </summary>
+    [Column(TypeName = "text[]")]
+    public string[] DenyPermissions { get; set; } = Array.Empty<string>();
+
+    /// <summary>
     ///     When this permission expires (null = never)
     /// </summary>
     public DateTime? ExpiresAt { get; set; }
@@ -80,6 +87,22 @@ public class TenantPermission : EntityBase
     }
 
     /// <summary>
+    ///     Check if a specific permission is denied
+    /// </summary>
+    public bool HasDenyPermission(string permission)
+    {
+        return DenyPermissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    ///     Check if permission is effectively granted (allowed and not denied)
+    /// </summary>
+    public bool HasEffectivePermission(string permission)
+    {
+        return HasPermission(permission) && !HasDenyPermission(permission);
+    }
+
+    /// <summary>
     ///     Add permissions to this entity
     /// </summary>
     public void AddPermissions(params string[] permissions)
@@ -101,6 +124,32 @@ public class TenantPermission : EntityBase
     public void RemovePermissions(params string[] permissions)
     {
         Permissions = Permissions
+            .Where(p => !permissions.Contains(p, StringComparer.OrdinalIgnoreCase))
+            .ToArray();
+    }
+
+    /// <summary>
+    ///     Add deny permissions to this entity (deny takes precedence over allow)
+    /// </summary>
+    public void AddDenyPermissions(params string[] permissions)
+    {
+        var current = DenyPermissions.ToList();
+
+        foreach (var perm in permissions)
+        {
+            if (!current.Contains(perm, StringComparer.OrdinalIgnoreCase))
+                current.Add(perm);
+        }
+
+        DenyPermissions = current.ToArray();
+    }
+
+    /// <summary>
+    ///     Remove deny permissions from this entity
+    /// </summary>
+    public void RemoveDenyPermissions(params string[] permissions)
+    {
+        DenyPermissions = DenyPermissions
             .Where(p => !permissions.Contains(p, StringComparer.OrdinalIgnoreCase))
             .ToArray();
     }

@@ -2,8 +2,8 @@
 
 **Date**: January 13, 2026  
 **Auditor**: Security Architecture Review  
-**Version**: 1.0  
-**Status**: 🔴 CRITICAL ISSUES IDENTIFIED  
+**Version**: 2.0  
+**Status**: ✅ CRITICAL ISSUES FIXED  
 **Scope**: Authorization Precedence, Deny Semantics, Tenant Isolation
 
 ---
@@ -25,14 +25,26 @@
 
 ### Critical Findings
 
-| Finding | Severity | Impact |
-|---------|----------|--------|
-| **No DAC Deny Support in TenantPermission** | 🔴 CRITICAL | Tenants cannot prohibit globally-allowed permissions |
-| **ActorContextMiddleware Not Registered** | 🔴 CRITICAL | ActorContext not populated in request pipeline |
-| **ALLOW-WINS Only Permission Model** | 🔴 HIGH | Global permissions leak into tenants unconditionally |
-| **Missing Fail-Closed on Null TenantId in PermissionQueryService** | 🔴 HIGH | Permission resolution with null tenant returns global defaults |
-| **Dual Permission Systems (TenantPermission vs ACL)** | 🟡 MEDIUM | Confusion about which system applies when |
-| **Cache Key Missing User Security Version** | 🟡 MEDIUM | User-level permission changes may not invalidate properly |
+| Finding | Severity | Impact | Status |
+|---------|----------|--------|--------|
+| **No DAC Deny Support in TenantPermission** | 🔴 CRITICAL | Tenants cannot prohibit globally-allowed permissions | ✅ **FIXED** |
+| **ActorContextMiddleware Not Registered** | 🔴 CRITICAL | ActorContext not populated in request pipeline | ✅ **FIXED** |
+| **ALLOW-WINS Only Permission Model** | 🔴 HIGH | Global permissions leak into tenants unconditionally | ✅ **FIXED** |
+| **Missing Fail-Closed on Null TenantId in PermissionQueryService** | 🔴 HIGH | Permission resolution with null tenant returns global defaults | ✅ **FIXED** |
+| **Dual Permission Systems (TenantPermission vs ACL)** | 🟡 MEDIUM | Confusion about which system applies when | 📝 Documented |
+| **Cache Key Missing User Security Version** | 🟡 MEDIUM | User-level permission changes may not invalidate properly | ⏳ Pending |
+
+### Fix Summary (January 13, 2026)
+
+The following critical security fixes were implemented:
+
+1. **TenantPermission.cs**: Added `DenyPermissions` field with `HasDenyPermission()`, `HasEffectivePermission()`, `AddDenyPermissions()`, and `RemoveDenyPermissions()` methods.
+
+2. **PipelineExtensions.cs**: Registered `ActorContextMiddleware` via `app.UseActorContext()` after authentication and before authorization.
+
+3. **FocusedPermissionServices.cs**: Replaced ALLOW-WINS additive algorithm with DENY-WINS subtraction algorithm (`EffectivePermissions = AllowSet - DenySet`).
+
+4. **FocusedPermissionServices.cs**: Added fail-closed behavior - when `tenantId` is null, returns empty permissions instead of global defaults.
 
 ### System Overview
 
@@ -41,9 +53,11 @@ The GameGuild authorization system implements a **four-layer architecture**:
 1. **Authentication** → JWT validation
 2. **Rule-Based (RBAC)** → AND-logic policy gates
 3. **ABAC Policies** → Deny-wins attribute evaluation
-4. **DAC Permissions** → **ALLOW-WINS ONLY** (⚠️ NO DENY SUPPORT)
+4. **DAC Permissions** → ✅ **DENY-WINS** (deny takes precedence over allow)
 
-**Key Architectural Gap**: The DAC layer (Layer 4) only supports **additive allow** permissions. There is **no mechanism for tenants to deny/prohibit globally-allowed permissions** in the `TenantPermission` entity.
+~~**Key Architectural Gap**: The DAC layer (Layer 4) only supports **additive allow** permissions. There is **no mechanism for tenants to deny/prohibit globally-allowed permissions** in the `TenantPermission` entity.~~
+
+**FIXED**: The `TenantPermission` entity now supports `DenyPermissions` field. Permission evaluation uses `EffectivePermissions = AllowSet - DenySet`. Tenants can now prohibit globally-allowed permissions.
 
 > **Note**: The `AccessControlListEntry` entity (resource-level ACL) DOES support deny-first algorithm. However, this is for resource-level access control, not for tenant-scoped RBAC-style permissions.
 
@@ -768,12 +782,12 @@ public async Task PermissionDeny_InvalidatesCache()
 
 ### 🔴 HIGH Severity
 
-| Issue | Location | Fix |
-|-------|----------|-----|
-| No Deny Support in TenantPermission | `TenantPermission.cs` | Add `DenyPermissions` field |
-| ActorContextMiddleware Not Registered | `PipelineExtensions.cs` | Add `app.UseActorContext()` |
-| ALLOW-WINS Only Algorithm | `FocusedPermissionServices.cs:265` | Implement deny subtraction |
-| No Fail-Closed for Null Tenant | `FocusedPermissionServices.cs:249` | Return empty when tenant null |
+| Issue | Location | Fix | Status |
+|-------|----------|-----|--------|
+| No Deny Support in TenantPermission | `TenantPermission.cs` | Add `DenyPermissions` field | ✅ **FIXED** |
+| ActorContextMiddleware Not Registered | `PipelineExtensions.cs` | Add `app.UseActorContext()` | ✅ **FIXED** |
+| ALLOW-WINS Only Algorithm | `FocusedPermissionServices.cs:265` | Implement deny subtraction | ✅ **FIXED** |
+| No Fail-Closed for Null Tenant | `FocusedPermissionServices.cs:249` | Return empty when tenant null | ✅ **FIXED** |
 
 ### 🟡 MEDIUM Severity
 
@@ -809,4 +823,8 @@ public async Task PermissionDeny_InvalidatesCache()
 
 **Document Owner**: Security Architecture Team  
 **Last Updated**: 2026-01-13  
-**Next Review**: After implementation of deny support
+**Version History**:
+- v1.0 (2026-01-13): Initial audit, identified 4 critical issues
+- v2.0 (2026-01-13): All 4 critical issues fixed and verified
+
+**Next Review**: Quarterly security review or after significant authorization changes

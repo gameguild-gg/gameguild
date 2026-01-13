@@ -194,7 +194,8 @@ public sealed class PermissionGrantService(
 ///     This is the primary implementation - <see cref="PermissionService"/> is a backward-compatible facade.
 /// </summary>
 public sealed class PermissionQueryService(
-    ITenantPermissionRepository repository
+    ITenantPermissionRepository repository,
+    ILogger<PermissionQueryService> logger
 ) : IPermissionQueryService
 {
     public async Task<bool> HasTenantPermissionAsync(
@@ -227,13 +228,21 @@ public sealed class PermissionQueryService(
     ///     Get effective permissions for a user in a tenant.
     /// </summary>
     /// <remarks>
-    ///     <b>Permission Evaluation Policy: ALLOW-WINS (ADDITIVE)</b>
+    ///     <b>Permission Evaluation Policy: DENY-WINS</b>
     ///     <para>
-    ///         Permissions are merged from three sources in order:
+    ///         Permissions are resolved from three layers. Explicit denies at any layer
+    ///         remove the permission from the effective set (deny takes precedence).
+    ///     </para>
+    ///     <para>
+    ///         <b>SECURITY: FAIL-CLOSED</b> - If no tenant context is provided, returns empty permissions.
+    ///         This prevents global defaults from being applied without proper tenant context.
+    ///     </para>
+    ///     <para>
+    ///         Evaluation order:
     ///         <list type="number">
-    ///             <item>Global defaults (UserId=null, TenantId=null) - system-wide baseline</item>
-    ///             <item>Tenant defaults (UserId=null, TenantId=X) - tenant-specific baseline</item>
-    ///             <item>Direct grants (UserId=Y, TenantId=X) - explicit user permissions</item>
+    ///             <item>Collect all ALLOW permissions from: Global defaults → Tenant defaults → Direct grants</item>
+    ///             <item>Collect all DENY permissions from: Global denies → Tenant denies → Direct denies</item>
+    ///             <item>Effective = ALLOW - DENY (deny always wins)</item>
     ///         </list>
     ///     </para>
     /// </remarks>
@@ -242,28 +251,56 @@ public sealed class PermissionQueryService(
         Guid? tenantId,
         CancellationToken cancellationToken = default)
     {
-        var allPermissions = new List<string>();
-
-        // Layer 1: Global defaults
-        var globalDefaults = await GetGlobalDefaultPermissionsAsync(cancellationToken);
-        allPermissions.AddRange(globalDefaults);
-
-        // Layer 2: Tenant defaults
-        if (tenantId.HasValue)
+        // SECURITY: FAIL-CLOSED - No tenant context = no permissions
+        // This prevents global defaults from being applied without proper tenant isolation
+        if (!tenantId.HasValue)
         {
-            var tenantDefaults = await GetTenantDefaultPermissionsAsync(tenantId.Value, cancellationToken);
-            allPermissions.AddRange(tenantDefaults);
+            logger.LogWarning(
+                "GetEffectivePermissionsAsync called without tenant context for user {UserId}. Returning empty permissions (fail-closed).",
+                userId);
+            return new List<string>();
         }
 
-        // Layer 3: Direct user permissions (excluding expired)
-        var userPermissions = await repository.GetByUserAsync(userId, cancellationToken);
-        var directPermissions = userPermissions
-            .Where(p => p.TenantId == tenantId)
-            .Where(p => !p.ExpiresAt.HasValue || p.ExpiresAt.Value > DateTime.UtcNow)
-            .SelectMany(p => p.Permissions);
-        allPermissions.AddRange(directPermissions);
+        var allowedPermissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var deniedPermissions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        return allPermissions.Distinct().ToList();
+        // Layer 1: Global defaults (UserId=null, TenantId=null)
+        var globalDefaults = await repository.GetByUserAndTenantAsync(null, null, cancellationToken);
+        if (globalDefaults != null && !globalDefaults.IsExpired())
+        {
+            allowedPermissions.UnionWith(globalDefaults.Permissions);
+            deniedPermissions.UnionWith(globalDefaults.DenyPermissions);
+        }
+
+        // Layer 2: Tenant defaults (UserId=null, TenantId=X)
+        var tenantDefaults = await repository.GetByUserAndTenantAsync(null, tenantId.Value, cancellationToken);
+        if (tenantDefaults != null && !tenantDefaults.IsExpired())
+        {
+            allowedPermissions.UnionWith(tenantDefaults.Permissions);
+            deniedPermissions.UnionWith(tenantDefaults.DenyPermissions);
+        }
+
+        // Layer 3: Direct user permissions (UserId=Y, TenantId=X)
+        var userPermissions = await repository.GetByUserAsync(userId, cancellationToken);
+        var directGrants = userPermissions
+            .Where(p => p.TenantId == tenantId.Value)
+            .Where(p => !p.ExpiresAt.HasValue || p.ExpiresAt.Value > DateTime.UtcNow)
+            .ToList();
+
+        foreach (var grant in directGrants)
+        {
+            allowedPermissions.UnionWith(grant.Permissions);
+            deniedPermissions.UnionWith(grant.DenyPermissions);
+        }
+
+        // DENY-WINS: Subtract all denied permissions from allowed set
+        allowedPermissions.ExceptWith(deniedPermissions);
+
+        logger.LogDebug(
+            "Effective permissions for user {UserId} in tenant {TenantId}: {Count} allowed, {DenyCount} denied",
+            userId, tenantId.Value, allowedPermissions.Count, deniedPermissions.Count);
+
+        return allowedPermissions.ToList();
     }
 
     public async Task<List<string>> GetGlobalDefaultPermissionsAsync(

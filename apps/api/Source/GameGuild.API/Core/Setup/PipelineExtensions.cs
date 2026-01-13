@@ -1,6 +1,7 @@
 using Asp.Versioning.ApiExplorer;
 using GameGuild.Endpoints;
 using GameGuild.Middlewares;
+using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using Serilog;
 
@@ -75,8 +76,10 @@ public static class PipelineExtensions
         // 16. Authentication (identify user from JWT/cookies)
         app.UseAuthentication();
 
-        // 17. Request Context (unified user/tenant/location context)
-        // app.UseMiddleware<RequestContextMiddleware>();
+        // 17. Actor Context (build immutable ActorContext from claims + tenant)
+        // SECURITY: Must be after Authentication (needs ClaimsPrincipal) and Tenant Resolution
+        // SECURITY: Must be before Authorization (authorization handlers use ActorContext)
+        app.UseActorContext();
 
         // 18. Authorization (enforce permissions after user is identified)
         app.UseAuthorization();
