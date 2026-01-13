@@ -63,13 +63,13 @@ public class TenantMatchRuleEvaluatorTests
     public async Task EvaluateAsync_NoTenantContext_DoesNotAllowNoTenant_ReturnsFail()
     {
         // Arrange
-        var tenantId = Guid.NewGuid().ToString();
-        var claims = new List<Claim> { new(ClaimNames.TenantId, tenantId) };
+        var tenantId = Guid.NewGuid();
+        var claims = new List<Claim> { new(ClaimNames.TenantId, tenantId.ToString()) };
         var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
         var context = new AuthorizationHandlerContext([], user, null);
         var parameters = RuleParameters.FromJson("{\"allowNoTenant\": false}");
 
-        _mockTenantContext.Setup(x => x.TenantId).Returns((string?)null);
+        _mockTenantContext.Setup(x => x.TenantId).Returns((Guid?)null);
 
         // Act
         var result = await _evaluator.EvaluateAsync(context, parameters);
@@ -83,13 +83,13 @@ public class TenantMatchRuleEvaluatorTests
     public async Task EvaluateAsync_NoTenantContext_AllowNoTenant_ReturnsSuccess()
     {
         // Arrange
-        var tenantId = Guid.NewGuid().ToString();
-        var claims = new List<Claim> { new(ClaimNames.TenantId, tenantId) };
+        var tenantId = Guid.NewGuid();
+        var claims = new List<Claim> { new(ClaimNames.TenantId, tenantId.ToString()) };
         var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
         var context = new AuthorizationHandlerContext([], user, null);
         var parameters = RuleParameters.FromJson("{\"allowNoTenant\": true}");
 
-        _mockTenantContext.Setup(x => x.TenantId).Returns((string?)null);
+        _mockTenantContext.Setup(x => x.TenantId).Returns((Guid?)null);
 
         // Act
         var result = await _evaluator.EvaluateAsync(context, parameters);
@@ -102,10 +102,10 @@ public class TenantMatchRuleEvaluatorTests
     public async Task EvaluateAsync_TenantMismatch_ReturnsFail()
     {
         // Arrange
-        var userTenantId = Guid.NewGuid().ToString();
-        var requestTenantId = Guid.NewGuid().ToString();
+        var userTenantId = Guid.NewGuid();
+        var requestTenantId = Guid.NewGuid();
         
-        var claims = new List<Claim> { new(ClaimNames.TenantId, userTenantId) };
+        var claims = new List<Claim> { new(ClaimNames.TenantId, userTenantId.ToString()) };
         var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
         var context = new AuthorizationHandlerContext([], user, null);
         var parameters = RuleParameters.FromJson("{}");
@@ -124,9 +124,9 @@ public class TenantMatchRuleEvaluatorTests
     public async Task EvaluateAsync_TenantMatch_ReturnsSuccess()
     {
         // Arrange
-        var tenantId = Guid.NewGuid().ToString();
+        var tenantId = Guid.NewGuid();
         
-        var claims = new List<Claim> { new(ClaimNames.TenantId, tenantId) };
+        var claims = new List<Claim> { new(ClaimNames.TenantId, tenantId.ToString()) };
         var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
         var context = new AuthorizationHandlerContext([], user, null);
         var parameters = RuleParameters.FromJson("{}");
@@ -144,14 +144,14 @@ public class TenantMatchRuleEvaluatorTests
     public async Task EvaluateAsync_TenantMatch_CaseInsensitive_ReturnsSuccess()
     {
         // Arrange
-        var tenantId = Guid.NewGuid().ToString();
+        var tenantId = Guid.NewGuid();
         
-        var claims = new List<Claim> { new(ClaimNames.TenantId, tenantId.ToUpper()) };
+        var claims = new List<Claim> { new(ClaimNames.TenantId, tenantId.ToString().ToUpper()) };
         var user = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
         var context = new AuthorizationHandlerContext([], user, null);
         var parameters = RuleParameters.FromJson("{}");
 
-        _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId.ToLower());
+        _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
 
         // Act
         var result = await _evaluator.EvaluateAsync(context, parameters);

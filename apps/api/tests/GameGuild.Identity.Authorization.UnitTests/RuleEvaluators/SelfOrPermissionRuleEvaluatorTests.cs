@@ -51,7 +51,8 @@ public class SelfOrPermissionRuleEvaluatorTests
             new Claim("tid", tenantId.ToString())
         ], "test"));
         
-        _tenantContextMock.Setup(x => x.TenantId).Returns(tenantId.ToString());
+        _tenantContextMock.Setup(x => x.TenantId).Returns(tenantId);
+        _tenantContextMock.Setup(x => x.HasTenant).Returns(true);
         
         _permissionServiceMock.Setup(x => x.HasPermissionAsync(userId, tenantId, "users:manage", It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -78,7 +79,8 @@ public class SelfOrPermissionRuleEvaluatorTests
         // Resource is the user itself (or an object with UserId property)
         var resource = new TestUserResource { UserId = userId };
 
-        _tenantContextMock.Setup(x => x.TenantId).Returns(tenantId.ToString());
+        _tenantContextMock.Setup(x => x.TenantId).Returns(tenantId);
+        _tenantContextMock.Setup(x => x.HasTenant).Returns(true);
 
         var context = new AuthorizationHandlerContext([], user, resource);
         var parameters = RuleParameters.FromJson("{\"selfPermission\":\"users:edit:self\"}");
@@ -116,7 +118,8 @@ public class SelfOrPermissionRuleEvaluatorTests
         ], "test"));
 
         var resource = new TestUserResource { UserId = otherUserId };
-        _tenantContextMock.Setup(x => x.TenantId).Returns(tenantId.ToString());
+        _tenantContextMock.Setup(x => x.TenantId).Returns(tenantId);
+        _tenantContextMock.Setup(x => x.HasTenant).Returns(true);
 
         var context = new AuthorizationHandlerContext([], user, resource);
         var parameters = RuleParameters.FromJson("{\"selfPermission\":\"users:edit:self\"}");

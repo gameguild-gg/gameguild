@@ -104,7 +104,7 @@ public class RequireAnyPermissionRuleEvaluatorTests
         var context = new AuthorizationHandlerContext([], user, null);
         var parameters = RuleParameters.FromJson("{\"permissions\": [\"read\"]}");
 
-        _mockTenantContext.Setup(x => x.TenantId).Returns((string?)null);
+        _mockTenantContext.Setup(x => x.TenantId).Returns((Guid?)null);
 
         // Act
         var result = await _evaluator.EvaluateAsync(context, parameters);
@@ -130,7 +130,7 @@ public class RequireAnyPermissionRuleEvaluatorTests
         var parameters = RuleParameters.FromJson("{\"permissions\": [\"read\", \"write\"]}");
         var permissions = new[] { "read", "write" };
 
-        _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId.ToString());
+        _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
         
         _mockPermissionService
             .Setup(x => x.HasAnyPermissionAsync(
@@ -163,7 +163,7 @@ public class RequireAnyPermissionRuleEvaluatorTests
         var parameters = RuleParameters.FromJson("{\"permissions\": [\"read\", \"write\"]}");
         var permissions = new[] { "read", "write" };
 
-        _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId.ToString());
+        _mockTenantContext.Setup(x => x.TenantId).Returns(tenantId);
         
         _mockPermissionService
             .Setup(x => x.HasAnyPermissionAsync(
