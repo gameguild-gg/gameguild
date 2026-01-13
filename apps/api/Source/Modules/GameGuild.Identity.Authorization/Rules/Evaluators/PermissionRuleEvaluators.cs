@@ -50,11 +50,19 @@ public sealed class RequireAllPermissionsRuleEvaluator : IRuleEvaluator
             return RuleEvaluationResult.Fail("Could not determine user ID from claims");
         }
 
-        // Extract tenant ID from context or claims
-        var tenantIdStr = _tenantContext.TenantId ?? Utilities.ClaimsExtractor.GetTenantId(user);
-        if (!Guid.TryParse(tenantIdStr, out var tenantId))
+        // Extract tenant ID from context (now Guid?) or claims
+        Guid tenantId;
+        if (_tenantContext.HasTenant && _tenantContext.TenantId.HasValue && _tenantContext.TenantId.Value != Guid.Empty)
         {
-            return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
+            tenantId = _tenantContext.TenantId.Value;
+        }
+        else
+        {
+            var tenantIdStr = Utilities.ClaimsExtractor.GetTenantId(user);
+            if (!Guid.TryParse(tenantIdStr, out tenantId) || tenantId == Guid.Empty)
+            {
+                return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
+            }
         }
 
         // Use batch permission check (single DB call)
@@ -118,11 +126,19 @@ public sealed class RequireAnyPermissionRuleEvaluator : IRuleEvaluator
             return RuleEvaluationResult.Fail("Could not determine user ID from claims");
         }
 
-        // Extract tenant ID from context or claims
-        var tenantIdStr = _tenantContext.TenantId ?? Utilities.ClaimsExtractor.GetTenantId(user);
-        if (!Guid.TryParse(tenantIdStr, out var tenantId))
+        // Extract tenant ID from context (now Guid?) or claims
+        Guid tenantId;
+        if (_tenantContext.HasTenant && _tenantContext.TenantId.HasValue && _tenantContext.TenantId.Value != Guid.Empty)
         {
-            return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
+            tenantId = _tenantContext.TenantId.Value;
+        }
+        else
+        {
+            var tenantIdStr = Utilities.ClaimsExtractor.GetTenantId(user);
+            if (!Guid.TryParse(tenantIdStr, out tenantId) || tenantId == Guid.Empty)
+            {
+                return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
+            }
         }
 
         // Use batch permission check (single DB call)

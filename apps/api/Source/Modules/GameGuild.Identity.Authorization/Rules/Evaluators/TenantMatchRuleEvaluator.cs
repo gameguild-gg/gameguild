@@ -37,10 +37,10 @@ public sealed class TenantMatchRuleEvaluator : IRuleEvaluator
             return Task.FromResult(RuleEvaluationResult.Fail("User has no tenant claim"));
         }
 
-        // Get current request tenant
+        // Get current request tenant (now Guid?)
         var requestTenantId = _tenantContext.TenantId;
 
-        if (string.IsNullOrEmpty(requestTenantId))
+        if (!requestTenantId.HasValue || requestTenantId.Value == Guid.Empty)
         {
             // No tenant context - allow if parameter says so
             // ReSharper disable once ArgumentsStyleOther - Explicit default value for API clarity
@@ -52,11 +52,12 @@ public sealed class TenantMatchRuleEvaluator : IRuleEvaluator
             return Task.FromResult(RuleEvaluationResult.Fail("No tenant context available"));
         }
 
-        // Compare tenants
-        if (!string.Equals(userTenantClaim, requestTenantId, StringComparison.OrdinalIgnoreCase))
+        // Compare tenants - convert Guid to string for comparison with claim
+        var requestTenantIdStr = requestTenantId.Value.ToString();
+        if (!string.Equals(userTenantClaim, requestTenantIdStr, StringComparison.OrdinalIgnoreCase))
         {
             return Task.FromResult(RuleEvaluationResult.Fail(
-                $"Tenant mismatch: user belongs to '{userTenantClaim}' but request is for '{requestTenantId}'"));
+                $"Tenant mismatch: user belongs to '{userTenantClaim}' but request is for '{requestTenantIdStr}'"));
         }
 
         return Task.FromResult(RuleEvaluationResult.Success());

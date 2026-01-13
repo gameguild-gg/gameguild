@@ -6,12 +6,18 @@ namespace GameGuild.Identity.Authorization;
 public interface IAuthorizationTenantContext
 {
     /// <summary>
-    ///     Gets the current tenant ID.
+    ///     Gets the current tenant ID as a strongly-typed Guid.
     /// </summary>
-    string? TenantId { get; }
+    /// <remarks>
+    ///     <para>
+    ///         This property returns <c>null</c> when no tenant context is available.
+    ///         Authorization decisions should fail-closed when tenant is null.
+    ///     </para>
+    /// </remarks>
+    Guid? TenantId { get; }
 
     /// <summary>
     ///     Gets whether a tenant has been resolved.
     /// </summary>
-    bool HasTenant => !string.IsNullOrEmpty(TenantId);
+    bool HasTenant => TenantId.HasValue;
 }

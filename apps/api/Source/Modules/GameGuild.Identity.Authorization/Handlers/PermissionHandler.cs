@@ -94,17 +94,44 @@ public sealed class PermissionHandler : AuthorizationHandler<PermissionRequireme
         userId = Guid.Empty;
         tenantId = Guid.Empty;
 
+        // SECURITY: Fail-closed if user ID cannot be parsed
         var userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out userId))
+        {
+            _logger.LogWarning("Failed to parse user ID claim - fail-closed");
             return false;
+        }
+        
+        // SECURITY: Reject Guid.Empty as valid user ID
+        if (userId == Guid.Empty)
+        {
+            _logger.LogWarning("User ID is Guid.Empty - fail-closed");
+            return false;
+        }
 
-        if (_tenantContext.HasTenant && Guid.TryParse(_tenantContext.TenantId, out tenantId))
+        // Try tenant context first (strongly-typed Guid?)
+        if (_tenantContext.HasTenant && _tenantContext.TenantId.HasValue)
+        {
+            tenantId = _tenantContext.TenantId.Value;
             return true;
+        }
 
+        // Fallback to claims
         var tenantClaim = user.FindFirstValue(_tokenOptions.TenantClaimType);
-        if (!string.IsNullOrEmpty(tenantClaim) && Guid.TryParse(tenantClaim, out tenantId))
+        if (!string.IsNullOrEmpty(tenantClaim) && Guid.TryParse(tenantClaim, out var parsedTenantId))
+        {
+            // SECURITY: Reject Guid.Empty as valid tenant ID
+            if (parsedTenantId == Guid.Empty)
+            {
+                _logger.LogWarning("Tenant ID claim is Guid.Empty - fail-closed");
+                return false;
+            }
+            tenantId = parsedTenantId;
             return true;
+        }
 
+        // SECURITY: Fail-closed if no valid tenant context
+        _logger.LogWarning("No valid tenant context available - fail-closed");
         return false;
     }
 }

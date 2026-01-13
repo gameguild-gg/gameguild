@@ -58,7 +58,8 @@ public sealed class DbAuthorizationPolicyProvider : IAuthorizationPolicyProvider
         using (var scope = _scopeFactory.CreateScope())
         {
             var tenantContext = scope.ServiceProvider.GetService<IAuthorizationTenantContext>();
-            tenantId = tenantContext?.TenantId ?? _tenancyOptions.DefaultTenantId;
+            // TenantId is now Guid? - convert to string for cache key, or use default
+            tenantId = tenantContext?.TenantId?.ToString() ?? _tenancyOptions.DefaultTenantId;
 
             var versionStore = scope.ServiceProvider.GetRequiredService<ITenantSecurityVersionStore>();
             version = await versionStore.GetVersionAsync(tenantId);

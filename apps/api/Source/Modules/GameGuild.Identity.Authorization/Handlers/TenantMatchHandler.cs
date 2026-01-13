@@ -97,9 +97,9 @@ public sealed class TenantMatchHandler : AuthorizationHandler<TenantMatchRequire
 
     private string? GetResolvedTenantId(ClaimsPrincipal user)
     {
-        // First check context
-        if (_tenantContext.HasTenant)
-            return _tenantContext.TenantId;
+        // First check context - convert Guid to string for comparison
+        if (_tenantContext.HasTenant && _tenantContext.TenantId.HasValue)
+            return _tenantContext.TenantId.Value.ToString();
 
         // Fall back to claims
         return _tenantResolver.ResolveFromClaims(user);

@@ -167,12 +167,18 @@ public sealed class ResourceAccessHandler : AuthorizationHandler<ResourceAccessR
     {
         tenantId = Guid.Empty;
 
-        if (_tenantContext.HasTenant && Guid.TryParse(_tenantContext.TenantId, out tenantId))
-            return true;
+        // TenantId is now Guid? - use directly if available
+        // SECURITY: Reject Guid.Empty as valid tenant ID
+        if (_tenantContext.HasTenant && _tenantContext.TenantId.HasValue)
+        {
+            tenantId = _tenantContext.TenantId.Value;
+            return tenantId != Guid.Empty;
+        }
 
+        // Fall back to claims
         var tenantClaim = user.FindFirstValue(_tokenOptions.TenantClaimType);
         if (!string.IsNullOrEmpty(tenantClaim) && Guid.TryParse(tenantClaim, out tenantId))
-            return true;
+            return tenantId != Guid.Empty;
 
         return false;
     }

@@ -1,3 +1,5 @@
+using GameGuild.Identity.Authorization.Models;
+
 namespace GameGuild.Identity.Authorization;
 
 /// <summary>
@@ -188,4 +190,57 @@ public static class Permissions
 
     /// <summary>Full management access to entitlements</summary>
     public const string EntitlementsManage = EntitlementsPermission.Keys.Manage;
+
+    // ========================
+    // SYSTEM PERMISSIONS
+    // ========================
+
+    /// <summary>Manage global default permissions (tenantId=null)</summary>
+    public const string SystemManageGlobalDefaults = SystemPermission.Keys.ManageGlobalDefaults;
+
+    /// <summary>Full system administration</summary>
+    public const string SystemAdmin = SystemPermission.Keys.Admin;
+
+    /// <summary>System wildcard (all permissions)</summary>
+    public const string SystemWildcard = SystemPermission.Keys.Wildcard;
+}
+
+/// <summary>
+///     System-level permissions for managing global defaults and system-wide settings.
+/// </summary>
+/// <remarks>
+///     <para>
+///         These permissions control access to system-level operations that affect
+///         all tenants or global defaults. They should only be granted to system administrators.
+///     </para>
+/// </remarks>
+public sealed class SystemPermission : Permission
+{
+    private SystemPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Contains(':') ? key.Split(':')[1] : key,
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
+    {
+    }
+
+    /// <summary>Permission to manage global default permissions (tenantId=null)</summary>
+    public static readonly SystemPermission ManageGlobalDefaults = new(Keys.ManageGlobalDefaults, "Manage global default permissions");
+
+    /// <summary>Full system administration permission</summary>
+    public static readonly SystemPermission Admin = new(Keys.Admin, "Full system administration");
+
+    /// <summary>System wildcard - grants all permissions</summary>
+    public static readonly SystemPermission Wildcard = new(Keys.Wildcard, "System wildcard - grants all permissions");
+
+    /// <summary>
+    ///     Compile-time constant keys for use in attributes.
+    /// </summary>
+    public static class Keys
+    {
+        public const string ManageGlobalDefaults = "system:manage-global-defaults";
+        public const string Admin = "system:admin";
+        public const string Wildcard = "system:*";
+    }
 }

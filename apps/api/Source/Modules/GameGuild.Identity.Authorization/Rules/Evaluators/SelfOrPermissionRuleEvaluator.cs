@@ -45,10 +45,19 @@ public sealed class SelfOrPermissionRuleEvaluator : IRuleEvaluator
             return RuleEvaluationResult.Fail("Could not determine current user ID");
         }
 
-        var tenantIdStr = _tenantContext.TenantId ?? Utilities.ClaimsExtractor.GetTenantId(user);
-        if (!Guid.TryParse(tenantIdStr, out var tenantId))
+        // Extract tenant ID from context (now Guid?) or claims
+        Guid tenantId;
+        if (_tenantContext.HasTenant && _tenantContext.TenantId.HasValue && _tenantContext.TenantId.Value != Guid.Empty)
         {
-            return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
+            tenantId = _tenantContext.TenantId.Value;
+        }
+        else
+        {
+            var tenantIdStr = Utilities.ClaimsExtractor.GetTenantId(user);
+            if (!Guid.TryParse(tenantIdStr, out tenantId) || tenantId == Guid.Empty)
+            {
+                return RuleEvaluationResult.Fail("Could not determine tenant ID for permission check");
+            }
         }
 
         var selfPermission = parameters.GetString("selfPermission");

@@ -5,8 +5,22 @@ namespace GameGuild.Identity.Authorization;
 /// <summary>
 ///     HTTP context-based implementation of authorization tenant context.
 /// </summary>
+/// <remarks>
+///     <para>
+///         This implementation reads tenant ID from HttpContext.Items with fallback behavior:
+///         1. First checks "AuthorizationTenantId" (set explicitly for authorization)
+///         2. Falls back to "TenantId" (set by TenantMiddleware)
+///     </para>
+///     <para>
+///         <b>SECURITY:</b> Uses Guid? consistently to prevent type confusion attacks.
+///         Invalid GUIDs result in null (fail-closed) rather than Guid.Empty.
+///     </para>
+/// </remarks>
 public sealed class HttpAuthorizationTenantContext : IAuthorizationTenantContext
 {
+    private const string PrimaryTenantIdKey = "AuthorizationTenantId";
+    private const string FallbackTenantIdKey = "TenantId";
+    
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     /// <summary>
@@ -18,15 +32,35 @@ public sealed class HttpAuthorizationTenantContext : IAuthorizationTenantContext
     }
 
     /// <inheritdoc />
-    public string? TenantId
+    public Guid? TenantId
     {
-        get => _httpContextAccessor.HttpContext?.Items[HttpContextKeys.AuthorizationTenantId] as string;
-        set
+        get
         {
-            if (_httpContextAccessor.HttpContext is not null)
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext is null) return null;
+            
+            // Try primary key first (explicitly set for authorization)
+            if (httpContext.Items.TryGetValue(PrimaryTenantIdKey, out var primaryValue))
             {
-                _httpContextAccessor.HttpContext.Items[HttpContextKeys.AuthorizationTenantId] = value;
+                if (primaryValue is Guid guidValue) return guidValue;
+                if (primaryValue is string strValue && Guid.TryParse(strValue, out var parsedGuid))
+                {
+                    // SECURITY: Don't accept Guid.Empty as valid tenant
+                    return parsedGuid != Guid.Empty ? parsedGuid : null;
+                }
             }
+            
+            // Fallback to TenantMiddleware key
+            if (httpContext.Items.TryGetValue(FallbackTenantIdKey, out var fallbackValue))
+            {
+                if (fallbackValue is Guid fallbackGuid) return fallbackGuid != Guid.Empty ? fallbackGuid : null;
+                if (fallbackValue is string fallbackStr && Guid.TryParse(fallbackStr, out var fallbackParsed))
+                {
+                    return fallbackParsed != Guid.Empty ? fallbackParsed : null;
+                }
+            }
+            
+            return null;
         }
     }
 
@@ -34,5 +68,11 @@ public sealed class HttpAuthorizationTenantContext : IAuthorizationTenantContext
     ///     Sets the tenant ID for the current request.
     /// </summary>
     /// <param name="tenantId">The tenant ID to set.</param>
-    public void SetTenantId(string? tenantId) => TenantId = tenantId;
+    public void SetTenantId(Guid? tenantId)
+    {
+        if (_httpContextAccessor.HttpContext is not null)
+        {
+            _httpContextAccessor.HttpContext.Items[PrimaryTenantIdKey] = tenantId;
+        }
+    }
 }
