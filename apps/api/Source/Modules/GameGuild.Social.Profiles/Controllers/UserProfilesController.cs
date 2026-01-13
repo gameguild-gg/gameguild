@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GameGuild.Identity.Users;
+namespace GameGuild.Social.Profiles;
 
 /// <summary>
 ///     Controller for managing user profiles and social links

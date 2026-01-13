@@ -18,15 +18,17 @@ namespace GameGuild.Identity.Users;
 ///     <para>
 ///         <b>Related Entities (Same Module):</b> User has 1:1 relationships with:
 ///         <list type="bullet">
-///             <item><see cref="UserProfile"/> - Extended profile information (bio, avatar, social links)</item>
 ///             <item><see cref="UserMetadata"/> - Custom fields, tags, external references</item>
 ///             <item><see cref="UserPreferences"/> - Notification, privacy, localization settings</item>
 ///         </list>
 ///         And 1:many with <see cref="UserNotification"/> for notification history.
 ///     </para>
 ///     <para>
-///         <b>Cross-Module Relationship:</b> Users can belong to multiple tenants via the
-///         <see cref="TenantMemberships"/> navigation property linking to <see cref="TenantMember"/>.
+///         <b>Cross-Module Relationships:</b>
+///         <list type="bullet">
+///             <item>Users can belong to multiple tenants via <see cref="TenantMemberships"/> → <see cref="TenantMember"/></item>
+///             <item>User profiles are in GameGuild.Social.Profiles module (UserProfile has UserId reference)</item>
+///         </list>
 ///     </para>
 /// </remarks>
 [Table("Users")]
@@ -137,11 +139,8 @@ public class User : EntityBase, IUser
     // NAVIGATION PROPERTIES
     // ========================
 
-    /// <summary>
-    ///     Extended profile information (bio, avatar, social links).
-    ///     Lazy loaded, nullable if profile not yet created.
-    /// </summary>
-    public virtual UserProfile? Profile { get; set; }
+    // Note: UserProfile has been moved to GameGuild.Social.Profiles module.
+    // Access profile via UserProfileRepository.GetByUserIdAsync(userId)
 
     /// <summary>
     ///     Custom metadata (tags, external references, custom fields).

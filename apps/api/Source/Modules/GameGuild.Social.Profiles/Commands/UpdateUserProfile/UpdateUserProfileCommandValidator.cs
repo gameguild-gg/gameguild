@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace GameGuild.Identity.Users;
+namespace GameGuild.Social.Profiles;
 
 public class UpdateUserProfileCommandValidator : AbstractValidator<UpdateUserProfileCommand>
 {

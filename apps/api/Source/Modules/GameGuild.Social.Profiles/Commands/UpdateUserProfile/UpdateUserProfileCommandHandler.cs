@@ -1,6 +1,7 @@
 using GameGuild.CQRS;
+using GameGuild.Identity.Users;
 
-namespace GameGuild.Identity.Users;
+namespace GameGuild.Social.Profiles;
 
 public class UpdateUserProfileCommandHandler(IUserRepository userRepository, IUserProfileRepository profileRepository) : ICommandHandler<UpdateUserProfileCommand>
 {

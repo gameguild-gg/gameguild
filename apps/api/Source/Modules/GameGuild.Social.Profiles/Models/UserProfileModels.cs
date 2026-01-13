@@ -1,4 +1,4 @@
-namespace GameGuild.Identity.Users;
+namespace GameGuild.Social.Profiles;
 
 /// <summary>
 ///     Data transfer object for user profile

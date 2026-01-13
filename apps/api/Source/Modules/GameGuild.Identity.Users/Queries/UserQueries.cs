@@ -17,11 +17,8 @@ public record GetUserAccessibilityPreferencesQuery(Guid UserId) : IQuery<UserAcc
 
 public record GetUserPrivacyPreferencesQuery(Guid UserId) : IQuery<UserPrivacyPreferencesDto>;
 
-public record GetUserProfileQuery(Guid UserId) : IQuery<UserProfileDto?>;
-
-public record GetUserAvatarQuery(Guid UserId) : IQuery<UserAvatarDto?>;
-
-public record GetUserBannerQuery(Guid UserId) : IQuery<UserBannerDto?>;
+// Note: Profile queries have been moved to GameGuild.Social.Profiles module
+// Use GetUserProfileQuery, GetUserAvatarQuery, GetUserBannerQuery from there
 
 public record GetUserNotificationsPageQuery(Guid UserId, int Page, int PageSize, string? Type, bool? IsRead, string? Priority, DateTimeOffset? FromDate, DateTimeOffset? ToDate) : IQuery<List<UserNotificationDto>>;
 

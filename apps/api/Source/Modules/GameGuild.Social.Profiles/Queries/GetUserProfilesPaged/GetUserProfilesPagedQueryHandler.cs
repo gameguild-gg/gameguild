@@ -1,6 +1,6 @@
 using GameGuild.CQRS;
 
-namespace GameGuild.Identity.Users;
+namespace GameGuild.Social.Profiles;
 
 /// <summary>
 ///     Query handler for getting user profiles with pagination, search, and sorting
