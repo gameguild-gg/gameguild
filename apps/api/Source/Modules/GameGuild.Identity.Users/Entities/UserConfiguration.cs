@@ -21,8 +21,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         // SAME-MODULE NAVIGATION
         // ========================
 
-        // Note: UserProfile has been moved to GameGuild.Social.Profiles module
-        // The relationship is configured there via UserProfileConfiguration
+        // User → UserProfile (1:1 optional)
+        builder.HasOne(x => x.Profile)
+            .WithOne(p => p.User)
+            .HasForeignKey<UserProfile>(p => p.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // User → UserMetadata (1:1 optional)
         builder.HasOne(x => x.Metadata)

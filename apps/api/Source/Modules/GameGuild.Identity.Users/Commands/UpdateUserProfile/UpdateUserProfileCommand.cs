@@ -1,5 +1,5 @@
 using GameGuild.CQRS;
 
-namespace GameGuild.Social.Profiles;
+namespace GameGuild.Identity.Users;
 
 public record UpdateUserProfileCommand(Guid UserId, UpdateUserProfileRequest Request) : ICommand;

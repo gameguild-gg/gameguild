@@ -1,7 +1,7 @@
 using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Social.Profiles;
+namespace GameGuild.Identity.Users;
 
 /// <summary>
 ///     Repository interface for UserProfile

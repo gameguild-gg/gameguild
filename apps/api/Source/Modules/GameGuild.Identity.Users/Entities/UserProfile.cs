@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Social.Profiles;
+namespace GameGuild.Identity.Users;
 
 /// <summary>
 ///     User profile entity for storing profile information, avatar, banner, and social links
@@ -28,6 +28,11 @@ public class UserProfile : EntityBase
     /// </summary>
     [Required]
     public Guid UserId { get; set; }
+
+    /// <summary>
+    ///     Navigation property to the user
+    /// </summary>
+    public virtual User User { get; set; } = null!;
 
     /// <summary>
     ///     Display name for the profile (can be different from User.Name)
