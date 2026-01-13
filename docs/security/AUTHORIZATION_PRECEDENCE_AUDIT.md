@@ -53,6 +53,12 @@ The following critical security fixes were implemented:
 
 7. **AuthorizationBehavior.cs**: Fixed dual permission system confusion - now properly uses `IAccessControlListService` for resource-level checks (when `ResourceType` is specified) and `IPermissionService` for tenant-level permission checks. Added `IAccessControlListService` dependency injection and `MapPermissionToAccessLevel()` helper.
 
+8. **DynamicRoleEntities.cs**: Added `DenyPermissions` field to `DynamicRole` entity. Roles can now explicitly deny permissions in addition to granting them.
+
+9. **RbacPermissionResolver.cs**: Updated `RbacResolutionResult` to include `DenyPermissions`. The resolver now collects deny permissions from all roles in the hierarchy and returns them alongside allow permissions.
+
+10. **EffectivePermissionResolverService.cs**: Rewrote `ResolveAsync()` to implement full DENY-WINS semantics. Collects denies from RBAC (role denies) and TenantPermission (direct denies), then applies DENY-WINS at the end: `EffectivePermissions = AllowSet - DenySet`. Static permissions (system account wildcard) are protected from deny.
+
 ### System Overview
 
 The GameGuild authorization system implements a **four-layer architecture**:
@@ -219,14 +225,14 @@ HTTP Request
 ┌─────────────────────────────────────────────────────────────────┐
 │ 6. PermissionQueryService.GetEffectivePermissionsAsync()        │
 │    File: Authorization/Services/FocusedPermissionServices.cs    │
-│    ⚠️ ALLOW-WINS ONLY - NO DENY SUPPORT                         │
+│    ✅ DENY-WINS SEMANTICS (FIXED)                               │
 │                                                                 │
 │    Layer 1: Global defaults (UserId=null, TenantId=null)        │
 │    Layer 2: Tenant defaults (UserId=null, TenantId=X)           │
 │    Layer 3: Direct grants (UserId=Y, TenantId=X)                │
 │                                                                 │
-│    Algorithm: EffectivePermissions = Union(Global, Tenant, Direct)
-│               return allPermissions.Distinct().ToList();        │
+│    Algorithm: EffectivePermissions = AllowSet - DenySet         │
+│               DENY takes precedence over ALLOW                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -238,8 +244,8 @@ HTTP Request
 | `ActorContextMiddleware` | `Identity.Authorization/Middleware/ActorContextMiddleware.cs` | Build ActorContext (⚠️ NOT REGISTERED) |
 | `PermissionHandler` | `Identity.Authorization/Handlers/PermissionHandler.cs` | ASP.NET AuthorizationHandler |
 | `AuthorizationPermissionServiceAdapter` | `Identity.Authorization/Services/AuthorizationPermissionServiceAdapter.cs` | Bridge to permission query |
-| `PermissionQueryService` | `Identity.Authorization/Services/FocusedPermissionServices.cs` | Permission resolution (allow-only) |
-| `EffectivePermissionResolverService` | `Identity.Authorization/Services/EffectivePermissionResolverService.cs` | Alternative resolver (also allow-only) |
+| `PermissionQueryService` | `Identity.Authorization/Services/FocusedPermissionServices.cs` | Permission resolution (DENY-WINS) |
+| `EffectivePermissionResolverService` | `Identity.Authorization/Services/EffectivePermissionResolverService.cs` | Unified resolver (DENY-WINS) |
 | `DatabaseAccessControlListService` | `Identity.Authorization/Services/DatabaseAccessControlListService.cs` | ACL with deny-first algorithm |
 | `HttpAuthorizationTenantContext` | `Identity.Authorization/Services/HttpAuthorizationTenantContext.cs` | Tenant context from HttpContext |
 
@@ -267,45 +273,58 @@ Uses _tenantContext.TenantId
 
 ## Effective Precedence Rules (As Implemented)
 
-### Pseudocode Algorithm (Current Implementation)
+### Pseudocode Algorithm (Current Implementation - DENY-WINS)
 
 ```python
 def get_effective_permissions(user_id: Guid, tenant_id: Guid?) -> Set[str]:
     """
-    Current implementation: ALLOW-WINS ONLY
+    Current implementation: DENY-WINS SEMANTICS ✅
     Location: FocusedPermissionServices.cs, PermissionQueryService.GetEffectivePermissionsAsync()
-    Lines: 232-267
+              EffectivePermissionResolverService.ResolveAsync()
     """
-    all_permissions = set()
+    all_allow_permissions = set()
+    all_deny_permissions = set()
     
     # Layer 1: Global defaults (UserId=null, TenantId=null)
     global_defaults = db.TenantPermissions
         .where(user_id=None, tenant_id=None)
-        .select(permissions)
-    all_permissions.update(global_defaults)
+        .first()
+    if global_defaults:
+        all_allow_permissions.update(global_defaults.permissions)
+        all_deny_permissions.update(global_defaults.deny_permissions)
     
     # Layer 2: Tenant defaults (UserId=null, TenantId=tenant_id)
     if tenant_id is not None:
         tenant_defaults = db.TenantPermissions
             .where(user_id=None, tenant_id=tenant_id)
-            .select(permissions)
-        all_permissions.update(tenant_defaults)
+            .first()
+        if tenant_defaults:
+            all_allow_permissions.update(tenant_defaults.permissions)
+            all_deny_permissions.update(tenant_defaults.deny_permissions)
     
-    # Layer 3: Direct user grants (UserId=user_id, TenantId=tenant_id OR null)
-    user_permissions = db.TenantPermissions
-        .where(user_id=user_id)
-        .where(tenant_id=tenant_id OR tenant_id=None)
+    # Layer 3: RBAC role permissions
+    rbac_result = rbac_resolver.resolve(user_id, tenant_id)
+    all_allow_permissions.update(rbac_result.permissions)
+    all_deny_permissions.update(rbac_result.deny_permissions)
+    
+    # Layer 4: Direct user grants (UserId=user_id, TenantId=tenant_id OR null)
+    user_permission = db.TenantPermissions
+        .where(user_id=user_id, tenant_id=tenant_id)
         .where(not expired)
-        .select(permissions)
-    all_permissions.update(user_permissions)
+        .first()
+    if user_permission:
+        all_allow_permissions.update(user_permission.permissions)
+        all_deny_permissions.update(user_permission.deny_permissions)
     
-    # ⚠️ NO DENY PROCESSING - All permissions are additive
-    return all_permissions.distinct()
+    # ✅ DENY-WINS: Subtract denies from allows
+    # Static permissions (system account wildcard) are protected from deny
+    effective = all_allow_permissions - all_deny_permissions
+    return effective
 
 
 def has_permission(user_id, tenant_id, permission) -> bool:
     """
-    Current implementation: Simple set membership
+    Current implementation: Simple set membership with DENY-WINS
     Location: FocusedPermissionServices.cs, PermissionQueryService.HasTenantPermissionAsync()
     """
     effective = get_effective_permissions(user_id, tenant_id)
@@ -314,17 +333,17 @@ def has_permission(user_id, tenant_id, permission) -> bool:
 
 ### Precedence Table (As Implemented)
 
-| Source | Priority | Effect | Can Override? |
-|--------|----------|--------|---------------|
-| Static permissions (system account) | 1 (highest) | ALLOW | No - hardcoded |
-| RBAC role permissions | 2 | ALLOW | Via role removal |
-| Global defaults | 3 | ALLOW | ⚠️ **NO** - always additive |
-| Tenant defaults | 4 | ALLOW | ⚠️ **NO** - always additive |
-| Direct user grants | 5 | ALLOW | Via revocation |
+| Source | Priority | Allow Effect | Deny Effect | Override Behavior |
+|--------|----------|--------------|-------------|-------------------|
+| Static permissions (system account) | 1 (highest) | ALLOW | ⛔ Protected | Cannot be denied |
+| RBAC role permissions | 2 | ALLOW | DENY-WINS | Deny from any source blocks |
+| Global defaults | 3 | ALLOW | DENY-WINS | Tenant can deny global allows |
+| Tenant defaults | 4 | ALLOW | DENY-WINS | User deny overrides tenant allow |
+| Direct user grants | 5 | ALLOW | DENY-WINS | Most specific context |
 
 ### ACL Layer (Separate System)
 
-The ACL layer in `DatabaseAccessControlListService` **does implement deny-first**:
+The ACL layer in `DatabaseAccessControlListService` **also implements deny-first**:
 
 ```python
 def evaluate_acl_access(subject, tenant_id, resource_type, resource_id) -> AccessLevel:
@@ -354,7 +373,8 @@ def evaluate_acl_access(subject, tenant_id, resource_type, resource_id) -> Acces
 
 **Critical Distinction**: 
 - `AccessControlListEntry` (ACL): Resource-level, has `IsDenied` flag, uses deny-first
-- `TenantPermission`: Tenant-scoped RBAC, **NO deny support**, uses allow-only
+- `TenantPermission`: Tenant-scoped RBAC, **has deny support via `DenyPermissions[]`**, uses DENY-WINS
+- `DynamicRole`: Role-based permissions, **has deny support via `DenyPermissions[]`**, uses DENY-WINS
 
 ---
 
@@ -364,16 +384,18 @@ def evaluate_acl_access(subject, tenant_id, resource_type, resource_id) -> Acces
 
 | Sub-Requirement | Status | Evidence |
 |-----------------|--------|----------|
-| Role → Permissions evaluated within tenant context | 🟡 PARTIAL | `RbacPermissionResolver.ResolvePermissionsAsync()` takes `tenantId` parameter |
+| Role → Permissions evaluated within tenant context | ✅ **FIXED** | `RbacPermissionResolver.ResolvePermissionsAsync()` takes `tenantId` parameter, returns `RbacResolutionResult` with both `Permissions` and `DenyPermissions` |
 | Admin in Tenant A ≠ Admin in Tenant B | ✅ PASS | `DynamicRoleAssignmentRepository.GetValidByUserAsync()` filters by `TenantId` |
 | Cache keys include TenantId | ✅ PASS | `CachedAccessControlListService.BuildCacheKey()` includes `tenantId` |
 | Cache keys include SecurityVersion | ✅ PASS | Cache keys include `v{version}` suffix |
+| Roles can deny permissions | ✅ **FIXED** | `DynamicRole.DenyPermissions[]` field added, DENY-WINS semantics applied |
 
-**Overall: 🟡 PARTIAL PASS**
+**Overall: ✅ PASS**
 
 **Evidence**:
-- `RbacPermissionResolver.cs` lines 185-240: Filters assignments by `tenantId`
-- `CachedAccessControlListService.cs` line 287: Key format `acl:{tenantId}:{userId}:...:v{version}`
+- `RbacPermissionResolver.cs`: `RbacResolutionResult` now includes `DenyPermissions` set
+- `DynamicRoleEntities.cs`: `DynamicRole.DenyPermissions` field added
+- `EffectivePermissionResolverService.cs`: Collects denies from RBAC and applies DENY-WINS
 
 ---
 
@@ -381,16 +403,17 @@ def evaluate_acl_access(subject, tenant_id, resource_type, resource_id) -> Acces
 
 | Sub-Requirement | Status | Evidence |
 |-----------------|--------|----------|
-| Global allow must NOT force-allow in tenant that prohibits it | 🔴 **FAIL** | No deny mechanism in `TenantPermission` |
-| Tenants MUST be able to reject globally-allowed permissions | 🔴 **FAIL** | No `DenyPermissions` field exists |
-| Confirm deny exists | 🔴 **FAIL** | `TenantPermission` entity only has `Permissions` array |
-| Conflict resolution defined | 🔴 **FAIL** | Only additive union, no conflict resolution |
+| Global allow must NOT force-allow in tenant that prohibits it | ✅ **FIXED** | DENY-WINS semantics in `EffectivePermissionResolverService.ResolveAsync()` |
+| Tenants MUST be able to reject globally-allowed permissions | ✅ **FIXED** | `TenantPermission.DenyPermissions[]` field exists and is applied |
+| Confirm deny exists | ✅ **FIXED** | Both `TenantPermission` and `DynamicRole` have `DenyPermissions[]` |
+| Conflict resolution defined | ✅ **FIXED** | DENY-WINS: `EffectivePermissions = AllowSet - DenySet`, static permissions protected |
 
-**Overall: 🔴 CRITICAL FAIL**
+**Overall: ✅ PASS**
 
 **Evidence**:
-- `TenantPermission.cs` lines 27-32: Only `Permissions string[]` exists
-- `FocusedPermissionServices.cs` line 265: `return allPermissions.Distinct().ToList();` - no deny subtraction
+- `TenantPermission.cs`: `DenyPermissions string[]` field with helper methods
+- `DynamicRoleEntities.cs`: `DenyPermissions string[]` field
+- `EffectivePermissionResolverService.cs`: Full DENY-WINS implementation with static permission protection
 
 ---
 
@@ -411,10 +434,10 @@ def evaluate_acl_access(subject, tenant_id, resource_type, resource_id) -> Acces
 | Sub-Requirement | Status | Evidence |
 |-----------------|--------|----------|
 | Users can have direct allow | ✅ PASS | `TenantPermission` with specific `UserId` |
-| Users can have direct deny | 🔴 **FAIL** | No deny mechanism |
-| Define interaction with RBAC + tenant defaults | 🟡 PARTIAL | Allow-wins documented, deny undefined |
+| Users can have direct deny | ✅ **FIXED** | `TenantPermission.DenyPermissions[]` field added |
+| Define interaction with RBAC + tenant defaults | ✅ **FIXED** | DENY-WINS semantics across all sources, documented |
 
-**Overall: 🔴 FAIL**
+**Overall: ✅ PASS**
 
 ---
 

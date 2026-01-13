@@ -17,14 +17,14 @@ namespace GameGuild.Identity.Authorization;
 ///             <term>Tenant-level permissions</term>
 ///             <description>
 ///                 Checks if the user has a capability in the tenant (e.g., "courses:create").
-///                 Uses <see cref="IPermissionService.HasTenantPermissionAsync"/>.
+///                 Uses <see cref="ActorContext.HasPermission"/> (populated by ActorContextMiddleware).
 ///             </description>
 ///         </item>
 ///         <item>
 ///             <term>Resource-level access</term>
 ///             <description>
 ///                 Checks if the user has access to a specific resource (e.g., Course #123).
-///                 Uses <see cref="IAccessControlListService.HasAccessAsync"/>.
+///                 Uses <see cref="IAccessControlListService.HasAccessAsync(AclSubject, Guid, string, string, AccessLevel, CancellationToken)"/>.
 ///             </description>
 ///         </item>
 ///     </list>
@@ -33,7 +33,6 @@ namespace GameGuild.Identity.Authorization;
 /// <typeparam name="TResponse">The response type</typeparam>
 public class AuthorizationBehavior<TRequest, TResponse>(
     IActorContextAccessor actorContextAccessor,
-    IPermissionService permissionService,
     IAccessControlListService aclService
 ) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequestBase
 {
