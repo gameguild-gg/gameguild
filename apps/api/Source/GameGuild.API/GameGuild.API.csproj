@@ -39,6 +39,13 @@
         <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Recommendations\GameGuild.Learning.Experience.Recommendations.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.LearningPaths\GameGuild.Learning.Experience.LearningPaths.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Learning.Experience.Social\GameGuild.Learning.Experience.Social.csproj" />
+        <!-- Social Modules -->
+        <ProjectReference Include="..\Modules\GameGuild.Social.Profiles\GameGuild.Social.Profiles.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Posts\GameGuild.Social.Posts.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Blog\GameGuild.Social.Blog.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Reactions\GameGuild.Social.Reactions.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Follows\GameGuild.Social.Follows.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Social.Feed\GameGuild.Social.Feed.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Subscriptions\GameGuild.Commerce.Subscriptions.csproj" />
