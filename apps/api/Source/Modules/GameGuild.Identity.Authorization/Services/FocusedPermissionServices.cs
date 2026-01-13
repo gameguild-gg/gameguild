@@ -1,3 +1,4 @@
+using GameGuild.Identity.Context.Actors;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authorization;
@@ -7,16 +8,25 @@ namespace GameGuild.Identity.Authorization;
 ///     This is the primary implementation - <see cref="PermissionService"/> is a backward-compatible facade.
 /// </summary>
 /// <remarks>
-///     <b>Security:</b> All mutations increment the tenant security version to ensure
-///     cache invalidation and prevent cache poisoning attacks.
+///     <para>
+///         <b>Security - Cache Invalidation:</b> All mutations increment the tenant security version to ensure
+///         cache invalidation and prevent stale cache privilege retention (Attack 3).
+///     </para>
+///     <para>
+///         <b>Security - Authorization Guards:</b> Global default operations (tenantId=null) require
+///         system-level ManageGlobalDefaults permission. This is defense-in-depth beyond command handler checks.
+///     </para>
 /// </remarks>
 public sealed class PermissionGrantService(
     ITenantPermissionRepository repository,
     IPermissionAuditService auditService,
     ITenantSecurityVersionStore securityVersionStore,
+    IActorContextAccessor actorContextAccessor,
     ILogger<PermissionGrantService> logger
 ) : IPermissionGrantService
 {
+    private ActorContext Actor => actorContextAccessor.ActorContext;
+
     public async Task<TenantPermission> GrantTenantPermissionAsync(
         Guid? userId,
         Guid? tenantId,
@@ -26,6 +36,9 @@ public sealed class PermissionGrantService(
         string? reason = null,
         CancellationToken cancellationToken = default)
     {
+        // SECURITY (Attack 6): Defense-in-depth - global defaults require system permission
+        ValidateGlobalDefaultAuthorization(tenantId, "grant global default permissions");
+
         logger.LogInformation(
             "Granting permissions {Permissions} to user {UserId} in tenant {TenantId}",
             string.Join(", ", permissions),
@@ -69,6 +82,9 @@ public sealed class PermissionGrantService(
         string[] permissions,
         CancellationToken cancellationToken = default)
     {
+        // SECURITY (Attack 6): Defense-in-depth - global defaults require system permission
+        ValidateGlobalDefaultAuthorization(tenantId, "revoke global default permissions");
+
         var existing = await repository.GetByUserAndTenantAsync(userId, tenantId, cancellationToken);
 
         if (existing == null) return false;
@@ -107,6 +123,10 @@ public sealed class PermissionGrantService(
         Guid? setBy = null,
         CancellationToken cancellationToken = default)
     {
+        // SECURITY (Attack 6): CRITICAL - Global defaults affect ALL users across ALL tenants
+        // This requires ManageGlobalDefaults permission - enforced at both service and command level
+        ValidateGlobalDefaultAuthorization(null, "set global default permissions");
+
         logger.LogInformation("Setting global default permissions: {Permissions}", string.Join(", ", permissions));
 
         var existing = await repository.GetByUserAndTenantAsync(null, null, cancellationToken);
@@ -294,6 +314,39 @@ public sealed class PermissionGrantService(
                 "Failed to increment security version for tenant {TenantId}. Cache may be stale.",
                 tenantKey);
         }
+    }
+
+    /// <summary>
+    ///     SECURITY (Attack 6): Validates that the current actor has permission to modify global defaults.
+    /// </summary>
+    /// <remarks>
+    ///     Global defaults (tenantId=null) affect ALL users across ALL tenants.
+    ///     Only system administrators or users with ManageGlobalDefaults permission can modify them.
+    ///     This is defense-in-depth - command handlers also enforce this check.
+    /// </remarks>
+    private void ValidateGlobalDefaultAuthorization(Guid? tenantId, string operation)
+    {
+        // Only check for global operations (tenantId=null)
+        if (tenantId.HasValue) return;
+
+        // Skip if no actor context available (e.g., during system initialization)
+        if (!Actor.IsAuthenticated) return;
+
+        // System admins can always modify global defaults
+        if (Actor.IsSystemAdmin) return;
+
+        // Check for ManageGlobalDefaults permission
+        if (Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults)) return;
+
+        // SECURITY: Fail-closed - deny access if no authorization
+        logger.LogWarning(
+            "User {UserId} attempted to {Operation} without ManageGlobalDefaults permission",
+            Actor.SubjectId,
+            operation);
+
+        throw new UnauthorizedAccessException(
+            $"Modifying global default permissions requires '{SystemPermission.Keys.ManageGlobalDefaults}' permission. " +
+            $"Attempted operation: {operation}");
     }
 }
 

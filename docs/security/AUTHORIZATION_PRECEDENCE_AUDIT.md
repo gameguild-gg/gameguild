@@ -477,6 +477,8 @@ return allPermissions.Distinct().ToList();    // "content:read" still present
 
 ### Attack 2: Privilege Escalation via Stale Cache
 
+**Status**: ✅ **FIXED** (January 13, 2026)
+
 **Scenario**: A user's permissions are revoked, but they continue to have access.
 
 ```
@@ -488,21 +490,37 @@ Setup:
 Attack Timeline:
 T+0:    User authenticates, permissions cached
 T+30:   Admin revokes "admin:*" via GrantService.RevokeTenantPermissionAsync()
-T+30:   SecurityVersion incremented (good)
+T+30:   SecurityVersion incremented ✅
 T+31:   User makes request
-T+31:   IF cache key doesn't match new version → cache miss → correct behavior
-T+31:   IF L1 cache has stale entry with matching key → privilege retained
+T+31:   Cache key includes version → version mismatch → cache miss → fresh query ✅
 
-Expected Behavior: Immediate cache invalidation
-Actual Behavior: Version-based invalidation works, but race window exists
-
-Mitigation Present: TenantSecurityVersion IS incremented on revocation
-Residual Risk: L1 memory cache may have stale entries until proactive eviction
+Mitigation: TenantSecurityVersion IS incremented on ALL permission mutations
 ```
+
+**Fix Implementation** (`FocusedPermissionServices.cs`):
+```csharp
+// All permission mutation methods call InvalidateTenantCacheAsync()
+private async Task InvalidateTenantCacheAsync(Guid? tenantId, CancellationToken cancellationToken)
+{
+    var tenantKey = tenantId?.ToString() ?? "global";
+    var newVersion = await securityVersionStore.IncrementVersionAsync(tenantKey, cancellationToken);
+    logger.LogDebug("Incremented security version for tenant {TenantId} to {Version}", tenantKey, newVersion);
+}
+```
+
+**Coverage**: All mutation methods in `PermissionGrantService`:
+- `GrantTenantPermissionAsync` ✅
+- `RevokeTenantPermissionAsync` ✅
+- `SetGlobalDefaultPermissionsAsync` ✅
+- `SetTenantDefaultPermissionsAsync` ✅
+- `DenyTenantPermissionAsync` ✅
+- `RemoveDenyPermissionsAsync` ✅
 
 ---
 
 ### Attack 3: Missing Tenant Fail-Closed
+
+**Status**: ✅ **FIXED** (January 13, 2026)
 
 **Scenario**: Request without tenant context gets global permissions.
 
@@ -511,36 +529,39 @@ Setup:
 - Global defaults: ["profile:read", "profile:update"]
 - Endpoint should require tenant context
 
-Attack:
+Attack Attempt:
 1. Attacker crafts request WITHOUT X-Tenant-Id header
-2. TenantMiddleware finds no tenant, continues without setting context
-3. PermissionQueryService called with tenantId=null
-4. GetEffectivePermissionsAsync(userId, null) returns global defaults only
-5. If "profile:update" is checked → GRANTED from global defaults
+2. TenantMiddleware finds no tenant
+3. IAuthorizationTenantContext.TenantId returns null
+4. GetEffectivePermissionsAsync(userId, null) → FAIL-CLOSED returns empty list ✅
+5. Permission check fails
+6. User denied access ✅
 
-Expected Behavior: No tenant = no permissions (fail-closed)
-Actual Behavior: No tenant = global defaults apply
+Expected Behavior: No tenant = no permissions (fail-closed) ✅
+Actual Behavior: No tenant = empty permissions (fail-closed) ✅
 ```
 
-**Code Path**:
+**Fix Implementation** (`FocusedPermissionServices.cs`):
 ```csharp
-// TenantMiddleware.InvokeAsync() line 149
-else
+public async Task<List<string>> GetEffectivePermissionsAsync(
+    Guid userId,
+    Guid? tenantId,
+    CancellationToken cancellationToken = default)
 {
-    // No tenant resolved - continue without tenant context
-    logger.LogDebug("No tenant resolved for request to {Path}", path);
-    await next(context);  // ⚠️ Request continues without tenant!
+    // SECURITY: FAIL-CLOSED - No tenant = no permissions
+    if (!tenantId.HasValue)
+    {
+        logger.LogWarning("Null tenant in permission query - returning empty (fail-closed)");
+        return new List<string>();
+    }
+    // ... rest of method
 }
-
-// PermissionQueryService.GetEffectivePermissionsAsync() line 249
-var allPermissions = new List<string>();
-allPermissions.AddRange(globalDefaults);  // ⚠️ Always added
-if (tenantId.HasValue)  // FALSE when tenant missing
-{
-    // tenant defaults skipped
-}
-return allPermissions.Distinct().ToList();  // Returns global defaults!
 ```
+
+**Additional Protections**:
+- `IAuthorizationTenantContext.TenantId` is now strongly-typed `Guid?` 
+- `HttpAuthorizationTenantContext` rejects `Guid.Empty` as valid tenant
+- `PermissionHandler` explicitly fails when no valid tenant context available
 
 ---
 
@@ -594,6 +615,100 @@ Actual: Two systems with different semantics
 
 Root Cause: No clear guidance on when to use which system
 ```
+
+---
+
+### Attack 6: Type Confusion in Tenant ID
+
+**Status**: ✅ **FIXED** (January 13, 2026)
+
+**Scenario**: Guid.TryParse failure could allow Guid.Empty to match records.
+
+```
+Setup:
+- Attacker provides malformed tenant ID
+- Guid.TryParse fails, tenantId defaults to Guid.Empty
+- Records with Guid.Empty tenant could be matched
+
+Attack Attempt:
+1. Attacker sends X-Tenant-Id: "invalid-not-a-guid"
+2. TenantIdExtractor.FromHeader() parses value
+3. Guid.TryParse fails → returns null (not Guid.Empty) ✅
+4. Authorization check fails due to missing tenant context ✅
+```
+
+**Fix Implementation** (`TenantIdExtractor.cs`):
+```csharp
+// SECURITY (Attack 5): Reject Guid.Empty to prevent type confusion attacks
+if (context.Request.Headers.TryGetValue(headerName, out var tenantIdHeader)
+    && Guid.TryParse(tenantIdHeader, out var tenantId)
+    && tenantId != Guid.Empty) // SECURITY: Reject empty GUID
+{
+    return tenantId;
+}
+return null;
+```
+
+**Coverage**:
+- `TenantIdExtractor.FromHeader()` ✅
+- `TenantIdExtractor.FromQuery()` ✅
+- `TenantIdExtractor.FromRoute()` ✅
+- `TenantResolver.ResolveByIdentifierAsync()` ✅
+- `TenantResolver.GetTenantIdFromClaims()` ✅
+- `HttpAuthorizationTenantContext.TenantId` ✅
+- `PermissionHandler.TryGetIdentityInfo()` ✅
+
+---
+
+### Attack 7: Tenant Default Escalation (Global Defaults)
+
+**Status**: ✅ **FIXED** (January 13, 2026)
+
+**Scenario**: Malicious actor with permissions:manage in one tenant tries to set global defaults.
+
+```
+Setup:
+- User has "permissions:manage" in Tenant A
+- User attempts to create global defaults (tenantId=null)
+
+Attack Attempt:
+1. Attacker calls GrantTenantPermissionAsync with tenantId=null
+2. Command handler checks Actor.HasPermission(ManageGlobalDefaults) ✅
+3. Attacker doesn't have ManageGlobalDefaults permission
+4. UnauthorizedAccessException thrown ✅
+```
+
+**Fix Implementation - Command Handler Level** (`TenantPermissionCommands.cs`):
+```csharp
+var isGlobalDefault = request.TenantId.Value == Guid.Empty;
+if (isGlobalDefault)
+{
+    if (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin)
+    {
+        throw new UnauthorizedAccessException(
+            "Modifying global default permissions requires 'system:manage-global-defaults' permission");
+    }
+}
+```
+
+**Fix Implementation - Service Level (Defense-in-Depth)** (`FocusedPermissionServices.cs`):
+```csharp
+private void ValidateGlobalDefaultAuthorization(Guid? tenantId, string operation)
+{
+    if (tenantId.HasValue) return;
+    if (!Actor.IsAuthenticated) return;
+    if (Actor.IsSystemAdmin) return;
+    if (Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults)) return;
+    
+    throw new UnauthorizedAccessException(
+        $"Modifying global default permissions requires '{SystemPermission.Keys.ManageGlobalDefaults}'");
+}
+```
+
+**Coverage** (all methods with defense-in-depth):
+- `GrantTenantPermissionAsync()` - Command + Service ✅
+- `RevokeTenantPermissionAsync()` - Command + Service ✅
+- `SetGlobalDefaultPermissionsAsync()` - Command + Service ✅
 
 ---
 

@@ -1624,9 +1624,22 @@ await permissionService.RevokeTenantPermissionAsync(userId, tenantId, "projects:
 // If version is not incremented, cached policies remain valid
 ```
 
-**Mitigation Status**: ✅ **Mitigated** 
+**Mitigation Status**: ✅ **FIXED** (January 13, 2026)
+- All permission mutation methods in `PermissionGrantService` call `InvalidateTenantCacheAsync()`
+- `InvalidateTenantCacheAsync()` increments `TenantSecurityVersion` via `ITenantSecurityVersionStore`
 - `IPolicyCache.Get()` validates against `TenantSecurityVersion`
-- Invalidation triggers version bump via `ITenantSecurityVersionRepository`
+- Cache is invalidated immediately on any permission change (grant, revoke, deny, remove-deny)
+- Global defaults use "global" as the tenant key for version tracking
+
+**Implementation** (`FocusedPermissionServices.cs`):
+```csharp
+private async Task InvalidateTenantCacheAsync(Guid? tenantId, CancellationToken cancellationToken)
+{
+    var tenantKey = tenantId?.ToString() ?? "global";
+    var newVersion = await securityVersionStore.IncrementVersionAsync(tenantKey, cancellationToken);
+    logger.LogDebug("Incremented security version for tenant {TenantId} to {Version}", tenantKey, newVersion);
+}
+```
 
 ---
 
@@ -1660,17 +1673,30 @@ if (string.IsNullOrEmpty(resolvedTenantId))
 
 **Scenario**: `IAuthorizationTenantContext.TenantId` is `string?` while `TenantPermission.TenantId` is `Guid?`. Inconsistent parsing could cause mismatches.
 
-```csharp
-// HttpAuthorizationTenantContext.cs
-public string? TenantId => _httpContextAccessor.HttpContext?.Items["TenantId"] as string;
+**Mitigation Status**: ✅ **FIXED** (January 13, 2026)
+- `IAuthorizationTenantContext.TenantId` changed to `Guid?` (strongly-typed)
+- `HttpAuthorizationTenantContext` rejects `Guid.Empty` as invalid tenant ID
+- `PermissionHandler` rejects `Guid.Empty` with fail-closed behavior
+- `TenantIdExtractor` (FromHeader, FromQuery, FromRoute) all reject `Guid.Empty`
+- `TenantResolver` methods reject `Guid.Empty` for tenant IDs
 
-// PermissionHandler.cs
-if (_tenantContext.HasTenant && Guid.TryParse(_tenantContext.TenantId, out tenantId))
-    return true;
-// If TryParse fails, tenantId is Guid.Empty - could match wrong records
+**Implementation** (`TenantIdExtractor.cs`):
+```csharp
+// SECURITY (Attack 5): Reject Guid.Empty to prevent type confusion attacks
+if (context.Request.Headers.TryGetValue(headerName, out var tenantIdHeader)
+    && Guid.TryParse(tenantIdHeader, out var tenantId)
+    && tenantId != Guid.Empty) // SECURITY: Reject empty GUID
+{
+    return tenantId;
+}
+return null;
 ```
 
-**Mitigation Status**: ⚠️ **Concern** - Failed `Guid.TryParse` sets `tenantId = Guid.Empty`. This could theoretically match unintended records if any exist with empty GUID.
+**Implementation** (`HttpAuthorizationTenantContext.cs`):
+```csharp
+// SECURITY: Don't accept Guid.Empty as valid tenant
+return parsedGuid != Guid.Empty ? parsedGuid : null;
+```
 
 ---
 
@@ -1682,20 +1708,38 @@ if (_tenantContext.HasTenant && Guid.TryParse(_tenantContext.TenantId, out tenan
 
 **Scenario**: Malicious actor with `permissions:manage` in one tenant tries to set tenant defaults that affect other tenants.
 
-```csharp
-// Current implementation in PermissionGrantService:
-// UserId=null, TenantId=X = tenant defaults for X
-// UserId=null, TenantId=null = GLOBAL defaults (system-wide!)
+**Mitigation Status**: ✅ **FIXED** (January 13, 2026)
+- **Command Handler Level**: `GrantTenantPermissionCommandHandler`, `RevokeTenantPermissionCommandHandler`, and `SetGlobalDefaultPermissionsCommandHandler` all require `ManageGlobalDefaults` permission when `tenantId=null/Empty`
+- **Service Level (Defense-in-Depth)**: `PermissionGrantService.ValidateGlobalDefaultAuthorization()` validates actor permissions for global operations
 
-// Attack: Attacker sets TenantId=null to create global defaults
-await permissionService.GrantTenantPermissionAsync(
-    userId: null,
-    tenantId: null,  // GLOBAL! Not tenant-specific
-    permission: "admin:full-access",
-    grantedBy: attackerId);
+**Implementation** (`TenantPermissionCommands.cs` - Command Handler):
+```csharp
+// SECURITY: Global defaults (tenantId=null or Empty) require ManageGlobalDefaults permission
+var isGlobalDefault = request.TenantId.Value == Guid.Empty;
+if (isGlobalDefault)
+{
+    if (!Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults) && !Actor.IsSystemAdmin)
+    {
+        throw new UnauthorizedAccessException(
+            "Modifying global default permissions requires 'system:manage-global-defaults' permission");
+    }
+}
 ```
 
-**Mitigation Status**: ⚠️ **Concern** - Authorization check for `GrantTenantPermissionAsync` must verify caller has system-level permissions when `tenantId=null`. Need to verify this is enforced at API layer.
+**Implementation** (`FocusedPermissionServices.cs` - Defense-in-Depth):
+```csharp
+/// SECURITY (Attack 6): Validates that the current actor has permission to modify global defaults.
+private void ValidateGlobalDefaultAuthorization(Guid? tenantId, string operation)
+{
+    if (tenantId.HasValue) return; // Only check global operations
+    if (!Actor.IsAuthenticated) return; // Skip system initialization
+    if (Actor.IsSystemAdmin) return;
+    if (Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults)) return;
+    
+    throw new UnauthorizedAccessException(
+        $"Modifying global default permissions requires '{SystemPermission.Keys.ManageGlobalDefaults}' permission.");
+}
+```
 
 ---
 

@@ -33,11 +33,15 @@ public static class TenantIdExtractor
     /// </summary>
     /// <param name="context">The HTTP context</param>
     /// <param name="headerName">Optional custom header name (defaults to "X-Tenant-Id")</param>
-    /// <returns>Tenant ID if found and valid Guid, otherwise null</returns>
+    /// <returns>Tenant ID if found and valid Guid (non-empty), otherwise null</returns>
+    /// <remarks>
+    ///     <b>SECURITY (Attack 5):</b> Rejects Guid.Empty to prevent type confusion attacks.
+    /// </remarks>
     public static Guid? FromHeader(HttpContext context, string headerName = DefaultTenantIdHeader)
     {
         if (context.Request.Headers.TryGetValue(headerName, out var tenantIdHeader)
-            && Guid.TryParse(tenantIdHeader, out var tenantId))
+            && Guid.TryParse(tenantIdHeader, out var tenantId)
+            && tenantId != Guid.Empty) // SECURITY: Reject empty GUID
         {
             return tenantId;
         }
@@ -50,11 +54,15 @@ public static class TenantIdExtractor
     /// </summary>
     /// <param name="context">The HTTP context</param>
     /// <param name="queryKey">Optional custom query key (defaults to "tenantId")</param>
-    /// <returns>Tenant ID if found and valid Guid, otherwise null</returns>
+    /// <returns>Tenant ID if found and valid Guid (non-empty), otherwise null</returns>
+    /// <remarks>
+    ///     <b>SECURITY (Attack 5):</b> Rejects Guid.Empty to prevent type confusion attacks.
+    /// </remarks>
     public static Guid? FromQuery(HttpContext context, string queryKey = DefaultTenantIdKey)
     {
         if (context.Request.Query.TryGetValue(queryKey, out var tenantIdQuery)
-            && Guid.TryParse(tenantIdQuery, out var tenantId))
+            && Guid.TryParse(tenantIdQuery, out var tenantId)
+            && tenantId != Guid.Empty) // SECURITY: Reject empty GUID
         {
             return tenantId;
         }
@@ -67,11 +75,15 @@ public static class TenantIdExtractor
     /// </summary>
     /// <param name="context">The HTTP context</param>
     /// <param name="routeKey">Optional custom route key (defaults to "tenantId")</param>
-    /// <returns>Tenant ID if found and valid Guid, otherwise null</returns>
+    /// <returns>Tenant ID if found and valid Guid (non-empty), otherwise null</returns>
+    /// <remarks>
+    ///     <b>SECURITY (Attack 5):</b> Rejects Guid.Empty to prevent type confusion attacks.
+    /// </remarks>
     public static Guid? FromRoute(HttpContext context, string routeKey = DefaultTenantIdKey)
     {
         if (context.Request.RouteValues.TryGetValue(routeKey, out var tenantIdRoute)
-            && Guid.TryParse(tenantIdRoute?.ToString(), out var tenantId))
+            && Guid.TryParse(tenantIdRoute?.ToString(), out var tenantId)
+            && tenantId != Guid.Empty) // SECURITY: Reject empty GUID
         {
             return tenantId;
         }

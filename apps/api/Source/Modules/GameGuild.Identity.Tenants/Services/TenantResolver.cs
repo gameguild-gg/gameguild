@@ -170,7 +170,8 @@ public sealed class TenantResolver(
             return null;
 
         // Try as GUID first
-        if (Guid.TryParse(tenantIdentifier, out var tenantId))
+        // SECURITY (Attack 5): Reject Guid.Empty to prevent type confusion
+        if (Guid.TryParse(tenantIdentifier, out var tenantId) && tenantId != Guid.Empty)
         {
             return await GetTenantByIdAsync(tenantId, cancellationToken);
         }
@@ -202,7 +203,8 @@ public sealed class TenantResolver(
             return null;
 
         var tenantClaim = user.FindFirst(TenantIdClaimType);
-        if (tenantClaim is not null && Guid.TryParse(tenantClaim.Value, out var tenantId))
+        // SECURITY (Attack 5): Reject Guid.Empty to prevent type confusion
+        if (tenantClaim is not null && Guid.TryParse(tenantClaim.Value, out var tenantId) && tenantId != Guid.Empty)
         {
             return tenantId;
         }
