@@ -129,4 +129,91 @@ public class TenantPermissionCommandSecurityTests
     }
 
     #endregion
+
+    #region New Command Types Validation
+
+    [Fact]
+    public void SetGlobalDefaultPermissionsCommand_CanBeCreated()
+    {
+        // Arrange & Act
+        var command = new SetGlobalDefaultPermissionsCommand
+        {
+            Permissions = new[] { "content:read", "content:write" },
+            SetBy = Guid.NewGuid()
+        };
+
+        // Assert
+        command.Permissions.Should().HaveCount(2);
+        command.SetBy.Should().NotBe(Guid.Empty);
+    }
+
+    [Fact]
+    public void SetTenantDefaultPermissionsCommand_CanBeCreated()
+    {
+        // Arrange & Act
+        var command = new SetTenantDefaultPermissionsCommand
+        {
+            TenantId = Guid.NewGuid(),
+            Permissions = new[] { "tenant:read" },
+            SetBy = Guid.NewGuid()
+        };
+
+        // Assert
+        command.TenantId.Value.Should().NotBe(Guid.Empty);
+        command.Permissions.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public void DenyTenantPermissionCommand_CanBeCreated()
+    {
+        // Arrange & Act
+        var command = new DenyTenantPermissionCommand
+        {
+            TenantId = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            Permissions = new[] { "dangerous:operation" },
+            DeniedBy = Guid.NewGuid(),
+            Reason = "Security concern"
+        };
+
+        // Assert
+        command.UserId.Should().NotBe(Guid.Empty);
+        command.DeniedBy.Should().NotBe(Guid.Empty);
+        command.Reason.Should().Be("Security concern");
+    }
+
+    [Fact]
+    public void DenyTenantPermissionCommand_GlobalDefault_UsesGuidEmpty()
+    {
+        // Arrange & Act
+        var command = new DenyTenantPermissionCommand
+        {
+            TenantId = Guid.Empty,
+            UserId = Guid.NewGuid(),
+            Permissions = new[] { "admin:*" },
+            DeniedBy = Guid.NewGuid()
+        };
+
+        // Assert - Guid.Empty indicates global default
+        command.TenantId.Value.Should().Be(Guid.Empty);
+    }
+
+    [Fact]
+    public void RemoveDenyPermissionsCommand_CanBeCreated()
+    {
+        // Arrange & Act
+        var command = new RemoveDenyPermissionsCommand
+        {
+            TenantId = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            Permissions = new[] { "content:write" },
+            RemovedBy = Guid.NewGuid()
+        };
+
+        // Assert
+        command.Permissions.Should().Contain("content:write");
+        command.RemovedBy.Should().NotBe(Guid.Empty);
+    }
+
+    #endregion
 }

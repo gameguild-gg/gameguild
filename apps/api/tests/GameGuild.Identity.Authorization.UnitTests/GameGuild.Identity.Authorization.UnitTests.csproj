@@ -30,6 +30,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Authentication\GameGuild.Identity.Authentication.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>
 
