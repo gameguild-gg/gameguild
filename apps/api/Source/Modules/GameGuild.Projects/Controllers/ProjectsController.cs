@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
-using GameGuild.Identity.Context.Actors;
 using GameGuild.Enums;
 using PermissionType = GameGuild.Identity.Authorization.PermissionType;
 using AccessLevel = GameGuild.Enums.AccessLevel;
@@ -22,14 +21,14 @@ public class ProjectsController : ControllerBase {
 
   private readonly IMediator _mediator;
 
-  private readonly IActorContextAccessor _actorContextAccessor;
+  private readonly ITenantContext _tenantContext;
 
-  /// <summary> Gets the current actor context </summary>
-  private ActorContext Actor => _actorContextAccessor.ActorContext;
+  private readonly IUserContext _userContext;
 
-  public ProjectsController(IMediator mediator, IActorContextAccessor actorContextAccessor, ILogger<ProjectsController> logger) {
+  public ProjectsController(IMediator mediator, IUserContext userContext, ITenantContext tenantContext, ILogger<ProjectsController> logger) {
     _mediator = mediator;
-    _actorContextAccessor = actorContextAccessor;
+    _userContext = userContext;
+    _tenantContext = tenantContext;
     _logger = logger;
   }
 
@@ -106,12 +105,12 @@ public class ProjectsController : ControllerBase {
       WebsiteUrl = request.WebsiteUrl,
       DownloadUrl = request.DownloadUrl,
       Type = (GameGuild.ProjectType)request.Type,
-      CreatedById = Actor.SubjectIdAsGuid ?? Guid.Empty,
+      CreatedById = _userContext.UserId ?? Guid.Empty,
       CategoryId = request.CategoryId,
       Visibility = request.Visibility,
       Status = request.Status,
       Tags = request.Tags,
-      TenantId = Actor.TenantId,
+      TenantId = _tenantContext.TenantId,
     };
 
     var result = await _mediator.Send(command);
@@ -138,7 +137,7 @@ public class ProjectsController : ControllerBase {
       Visibility = request.Visibility,
       Status = request.Status,
       Tags = request.Tags,
-      UpdatedBy = Actor.SubjectIdAsGuid ?? Guid.Empty,
+      UpdatedBy = _userContext.UserId ?? Guid.Empty,
     };
 
     var result = await _mediator.Send(command);
@@ -151,7 +150,7 @@ public class ProjectsController : ControllerBase {
   /// <summary> Delete a project </summary>
   [HttpDelete("{id:guid}")]
   public async Task<ActionResult<DeleteProjectResult>> DeleteProject(Guid id, [FromQuery] bool softDelete = true, [FromQuery] string? reason = null) {
-    var command = new DeleteProjectCommand { ProjectId = id, DeletedBy = Actor.SubjectIdAsGuid ?? Guid.Empty, SoftDelete = softDelete, Reason = reason };
+    var command = new DeleteProjectCommand { ProjectId = id, DeletedBy = _userContext.UserId ?? Guid.Empty, SoftDelete = softDelete, Reason = reason };
 
     var result = await _mediator.Send(command);
 
@@ -163,7 +162,7 @@ public class ProjectsController : ControllerBase {
   /// <summary> Publish a project </summary>
   [HttpPost("{id:guid}/publish")]
   public async Task<ActionResult<PublishProjectResult>> PublishProject(Guid id) {
-    var command = new PublishProjectCommand { ProjectId = id, PublishedBy = Actor.SubjectIdAsGuid ?? Guid.Empty };
+    var command = new PublishProjectCommand { ProjectId = id, PublishedBy = _userContext.UserId ?? Guid.Empty };
 
     var result = await _mediator.Send(command);
 
@@ -175,7 +174,7 @@ public class ProjectsController : ControllerBase {
   /// <summary> Unpublish a project </summary>
   [HttpPost("{id:guid}/unpublish")]
   public async Task<ActionResult<UnpublishProjectResult>> UnpublishProject(Guid id) {
-    var command = new UnpublishProjectCommand { ProjectId = id, UnpublishedBy = Actor.SubjectIdAsGuid ?? Guid.Empty };
+    var command = new UnpublishProjectCommand { ProjectId = id, UnpublishedBy = _userContext.UserId ?? Guid.Empty };
 
     var result = await _mediator.Send(command);
 
@@ -187,7 +186,7 @@ public class ProjectsController : ControllerBase {
   /// <summary> Archive a project </summary>
   [HttpPost("{id:guid}/archive")]
   public async Task<ActionResult<ArchiveProjectResult>> ArchiveProject(Guid id) {
-    var command = new ArchiveProjectCommand { ProjectId = id, ArchivedBy = Actor.SubjectIdAsGuid ?? Guid.Empty };
+    var command = new ArchiveProjectCommand { ProjectId = id, ArchivedBy = _userContext.UserId ?? Guid.Empty };
 
     var result = await _mediator.Send(command);
 

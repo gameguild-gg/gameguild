@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 using PermissionType = GameGuild.Identity.Authorization.PermissionType;
+using IPermissionService = GameGuild.Identity.Authorization.IPermissionService;
 
 namespace GameGuild.Projects;
 
@@ -17,11 +18,14 @@ public class ProjectPermissionController : ControllerBase {
 
   private readonly IPermissionResolver _permissionResolver;
 
+  private readonly IPermissionService _permissionService;
+
   private readonly IResourcePermissionService _resourcePermissionService;
 
-  public ProjectPermissionController(IPermissionResolver permissionResolver, IResourcePermissionService resourcePermissionService, ILogger<ProjectPermissionController> logger) {
+  public ProjectPermissionController(IPermissionResolver permissionResolver, IResourcePermissionService resourcePermissionService, IPermissionService permissionService, ILogger<ProjectPermissionController> logger) {
     _permissionResolver = permissionResolver;
     _resourcePermissionService = resourcePermissionService;
+    _permissionService = permissionService;
     _logger = logger;
   }
 

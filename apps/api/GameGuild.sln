@@ -30,19 +30,19 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Identity.Tenants"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Features", "Source\Modules\GameGuild.Features\GameGuild.Features.csproj", "{FBBD98C3-5877-43FF-AD2F-4942E3C466E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Subscriptions", "Source\Modules\GameGuild.Subscriptions\GameGuild.Subscriptions.csproj", "{8A7E3586-A64E-4B58-B7E5-DC26D8AB8399}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Subscriptions", "Source\Modules\GameGuild.Commerce.Subscriptions\GameGuild.Commerce.Subscriptions.csproj", "{8A7E3586-A64E-4B58-B7E5-DC26D8AB8399}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Billing", "Source\Modules\GameGuild.Billing\GameGuild.Billing.csproj", "{749A6E94-F9AE-4260-BDC4-D5575DBC746F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Billing", "Source\Modules\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj", "{749A6E94-F9AE-4260-BDC4-D5575DBC746F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Notifications", "Source\Modules\GameGuild.Notifications\GameGuild.Notifications.csproj", "{DEBF5CCA-C502-4325-9EBE-9F34565C4B47}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Monitoring.SLA", "Source\Modules\GameGuild.Monitoring.SLA\GameGuild.Monitoring.SLA.csproj", "{DA3A0B67-3555-417D-9323-0F293F69A8E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Payments", "Source\Modules\GameGuild.Payments\GameGuild.Payments.csproj", "{67CB8651-C272-4C4D-B914-A71F6B292383}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Payments", "Source\Modules\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj", "{67CB8651-C272-4C4D-B914-A71F6B292383}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Resources", "Source\Modules\GameGuild.Resources\GameGuild.Resources.csproj", "{6985E6DA-EBC9-4DC2-8F10-217C88FAB30D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Monitoring.FERPA", "Source\Modules\GameGuild.Monitoring.FERPA\GameGuild.Monitoring.FERPA.csproj", "{B1DB086F-5A62-4E0A-969D-A2B372D7950F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Compliance.FERPA", "Source\Modules\GameGuild.Compliance.FERPA\GameGuild.Compliance.FERPA.csproj", "{B1DB086F-5A62-4E0A-969D-A2B372D7950F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Projects", "Source\Modules\GameGuild.Projects\GameGuild.Projects.csproj", "{D07273CB-1273-402D-BF3C-A734192DA345}"
 EndProject
@@ -54,9 +54,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Audit", "Source\M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Tags", "Source\Modules\GameGuild.Tags\GameGuild.Tags.csproj", "{3B5D28DB-BE71-4BCC-852A-E835E955DD40}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Products", "Source\Modules\GameGuild.Products\GameGuild.Products.csproj", "{D2E7999C-039F-43E8-A55D-36050CFB6479}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Products", "Source\Modules\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj", "{D2E7999C-039F-43E8-A55D-36050CFB6479}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.KYC", "Source\Modules\GameGuild.KYC\GameGuild.KYC.csproj", "{00FFC17F-4469-4284-A02C-5DABCAFA13BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Compliance.KYC", "Source\Modules\GameGuild.Compliance.KYC\GameGuild.Compliance.KYC.csproj", "{00FFC17F-4469-4284-A02C-5DABCAFA13BE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Identity.Authentication.UnitTests", "Tests\GameGuild.Identity.Authentication.UnitTests\GameGuild.Identity.Authentication.UnitTests.csproj", "{8BE80EFA-1E23-4C25-A784-B1D0E7677DCB}"
 EndProject

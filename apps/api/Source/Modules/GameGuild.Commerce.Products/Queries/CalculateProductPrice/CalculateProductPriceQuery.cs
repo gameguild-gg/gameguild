@@ -1,0 +1,17 @@
+using GameGuild.CQRS;
+
+namespace GameGuild.Commerce.Products;
+
+/// <summary>
+/// Query to calculate the final price for a product
+/// </summary>
+/// <param name="ProductId">Product ID</param>
+/// <param name="PricingId">Optional specific pricing ID to use</param>
+/// <param name="PromoCodes">Optional list of promo codes to apply</param>
+/// <param name="UserId">Optional user ID for user-specific discounts</param>
+public record CalculateProductPriceQuery(
+    Guid ProductId,
+    Guid? PricingId = null,
+    List<string>? PromoCodes = null,
+    Guid? UserId = null
+) : IQuery<PricingCalculationResult>;

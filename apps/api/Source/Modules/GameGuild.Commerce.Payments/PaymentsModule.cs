@@ -1,0 +1,48 @@
+using GameGuild.CQRS;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace GameGuild.Commerce.Payments;
+
+/// <summary>
+///     Payments module configuration for comprehensive payment processing system
+///     Integrates payment services, repositories, and data access layers
+/// </summary>
+public static class PaymentsModule
+{
+    /// <summary>
+    ///     Register all payments services including repositories and data context
+    /// </summary>
+    public static IServiceCollection AddPaymentsModule(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Register CQRS handlers from this assembly
+        services.AddCqrs(typeof(PaymentsModule).Assembly);
+
+        // Register repositories (using shared ApplicationDbContext)
+        services.AddScoped<IAuditTrailRepository, AuditTrailRepository>();
+        services.AddScoped<IFinancialLedgerRepository, FinancialLedgerRepository>();
+        services.AddScoped<IRevenueEventRepository, RevenueEventRepository>();
+
+        // Register services
+        services.AddScoped<IDisputeService, DisputeService>();
+        services.AddScoped<IRevenueAuditService, RevenueAuditService>();
+        services.AddScoped<ITaxCalculationService, TaxCalculationService>();
+        services.AddScoped<IWalletService, WalletService>();
+
+        // Register controllers
+        services.AddControllers().AddApplicationPart(typeof(PaymentsModule).Assembly);
+
+        return services;
+    }
+
+    /// <summary>
+    ///     Configure the payments module in the application pipeline
+    /// </summary>
+    public static IApplicationBuilder UsePaymentsModule(this IApplicationBuilder app)
+    {
+        // Payments module doesn't require specific middleware configuration
+        // Payment processing is handled through controllers and services
+        return app;
+    }
+}

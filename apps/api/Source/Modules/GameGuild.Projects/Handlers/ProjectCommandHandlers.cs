@@ -3,7 +3,6 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authentication;
-using GameGuild.Identity.Context.Actors;
 using GameGuild.Enums;
 using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
@@ -35,14 +34,14 @@ public class ProjectCommandHandlers
 
   private readonly ILogger<ProjectCommandHandlers> _logger;
 
-  private readonly IActorContextAccessor _actorContextAccessor;
+  private readonly ITenantContext _tenantContext;
 
-  /// <summary> Gets the current actor context </summary>
-  private ActorContext Actor => _actorContextAccessor.ActorContext;
+  private readonly IUserContext _userContext;
 
-  public ProjectCommandHandlers(IApplicationDbContext context, IActorContextAccessor actorContextAccessor, ILogger<ProjectCommandHandlers> logger) {
+  public ProjectCommandHandlers(IApplicationDbContext context, IUserContext userContext, ITenantContext tenantContext, ILogger<ProjectCommandHandlers> logger) {
     _context = context;
-    _actorContextAccessor = actorContextAccessor;
+    _userContext = userContext;
+    _tenantContext = tenantContext;
     _logger = logger;
   }
 
@@ -53,7 +52,7 @@ public class ProjectCommandHandlers
       if (project == null) { return new ArchiveProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have archive permissions
-      var hasArchivePermission = project.Collaborators.Any(c => c.UserId == Actor.SubjectIdAsGuid && c.IsActive && c.Permissions.Contains(PermissionType.Archive.ToString()));
+      var hasArchivePermission = project.Collaborators.Any(c => c.UserId == _userContext.UserId && c.IsActive && c.Permissions.Contains(PermissionType.Archive.ToString()));
 
       if (!hasArchivePermission) { return new ArchiveProjectResult { Success = false, Error = "Unauthorized to archive this project" }; }
 
@@ -73,10 +72,10 @@ public class ProjectCommandHandlers
 
   public async Task<CreateProjectResult> Handle(CreateProjectCommand request, CancellationToken cancellationToken) {
     try {
-      _logger.LogInformation("Creating project: {Title} by user {UserId}", request.Title, Actor.SubjectIdAsGuid);
+      _logger.LogInformation("Creating project: {Title} by user {UserId}", request.Title, _userContext.UserId);
 
       // Validate user permissions
-      if (!Actor.IsAuthenticated || Actor.SubjectIdAsGuid == null) { return new CreateProjectResult { Success = false, Error = "User must be authenticated" }; }
+      if (!_userContext.IsAuthenticated || _userContext.UserId == null) { return new CreateProjectResult { Success = false, Error = "User must be authenticated" }; }
 
       // Create project entity
       var project = new Project {
@@ -97,7 +96,7 @@ public class ProjectCommandHandlers
       };
       
       // Set TenantId using helper (TenantId has protected setter)
-      var tenantId = request.TenantId ?? Actor.TenantId;
+      var tenantId = request.TenantId ?? _tenantContext.TenantId;
       if (tenantId.HasValue)
       {
         EntityHelper.SetTenantId(project, tenantId.Value);
@@ -117,7 +116,7 @@ public class ProjectCommandHandlers
       var creatorCollaborator = new ProjectCollaborator {
         Id = Guid.NewGuid(),
         ProjectId = project.Id,
-        UserId = Actor.SubjectIdAsGuid!.Value,
+        UserId = _userContext.UserId!.Value,
         Role = ProjectRoles.Owner,
         Permissions = FormatOwnerPermissions(),
         IsActive = true,
@@ -142,14 +141,14 @@ public class ProjectCommandHandlers
 
   public async Task<DeleteProjectResult> Handle(DeleteProjectCommand request, CancellationToken cancellationToken) {
     try {
-      _logger.LogInformation("Deleting project: {ProjectId} by user {UserId}", request.ProjectId, Actor.SubjectIdAsGuid);
+      _logger.LogInformation("Deleting project: {ProjectId} by user {UserId}", request.ProjectId, _userContext.UserId);
 
       var project = await _context.Set<Project>().Include(p => p.Collaborators).FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
       if (project == null) { return new DeleteProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have delete permissions
-      var hasDeletePermission = project.Collaborators.Any(c => c.UserId == Actor.SubjectIdAsGuid && c.IsActive && c.Permissions.Contains(PermissionType.Delete.ToString()));
+      var hasDeletePermission = project.Collaborators.Any(c => c.UserId == _userContext.UserId && c.IsActive && c.Permissions.Contains(PermissionType.Delete.ToString()));
 
       if (!hasDeletePermission) { return new DeleteProjectResult { Success = false, Error = "Unauthorized to delete this project" }; }
 
@@ -181,7 +180,7 @@ public class ProjectCommandHandlers
       if (project == null) { return new PublishProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have publish permissions
-      var hasPublishPermission = project.Collaborators.Any(c => c.UserId == Actor.SubjectIdAsGuid && c.IsActive && c.Permissions.Contains(PermissionType.Publish.ToString()));
+      var hasPublishPermission = project.Collaborators.Any(c => c.UserId == _userContext.UserId && c.IsActive && c.Permissions.Contains(PermissionType.Publish.ToString()));
 
       if (!hasPublishPermission) { return new PublishProjectResult { Success = false, Error = "Unauthorized to publish this project" }; }
 
@@ -206,7 +205,7 @@ public class ProjectCommandHandlers
       if (project == null) { return new UnpublishProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have unpublish permissions
-      var hasUnpublishPermission = project.Collaborators.Any(c => c.UserId == Actor.SubjectIdAsGuid && c.IsActive && c.Permissions.Contains(PermissionType.Unpublish.ToString()));
+      var hasUnpublishPermission = project.Collaborators.Any(c => c.UserId == _userContext.UserId && c.IsActive && c.Permissions.Contains(PermissionType.Unpublish.ToString()));
 
       if (!hasUnpublishPermission) { return new UnpublishProjectResult { Success = false, Error = "Unauthorized to unpublish this project" }; }
 
@@ -226,14 +225,14 @@ public class ProjectCommandHandlers
 
   public async Task<UpdateProjectResult> Handle(UpdateProjectCommand request, CancellationToken cancellationToken) {
     try {
-      _logger.LogInformation("Updating project: {ProjectId} by user {UserId}", request.ProjectId, Actor.SubjectIdAsGuid);
+      _logger.LogInformation("Updating project: {ProjectId} by user {UserId}", request.ProjectId, _userContext.UserId);
 
       var project = await _context.Set<Project>().Include(p => p.Collaborators).FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.DeletedAt == null, cancellationToken);
 
       if (project == null) { return new UpdateProjectResult { Success = false, Error = "Project not found" }; }
 
       // Check authorization - user must have edit permissions
-      var hasEditPermission = project.Collaborators.Any(c => c.UserId == Actor.SubjectIdAsGuid && c.IsActive && c.Permissions.Contains(PermissionType.Edit.ToString()));
+      var hasEditPermission = project.Collaborators.Any(c => c.UserId == _userContext.UserId && c.IsActive && c.Permissions.Contains(PermissionType.Edit.ToString()));
 
       if (!hasEditPermission) { return new UpdateProjectResult { Success = false, Error = "Unauthorized to update this project" }; }
 

@@ -1,0 +1,46 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace GameGuild.Commerce.Subscriptions;
+
+/// <summary>
+///     Request model for updating subscription plans
+/// </summary>
+public class UpdateSubscriptionPlanRequest
+{
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+
+    [Required]
+    [MaxLength(500)]
+    public string Description { get; set; } = string.Empty;
+
+    [Required]
+    [Range(0, double.MaxValue)]
+    public decimal Price { get; set; }
+
+    [Required]
+    [MaxLength(3)]
+    public string Currency { get; set; } = "USD";
+
+    [Required]
+    public PlanInterval Interval { get; set; }
+
+    public bool IsActive { get; set; } = true;
+
+    [Range(1, int.MaxValue)]
+    public int MaxUsers { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int MaxProjects { get; set; }
+
+    [Range(1, long.MaxValue)]
+    public long MaxStorage { get; set; }
+
+    [Range(1, int.MaxValue)]
+    public int MaxApiCallsPerMonth { get; set; }
+
+    public bool HasAdvancedFeatures { get; set; }
+
+    public bool HasPrioritySupport { get; set; }
+}

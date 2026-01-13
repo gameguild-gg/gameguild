@@ -28,7 +28,7 @@
         <ProjectReference Include="..\Modules\GameGuild.Monitoring.SLA\GameGuild.Monitoring.SLA.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Notifications\GameGuild.Notifications.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Payments\GameGuild.Payments.csproj" />
-        <ProjectReference Include="..\Modules\GameGuild.Products\GameGuild.Products.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Commerce.Products\GameGuild.Commerce.Products.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Programs\GameGuild.Programs.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
