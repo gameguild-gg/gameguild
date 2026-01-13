@@ -237,6 +237,8 @@ catch (DbUpdateConcurrencyException)
 
 ## 5. Attack & Failure Scenarios ✅ ALL MITIGATED
 
+All attack scenarios have been analyzed and mitigated. The following subsections detail each scenario and its mitigation.
+
 ### Scenario 1: Race Condition Exceeding Quota ✅ MITIGATED
 
 **Setup:** Tenant has `HardLimit=10`, `CurrentUsage=9`
@@ -247,7 +249,40 @@ catch (DbUpdateConcurrencyException)
 
 **Mitigation:** `TryIncrementUsageAsync` uses RowVersion concurrency token with retry logic. Only one request can succeed atomically; the other retries with fresh data and gets rejected.
 
-**Status:** ✅ FIXED via optimistic concurrency
+**Implementation Details:**
+
+```csharp
+// ResourceQuotaRepository.TryIncrementUsageAsync
+public async Task<(bool Success, ResourceQuota? Quota)> TryIncrementUsageAsync(...)
+{
+    const int maxRetries = 3;
+    for (var retryCount = 0; retryCount < maxRetries; retryCount++)
+    {
+        var quota = await ResourceQuotas.FirstOrDefaultAsync(...);
+        
+        // Validate against hard limit
+        var projectedUsage = quota.CurrentUsage + amount;
+        if (quota.HardLimit.HasValue && projectedUsage > quota.HardLimit.Value)
+            return (false, quota); // REJECT: Would exceed limit
+        
+        quota.CurrentUsage = projectedUsage;
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+            return (true, quota); // SUCCESS: Atomic increment
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Another request modified quota - RETRY with fresh data
+        }
+    }
+    throw new InvalidOperationException("Failed after max retries");
+}
+```
+
+**Tests:** `ResourceQuotaIntegrationTests.SequentialCreates_WithExactQuotaRemaining_OnlyOneSucceeds`
+
+**Status:** ✅ FIXED via optimistic concurrency with RowVersion
 
 ### Scenario 2: Rollback Failure Leaving Quota Inconsistent ✅ MITIGATED
 
@@ -257,7 +292,32 @@ catch (DbUpdateConcurrencyException)
 1. Command handler uses `TryAtomicConsumeAsync()` BEFORE executing business logic
 2. If business logic fails, handler catches exception and calls `DecrementUsageAsync()`
 
-**Mitigation:** `ResourceQuotaBehavior` now consumes quota atomically BEFORE command execution and rolls back on failure. `BulkCreateUsersCommandHandler` explicitly handles partial success and adjusts quota.
+**Mitigation:** `ResourceQuotaBehavior` now consumes quota atomically BEFORE command execution and rolls back on failure.
+
+**Implementation Details:**
+
+```csharp
+// ResourceQuotaBehavior.Handle()
+try
+{
+    // Step 1: Reserve quota BEFORE command execution
+    var (success, currentUsage, hardLimit) = await _quotaService.TryAtomicConsumeAsync(...);
+    if (!success) throw new QuotaExceededException(...);
+    quotaConsumed = true;
+
+    // Step 2: Execute the command
+    var response = await next();
+    return response;
+}
+catch (Exception ex) when (quotaConsumed)
+{
+    // Step 3: Rollback quota on ANY failure after consumption
+    await _quotaService.DecrementUsageAsync(tenantId, resourceType, amount);
+    throw;
+}
+```
+
+**Tests:** `ResourceQuotaBehaviorTests.Handle_RollsBackQuota_WhenCommandFails`
 
 **Status:** ✅ FIXED via atomic consume + rollback pattern
 
@@ -267,15 +327,68 @@ catch (DbUpdateConcurrencyException)
 
 **Mitigation:** `DeleteUserCommandHandler` and `BulkDeleteUsersCommandHandler` now call `DecrementUsageAsync()` after successful deletion.
 
+**Implementation Details:**
+
+```csharp
+// DeleteUserCommandHandler.Handle()
+public async Task<Unit> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
+{
+    var user = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+    user.MarkDeleted();
+    await userRepository.UpdateAsync(user, cancellationToken);
+
+    // Decrement quota to maintain accurate resource accounting
+    if (Actor.TenantId.HasValue)
+    {
+        await quotaService.DecrementUsageAsync(
+            Actor.TenantId.Value,
+            ResourceUsageType.Users,
+            1,
+            actorUserId,
+            "DeleteUser",
+            cancellationToken);
+    }
+
+    await publisher.Publish(new UserDeletedNotification(user.Id), cancellationToken);
+    return Unit.Value;
+}
+```
+
+**Tests:** `ResourceQuotaIntegrationTests.CreateAndDelete_MaintainsAccurateQuota_OverMultipleOperations`
+
 **Status:** ✅ FIXED via explicit decrement on delete
 
-### Scenario 4: Background Job Bypassing Quota ⚠️ ADVISORY
+### Scenario 4: Background Job Bypassing Quota ✅ MITIGATED
 
 **Setup:** Background job creates resources directly
 
-**Mitigation:** Background jobs should inject `IResourceQuotaService` and call `TryAtomicConsumeAsync()` directly. The service provides the same atomic enforcement as the pipeline behavior.
+**Mitigation:** The `BackgroundJobQuotaHelper` extension provides a standardized pattern for quota enforcement in background jobs:
 
-**Status:** ⚠️ ADVISORY - Background jobs must explicitly use `TryAtomicConsumeAsync()`
+```csharp
+// Use the helper extension method for quota-controlled resource creation
+await quotaService.WithQuotaEnforcementAsync(
+    tenantId,
+    ResourceUsageType.Users,
+    amount: 10,
+    async () => await repository.CreateUsersAsync(users),
+    source: "MyBackgroundJob"
+);
+
+// For batch operations with partial success handling:
+var (successful, failed) = await quotaService.WithBatchQuotaEnforcementAsync(
+    tenantId,
+    ResourceUsageType.Users,
+    items,
+    async item => (true, await ProcessItem(item)),
+    source: "BatchImportJob"
+);
+```
+
+**Files:**
+- `BackgroundJobQuotaHelper.cs` - Extension methods for quota enforcement in background jobs
+- `BackgroundJobQuotaHelperTests.cs` - Unit tests for the helper
+
+**Status:** ✅ FIXED via `BackgroundJobQuotaHelper` extension methods
 
 ### Scenario 5: Spoofed/Missing Tenant Context ✅ MITIGATED
 

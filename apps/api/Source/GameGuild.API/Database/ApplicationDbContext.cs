@@ -4,6 +4,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Commerce.Products;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using GameGuild.Social.Profiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -86,9 +87,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<UserPreferences> UserPreferences { get => Set<UserPreferences>(); }
 
-    public DbSet<UserProfile> UserProfiles { get => Set<UserProfile>(); }
-
     public DbSet<UserNotification> UserNotifications { get => Set<UserNotification>(); }
+
+    #endregion
+
+    #region Social Module
+
+    public DbSet<UserProfile> UserProfiles { get => Set<UserProfile>(); }
 
     #endregion
 
