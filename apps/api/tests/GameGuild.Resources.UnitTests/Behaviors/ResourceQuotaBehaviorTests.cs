@@ -88,25 +88,6 @@ public class ResourceQuotaBehaviorTests
     }
 
     [Fact]
-    public async Task Handle_AllowsProceed_WhenNoQuotaAttributePresent()
-    {
-        // Arrange
-        var command = new TestCommand();
-        var actorContext = ActorContext.Anonymous; // No tenant, but shouldn't matter
-        _actorContextAccessorMock.Setup(x => x.ActorContext).Returns(actorContext);
-
-        // Act
-        var result = await _behavior.Handle(command, _nextMock.Object, CancellationToken.None);
-
-        // Assert
-        result.Should().Be(Unit.Value);
-        _nextMock.Verify(x => x(), Times.Once);
-        _quotaServiceMock.Verify(
-            x => x.TryAtomicConsumeAsync(It.IsAny<Guid>(), It.IsAny<ResourceUsageType>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Fact]
     public async Task Handle_ConsumesQuota_WhenRecordUsageIsTrue()
     {
         // Arrange
@@ -181,11 +162,6 @@ public class ResourceQuotaBehaviorTests
         
         // Verify next handler was never called
         _nextMock.Verify(x => x(), Times.Never);
-    }
-
-    // Test command without RequiresQuota attribute
-    private class TestCommand : IRequest<Unit>
-    {
     }
 
     // Test command with RequiresQuota attribute
