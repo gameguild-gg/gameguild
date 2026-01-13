@@ -183,6 +183,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<PermissionDelegation> PermissionDelegations { get => Set<PermissionDelegation>(); }
 
+    public DbSet<PermissionTemplate> PermissionTemplates { get => Set<PermissionTemplate>(); }
+
     public DbSet<SoDRule> SoDRules { get => Set<SoDRule>(); }
 
     public DbSet<SoDViolation> SoDViolations { get => Set<SoDViolation>(); }

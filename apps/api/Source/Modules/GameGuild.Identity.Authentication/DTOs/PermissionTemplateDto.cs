@@ -1,7 +1,7 @@
 using GameGuild.Identity.Authorization;
-﻿namespace GameGuild.Identity.Authentication;
+namespace GameGuild.Identity.Authentication;
 
-public abstract class PermissionTemplateDto
+public class PermissionTemplateDto
 {
     public Guid Id { get; set; }
 
@@ -11,11 +11,13 @@ public abstract class PermissionTemplateDto
 
     public string Category { get; set; } = string.Empty;
 
-    public List<PermissionType> TenantPermissions { get; set; } = new List<PermissionType>();
+    public List<string> Permissions { get; set; } = new List<string>();
 
-    public Dictionary<string, List<PermissionType>> ContentTypePermissions { get; set; } = new Dictionary<string, List<PermissionType>>();
+    public bool IsSystemTemplate { get; set; }
 
     public bool IsActive { get; set; }
+
+    public string? MinimumTier { get; set; }
 
     public DateTime CreatedAt { get; set; }
 }
