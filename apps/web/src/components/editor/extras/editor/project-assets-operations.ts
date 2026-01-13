@@ -85,10 +85,17 @@ export async function calculateProjectAssetsSize(params: CalculateAssetsParams):
     
     const assetsList = await Promise.all(assetsListPromises)
     
-    // Now check for collections - we'll include all collections for now
-    // since there's no usage tracking for collections yet
-    const allCollections = await assetManager.listCollections()
-    const collectionPromises = allCollections.map(async (collection) => {
+    // Get collections used by this project (using the same usage tracking as regular assets)
+    const collectionsWithUsage = await assetManager.listCollections()
+    
+    // Filter collections - only include those used by this project
+    const projectCollections = collectionsWithUsage.filter(collection => {
+      // Check if this collection has usage data for this project
+      const usageData = assetsWithUsage.find(a => a.id === collection.id)
+      return usageData && usageData.projects && usageData.projects.includes(projectId)
+    })
+    
+    const collectionPromises = projectCollections.map(async (collection) => {
       try {
         const manifest = await assetManager.getCollection(collection.id)
         if (manifest) {
