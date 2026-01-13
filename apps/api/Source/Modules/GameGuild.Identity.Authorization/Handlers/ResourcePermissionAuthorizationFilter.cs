@@ -33,10 +33,10 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         if (actionDescriptor == null) return;
 
         var actorContextAccessor = context.HttpContext.RequestServices.GetService<IActorContextAccessor>();
-        var permissionService = context.HttpContext.RequestServices.GetService<IPermissionService>();
-        if (actorContextAccessor == null || permissionService == null)
+        var permissionQueryService = context.HttpContext.RequestServices.GetService<IPermissionQueryService>();
+        if (actorContextAccessor == null || permissionQueryService == null)
         {
-            _logger.LogWarning("IActorContextAccessor or IPermissionService not available - skipping authorization check");
+            _logger.LogWarning("IActorContextAccessor or IPermissionQueryService not available - skipping authorization check");
             return;
         }
 
@@ -60,7 +60,7 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
 
         foreach (var attr in attributes)
         {
-            var authorized = await CheckPermissionAsync(attr, context.HttpContext, actor, permissionService);
+            var authorized = await CheckPermissionAsync(attr, context.HttpContext, actor, permissionQueryService);
             if (!authorized)
             {
                 _logger.LogWarning(
@@ -105,41 +105,41 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         Attribute attr,
         HttpContext httpContext,
         ActorContext actor,
-        IPermissionService permissionService)
+        IPermissionQueryService permissionQueryService)
     {
         // Handle resource permission attributes
         if (attr is IResourcePermissionMarker resourceAttr)
         {
-            return await CheckResourcePermissionAsync(resourceAttr, httpContext, actor, permissionService);
+            return await CheckResourcePermissionAsync(resourceAttr, httpContext, actor, permissionQueryService);
         }
 
         // Handle content-type permission attributes
         if (attr is IContentTypePermissionMarker contentTypeAttr)
         {
-            return await CheckContentTypePermissionAsync(contentTypeAttr, actor, permissionService);
+            return await CheckContentTypePermissionAsync(contentTypeAttr, actor, permissionQueryService);
         }
 
         // Handle tenant permission attributes
         if (attr is RequireTenantPermissionAttribute tenantAttr)
         {
-            return await CheckTenantPermissionAsync(tenantAttr.Permission, actor, permissionService);
+            return await CheckTenantPermissionAsync(tenantAttr.Permission, actor, permissionQueryService);
         }
         if (attr is RequireTenantPermission tenantAttr2)
         {
-            return await CheckTenantPermissionAsync(tenantAttr2.Permission, actor, permissionService);
+            return await CheckTenantPermissionAsync(tenantAttr2.Permission, actor, permissionQueryService);
         }
 
         // Handle simple permission attributes
         if (attr is RequiresPermissionAttribute simpleAttr)
         {
-            return actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+            return actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
                 actor.SubjectIdAsGuid!.Value,
                 actor.TenantId.Value,
                 simpleAttr.PermissionName);
         }
         if (attr is RequirePermissionAttribute simpleAttr2)
         {
-            return actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+            return actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
                 actor.SubjectIdAsGuid!.Value,
                 actor.TenantId.Value,
                 simpleAttr2.PermissionName);
