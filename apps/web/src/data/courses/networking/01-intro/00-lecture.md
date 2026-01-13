@@ -60,6 +60,8 @@ graph TD
     C --> D["<b>Layer 1: Link</b><br/>Ethernet, MAC addresses, physical signals"]
 ```
 
+![OSI vs TCP/IP](https://www.9tut.com/images/ccna_self_study/TCP_UDP/TCP_UDP.jpg)
+
 ### Encapsulation: How Data Travels Down the Stack
 
 When data is sent, headers are added at each layer as it travels **down** the stack:
