@@ -1,20 +1,39 @@
 using System.Collections.Concurrent;
 using GameGuild.Configuration.PresentationLayer.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authorization;
 
 /// <summary>
-///     Cached wrapper for IAccessControlListService that adds in-memory caching for Access Control List lookups.
+///     Cached wrapper for IAccessControlListService that adds hybrid (L1 + L2) caching for Access Control List lookups.
 ///     This wraps a database-backed service and provides fast reads via cache.
 ///     Write operations go through to the database and invalidate cache.
 /// </summary>
+/// <remarks>
+///     <para>
+///         <b>Cache Levels:</b>
+///         <list type="bullet">
+///             <item>L1 (IMemoryCache): Fast, per-instance cache with short TTL</item>
+///             <item>L2 (IDistributedCache via IHybridPermissionCache): Shared cache for multi-instance deployments</item>
+///         </list>
+///     </para>
+///     <para>
+///         <b>Cache Invalidation:</b>
+///         Uses version-based cache keys. When permissions change, the tenant security version is incremented,
+///         causing old cache entries to become stale. Explicit invalidation is also performed for immediate consistency.
+///     </para>
+/// </remarks>
 public sealed class CachedAccessControlListService : IAccessControlListService
 {
+    private const string CacheType = "acl";
+    
     private readonly IAccessControlListService _innerService;
-    private readonly IMemoryCache _cache;
+    private readonly IMemoryCache _l1Cache;
+    private readonly IHybridPermissionCache? _hybridCache;
     private readonly ITenantSecurityVersionStore _versionStore;
+    private readonly ICacheMetricsService? _metrics;
     private readonly AuthorizationCacheOptions _options;
     private readonly ConcurrentDictionary<string, HashSet<string>> _tenantCacheKeys = new();
 
@@ -25,12 +44,16 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         IAccessControlListService innerService,
         IMemoryCache cache,
         ITenantSecurityVersionStore versionStore,
-        IOptions<AuthorizationCacheOptions> options)
+        IOptions<AuthorizationCacheOptions> options,
+        IHybridPermissionCache? hybridCache = null,
+        ICacheMetricsService? metrics = null)
     {
         _innerService = innerService;
-        _cache = cache;
+        _l1Cache = cache;
         _versionStore = versionStore;
         _options = options.Value;
+        _hybridCache = hybridCache;
+        _metrics = metrics;
     }
 
     #region Subject-based operations (preferred)
@@ -46,16 +69,30 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         var version = await _versionStore.GetVersionAsync(tenantId.ToString(), cancellationToken).ConfigureAwait(false);
         var cacheKey = BuildSubjectCacheKey(subject, tenantId, resourceType, resourceId, version);
 
-        // Try cache first
-        if (_cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
+        // Try L1 cache first
+        if (_l1Cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
         {
+            _metrics?.RecordHit(CacheLevel.L1, CacheType);
             return cachedLevel;
         }
 
+        // Try L2 (hybrid) cache if available
+        if (_hybridCache != null)
+        {
+            var hybridResult = await _hybridCache.GetValueAsync<AccessLevel>(cacheKey, CacheType, cancellationToken).ConfigureAwait(false);
+            if (hybridResult.Found)
+            {
+                // Promote to L1
+                CacheAccessLevel(cacheKey, tenantId.ToString(), hybridResult.Value, l1Only: true);
+                return hybridResult.Value;
+            }
+        }
+
         // Cache miss - fetch from underlying service
+        _metrics?.RecordMiss(CacheType);
         var level = await _innerService.EvaluateAccessAsync(subject, tenantId, resourceType, resourceId, cancellationToken).ConfigureAwait(false);
 
-        CacheAccessLevel(cacheKey, tenantId.ToString(), level);
+        await CacheAccessLevelAsync(cacheKey, tenantId.ToString(), level, cancellationToken).ConfigureAwait(false);
 
         return level;
     }
@@ -141,16 +178,30 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         var version = await _versionStore.GetVersionAsync(tenantId.ToString(), cancellationToken).ConfigureAwait(false);
         var cacheKey = BuildCacheKey(userId, tenantId, resourceType, resourceId, version);
 
-        // Try cache first
-        if (_cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
+        // Try L1 cache first
+        if (_l1Cache.TryGetValue(cacheKey, out AccessLevel cachedLevel))
         {
+            _metrics?.RecordHit(CacheLevel.L1, CacheType);
             return cachedLevel;
         }
 
+        // Try L2 (hybrid) cache if available
+        if (_hybridCache != null)
+        {
+            var hybridResult = await _hybridCache.GetValueAsync<AccessLevel>(cacheKey, CacheType, cancellationToken).ConfigureAwait(false);
+            if (hybridResult.Found)
+            {
+                // Promote to L1
+                CacheAccessLevel(cacheKey, tenantId.ToString(), hybridResult.Value, l1Only: true);
+                return hybridResult.Value;
+            }
+        }
+
         // Cache miss - fetch from underlying service
+        _metrics?.RecordMiss(CacheType);
         var level = await _innerService.GetAccessLevelAsync(userId, tenantId, resourceType, resourceId, cancellationToken).ConfigureAwait(false);
 
-        CacheAccessLevel(cacheKey, tenantId.ToString(), level);
+        await CacheAccessLevelAsync(cacheKey, tenantId.ToString(), level, cancellationToken).ConfigureAwait(false);
 
         return level;
     }
@@ -213,7 +264,29 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         {
             foreach (var key in keys)
             {
-                _cache.Remove(key);
+                _l1Cache.Remove(key);
+                _metrics?.RecordEviction(CacheLevel.L1, CacheType);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Invalidates all cached Access Control List entries for a tenant asynchronously,
+    ///     including distributed cache if enabled.
+    /// </summary>
+    /// <param name="tenantId">The tenant ID.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task InvalidateTenantAsync(string tenantId, CancellationToken cancellationToken = default)
+    {
+        // Invalidate L1 cache
+        InvalidateTenant(tenantId);
+
+        // Invalidate L2 cache if available
+        if (_hybridCache != null && _tenantCacheKeys.TryGetValue(tenantId, out var keys))
+        {
+            foreach (var key in keys.ToList())
+            {
+                await _hybridCache.RemoveAsync(key, CacheType, cancellationToken).ConfigureAwait(false);
             }
         }
     }
@@ -232,15 +305,38 @@ public sealed class CachedAccessControlListService : IAccessControlListService
         return $"acl:subj:{tenantId}:{userPart}:{rolesPart}:{groupsPart}:{resourceType}:{resourceId}:v{version}";
     }
 
-    private void CacheAccessLevel(string cacheKey, string tenantId, AccessLevel level)
+    /// <summary>
+    ///     Caches an access level in L1 cache only (used for L2 → L1 promotion).
+    /// </summary>
+    private void CacheAccessLevel(string cacheKey, string tenantId, AccessLevel level, bool l1Only)
     {
         var cacheOptions = new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(TimeSpan.FromSeconds(_options.AccessControlListTtlSeconds))
             .SetSlidingExpiration(TimeSpan.FromSeconds(_options.AccessControlListTtlSeconds / 2));
 
-        _cache.Set(cacheKey, level, cacheOptions);
+        _l1Cache.Set(cacheKey, level, cacheOptions);
 
         // Track cache key for tenant invalidation
+        TrackCacheKey(tenantId, cacheKey);
+    }
+
+    /// <summary>
+    ///     Caches an access level in both L1 and L2 caches asynchronously.
+    /// </summary>
+    private async Task CacheAccessLevelAsync(string cacheKey, string tenantId, AccessLevel level, CancellationToken cancellationToken)
+    {
+        // Cache in L1
+        CacheAccessLevel(cacheKey, tenantId, level, l1Only: true);
+
+        // Cache in L2 if available
+        if (_hybridCache != null)
+        {
+            await _hybridCache.SetValueAsync(cacheKey, level, CacheType, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    private void TrackCacheKey(string tenantId, string cacheKey)
+    {
         _tenantCacheKeys.AddOrUpdate(
             tenantId,
             _ => new HashSet<string> { cacheKey },
@@ -271,7 +367,8 @@ public sealed class CachedAccessControlListService : IAccessControlListService
             {
                 foreach (var key in keysToRemove)
                 {
-                    _cache.Remove(key);
+                    _l1Cache.Remove(key);
+                    _metrics?.RecordEviction(CacheLevel.L1, CacheType);
                     keys.Remove(key);
                 }
             }
@@ -293,7 +390,8 @@ public sealed class CachedAccessControlListService : IAccessControlListService
             {
                 foreach (var key in keysToRemove)
                 {
-                    _cache.Remove(key);
+                    _l1Cache.Remove(key);
+                    _metrics?.RecordEviction(CacheLevel.L1, CacheType);
                     keys.Remove(key);
                 }
             }

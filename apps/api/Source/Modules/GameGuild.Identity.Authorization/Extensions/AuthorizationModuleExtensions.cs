@@ -1,6 +1,7 @@
 
 
 using GameGuild.Configuration.PresentationLayer.Authorization;
+using GameGuild.Identity.Authorization.Caching;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,6 +61,9 @@ public static class AuthorizationModuleExtensions
 
         if (enableCaching)
         {
+            // Register caching infrastructure
+            services.AddAuthorizationCaching();
+            
             // Cached wrappers around database stores for fast reads
             services.AddScoped<IPolicyDefinitionStore>(sp =>
             {
@@ -67,7 +71,9 @@ public static class AuthorizationModuleExtensions
                 var cache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                 var versionStore = sp.GetRequiredService<ITenantSecurityVersionStore>();
                 var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AuthorizationCacheOptions>>();
-                return new CachedPolicyDefinitionStore(innerStore, cache, versionStore, options);
+                var hybridCache = sp.GetService<IHybridPermissionCache>();
+                var metrics = sp.GetService<ICacheMetricsService>();
+                return new CachedPolicyDefinitionStore(innerStore, cache, versionStore, options, hybridCache, metrics);
             });
 
             services.AddScoped<IAccessControlListService>(sp =>
@@ -76,7 +82,9 @@ public static class AuthorizationModuleExtensions
                 var cache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
                 var versionStore = sp.GetRequiredService<ITenantSecurityVersionStore>();
                 var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<AuthorizationCacheOptions>>();
-                return new CachedAccessControlListService(innerService, cache, versionStore, options);
+                var hybridCache = sp.GetService<IHybridPermissionCache>();
+                var metrics = sp.GetService<ICacheMetricsService>();
+                return new CachedAccessControlListService(innerService, cache, versionStore, options, hybridCache, metrics);
             });
         }
         else
