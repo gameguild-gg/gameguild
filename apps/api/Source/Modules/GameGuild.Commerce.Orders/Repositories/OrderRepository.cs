@@ -1,7 +1,8 @@
 using GameGuild.Abstractions;
+using GameGuild.Commerce.Products;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Commerce.Products;
+namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Repository implementation for Order entities

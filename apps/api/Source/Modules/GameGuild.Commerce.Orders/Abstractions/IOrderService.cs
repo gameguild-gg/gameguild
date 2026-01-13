@@ -1,4 +1,4 @@
-namespace GameGuild.Commerce.Products;
+namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Service interface for managing orders and purchases

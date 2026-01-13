@@ -1,4 +1,6 @@
-namespace GameGuild.Commerce.Products;
+using GameGuild.Commerce.Products;
+
+namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Service for managing orders and purchases with idempotency and price snapshotting
@@ -28,8 +30,8 @@ public class OrderService(
         var order = Order.Create(
             request.UserId,
             request.IdempotencyKey,
+            request.TenantId ?? Guid.Empty,
             request.Currency,
-            request.TenantId,
             request.IpAddress,
             request.UserAgent);
 

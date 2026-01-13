@@ -4,7 +4,7 @@ using GameGuild.Entities;
 using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Commerce.Products;
+namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Represents a purchase order containing one or more line items

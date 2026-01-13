@@ -1,4 +1,4 @@
-namespace GameGuild.Commerce.Products;
+namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Repository interface for Order entities

@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Commerce.Products;
 using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Commerce.Products;
+namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Represents a single line item in an order with price snapshot
