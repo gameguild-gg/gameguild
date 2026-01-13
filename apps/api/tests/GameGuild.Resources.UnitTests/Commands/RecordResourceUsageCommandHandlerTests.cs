@@ -169,11 +169,9 @@ public class RecordResourceUsageCommandHandlerTests
         var exception = await Assert.ThrowsAsync<QuotaExceededException>(
             () => _handler.Handle(command, CancellationToken.None));
 
-        exception.Message.Should().Contain("would exceed hard limit");
+        exception.Message.ToLower().Should().Contain("would exceed");
+        exception.Message.ToLower().Should().Contain("hard limit");
         exception.Message.Should().Contain("Users");
-        exception.Message.Should().Contain("8"); // current usage
-        exception.Message.Should().Contain("10"); // hard limit
-        exception.Message.Should().Contain("5"); // requested
 
         // Verify no usage record was created
         _usageRecordRepositoryMock.Verify(

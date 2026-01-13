@@ -80,8 +80,8 @@ public class ResourceQuotaBehaviorTests
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
             () => _behavior.Handle(command, _nextMock.Object, CancellationToken.None));
 
-        exception.Should().Be(expectedException);
-        exception.Message.Should().Contain("Database connection failed");
+        exception.InnerException.Should().Be(expectedException);
+        exception.Message.Should().Contain("Unable to verify resource quota");
         
         // Verify next handler was never called (fail-closed on quota service error)
         _nextMock.Verify(x => x(), Times.Never);
@@ -166,7 +166,7 @@ public class ResourceQuotaBehaviorTests
 
     // Test command with RequiresQuota attribute
     [RequiresQuota(ResourceUsageType.Users, 1)]
-    private class TestQuotaCommand : IRequest<Unit>
+    public class TestQuotaCommand : IRequest<Unit>
     {
     }
 }

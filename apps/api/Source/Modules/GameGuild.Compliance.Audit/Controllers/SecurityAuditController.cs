@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Audit;
+namespace GameGuild.Compliance.Audit;
 
 /// <summary>
 ///     Unified security audit log viewer for administrators.

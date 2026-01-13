@@ -168,7 +168,7 @@ public class ResourceQuotaIntegrationTests : IDisposable
     {
         // Arrange
         var tenantId = Guid.NewGuid();
-        await _service.SetQuotaAsync(tenantId, ResourceUsageType.Users, hardLimit: 10);
+        await _service.SetQuotaAsync(tenantId, ResourceUsageType.Users, softLimit: null, hardLimit: 10);
 
         var initialQuota = await _service.GetQuotaAsync(tenantId, ResourceUsageType.Users);
         var initialUsage = initialQuota!.CurrentUsage;

@@ -50,7 +50,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.GameJams", "Sourc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Localization", "Source\Modules\GameGuild.Localization\GameGuild.Localization.csproj", "{9171336A-6A06-417E-9C17-747D2BB01D94}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Audit", "Source\Modules\GameGuild.Audit\GameGuild.Audit.csproj", "{567EB9FE-605E-496F-B08E-449D5F0E6A1F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Compliance.Audit", "Source\Modules\GameGuild.Compliance.Audit\GameGuild.Compliance.Audit.csproj", "{567EB9FE-605E-496F-B08E-449D5F0E6A1F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Tags", "Source\Modules\GameGuild.Tags\GameGuild.Tags.csproj", "{3B5D28DB-BE71-4BCC-852A-E835E955DD40}"
 EndProject

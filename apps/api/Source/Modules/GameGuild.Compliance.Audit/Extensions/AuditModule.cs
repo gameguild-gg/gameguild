@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace GameGuild.Audit;
+namespace GameGuild.Compliance.Audit;
 
 /// <summary>
 /// Extension methods for registering Audit module services

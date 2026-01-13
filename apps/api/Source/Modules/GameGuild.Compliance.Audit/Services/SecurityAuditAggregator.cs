@@ -5,7 +5,7 @@ using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace GameGuild.Audit;
+namespace GameGuild.Compliance.Audit;
 
 /// <summary>
 ///     Implementation of ISecurityAuditAggregator that queries authentication attempts,

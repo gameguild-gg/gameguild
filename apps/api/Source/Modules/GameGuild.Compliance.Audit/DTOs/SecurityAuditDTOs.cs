@@ -1,4 +1,4 @@
-namespace GameGuild.Audit;
+namespace GameGuild.Compliance.Audit;
 
 /// <summary>
 ///     Request for unified security audit logs.

@@ -20,7 +20,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Modules\GameGuild.Audit\GameGuild.Audit.csproj" />
+        <ProjectReference Include="..\Modules\GameGuild.Compliance.Audit\GameGuild.Compliance.Audit.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authentication\GameGuild.Identity.Authentication.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\Modules\GameGuild.Commerce.Billing\GameGuild.Commerce.Billing.csproj" />

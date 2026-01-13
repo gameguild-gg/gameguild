@@ -85,8 +85,8 @@ public class ResourceQuotaIsolationTests : IDisposable
         var tenantA = Guid.NewGuid();
         var tenantB = Guid.NewGuid();
 
-        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Storage, hardLimit: 1000);
-        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Storage, hardLimit: 2000);
+        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Storage, softLimit: null, hardLimit: 1000);
+        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Storage, softLimit: null, hardLimit: 2000);
 
         // Act: Try to get Tenant B's quota using Tenant A's ID (should return null or Tenant A's quota)
         var quotaA = await _service.GetQuotaAsync(tenantA, ResourceUsageType.Storage);
@@ -103,7 +103,7 @@ public class ResourceQuotaIsolationTests : IDisposable
         quotaB.HardLimit.Should().Be(2000);
 
         // Verify that modifying Tenant A's quota doesn't affect Tenant B
-        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Storage, hardLimit: 500);
+        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Storage, softLimit: null, hardLimit: 500);
         
         var updatedQuotaA = await _service.GetQuotaAsync(tenantA, ResourceUsageType.Storage);
         var unchangedQuotaB = await _service.GetQuotaAsync(tenantB, ResourceUsageType.Storage);
@@ -120,9 +120,9 @@ public class ResourceQuotaIsolationTests : IDisposable
         var tenantB = Guid.NewGuid();
         var tenantC = Guid.NewGuid();
 
-        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Users, hardLimit: 50);
-        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Users, hardLimit: 50);
-        await _service.SetQuotaAsync(tenantC, ResourceUsageType.Users, hardLimit: 50);
+        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Users, softLimit: null, hardLimit: 50);
+        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Users, softLimit: null, hardLimit: 50);
+        await _service.SetQuotaAsync(tenantC, ResourceUsageType.Users, softLimit: null, hardLimit: 50);
 
         // Act: Fire concurrent requests to different tenants
         var tasksA = Enumerable.Range(0, 30).Select(_ => 
@@ -156,8 +156,8 @@ public class ResourceQuotaIsolationTests : IDisposable
         var tenantA = Guid.NewGuid();
         var tenantB = Guid.NewGuid();
 
-        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Projects, hardLimit: 10);
-        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Projects, hardLimit: 20);
+        await _service.SetQuotaAsync(tenantA, ResourceUsageType.Projects, softLimit: null, hardLimit: 10);
+        await _service.SetQuotaAsync(tenantB, ResourceUsageType.Projects, softLimit: null, hardLimit: 20);
 
         // Act: Delete Tenant A's quota
         var deleted = await _service.DeleteQuotaAsync(tenantA, ResourceUsageType.Projects);

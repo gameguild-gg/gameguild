@@ -1,4 +1,4 @@
-namespace GameGuild.Audit;
+namespace GameGuild.Compliance.Audit;
 
 /// <summary>
 ///     Service that aggregates audit logs from multiple sources

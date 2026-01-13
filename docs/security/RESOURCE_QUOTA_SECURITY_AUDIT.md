@@ -36,6 +36,7 @@ The Resources module provides quota management and enforcement for multi-tenant 
 10. **✅ Audit trail for quota changes** - Domain events `QuotaChangedEvent` and `QuotaExceededEvent` published on all quota operations
 11. **✅ Duplicate namespace imports removed** - All test files cleaned up from repeated `using GameGuild.Resources;` statements
 12. **✅ UpdateAsync added to IUsageRecordRepository** - TODO comment resolved; usage record updates now persisted correctly
+13. **✅ XML documentation improved** - All quota methods now clearly marked as **AUTHORITATIVE** or **ADVISORY ONLY** in XML docs
 
 ---
 
