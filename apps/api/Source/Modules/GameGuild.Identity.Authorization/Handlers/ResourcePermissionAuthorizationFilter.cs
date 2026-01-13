@@ -152,7 +152,7 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         IResourcePermissionMarker attr,
         HttpContext httpContext,
         ActorContext actor,
-        IPermissionService permissionService)
+        IPermissionQueryService permissionQueryService)
     {
         // Extract resource ID from route/query
         var resourceId = ExtractResourceId(httpContext, attr.ResourceIdParameterName);
@@ -167,8 +167,8 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         // Build composite permission name for resource-level check
         var permissionName = $"{attr.ResourceType.Name}.{resourceId}.{attr.RequiredPermission}";
         
-        // Check resource-level permission using IPermissionService
-        var hasPermission = actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+        // Check resource-level permission using IPermissionQueryService
+        var hasPermission = actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
             actor.SubjectIdAsGuid!.Value,
             actor.TenantId.Value,
             permissionName);
@@ -187,13 +187,13 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
     private async Task<bool> CheckContentTypePermissionAsync(
         IContentTypePermissionMarker attr,
         ActorContext actor,
-        IPermissionService permissionService)
+        IPermissionQueryService permissionQueryService)
     {
         // Build permission name from content type and permission
         var permissionName = $"{attr.ResourceType.Name}.{attr.Permission}";
         
         // Check if user has content-type level permission (treated as tenant permission)
-        var hasPermission = actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+        var hasPermission = actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
             actor.SubjectIdAsGuid!.Value,
             actor.TenantId.Value,
             permissionName);
@@ -211,13 +211,13 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
     private async Task<bool> CheckTenantPermissionAsync(
         object permission,
         ActorContext actor,
-        IPermissionService permissionService)
+        IPermissionQueryService permissionQueryService)
     {
         // Build permission name
         var permissionName = permission.ToString() ?? "";
         
         // Check if user has tenant-level permission
-        var hasPermission = actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+        var hasPermission = actor.TenantId.HasValue && await permissionQueryService.HasTenantPermissionAsync(
             actor.SubjectIdAsGuid!.Value,
             actor.TenantId.Value,
             permissionName);

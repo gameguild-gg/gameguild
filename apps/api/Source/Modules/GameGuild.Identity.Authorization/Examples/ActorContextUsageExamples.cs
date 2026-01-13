@@ -95,14 +95,14 @@ public class UpdateProjectCommandHandler
 public class ProjectAuthorizationService
 {
     private readonly IActorContextAccessor _actorContextAccessor;
-    private readonly IPermissionService _permissionService;
+    private readonly IPermissionQueryService _permissionQueryService;
 
     public ProjectAuthorizationService(
         IActorContextAccessor actorContextAccessor,
-        IPermissionService permissionService)
+        IPermissionQueryService permissionQueryService)
     {
         _actorContextAccessor = actorContextAccessor;
-        _permissionService = permissionService;
+        _permissionQueryService = permissionQueryService;
     }
 
     /// <summary>
@@ -138,7 +138,7 @@ public class ProjectAuthorizationService
 
         // Check resource-specific permission
         var resourcePermission = $"project:{resourceId}:{permission}";
-        return await _permissionService.HasTenantPermissionAsync(
+        return await _permissionQueryService.HasTenantPermissionAsync(
             userId.Value,
             tenantId.Value,
             resourcePermission,

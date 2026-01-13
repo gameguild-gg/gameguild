@@ -1,8 +1,20 @@
+using System.ComponentModel;
+
 namespace GameGuild.Identity.Authorization;
 
 /// <summary>
-///     Core permission service interface for managing tenant-level permissions
+///     Core permission service interface for managing tenant-level permissions.
 /// </summary>
+/// <remarks>
+///     This interface is deprecated. Use the focused service interfaces instead:
+///     <list type="bullet">
+///         <item><see cref="IPermissionGrantService"/> for grant/revoke operations</item>
+///         <item><see cref="IPermissionQueryService"/> for permission checks and queries</item>
+///         <item><see cref="IPermissionBulkService"/> for bulk operations and tenant membership</item>
+///     </list>
+/// </remarks>
+[Obsolete("Use IPermissionGrantService, IPermissionQueryService, or IPermissionBulkService instead. This facade will be removed in a future version.")]
+[EditorBrowsable(EditorBrowsableState.Never)]
 public interface IPermissionService
 {
     // Tenant Permission Management

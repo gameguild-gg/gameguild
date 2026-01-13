@@ -12,7 +12,7 @@ namespace GameGuild.Identity.Authorization;
 ///     <para>
 ///         This behavior uses <see cref="IActorContextAccessor"/> to get the pre-evaluated
 ///         security context for the current request. For resource-level permissions that
-///         require database lookups, it delegates to <see cref="IPermissionService"/>.
+///         require database lookups, it delegates to <see cref="IPermissionQueryService"/>.
 ///     </para>
 ///     <para>
 ///         Use <see cref="AuthorizeRequestAttribute"/> on command/query classes to define
@@ -25,17 +25,17 @@ public class ActorAuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior
     where TRequest : IRequestBase
 {
     private readonly IActorContextAccessor _actorContextAccessor;
-    private readonly IPermissionService _permissionService;
+    private readonly IPermissionQueryService _permissionQueryService;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="ActorAuthorizationBehavior{TRequest, TResponse}"/> class.
     /// </summary>
     public ActorAuthorizationBehavior(
         IActorContextAccessor actorContextAccessor,
-        IPermissionService permissionService)
+        IPermissionQueryService permissionQueryService)
     {
         _actorContextAccessor = actorContextAccessor ?? throw new ArgumentNullException(nameof(actorContextAccessor));
-        _permissionService = permissionService ?? throw new ArgumentNullException(nameof(permissionService));
+        _permissionQueryService = permissionQueryService ?? throw new ArgumentNullException(nameof(permissionQueryService));
     }
 
     private ActorContext Actor => _actorContextAccessor.ActorContext;
@@ -169,10 +169,10 @@ public class ActorAuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior
         if (!userId.HasValue || !tenantId.HasValue)
             return false;
 
-        // Check resource-specific permission via permission service
+        // Check resource-specific permission via permission query service
         var resourcePermission = $"{resourceType}.{resourceId}.{permission}";
 
-        return await _permissionService.HasTenantPermissionAsync(
+        return await _permissionQueryService.HasTenantPermissionAsync(
             userId.Value,
             tenantId.Value,
             resourcePermission,
