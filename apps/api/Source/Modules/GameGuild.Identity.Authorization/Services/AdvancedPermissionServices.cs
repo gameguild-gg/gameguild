@@ -7,7 +7,6 @@ namespace GameGuild.Identity.Authorization;
 /// </summary>
 public class JitElevationService(
     IJitElevationRequestRepository repository,
-    IPermissionService permissionService,
     IPermissionAuditService auditService,
     ILogger<JitElevationService> logger
 ) : IJitElevationService
@@ -17,9 +16,6 @@ public class JitElevationService(
 
     private readonly ILogger<JitElevationService> _logger =
         logger ?? throw new ArgumentNullException(nameof(logger));
-
-    private readonly IPermissionService _permissionService =
-        permissionService ?? throw new ArgumentNullException(nameof(permissionService));
 
     private readonly IJitElevationRequestRepository _repository =
         repository ?? throw new ArgumentNullException(nameof(repository));

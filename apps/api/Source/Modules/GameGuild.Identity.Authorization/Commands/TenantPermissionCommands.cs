@@ -46,7 +46,7 @@ public sealed record GrantTenantPermissionCommand : ICommand<Guid>
 ///     Handler for GrantTenantPermissionCommand.
 /// </summary>
 public sealed class GrantTenantPermissionCommandHandler(
-    IPermissionService permissionService,
+    IPermissionGrantService grantService,
     IActorContextAccessor actorContextAccessor,
     ILogger<GrantTenantPermissionCommandHandler> logger)
     : ICommandHandler<GrantTenantPermissionCommand, Guid>
@@ -71,7 +71,7 @@ public sealed class GrantTenantPermissionCommandHandler(
             throw new UnauthorizedAccessException("Only tenant or system administrators can grant tenant permissions");
         }
 
-        var tenantPermission = await permissionService.GrantTenantPermissionAsync(
+        var tenantPermission = await grantService.GrantTenantPermissionAsync(
                 request.UserId,
                 request.TenantId,
                 request.Permissions,
@@ -125,7 +125,7 @@ public sealed record RevokeTenantPermissionCommand : ICommand<bool>
 ///     Handler for RevokeTenantPermissionCommand.
 /// </summary>
 public sealed class RevokeTenantPermissionCommandHandler(
-    IPermissionService permissionService,
+    IPermissionGrantService grantService,
     IActorContextAccessor actorContextAccessor,
     ILogger<RevokeTenantPermissionCommandHandler> logger)
     : ICommandHandler<RevokeTenantPermissionCommand, bool>
@@ -160,7 +160,7 @@ public sealed class RevokeTenantPermissionCommandHandler(
             throw new InvalidOperationException("Cannot revoke your own admin permissions");
         }
 
-        var success = await permissionService.RevokeTenantPermissionAsync(
+        var success = await grantService.RevokeTenantPermissionAsync(
                 request.UserId,
                 request.TenantId,
                 request.Permissions,

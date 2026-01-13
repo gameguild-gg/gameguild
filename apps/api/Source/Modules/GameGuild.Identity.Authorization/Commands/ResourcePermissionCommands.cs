@@ -53,7 +53,7 @@ public sealed record UpdateUserPermissionsCommand : ICommand<PermissionUpdateRes
 public sealed class UpdateUserPermissionsCommandHandler(
     IResourcePermissionService resourcePermissionService,
     IActorContextAccessor actorContextAccessor,
-    IPermissionService permissionService,
+    IPermissionQueryService queryService,
     ILogger<UpdateUserPermissionsCommandHandler> logger)
     : ICommandHandler<UpdateUserPermissionsCommand, PermissionUpdateResult>
 {
@@ -70,7 +70,7 @@ public sealed class UpdateUserPermissionsCommandHandler(
         // Check if the current user has permission to manage permissions for this resource
         var resourceIdGuid = Guid.Parse(request.ResourceId);
         var resourcePermission = $"{request.ResourceType}.{resourceIdGuid}.Admin";
-        var hasManagePermission = Actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+        var hasManagePermission = Actor.TenantId.HasValue && await queryService.HasTenantPermissionAsync(
             Actor.SubjectIdAsGuid!.Value,
             Actor.TenantId.Value,
             resourcePermission,
@@ -175,7 +175,7 @@ public sealed record ShareResourceCommand : ICommand<ShareResult>
 public sealed class ShareResourceCommandHandler(
     IResourcePermissionService resourcePermissionService,
     IActorContextAccessor actorContextAccessor,
-    IPermissionService permissionService,
+    IPermissionQueryService queryService,
     ILogger<ShareResourceCommandHandler> logger)
     : ICommandHandler<ShareResourceCommand, ShareResult>
 {
@@ -192,7 +192,7 @@ public sealed class ShareResourceCommandHandler(
         // Check if the current user has permission to share this resource
         var resourceIdGuid = Guid.Parse(request.ResourceId);
         var resourcePermission = $"{request.ResourceType}.{resourceIdGuid}.Share";
-        var hasSharePermission = Actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+        var hasSharePermission = Actor.TenantId.HasValue && await queryService.HasTenantPermissionAsync(
             Actor.SubjectIdAsGuid!.Value,
             Actor.TenantId.Value,
             resourcePermission,
@@ -283,7 +283,7 @@ public sealed record RemoveUserAccessCommand : ICommand<PermissionUpdateResult>
 public sealed class RemoveUserAccessCommandHandler(
     IResourcePermissionService resourcePermissionService,
     IActorContextAccessor actorContextAccessor,
-    IPermissionService permissionService,
+    IPermissionQueryService queryService,
     ILogger<RemoveUserAccessCommandHandler> logger)
     : ICommandHandler<RemoveUserAccessCommand, PermissionUpdateResult>
 {
@@ -301,7 +301,7 @@ public sealed class RemoveUserAccessCommandHandler(
         // Check if the current user has permission to manage permissions for this resource
         var resourceIdGuid = Guid.Parse(request.ResourceId);
         var resourcePermission = $"{request.ResourceType}.{resourceIdGuid}.Admin";
-        var hasManagePermission = Actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+        var hasManagePermission = Actor.TenantId.HasValue && await queryService.HasTenantPermissionAsync(
             Actor.SubjectIdAsGuid!.Value,
             Actor.TenantId.Value,
             resourcePermission,

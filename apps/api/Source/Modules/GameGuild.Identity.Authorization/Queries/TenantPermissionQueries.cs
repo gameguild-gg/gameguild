@@ -64,7 +64,7 @@ public sealed record GetTenantPermissionsResponse
 ///     Handler for GetTenantPermissionsQuery.
 /// </summary>
 public sealed class GetTenantPermissionsQueryHandler(
-    IPermissionService permissionService,
+    IPermissionQueryService queryService,
     IActorContextAccessor actorContextAccessor,
     ILogger<GetTenantPermissionsQueryHandler> logger)
     : IQueryHandler<GetTenantPermissionsQuery, GetTenantPermissionsResponse>
@@ -98,8 +98,8 @@ public sealed class GetTenantPermissionsQueryHandler(
 
         // Get permissions based on request
         var permissions = request.IncludeEffective
-            ? await permissionService.GetEffectivePermissionsAsync(targetUserId, tenantId, cancellationToken).ConfigureAwait(false)
-            : await permissionService.GetTenantPermissionsAsync(targetUserId, tenantId, cancellationToken).ConfigureAwait(false);
+            ? await queryService.GetEffectivePermissionsAsync(targetUserId, tenantId, cancellationToken).ConfigureAwait(false)
+            : await queryService.GetTenantPermissionsAsync(targetUserId, tenantId, cancellationToken).ConfigureAwait(false);
 
         var isTenantAdmin = permissions.Contains("TenantAdmin") || permissions.Contains("Admin");
         var isSystemAdmin = permissions.Contains("SystemAdmin");
@@ -216,7 +216,7 @@ public sealed record EffectivePermissionDto
 /// </summary>
 public sealed class GetEffectivePermissionsQueryHandler(
     IActorContextAccessor actorContextAccessor,
-    IPermissionService permissionService,
+    IPermissionQueryService queryService,
     ILogger<GetEffectivePermissionsQueryHandler> logger)
     : IQueryHandler<GetEffectivePermissionsQuery, EffectivePermissionsResponse>
 {
@@ -235,7 +235,7 @@ public sealed class GetEffectivePermissionsQueryHandler(
 
         // Check if current user can view permissions for this resource
         var resourcePermission = $"{request.ResourceType}.{request.ResourceId}.Read";
-        var canView = Actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+        var canView = Actor.TenantId.HasValue && await queryService.HasTenantPermissionAsync(
             Actor.SubjectIdAsGuid!.Value,
             Actor.TenantId.Value,
             resourcePermission,
@@ -359,7 +359,7 @@ public sealed record HasPermissionResponse
 /// </summary>
 public sealed class HasPermissionQueryHandler(
     IActorContextAccessor actorContextAccessor,
-    IPermissionService permissionService,
+    IPermissionQueryService queryService,
     ILogger<HasPermissionQueryHandler> logger)
     : IQueryHandler<HasPermissionQuery, HasPermissionResponse>
 {
@@ -379,7 +379,7 @@ public sealed class HasPermissionQueryHandler(
 
         // Use composite permission pattern for resource-level checks
         var resourcePermission = $"{request.ResourceType}.{request.ResourceId}.{request.Permission}";
-        var hasPermission = Actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+        var hasPermission = Actor.TenantId.HasValue && await queryService.HasTenantPermissionAsync(
             targetUserId,
             Actor.TenantId.Value,
             resourcePermission,
@@ -474,7 +474,7 @@ public sealed record GetResourceUsersResponse
 public sealed class GetResourceUsersQueryHandler(
     IResourcePermissionService resourcePermissionService,
     IActorContextAccessor actorContextAccessor,
-    IPermissionService permissionService,
+    IPermissionQueryService queryService,
     ILogger<GetResourceUsersQueryHandler> logger)
     : IQueryHandler<GetResourceUsersQuery, GetResourceUsersResponse>
 {
@@ -490,7 +490,7 @@ public sealed class GetResourceUsersQueryHandler(
         // Check if current user has permission to view users for this resource
         var resourceIdGuid = Guid.Parse(request.ResourceId);
         var resourcePermission = $"{request.ResourceType}.{resourceIdGuid}.Read";
-        var canView = Actor.TenantId.HasValue && await permissionService.HasTenantPermissionAsync(
+        var canView = Actor.TenantId.HasValue && await queryService.HasTenantPermissionAsync(
             Actor.SubjectIdAsGuid!.Value,
             Actor.TenantId.Value,
             resourcePermission,

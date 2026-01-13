@@ -2,18 +2,18 @@ namespace GameGuild.Identity.Authorization;
 
 /// <summary>
 ///     Adapter that bridges the authorization permission service interface
-///     to the existing GameGuild.Permissions module.
+///     to the permission query service.
 /// </summary>
 public sealed class AuthorizationPermissionServiceAdapter : IAuthorizationPermissionService
 {
-    private readonly IPermissionService _permissionService;
+    private readonly IPermissionQueryService _queryService;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="AuthorizationPermissionServiceAdapter"/>.
     /// </summary>
-    public AuthorizationPermissionServiceAdapter(IPermissionService permissionService)
+    public AuthorizationPermissionServiceAdapter(IPermissionQueryService queryService)
     {
-        _permissionService = permissionService;
+        _queryService = queryService;
     }
 
     /// <inheritdoc />
@@ -23,7 +23,7 @@ public sealed class AuthorizationPermissionServiceAdapter : IAuthorizationPermis
         string permission,
         CancellationToken cancellationToken = default)
     {
-        return await _permissionService.HasTenantPermissionAsync(
+        return await _queryService.HasTenantPermissionAsync(
             userId,
             tenantId,
             permission,
@@ -44,7 +44,7 @@ public sealed class AuthorizationPermissionServiceAdapter : IAuthorizationPermis
         }
 
         // Get all user permissions once (single DB call)
-        var userPermissions = await _permissionService.GetEffectivePermissionsAsync(
+        var userPermissions = await _queryService.GetEffectivePermissionsAsync(
             userId,
             tenantId,
             cancellationToken);
@@ -78,7 +78,7 @@ public sealed class AuthorizationPermissionServiceAdapter : IAuthorizationPermis
         }
 
         // Get all user permissions once (single DB call)
-        var userPermissions = await _permissionService.GetEffectivePermissionsAsync(
+        var userPermissions = await _queryService.GetEffectivePermissionsAsync(
             userId,
             tenantId,
             cancellationToken);
@@ -104,7 +104,7 @@ public sealed class AuthorizationPermissionServiceAdapter : IAuthorizationPermis
         Guid tenantId,
         CancellationToken cancellationToken = default)
     {
-        var permissions = await _permissionService.GetEffectivePermissionsAsync(
+        var permissions = await _queryService.GetEffectivePermissionsAsync(
             userId,
             tenantId,
             cancellationToken);
