@@ -423,15 +423,15 @@ Authorization checks in handlers:
 ```
 
 **Patterns Used:**
-- ✅ **Decorator/Proxy:** `CachedAccessControlListService` wraps `DatabaseAccessControlListService`
-- ✅ **Strategy Pattern:** Multiple policy stores (InMemory, Database, Cached)
+- ✅ **Decorator/Proxy:** `CachedAccessControlListService` wraps `DatabaseAccessControlListService`, `CachedPolicyDefinitionStore` wraps `DatabasePolicyDefinitionStore`
+- ✅ **Strategy Pattern:** Database stores as source of truth with optional cache decorator layer
 - ✅ **Chain of Responsibility:** Multiple authorization handlers evaluated in sequence
 - ✅ **FIXED: Adapter Pattern:** ~~Three adapter classes bridging legacy interfaces.~~ Legacy interfaces and adapters **DELETED**.
 
 **SOLID Compliance:**
 - **SRP:** ✅ **FIXED:** `PermissionService` now uses `ITenantSecurityVersionStore` for cache invalidation. Split services: `IPermissionGrantService`, `IPermissionQueryService`, `IPermissionBulkService`.
 - **OCP:** ✅ New policy types can be added via `IPolicyDefinitionStore`
-- **LSP:** ✅ Policy stores are substitutable (InMemory, Database, Cached)
+- **LSP:** ✅ Policy stores are substitutable (Database with/without Cached decorator)
 - **ISP:** ✅ `IPermissionsContext` split into `IPermissionChecker` (permission operations) and `IPermissionContextInfo` (identity properties). Clients can depend on focused interfaces.
 - **DIP:** ✅ Depends on abstractions (`IPermissionService`, `IPolicyDefinitionStore`)
 
@@ -579,7 +579,7 @@ public static T Create<T>(Action<T>? configure = null)
 **Violations:**
 1. ✅ **FIXED: Dual context model is complex:** ~~Having both `IIdentityContext`/`IUserContext`/`ITenantContext` AND `ActorContext` creates cognitive load.~~ Legacy interfaces now marked `[Obsolete]`. All production handlers migrated to `IActorContextAccessor`.
 2. **Five-layer authorization:** Conditional → ABAC → Direct → RBAC → Default Deny. Most apps need 2-3 layers, not 5.
-3. **Multiple permission stores:** InMemory, Database, Cached. Over-engineering for most use cases.
+3. ✅ **FIXED: Multiple permission stores:** ~~InMemory, Database, Cached. Over-engineering for most use cases.~~ Deleted unused `InMemoryPolicyDefinitionStore` and `InMemoryTenantSecurityVersionStore`. Remaining architecture uses **Decorator pattern**: `DatabasePolicyDefinitionStore` (source of truth) wrapped by `CachedPolicyDefinitionStore` (L1+L2 cache). Single toggle: `enableCaching=true` for production, `false` for debugging. This is correct cache-aside architecture, not over-engineering.
 4. ✅ **FIXED: Hierarchical tenant members:** ~~ParentMemberId feature has no documented use case.~~ Now documented as organizational hierarchy (teams, departments) with explicit note that it does NOT affect permissions. See [TenantMember.cs](apps/api/Source/Modules/GameGuild.Identity.Tenants/Entities/TenantMember.cs)
 
 **Good Simplicity:**
@@ -633,7 +633,7 @@ public static T Create<T>(Action<T>? configure = null)
 - ✅ **FIXED: IUserContext implementations:** ~~`ActorBasedUserContext` and `UserContext` had different behaviors.~~ Legacy interfaces and implementations **DELETED**. Only `IActorContextAccessor` remains, eliminating the LSP violation.
 
 **Good LSP:**
-- ✅ Policy stores (InMemory, Database, Cached) are substitutable
+- ✅ Policy stores use Decorator pattern (Database + Cached wrapper) - both implement `IPolicyDefinitionStore`
 - ✅ CQRS handlers are substitutable
 
 #### Interface Segregation Principle (ISP)
