@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Resources;
 
 namespace GameGuild.Commerce.Products;
 
@@ -17,6 +18,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="MaxAffiliateDiscount">Maximum affiliate discount</param>
 /// <param name="AffiliateCommissionPercentage">Affiliate commission percentage</param>
 /// <param name="TenantId">Optional tenant ID</param>
+[RequiresQuota(ResourceUsageType.Products, Source = "CreateProduct")]
 public record CreateProductCommand(
     string Name,
     string? Description = null,

@@ -1,10 +1,12 @@
 using GameGuild.CQRS;
+using GameGuild.Resources;
 
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Command to create a new role
 /// </summary>
+[RequiresQuota(ResourceUsageType.Roles, Source = "CreateRole")]
 public record CreateRoleCommand : ICommand<RoleDto>
 {
     public string Name { get; init; } = string.Empty;
