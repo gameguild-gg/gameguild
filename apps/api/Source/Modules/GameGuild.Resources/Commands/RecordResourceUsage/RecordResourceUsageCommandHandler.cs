@@ -43,15 +43,32 @@ public class RecordResourceUsageCommandHandler(IUsageRecordRepository usageRecor
             }
         }
 
-        // Create usage record (audit trail)
-        var usageRecord = new UsageRecord
-        {
-            Id = Guid.NewGuid(), Type = request.ResourceUsageType, Count = request.Count, PeriodStart = request.PeriodStart, PeriodEnd = request.PeriodEnd, Metadata = request.Metadata, CreatedAt = DateTime.UtcNow
-        };
+        // Create usage record using factory method (avoids reflection, type-safe)
+        var usageRecord = UsageRecord.CreateDaily(
+            request.ResourceUsageType,
+            request.TenantId,
+            request.Count,
+            request.PeriodStart,
+            userId: null,
+            source: request.Source);
 
-        // Set TenantId using reflection since the setter is protected
-        var tenantIdProperty = typeof(UsageRecord).GetProperty("TenantId");
-        tenantIdProperty?.GetSetMethod(nonPublic: true)?.Invoke(usageRecord, new object[] { request.TenantId });
+        // Override period end if specified
+        if (request.PeriodEnd != default)
+        {
+            usageRecord.PeriodEnd = request.PeriodEnd;
+        }
+
+        // Set metadata if provided
+        if (!string.IsNullOrEmpty(request.Metadata))
+        {
+            usageRecord.Metadata = request.Metadata;
+        }
+
+        // Link to quota if exists
+        if (quota != null)
+        {
+            usageRecord.ResourceQuotaId = quota.Id;
+        }
 
         await usageRecordRepository.CreateAsync(usageRecord, cancellationToken).ConfigureAwait(false);
 

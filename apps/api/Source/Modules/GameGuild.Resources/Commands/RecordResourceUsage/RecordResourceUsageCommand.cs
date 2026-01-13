@@ -10,7 +10,8 @@ namespace GameGuild.Resources;
 /// <param name="Count">Usage count</param>
 /// <param name="PeriodStart">Usage period start</param>
 /// <param name="PeriodEnd">Usage period end</param>
-/// <param name="Metadata">Optional metadata</param>
+/// <param name="Metadata">Optional metadata (JSON string)</param>
+/// <param name="Source">Optional source identifier (e.g., "API", "UI", "System")</param>
 /// <param name="SkipQuotaIncrement">If true, only creates the usage record without incrementing quota (use when quota was already atomically consumed)</param>
 public record RecordResourceUsageCommand(
     Guid TenantId,
@@ -19,4 +20,5 @@ public record RecordResourceUsageCommand(
     DateTime PeriodStart,
     DateTime PeriodEnd,
     string? Metadata = null,
+    string? Source = null,
     bool SkipQuotaIncrement = false) : ICommand<Guid>;

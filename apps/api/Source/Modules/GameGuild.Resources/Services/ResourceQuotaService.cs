@@ -1,4 +1,5 @@
 using System.Text.Json;
+using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Resources;
@@ -6,7 +7,11 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Implementation of resource quota management service
 /// </summary>
-public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsageRecordRepository usageRepository, ILogger<ResourceQuotaService> logger) : IResourceQuotaService
+public class ResourceQuotaService(
+    IResourceQuotaRepository quotaRepository,
+    IUsageRecordRepository usageRepository,
+    IPublisher publisher,
+    ILogger<ResourceQuotaService> logger) : IResourceQuotaService
 {
     public async Task<ResourceQuota> SetQuotaAsync(
         Guid tenantId,
@@ -18,6 +23,8 @@ public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsa
     )
     {
         var existingQuota = await quotaRepository.GetByTenantAndTypeAsync(tenantId, type, cancellationToken);
+        var isNew = existingQuota == null;
+        var previousUsage = existingQuota?.CurrentUsage;
 
         if (existingQuota != null)
         {
@@ -33,6 +40,19 @@ public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsa
             existingQuota.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
             existingQuota = await quotaRepository.CreateAsync(existingQuota, cancellationToken);
         }
+
+        // Publish audit event for quota change
+        await publisher.Publish(new QuotaChangedEvent(
+            TenantId: tenantId,
+            ResourceType: type,
+            ChangeType: isNew ? QuotaChangeType.Created : QuotaChangeType.LimitsUpdated,
+            PreviousUsage: previousUsage,
+            CurrentUsage: existingQuota.CurrentUsage,
+            SoftLimit: softLimit,
+            HardLimit: hardLimit,
+            Source: "SetQuotaAsync",
+            ActorId: null,
+            Timestamp: DateTime.UtcNow), cancellationToken);
 
         logger.LogInformation("Set quota for tenant {TenantId}, type {Type}: Soft={SoftLimit}, Hard={HardLimit}", tenantId, type, softLimit, hardLimit);
 
@@ -52,9 +72,26 @@ public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsa
 
         if (quota == null) return false;
 
+        var previousUsage = quota.CurrentUsage;
         var deleted = await quotaRepository.DeleteAsync(quota.Id, cancellationToken);
 
-        if (deleted) { logger.LogInformation("Deleted quota for tenant {TenantId}, type {Type}", tenantId, type); }
+        if (deleted)
+        {
+            // Publish audit event for quota deletion
+            await publisher.Publish(new QuotaChangedEvent(
+                TenantId: tenantId,
+                ResourceType: type,
+                ChangeType: QuotaChangeType.Deleted,
+                PreviousUsage: previousUsage,
+                CurrentUsage: 0,
+                SoftLimit: quota.SoftLimit,
+                HardLimit: quota.HardLimit,
+                Source: "DeleteQuotaAsync",
+                ActorId: null,
+                Timestamp: DateTime.UtcNow), cancellationToken);
+
+            logger.LogInformation("Deleted quota for tenant {TenantId}, type {Type}", tenantId, type);
+        }
 
         return deleted;
     }
@@ -247,6 +284,35 @@ public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsa
             return (true, 0, null);
         }
 
+        if (success)
+        {
+            // Publish audit event for successful consumption
+            await publisher.Publish(new QuotaChangedEvent(
+                TenantId: tenantId,
+                ResourceType: type,
+                ChangeType: QuotaChangeType.UsageIncremented,
+                PreviousUsage: quota.CurrentUsage - amount,
+                CurrentUsage: quota.CurrentUsage,
+                SoftLimit: quota.SoftLimit,
+                HardLimit: quota.HardLimit,
+                Source: "TryAtomicConsumeAsync",
+                ActorId: null,
+                Timestamp: DateTime.UtcNow), cancellationToken);
+        }
+        else
+        {
+            // Publish event for quota exceeded attempt
+            await publisher.Publish(new QuotaExceededEvent(
+                TenantId: tenantId,
+                ResourceType: type,
+                CurrentUsage: quota.CurrentUsage,
+                RequestedAmount: amount,
+                HardLimit: quota.HardLimit ?? 0,
+                Source: "TryAtomicConsumeAsync",
+                ActorId: null,
+                Timestamp: DateTime.UtcNow), cancellationToken);
+        }
+
         return (success, quota.CurrentUsage, quota.HardLimit);
     }
 
@@ -295,10 +361,27 @@ public class ResourceQuotaService(IResourceQuotaRepository quotaRepository, IUsa
     {
         try
         {
+            // Get current quota for audit purposes
+            var quotaBefore = await GetQuotaAsync(tenantId, type, cancellationToken);
+            var previousUsage = quotaBefore?.CurrentUsage ?? 0;
+
             var decremented = await quotaRepository.DecrementUsageAsync(tenantId, type, amount, cancellationToken);
 
             if (decremented)
             {
+                // Publish audit event for decrement
+                await publisher.Publish(new QuotaChangedEvent(
+                    TenantId: tenantId,
+                    ResourceType: type,
+                    ChangeType: QuotaChangeType.UsageDecremented,
+                    PreviousUsage: previousUsage,
+                    CurrentUsage: Math.Max(0, previousUsage - amount),
+                    SoftLimit: quotaBefore?.SoftLimit,
+                    HardLimit: quotaBefore?.HardLimit,
+                    Source: source ?? "DecrementUsageAsync",
+                    ActorId: userId,
+                    Timestamp: DateTime.UtcNow), cancellationToken);
+
                 logger.LogInformation(
                     "Decremented {Amount} {Type} usage for tenant {TenantId} (source: {Source})",
                     amount, type, tenantId, source ?? "unknown");
