@@ -1,9 +1,11 @@
 using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
+using GameGuild.Resources;
 
 namespace GameGuild.Identity.Authentication;
 
 // Conditional Policy CRUD Commands
+[RequiresQuota(ResourceUsageType.ConditionalPolicies, 1, Source = "CreateConditionalPolicy")]
 public record CreateConditionalPolicyCommand : ICommand<ConditionalPolicy>
 {
     public string Name { get; init; } = string.Empty;

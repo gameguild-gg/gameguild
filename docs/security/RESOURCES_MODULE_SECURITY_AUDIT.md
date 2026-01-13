@@ -209,13 +209,13 @@ catch (DbUpdateConcurrencyException)
 | 3 | ~~Fail-open on missing tenant~~ | ~~Critical~~ | `ResourceQuotaBehavior` | ✅ FIXED |
 | 4 | ~~Fail-open on service errors~~ | ~~Critical~~ | `ResourceQuotaBehavior` | ✅ FIXED |
 | 5 | ~~RowVersion not configured~~ | ~~Critical~~ | `ResourceQuotaConfiguration` | ✅ FIXED |
-| 6 | **EnforceHardLimit can be disabled** | **High** | `RequiresQuotaAttribute.EnforceHardLimit` | ⚠️ TODO |
-| 7 | **Only 1 command uses quota** | **High** | Only `CreateUserCommand` | ⚠️ TODO |
-| 8 | Bulk operations may bypass | High | `BulkCreateUsers`, etc. | Needs review |
-| 9 | Stringly-typed quota keys | Medium | Only 4 `ResourceUsageType` values | Design choice |
-| 10 | No quota caching invalidation | Medium | Direct DB reads every time | Design choice |
-| 11 | Mixed responsibilities | Low | `ResourceQuotaService` | Design choice |
-| 12 | No audit trail for quota changes | Low | Missing audit events | Future enhancement |
+| 6 | ~~EnforceHardLimit can be disabled~~ | ~~High~~ | `RequiresQuotaAttribute.EnforceHardLimit` | ✅ FIXED - Deprecated with `[Obsolete]`, always enforced |
+| 7 | ~~Only 1 command uses quota~~ | ~~High~~ | All critical commands | ✅ FIXED - 11 commands now have `[RequiresQuota]` |
+| 8 | ~~Bulk operations may bypass~~ | ~~High~~ | `BulkCreateUsersCommandHandler` | ✅ FIXED - Atomic consume with rollback |
+| 9 | ~~Only 4 ResourceUsageType values~~ | ~~Medium~~ | `ResourceUsageType` enum | ✅ FIXED - Now has 23 types |
+| 10 | ~~No quota caching~~ | ~~Medium~~ | Direct DB reads | ✅ FIXED - `CachedResourceQuotaService` decorator |
+| 11 | ~~Mixed responsibilities~~ | ~~Low~~ | `ResourceQuotaService` | ✅ IMPROVED - Clear separation: read (cached), write (atomic) |
+| 12 | ~~No audit trail for quota changes~~ | ~~Low~~ | Missing audit events | ✅ FIXED - `QuotaChangedEvent` and `QuotaExceededEvent` published |
 
 ---
 

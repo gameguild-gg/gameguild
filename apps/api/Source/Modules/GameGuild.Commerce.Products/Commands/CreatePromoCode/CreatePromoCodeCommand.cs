@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Resources;
 
 namespace GameGuild.Commerce.Products;
 
@@ -22,6 +23,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="StackingPriority">Priority for stacking (higher = applied first)</param>
 /// <param name="ProductId">Specific product ID (null = all products)</param>
 /// <param name="CreatedBy">User ID of the creator</param>
+[RequiresQuota(ResourceUsageType.PromoCodes, 1, Source = "CreatePromoCode")]
 public record CreatePromoCodeCommand(
     string Code,
     string Name,

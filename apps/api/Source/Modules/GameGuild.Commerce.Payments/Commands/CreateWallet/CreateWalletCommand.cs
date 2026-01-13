@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.Resources;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -7,4 +8,5 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 /// <param name="UserId">User unique identifier</param>
 /// <param name="Currency">Currency code (default: USD)</param>
+[RequiresQuota(ResourceUsageType.Wallets, 1, Source = "CreateWallet")]
 public record CreateWalletCommand(Guid UserId, string Currency = "USD") : ICommand<UserWallet>;

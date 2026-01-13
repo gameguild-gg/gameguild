@@ -1,9 +1,11 @@
 using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
+using GameGuild.Resources;
 
 namespace GameGuild.Identity.Authentication;
 
 // ABAC Policy Commands
+[RequiresQuota(ResourceUsageType.AbacPolicies, 1, Source = "CreateAbacPolicy")]
 public record CreateAbacPolicyCommand : ICommand<AbacPolicy>
 {
     public string Name { get; init; } = string.Empty;

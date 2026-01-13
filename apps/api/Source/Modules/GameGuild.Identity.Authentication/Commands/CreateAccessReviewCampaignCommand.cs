@@ -1,9 +1,11 @@
 using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
+using GameGuild.Resources;
 
 namespace GameGuild.Identity.Authentication;
 
 // Access Review Campaign Commands
+[RequiresQuota(ResourceUsageType.AccessReviewCampaigns, 1, Source = "CreateAccessReviewCampaign")]
 public record CreateAccessReviewCampaignCommand : ICommand<AccessReviewCampaign>
 {
     public string Name { get; init; } = string.Empty;
