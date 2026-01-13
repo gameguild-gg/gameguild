@@ -34,6 +34,8 @@ The Resources module provides quota management and enforcement for multi-tenant 
 8. **✅ EnforceHardLimit deprecated** - Flag is marked `[Obsolete]` and ignored; hard limits always enforced
 9. **✅ No reflection for TenantId** - `RecordResourceUsageCommandHandler` uses `UsageRecord.CreateDaily()` factory method
 10. **✅ Audit trail for quota changes** - Domain events `QuotaChangedEvent` and `QuotaExceededEvent` published on all quota operations
+11. **✅ Duplicate namespace imports removed** - All test files cleaned up from repeated `using GameGuild.Resources;` statements
+12. **✅ UpdateAsync added to IUsageRecordRepository** - TODO comment resolved; usage record updates now persisted correctly
 
 ---
 
@@ -195,12 +197,12 @@ Read operations correctly do not affect quota state.
 | ~~String-based metadata~~ | ~~Medium~~ | `ResourceQuota.Metadata` | ⚠️ Acceptable - JSON string with MaxLength validation |
 | ~~No audit trail for quota changes~~ | ~~Medium~~ | All quota operations | ✅ FIXED - Domain events `QuotaChangedEvent` and `QuotaExceededEvent` published |
 
-### 4.4 Low Issues
+### 4.4 Low Issues ✅ ALL FIXED
 
-| Issue | Severity | Location | Impact |
+| Issue | Severity | Location | Status |
 |-------|----------|----------|--------|
-| **Duplicate namespace imports** | Low | Test files | Code smell |
-| **TODO comment** | Low | `ResourceQuotaService` line 99 | Missing UpdateAsync for UsageRecord |
+| ~~Duplicate namespace imports~~ | ~~Low~~ | Test files | ✅ FIXED - Removed duplicate `using GameGuild.Resources;` statements |
+| ~~TODO comment~~ | ~~Low~~ | `ResourceQuotaService` | ✅ FIXED - Added `UpdateAsync` to `IUsageRecordRepository` and called it |
 
 ---
 
