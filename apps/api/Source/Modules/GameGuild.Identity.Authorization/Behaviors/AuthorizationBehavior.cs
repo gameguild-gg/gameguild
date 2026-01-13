@@ -5,14 +5,36 @@ using GameGuild.Identity.Context.Actors;
 namespace GameGuild.Identity.Authorization;
 
 /// <summary>
-///     Pipeline behavior that performs authorization checks on CQRS commands and queries
-///     Uses custom attributes on request classes to determine authorization requirements
+///     Pipeline behavior that performs authorization checks on CQRS commands and queries.
+///     Uses custom attributes on request classes to determine authorization requirements.
 /// </summary>
+/// <remarks>
+///     <para>
+///         This behavior supports two types of authorization checks:
+///     </para>
+///     <list type="bullet">
+///         <item>
+///             <term>Tenant-level permissions</term>
+///             <description>
+///                 Checks if the user has a capability in the tenant (e.g., "courses:create").
+///                 Uses <see cref="IPermissionService.HasTenantPermissionAsync"/>.
+///             </description>
+///         </item>
+///         <item>
+///             <term>Resource-level access</term>
+///             <description>
+///                 Checks if the user has access to a specific resource (e.g., Course #123).
+///                 Uses <see cref="IAccessControlListService.HasAccessAsync"/>.
+///             </description>
+///         </item>
+///     </list>
+/// </remarks>
 /// <typeparam name="TRequest">The request type (command or query)</typeparam>
 /// <typeparam name="TResponse">The response type</typeparam>
 public class AuthorizationBehavior<TRequest, TResponse>(
     IActorContextAccessor actorContextAccessor,
-    IPermissionService permissionService
+    IPermissionService permissionService,
+    IAccessControlListService aclService
 ) : IPipelineBehavior<TRequest, TResponse> where TRequest : IRequestBase
 {
     private ActorContext Actor => actorContextAccessor.ActorContext;
@@ -103,7 +125,8 @@ public class AuthorizationBehavior<TRequest, TResponse>(
 
             if (!string.IsNullOrEmpty(resourceType))
             {
-                // Resource-level check: extract resource id from request
+                // RESOURCE-LEVEL CHECK: Use ACL service to check access to specific resource
+                // This answers: "Does user have access to THIS specific resource?"
                 var resourceId = GetResourceIdFromRequest(request, resourceIdProperty);
 
                 if (resourceId == Guid.Empty)
@@ -114,16 +137,24 @@ public class AuthorizationBehavior<TRequest, TResponse>(
                 {
                     var userId = Actor.SubjectIdAsGuid ?? throw new UnauthorizedAccessException("User not authenticated");
                     var tenantId = Actor.TenantId ?? throw new UnauthorizedAccessException("Tenant context required");
-                    // Compose resource-specific permission name (same pattern as PermissionsContext)
-                    var resourcePermission = $"{resourceType}.{resourceId}.{permission}";
-                    hasPerm = await permissionService
-                        .HasTenantPermissionAsync(userId, tenantId, resourcePermission, cancellationToken)
+                    
+                    // Map permission string to AccessLevel (e.g., "read" -> Read, "write" -> Write)
+                    var requiredLevel = MapPermissionToAccessLevel(permission);
+                    
+                    // Build AclSubject from actor context
+                    // Note: Role/Group IDs would require additional resolution from role names
+                    // For now, we rely on user-based ACL lookup; the ACL service can resolve roles internally
+                    var subject = AclSubject.ForUser(userId);
+                    
+                    hasPerm = await aclService
+                        .HasAccessAsync(subject, tenantId, resourceType, resourceId.ToString(), requiredLevel, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }
             else
             {
-                // Tenant-level permission - use ActorContext.HasPermission for simple check
+                // TENANT-LEVEL CHECK: Use permission service to check tenant capability
+                // This answers: "Does user have this capability in the tenant?"
                 hasPerm = Actor.HasPermission(permission);
             }
 
@@ -152,23 +183,89 @@ public class AuthorizationBehavior<TRequest, TResponse>(
 
         return Guid.Empty;
     }
+
+    /// <summary>
+    ///     Maps a permission string to an <see cref="AccessLevel"/> for ACL checks.
+    /// </summary>
+    /// <remarks>
+    ///     Permission strings like "read", "write", "delete", "manage" are mapped to
+    ///     appropriate access levels for resource-level authorization.
+    /// </remarks>
+    private static AccessLevel MapPermissionToAccessLevel(string permission)
+    {
+        var normalizedPermission = permission.ToLowerInvariant();
+        
+        // Check for common permission patterns
+        // Admin = full access including delete and sharing
+        if (normalizedPermission.Contains("manage") || normalizedPermission.Contains("admin") ||
+            normalizedPermission.Contains("delete") || normalizedPermission.Contains("remove"))
+            return AccessLevel.Admin;
+        
+        // Write = read and write access
+        if (normalizedPermission.Contains("write") || normalizedPermission.Contains("edit") || 
+            normalizedPermission.Contains("update") || normalizedPermission.Contains("create"))
+            return AccessLevel.Write;
+        
+        // Read = read-only access
+        if (normalizedPermission.Contains("read") || normalizedPermission.Contains("view") || 
+            normalizedPermission.Contains("get") || normalizedPermission.Contains("list"))
+            return AccessLevel.Read;
+        
+        // Default to Write for unknown permission patterns
+        return AccessLevel.Write;
+    }
 }
 
 /// <summary>
-///     Attribute to mark CQRS requests (commands/queries) with authorization requirements
+///     Attribute to mark CQRS requests (commands/queries) with authorization requirements.
 /// </summary>
+/// <remarks>
+///     <para>
+///         Use this attribute to declare authorization requirements on command/query classes.
+///     </para>
+///     <para>
+///         <b>Tenant-level permissions</b> (when ResourceType is null):
+///         Checks if the user has the specified capability in the current tenant.
+///         Example: <c>[AuthorizeRequest("courses:create")]</c>
+///     </para>
+///     <para>
+///         <b>Resource-level access</b> (when ResourceType is set):
+///         Checks if the user has access to the specific resource via ACL.
+///         Example: <c>[AuthorizeRequest("edit", ResourceType = "course", ResourceIdProperty = "CourseId")]</c>
+///     </para>
+/// </remarks>
 [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 public class AuthorizeRequestAttribute(string permission) : Attribute
 {
+    /// <summary>
+    ///     The permission required (e.g., "courses:create" for tenant-level, "edit" for resource-level).
+    /// </summary>
     public string Permission { get; } = permission;
 
+    /// <summary>
+    ///     The layer at which this permission is evaluated.
+    /// </summary>
     public PermissionLayer Layer { get; set; } = PermissionLayer.Tenant;
 
+    /// <summary>
+    ///     If set, triggers resource-level ACL check instead of tenant-level permission check.
+    ///     The value specifies the resource type (e.g., "course", "project").
+    /// </summary>
     public string? ResourceType { get; set; }
 
+    /// <summary>
+    ///     The name of the property on the request that contains the resource ID.
+    ///     Defaults to "ResourceId" if not specified.
+    /// </summary>
     public string? ResourceIdProperty { get; set; }
 
+    /// <summary>
+    ///     If true, requires the user to be a system administrator. Bypasses other checks.
+    /// </summary>
     public bool RequireSystemAdmin { get; set; }
 
+    /// <summary>
+    ///     If true, requires the user to be a tenant administrator.
+    /// </summary>
     public bool RequireTenantAdmin { get; set; }
 }

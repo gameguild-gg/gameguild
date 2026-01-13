@@ -31,7 +31,7 @@
 | **ActorContextMiddleware Not Registered** | 🔴 CRITICAL | ActorContext not populated in request pipeline | ✅ **FIXED** |
 | **ALLOW-WINS Only Permission Model** | 🔴 HIGH | Global permissions leak into tenants unconditionally | ✅ **FIXED** |
 | **Missing Fail-Closed on Null TenantId in PermissionQueryService** | 🔴 HIGH | Permission resolution with null tenant returns global defaults | ✅ **FIXED** |
-| **Dual Permission Systems (TenantPermission vs ACL)** | 🟡 MEDIUM | Clarified: TenantPermission=tenant-level ops, ACL=resource-level access | ✅ **Documented** |
+| **Dual Permission Systems (TenantPermission vs ACL)** | 🟡 MEDIUM | Clarified: TenantPermission=tenant-level ops, ACL=resource-level access | ✅ **FIXED** |
 | **Cache Key Missing User Security Version** | 🟡 MEDIUM | User-level permission changes may not invalidate properly | ✅ **FIXED** |
 | **Magic GUID for System Account** | 🟡 MEDIUM | Hard-coded system account ID in code | ✅ **FIXED** |
 
@@ -50,6 +50,8 @@ The following critical security fixes were implemented:
 5. **CachedAccessControlListService.cs**: Added `IUserSecurityVersionStore` to cache key for proper user-level cache invalidation. Cache keys now include both `tv{tenantVersion}` and `uv{userVersion}`.
 
 6. **EffectivePermissionResolverService.cs**: Moved magic GUID for system account to `AuthorizationOptions.SystemAccountId` configuration property.
+
+7. **AuthorizationBehavior.cs**: Fixed dual permission system confusion - now properly uses `IAccessControlListService` for resource-level checks (when `ResourceType` is specified) and `IPermissionService` for tenant-level permission checks. Added `IAccessControlListService` dependency injection and `MapPermissionToAccessLevel()` helper.
 
 ### System Overview
 
@@ -886,7 +888,7 @@ public async Task PermissionDeny_InvalidatesCache()
 
 | Issue | Location | Fix | Status |
 |-------|----------|-----|--------|
-| Dual Permission Systems | `TenantPermission` vs `AccessControlListEntry` | Document usage guidelines | ✅ **Documented** |
+| Dual Permission Systems | `TenantPermission` vs `AccessControlListEntry` | Fixed `AuthorizationBehavior` to use correct system per scope | ✅ **FIXED** |
 | Missing User Security Version | `CachedAccessControlListService.cs` | Add user version to cache key | ✅ **FIXED** |
 | Magic GUID for System Account | `EffectivePermissionResolverService.cs:127` | Move to configuration | ✅ **FIXED** |
 
@@ -919,6 +921,7 @@ public async Task PermissionDeny_InvalidatesCache()
 **Version History**:
 - v1.0 (2026-01-13): Initial audit, identified 4 critical issues
 - v2.0 (2026-01-13): All 4 critical issues fixed and verified
-- v2.1 (2026-01-13): Fixed medium issues (user version cache, system account config), documented dual permission systems (TenantPermission=tenant-level, ACL=resource-level)
+- v2.1 (2026-01-13): Fixed medium issues (user version cache, system account config), documented dual permission systems
+- v2.2 (2026-01-13): Fixed `AuthorizationBehavior` to properly use ACL for resource-level checks vs TenantPermission for tenant-level checks
 
 **Next Review**: Quarterly security review or after significant authorization changes
