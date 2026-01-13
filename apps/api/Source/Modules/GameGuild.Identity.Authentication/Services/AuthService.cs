@@ -65,7 +65,7 @@ public class AuthService(
             if (user != null)
             {
                 // Verify password using BCrypt
-                var hashPreview = user.PasswordHash.Substring(0, Math.Min(20, user.PasswordHash.Length));
+                var hashPreview = user.PasswordHash?.Substring(0, Math.Min(20, user.PasswordHash.Length)) ?? string.Empty;
                 logger.LogInformation("DEBUG: Verifying password for user {Email}. Password length: {PasswordLength}, Hash: {Hash}", user.Email, request.Password.Length, hashPreview);
 
                 var passwordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);

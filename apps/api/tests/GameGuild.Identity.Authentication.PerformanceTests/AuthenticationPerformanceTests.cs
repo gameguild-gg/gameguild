@@ -63,10 +63,11 @@ public class AuthenticationPerformanceTests : IDisposable
         _mockValidator.Setup(x => x.ValidateAsync(It.IsAny<LocalSignInCommand>(), It.IsAny<CancellationToken>()))
                      .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
-        _mockAuthService.Setup(x => x.LocalSignInAsync(It.IsAny<GameGuild.Identity.Authentication.Models.Requests.LocalSignInRequest>(), It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(new GameGuild.Identity.Authentication.Models.Responses.SignInResponse
+        _mockAuthService.Setup(x => x.LocalSignInAsync(It.IsAny<LocalSignInRequest>(), It.IsAny<CancellationToken>()))
+                       .ReturnsAsync(new SignInResponse
                        {
-                           User = new GameGuild.Identity.Authentication.Models.UserIdentity { Id = Guid.NewGuid(), Email = "test@example.com" },
+                           Success = true,
+                           User = new UserDto { Id = Guid.NewGuid(), Email = "test@example.com" },
                            AccessToken = "jwt-token",
                            RefreshToken = "refresh-token"
                        });

@@ -34,6 +34,7 @@ public class ServiceAccountsController : AuthControllerBase
     ///     The returned access token can be used to authenticate API requests.
     /// </remarks>
     /// <param name="request">The client credentials request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An OAuth2 token response with access token.</returns>
     [HttpPost("/api/v1/oauth/token")]
     [AllowAnonymous]
@@ -103,6 +104,7 @@ public class ServiceAccountsController : AuthControllerBase
     ///     The client secret is only returned once during creation. Store it securely.
     /// </remarks>
     /// <param name="request">The service account creation request.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The created service account with client credentials.</returns>
     [HttpPost]
     [Authorize(Policy = "RequireAdminRole")]

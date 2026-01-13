@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
@@ -17,8 +16,7 @@ namespace GameGuild.Identity.Authentication;
 [Route("api/auth/webauthn")]
 [EnableRateLimiting(RateLimitPolicies.Authentication)]
 public class WebAuthnController(
-    IWebAuthnService webAuthnService,
-    ILogger<WebAuthnController> logger) : ControllerBase
+    IWebAuthnService webAuthnService) : ControllerBase
 {
     #region Registration Endpoints
 
@@ -26,6 +24,7 @@ public class WebAuthnController(
     ///     Begin WebAuthn credential registration.
     /// </summary>
     /// <param name="request">Registration request with optional authenticator preferences.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Options to pass to navigator.credentials.create().</returns>
     [HttpPost("register/begin")]
     [Authorize]
@@ -56,6 +55,7 @@ public class WebAuthnController(
     ///     Complete WebAuthn credential registration.
     /// </summary>
     /// <param name="request">The attestation response from the browser.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Result of the registration.</returns>
     [HttpPost("register/complete")]
     [Authorize]
@@ -93,6 +93,7 @@ public class WebAuthnController(
     ///     Begin WebAuthn authentication (passwordless login).
     /// </summary>
     /// <param name="request">Optional email to filter credentials.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Options to pass to navigator.credentials.get().</returns>
     [HttpPost("authenticate/begin")]
     [AllowAnonymous]
@@ -116,6 +117,7 @@ public class WebAuthnController(
     ///     Complete WebAuthn authentication (passwordless login).
     /// </summary>
     /// <param name="request">The assertion response from the browser.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Authentication result with user info.</returns>
     [HttpPost("authenticate/complete")]
     [AllowAnonymous]
@@ -166,6 +168,7 @@ public class WebAuthnController(
     ///     Delete a WebAuthn credential.
     /// </summary>
     /// <param name="credentialId">The credential ID to delete.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpDelete("credentials/{credentialId:guid}")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -191,6 +194,7 @@ public class WebAuthnController(
     /// </summary>
     /// <param name="credentialId">The credential ID to update.</param>
     /// <param name="request">The new friendly name.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     [HttpPatch("credentials/{credentialId:guid}")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

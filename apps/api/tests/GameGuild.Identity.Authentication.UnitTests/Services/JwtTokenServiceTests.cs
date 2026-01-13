@@ -1,8 +1,5 @@
 using FluentAssertions;
 using GameGuild.Identity.Authentication;
-using GameGuild.Identity.Authentication;
-using GameGuild.Identity.Authentication;
-using GameGuild.Identity.Authentication;
 using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,6 +15,7 @@ public class JwtTokenServiceTests
 {
     private readonly Mock<ILogger<JwtTokenService>> _loggerMock;
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
+    private readonly Mock<IRefreshTokenHasher> _refreshTokenHasherMock;
     private readonly Mock<IOptions<JwtOptions>> _jwtOptionsMock;
     private readonly JwtTokenService _service;
     private readonly JwtOptions _jwtOptions;
@@ -26,6 +24,7 @@ public class JwtTokenServiceTests
     {
         _loggerMock = new Mock<ILogger<JwtTokenService>>();
         _refreshTokenRepositoryMock = new Mock<IRefreshTokenRepository>();
+        _refreshTokenHasherMock = new Mock<IRefreshTokenHasher>();
         
         _jwtOptions = new JwtOptions
         {
@@ -42,6 +41,7 @@ public class JwtTokenServiceTests
         _service = new JwtTokenService(
             _loggerMock.Object,
             _refreshTokenRepositoryMock.Object,
+            _refreshTokenHasherMock.Object,
             _jwtOptionsMock.Object
         );
     }
@@ -61,6 +61,7 @@ public class JwtTokenServiceTests
             email, 
             roles, 
             tenantId, 
+            1, // tokenVersion
             CancellationToken.None
         );
 
@@ -83,6 +84,7 @@ public class JwtTokenServiceTests
             email, 
             roles, 
             null, 
+            1, // tokenVersion
             CancellationToken.None
         );
 
@@ -100,7 +102,7 @@ public class JwtTokenServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(
-            () => _service.GenerateAccessTokenAsync(userId, email, null!, null, CancellationToken.None)
+            () => _service.GenerateAccessTokenAsync(userId, email, null!, null, 1, CancellationToken.None)
         );
     }
 
