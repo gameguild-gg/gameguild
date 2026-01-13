@@ -10,12 +10,12 @@
 export type ProjectMode = "free-page" | "code-page" | "quiz-page"
 export type ProjectLayoutType = "type1" | "type2"
 
+type NodeList = string | string[] | null
+
 export interface NodeRestrictions {
-  left: string[] | null  // null = all allowed, array = blocked nodes
-  right: string[] | null  // null = all allowed, ['*'] = all blocked except rightAllowed
-  rightAllowed?: string[]  // nodes allowed on right when right = ['*']
-  single?: string[] | null  // restrictions for single panel (type1), ['*'] = all blocked except singleAllowed
-  singleAllowed?: string[]  // nodes allowed in single panel when single = ['*']
+  left?: [NodeList, NodeList]   // [bloqueados, liberados] - primeiro define bloqueio, segundo define permissão
+  right?: [NodeList, NodeList]  // '*' bloqueia/libera todos, string específico, ou null para nenhum
+  single?: [NodeList, NodeList] // ex: ['*', 'code-studio'] = bloqueia todos exceto code-studio
 }
 
 export interface ProjectModeConfig {
@@ -27,26 +27,26 @@ export interface ProjectModeConfig {
 
 /**
  * Node restrictions for each mode
+ * Formato: [bloqueados, liberados]
+ * - '*' na primeira posição = bloqueia todos
+ * - '*' na segunda posição = libera todos
+ * - null = nenhum bloqueio/liberação específica
  */
 export const NODE_RESTRICTIONS: Record<ProjectMode, NodeRestrictions> = {
   "free-page": {
-    left: null,  // todos permitidos
-    right: null,  // todos permitidos
-    single: null  // todos permitidos em single panel
+    left: [null, null],   // nenhum bloqueio, todos permitidos
+    right: [null, null],  // nenhum bloqueio, todos permitidos
+    single: [null, null]  // nenhum bloqueio, todos permitidos
   },
   "code-page": {
-    left: ['code-studio'],  // bloqueados na esquerda
-    right: ['*'],  // todos bloqueados exceto code-studio
-    rightAllowed: ['code-studio'],
-    single: ['*'],  // em single panel, só code-studio permitido
-    singleAllowed: ['code-studio']
+    left: ['code-studio', null],      // bloqueia code-studio na esquerda
+    right: ['*', 'code-studio'],      // bloqueia todos exceto code-studio
+    single: ['*', 'code-studio']      // bloqueia todos exceto code-studio
   },
   "quiz-page": {
-    left: ['quiz'],  // bloqueados na esquerda
-    right: ['*'],  // todos bloqueados exceto quiz
-    rightAllowed: ['quiz'],
-    single: ['*'],  // em single panel, só quiz permitido
-    singleAllowed: ['quiz']
+    left: ['quiz', null],        // bloqueia quiz na esquerda
+    right: ['*', 'quiz'],        // bloqueia todos exceto quiz
+    single: ['*', 'quiz']        // bloqueia todos exceto quiz
   }
 }
 
@@ -85,41 +85,48 @@ export function isNodeAllowed(
   const restrictions = NODE_RESTRICTIONS[mode]
   
   if (!restrictions) {
-    return true  // no restrictions
-  }
-
-  // Handle single panel (type1 layouts)
-  if (panel === "single") {
-    const singleRestrictions = restrictions.single
-    
-    if (singleRestrictions === null) {
-      return true  // no restrictions
-    }
-    
-    if (singleRestrictions?.includes('*')) {
-      const allowedNodes = restrictions.singleAllowed || []
-      return allowedNodes.includes(nodeType)
-    }
-    
-    return !singleRestrictions?.includes(nodeType)
-  }
-
-  // Handle dual panel (type2 layouts)
-  const panelRestrictions = restrictions[panel]
-  
-  // No restrictions on this panel
-  if (panelRestrictions === null) {
     return true
   }
 
-  // Check if all nodes are blocked except specific ones
-  if (panelRestrictions.includes('*')) {
-    const allowedNodes = panel === "right" ? restrictions.rightAllowed || [] : []
-    return allowedNodes.includes(nodeType)
+  const panelRestrictions = restrictions[panel]
+  
+  if (!panelRestrictions) {
+    return true  // sem restrições neste painel
   }
 
-  // Check if this specific node is blocked
-  return !panelRestrictions.includes(nodeType)
+  const [blocked, allowed] = panelRestrictions
+  
+  // Helper para verificar se nodeType está em uma lista
+  const isInList = (list: NodeList, type: string): boolean => {
+    if (list === null) return false
+    if (list === '*') return true
+    if (typeof list === 'string') return list === type
+    return list.includes(type)
+  }
+
+  // Primeiro verifica se está explicitamente permitido
+  if (allowed !== null) {
+    if (isInList(allowed, nodeType)) {
+      return true  // explicitamente permitido
+    }
+    // Se há lista de permitidos mas node não está nela, verificar bloqueios
+    if (allowed === '*') {
+      return true  // todos permitidos
+    }
+  }
+
+  // Verifica se está bloqueado
+  if (blocked !== null) {
+    if (isInList(blocked, nodeType)) {
+      return false  // explicitamente bloqueado
+    }
+    if (blocked === '*' && allowed !== '*') {
+      return false  // todos bloqueados e não está em allowed
+    }
+  }
+
+  // Se não há restrições ou não está bloqueado, permitir
+  return true
 }
 
 /**
