@@ -1,10 +1,21 @@
 namespace GameGuild.Identity.Authorization;
 
 /// <summary>
-///     Service interface for granting and revoking permissions.
+///     Service interface for granting and revoking <b>tenant-level</b> permissions.
 ///     Follows Single Responsibility Principle by focusing only on permission mutations.
 /// </summary>
 /// <remarks>
+///     <para>
+///         <b>Scope: TENANT-LEVEL OPERATIONS</b>
+///     </para>
+///     <para>
+///         This service manages permissions that control what <b>operations</b> a user can perform
+///         within a tenant (e.g., "courses:create", "projects:delete", "users:manage").
+///     </para>
+///     <para>
+///         For <b>resource-level access control</b> (e.g., "Can user X edit Course #123?"),
+///         use <see cref="IAccessControlListService"/> instead.
+///     </para>
 ///     <para>
 ///         This service was extracted from <c>IPermissionService</c> to improve SRP compliance.
 ///         For querying permissions, use <see cref="IPermissionQueryService"/>.
@@ -53,10 +64,21 @@ public interface IPermissionGrantService
 }
 
 /// <summary>
-///     Service interface for querying permissions.
+///     Service interface for querying <b>tenant-level</b> permissions.
 ///     Follows Single Responsibility Principle by focusing only on permission queries.
 /// </summary>
 /// <remarks>
+///     <para>
+///         <b>Scope: TENANT-LEVEL OPERATIONS</b>
+///     </para>
+///     <para>
+///         This service queries permissions that control what <b>operations</b> a user can perform
+///         within a tenant (e.g., "Can user create courses in this tenant?").
+///     </para>
+///     <para>
+///         For <b>resource-level access control</b> (e.g., "Can user X read/write Course #123?"),
+///         use <see cref="IAccessControlListService"/> instead.
+///     </para>
 ///     <para>
 ///         This service was extracted from <c>IPermissionService</c> to improve SRP compliance.
 ///         For granting/revoking permissions, use <see cref="IPermissionGrantService"/>.

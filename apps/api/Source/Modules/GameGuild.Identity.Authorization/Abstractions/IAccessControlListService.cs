@@ -1,9 +1,30 @@
 namespace GameGuild.Identity.Authorization;
 
 /// <summary>
-///     Manages Access Control Lists for resources.
+///     Manages Access Control Lists for <b>resource-level</b> access control.
 ///     Supports User, Role, Group, and Anonymous principals with deny-first evaluation.
 /// </summary>
+/// <remarks>
+///     <para>
+///         <b>Scope: RESOURCE-LEVEL ACCESS</b>
+///     </para>
+///     <para>
+///         This service controls access to <b>specific resources</b> (e.g., "Can user X read/write Course #123?").
+///         It determines what level of access (None, Read, ReadWrite, Admin) a user has on individual resources.
+///     </para>
+///     <para>
+///         For <b>tenant-level operation permissions</b> (e.g., "Can user create courses in this tenant?"),
+///         use <see cref="IPermissionQueryService"/> instead.
+///     </para>
+///     <para>
+///         <b>Authorization Flow:</b>
+///         <list type="number">
+///             <item>First check tenant permission: Does user have "courses:edit" in tenant?</item>
+///             <item>Then check resource ACL: Does user have access to this specific course?</item>
+///         </list>
+///         Both checks must pass for access to be granted.
+///     </para>
+/// </remarks>
 public interface IAccessControlListService
 {
     /// <summary>
