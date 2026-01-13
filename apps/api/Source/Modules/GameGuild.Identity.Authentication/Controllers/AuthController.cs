@@ -1,17 +1,23 @@
 using Asp.Versioning;
+using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Authentication API Controller - RESTful API for user authentication and token management
 /// </summary>
+/// <remarks>
+///     Rate limited to 10 requests per minute per client to prevent brute-force attacks.
+/// </remarks>
 [ApiController]
 [ApiVersion("1.0")]
 [Tags("authentication")]
+[EnableRateLimiting(RateLimitPolicies.Authentication)]
 public sealed class AuthController(ISender sender) : ControllerBase
 {
     #region Registration Operations - /v1/auth/sign-up

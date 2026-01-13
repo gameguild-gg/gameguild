@@ -1,8 +1,10 @@
 using Asp.Versioning;
+using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.Identity.Authorization;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -12,11 +14,15 @@ namespace GameGuild.Identity.Authentication;
 ///     API controller for comprehensive permission management operations
 ///     Enhanced with CQRS pattern, 3-layer permission hierarchy, and advanced analytics
 /// </summary>
+/// <remarks>
+///     Rate limited to 100 requests per minute per client to prevent DoS attacks on permission evaluation.
+/// </remarks>
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/permissions")]
 [Tags("permissions")]
 [ApiExplorerSettings(IgnoreApi = true)]
+[EnableRateLimiting(RateLimitPolicies.Authorization)]
 public class PermissionsController(IMediator mediator, ILogger<PermissionsController> logger) : ControllerBase
 {
     private readonly ILogger<PermissionsController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

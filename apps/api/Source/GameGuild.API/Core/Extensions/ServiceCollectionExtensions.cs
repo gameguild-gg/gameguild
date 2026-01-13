@@ -335,14 +335,72 @@ public static class ServiceCollectionExtensions
             RateLimitingOptions.CreateDefault);
         options.Validate();
 
-        services.AddRateLimiter(_ =>
+        services.AddRateLimiter(rateLimiterOptions =>
             {
-                // TODO: Fix rate limiter configuration for .NET 9
-                // These methods may not be available in .NET 9
-                // Fixed window for internal API calls and the Console application.
-                // rateLimiterOptions.AddFixedWindowLimiter("InternalPolicy", policyOptions => { ... });
-                // Sliding window for public API calls with rate limiting.
-                // rateLimiterOptions.AddSlidingWindowLimiter("PublicPolicy", policyOptions => { ... });
+                // Global rejection handler for rate limit exceeded
+                rateLimiterOptions.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+                rateLimiterOptions.OnRejected = async (context, cancellationToken) =>
+                {
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    context.HttpContext.Response.ContentType = "application/problem+json";
+
+                    var retryAfter = context.Lease.TryGetMetadata(System.Threading.RateLimiting.MetadataName.RetryAfter, out var retryAfterValue)
+                        ? retryAfterValue.TotalSeconds
+                        : 60;
+
+                    context.HttpContext.Response.Headers.RetryAfter = ((int)retryAfter).ToString();
+
+                    var problemDetails = new ProblemDetails
+                    {
+                        Status = StatusCodes.Status429TooManyRequests,
+                        Title = "Too Many Requests",
+                        Detail = $"Rate limit exceeded. Please retry after {retryAfter:F0} seconds.",
+                        Instance = context.HttpContext.Request.Path
+                    };
+
+                    await context.HttpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
+                };
+
+                // Authentication policy: Strict rate limiting for sign-in, sign-up, password reset
+                // 10 requests per minute to prevent brute-force attacks
+                rateLimiterOptions.AddFixedWindowLimiter(RateLimitPolicies.Authentication, policyOptions =>
+                {
+                    policyOptions.PermitLimit = options.AuthenticationRequestsPerMinute;
+                    policyOptions.Window = TimeSpan.FromMinutes(1);
+                    policyOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+                    policyOptions.QueueLimit = options.QueueLimit;
+                });
+
+                // Authorization policy: Permission check endpoints
+                // 100 requests per minute to prevent DoS on permission evaluation
+                rateLimiterOptions.AddFixedWindowLimiter(RateLimitPolicies.Authorization, policyOptions =>
+                {
+                    policyOptions.PermitLimit = options.AuthorizationRequestsPerMinute;
+                    policyOptions.Window = TimeSpan.FromMinutes(1);
+                    policyOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+                    policyOptions.QueueLimit = options.QueueLimit;
+                });
+
+                // API policy: General API endpoints with sliding window for smoother distribution
+                // 60 requests per minute for general API calls
+                rateLimiterOptions.AddSlidingWindowLimiter(RateLimitPolicies.Api, policyOptions =>
+                {
+                    policyOptions.PermitLimit = options.ApiRequestsPerMinute;
+                    policyOptions.Window = TimeSpan.FromMinutes(1);
+                    policyOptions.SegmentsPerWindow = 4; // 4 segments = 15-second buckets
+                    policyOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+                    policyOptions.QueueLimit = options.QueueLimit;
+                });
+
+                // Internal policy: Relaxed limits for admin/internal endpoints
+                // 200 requests per minute
+                rateLimiterOptions.AddFixedWindowLimiter(RateLimitPolicies.Internal, policyOptions =>
+                {
+                    policyOptions.PermitLimit = 200;
+                    policyOptions.Window = TimeSpan.FromMinutes(1);
+                    policyOptions.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+                    policyOptions.QueueLimit = options.QueueLimit * 2;
+                });
             }
         );
 

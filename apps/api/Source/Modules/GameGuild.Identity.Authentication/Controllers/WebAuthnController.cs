@@ -1,6 +1,8 @@
+using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -8,8 +10,12 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Controller for WebAuthn/FIDO2 passwordless authentication operations.
 /// </summary>
+/// <remarks>
+///     Rate limited to 10 requests per minute per client to prevent abuse of authentication endpoints.
+/// </remarks>
 [ApiController]
 [Route("api/auth/webauthn")]
+[EnableRateLimiting(RateLimitPolicies.Authentication)]
 public class WebAuthnController(
     IWebAuthnService webAuthnService,
     ILogger<WebAuthnController> logger) : ControllerBase
