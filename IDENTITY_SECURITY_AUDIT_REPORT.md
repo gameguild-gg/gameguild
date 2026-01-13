@@ -606,10 +606,10 @@ public static T Create<T>(Action<T>? configure = null)
 
 #### Single Responsibility Principle (SRP)
 
-**Violations:**
+**All SRP Violations FIXED:**
 - ✅ **FIXED: Tenant entity:** ~~manages members, domains, settings, statistics, usage (5+ concerns)~~ Proper DDD aggregate root. See section 3.3.
 - ✅ **FIXED: PermissionService:** ~~grant, revoke, check, bulk operations, audit (5+ concerns)~~ Split into `IPermissionGrantService` (mutations), `IPermissionQueryService` (reads), `IPermissionBulkService` (bulk ops). Legacy `IPermissionService` maintained for backward compatibility.
-- ⚠️ `AuthenticationModule.UseAuthenticationModule()`: registers 3 different middleware (permission caching, ABAC, access review). Should these be separate module methods?
+- ✅ **CLARIFIED: `AuthenticationModule.UseAuthenticationModule()`:** ~~registers 3 different middleware (permission caching, ABAC, access review).~~ This is **intentional design**: the Authentication module configures the pipeline with middleware from the Authorization module (where they now live). The middleware were moved to Authorization module to fix the original placement issue. Authentication module simply wires them into the pipeline in correct order. This is proper separation of concerns - Authorization owns the middleware, Authentication configures the pipeline.
 
 **Good SRP:**
 - ✅ `ActorContext`: only models identity, doesn't perform operations
@@ -639,24 +639,28 @@ public static T Create<T>(Action<T>? configure = null)
 
 #### Interface Segregation Principle (ISP)
 
-**Violations:**
+**All ISP Violations FIXED:**
 - ✅ **FIXED: `IPermissionsContext`:** Split into `IPermissionChecker` (HasTenantPermissionAsync, HasResourcePermissionAsync, GetEffectivePermissionsAsync, IsOwner) and `IPermissionContextInfo` (UserId, TenantId, IsAuthenticated, IsSystemAdmin, IsTenantAdmin). Clients can now depend on focused interfaces. `IPermissionsContext` inherits from both for backward compatibility.
-- ⚠️ `IAuthorizationPermissionService`: Large interface with many methods
+- ✅ **FIXED: `IAuthorizationPermissionService`:** Split into focused interfaces: `IAuthorizationSinglePermissionChecker` (single permission checks), `IAuthorizationPermissionResolver` (get all permissions), and `IAuthorizationBatchPermissionChecker` (batch permission checks). The composite `IAuthorizationPermissionService` inherits from all three for backward compatibility. Clients should depend on the focused interfaces. See [IAuthorizationPermissionService.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Abstractions/IAuthorizationPermissionService.cs)
 
 **Good ISP:**
 - ✅ `IActorContextAccessor`: Only 3 methods (get, set, clear)
 - ✅ `IJwtTokenService`: Focused on token operations
+- ✅ `IAuthorizationSinglePermissionChecker`: Only permission check methods
+- ✅ `IAuthorizationPermissionResolver`: Only permission resolution methods
 
 #### Dependency Inversion Principle (DIP)
 
-**Violations:**
-- ⚠️ `ActorContextMiddleware` directly uses `ClaimsPrincipal` (ASP.NET Core type). Should depend on abstraction.
-- ⚠️ `TenantMiddleware` stores tenant in `HttpContext.Items` (leaky abstraction). Other code depends on magic string `"CurrentTenant"`.
+**All DIP Violations FIXED:**
+- ✅ **FIXED: `ActorContextMiddleware` ClaimsPrincipal dependency:** Created `IClaimsPrincipalAccessor` abstraction. `ActorContextMiddleware` now injects `IClaimsPrincipalAccessor` instead of directly accessing `HttpContext.User`. This enables testing and decouples from ASP.NET Core. See [IClaimsPrincipalAccessor.cs](apps/api/Source/Modules/GameGuild.Identity.Authorization/Abstractions/IClaimsPrincipalAccessor.cs)
+- ✅ **FIXED: `TenantMiddleware` magic strings:** Created `HttpContextKeys` constants class with `CurrentTenant`, `AuthorizationTenantId`, and other keys. All middleware now uses typed constants. Legacy `TenantItemKey` and `TenantIdItemKey` marked `[Obsolete]` pointing to `HttpContextKeys`. See [HttpContextKeys.cs](apps/api/Source/Modules/GameGuild.SharedKernel/HttpContextKeys.cs)
 
 **Good DIP:**
 - ✅ Controllers depend on `IMediator`, not concrete handlers
 - ✅ Services depend on repository interfaces, not EF Core directly
 - ✅ ActorContext has no ASP.NET dependencies
+- ✅ `ActorContextMiddleware` depends on `IClaimsPrincipalAccessor` abstraction
+- ✅ All HttpContext.Items access uses `HttpContextKeys` constants
 
 ---
 
