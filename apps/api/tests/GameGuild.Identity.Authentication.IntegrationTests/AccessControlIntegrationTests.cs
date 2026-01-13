@@ -1,6 +1,7 @@
 using GameGuild.API.Database;
 using Xunit;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;

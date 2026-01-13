@@ -87,10 +87,10 @@ public class AuthenticationIntegrationTests : IClassFixture<WebApplicationFactor
 
         // Verify auth user was created in database
         var context = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var authUser = await context.Set<GameGuild.Identity.Authentication.Entities.AuthUser>().FirstOrDefaultAsync(u => u.Email == signUpRequest.Email);
+        var user = await context.Set<GameGuild.Identity.Users.User>().FirstOrDefaultAsync(u => u.Email == signUpRequest.Email);
 
-        authUser.Should().NotBeNull();
-        authUser!.Email.Should().Be(signUpRequest.Email);
+        user.Should().NotBeNull();
+        user!.Email.Should().Be(signUpRequest.Email);
     }
 
     [Fact]

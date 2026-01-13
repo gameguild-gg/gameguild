@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.API.Database;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Users;
 using Xunit;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -742,7 +743,7 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
     private async Task CreateTestUserAsync(Guid userId)
     {
         // Create a minimal user entry for testing
-        var authUser = new AuthUser
+        var user = new User
         {
             Id = userId,
             Email = $"test.user.{userId}@example.com",
@@ -752,7 +753,7 @@ public class SessionManagementIntegrationTests : IClassFixture<WebApplicationFac
             UpdatedAt = DateTime.UtcNow
         };
 
-        await _dbContext.Set<AuthUser>().AddAsync(authUser);
+        await _dbContext.Set<User>().AddAsync(user);
         await _dbContext.SaveChangesAsync();
     }
 

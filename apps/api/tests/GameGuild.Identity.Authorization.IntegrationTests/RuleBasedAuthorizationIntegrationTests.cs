@@ -1,9 +1,7 @@
 using System.Security.Claims;
 using FluentAssertions;
 using GameGuild.Abstractions;
-using GameGuild.Identity.Authorization.Abstractions;
-using GameGuild.Identity.Authorization.Entities;
-using GameGuild.Identity.Authorization.Rules.Abstractions;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;

@@ -1,8 +1,7 @@
 using FluentAssertions;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Resources;
-using GameGuild.Identity.Users;
-using GameGuild.Identity.Users;
 using GameGuild.Identity.Users;
 using Moq;
 using Xunit;
@@ -13,22 +12,22 @@ public class BulkCreateUsersCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
     private readonly Mock<IResourceQuotaService> _quotaServiceMock;
-    private readonly Mock<ITenantContext> _tenantContextMock;
+    private readonly Mock<IActorContextAccessor> _actorContextAccessorMock;
     private readonly BulkCreateUsersCommandHandler _handler;
 
     public BulkCreateUsersCommandHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
         _quotaServiceMock = new Mock<IResourceQuotaService>();
-        _tenantContextMock = new Mock<ITenantContext>();
+        _actorContextAccessorMock = new Mock<IActorContextAccessor>();
         
         // Default: no tenant context (quota checks skipped)
-        _tenantContextMock.Setup(x => x.TenantId).Returns((Guid?)null);
+        _actorContextAccessorMock.Setup(x => x.ActorContext).Returns(ActorContext.Anonymous);
         
         _handler = new BulkCreateUsersCommandHandler(
             _userRepositoryMock.Object,
             _quotaServiceMock.Object,
-            _tenantContextMock.Object);
+            _actorContextAccessorMock.Object);
     }
 
     [Fact]

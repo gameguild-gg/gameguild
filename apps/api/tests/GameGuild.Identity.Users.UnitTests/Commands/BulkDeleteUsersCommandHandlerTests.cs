@@ -1,8 +1,8 @@
 using FluentAssertions;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Identity.Users;
-using GameGuild.Identity.Users;
-using GameGuild.Identity.Users;
+using GameGuild.Resources;
 using Moq;
 using Xunit;
 
@@ -11,12 +11,20 @@ namespace GameGuild.Identity.Users.UnitTests.Commands;
 public class BulkDeleteUsersCommandHandlerTests
 {
     private readonly Mock<IUserRepository> _userRepositoryMock;
+    private readonly Mock<IResourceQuotaService> _quotaServiceMock;
+    private readonly Mock<IActorContextAccessor> _actorContextAccessorMock;
     private readonly BulkDeleteUsersCommandHandler _handler;
 
     public BulkDeleteUsersCommandHandlerTests()
     {
         _userRepositoryMock = new Mock<IUserRepository>();
-        _handler = new BulkDeleteUsersCommandHandler(_userRepositoryMock.Object);
+        _quotaServiceMock = new Mock<IResourceQuotaService>();
+        _actorContextAccessorMock = new Mock<IActorContextAccessor>();
+        _actorContextAccessorMock.Setup(x => x.ActorContext).Returns(ActorContext.Anonymous);
+        _handler = new BulkDeleteUsersCommandHandler(
+            _userRepositoryMock.Object,
+            _quotaServiceMock.Object,
+            _actorContextAccessorMock.Object);
     }
 
     [Fact]

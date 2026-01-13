@@ -1,4 +1,5 @@
 using System.Reflection;
+using GameGuild.CQRS.Models;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using PermissionType = GameGuild.Identity.Authorization.PermissionType;
@@ -28,14 +29,15 @@ public static class TestEntityFactory
             Name = name,
             ResourceType = resourceType,
             Effect = effect,
-            AttributeExpression = attributeExpression ?? "{}",
-            ConditionExpression = conditionExpression,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            SubjectConditions = attributeExpression ?? "{}",
+            EnvironmentConditions = conditionExpression,
+            IsEnabled = true
         };
         
-        SetTenantId(policy, tenantId);
+        if (tenantId.HasValue)
+        {
+            policy.TenantId = new TenantId(tenantId.Value);
+        }
         return policy;
     }
 
