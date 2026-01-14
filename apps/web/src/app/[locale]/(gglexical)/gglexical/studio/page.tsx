@@ -3,7 +3,7 @@
 import { Editor } from "@/components/editor/lexical-editor"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Save, HardDrive, Eye, Blocks, Home } from "lucide-react"
+import { Save, HardDrive, Eye, Blocks, Home, Monitor, Presentation, Plus } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -19,6 +19,7 @@ import { SyncStatusIndicator } from "@/components/editor/extras/editor/sync-stat
 import { EditableProjectTitle } from "@/components/editor/extras/editor/editable-project-title"
 import { ProjectStorageInfo } from "@/components/editor/extras/editor/project-storage-info"
 import { ProjectModeIndicator } from "@/components/editor/extras/editor/project-mode-indicator"
+import { PanelNavigationSidebar } from "@/components/editor/extras/editor/panel-navigation-sidebar"
 import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/components/editor/extras/editor/project-title-operations"
 import { handleSave as saveProject, handleSaveAs as saveAsProject } from "@/components/editor/extras/editor/project-save-operations"
 import { calculateProjectAssetsSize as calculateAssets } from "@/components/editor/extras/editor/project-assets-operations"
@@ -35,6 +36,21 @@ import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
 import type { SerializedEditorState } from "lexical"
+import { 
+  type SequentialPanelStructure, 
+  type PanelLayoutType, 
+  type PreviewMode,
+  isSequentialStructure,
+  parseSequentialStructure,
+  createEmptySequentialStructure,
+  addPanel,
+  removePanel,
+  reorderPanels,
+  updatePanelName,
+  updatePanelState,
+  updatePreviewMode,
+  serializeSequentialStructure
+} from "@/lib/storage/editor/panel-structure"
 
 export type ProjectType = "type1" | "type2" | "type3"
 
@@ -144,6 +160,14 @@ export default function Page() {
   const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
   const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>("free-page")
 
+  // Sequential panel states
+  const [sequentialStructure, setSequentialStructure] = useState<SequentialPanelStructure | null>(null)
+  const [currentPanelIndex, setCurrentPanelIndex] = useState(0)
+  const [panelEditorRefs, setPanelEditorRefs] = useState<Map<string, React.RefObject<LexicalEditor>>>(new Map())
+  
+  const [nextUrl, setNextUrl] = useState<string | null>(null)
+  const [exitDialogOpen, setExitDialogOpen] = useState(false)
+
   const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
     if (event.ctrlKey || event.metaKey || event.button === 1) {
       return
@@ -217,14 +241,21 @@ export default function Page() {
 
   // Atualizar informações de armazenamento sempre que o editor mudar
   useEffect(() => {
-    const dataToCalculate = createProjectData(currentLayout, {
-      single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
-      left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
-      right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
-    })
+    let dataToCalculate: string
+    
+    if (currentLayout === "sequential" && sequentialStructure) {
+      dataToCalculate = serializeSequentialStructure(sequentialStructure)
+    } else {
+      dataToCalculate = createProjectData(currentLayout, {
+        single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
+        left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
+        right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
+      })
+    }
+    
     const size = estimateSize(dataToCalculate)
     setCurrentProjectSize(size)
-  }, [editorState, leftEditorState, rightEditorState, currentLayout])
+  }, [editorState, leftEditorState, rightEditorState, currentLayout, sequentialStructure])
 
   // Calculate assets size when project changes or editor content changes
   useEffect(() => {
@@ -233,7 +264,7 @@ export default function Page() {
     } else {
       setCurrentProjectAssetsSize(0)
     }
-  }, [currentProjectId, isDbInitialized, editorState, leftEditorState, rightEditorState])
+  }, [currentProjectId, isDbInitialized, editorState, leftEditorState, rightEditorState, sequentialStructure])
 
   const storageAdapter = {
     save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: string = "type1") => {
@@ -401,11 +432,19 @@ export default function Page() {
 
   const handleSave = async () => {
     // Prepare the correct state based on layout type
-    const dataToSave = createProjectData(currentLayout, {
-      single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
-      left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
-      right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
-    })
+    let dataToSave: string
+    
+    if (currentLayout === "sequential" && sequentialStructure) {
+      // Sequential layout: serialize the structure
+      dataToSave = serializeSequentialStructure(sequentialStructure)
+    } else {
+      // Single or Dual layout
+      dataToSave = createProjectData(currentLayout, {
+        single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
+        left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
+        right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
+      })
+    }
     
     const refToUse = currentLayout === "single" ? editorRef : leftEditorRef
     
@@ -424,11 +463,19 @@ export default function Page() {
 
   const handleSaveAs = async (storageOption: "local" | "gameguild-cloud" | "google-drive" = "local") => {
     // Prepare the correct state based on layout type
-    const dataToSave = createProjectData(currentLayout, {
-      single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
-      left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
-      right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
-    })
+    let dataToSave: string
+    
+    if (currentLayout === "sequential" && sequentialStructure) {
+      // Sequential layout: serialize the structure
+      dataToSave = serializeSequentialStructure(sequentialStructure)
+    } else {
+      // Single or Dual layout
+      dataToSave = createProjectData(currentLayout, {
+        single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
+        left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
+        right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
+      })
+    }
     
     const refToUse = currentLayout === "single" ? editorRef : leftEditorRef
     
@@ -592,9 +639,6 @@ export default function Page() {
       loadSavedProjectsList,
     })
   }
-
-  const [exitDialogOpen, setExitDialogOpen] = useState(false)
-  const [nextUrl, setNextUrl] = useState<string>("")
 
   const handleNavigation = (url: string) => {
     if (currentProjectId && editorState) {
@@ -800,6 +844,23 @@ export default function Page() {
                       // Mark project load time to prevent auto-save for 1 second
                       setLastProjectLoadTime(Date.now())
                       
+                      // Handle sequential layout
+                      if (layoutInfo.isSequential && layoutInfo.sequentialData) {
+                        setSequentialStructure(layoutInfo.sequentialData)
+                        setCurrentPanelIndex(0)
+                        
+                        // Initialize editor refs for all panels
+                        const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
+                        layoutInfo.sequentialData.panels.forEach(panel => {
+                          newRefs.set(panel.id, { current: undefined as any })
+                        })
+                        setPanelEditorRefs(newRefs)
+                        
+                        // Update URL hash with project ID
+                        window.history.pushState(null, '', `#${projectData.id}`)
+                        return
+                      }
+                      
                       // Extract editor states baseado no layout detectado
                       const states = extractEditorStates(projectData.data, layoutInfo.layoutType)
                       
@@ -864,6 +925,49 @@ export default function Page() {
                     <Eye className="h-4 w-4" />
                     Preview
                   </Button>
+                  
+                  {/* Preview Mode Selector (Sequential Layout Only) */}
+                  {currentLayout === "sequential" && sequentialStructure && (
+                    <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-300 dark:border-gray-600">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Preview Mode:
+                      </span>
+                      <Button
+                        variant={sequentialStructure.previewMode === "continuous" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          const newStructure = updatePreviewMode(sequentialStructure, "continuous")
+                          setSequentialStructure(newStructure)
+                          toast.success("Preview mode changed", {
+                            description: "Preview will show all panels in continuous scroll",
+                            duration: 2000
+                          })
+                        }}
+                        className="gap-2 h-8"
+                        title="Show all panels in continuous scroll"
+                      >
+                        <Monitor className="h-3.5 w-3.5" />
+                        Continuous
+                      </Button>
+                      <Button
+                        variant={sequentialStructure.previewMode === "slide" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          const newStructure = updatePreviewMode(sequentialStructure, "slide")
+                          setSequentialStructure(newStructure)
+                          toast.success("Preview mode changed", {
+                            description: "Preview will show one panel at a time",
+                            duration: 2000
+                          })
+                        }}
+                        className="gap-2 h-8"
+                        title="Show one panel at a time (presentation mode)"
+                      >
+                        <Presentation className="h-3.5 w-3.5" />
+                        Slide
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Status Indicators */}
@@ -911,7 +1015,38 @@ export default function Page() {
                 let dataString: string
                 let layoutType: LayoutType
                 
-                if (projectData.layout === "dual") {
+                if (projectData.layout === "sequential") {
+                  // Sequential panels
+                  const initialStructure = createEmptySequentialStructure()
+                  dataString = serializeSequentialStructure(initialStructure)
+                  layoutType = "sequential"
+                  setSequentialStructure(initialStructure)
+                  setCurrentPanelIndex(0)
+                  
+                  // Initialize editor refs for first panel
+                  const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
+                  if (initialStructure.panels[0]) {
+                    newRefs.set(initialStructure.panels[0].id, { current: undefined as any })
+                  }
+                  setPanelEditorRefs(newRefs)
+                  
+                  // Update the project in storage with the correct sequential structure
+                  setTimeout(async () => {
+                    try {
+                      await storageAdapter.save(
+                        projectData.id,
+                        projectData.name,
+                        dataString,
+                        projectData.tags,
+                        projectData.storageType,
+                        undefined,
+                        projectData.type
+                      )
+                    } catch (error) {
+                      console.error("Failed to save sequential structure:", error)
+                    }
+                  }, 200)
+                } else if (projectData.layout === "dual") {
                   // Dual panel
                   dataString = createProjectData("dual", { left: emptyState, right: emptyState })
                   layoutType = "dual"
@@ -937,7 +1072,7 @@ export default function Page() {
                       editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyStateString))
                     }
                     setEditorState(emptyStateString)
-                  } else {
+                  } else if (layoutType === "dual") {
                     // dual panel - initialize both editors
                     if (leftEditorRef.current) {
                       leftEditorRef.current.setEditorState(leftEditorRef.current.parseEditorState(emptyStateString))
@@ -948,6 +1083,7 @@ export default function Page() {
                     setLeftEditorState(emptyStateString)
                     setRightEditorState(emptyStateString)
                   }
+                  // Sequential panels will be initialized as they render
                 }, 100)
                 
                 setCurrentProjectId(projectData.id)
@@ -964,7 +1100,185 @@ export default function Page() {
             />
 
             {/* Editor Container - Render based on layout type */}
-            {currentLayout === "single" ? (
+            {currentLayout === "sequential" && sequentialStructure ? (
+              <div className="flex gap-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+                {/* Panel Navigation Sidebar */}
+                <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                  <PanelNavigationSidebar
+                    panels={sequentialStructure.panels}
+                    currentPanelIndex={currentPanelIndex}
+                    onPanelSelect={(index: number) => {
+                      setCurrentPanelIndex(index)
+                    }}
+                    onPanelAdd={(type: PanelLayoutType) => {
+                      const newStructure = addPanel(sequentialStructure, type)
+                      setSequentialStructure(newStructure)
+                      // Initialize ref for new panel
+                      const lastPanel = newStructure.panels[newStructure.panels.length - 1]
+                      const newRefs = new Map(panelEditorRefs)
+                      if (lastPanel) {
+                        newRefs.set(lastPanel.id, { current: undefined as any })
+                      }
+                      setPanelEditorRefs(newRefs)
+                      // Navigate to new panel
+                      setCurrentPanelIndex(newStructure.panels.length - 1)
+                    }}
+                    onPanelRemove={(panelId: string) => {
+                      if (sequentialStructure.panels.length === 1) {
+                        toast.error("Cannot remove last panel", {
+                          description: "At least one panel is required",
+                          duration: 3000
+                        })
+                        return
+                      }
+                      const newStructure = removePanel(sequentialStructure, panelId)
+                      setSequentialStructure(newStructure)
+                      // Remove ref
+                      const newRefs = new Map(panelEditorRefs)
+                      newRefs.delete(panelId)
+                      setPanelEditorRefs(newRefs)
+                      // Adjust current index if needed
+                      if (currentPanelIndex >= newStructure.panels.length) {
+                        setCurrentPanelIndex(newStructure.panels.length - 1)
+                      }
+                    }}
+                    onPanelReorder={(fromIndex: number, toIndex: number) => {
+                      const newStructure = reorderPanels(sequentialStructure, fromIndex, toIndex)
+                      setSequentialStructure(newStructure)
+                      // Update current index to follow the moved panel
+                      if (currentPanelIndex === fromIndex) {
+                        setCurrentPanelIndex(toIndex)
+                      } else if (currentPanelIndex === toIndex) {
+                        setCurrentPanelIndex(fromIndex < toIndex ? toIndex - 1 : toIndex + 1)
+                      }
+                    }}
+                    onPanelNameChange={(panelId: string, name: string) => {
+                      const newStructure = updatePanelName(sequentialStructure, panelId, name)
+                      setSequentialStructure(newStructure)
+                    }}
+                  />
+                </div>
+                
+                {/* Continuous Scroll Container - All panels visible */}
+                <div className="flex-1 overflow-y-auto max-h-[calc(100vh-16rem)] bg-gray-50 dark:bg-gray-950">
+                  <div className="space-y-4 p-6">
+                    {sequentialStructure.panels.map((panel, index) => (
+                      <div key={panel.id}>
+                        <div 
+                          className={`border-2 transition-all rounded-lg overflow-hidden ${
+                            currentPanelIndex === index
+                              ? 'border-blue-500 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800'
+                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                          }`}
+                          onClick={() => setCurrentPanelIndex(index)}
+                        >
+                          {/* Panel Header */}
+                          <div className="bg-white dark:bg-gray-900 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {panel.name || `Panel ${panel.order + 1}`}
+                              </span>
+                              <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                                {panel.type === "single" ? "Single" : "Dual"}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Panel Content */}
+                          {panel.type === "single" ? (
+                            <div className="bg-white dark:bg-gray-900">
+                              <EditorLayoutType1
+                                editorRef={panelEditorRefs.get(panel.id) as any}
+                                editorState={typeof panel.state === "string" ? panel.state : JSON.stringify(panel.state || "")}
+                                onEditorChange={(newState) => {
+                                  const newStructure = updatePanelState(sequentialStructure, panel.id, { state: newState })
+                                  setSequentialStructure(newStructure)
+                                }}
+                                onLoadingChange={(setLoading) => {
+                                  if (currentPanelIndex === index) {
+                                    setLoadingRef.current = setLoading
+                                  }
+                                }}
+                                projectId={currentProjectId}
+                                mode={currentProjectMode}
+                              />
+                            </div>
+                          ) : (
+                            <div className="bg-white dark:bg-gray-900">
+                              <EditorLayoutType2
+                                leftEditorRef={panelEditorRefs.get(`${panel.id}-left`) as any}
+                                rightEditorRef={panelEditorRefs.get(`${panel.id}-right`) as any}
+                                leftEditorState={typeof panel.left === "string" ? panel.left : JSON.stringify(panel.left || "")}
+                                rightEditorState={typeof panel.right === "string" ? panel.right : JSON.stringify(panel.right || "")}
+                                onLeftEditorChange={(newState) => {
+                                  const newStructure = updatePanelState(sequentialStructure, panel.id, { left: newState })
+                                  setSequentialStructure(newStructure)
+                                }}
+                                onRightEditorChange={(newState) => {
+                                  const newStructure = updatePanelState(sequentialStructure, panel.id, { right: newState })
+                                  setSequentialStructure(newStructure)
+                                }}
+                                onLoadingChange={(setLoading) => {
+                                  if (currentPanelIndex === index) {
+                                    setLoadingRef.current = setLoading
+                                  }
+                                }}
+                                projectId={currentProjectId}
+                                mode={currentProjectMode}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Add Panel Button */}
+                        <div className="flex justify-center my-4">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newStructure = addPanel(sequentialStructure, "single", index + 1)
+                                setSequentialStructure(newStructure)
+                                const lastPanel = newStructure.panels[index + 1]
+                                const newRefs = new Map(panelEditorRefs)
+                                if (lastPanel) {
+                                  newRefs.set(lastPanel.id, { current: undefined as any })
+                                }
+                                setPanelEditorRefs(newRefs)
+                                setCurrentPanelIndex(index + 1)
+                              }}
+                              className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Add Single Panel
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const newStructure = addPanel(sequentialStructure, "dual", index + 1)
+                                setSequentialStructure(newStructure)
+                                const lastPanel = newStructure.panels[index + 1]
+                                const newRefs = new Map(panelEditorRefs)
+                                if (lastPanel) {
+                                  newRefs.set(lastPanel.id, { current: undefined as any })
+                                }
+                                setPanelEditorRefs(newRefs)
+                                setCurrentPanelIndex(index + 1)
+                              }}
+                              className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
+                            >
+                              <Plus className="h-4 w-4" />
+                              Add Dual Panel
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : currentLayout === "single" ? (
               <EditorLayoutType1
                 editorRef={editorRef}
                 editorState={editorState}
