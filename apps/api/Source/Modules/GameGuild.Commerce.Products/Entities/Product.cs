@@ -88,39 +88,6 @@ public class Product : EntityBase
     /// <returns>CreatorInfo if creator is loaded, null otherwise</returns>
     public CreatorInfo? GetCreatorInfo() => Creator?.ToCreatorInfo();
 
-    /// <summary>
-    ///     JSON array of product IDs included in the bundle.
-    ///     DEPRECATED: Use BundleItems collection instead for type-safe bundle management.
-    /// </summary>
-    [Obsolete("Use BundleItems navigation property instead for type-safe bundle management")]
-    [MaxLength(4000)]
-    [Column(TypeName = "jsonb")]
-    public string? BundleItemsJson { get; set; }
-
-    /// <summary>
-    ///     Referral commission percentage.
-    ///     DEPRECATED: Use CommissionConfig instead.
-    /// </summary>
-    [Obsolete("Use CommissionConfig instead for commission management")]
-    [Column(TypeName = "decimal(5,2)")]
-    public decimal ReferralCommissionPercentage { get; set; } = 30m;
-
-    /// <summary>
-    ///     Maximum affiliate discount.
-    ///     DEPRECATED: Use CommissionConfig instead.
-    /// </summary>
-    [Obsolete("Use CommissionConfig instead for commission management")]
-    [Column(TypeName = "decimal(5,2)")]
-    public decimal MaxAffiliateDiscount { get; set; }
-
-    /// <summary>
-    ///     Affiliate commission percentage.
-    ///     DEPRECATED: Use CommissionConfig instead.
-    /// </summary>
-    [Obsolete("Use CommissionConfig instead for commission management")]
-    [Column(TypeName = "decimal(5,2)")]
-    public decimal AffiliateCommissionPercentage { get; set; } = 30m;
-
     // Navigation properties
 
     /// <summary>
@@ -255,39 +222,5 @@ public class Product : EntityBase
     public IEnumerable<Guid> GetBundleProductIds()
     {
         return BundleItems.OrderBy(bi => bi.DisplayOrder).Select(bi => bi.IncludedProductId);
-    }
-
-    /// <summary>
-    ///     Get bundle item IDs from JSON.
-    ///     DEPRECATED: Use GetBundleProductIds() instead.
-    /// </summary>
-    [Obsolete("Use GetBundleProductIds() instead for type-safe bundle management")]
-    public List<Guid> GetBundleItemIds()
-    {
-#pragma warning disable CS0618 // Type or member is obsolete
-        if (string.IsNullOrEmpty(BundleItemsJson))
-            return new List<Guid>();
-
-        try
-        {
-            return JsonSerializer.Deserialize<List<Guid>>(BundleItemsJson) ?? new List<Guid>();
-        }
-        catch
-        {
-            return new List<Guid>();
-        }
-#pragma warning restore CS0618
-    }
-
-    /// <summary>
-    ///     Set bundle item IDs to JSON.
-    ///     DEPRECATED: Use AddToBundleTypeSafe() instead.
-    /// </summary>
-    [Obsolete("Use AddToBundleTypeSafe() instead for type-safe bundle management")]
-    public void SetBundleItemIds(List<Guid> productIds)
-    {
-#pragma warning disable CS0618 // Type or member is obsolete
-        BundleItemsJson = JsonSerializer.Serialize(productIds);
-#pragma warning restore CS0618
     }
 }
