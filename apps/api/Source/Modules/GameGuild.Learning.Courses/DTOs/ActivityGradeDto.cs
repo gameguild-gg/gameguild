@@ -1,7 +1,3 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> DTO for ActivityGrade responses - avoids circular references for Swagger/OpenAPI </summary>

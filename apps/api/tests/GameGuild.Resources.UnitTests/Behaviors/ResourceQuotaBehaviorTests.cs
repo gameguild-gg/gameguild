@@ -1,7 +1,6 @@
 using FluentAssertions;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
-using GameGuild.Resources;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;

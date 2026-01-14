@@ -1,7 +1,3 @@
-using GameGuild.CQRS;
-
-using GameGuild.Enums;
-
 namespace GameGuild.Learning.Courses;
 
 // Query to get program statistics

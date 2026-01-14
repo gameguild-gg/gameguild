@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record UpdateProgressDto(ProgressStatus? Status = null, DateTime? LastAccessedAt = null, Dictionary<string, object>? AdditionalData = null) {
   public ProgressStatus? Status { get; init; } = Status;

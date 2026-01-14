@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GameGuild.Abstractions;
-using GameGuild.Commerce.Billing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.Extensions.Logging;

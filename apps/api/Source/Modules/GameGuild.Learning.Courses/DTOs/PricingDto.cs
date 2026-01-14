@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record PricingDto(decimal Price, string Currency, bool IsSubscription, int? SubscriptionDurationDays, bool IsMonetizationEnabled) {
   public decimal Price { get; init; } = Price;

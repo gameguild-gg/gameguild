@@ -1,12 +1,9 @@
 
 
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using GameGuild.Enums;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
-using GameGuild.Identity.Users;
-﻿namespace GameGuild.Learning.Courses;
+
+ namespace GameGuild.Learning.Courses;
 
 /// <summary> EntityBase Framework configuration for ContentInteraction entity </summary>
 public class ContentInteractionConfiguration : IEntityTypeConfiguration<ContentInteraction> {

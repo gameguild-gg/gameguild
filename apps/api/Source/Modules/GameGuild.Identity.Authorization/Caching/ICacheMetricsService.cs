@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
-using System.Threading;
 
 namespace GameGuild.Identity.Authorization.Caching;
 

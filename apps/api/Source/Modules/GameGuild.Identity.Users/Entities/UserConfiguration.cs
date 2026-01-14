@@ -1,4 +1,3 @@
-using GameGuild.Identity.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

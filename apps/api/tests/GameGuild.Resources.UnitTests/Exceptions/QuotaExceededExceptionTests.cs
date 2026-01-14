@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Resources;
 using Xunit;
 
 namespace GameGuild.Resources.UnitTests.Exceptions;

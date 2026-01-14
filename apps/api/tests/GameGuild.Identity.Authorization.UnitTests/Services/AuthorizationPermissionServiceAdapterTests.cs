@@ -1,6 +1,4 @@
 using FluentAssertions;
-using GameGuild.Identity.Authorization;
-using GameGuild.Identity.Authentication;
 using Moq;
 using Xunit;
 

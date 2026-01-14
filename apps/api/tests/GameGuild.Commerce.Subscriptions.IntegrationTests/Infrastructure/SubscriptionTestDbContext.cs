@@ -1,5 +1,4 @@
 using GameGuild.API.Database;
-using GameGuild.Commerce.Subscriptions;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Subscriptions.IntegrationTests.Infrastructure;

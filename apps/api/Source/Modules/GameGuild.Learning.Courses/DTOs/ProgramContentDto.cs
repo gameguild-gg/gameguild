@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿using System.Text.Json;
+using System.Text.Json;
 
 
 namespace GameGuild.Learning.Courses;

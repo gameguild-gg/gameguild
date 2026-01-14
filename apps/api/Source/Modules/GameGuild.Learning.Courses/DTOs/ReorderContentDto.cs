@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record ReorderContentDto(List<Guid> ContentIds) {
   public List<Guid> ContentIds { get; init; } = ContentIds;

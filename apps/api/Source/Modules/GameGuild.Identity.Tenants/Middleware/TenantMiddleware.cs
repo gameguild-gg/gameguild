@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants.Utilities;

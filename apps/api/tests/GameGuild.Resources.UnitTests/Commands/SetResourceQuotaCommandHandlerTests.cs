@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GameGuild.CQRS;
-using GameGuild.Resources;
 using Moq;
 using Xunit;
 

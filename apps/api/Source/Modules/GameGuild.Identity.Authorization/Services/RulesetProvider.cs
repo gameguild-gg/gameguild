@@ -209,7 +209,7 @@ public sealed class RulesetProvider : IRulesetProvider
         };
     }
 
-    private static List<string> ParseJsonArray(string? json)
+    private List<string> ParseJsonArray(string? json)
     {
         if (string.IsNullOrEmpty(json))
             return [];
@@ -218,8 +218,9 @@ public sealed class RulesetProvider : IRulesetProvider
         {
             return JsonSerializer.Deserialize<List<string>>(json) ?? [];
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to parse JSON array: {Json}", json);
             return [];
         }
     }

@@ -1,8 +1,4 @@
 using FluentAssertions;
-using GameGuild.Identity.Users;
-using GameGuild.Identity.Users;
-using GameGuild.Identity.Users;
-using GameGuild.Identity.Users;
 using Moq;
 using Xunit;
 

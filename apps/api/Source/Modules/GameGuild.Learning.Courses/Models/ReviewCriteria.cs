@@ -1,9 +1,6 @@
 using GameGuild.Entities;
-using GameGuild.Enums;
-using GameGuild.Identity.Users;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+
 namespace GameGuild.Learning.Courses;
 
 /// <summary>

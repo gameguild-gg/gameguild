@@ -8,7 +8,6 @@
 // =============================================================================
 
 using GameGuild.Identity.Context.Actors;
-using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 

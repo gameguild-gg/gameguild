@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Identity.Tenants;
 using Xunit;
 
 namespace GameGuild.Identity.Tenants.UnitTests.Entities;

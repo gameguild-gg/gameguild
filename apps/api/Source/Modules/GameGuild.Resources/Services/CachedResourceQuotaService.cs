@@ -136,28 +136,6 @@ public class CachedResourceQuotaService : IResourceQuotaService
 
     // ========== Usage Tracking (writes invalidate cache) ==========
 
-    [Obsolete("Use TryAtomicConsumeAsync for atomic, concurrency-safe quota consumption. This method is not atomic.")]
-    public async Task<bool> RecordUsageAsync(
-        Guid tenantId,
-        ResourceUsageType type,
-        long amount = 1,
-        Guid? userId = null,
-        string? source = null,
-        Dictionary<string, string>? metadata = null,
-        CancellationToken cancellationToken = default)
-    {
-#pragma warning disable CS0618
-        var result = await _inner.RecordUsageAsync(tenantId, type, amount, userId, source, metadata, cancellationToken);
-#pragma warning restore CS0618
-
-        if (result)
-        {
-            InvalidateQuotaCache(tenantId, type);
-        }
-
-        return result;
-    }
-
     public async Task<long> GetCurrentUsageAsync(
         Guid tenantId,
         ResourceUsageType type,

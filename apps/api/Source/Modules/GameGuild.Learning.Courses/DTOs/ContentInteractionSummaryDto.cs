@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 /// <summary>
 /// Simplified content interaction information to avoid circular references

@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Resources;
 using Moq;
 using Xunit;
 

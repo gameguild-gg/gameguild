@@ -1,4 +1,3 @@
-using System.Text.Json;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
@@ -94,96 +93,6 @@ public class ResourceQuotaService(
         }
 
         return deleted;
-    }
-
-    /// <remarks>
-    /// DEPRECATED: Prefer using TryAtomicConsumeAsync for atomic operations with concurrency safety.
-    /// This method now enforces hard limits but is not atomic under concurrent access.
-    /// </remarks>
-    [Obsolete("Use TryAtomicConsumeAsync for atomic quota enforcement with concurrency safety. This method will be removed in v2.0.")]
-    public async Task<bool> RecordUsageAsync(
-        Guid tenantId,
-        ResourceUsageType type,
-        long amount = 1,
-        Guid? userId = null,
-        string? source = null,
-        Dictionary<string, string>? metadata = null,
-        CancellationToken cancellationToken = default
-    )
-    {
-        try
-        {
-            // Update quota usage
-            var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
-
-            if (quota != null)
-            {
-                // Check if quota needs reset
-                if (quota.ShouldReset()) { quota.ResetUsage(); }
-
-                // SECURITY FIX: Enforce hard limit before recording
-                if (quota.HardLimit.HasValue)
-                {
-                    var projectedUsage = quota.CurrentUsage + amount;
-                    if (projectedUsage > quota.HardLimit.Value)
-                    {
-                        logger.LogWarning(
-                            "RecordUsageAsync rejected: would exceed hard limit for tenant {TenantId}, type {Type}. " +
-                            "Current: {CurrentUsage}, Requested: {Amount}, Limit: {HardLimit}",
-                            tenantId, type, quota.CurrentUsage, amount, quota.HardLimit.Value);
-                        return false;
-                    }
-                }
-
-                quota.CurrentUsage += amount;
-                quota.UpdatedAt = DateTime.UtcNow;
-                await quotaRepository.UpdateAsync(quota, cancellationToken);
-            }
-
-            // Record usage history
-            var today = DateTime.UtcNow.Date;
-            var usageRecords = await usageRepository.GetByDateRangeAsync(tenantId, type, today, today.AddDays(1), cancellationToken);
-
-            var usageRecord = usageRecords.FirstOrDefault();
-
-            if (usageRecord != null)
-            {
-                usageRecord.UsageAmount += amount;
-                usageRecord.UpdatedAt = DateTime.UtcNow;
-
-                // Update peak usage if this is higher
-                if (usageRecord.PeakUsage == null || usageRecord.UsageAmount > usageRecord.PeakUsage)
-                {
-                    usageRecord.PeakUsage = usageRecord.UsageAmount;
-                    usageRecord.PeakUsageDate = DateTime.UtcNow;
-                }
-
-                await usageRepository.UpdateAsync(usageRecord, cancellationToken);
-            }
-            else
-            {
-                usageRecord = UsageRecord.CreateDaily(type, tenantId, amount, today, userId, source);
-
-                usageRecord.PeakUsage = amount;
-                usageRecord.PeakUsageDate = DateTime.UtcNow;
-
-                if (metadata != null) { usageRecord.Metadata = JsonSerializer.Serialize(metadata); }
-
-                if (quota != null) { usageRecord.ResourceQuotaId = quota.Id; }
-
-                await usageRepository.AddAsync(usageRecord, cancellationToken);
-            }
-
-            logger.LogDebug("Recorded usage for tenant {TenantId}, type {Type}: amount={Amount}", tenantId, type, amount);
-
-            return true;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error recording usage for tenant {TenantId}, type {Type}", tenantId, type);
-
-            return false;
-        }
     }
 
     public async Task<long> GetCurrentUsageAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default)

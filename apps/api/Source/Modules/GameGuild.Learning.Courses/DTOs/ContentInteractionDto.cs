@@ -1,7 +1,3 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
 namespace GameGuild.Learning.Courses;
 
 /// <summary> DTO for ContentInteraction responses - avoids circular references for Swagger/OpenAPI </summary>

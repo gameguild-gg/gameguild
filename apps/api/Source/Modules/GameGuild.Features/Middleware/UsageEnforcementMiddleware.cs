@@ -1,4 +1,3 @@
-using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Commerce.Subscriptions;
 using Microsoft.AspNetCore.Http;

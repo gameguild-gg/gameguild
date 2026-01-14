@@ -1,6 +1,4 @@
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Running;
-using GameGuild.Commerce.Subscriptions;
 using GameGuild.ValueObjects;
 
 namespace GameGuild.Commerce.Subscriptions.PerformanceTests;

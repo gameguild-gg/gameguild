@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Xunit;
 
 namespace GameGuild.Commerce.Products.UnitTests;

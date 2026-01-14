@@ -1,7 +1,5 @@
 using GameGuild.CQRS;
 
-using GameGuild.Enums;
-
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Query to get a program by ID </summary>

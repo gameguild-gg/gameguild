@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GameGuild.Abstractions;
-using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;

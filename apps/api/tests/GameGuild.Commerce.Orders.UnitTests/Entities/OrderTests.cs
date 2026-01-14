@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Commerce.Orders;
 using Xunit;
 
 namespace GameGuild.Commerce.Orders.UnitTests.Entities;

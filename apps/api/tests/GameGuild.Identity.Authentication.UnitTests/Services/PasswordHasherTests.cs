@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Identity.Authentication;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;

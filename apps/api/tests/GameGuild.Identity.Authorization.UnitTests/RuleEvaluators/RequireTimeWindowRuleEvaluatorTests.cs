@@ -1,8 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
 using FluentAssertions;
-using GameGuild.Identity.Authorization;
-using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Xunit;
 

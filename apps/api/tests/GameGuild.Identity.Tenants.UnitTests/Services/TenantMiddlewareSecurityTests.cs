@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GameGuild.CQRS;
-using GameGuild.Identity.Tenants;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;

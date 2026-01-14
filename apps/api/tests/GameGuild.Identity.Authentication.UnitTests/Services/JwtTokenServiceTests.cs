@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Identity.Authentication;
 using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

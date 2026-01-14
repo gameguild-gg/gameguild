@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Identity.Authentication;
 using Xunit;
 
 namespace GameGuild.Identity.Authentication.UnitTests.Entities;

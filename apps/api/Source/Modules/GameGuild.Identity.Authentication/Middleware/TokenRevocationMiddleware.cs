@@ -1,5 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using GameGuild.Identity.Authorization.Utilities;
 using GameGuild.Identity.Users;
 using Microsoft.AspNetCore.Http;

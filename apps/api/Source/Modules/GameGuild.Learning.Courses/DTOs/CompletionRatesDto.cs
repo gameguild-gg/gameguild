@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record CompletionRatesDto(Guid ProgramId, decimal OverallCompletionRate, Dictionary<Guid, decimal> ContentCompletionRates, List<CompletionTrendDto> CompletionTrends) {
   public Guid ProgramId { get; init; } = ProgramId;

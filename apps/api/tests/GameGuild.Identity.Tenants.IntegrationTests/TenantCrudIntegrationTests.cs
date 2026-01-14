@@ -1,6 +1,5 @@
 using FluentAssertions;
 using GameGuild.API.Database;
-using GameGuild.Identity.Tenants;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;

@@ -1,5 +1,4 @@
 using GameGuild.CQRS;
-using GameGuild.Identity.Users;
 
 namespace GameGuild.Identity.Users;
 

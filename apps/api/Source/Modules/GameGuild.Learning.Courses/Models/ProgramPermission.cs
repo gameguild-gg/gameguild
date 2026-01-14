@@ -1,10 +1,3 @@
-
-
-using GameGuild.Enums;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
-using GameGuild.Identity.Users;
 namespace GameGuild.Learning.Courses;
 
 /*

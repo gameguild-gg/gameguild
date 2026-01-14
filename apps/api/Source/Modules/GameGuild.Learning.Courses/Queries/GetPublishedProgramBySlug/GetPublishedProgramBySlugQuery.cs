@@ -1,7 +1,5 @@
 using GameGuild.CQRS;
 
-using GameGuild.Enums;
-
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Query to get published program by slug (public access) </summary>

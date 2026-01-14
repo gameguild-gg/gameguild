@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Commerce.Payments;
 using Xunit;
 
 namespace GameGuild.Commerce.Payments.UnitTests.Security;

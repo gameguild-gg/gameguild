@@ -1,8 +1,6 @@
 using AutoFixture;
 using FluentAssertions;
 using GameGuild.Abstractions;
-using GameGuild.Identity.Authentication;
-using GameGuild.Identity.Authentication;
 using Microsoft.EntityFrameworkCore;
 using MockQueryable.Moq;
 using Moq;

@@ -1,7 +1,5 @@
 using FluentAssertions;
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Resources;
 using GameGuild.Resources.IntegrationTests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;

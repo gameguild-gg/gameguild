@@ -1,6 +1,5 @@
 using System.Reflection;
 using GameGuild.CQRS;
-using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.Extensions.Logging;
 

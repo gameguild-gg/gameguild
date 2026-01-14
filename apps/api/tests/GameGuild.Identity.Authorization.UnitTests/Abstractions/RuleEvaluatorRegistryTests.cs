@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Xunit;
 

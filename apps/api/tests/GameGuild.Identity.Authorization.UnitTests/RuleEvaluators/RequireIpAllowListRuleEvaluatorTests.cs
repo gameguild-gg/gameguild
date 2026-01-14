@@ -1,8 +1,6 @@
 using System.Net;
 using System.Security.Claims;
 using FluentAssertions;
-using GameGuild.Identity.Authorization;
-using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Moq;

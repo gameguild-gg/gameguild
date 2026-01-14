@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record UpdateProgramDto(string? Title = null, string? Description = null, string? Thumbnail = null) {
   public string? Title { get; init; } = Title;

@@ -1,6 +1,4 @@
 using FluentAssertions;
-using GameGuild.Identity.Users;
-
 using Xunit;
 
 namespace GameGuild.Identity.Users.UnitTests.Entities;

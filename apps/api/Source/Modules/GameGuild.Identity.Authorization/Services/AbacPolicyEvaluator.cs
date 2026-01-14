@@ -164,7 +164,7 @@ public class AbacPolicyEvaluator(
         return true;
     }
 
-    private static bool EvaluateJsonConditions(string jsonConditions, IReadOnlyDictionary<string, object> attributes)
+    private bool EvaluateJsonConditions(string jsonConditions, IReadOnlyDictionary<string, object> attributes)
     {
         try
         {
@@ -182,8 +182,9 @@ public class AbacPolicyEvaluator(
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Failed to parse ABAC JSON conditions: {Conditions}", jsonConditions);
             return false;
         }
     }

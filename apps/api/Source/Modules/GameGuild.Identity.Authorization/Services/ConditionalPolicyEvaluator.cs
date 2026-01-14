@@ -207,8 +207,9 @@ public class ConditionalPolicyEvaluator(
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Failed to parse time conditions: {TimeConditionsJson}", timeConditionsJson);
             return true; // If parsing fails, don't block
         }
     }
@@ -238,8 +239,9 @@ public class ConditionalPolicyEvaluator(
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Failed to parse environment conditions: {ConditionsJson}", conditionsJson);
             return true;
         }
     }
@@ -284,13 +286,14 @@ public class ConditionalPolicyEvaluator(
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Failed to parse location conditions: {ConditionsJson}", conditionsJson);
             return true;
         }
     }
 
-    private static bool IsIpInRange(string ipAddress, string range)
+    private bool IsIpInRange(string ipAddress, string range)
     {
         try
         {
@@ -326,8 +329,9 @@ public class ConditionalPolicyEvaluator(
 
             return ipAddress.Equals(range, StringComparison.OrdinalIgnoreCase);
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Failed to parse IP range - IP: {IpAddress}, Range: {Range}", ipAddress, range);
             return false;
         }
     }
@@ -359,8 +363,9 @@ public class ConditionalPolicyEvaluator(
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Failed to parse device conditions: {ConditionsJson}", conditionsJson);
             return true;
         }
     }
@@ -383,8 +388,9 @@ public class ConditionalPolicyEvaluator(
 
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogWarning(ex, "Failed to parse custom conditions: {ConditionsJson}", conditionsJson);
             return true;
         }
     }

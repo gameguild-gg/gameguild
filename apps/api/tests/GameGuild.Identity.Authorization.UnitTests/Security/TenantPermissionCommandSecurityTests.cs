@@ -1,8 +1,5 @@
 using FluentAssertions;
 using GameGuild.CQRS.Models;
-using GameGuild.Identity.Authorization;
-using Microsoft.Extensions.Logging;
-using Moq;
 using Xunit;
 
 namespace GameGuild.Identity.Authorization.UnitTests.Security;

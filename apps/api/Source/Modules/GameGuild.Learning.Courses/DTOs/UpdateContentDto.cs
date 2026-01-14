@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record UpdateContentDto(string? Title = null, string? Description = null, string? Body = null, int? SortOrder = null, bool? IsRequired = null, int? EstimatedMinutes = null) {
   public string? Title { get; init; } = Title;

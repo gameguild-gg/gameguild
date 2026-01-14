@@ -1,5 +1,4 @@
 using GameGuild.Abstractions;
-using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 

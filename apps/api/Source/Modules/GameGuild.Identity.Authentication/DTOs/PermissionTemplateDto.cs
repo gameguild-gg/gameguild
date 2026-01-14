@@ -1,5 +1,4 @@
-using GameGuild.Identity.Authorization;
-namespace GameGuild.Identity.Authentication;
+﻿namespace GameGuild.Identity.Authentication;
 
 public class PermissionTemplateDto
 {

@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Resources;
 using Moq;
 using Xunit;
 
@@ -176,7 +175,7 @@ public class BackgroundJobQuotaHelperTests
             _tenantId,
             ResourceUsageType.Users,
             items,
-            async item => (true, $"processed-{item}"));
+            item => Task.FromResult<(bool, string?)>((true, $"processed-{item}")));
 
         // Assert
         successful.Should().HaveCount(3);
@@ -205,9 +204,9 @@ public class BackgroundJobQuotaHelperTests
             _tenantId,
             ResourceUsageType.Users,
             items,
-            async item => item.EndsWith("4") || item.EndsWith("5") 
+            item => Task.FromResult(item.EndsWith("4") || item.EndsWith("5") 
                 ? (false, (string?)null) 
-                : (true, $"processed-{item}"));
+                : (true, $"processed-{item}")));
 
         // Assert
         successful.Should().HaveCount(3);
@@ -234,7 +233,7 @@ public class BackgroundJobQuotaHelperTests
                 _tenantId,
                 ResourceUsageType.Users,
                 items,
-                async item => (true, $"processed-{item}")));
+                item => Task.FromResult<(bool, string?)>((true, $"processed-{item}"))));
 
         exception.Message.Should().Contain("batch of 3");
     }
@@ -250,7 +249,7 @@ public class BackgroundJobQuotaHelperTests
             _tenantId,
             ResourceUsageType.Users,
             items,
-            async item => (true, $"processed-{item}"));
+            item => Task.FromResult<(bool, string?)>((true, $"processed-{item}")));
 
         // Assert
         successful.Should().BeEmpty();

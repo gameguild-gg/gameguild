@@ -1,6 +1,5 @@
 using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 

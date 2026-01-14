@@ -1,6 +1,4 @@
 using FluentValidation.TestHelper;
-using GameGuild.Identity.Users;
-
 using Xunit;
 
 namespace GameGuild.Identity.Users.UnitTests.Commands;

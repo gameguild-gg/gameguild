@@ -1,8 +1,7 @@
 using GameGuild.Enums;
 
 
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record BulkUpdateProgramsDto(List<Guid> ProgramIds, ContentStatus? Status = null, AccessLevel? Visibility = null) {
   public List<Guid> ProgramIds { get; init; } = ProgramIds;

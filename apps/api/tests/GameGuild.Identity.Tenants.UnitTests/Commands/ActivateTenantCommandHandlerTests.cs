@@ -1,7 +1,4 @@
 using FluentAssertions;
-using GameGuild.Identity.Tenants;
-using GameGuild.Identity.Tenants;
-using GameGuild.Identity.Tenants;
 using Moq;
 using Xunit;
 

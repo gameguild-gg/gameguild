@@ -1,8 +1,7 @@
 using GameGuild.Enums;
 
 
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record ProgramSearchDto(string? SearchTerm = null, ContentStatus? Status = null, AccessLevel? Visibility = null, Guid? CreatorId = null, int Skip = 0, int Take = 50) {
   public string? SearchTerm { get; init; } = SearchTerm;

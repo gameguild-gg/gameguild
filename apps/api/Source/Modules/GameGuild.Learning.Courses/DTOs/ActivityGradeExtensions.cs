@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 /// <summary> Extension methods to convert from entity/service models to DTOs </summary>
 public static class ActivityGradeExtensions {

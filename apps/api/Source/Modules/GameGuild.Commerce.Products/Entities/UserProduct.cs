@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Commerce.Subscriptions;
 using GameGuild.Entities;
 using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;

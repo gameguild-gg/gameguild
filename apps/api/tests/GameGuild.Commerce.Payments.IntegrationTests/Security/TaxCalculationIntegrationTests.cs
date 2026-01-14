@@ -1,16 +1,12 @@
 using FluentAssertions;
 using GameGuild.API.Database;
-using GameGuild.Commerce.Payments;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Moq;
 using System.Net;
 using System.Net.Http.Json;
-using Xunit;
 
 namespace GameGuild.Commerce.Payments.IntegrationTests.Security;
 

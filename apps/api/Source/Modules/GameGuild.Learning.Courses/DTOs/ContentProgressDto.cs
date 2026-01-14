@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record ContentProgressDto(Guid ContentId, string Title, ProgressStatus Status, decimal CompletionPercentage, DateTime? FirstAccessedAt, DateTime? LastAccessedAt, DateTime? CompletedAt) {
   public Guid ContentId { get; init; } = ContentId;

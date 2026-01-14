@@ -1,4 +1,3 @@
-using GameGuild.Enums;
 namespace GameGuild.Learning.Courses;
 
 /// <summary>

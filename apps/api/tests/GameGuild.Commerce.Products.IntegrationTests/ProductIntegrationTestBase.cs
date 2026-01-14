@@ -1,7 +1,5 @@
-using GameGuild.API;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit;
 
 namespace GameGuild.Commerce.Products.IntegrationTests;
 

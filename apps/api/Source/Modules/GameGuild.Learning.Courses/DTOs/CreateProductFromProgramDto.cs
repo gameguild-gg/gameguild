@@ -1,8 +1,4 @@
-using GameGuild.Enums;
-
-
-using System.ComponentModel.DataAnnotations;
-﻿namespace GameGuild.Learning.Courses;
+namespace GameGuild.Learning.Courses;
 
 public record CreateProductFromProgramDto(string Name, string? Description, decimal BasePrice, string Currency = "USD") {
   public string Name { get; init; } = Name;

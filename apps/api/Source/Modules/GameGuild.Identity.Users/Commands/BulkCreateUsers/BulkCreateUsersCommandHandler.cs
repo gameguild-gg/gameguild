@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 using GameGuild.Resources;
-using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Identity.Users;

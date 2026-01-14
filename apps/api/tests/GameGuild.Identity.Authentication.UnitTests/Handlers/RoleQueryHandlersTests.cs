@@ -1,8 +1,5 @@
 using AutoFixture;
 using FluentAssertions;
-using GameGuild.Identity.Authentication;
-using GameGuild.Identity.Authentication;
-using GameGuild.Identity.Authentication;
 using Moq;
 using Xunit;
 

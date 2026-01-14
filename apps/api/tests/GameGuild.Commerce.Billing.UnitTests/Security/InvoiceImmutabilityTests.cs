@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.Commerce.Billing;
 using GameGuild.ValueObjects;
 using Xunit;
 
