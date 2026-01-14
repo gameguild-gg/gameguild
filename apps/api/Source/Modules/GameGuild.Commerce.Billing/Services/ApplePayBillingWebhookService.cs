@@ -18,8 +18,11 @@ public class ApplePayBillingWebhookService : BillingWebhookService
         IBillingWebhookRepository webhookRepository,
         IApplePayReceiptValidationService receiptValidationService,
         ILogger<ApplePayBillingWebhookService> logger,
-        ISubscriptionService subscriptionService)
-        : base(logger, subscriptionService)
+        ISubscriptionLifecycleService lifecycleService,
+        ISubscriptionQueryService queryService,
+        ISubscriptionBillingService billingService,
+        ISubscriptionExternalIdService externalIdService)
+        : base(logger, lifecycleService, queryService, billingService, externalIdService)
     {
         _webhookRepository = webhookRepository;
         _receiptValidationService = receiptValidationService;

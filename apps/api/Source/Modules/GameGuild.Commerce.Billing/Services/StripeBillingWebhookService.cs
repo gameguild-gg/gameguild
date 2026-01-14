@@ -15,8 +15,11 @@ public class StripeBillingWebhookService : BillingWebhookService
     public StripeBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
         ILogger<StripeBillingWebhookService> logger,
-        ISubscriptionService subscriptionService) 
-        : base(logger, subscriptionService)
+        ISubscriptionLifecycleService lifecycleService,
+        ISubscriptionQueryService queryService,
+        ISubscriptionBillingService billingService,
+        ISubscriptionExternalIdService externalIdService) 
+        : base(logger, lifecycleService, queryService, billingService, externalIdService)
     {
         _webhookRepository = webhookRepository;
         _logger = logger;
