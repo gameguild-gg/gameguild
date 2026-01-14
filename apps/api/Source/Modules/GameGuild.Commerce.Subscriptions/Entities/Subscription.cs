@@ -38,6 +38,14 @@ public class Subscription : EntityBase, ISubscription
     };
 
     /// <summary>
+    ///     Parameterless constructor for EF Core
+    /// </summary>
+    private Subscription()
+    {
+        // EF Core will populate properties via reflection
+    }
+
+    /// <summary>
     ///     Creates a new subscription (TenantId required - fail-closed)
     /// </summary>
     /// <exception cref="ArgumentException">Thrown when tenantId is empty</exception>
