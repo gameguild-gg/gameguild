@@ -1,3 +1,5 @@
+using GameGuild.Commerce.Subscriptions;
+
 namespace GameGuild.Commerce.Products;
 
 /// <summary>

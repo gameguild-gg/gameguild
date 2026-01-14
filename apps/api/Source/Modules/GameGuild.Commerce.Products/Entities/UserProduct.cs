@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.Commerce.Subscriptions;
 using GameGuild.Entities;
 using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
@@ -124,7 +125,7 @@ public class UserProduct : EntityBase
         RevocationReason = reason;
         if (SubscriptionStatus.HasValue)
         {
-            SubscriptionStatus = Products.SubscriptionStatus.Cancelled;
+            SubscriptionStatus = Subscriptions.SubscriptionStatus.Cancelled;
         }
         Touch();
     }
