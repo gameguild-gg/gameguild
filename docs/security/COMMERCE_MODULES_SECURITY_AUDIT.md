@@ -1346,24 +1346,27 @@ await _webhookRepo.CreateAsync(webhookEvent, ct);
 // Then process...
 ```
 
-#### 1.3 Add Tenant Validation at Controller Level
+#### 1.3 Add Tenant Validation at Controller Level ✅ DONE
 
 ```csharp
-// Create authorization filter or use existing middleware
-[ValidateTenantOwnership]
-public async Task<IActionResult> CreateSubscription([FromBody] CreateSubscriptionRequest body)
+// SubscriptionsController.cs & PaymentsController.cs - IMPLEMENTED
+// ValidateTenantAccess() method validates request TenantId against IActorContextAccessor
+private IActionResult? ValidateTenantAccess(Guid requestTenantId)
 {
-    // Filter validates User.TenantId matches body.TenantId
+    var actorContext = actorContextAccessor.ActorContext;
+    if (actorContext.TenantId != requestTenantId)
+        return StatusCode(403, new { error = "Cross-tenant access denied" });
+    return null;
 }
 ```
 
-#### 1.4 Add Transaction Boundaries
+#### 1.4 Add Transaction Boundaries ✅ DONE
 
 ```csharp
-// OrderService.CompleteOrderAsync - Wrap in transaction
+// OrderService.CompleteOrderAsync - NOW USES TRANSACTIONS
 public async Task<OrderResult> CompleteOrderAsync(...)
 {
-    await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+    await using var transaction = await _context.BeginTransactionAsync(ct);
     try
     {
         // All operations...
@@ -1377,148 +1380,129 @@ public async Task<OrderResult> CompleteOrderAsync(...)
 }
 ```
 
-### Phase 2: High Priority (Week 3-4)
+### Phase 2: High Priority (Week 3-4) ✅ COMPLETED
 
-#### 2.1 Add Renewal Idempotency
+#### 2.1 Add Renewal Idempotency ✅ DONE
 
 ```csharp
-// Add to Subscription entity
+// Subscription.cs - IMPLEMENTED
 public string? LastRenewalIdempotencyKey { get; private set; }
 
 public SubscriptionRenewalResult ProcessRenewal(Money newAmount, string idempotencyKey)
 {
     if (LastRenewalIdempotencyKey == idempotencyKey)
-        return SubscriptionRenewalResult.AlreadyProcessed(Id);
+        return SubscriptionRenewalResult.CreateSuccess(Id, BillingCycleCount, Amount);
 
     LastRenewalIdempotencyKey = idempotencyKey;
     // Continue processing...
 }
 ```
 
-#### 2.2 Add External Payment ID to RecordPayment
+#### 2.2 Add External Payment ID to RecordPayment ✅ DONE
 
 ```csharp
-public void RecordPayment(decimal amount, string currency, DateTime paymentDate,
-                          string externalPaymentId)  // Add this
+// Subscription.cs - IMPLEMENTED with idempotency key tracking
+public PaymentRecordResult RecordPayment(decimal amount, string currency, DateTime paymentDate,
+    string idempotencyKey, int? forBillingCycle = null)
 {
-    // Check for duplicate payment ID in payment history
-    // Store externalPaymentId for audit
+    if (LastPaymentIdempotencyKey == idempotencyKey)
+        return PaymentRecordResult.AlreadyProcessed(idempotencyKey, LastProcessedBillingCycle);
+    // Store idempotency key and process...
 }
 ```
 
-#### 2.3 Create Invoice Entity
+#### 2.3 Create Invoice Entity ✅ DONE
 
 ```csharp
-[Table("Invoices")]
+// Invoice.cs - FULLY IMPLEMENTED with immutable design
+[Table("invoices")]
+[Index(nameof(PaymentId), IsUnique = true, Name = "IX_invoices_PaymentId_Unique")]
 public class Invoice : EntityBase
 {
-    [Required]
-    public Guid TenantId { get; private set; }  // NOT nullable
-
-    public Guid? SubscriptionId { get; private set; }
-    public Guid? OrderId { get; private set; }
-
-    public InvoiceStatus Status { get; private set; }
-
-    // Immutable after issuance
-    public decimal Subtotal { get; private init; }
-    public decimal TaxAmount { get; private init; }
-    public decimal Total { get; private init; }
-    public string Currency { get; private init; }
-
-    public DateTime IssuedAt { get; private init; }
-    public DateTime DueDate { get; private set; }
-
-    // Only status transitions allowed, not amount changes
-    public void MarkAsPaid(string paymentId) { ... }
-    public void MarkAsVoid(string reason) { ... }
+    // TenantId fail-closed validation in constructor
+    // Immutable after issuance via private setters
+    // RecordPayment() with single-payment invariant enforcement
+    // State machine: Draft → Open → Paid/Void/Uncollectible
 }
 ```
 
-### Phase 3: Medium Priority (Week 5-6)
+### Phase 3: Medium Priority (Week 5-6) ✅ COMPLETED
 
-#### 3.1 Add Price Versioning
+#### 3.1 Add Price Versioning ✅ DONE
 
 ```csharp
-[Table("ProductPricingVersions")]
+// ProductPricingVersion.cs - IMPLEMENTED
+[Table("product_pricing_versions")]
 public class ProductPricingVersion : EntityBase
 {
-    public Guid ProductPricingId { get; set; }
-    public int Version { get; set; }
-    public decimal BasePrice { get; set; }
-    public decimal? SalePrice { get; set; }
-    public DateTime EffectiveFrom { get; set; }
-    public DateTime? EffectiveTo { get; set; }
+    public Guid ProductPricingId { get; private set; }
+    public int PriceVersion { get; private set; }
+    public decimal BasePrice { get; private set; }
+    public decimal? SalePrice { get; private set; }
+    public DateTime EffectiveFrom { get; private set; }
+    public DateTime? EffectiveTo { get; private set; }
+    public string? ChangeReason { get; private set; }
 }
 ```
 
-#### 3.2 Add Payment Gateway Abstraction
+#### 3.2 Add Payment Gateway Abstraction ✅ DONE
 
 ```csharp
+// IPaymentGateway.cs - IMPLEMENTED
 public interface IPaymentGateway
 {
-    string Provider { get; }
-    Task<PaymentResult> ProcessPaymentAsync(PaymentRequest request, CancellationToken ct);
-    Task<RefundResult> ProcessRefundAsync(RefundRequest request, CancellationToken ct);
-    Task<bool> ValidateWebhookSignatureAsync(string payload, string signature);
+    string ProviderName { get; }
+    Task<GatewayPaymentResult> ProcessPaymentAsync(GatewayPaymentRequest request, CancellationToken ct);
+    Task<GatewayRefundResult> ProcessRefundAsync(GatewayRefundRequest request, CancellationToken ct);
+    Task<WebhookValidationResult> ValidateWebhookSignatureAsync(string payload, string signature, CancellationToken ct);
 }
 
-// Implementations: StripePaymentGateway, PayPalPaymentGateway, etc.
+// StripePaymentGateway.cs - IMPLEMENTED
+// PayPalBillingWebhookService.cs - IMPLEMENTED with IPayPalSignatureVerificationService
+// ApplePayBillingWebhookService.cs - IMPLEMENTED with IApplePayReceiptValidationService
 ```
 
-#### 3.3 Implement Proration
+#### 3.3 Implement Proration ✅ DONE
 
 ```csharp
-public class PlanChangeService
+// Subscription.cs - IMPLEMENTED
+public PlanChangeProration ChangePlan(Guid newPlanId, Money newAmount, DateTime? effectiveDate = null)
 {
-    public PlanChangeResult CalculatePlanChange(
-        Subscription subscription,
-        SubscriptionPlan newPlan,
-        DateTime effectiveDate)
-    {
-        var daysRemaining = (subscription.CurrentPeriodEnd - effectiveDate).Days;
-        var totalDays = (subscription.CurrentPeriodEnd - subscription.CurrentPeriodStart).Days;
-        var creditRatio = (decimal)daysRemaining / totalDays;
-
-        var credit = subscription.Amount.Amount * creditRatio;
-        var newCharge = CalculateNewPlanAmount(newPlan, daysRemaining);
-
-        return new PlanChangeResult
-        {
-            Credit = new Money(credit, subscription.Amount.Currency),
-            Charge = new Money(newCharge, subscription.Amount.Currency),
-            NetAmount = new Money(newCharge - credit, subscription.Amount.Currency)
-        };
-    }
+    var proration = CalculateProration(oldAmount, newAmount, effectiveDate ?? DateTime.UtcNow);
+    // Apply plan change...
+    return proration;
 }
+
+// PlanChangeProration.cs - IMPLEMENTED
+public record PlanChangeProration(Money CreditForUnused, Money ChargeForNew, Money NetAdjustment, DateTime EffectiveDate);
 ```
 
-### Phase 4: Lower Priority (Week 7-8)
+### Phase 4: Lower Priority (Week 7-8) ✅ COMPLETED
 
-#### 4.1 Unify SubscriptionStatus Enums
+#### 4.1 Unify SubscriptionStatus Enums ✅ DONE
 
-- Remove duplicate from `OrderEnums.cs`
-- Use single source of truth in Subscriptions module
+- ✅ `Products.SubscriptionStatus` renamed to `EntitlementSubscriptionStatus`
+- ✅ Single source of truth in Subscriptions module via `SubscriptionStatus`
 
-#### 4.2 Add Optimistic Concurrency to Wallet
+#### 4.2 Add Optimistic Concurrency to Wallet ✅ DONE
 
 ```csharp
+// UserWallet.cs - IMPLEMENTED
 public void DeductFunds(decimal amount, ...)
 {
     if (!IsActive || IsLocked || Balance < amount)
         throw new InvalidOperationException(...);
 
-    // EntityBase.Version will be checked on save
     Balance -= amount;
-    Touch();  // Increments version
+    Touch();  // Increments Version for optimistic concurrency
 }
 ```
 
-#### 4.3 Make Reconciliation Immutable
+#### 4.3 Make Reconciliation Immutable ✅ DONE
 
 ```csharp
-// Remove Unreconcile() method
-// Add ReconciledLedgerEntry wrapper that prevents modification
+// FinancialLedgerEntry.cs - Unreconcile() method REMOVED
+// Reconciled entries cannot be modified
 ```
 
 ---
