@@ -127,7 +127,7 @@ public class SubscriptionStateMachineTests
         subscription.Suspend("Test");
 
         // Act
-        subscription.Cancel(CancellationReason.NonPayment, "Extended non-payment");
+        subscription.Cancel(CancellationReason.PaymentFailed, "Extended non-payment");
 
         // Assert
         subscription.Status.Should().Be(SubscriptionStatus.Cancelled);
@@ -251,9 +251,8 @@ public class SubscriptionStateMachineTests
 
     [Theory]
     [InlineData(CancellationReason.UserRequested)]
-    [InlineData(CancellationReason.NonPayment)]
-    [InlineData(CancellationReason.Fraud)]
-    [InlineData(CancellationReason.TermsViolation)]
+    [InlineData(CancellationReason.PaymentFailed)]
+    [InlineData(CancellationReason.PolicyViolation)]
     [InlineData(CancellationReason.PlanDiscontinued)]
     [InlineData(CancellationReason.ExternalRequest)]
     public void Cancel_ShouldStoreCancellationReason(CancellationReason reason)
