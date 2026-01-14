@@ -67,7 +67,7 @@ public class SubscriptionPerformanceBenchmarks
     [Benchmark]
     public void RecordPayment()
     {
-        _subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow);
+        _subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, $"perf_test_{Guid.NewGuid()}");
     }
 
     [Benchmark]

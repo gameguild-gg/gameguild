@@ -42,7 +42,7 @@ public class Subscription : EntityBase, ISubscription
     /// </summary>
     /// <exception cref="ArgumentException">Thrown when tenantId is empty</exception>
     // ReSharper disable once VirtualMemberCallInConstructor - Setting TenantId is safe as it's a simple property setter
-    public Subscription(Guid tenantId, Guid planId, Guid createdByUserId, BillingCycle billingCycle, Money amount, DateTime startDate, DateTime? trialEndDate = null)
+    public Subscription(Guid tenantId, Guid planId, Guid createdByUserId, BillingCycle billingCycle, Money amount, DateTime startDate, DateTime? trialEndDate = null, Guid? lockedPriceVersionId = null)
     {
         if (tenantId == Guid.Empty)
             throw new ArgumentException("TenantId is required for financial entities (fail-closed)", nameof(tenantId));
@@ -54,6 +54,7 @@ public class Subscription : EntityBase, ISubscription
         Amount = amount;
         StartDate = startDate;
         TrialEndDate = trialEndDate;
+        LockedPriceVersionId = lockedPriceVersionId;
         Status = trialEndDate.HasValue ? SubscriptionStatus.Trialing : SubscriptionStatus.PendingActivation;
 
         (var periodStart, var periodEnd, var nextBilling) = CalculateBillingDates(startDate, billingCycle);
@@ -100,6 +101,22 @@ public class Subscription : EntityBase, ISubscription
     /// </summary>
     [MaxLength(100)]
     public string? LastPaymentIdempotencyKey { get; private set; }
+
+    /// <summary>
+    ///     Locked price version ID (ensures subscription uses contracted rate, not current plan price).
+    ///     If null, the subscription uses the current plan price on renewal.
+    /// </summary>
+    /// <remarks>
+    ///     This prevents the "price change affecting existing subscriptions" attack scenario
+    ///     where an admin price change would unexpectedly affect existing subscribers.
+    /// </remarks>
+    public Guid? LockedPriceVersionId { get; private set; }
+
+    /// <summary>
+    ///     Last processed billing cycle number (prevents out-of-order payment corruption).
+    ///     Payments are only accepted if they advance or match this value.
+    /// </summary>
+    public int LastProcessedBillingCycle { get; private set; }
 
     /// <summary>
     ///     Trial end date (if applicable)
@@ -456,24 +473,96 @@ public class Subscription : EntityBase, ISubscription
     }
 
     /// <summary>
-    ///     Records a successful payment with idempotency key (prevents duplicate recording)
+    ///     Locks the subscription to a specific price version.
+    ///     This ensures the subscription continues at the contracted rate
+    ///     even if the plan price changes.
+    /// </summary>
+    /// <param name="priceVersionId">The price version ID to lock to</param>
+    /// <exception cref="InvalidOperationException">Thrown if subscription is cancelled</exception>
+    public void LockToPriceVersion(Guid priceVersionId)
+    {
+        if (Status == SubscriptionStatus.Cancelled)
+            throw new InvalidOperationException("Cannot lock price version for cancelled subscriptions");
+
+        LockedPriceVersionId = priceVersionId;
+
+        Raise(new SubscriptionPriceVersionLockedEvent(Id, TenantId ?? Guid.Empty, priceVersionId));
+    }
+
+    /// <summary>
+    ///     Unlocks the subscription from its current price version,
+    ///     allowing it to use the current plan price on renewal.
+    /// </summary>
+    public void UnlockPriceVersion()
+    {
+        if (!LockedPriceVersionId.HasValue)
+            return; // Already unlocked
+
+        var oldVersionId = LockedPriceVersionId.Value;
+        LockedPriceVersionId = null;
+
+        Raise(new SubscriptionPriceVersionUnlockedEvent(Id, TenantId ?? Guid.Empty, oldVersionId));
+    }
+
+    /// <summary>
+    ///     Records a successful payment with idempotency key and billing cycle tracking
+    ///     (prevents duplicate recording and out-of-order payment corruption)
     /// </summary>
     /// <param name="amount">Payment amount</param>
     /// <param name="currency">Currency code</param>
     /// <param name="paymentDate">When payment was processed</param>
     /// <param name="idempotencyKey">Unique payment key (e.g., external payment ID from provider)</param>
-    /// <returns>True if payment was recorded, false if already processed (idempotent)</returns>
-    public bool RecordPayment(decimal amount, string currency, DateTime paymentDate, string idempotencyKey)
+    /// <param name="forBillingCycle">Optional billing cycle this payment is for (prevents out-of-order issues)</param>
+    /// <returns>PaymentRecordResult indicating success, already processed, or rejected</returns>
+    public PaymentRecordResult RecordPayment(decimal amount, string currency, DateTime paymentDate, string idempotencyKey, int? forBillingCycle = null)
     {
         if (string.IsNullOrEmpty(idempotencyKey))
             throw new ArgumentException("Idempotency key is required for payment recording", nameof(idempotencyKey));
 
         // Idempotency check - if same payment already recorded, skip (idempotent)
         if (LastPaymentIdempotencyKey == idempotencyKey)
-            return false;
+            return PaymentRecordResult.AlreadyProcessed(idempotencyKey, LastProcessedBillingCycle);
 
+        // Out-of-order protection: If billing cycle is specified, validate it
+        if (forBillingCycle.HasValue)
+        {
+            // Reject payments for billing cycles we've already processed
+            if (forBillingCycle.Value < LastProcessedBillingCycle)
+            {
+                return PaymentRecordResult.RejectedOutOfOrder(
+                    forBillingCycle.Value, 
+                    LastProcessedBillingCycle,
+                    $"Payment for billing cycle {forBillingCycle.Value} rejected: already processed through cycle {LastProcessedBillingCycle}");
+            }
+
+            // If payment is for a future cycle, only update LastPaymentAt if it's more recent
+            if (forBillingCycle.Value == LastProcessedBillingCycle)
+            {
+                // Same cycle - idempotent, already handled above by idempotency key
+                // This is a different payment for the same cycle - could be a retry
+                // Update payment date only if newer
+                if (paymentDate > (LastPaymentAt ?? DateTime.MinValue))
+                {
+                    LastPaymentAt = paymentDate;
+                }
+                LastPaymentIdempotencyKey = idempotencyKey;
+                return PaymentRecordResult.AlreadyProcessed(idempotencyKey, LastProcessedBillingCycle);
+            }
+        }
+
+        // Record the payment
         LastPaymentAt = paymentDate;
         LastPaymentIdempotencyKey = idempotencyKey;
+
+        // Update billing cycle tracking
+        if (forBillingCycle.HasValue)
+        {
+            LastProcessedBillingCycle = forBillingCycle.Value;
+        }
+        else
+        {
+            LastProcessedBillingCycle = BillingCycleCount; // Use current cycle if not specified
+        }
 
         // Calculate next billing date based on billing cycle
         NextBillingDate = BillingCycle switch
@@ -490,7 +579,17 @@ public class Subscription : EntityBase, ISubscription
         BillingCycleCount++;
 
         Raise(new SubscriptionPaymentProcessedEvent(Id, TenantId ?? Guid.Empty, amount, currency, paymentDate));
-        return true;
+        return PaymentRecordResult.Success(idempotencyKey, BillingCycleCount);
+    }
+
+    /// <summary>
+    ///     Records a payment (backward-compatible overload returning bool)
+    /// </summary>
+    [Obsolete("Use RecordPayment with PaymentRecordResult return type for better error handling")]
+    public bool RecordPaymentLegacy(decimal amount, string currency, DateTime paymentDate, string idempotencyKey)
+    {
+        var result = RecordPayment(amount, currency, paymentDate, idempotencyKey);
+        return result.IsSuccess;
     }
 
     /// <summary>

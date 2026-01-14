@@ -47,13 +47,13 @@ public class StripeBillingWebhookService : BillingWebhookService
         }
 
         // Create webhook event record
+        // Note: CreatedAt is set automatically by EntityBase
         var webhookEvent = new BillingWebhookEvent
         {
             ExternalEventId = eventId,
             Provider = "stripe",
             EventType = eventType,
             Payload = payload,
-            ReceivedAt = DateTime.UtcNow,
             ProcessingAttempts = 1
         };
 
@@ -143,24 +143,46 @@ internal class StripeWebhookPayload
     public string EventType { get; set; } = string.Empty;
     public string RawPayload { get; set; } = string.Empty;
     public Guid? TenantId { get; set; }
+    public Guid? PlanId { get; set; }
     public string? ExternalSubscriptionId { get; set; }
-    public string? ExternalCustomerId { get; set; }
+    public string? CustomerId { get; set; }
+    public string? ProductId { get; set; }
+    public string? PriceId { get; set; }
+    public string? PaymentId { get; set; }
+    public string? InvoiceId { get; set; }
     public decimal? Amount { get; set; }
     public string? Currency { get; set; }
+    public string? Status { get; set; }
     public DateTime? PaidAt { get; set; }
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+    public DateTime? NextBillingDate { get; set; }
 
-    public SubscriptionWebhookPayload ToSubscriptionPayload() => new()
+    public StripeSubscriptionWebhookPayload ToSubscriptionPayload() => new()
     {
         TenantId = TenantId ?? Guid.Empty,
-        ExternalSubscriptionId = ExternalSubscriptionId,
-        ExternalCustomerId = ExternalCustomerId
+        PlanId = PlanId ?? Guid.Empty,
+        ExternalSubscriptionId = ExternalSubscriptionId ?? string.Empty,
+        CustomerId = CustomerId,
+        ProductId = ProductId,
+        PriceId = PriceId,
+        Status = Status ?? string.Empty,
+        Amount = Amount ?? 0,
+        StartDate = StartDate,
+        EndDate = EndDate,
+        NextBillingDate = NextBillingDate
     };
 
-    public PaymentWebhookPayload ToPaymentPayload() => new()
+    public StripePaymentWebhookPayload ToPaymentPayload() => new()
     {
         TenantId = TenantId ?? Guid.Empty,
+        PaymentId = PaymentId ?? string.Empty,
+        ExternalSubscriptionId = ExternalSubscriptionId ?? string.Empty,
+        CustomerId = CustomerId,
+        InvoiceId = InvoiceId,
         Amount = Amount ?? 0,
         Currency = Currency ?? "USD",
+        Status = Status ?? string.Empty,
         PaidAt = PaidAt ?? DateTime.UtcNow
     };
 }

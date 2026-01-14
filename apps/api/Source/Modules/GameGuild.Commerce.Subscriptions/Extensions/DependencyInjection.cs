@@ -25,8 +25,8 @@ public static class DependencyInjection
         services.AddScoped<ICommandHandler<CreateSubscriptionCommand, Guid>, CreateSubscriptionCommandHandler>();
         services.AddScoped<IRequestHandler<CreateSubscriptionCommand, Guid>>(sp => sp.GetRequiredService<ICommandHandler<CreateSubscriptionCommand, Guid>>());
         
-        services.AddScoped<ICommandHandler<RecordSubscriptionPaymentCommand>, RecordSubscriptionPaymentCommandHandler>();
-        services.AddScoped<IRequestHandler<RecordSubscriptionPaymentCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<RecordSubscriptionPaymentCommand>>());
+        services.AddScoped<ICommandHandler<RecordSubscriptionPaymentCommand, PaymentRecordResult>, RecordSubscriptionPaymentCommandHandler>();
+        services.AddScoped<IRequestHandler<RecordSubscriptionPaymentCommand, PaymentRecordResult>>(sp => sp.GetRequiredService<ICommandHandler<RecordSubscriptionPaymentCommand, PaymentRecordResultnPaymentCommand, PaymentRecordResult>>());
         
         services.AddScoped<ICommandHandler<RecordSubscriptionPaymentFailureCommand>, RecordSubscriptionPaymentFailureCommandHandler>();
         services.AddScoped<IRequestHandler<RecordSubscriptionPaymentFailureCommand>>(sp => sp.GetRequiredService<ICommandHandler<RecordSubscriptionPaymentFailureCommand>>());
