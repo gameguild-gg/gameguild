@@ -58,11 +58,11 @@ All 5 attack scenarios from Section 5 have been mitigated:
 ### Overall Maturity Assessment (Updated)
 
 ```
-Commerce Module Maturity: 97/100 (Production-Ready)
+Commerce Module Maturity: 98/100 (Production-Ready)
 ├── Products Module:      95/100 (Price versioning, commission config, bundle items, ICreator abstraction)
-├── Orders Module:        95/100 (State machine, idempotency, tenant validation, transactions)
+├── Orders Module:        98/100 (State machine, idempotency, audit events, ExternalPaymentId, transactions)
 ├── Subscriptions Module: 98/100 (Core logic solid, price locking, out-of-order protection, PaymentResult InvoiceId)
-├── Billing Module:       97/100 (Repository implemented, webhook handlers fully integrated with ISubscriptionService)
+├── Billing Module:       98/100 (Repository implemented, webhook handlers fully integrated with ISubscriptionService)
 └── Payments Module:      97/100 (Gateway abstraction, tenant validation, ledger types, PaymentResult InvoiceId)
 ```
 
