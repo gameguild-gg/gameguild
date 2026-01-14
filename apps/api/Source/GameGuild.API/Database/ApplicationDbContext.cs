@@ -1,6 +1,7 @@
 using GameGuild.Abstractions;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
+using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Products;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
@@ -40,6 +41,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         // Apply Products module configurations
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(Product).Assembly, type => type.Namespace?.StartsWith("GameGuild.Products") == true);
+
+        // Apply Orders module configurations
+        OrdersModule.ConfigureOrdersModel(modelBuilder);
 
         // NOTE: The following modules are currently disabled. Uncomment when enabling them.
         // // Apply Resources module configurations (using automatic discovery)
@@ -222,6 +226,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<PromoStackingRule> PromoStackingRules { get => Set<PromoStackingRule>(); }
 
     public DbSet<UserProduct> UserProducts { get => Set<UserProduct>(); }
+
+    #endregion
+
+    #region Orders Module
+
+    public DbSet<Order> Orders { get => Set<Order>(); }
+
+    public DbSet<OrderLineItem> OrderLineItems { get => Set<OrderLineItem>(); }
 
     #endregion
 

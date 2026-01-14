@@ -22,6 +22,7 @@ using GameGuild.Configuration.PresentationLayer.RequestContext;
 using GameGuild.Configuration.PresentationLayer.ResponseCompression;
 using GameGuild.Configuration.PresentationLayer.SignalIR;
 using GameGuild.Endpoints;
+using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Products;
 using GameGuild.Commerce.Subscriptions;
