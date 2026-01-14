@@ -3,7 +3,7 @@ import { GoogleDriveService } from "../../../services/editor/google-drive-servic
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2"
+  type: "type1" | "type2" | "type3"
   data: string
   tags: string[]
   size: number

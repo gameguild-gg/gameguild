@@ -1,5 +1,6 @@
 import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
+import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/layout-detector"
 
 // Parameter interface
 export interface CheckSelectedProjectParams {
@@ -7,8 +8,8 @@ export interface CheckSelectedProjectParams {
     load: (id: string) => Promise<{
       id: string
       name: string
-      type: "type1" | "type2"
-      data: string
+      type: string // Project type (type1, type2, type3, etc.)
+      data: string // Layout auto-detected from data structure
       tags: string[]
       storageType?: "local" | "gameguild-cloud" | "google-drive"
     } | null>
@@ -21,7 +22,8 @@ export interface CheckSelectedProjectParams {
   setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
   setProjectTags: (tags: string[]) => void
   setIsFirstTime: (value: boolean) => void
-  setCurrentLayoutType: (type: "type1" | "type2") => void
+  setCurrentLayout: (layout: "single" | "dual") => void // Layout auto-detected
+  setCurrentProjectType: (type: string) => void // Project type
   setEditorState: (state: string) => void
   setLeftEditorState: (state: string) => void
   setRightEditorState: (state: string) => void
@@ -41,7 +43,8 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     setCurrentProjectStorageType,
     setProjectTags,
     setIsFirstTime,
-    setCurrentLayoutType,
+    setCurrentLayout,
+    setCurrentProjectType,
     setEditorState,
     setLeftEditorState,
     setRightEditorState,
@@ -54,10 +57,12 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
       try {
         const projectData = await storageAdapter.load(hash)
         if (projectData && projectData.data) {
-          const layoutType = projectData.type || "type1"
+          // Detect layout automaticamente from data structure
+          const layoutInfo = detectProjectLayout(projectData.data)
           
-          // Set layout type first
-          setCurrentLayoutType(layoutType)
+          // Set layout and type
+          setCurrentLayout(layoutInfo.layoutType)
+          setCurrentProjectType(projectData.type)
           
           // Set project metadata immediately
           setCurrentProjectId(projectData.id)
@@ -66,65 +71,37 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
           setProjectTags(projectData.tags || [])
           setIsFirstTime(false)
           
+          // Extract editor states
+          const states = extractEditorStates(projectData.data, layoutInfo.layoutType)
+          
           // Wait for layout to render before loading editor data
           setTimeout(() => {
             try {
-              if (layoutType === "type1" && editorRef.current) {
-                try {
-                  // Validate JSON format first
-                  let parsedData
-                  try {
-                    parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
-                  } catch (parseError) {
-                    throw new Error("Project data is not valid JSON")
-                  }
-                  
-                  // Validate Lexical editor state structure
-                  if (!parsedData || typeof parsedData !== 'object' || !parsedData.root) {
-                    throw new Error("Project data is not in expected Lexical format")
-                  }
-                  
-                  const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
-                  editorRef.current.setEditorState(editorState)
-                  setEditorState(JSON.stringify(parsedData))
-                } catch (validationError: any) {
-                  throw validationError
+              if (layoutInfo.isSinglePanel && editorRef.current && states.single) {
+                // Single panel layout
+                if (!states.single.root) {
+                  throw new Error("Project data is not in expected Lexical format")
                 }
-              } else if (layoutType === "type2" && leftEditorRef.current && rightEditorRef.current) {
-                try {
-                  // Parse type2 data (has left and right properties)
-                  let parsedData
-                  try {
-                    parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
-                  } catch (parseError) {
-                    throw new Error("Project data is not valid JSON")
-                  }
-                  
-                  // Validate type2 structure
-                  if (!parsedData || typeof parsedData !== 'object' || !parsedData.left || !parsedData.right) {
-                    throw new Error("Project data is not in expected Type2 format")
-                  }
-                  
-                  // Parse and set left editor
-                  const leftParsed = typeof parsedData.left === 'string' ? JSON.parse(parsedData.left) : parsedData.left
-                  if (!leftParsed.root) {
-                    throw new Error("Left editor data is not valid Lexical format")
-                  }
-                  const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(leftParsed))
-                  leftEditorRef.current.setEditorState(leftEditorState)
-                  setLeftEditorState(JSON.stringify(leftParsed))
-                  
-                  // Parse and set right editor
-                  const rightParsed = typeof parsedData.right === 'string' ? JSON.parse(parsedData.right) : parsedData.right
-                  if (!rightParsed.root) {
-                    throw new Error("Right editor data is not valid Lexical format")
-                  }
-                  const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(rightParsed))
-                  rightEditorRef.current.setEditorState(rightEditorState)
-                  setRightEditorState(JSON.stringify(rightParsed))
-                } catch (validationError: any) {
-                  throw validationError
+                
+                const editorState = editorRef.current.parseEditorState(JSON.stringify(states.single))
+                editorRef.current.setEditorState(editorState)
+                setEditorState(JSON.stringify(states.single))
+                
+              } else if (layoutInfo.isDualPanel && leftEditorRef.current && rightEditorRef.current && states.left && states.right) {
+                // Dual panel layout
+                if (!states.left.root || !states.right.root) {
+                  throw new Error("Dual panel data is not in expected Lexical format")
                 }
+                
+                // Set left editor
+                const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(states.left))
+                leftEditorRef.current.setEditorState(leftEditorState)
+                setLeftEditorState(JSON.stringify(states.left))
+                
+                // Set right editor
+                const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(states.right))
+                rightEditorRef.current.setEditorState(rightEditorState)
+                setRightEditorState(JSON.stringify(states.right))
               }
             } catch (error) {
               console.error("Failed to load editor data:", error)
@@ -165,92 +142,6 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
       }
     }
     
-    // If no hash or hash loading failed, check localStorage
-    const selectedProjectData = localStorage.getItem('selectedProject')
-    if (selectedProjectData) {
-      const projectData = JSON.parse(selectedProjectData)
-      
-      // Clear the localStorage item
-      localStorage.removeItem('selectedProject')
-      
-      // Load the project into the editor
-      if (projectData.id && projectData.data) {
-        const layoutType = projectData.type || "type1"
-        setCurrentLayoutType(layoutType)
-        
-        if (layoutType === "type1" && editorRef.current) {
-          try {
-            const parsedData = JSON.parse(projectData.data)
-            if (!parsedData || !parsedData.root) {
-              throw new Error("Invalid project data format")
-            }
-            
-            const editorState = editorRef.current.parseEditorState(projectData.data)
-            editorRef.current.setEditorState(editorState)
-            setEditorState(projectData.data)
-          } catch (error) {
-            console.error("Error loading project from localStorage:", error)
-            toast.error("Erro ao carregar projeto", {
-              description: "Não foi possível carregar o projeto do armazenamento local",
-              duration: 4000,
-              icon: "❌",
-            })
-            setIsFirstTime(false)
-            return
-          }
-        } else if (layoutType === "type2" && leftEditorRef.current && rightEditorRef.current) {
-          try {
-            const parsedData = JSON.parse(projectData.data)
-            if (!parsedData || !parsedData.left || !parsedData.right) {
-              throw new Error("Invalid Type2 project data format")
-            }
-            
-            // Set left editor
-            const leftParsed = typeof parsedData.left === 'string' ? JSON.parse(parsedData.left) : parsedData.left
-            const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(leftParsed))
-            leftEditorRef.current.setEditorState(leftEditorState)
-            setLeftEditorState(JSON.stringify(leftParsed))
-            
-            // Set right editor
-            const rightParsed = typeof parsedData.right === 'string' ? JSON.parse(parsedData.right) : parsedData.right
-            const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(rightParsed))
-            rightEditorRef.current.setEditorState(rightEditorState)
-            setRightEditorState(JSON.stringify(rightParsed))
-          } catch (error) {
-            console.error("Error loading Type2 project from localStorage:", error)
-            toast.error("Erro ao carregar projeto", {
-              description: "Não foi possível carregar o projeto do armazenamento local",
-              duration: 4000,
-              icon: "❌",
-            })
-            setIsFirstTime(false)
-            return
-          }
-        }
-        
-        setCurrentProjectId(projectData.id)
-        setCurrentProjectName(projectData.name)
-        setCurrentProjectStorageType(projectData.storageType || "local")
-        setProjectTags(projectData.tags || [])
-        
-        // Update URL hash
-        window.history.pushState(null, '', `#${projectData.id}`)
-        
-        toast.success("Projeto carregado", {
-          description: `"${projectData.name}" foi aberto para visualização`,
-          duration: 2500,
-          icon: "👁️",
-        })
-      }
-    }
-    
-    // Check if there's a new project type selection
-    const newProjectType = localStorage.getItem('newProjectType')
-    if (newProjectType && (newProjectType === 'type1' || newProjectType === 'type2')) {
-      console.log('Setting initial project type to:', newProjectType)
-      setCurrentLayoutType(newProjectType as "type1" | "type2")
-      localStorage.removeItem('newProjectType')
-    }
   } catch (error) {
     console.error("Error checking selected project:", error)
     toast.error("Erro ao carregar projeto", {
@@ -260,5 +151,6 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     })
   }
   
+  // If no project was loaded, mark as not first time
   setIsFirstTime(false)
 }

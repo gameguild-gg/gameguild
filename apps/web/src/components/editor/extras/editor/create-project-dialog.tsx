@@ -9,11 +9,11 @@ import { toast } from "sonner"
 import { StorageOptionSelector, type StorageOption } from "./storage-option-selector"
 import { 
   type ProjectMode, 
-  type ProjectLayoutType,
   PROJECT_MODES, 
   NODE_RESTRICTIONS,
-  canSelectLayoutType 
+  getSuggestedLayoutForMode
 } from "@/lib/storage/editor/project-modes"
+import { createProjectData, type LayoutType } from "@/lib/storage/editor/layout-detector"
 
 interface ProjectData {
   id: string
@@ -27,7 +27,7 @@ interface ProjectData {
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: "type1" | "type2") => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string) => Promise<void>
 }
 
 interface CreateProjectDialogProps {
@@ -41,8 +41,9 @@ interface CreateProjectDialogProps {
     name: string
     tags: string[]
     storageType: "local" | "gameguild-cloud" | "google-drive"
-    type: "type1" | "type2"
+    type: string // Project type (type1, type2, etc.)
     mode: ProjectMode
+    layout: LayoutType // Layout: single or dual
   }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
@@ -66,7 +67,8 @@ export function CreateProjectDialog({
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [storageOption, setStorageOption] = useState<StorageOption>("local")
   const [projectMode, setProjectMode] = useState<ProjectMode>("free-page")
-  const [projectType, setProjectType] = useState<ProjectLayoutType>("type1")
+  const [projectType, setProjectType] = useState<string>("type1") // Project type (type1, type2, type3, etc.)
+  const [layoutType, setLayoutType] = useState<LayoutType>("single") // Layout detection: single or dual
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -135,14 +137,26 @@ export function CreateProjectDialog({
     }
 
     // Create empty project
-    const emptyState =
-      '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+    const emptyState = {
+      root: {
+        children: [{
+          children: [],
+          direction: null,
+          format: "",
+          indent: 0,
+          type: "paragraph",
+          version: 1
+        }],
+        direction: null,
+        format: "",
+        indent: 0,
+        type: "root",
+        version: 1
+      }
+    }
 
     try {
       const newProjectId = generateProjectId()
-      
-      // Use the selected layout type
-      const finalLayoutType = projectType
       
       // Get restrictions for the mode
       const restrictions = NODE_RESTRICTIONS[projectMode]
@@ -156,14 +170,21 @@ export function CreateProjectDialog({
         nodes: {}
       }
       
+      // Create data structure based on selected layout
+      const projectData = createProjectData(layoutType, {
+        single: layoutType === "single" ? emptyState : null,
+        left: layoutType === "dual" ? emptyState : null,
+        right: layoutType === "dual" ? emptyState : null,
+      })
+      
       await storageAdapter.save(
         newProjectId, 
         newCreateProjectName, 
-        emptyState, 
+        projectData, 
         projectTags, 
         storageOption, 
         preferences,
-        finalLayoutType
+        projectType as "type1" | "type2" | "type3" // Project type
       )
 
       // Call the callback to update parent state
@@ -172,8 +193,9 @@ export function CreateProjectDialog({
         name: newCreateProjectName,
         tags: projectTags,
         storageType: storageOption,
-        type: finalLayoutType,
+        type: projectType,
         mode: projectMode,
+        layout: layoutType,
       })
 
       // Reset form state
@@ -184,6 +206,7 @@ export function CreateProjectDialog({
       setStorageOption("local")
       setProjectMode("free-page")
       setProjectType("type1")
+      setLayoutType("single")
       onOpenChange(false)
 
       // Update lists
@@ -213,6 +236,7 @@ export function CreateProjectDialog({
     setStorageOption("local")
     setProjectMode("free-page")
     setProjectType("type1")
+    setLayoutType("single")
     onOpenChange(false)
   }
 
@@ -252,26 +276,56 @@ export function CreateProjectDialog({
               </select>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {projectMode === "free-page" && "No restrictions, flexible content"}
-                {projectMode === "code-page" && "Code studio on right panel"}
-                {projectMode === "quiz-page" && "Quiz nodes on right panel"}
+                {projectMode === "code-page" && "Code studio focused"}
+                {projectMode === "quiz-page" && "Quiz focused"}
               </p>
             </div>
 
-            {/* Layout Type Selection (always available) */}
+            {/* Layout Selection */}
             <div>
-              <Label htmlFor="project-type">Layout Type</Label>
+              <Label htmlFor="layout-type">Layout</Label>
+              <select
+                id="layout-type"
+                value={layoutType}
+                onChange={(e) => setLayoutType(e.target.value as LayoutType)}
+                className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              >
+                <option value="single">Single Panel</option>
+                <option value="dual">Dual Panel</option>
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {layoutType === "single" ? "Vertical single editor" : "Horizontal split layout"}
+              </p>
+            </div>
+          </div>
+          
+          {/* Additional Configuration */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Project Type Selection */}
+            <div>
+              <Label htmlFor="project-type">Project Type</Label>
               <select
                 id="project-type"
                 value={projectType}
-                onChange={(e) => setProjectType(e.target.value as ProjectLayoutType)}
+                onChange={(e) => setProjectType(e.target.value)}
                 className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               >
-                <option value="type1">Single Panel</option>
-                <option value="type2">Dual Panel</option>
+                <option value="type1">Type 1</option>
+                <option value="type2">Type 2</option>
+                <option value="type3">Type 3</option>
               </select>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {projectType === "type1" ? "Vertical single editor" : "Horizontal split layout"}
+                Project classification (all types currently function the same)
               </p>
+            </div>
+
+            {/* Storage Option */}
+            <div>
+              <Label htmlFor="storage-option">Storage Location</Label>
+              <StorageOptionSelector 
+                selectedOption={storageOption} 
+                onSelectionChange={setStorageOption} 
+              />
             </div>
           </div>
 
@@ -475,12 +529,6 @@ export function CreateProjectDialog({
               </div>
             )}
           </div>
-
-          {/* Storage Options Section */}
-          <StorageOptionSelector
-            selectedOption={storageOption}
-            onSelectionChange={setStorageOption}
-          />
 
           <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
             <div className="flex items-center gap-2 mb-2">

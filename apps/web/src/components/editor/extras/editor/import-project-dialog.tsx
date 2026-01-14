@@ -14,7 +14,7 @@ import { ProjectImporter, type ImportedProjectData } from "@/lib/interopAdapter/
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2"
+  type: "type1" | "type2" | "type3"
   data: string
   tags: string[]
   size: number
@@ -25,7 +25,7 @@ interface ProjectData {
 
 interface StorageAdapter {
   list: () => Promise<ProjectData[]>
-  save: (id: string, name: string, data: string, tags: string[], storageType?: any, preferences?: any, type?: "type1" | "type2") => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: any, preferences?: any, type?: "type1" | "type2" | "type3") => Promise<void>
 }
 
 interface ImportProjectDialogProps {

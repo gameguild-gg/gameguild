@@ -12,6 +12,7 @@ import { PreviewRendererType1 } from "@/components/editor/extras/preview/preview
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
 import { useRouter } from "next/navigation"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
+import { detectProjectLayout, extractEditorStates, type LayoutType } from "@/lib/storage/editor/layout-detector"
 import { checkSelectedProject as checkProjectPreview } from "@/components/editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/editor/extras/preview/preview-load-operations"
 
@@ -148,68 +149,24 @@ export default function PreviewPage() {
     window.history.pushState(null, '', `#${projectData.id}`)
   }
 
-  const getSerializedState = (): SerializedEditorState | null => {
-    if (!currentProject) return null
-
-    try {
-      return JSON.parse(currentProject.data)
-    } catch (error) {
-      console.error("Failed to parse project data:", error)
-      return null
-    }
-  }
-
-  const getLeftRightStates = (): { left: SerializedEditorState | null; right: SerializedEditorState | null } => {
-    if (!currentProject || currentProject.type !== "type2") {
-      return { left: null, right: null }
-    }
-
-    try {
-      const parsed = JSON.parse(currentProject.data)
-      
-      // Debug log to understand the data structure
-      console.log("Type2 parsed data:", parsed)
-      
-      // Check if parsed data has left and right properties
-      if (!parsed.left || !parsed.right) {
-        console.error("Type2 project data missing left or right states:", parsed)
-        return { left: null, right: null }
-      }
-      
-      // Parse the left and right states (they are stored as JSON strings)
-      let leftState: SerializedEditorState | null = null
-      let rightState: SerializedEditorState | null = null
-      
-      try {
-        leftState = typeof parsed.left === "string" ? JSON.parse(parsed.left) : parsed.left
-        rightState = typeof parsed.right === "string" ? JSON.parse(parsed.right) : parsed.right
-      } catch (parseError) {
-        console.error("Failed to parse left/right editor states:", parseError)
-        return { left: null, right: null }
-      }
-      
-      // Validate that left and right have root property
-      if (!leftState?.root || !rightState?.root) {
-        console.error("Type2 states missing root property:", {
-          leftHasRoot: !!leftState?.root,
-          rightHasRoot: !!rightState?.root
-        })
-        return { left: null, right: null }
-      }
-      
+  const getLayoutAndStates = (): { layout: LayoutType; states: { single: any | null; left: any | null; right: any | null } } => {
+    if (!currentProject) {
       return {
-        left: leftState,
-        right: rightState,
+        layout: "single",
+        states: { single: null, left: null, right: null }
       }
-    } catch (error) {
-      console.error("Failed to parse type2 project data:", error)
-      return { left: null, right: null }
+    }
+    
+    const layoutInfo = detectProjectLayout(currentProject.data)
+    const states = extractEditorStates(currentProject.data, layoutInfo.layoutType)
+    
+    return {
+      layout: layoutInfo.layoutType,
+      states
     }
   }
 
-  const serializedState = getSerializedState()
-  const { left: leftState, right: rightState } = getLeftRightStates()
-  const currentLayoutType = currentProject?.type || "type1"
+  const { layout: currentLayout, states } = getLayoutAndStates()
 
   return (
     <>
@@ -217,7 +174,7 @@ export default function PreviewPage() {
         <div className="container mx-auto py-10">
           <div
             className={`mx-auto space-y-4 px-4 sm:px-6 lg:px-8 ${
-              currentProject && (serializedState || (leftState && rightState)) ? "max-w-full" : "max-w-4xl"
+              currentProject && (states.single || (states.left && states.right)) ? "max-w-full" : "max-w-4xl"
             }`}
           >
             {/* Professional Header */}
@@ -273,7 +230,7 @@ export default function PreviewPage() {
               {/* Action Bar */}
               <div className="flex items-center justify-between gap-4 p-4 bg-white dark:bg-gray-900">
                 <div className="flex items-center gap-3">
-                  {currentProject && (serializedState || (leftState && rightState)) && currentLayoutType === "type1" && (
+                  {currentProject && (states.single || (states.left && states.right)) && currentLayout === "single" && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -323,11 +280,11 @@ export default function PreviewPage() {
               </div>
             </div>
 
-            {currentProject && (serializedState || (leftState && rightState)) ? (
+            {currentProject && (states.single || (states.left && states.right)) ? (
               <>
-                {currentLayoutType === "type1" && serializedState ? (
+                {currentLayout === "single" && states.single ? (
                   <PreviewRendererType1
-                    serializedState={serializedState as any}
+                    serializedState={states.single as any}
                     currentProject={currentProject}
                     storageAdapter={storageAdapter}
                     availableTags={availableTags}
@@ -336,8 +293,8 @@ export default function PreviewPage() {
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
                   />
-                ) : currentLayoutType === "type2" && leftState && rightState ? (
-                  <PreviewRendererType2 leftState={leftState as any} rightState={rightState as any} projectId={currentProject.id} />
+                ) : currentLayout === "dual" && states.left && states.right ? (
+                  <PreviewRendererType2 leftState={states.left as any} rightState={states.right as any} projectId={currentProject.id} />
                 ) : (
                   <div className="border border-red-200 bg-red-50 shadow-sm dark:border-red-700 dark:bg-red-900/20">
                     <div className="p-6 px-12 py-12">
@@ -349,7 +306,7 @@ export default function PreviewPage() {
                         <p className="mb-6 text-red-600 dark:text-red-400">
                           This project's data structure is incompatible with the viewer.
                           <br />
-                          Type: {currentLayoutType} | Has Left: {leftState ? "Yes" : "No"} | Has Right: {rightState ? "Yes" : "No"}
+                          Layout: {currentLayout} | Has Single: {states.single ? "Yes" : "No"} | Has Left/Right: {states.left && states.right ? "Yes" : "No"}
                         </p>
                         <Button
                           onClick={() => setCurrentProject(null)}

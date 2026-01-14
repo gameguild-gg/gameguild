@@ -7,12 +7,11 @@ export interface SaveParams {
   currentProjectId: string
   currentProjectName: string
   currentProjectStorageType: "local" | "gameguild-cloud" | "google-drive"
-  layoutType: "type1" | "type2"
-  editorState: string
+  editorState: string // Already formatted via createProjectData
   editorRef: React.RefObject<LexicalEditor | null>
   projectTags: string[]
   storageAdapter: {
-    save: (id: string, name: string, data: string, tags: string[], storageType: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: "type1" | "type2") => Promise<void>
+    save: (id: string, name: string, data: string, tags: string[], storageType: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string) => Promise<void>
   }
   calculateProjectAssetsSize: (projectId: string) => Promise<void>
   setSaveAsDialogOpen: (open: boolean) => void
@@ -20,13 +19,12 @@ export interface SaveParams {
 
 export interface SaveAsParams {
   newProjectName: string
-  layoutType: "type1" | "type2"
-  editorState: string
+  editorState: string // Already formatted via createProjectData
   editorRef: React.RefObject<LexicalEditor | null>
   projectTags: string[]
   storageOption: "local" | "gameguild-cloud" | "google-drive"
   storageAdapter: {
-    save: (id: string, name: string, data: string, tags: string[], storageType: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: "type1" | "type2") => Promise<void>
+    save: (id: string, name: string, data: string, tags: string[], storageType: "local" | "gameguild-cloud" | "google-drive", preferences?: any, type?: string) => Promise<void>
     list: () => Promise<Array<{ name: string }>>
   }
   generateProjectId: () => string
@@ -47,7 +45,6 @@ export async function handleSave(params: SaveParams): Promise<void> {
     currentProjectId,
     currentProjectName,
     currentProjectStorageType,
-    layoutType,
     editorState,
     editorRef,
     projectTags,
@@ -88,7 +85,7 @@ export async function handleSave(params: SaveParams): Promise<void> {
   }
 
   try {
-    await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags, currentProjectStorageType, undefined, layoutType)
+    await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags, currentProjectStorageType)
 
     // Sync asset index with the saved project data
     await assetManager.syncProjectAssets(currentProjectId, stateToSave)
@@ -117,7 +114,6 @@ export async function handleSave(params: SaveParams): Promise<void> {
 export async function handleSaveAs(params: SaveAsParams): Promise<void> {
   const {
     newProjectName,
-    layoutType,
     editorState,
     editorRef,
     projectTags,
@@ -191,7 +187,7 @@ export async function handleSaveAs(params: SaveAsParams): Promise<void> {
 
   try {
     const newProjectId = generateProjectId()
-    await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags, storageOption, undefined, layoutType)
+    await storageAdapter.save(newProjectId, newProjectName, stateToSave, projectTags, storageOption)
     
     // Sync asset index with the saved project data
     await assetManager.syncProjectAssets(newProjectId, stateToSave)

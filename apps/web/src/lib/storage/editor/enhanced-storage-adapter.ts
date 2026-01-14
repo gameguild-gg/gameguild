@@ -8,8 +8,8 @@ export type { ProjectPreferences } from "./project-preferences"
 export interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" // Layout type
-  data: string
+  type: "type1" | "type2" | "type3" // Project type (not layout - layout is auto-detected from data structure)
+  data: string // If dual panel: {left, right}, if single panel: direct state
   tags: string[]
   size: number
   createdAt: string
@@ -30,7 +30,7 @@ interface TagData {
 interface ProjectMetadata {
   id: string
   name: string
-  type: "type1" | "type2" // Layout type
+  type: "type1" | "type2" | "type3" // Project type (not layout)
   tags: string[]
   size: number
   hash: string
@@ -167,7 +167,7 @@ export class EnhancedStorageAdapter {
     }
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: "type1" | "type2" = "type1"): Promise<void> {
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: "type1" | "type2" | "type3" = "type1"): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
