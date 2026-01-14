@@ -16,5 +16,9 @@ public class RecordSubscriptionPaymentCommandValidator : AbstractValidator<Recor
         RuleFor(x => x.Currency).NotEmpty().WithMessage("Currency is required").Length(3).WithMessage("Currency must be exactly 3 characters (ISO 4217)");
 
         RuleFor(x => x.PaymentDate).LessThanOrEqualTo(DateTime.UtcNow).WithMessage("PaymentDate cannot be in the future");
+
+        RuleFor(x => x.IdempotencyKey)
+            .NotEmpty()
+            .WithMessage("IdempotencyKey is required for duplicate payment prevention");
     }
 }

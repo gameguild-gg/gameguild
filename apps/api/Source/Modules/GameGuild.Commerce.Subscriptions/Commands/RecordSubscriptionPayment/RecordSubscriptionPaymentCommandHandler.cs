@@ -13,8 +13,8 @@ public class RecordSubscriptionPaymentCommandHandler(ISubscriptionRepository sub
 
         if (subscription is null) throw new InvalidOperationException("Subscription not found");
 
-        // Record the payment
-        subscription.RecordPayment(request.Amount, request.Currency, request.PaymentDate);
+        // Record the payment with idempotency key
+        subscription.RecordPayment(request.Amount, request.Currency, request.PaymentDate, request.IdempotencyKey);
 
         // Save changes
         await subscriptionRepository.UpdateAsync(subscription, cancellationToken);

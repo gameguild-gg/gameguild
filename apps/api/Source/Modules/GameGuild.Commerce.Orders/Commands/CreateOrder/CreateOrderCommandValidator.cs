@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace GameGuild.Commerce.Products;
+namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Validator for CreateOrderCommand

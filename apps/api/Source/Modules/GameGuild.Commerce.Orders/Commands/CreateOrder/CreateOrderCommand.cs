@@ -1,4 +1,4 @@
-namespace GameGuild.Commerce.Products;
+namespace GameGuild.Commerce.Orders;
 
 /// <summary>
 /// Command to create a new order with idempotency protection

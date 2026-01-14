@@ -27,13 +27,17 @@ After implementing critical fixes, **6 of 8 financial invariants now PASS**. The
 | Billing Repository | ✅ IMPLEMENTED | Full IApplicationDbContext integration |
 | Subscription Idempotency | ✅ FIXED | Renewal and payment idempotency keys added |
 | Proration Calculation | ✅ IMPLEMENTED | ChangePlan() returns PlanChangeProration |
+| **Price Versioning** | ✅ IMPLEMENTED | ProductPricingVersion tracks all price changes |
+| **Commission Separation** | ✅ IMPLEMENTED | ProductCommissionConfig extracts affiliate logic |
+| **Bundle Type Safety** | ✅ IMPLEMENTED | ProductBundleItem replaces JSON string |
 | Transaction Boundaries | ⚠️ PARTIAL | IApplicationDbContext available, needs explicit use |
 
 ### Overall Maturity Assessment (Updated)
 
 ```
-Commerce Module Maturity: 72/100 (Production-Ready with Caveats)
-├── Products Module:      70/100 (Functional, refinement needed)
+Commerce Module Maturity: 78/100 (Production-Ready with Caveats)
+├── Products Module:      85/100 (Price versioning, commission config, bundle items fixed)
+├── Orders Module:        80/100 (NEW - State machine, idempotency, tenant validation)
 ├── Subscriptions Module: 80/100 (Core logic solid, idempotency fixed)
 ├── Billing Module:       65/100 (Repository implemented, handlers pending)
 └── Payments Module:      55/100 (Partial, gateway abstraction needed)
@@ -110,19 +114,23 @@ Commerce Module Maturity: 72/100 (Production-Ready with Caveats)
 |--------|---------------|----------------|
 | **Products** | `Product` | Catalog item definition |
 | | `ProductPricing` | Price options with sale support |
+| | `ProductPricingVersion` | **NEW** Immutable price version history |
+| | `ProductCommissionConfig` | **NEW** Affiliate/referral commission config |
+| | `ProductBundleItem` | **NEW** Type-safe bundle composition |
 | | `ProductSubscriptionPlan` | Subscription plan tied to product |
-| | `Order` | Purchase container with idempotency |
-| | `OrderLineItem` | Line item with price snapshot |
 | | `PromoCode` | Discount code management |
-| | `OrderService` | Order lifecycle management |
 | | `PricingEngineService` | Price calculation with discounts |
+| **Orders** | `Order` | Purchase container with idempotency |
+| | `OrderLineItem` | Line item with price snapshot |
+| | `OrderService` | Order lifecycle management |
 | **Subscriptions** | `Subscription` | Tenant subscription state |
 | | `SubscriptionPlan` | Plan definition with limits |
 | | `ISubscriptionService` | Subscription lifecycle operations |
 | | `ISubscriptionDomainService` | Domain-level billing operations |
 | **Billing** | `BillingWebhookEvent` | Webhook storage and tracking |
-| | `BillingWebhookService` | Webhook processing (NOT IMPLEMENTED) |
-| | `BillingWebhookRepository` | Webhook persistence (NOT IMPLEMENTED) |
+| | `BillingWebhookService` | Webhook processing |
+| | `BillingWebhookRepository` | Webhook persistence |
+| | `Invoice` | **NEW** Immutable billing record |
 | **Payments** | `FinancialLedgerEntry` | Double-entry accounting |
 | | `PaymentDispute` | Chargeback handling |
 | | `UserWallet` | User balance management |
@@ -156,6 +164,9 @@ Commerce Module Maturity: 72/100 (Production-Ready with Caveats)
 | 5 | Idempotency keys for renewals and payments | `Subscription.cs` |
 | 6 | Proration calculation in ChangePlan() | `Subscription.cs`, `PlanChangeProration.cs` |
 | 7 | Full BillingWebhookRepository implementation | `BillingWebhookRepository.cs` |
+| 9 | Price versioning with immutable history | `ProductPricing.cs`, `ProductPricingVersion.cs` (NEW) |
+| 10 | Commission logic extracted to separate entity | `Product.cs`, `ProductCommissionConfig.cs` (NEW) |
+| 11 | Type-safe bundle items with FK relationships | `Product.cs`, `ProductBundleItem.cs` (NEW) |
 
 ### Remaining Work
 
@@ -164,32 +175,36 @@ Commerce Module Maturity: 72/100 (Production-Ready with Caveats)
 | 3 | PaymentResult missing InvoiceId | Add `InvoiceId` property to `PaymentResult` |
 | 8 | No transaction boundaries in OrderService | Wrap `CompleteOrderAsync()` in `IApplicationDbContext.BeginTransactionAsync()` |
 
-### Detailed Evidence
+### Detailed Evidence (Historical - Pre-Fix)
 
-#### Invariant 1: TenantId Enforcement
+**Note:** The evidence below documents the original issues. See "Issues Fixed" sections for current implementation.
+
+#### Invariant 1: TenantId Enforcement (FIXED)
 ```csharp
-// EntityBase.cs:109 - TenantId is nullable
+// BEFORE: EntityBase.cs:109 - TenantId is nullable
 public virtual Guid? TenantId { get; protected set; }
 
-// Subscription.cs:30 - Constructor sets TenantId
-TenantId = new TenantId(tenantId);
-
-// BillingWebhookEvent.cs:69 - Shadows base with nullable
-public new Guid? TenantId { get; set; }
-
-// PROBLEM: No validation that TenantId is set before financial operations
+// AFTER: Order.Create() now validates TenantId
+if (tenantId == null || tenantId == Guid.Empty)
+    throw new ArgumentException("TenantId is required for financial entities", nameof(tenantId));
 ```
 
-#### Invariant 5: Duplicate Charge Risk
+#### Invariant 5: Duplicate Charge Risk (FIXED)
 ```csharp
-// Subscription.cs:336-358 - No idempotency
+// BEFORE: Subscription.cs - No idempotency
 public SubscriptionRenewalResult ProcessRenewal(Money newAmount)
 {
-    // No idempotency key check
-    // No "last renewal date" check
-    Amount = newAmount;
     BillingCycleCount++;  // Only "guard" - not sufficient
+}
+
+// AFTER: Subscription.cs - Idempotency key required
+public SubscriptionRenewalResult ProcessRenewal(Money newAmount, string idempotencyKey)
+{
+    if (LastRenewalIdempotencyKey == idempotencyKey)
+        return SubscriptionRenewalResult.CreateSuccess(Id, BillingCycleCount, Amount);
+    LastRenewalIdempotencyKey = idempotencyKey;
     // ...
+}
 }
 ```
 
@@ -210,46 +225,93 @@ public Task<bool> ExistsAsync(string externalEventId, string provider, ...)
 
 ### 3.1 GameGuild.Commerce.Products
 
+#### Architecture Assessment (Updated)
+
+| Aspect | Rating | Notes |
+|--------|--------|-------|
+| Separation of Concerns | ✅ Fixed | Commission logic extracted to `ProductCommissionConfig` |
+| Price Versioning | ✅ Implemented | `ProductPricingVersion` provides immutable price history |
+| Bundle Type Safety | ✅ Implemented | `ProductBundleItem` replaces JSON string with proper entity |
+| Coupling | ⚠️ Medium | Direct dependency on Identity.Users for Creator (acceptable) |
+
+#### Issues Fixed
+
+1. **✅ FIXED: Price Versioning Implemented**
+   - `ProductPricingVersion` entity created with immutable design
+   - `ProductPricing.BasePrice` and `SalePrice` now have private setters
+   - Price changes tracked via `UpdateBasePrice()`, `UpdateSalePrice()`, `UpdatePrices()` methods
+   - Each change creates a new version with audit trail
+   ```csharp
+   // ProductPricing.cs - Price changes create versions
+   public ProductPricingVersion UpdateBasePrice(decimal newBasePrice, string? changeReason = null, Guid? changedByUserId = null)
+   {
+       var previousVersion = GetCurrentActiveVersion();
+       previousVersion?.Supersede(DateTime.UtcNow);
+       BasePrice = newBasePrice;
+       CurrentVersion++;
+       return ProductPricingVersion.Create(this, CurrentVersion, DateTime.UtcNow, changeReason, changedByUserId);
+   }
+   ```
+
+2. **✅ FIXED: Commission Logic Extracted**
+   - `ProductCommissionConfig` entity created with full commission management
+   - Product entity commission fields marked `[Obsolete]`
+   - `Product.CreateWithCommission()` factory creates both product and config
+   - Commission config supports: referral/affiliate percentages, max discount, recurring settings
+   ```csharp
+   // ProductCommissionConfig.cs - Separated commission logic
+   public static ProductCommissionConfig Create(
+       Guid productId,
+       decimal referralCommissionPercentage = 30m,
+       decimal affiliateCommissionPercentage = 30m,
+       decimal maxAffiliateDiscount = 0m,
+       Guid? tenantId = null)
+   ```
+
+3. **✅ FIXED: Type-Safe Bundle Items**
+   - `ProductBundleItem` entity created with proper FK relationships
+   - `Product.BundleItemsJson` field marked `[Obsolete]`
+   - New methods: `AddToBundleTypeSafe()`, `RemoveFromBundle()`, `GetBundleProductIds()`
+   - Supports quantity, display order, required flag, bundle-specific discounts
+   ```csharp
+   // ProductBundleItem.cs - Type-safe bundle composition
+   public static ProductBundleItem Create(
+       Guid bundleProductId,
+       Guid includedProductId,
+       int quantity = 1,
+       int displayOrder = 0,
+       bool isRequired = true,
+       Guid? tenantId = null)
+   ```
+
+#### Positive Findings
+
+✅ `Order` has unique `IdempotencyKey` index (now in Commerce.Orders module)  
+✅ `OrderLineItem` captures price snapshots at purchase time  
+✅ `PromoCode` has proper validation with usage limits  
+✅ `ProductPricingVersion` provides historical price lookup via `GetVersionAt(DateTime)`  
+✅ Commission config includes recurring payment commission settings  
+✅ Bundle items have referential integrity via FK constraints  
+
+---
+
+### 3.1.1 GameGuild.Commerce.Orders (NEW MODULE)
+
 #### Architecture Assessment
 
 | Aspect | Rating | Notes |
 |--------|--------|-------|
-| Separation of Concerns | ⚠️ Medium | Products contain affiliate/referral logic that should be separate |
-| Price Versioning | ⚠️ Partial | `OrderLineItem` has snapshots, but `ProductPricing` is mutable |
-| Coupling | ⚠️ Medium | Direct dependency on Identity.Users for Creator |
-
-#### Issues Identified
-
-1. **HIGH: Mutable Pricing Without History**
-   - `ProductPricing` can be modified directly
-   - No price version history
-   - Active subscriptions could reference stale prices
-   ```csharp
-   // ProductPricing.cs - All fields are public setters
-   public decimal BasePrice { get; set; }
-   public decimal? SalePrice { get; set; }
-   ```
-
-2. **MEDIUM: Business Logic in Entity**
-   - `Product.Create()` factory has hardcoded defaults
-   - Referral commission logic embedded in Product entity
-   ```csharp
-   // Product.cs:86-89
-   public decimal ReferralCommissionPercentage { get; set; } = 30m;
-   public decimal AffiliateCommissionPercentage { get; set; } = 30m;
-   ```
-
-3. **LOW: BundleItems as JSON String**
-   - `Product.BundleItems` stored as JSON string
-   - No type safety for bundle composition
-   - Risk of orphaned bundle references
+| State Machine | ✅ Implemented | `ValidOrderTransitions` with `TransitionTo()` enforcement |
+| TenantId Validation | ✅ Enforced | `Create()` throws if TenantId is null/empty |
+| Idempotency | ✅ Good | Unique `IdempotencyKey` index |
+| Price Snapshots | ✅ Good | `OrderLineItem` captures prices at purchase time |
 
 #### Positive Findings
 
-✅ `Order` has unique `IdempotencyKey` index  
-✅ `OrderLineItem` captures price snapshots at purchase time  
-✅ `PromoCode` has proper validation with usage limits  
-✅ `OrderService.CreateOrderAsync()` checks for existing orders by idempotency key  
+✅ Order and OrderLineItem properly separated from Products module  
+✅ State machine prevents invalid order status transitions  
+✅ Price snapshots in OrderLineItem protect against price changes  
+✅ IdempotencyKey prevents duplicate order creation  
 
 ---
 
