@@ -167,9 +167,10 @@ public class SubscriptionTests
         subscription.Activate();
         var paymentDate = DateTime.UtcNow;
         var amount = 29.99m;
+        var idempotencyKey = Guid.NewGuid().ToString();
 
         // Act
-        subscription.RecordPayment(amount, "USD", paymentDate);
+        subscription.RecordPayment(amount, "USD", paymentDate, idempotencyKey);
 
         // Assert
         subscription.LastPaymentAt.Should().Be(paymentDate);
