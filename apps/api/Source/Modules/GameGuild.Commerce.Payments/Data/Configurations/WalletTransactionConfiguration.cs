@@ -10,39 +10,54 @@ public class WalletTransactionConfiguration : IEntityTypeConfiguration<WalletTra
 {
     public void Configure(EntityTypeBuilder<WalletTransaction> builder)
     {
-        // Configure table name (snake_case convention)
-        builder.ToTable("wallettransaction", "gameguild.payments");
+        // Configure table name with constraints
+        builder.ToTable("wallet_transactions", tb =>
+        {
+            tb.HasCheckConstraint("CK_WalletTransaction_Amount_Positive", "amount > 0");
+        });
 
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).HasColumnName("id").IsRequired();
+        // Property configurations
+        builder.Property(x => x.WalletId)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for WalletTransaction
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        builder.Property(x => x.Type)
+            .IsRequired();
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(x => x.Amount)
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
 
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_wallettransaction_tenant_id");
+        builder.Property(x => x.BalanceAfter)
+            .HasColumnType("decimal(18,2)")
+            .IsRequired();
 
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.Property(x => x.Description)
+            .HasMaxLength(500)
+            .IsRequired();
+
+        builder.Property(x => x.ReferenceId)
+            .HasMaxLength(200);
+
+        builder.Property(x => x.Status)
+            .IsRequired();
+
+        builder.Property(x => x.Metadata)
+            .HasMaxLength(2000);
+
+        // Relationship configurations
+        builder.HasOne(x => x.Wallet)
+            .WithMany(w => w.Transactions)
+            .HasForeignKey(x => x.WalletId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure indexes for performance
+        builder.HasIndex(x => x.WalletId).HasDatabaseName("ix_wallet_transactions_wallet_id");
+        builder.HasIndex(x => x.Type).HasDatabaseName("ix_wallet_transactions_type");
+        builder.HasIndex(x => x.Status).HasDatabaseName("ix_wallet_transactions_status");
+        builder.HasIndex(x => x.CreatedAt).HasDatabaseName("ix_wallet_transactions_created_at");
+        builder.HasIndex(x => x.ReferenceId).HasDatabaseName("ix_wallet_transactions_reference_id");
     }
 }
