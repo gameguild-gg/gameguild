@@ -8,7 +8,7 @@ namespace GameGuild.Social.Posts;
 public class Post : EntityBase
 {
     public Guid AuthorId { get; private set; }
-    public Guid? TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public string Content { get; private set; } = string.Empty;
     public string? MediaUrl { get; private set; }
     public MediaType? MediaType { get; private set; }

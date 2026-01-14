@@ -26,8 +26,15 @@ public interface IOrderService
     /// <summary>
     /// Complete an order (process payment, grant entitlements)
     /// </summary>
+    /// <param name="orderId">The order ID to complete</param>
+    /// <param name="paymentId">Optional internal Payment entity ID for Payment→Order linkage</param>
+    /// <param name="paymentProviderReference">Optional external payment provider reference</param>
+    /// <param name="paymentMethod">Optional payment method description</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Order result with success/failure status</returns>
     Task<OrderResult> CompleteOrderAsync(
         Guid orderId,
+        Guid? paymentId = null,
         string? paymentProviderReference = null,
         string? paymentMethod = null,
         CancellationToken cancellationToken = default);

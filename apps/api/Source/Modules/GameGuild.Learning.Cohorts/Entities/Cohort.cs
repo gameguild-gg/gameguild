@@ -8,7 +8,7 @@ namespace GameGuild.Learning.Cohorts;
 public class Cohort : EntityBase
 {
     public Guid CourseId { get; private set; }
-    public Guid? TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public string Name { get; private set; } = string.Empty;
     public string? Description { get; private set; }
     public DateTime StartDate { get; private set; }

@@ -11,7 +11,7 @@ public class UserProductRepository(IApplicationDbContext context)
     : CommerceRepositoryBase<UserProduct>(context), IUserProductRepository
 {
     /// <inheritdoc />
-    public async Task<UserProduct?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public new async Task<UserProduct?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await Entities
             .Include(up => up.Product)
@@ -92,7 +92,7 @@ public class UserProductRepository(IApplicationDbContext context)
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(UserProduct userProduct, CancellationToken cancellationToken = default)
+    public new Task UpdateAsync(UserProduct userProduct, CancellationToken cancellationToken = default)
     {
         Entities.Update(userProduct);
         return Task.CompletedTask;

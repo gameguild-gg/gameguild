@@ -78,6 +78,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     {
         var result = await orderService.CompleteOrderAsync(
             orderId,
+            request?.PaymentId,
             request?.PaymentProviderReference,
             request?.PaymentMethod,
             cancellationToken).ConfigureAwait(false);
@@ -233,7 +234,11 @@ public record AddOrderItemRequest(
     string? PromoCode = null);
 
 /// <summary>Request to complete an order</summary>
+/// <param name="PaymentId">Optional internal Payment entity ID for Payment→Order linkage</param>
+/// <param name="PaymentProviderReference">Optional external payment provider reference</param>
+/// <param name="PaymentMethod">Optional payment method description (e.g., "card", "bank_transfer")</param>
 public record CompleteOrderRequest(
+    Guid? PaymentId = null,
     string? PaymentProviderReference = null,
     string? PaymentMethod = null);
 

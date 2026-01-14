@@ -8,7 +8,7 @@ namespace GameGuild.Social.Blog;
 public class BlogPost : EntityBase
 {
     public Guid AuthorId { get; private set; }
-    public Guid? TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;
     public string? Excerpt { get; private set; }

@@ -10,7 +10,7 @@ namespace GameGuild.Commerce.Products;
 public class ProductPricingRepository(IApplicationDbContext context) 
     : CommerceRepositoryBase<ProductPricing>(context), IProductPricingRepository
 {
-    public async Task<ProductPricing?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public new async Task<ProductPricing?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await Query
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken)
@@ -30,7 +30,7 @@ public class ProductPricingRepository(IApplicationDbContext context)
         await Entities.AddAsync(pricing, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task UpdateAsync(ProductPricing pricing, CancellationToken cancellationToken = default)
+    public new Task UpdateAsync(ProductPricing pricing, CancellationToken cancellationToken = default)
     {
         Entities.Update(pricing);
         return Task.CompletedTask;

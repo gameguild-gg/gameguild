@@ -24,7 +24,7 @@ public class TaxCalculationTests
     [InlineData("PL", 0.23, 100, 23)]        // Poland 23% VAT
     [InlineData("SE", 0.25, 100, 25)]        // Sweden 25% VAT
     public void EUVATRates_StandardDigitalGoods_CalculatesCorrectly(
-        string jurisdictionCode, decimal rate, decimal subtotal, decimal expectedTax)
+        string _, decimal rate, decimal subtotal, decimal expectedTax)
     {
         // Arrange
         var calculator = new TaxCalculator();
@@ -45,7 +45,7 @@ public class TaxCalculationTests
     [InlineData("IT", 0.10, 100, 10)]        // Italy 10% reduced VAT
     [InlineData("ES", 0.10, 100, 10)]        // Spain 10% reduced VAT
     public void EUVATRates_ReducedRate_CalculatesCorrectly(
-        string jurisdictionCode, decimal rate, decimal subtotal, decimal expectedTax)
+        string _, decimal rate, decimal subtotal, decimal expectedTax)
     {
         // Arrange
         var calculator = new TaxCalculator();
@@ -72,7 +72,7 @@ public class TaxCalculationTests
     [InlineData("US-MT", 0, 100, 0)]            // Montana (no sales tax)
     [InlineData("US-NH", 0, 100, 0)]            // New Hampshire (no sales tax)
     public void USSalesTax_ByState_CalculatesCorrectly(
-        string jurisdictionCode, decimal rate, decimal subtotal, decimal expectedTax)
+        string _, decimal rate, decimal subtotal, decimal expectedTax)
     {
         // Arrange
         var calculator = new TaxCalculator();
@@ -96,7 +96,7 @@ public class TaxCalculationTests
     [InlineData("CA-NS", 0.15, 100, 15)]        // Nova Scotia HST 15%
     [InlineData("CA-NB", 0.15, 100, 15)]        // New Brunswick HST 15%
     public void CanadaTax_ByProvince_CalculatesCorrectly(
-        string jurisdictionCode, decimal combinedRate, decimal subtotal, decimal expectedTax)
+        string _, decimal combinedRate, decimal subtotal, decimal expectedTax)
     {
         // Arrange
         var calculator = new TaxCalculator();

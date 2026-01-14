@@ -9,7 +9,7 @@ public class FeaturedContent : EntityBase
 {
     public Guid? CourseId { get; private set; }
     public Guid? LearningPathId { get; private set; }
-    public Guid? TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string? Subtitle { get; private set; }
     public string? ImageUrl { get; private set; }
@@ -61,7 +61,7 @@ public class FeaturedContent : EntityBase
 /// </summary>
 public class CourseCollection : EntityBase
 {
-    public Guid? TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public Guid CuratorId { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;

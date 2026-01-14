@@ -100,7 +100,7 @@ public class OrderRepository(IApplicationDbContext context)
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(Order order, CancellationToken cancellationToken = default)
+    public new Task UpdateAsync(Order order, CancellationToken cancellationToken = default)
     {
         Entities.Update(order);
         return Task.CompletedTask;

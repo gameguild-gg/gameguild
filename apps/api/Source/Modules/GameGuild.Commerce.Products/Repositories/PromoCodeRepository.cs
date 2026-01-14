@@ -13,7 +13,7 @@ public class PromoCodeRepository(IApplicationDbContext context)
     private DbSet<PromoCodeUse> PromoCodeUses => Context.Set<PromoCodeUse>();
 
     /// <inheritdoc />
-    public async Task<PromoCode?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public new async Task<PromoCode?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await Entities
             .Include(p => p.Product)
@@ -125,7 +125,7 @@ public class PromoCodeRepository(IApplicationDbContext context)
     }
 
     /// <inheritdoc />
-    public Task UpdateAsync(PromoCode promoCode, CancellationToken cancellationToken = default)
+    public new Task UpdateAsync(PromoCode promoCode, CancellationToken cancellationToken = default)
     {
         Entities.Update(promoCode);
         return Task.CompletedTask;

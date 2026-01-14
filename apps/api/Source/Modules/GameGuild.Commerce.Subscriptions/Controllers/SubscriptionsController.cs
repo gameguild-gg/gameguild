@@ -39,7 +39,15 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         var validationError = ValidateTenantAccess(body.TenantId, "create subscription");
         if (validationError != null) return validationError;
 
-        var id = await sender.Send(new CreateSubscriptionCommand(body.TenantId, body.PlanId, body.CreatedByUserId, body.BillingCycle, body.Amount, body.StartDate, body.TrialDays), ct);
+        var id = await sender.Send(new CreateSubscriptionCommand(
+            body.TenantId, 
+            body.PlanId, 
+            body.CreatedByUserId, 
+            body.BillingCycle, 
+            body.Amount, 
+            FulfilledOrderId: body.FulfilledOrderId,
+            StartDate: body.StartDate, 
+            TrialDays: body.TrialDays), ct);
 
         return CreatedAtAction(nameof(GetSubscriptionById), new { subscriptionId = id }, new { id });
     }
@@ -483,7 +491,26 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     #endregion
 
     // POST /subscriptions
-    public record CreateSubscriptionRequest(Guid TenantId, Guid PlanId, Guid CreatedByUserId, BillingCycle BillingCycle, decimal Amount, string Currency, DateTime? StartDate, int? TrialDays);
+    /// <summary>Request to create a subscription</summary>
+    /// <param name="TenantId">The tenant ID</param>
+    /// <param name="PlanId">The subscription plan ID</param>
+    /// <param name="CreatedByUserId">The user who created the subscription</param>
+    /// <param name="BillingCycle">The billing cycle (Monthly, Yearly, etc.)</param>
+    /// <param name="Amount">The subscription amount</param>
+    /// <param name="Currency">The currency code</param>
+    /// <param name="FulfilledOrderId">Optional Order ID that triggered this subscription (Economic Model: Order→Subscription causality)</param>
+    /// <param name="StartDate">Optional start date</param>
+    /// <param name="TrialDays">Optional trial period in days</param>
+    public record CreateSubscriptionRequest(
+        Guid TenantId, 
+        Guid PlanId, 
+        Guid CreatedByUserId, 
+        BillingCycle BillingCycle, 
+        decimal Amount, 
+        string Currency, 
+        Guid? FulfilledOrderId = null,
+        DateTime? StartDate = null, 
+        int? TrialDays = null);
 
     public record StartTrialRequest(int TrialDays);
 

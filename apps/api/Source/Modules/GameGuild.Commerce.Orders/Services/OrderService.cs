@@ -107,6 +107,7 @@ public class OrderService(
     /// <inheritdoc />
     public async Task<OrderResult> CompleteOrderAsync(
         Guid orderId,
+        Guid? paymentId = null,
         string? paymentProviderReference = null,
         string? paymentMethod = null,
         CancellationToken cancellationToken = default)
@@ -117,13 +118,14 @@ public class OrderService(
             return OrderResult.Failed($"Order {orderId} not found");
         }
 
-        if (order.Status == OrderStatus.Completed)
+        // Idempotent: already completed or fulfilled
+        if (order.Status == OrderStatus.Completed || order.Status == OrderStatus.Fulfilled)
         {
-            // Already completed - idempotent
             return OrderResult.Succeeded(order, wasDuplicate: true);
         }
 
-        if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Processing)
+        // Idempotent: already paid but not fulfilled - continue to fulfillment
+        if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Processing && order.Status != OrderStatus.Paid)
         {
             return OrderResult.Failed($"Cannot complete order in {order.Status} status");
         }
@@ -134,7 +136,24 @@ public class OrderService(
         
         try
         {
-            // Grant entitlements for each line item
+            // STEP 1: Mark as paid (if not already paid)
+            // Economic Causality: Payment confirmation happens BEFORE fulfillment
+            if (order.Status != OrderStatus.Paid)
+            {
+                if (paymentId.HasValue)
+                {
+                    // New flow: Link to internal Payment entity with proper Paid state
+                    order.MarkAsPaidPendingFulfillment(paymentId.Value, paymentProviderReference);
+                }
+                else
+                {
+                    // Legacy flow: No internal Payment entity, use external reference only
+                    // Still use proper two-step flow for new orders
+                    order.MarkAsPaid(paymentProviderReference, paymentMethod, paymentProviderReference);
+                }
+            }
+
+            // STEP 2: Grant entitlements (after payment is confirmed)
             foreach (var lineItem in order.LineItems)
             {
                 var acquisitionType = lineItem.IsSubscription
@@ -157,8 +176,9 @@ public class OrderService(
                 }
             }
 
-            // Mark as paid
-            order.MarkAsPaid(paymentProviderReference, paymentMethod);
+            // STEP 3: Mark as fulfilled (after entitlements are granted)
+            // Economic Causality: Fulfillment happens AFTER entitlements are created
+            order.MarkAsFulfilled();
 
             await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
             await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

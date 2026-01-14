@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.LearningPaths;
 /// </summary>
 public class LearningPath : EntityBase
 {
-    public Guid? TenantId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public Guid CreatorId { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string Slug { get; private set; } = string.Empty;

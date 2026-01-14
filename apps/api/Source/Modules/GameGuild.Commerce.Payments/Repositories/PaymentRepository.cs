@@ -13,7 +13,7 @@ public class PaymentRepository(
     ILogger<PaymentRepository> logger) 
     : CommerceRepositoryBase<Payment>(context), IPaymentRepository
 {
-    public async Task<Payment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public new async Task<Payment?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Getting payment by ID: {PaymentId}", id);
         return await Query
@@ -188,7 +188,7 @@ public class PaymentRepository(
         return payment;
     }
 
-    public async Task<Payment> UpdateAsync(Payment payment, CancellationToken cancellationToken = default)
+    public new async Task<Payment> UpdateAsync(Payment payment, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Updating payment {PaymentId}", payment.Id);
 

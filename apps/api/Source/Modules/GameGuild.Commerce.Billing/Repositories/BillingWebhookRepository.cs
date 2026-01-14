@@ -13,7 +13,7 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
     : CommerceRepositoryBase<BillingWebhookEvent>(context), IBillingWebhookRepository
 {
     /// <inheritdoc />
-    public async Task<BillingWebhookEvent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public new async Task<BillingWebhookEvent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Getting webhook event by ID: {Id}", id);
         return await Entities.FirstOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false);
@@ -51,7 +51,7 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
     }
 
     /// <inheritdoc />
-    public async Task<BillingWebhookEvent> CreateAsync(BillingWebhookEvent webhookEvent, CancellationToken cancellationToken = default)
+    public new async Task<BillingWebhookEvent> CreateAsync(BillingWebhookEvent webhookEvent, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(webhookEvent);
         
@@ -71,7 +71,7 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
     }
 
     /// <inheritdoc />
-    public async Task<BillingWebhookEvent> UpdateAsync(BillingWebhookEvent webhookEvent, CancellationToken cancellationToken = default)
+    public new async Task<BillingWebhookEvent> UpdateAsync(BillingWebhookEvent webhookEvent, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(webhookEvent);
         logger.LogInformation("Updating webhook event: {Id}", webhookEvent.Id);
@@ -82,7 +82,7 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
     }
 
     /// <inheritdoc />
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public new async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Deleting webhook event: {Id}", id);
         

@@ -201,7 +201,7 @@ public abstract class WebhookProcessorBase
             ExternalEventId = eventId,
             Provider = ProviderName,
             EventType = eventType,
-            Payload = _webhookSettings.StorePayloads ? payload : null,
+            Payload = _webhookSettings.StorePayloads ? payload : string.Empty,
             ProcessingAttempts = 0
         };
 

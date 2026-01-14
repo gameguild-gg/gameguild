@@ -257,7 +257,7 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     ///     Current subscription amount
     /// </summary>
     // ReSharper disable once RedundantDefaultMemberInitializer - null! required for nullable reference types with private setter
-    public Money Amount { get; private set; }
+    public Money Amount { get; private set; } = null!;
 
     /// <summary>
     ///     When the subscription started/became active

@@ -8,4 +8,12 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Command to create a new subscription
 /// </summary>
 [RequiresQuota(ResourceUsageType.Subscriptions, 1, Source = "CreateSubscription")]
-public record CreateSubscriptionCommand(Guid TenantId, Guid PlanId, Guid CreatedByUserId, BillingCycle BillingCycle, decimal Amount, DateTime? StartDate = null, int? TrialDays = null) : ICommand<Guid>;
+public record CreateSubscriptionCommand(
+    Guid TenantId, 
+    Guid PlanId, 
+    Guid CreatedByUserId, 
+    BillingCycle BillingCycle, 
+    decimal Amount, 
+    Guid? FulfilledOrderId = null,
+    DateTime? StartDate = null, 
+    int? TrialDays = null) : ICommand<Guid>;

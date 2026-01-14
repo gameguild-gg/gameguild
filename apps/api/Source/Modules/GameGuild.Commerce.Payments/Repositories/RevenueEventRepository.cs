@@ -10,7 +10,7 @@ namespace GameGuild.Commerce.Payments;
 public class RevenueEventRepository(IApplicationDbContext context) 
     : CommerceRepositoryBase<RevenueEvent>(context), IRevenueEventRepository
 {
-    public async Task<RevenueEvent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) { return await Entities.FirstOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false); }
+    public new async Task<RevenueEvent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) { return await Entities.FirstOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false); }
 
     public async Task<List<RevenueEvent>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, int skip, int take, CancellationToken cancellationToken = default)
     {
@@ -24,7 +24,7 @@ public class RevenueEventRepository(IApplicationDbContext context)
 
     public async Task AddAsync(RevenueEvent revenueEvent, CancellationToken cancellationToken = default) { await Entities.AddAsync(revenueEvent, cancellationToken).ConfigureAwait(false); }
 
-    public async Task UpdateAsync(RevenueEvent revenueEvent, CancellationToken cancellationToken = default)
+    public new async Task UpdateAsync(RevenueEvent revenueEvent, CancellationToken cancellationToken = default)
     {
         Entities.Update(revenueEvent);
         await Task.CompletedTask.ConfigureAwait(false);

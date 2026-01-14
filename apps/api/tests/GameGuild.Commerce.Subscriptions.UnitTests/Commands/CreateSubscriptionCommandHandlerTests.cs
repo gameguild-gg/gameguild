@@ -1,5 +1,6 @@
 using GameGuild.ValueObjects;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
 
@@ -8,12 +9,14 @@ namespace GameGuild.Commerce.Subscriptions.UnitTests.Commands;
 public class CreateSubscriptionCommandHandlerTests
 {
     private readonly Mock<ISubscriptionRepository> _mockRepository;
+    private readonly Mock<ILogger<CreateSubscriptionCommandHandler>> _mockLogger;
     private readonly CreateSubscriptionCommandHandler _handler;
 
     public CreateSubscriptionCommandHandlerTests()
     {
         _mockRepository = new Mock<ISubscriptionRepository>();
-        _handler = new CreateSubscriptionCommandHandler(_mockRepository.Object);
+        _mockLogger = new Mock<ILogger<CreateSubscriptionCommandHandler>>();
+        _handler = new CreateSubscriptionCommandHandler(_mockRepository.Object, _mockLogger.Object);
     }
 
     [Fact]

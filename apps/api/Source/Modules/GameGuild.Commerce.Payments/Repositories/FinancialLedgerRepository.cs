@@ -10,7 +10,7 @@ namespace GameGuild.Commerce.Payments;
 public class FinancialLedgerRepository(IApplicationDbContext context) 
     : CommerceRepositoryBase<FinancialLedgerEntry>(context), IFinancialLedgerRepository
 {
-    public async Task<FinancialLedgerEntry?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public new async Task<FinancialLedgerEntry?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await Entities.FirstOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false);
     }
@@ -32,7 +32,7 @@ public class FinancialLedgerRepository(IApplicationDbContext context)
 
     public async Task AddAsync(FinancialLedgerEntry entry, CancellationToken cancellationToken = default) { await Entities.AddAsync(entry, cancellationToken).ConfigureAwait(false); }
 
-    public async Task UpdateAsync(FinancialLedgerEntry entry, CancellationToken cancellationToken = default)
+    public new async Task UpdateAsync(FinancialLedgerEntry entry, CancellationToken cancellationToken = default)
     {
         Entities.Update(entry);
         await Task.CompletedTask.ConfigureAwait(false);

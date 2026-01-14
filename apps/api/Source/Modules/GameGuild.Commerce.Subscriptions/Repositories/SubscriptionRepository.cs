@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Subscriptions;
 public class SubscriptionRepository(IApplicationDbContext context) 
     : CommerceRepositoryBase<Subscription>(context), ISubscriptionRepository
 {
-    public async Task<Subscription?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public new async Task<Subscription?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await Query.Include(s => s.Plan).FirstOrDefaultAsync(s => s.Id == id, cancellationToken).ConfigureAwait(false);
     }
@@ -123,7 +123,7 @@ public class SubscriptionRepository(IApplicationDbContext context)
         return entry.Entity;
     }
 
-    public async Task<Subscription> UpdateAsync(Subscription subscription, CancellationToken cancellationToken = default)
+    public new async Task<Subscription> UpdateAsync(Subscription subscription, CancellationToken cancellationToken = default)
     {
         Entities.Update(subscription);
         await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -131,7 +131,7 @@ public class SubscriptionRepository(IApplicationDbContext context)
         return subscription;
     }
 
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public new async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var subscription = await Entities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken).ConfigureAwait(false);
 

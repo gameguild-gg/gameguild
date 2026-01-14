@@ -88,7 +88,7 @@ public class ProductRepository(IApplicationDbContext context)
         await Entities.AddAsync(product, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task UpdateAsync(Product product, CancellationToken cancellationToken = default)
+    public new Task UpdateAsync(Product product, CancellationToken cancellationToken = default)
     {
         Entities.Update(product);
         return Task.CompletedTask;
