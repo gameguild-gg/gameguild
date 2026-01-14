@@ -988,16 +988,16 @@ public interface IOrderService
 
 ### Low Risk (All Resolved ✅)
 
-| #   | Issue                                | Location                 | Status                                                                       |
-| --- | ------------------------------------ | ------------------------ | ---------------------------------------------------------------------------- |
-| L1  | Business logic in Product entity     | `Product.cs`             | ✅ ACCEPTABLE - Domain logic belongs in entity; `ICreator` abstraction added |
-| L2  | Nullable TenantId returns Guid.Empty | `ISubscription.TenantId` | ✅ FIXED - Now throws `InvalidOperationException`                            |
-| L3  | Hardcoded commission percentages     | `Product.cs:86-89`       | ✅ FIXED                                                                     |
-| L4  | TODO comments in production code     | Multiple files           | ✅ ADDRESSED - Critical TODOs documented, remaining are feature placeholders |
-| L5  | No Price versioning                  | `ProductPricing`         | ✅ FIXED                                                                     |
-| L6  | Webhook service is abstract          | `BillingWebhookService`  | ✅ FIXED - `StripeBillingWebhookService` added                               |
-| L7  | PayPal webhook stub                  | Controller               | ✅ FIXED - Full endpoint with signature verification headers                 |
-| L8  | Apple Pay webhook not implemented    | Controller               | ✅ FIXED - App Store Server Notifications V2 endpoint implemented            |
+| #   | Issue                                | Location                 | Status                                                                                          |
+| --- | ------------------------------------ | ------------------------ | ----------------------------------------------------------------------------------------------- |
+| L1  | Business logic in Product entity     | `Product.cs`             | ✅ ACCEPTABLE - Domain logic belongs in entity; `ICreator` abstraction added                    |
+| L2  | Nullable TenantId returns Guid.Empty | `ISubscription.TenantId` | ✅ FIXED - Now throws `InvalidOperationException`                                               |
+| L3  | Hardcoded commission percentages     | `Product.cs:86-89`       | ✅ FIXED                                                                                        |
+| L4  | TODO comments in production code     | Multiple files           | ✅ FIXED - All TODOs replaced with real implementations (Payment entity, handlers, EF configs) |
+| L5  | No Price versioning                  | `ProductPricing`         | ✅ FIXED                                                                                        |
+| L6  | Webhook service is abstract          | `BillingWebhookService`  | ✅ FIXED - `StripeBillingWebhookService` added                                                  |
+| L7  | PayPal webhook stub                  | Controller               | ✅ FIXED - Full endpoint with signature verification headers                                    |
+| L8  | Apple Pay webhook not implemented    | Controller               | ✅ FIXED - App Store Server Notifications V2 endpoint implemented                               |
 
 ---
 
