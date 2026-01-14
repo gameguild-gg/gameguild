@@ -4,25 +4,14 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Represents proration calculation for subscription plan changes.
 ///     This ensures upgrades/downgrades leave no financial residue.
 /// </summary>
+/// <param name="CreditForUnused">Credit for unused time on the old plan</param>
+/// <param name="ChargeForNew">Charge for remaining time on the new plan</param>
+/// <param name="NetAdjustment">Net adjustment (positive = customer owes, negative = credit due)</param>
+/// <param name="EffectiveDate">When the proration takes effect</param>
 public record PlanChangeProration(
-    /// <summary>
-    ///     Credit for unused time on the old plan
-    /// </summary>
     decimal CreditForUnused,
-
-    /// <summary>
-    ///     Charge for remaining time on the new plan
-    /// </summary>
     decimal ChargeForNew,
-
-    /// <summary>
-    ///     Net adjustment (positive = customer owes, negative = credit due)
-    /// </summary>
     decimal NetAdjustment,
-
-    /// <summary>
-    ///     When the proration takes effect
-    /// </summary>
     DateTime EffectiveDate
 )
 {

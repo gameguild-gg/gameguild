@@ -31,6 +31,12 @@ public class ApplePaySettings
     public string? PrivateKeyContent { get; set; }
 
     /// <summary>
+    ///     Shared secret for App Store receipt validation (legacy API).
+    ///     Note: Prefer using App Store Server API with PrivateKey for new integrations.
+    /// </summary>
+    public string? SharedSecret { get; set; }
+
+    /// <summary>
     ///     Environment: "production" or "sandbox".
     /// </summary>
     public string Environment { get; set; } = "sandbox";

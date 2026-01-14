@@ -171,13 +171,13 @@ Attacker replays Stripe webhook to duplicate payment credits.
 
 ## PART 4: Recommended Improvements
 
-### Priority 1: Immediate (This Sprint)
+### Priority 1: Immediate (This Sprint) ✅ COMPLETED
 
-| # | Action | Effort | Impact |
-|---|--------|--------|--------|
-| 1 | Complete `[Obsolete]` annotation on `RecordUsageAsync` | 1 hour | Prevents new code from using non-atomic path |
-| 2 | Add structured logging to all catch blocks in Authorization | 2 hours | Improves debuggability |
-| 3 | Remove disabled code comments in Subscription.cs | 30 min | Reduces confusion |
+| # | Action | Effort | Impact | Status |
+|---|--------|--------|--------|--------|
+| 1 | Complete `[Obsolete]` annotation on `RecordUsageAsync` | 1 hour | Prevents new code from using non-atomic path | ✅ DONE |
+| 2 | Add structured logging to all catch blocks in Authorization | 2 hours | Improves debuggability | ✅ VERIFIED |
+| 3 | Remove disabled code comments in Subscription.cs | 30 min | Reduces confusion | ✅ DONE |
 
 ### Priority 2: Short-term (Next 2 Sprints)
 
@@ -235,16 +235,23 @@ These items can be addressed opportunistically when working on related features:
 
 | Rank | Fix | Effort | Impact | Status |
 |------|-----|--------|--------|--------|
-| 1 | Mark RecordUsageAsync obsolete | 1h | High | 🔲 TODO |
-| 2 | Add logging to catch blocks | 2h | Medium | 🔲 TODO |
-| 3 | Remove commented code | 30m | Low | 🔲 TODO |
+| 1 | Mark RecordUsageAsync obsolete | 1h | High | ✅ DONE |
+| 2 | Add logging to catch blocks | 2h | Medium | ✅ VERIFIED (already implemented) |
+| 3 | Remove commented code | 30m | Low | ✅ DONE |
 | 4 | Implement JWT key rotation | 2d | Critical | 🔲 TODO |
 | 5 | Add Redis rate limiting | 3d | High | 🔲 TODO |
 | 6 | Wire SLA → Notifications | 1d | Medium | 🔲 TODO |
 | 7 | Authorization integration tests | 2w | High | 🔲 TODO |
 | 8 | RiskLevel step-up auth | 1w | Medium | 🔲 TODO |
-| 9 | StatefulEntity refactor | 3d | Low | 🔲 TODO |
+| 9 | StatefulEntity refactor | 3d | Low | ✅ BASE CLASS EXISTS |
 | 10 | TaxController implementation | 1w | Low | 🔲 BACKLOG |
+
+### Fixes Applied in This Review
+
+1. **RecordUsageAsync marked `[Obsolete]`** - Added obsolete attribute with migration guidance to `TryAtomicConsumeAsync`
+2. **Removed commented navigation properties in Subscription.cs** - Cleaned up `// public virtual Tenant Tenant` and `// public virtual User CreatedByUser`
+3. **Verified catch blocks** - All Authorization services already have proper structured logging with `LogError(ex, ...)`
+4. **StatefulEntity base class verified** - `StatefulEntity<TStatus>` exists in SharedKernel; Order and Subscription can extend it incrementally
 
 ---
 

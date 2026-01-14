@@ -183,9 +183,6 @@ public class Subscription : EntityBase, ISubscription
     public string? Metadata { get; private set; }
 
     // Navigation properties
-    // TODO: Re-enable when Tenant and User modules are properly organized
-    // public virtual Tenant Tenant { get; set; } = null!;
-
     public virtual SubscriptionPlan Plan { get; set; } = null!;
 
     /// <summary>
@@ -194,8 +191,6 @@ public class Subscription : EntityBase, ISubscription
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown when TenantId is null</exception>
     Guid ISubscription.TenantId { get => TenantId ?? throw new InvalidOperationException("TenantId is required for subscription entities but was null. This indicates a data integrity issue."); }
-
-    // public virtual User CreatedByUser { get; set; } = null!;
 
     /// <summary>
     ///     Current status of the subscription

@@ -32,7 +32,7 @@ public class Payment : EntityBase
 
     /// <summary>Tenant ID for multi-tenant isolation</summary>
     [Required]
-    public Guid TenantId { get; private set; }
+    public new Guid TenantId { get; private set; }
 
     /// <summary>Optional subscription reference</summary>
     public Guid? SubscriptionId { get; private set; }

@@ -101,6 +101,35 @@ public class Order : EntityBase
     [Column(TypeName = "jsonb")]
     public string? Metadata { get; set; }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // ECONOMIC MODEL ALIGNMENT - Added for unified commerce flow
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    ///     Type of order - determines fulfillment logic and validation rules.
+    ///     Subscribe/Upgrade/Downgrade orders require TargetSubscriptionId.
+    /// </summary>
+    public OrderType OrderType { get; set; } = OrderType.OneTimePurchase;
+
+    /// <summary>
+    ///     Target subscription ID for upgrade/downgrade/renewal orders.
+    ///     Required when OrderType is Upgrade, Downgrade, AddOn, or Renewal.
+    /// </summary>
+    public Guid? TargetSubscriptionId { get; set; }
+
+    /// <summary>
+    ///     When fulfillment was completed (entitlements granted).
+    ///     Distinct from PaidAt - payment can succeed before fulfillment completes.
+    ///     Only set when Status transitions to Fulfilled.
+    /// </summary>
+    public DateTime? FulfilledAt { get; private set; }
+
+    /// <summary>
+    ///     Foreign key to Payment entity for reconciliation.
+    ///     Links order to the payment transaction that settled it.
+    /// </summary>
+    public Guid? PaymentId { get; private set; }
+
     /// <summary>Order line items</summary>
     public virtual ICollection<OrderLineItem> LineItems { get; set; } = new List<OrderLineItem>();
 
@@ -133,18 +162,22 @@ public class Order : EntityBase
     }
 
     /// <summary>
-    ///     Valid state transitions for orders (monotonic state machine)
+    ///     Valid state transitions for orders (monotonic state machine).
+    ///     Economic invariant: No backward transitions that would reverse economic effects.
+    ///     Extended to support Paid→Fulfilled flow for explicit fulfillment tracking.
     /// </summary>
     private static readonly Dictionary<OrderStatus, HashSet<OrderStatus>> ValidTransitions = new()
     {
-        { OrderStatus.Pending, new HashSet<OrderStatus> { OrderStatus.Processing, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
-        { OrderStatus.Processing, new HashSet<OrderStatus> { OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
-        { OrderStatus.Completed, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } },
+        { OrderStatus.Pending, new HashSet<OrderStatus> { OrderStatus.Processing, OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
+        { OrderStatus.Processing, new HashSet<OrderStatus> { OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
+        { OrderStatus.Paid, new HashSet<OrderStatus> { OrderStatus.Fulfilled, OrderStatus.Failed } }, // Paid but not yet fulfilled
+        { OrderStatus.Fulfilled, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } }, // Terminal success state
+        { OrderStatus.Completed, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } }, // Legacy: treated as Fulfilled
         { OrderStatus.Failed, new HashSet<OrderStatus>() }, // Terminal state
         { OrderStatus.Cancelled, new HashSet<OrderStatus>() }, // Terminal state
         { OrderStatus.Refunded, new HashSet<OrderStatus>() }, // Terminal state
         { OrderStatus.PartiallyRefunded, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.Disputed } },
-        { OrderStatus.Disputed, new HashSet<OrderStatus> { OrderStatus.Completed, OrderStatus.Refunded } }
+        { OrderStatus.Disputed, new HashSet<OrderStatus> { OrderStatus.Fulfilled, OrderStatus.Completed, OrderStatus.Refunded } }
     };
 
     /// <summary>
@@ -242,6 +275,62 @@ public class Order : EntityBase
         Touch();
     }
 
+    /// <summary>
+    ///     Mark order as paid without fulfillment (explicit Paid state).
+    ///     Use this when payment succeeds but fulfillment is async.
+    ///     Call MarkAsFulfilled() after entitlements are granted.
+    /// </summary>
+    /// <param name="paymentId">Internal Payment entity ID</param>
+    /// <param name="externalPaymentId">External payment gateway reference</param>
+    public void MarkAsPaidPendingFulfillment(Guid paymentId, string? externalPaymentId = null)
+    {
+        TransitionTo(OrderStatus.Paid, reason: null, externalPaymentId: externalPaymentId);
+        PaymentId = paymentId;
+        PaidAt = DateTime.UtcNow;
+        ExternalPaymentId = externalPaymentId;
+        Touch();
+    }
+
+    /// <summary>
+    ///     Mark order as fulfilled after entitlements are granted.
+    ///     Must be in Paid or Completed status.
+    ///     Economic invariant: FulfilledAt is set exactly once.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when order is not in Paid status</exception>
+    public void MarkAsFulfilled()
+    {
+        if (FulfilledAt.HasValue)
+            return; // Idempotent - already fulfilled
+
+        // Allow transition from Paid or legacy Completed
+        if (Status == OrderStatus.Completed)
+        {
+            // Legacy order already marked as Completed - just set FulfilledAt
+            FulfilledAt = DateTime.UtcNow;
+            Touch();
+            return;
+        }
+
+        TransitionTo(OrderStatus.Fulfilled, reason: "Entitlements granted");
+        FulfilledAt = DateTime.UtcNow;
+        Touch();
+    }
+
+    /// <summary>
+    ///     Associates a Payment entity with this order.
+    ///     Single payment per order invariant enforced.
+    /// </summary>
+    /// <param name="paymentId">The Payment entity ID</param>
+    /// <exception cref="InvalidOperationException">Thrown when order already has a different payment</exception>
+    public void AssociatePayment(Guid paymentId)
+    {
+        if (PaymentId.HasValue && PaymentId != paymentId)
+            throw new InvalidOperationException($"Order {Id} already has payment {PaymentId}. Single payment per order enforced.");
+        
+        PaymentId = paymentId;
+        Touch();
+    }
+
     /// <summary>Mark order as failed (with state machine validation and audit trail)</summary>
     /// <param name="reason">Reason for the failure</param>
     public void MarkAsFailed(string? reason = null)
@@ -272,4 +361,11 @@ public class Order : EntityBase
         RefundedAt = DateTime.UtcNow;
         Touch();
     }
+
+    /// <summary>
+    ///     Whether the order is in a terminal success state (fulfilled or legacy completed)
+    /// </summary>
+    public bool IsSuccessfullyCompleted => 
+        Status == OrderStatus.Fulfilled || 
+        (Status == OrderStatus.Completed && FulfilledAt.HasValue);
 }

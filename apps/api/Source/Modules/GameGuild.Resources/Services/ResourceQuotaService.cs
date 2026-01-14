@@ -100,6 +100,7 @@ public class ResourceQuotaService(
     /// DEPRECATED: Prefer using TryAtomicConsumeAsync for atomic operations with concurrency safety.
     /// This method now enforces hard limits but is not atomic under concurrent access.
     /// </remarks>
+    [Obsolete("Use TryAtomicConsumeAsync for atomic quota enforcement with concurrency safety. This method will be removed in v2.0.")]
     public async Task<bool> RecordUsageAsync(
         Guid tenantId,
         ResourceUsageType type,

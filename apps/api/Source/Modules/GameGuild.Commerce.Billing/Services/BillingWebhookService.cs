@@ -11,17 +11,31 @@ namespace GameGuild.Commerce.Billing;
 public abstract class BillingWebhookService : IBillingWebhookService
 {
     private readonly ILogger<BillingWebhookService> _logger;
-    private readonly ISubscriptionService _subscriptionService;
+    private readonly ISubscriptionLifecycleService _lifecycleService;
+    private readonly ISubscriptionQueryService _queryService;
+    private readonly ISubscriptionBillingService _billingService;
+    private readonly ISubscriptionExternalIdService _externalIdService;
 
     /// <summary>
     ///     Initializes a new instance of the BillingWebhookService.
     /// </summary>
     /// <param name="logger">Logger for webhook events</param>
-    /// <param name="subscriptionService">Subscription service for processing subscription/payment events</param>
-    protected BillingWebhookService(ILogger<BillingWebhookService> logger, ISubscriptionService subscriptionService)
+    /// <param name="lifecycleService">Subscription lifecycle service</param>
+    /// <param name="queryService">Subscription query service</param>
+    /// <param name="billingService">Subscription billing service</param>
+    /// <param name="externalIdService">Subscription external ID service</param>
+    protected BillingWebhookService(
+        ILogger<BillingWebhookService> logger,
+        ISubscriptionLifecycleService lifecycleService,
+        ISubscriptionQueryService queryService,
+        ISubscriptionBillingService billingService,
+        ISubscriptionExternalIdService externalIdService)
     {
         _logger = logger;
-        _subscriptionService = subscriptionService;
+        _lifecycleService = lifecycleService;
+        _queryService = queryService;
+        _billingService = billingService;
+        _externalIdService = externalIdService;
     }
 
     /// <inheritdoc />
@@ -32,8 +46,8 @@ public abstract class BillingWebhookService : IBillingWebhookService
             _logger.LogInformation("Handling subscription created webhook for tenant {TenantId}, subscription {SubscriptionId}", 
                 payload.TenantId, payload.ExternalSubscriptionId);
 
-            // Create subscription via the subscription service
-            var subscription = await _subscriptionService.CreateAsync(
+            // Create subscription via the lifecycle service
+            var subscription = await _lifecycleService.CreateAsync(
                 tenantId: payload.TenantId,
                 planId: payload.PlanId,
                 createdByUserId: Guid.Empty, // System-created via webhook
@@ -44,7 +58,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
             ).ConfigureAwait(false);
 
             // Set external IDs for future webhook correlation
-            await _subscriptionService.SetExternalIdsAsync(
+            await _externalIdService.SetExternalIdsAsync(
                 subscription.Id,
                 payload.ExternalSubscriptionId,
                 externalCustomerId: null
