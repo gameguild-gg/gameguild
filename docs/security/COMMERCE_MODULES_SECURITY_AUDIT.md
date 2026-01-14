@@ -355,15 +355,22 @@ public SubscriptionRenewalResult ProcessRenewal(Money newAmount, string idempote
 }
 ```
 
-#### Invariant 7: Webhook Repository Not Implemented
+#### Invariant 7: Webhook Repository (FIXED)
 
 ```csharp
-// BillingWebhookRepository.cs - ALL methods throw
+// BEFORE: BillingWebhookRepository.cs - ALL methods threw NotImplementedException
 public Task<bool> ExistsAsync(string externalEventId, string provider, ...)
 {
-    // TODO: return await _context.BillingWebhookEvents
-    //     .AnyAsync(e => e.ExternalEventId == externalEventId ...);
     return Task.FromException<bool>(new NotImplementedException("TODO: Inject DbContext"));
+}
+
+// AFTER: BillingWebhookRepository.cs - Fully implemented
+public async Task<bool> ExistsAsync(string externalEventId, string provider, CancellationToken cancellationToken = default)
+{
+    logger.LogDebug("Checking if webhook event exists: {ExternalEventId} for provider: {Provider}", externalEventId, provider);
+    return await WebhookEvents
+        .AnyAsync(e => e.ExternalEventId == externalEventId && e.Provider == provider, cancellationToken)
+        .ConfigureAwait(false);
 }
 ```
 
