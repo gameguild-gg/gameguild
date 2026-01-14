@@ -23,8 +23,8 @@ public static class ServiceCollectionExtensions
         // Register repositories
         services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
 
-        // Register services
-        services.AddScoped<IBillingWebhookService, BillingWebhookService>();
+        // Register webhook service (uses concrete implementation that integrates with Subscriptions)
+        services.AddScoped<IBillingWebhookService, StripeBillingWebhookService>();
 
         return services;
     }
@@ -36,7 +36,7 @@ public static class ServiceCollectionExtensions
     {
         // Register webhook-specific services
         services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
-        services.AddScoped<IBillingWebhookService, BillingWebhookService>();
+        services.AddScoped<IBillingWebhookService, StripeBillingWebhookService>();
 
         return services;
     }

@@ -33,6 +33,12 @@ public class PaymentResult
     public string? TransactionId { get; init; }
 
     /// <summary>
+    ///     Invoice ID that this payment was applied to.
+    ///     Links payment to specific invoice for audit trail and preventing duplicate applications.
+    /// </summary>
+    public Guid? InvoiceId { get; init; }
+
+    /// <summary>
     ///     Error message if payment failed
     /// </summary>
     public string? ErrorMessage { get; init; }
@@ -55,24 +61,24 @@ public class PaymentResult
     /// <summary>
     ///     Creates a successful payment result
     /// </summary>
-    public static PaymentResult CreateSuccess(Money amount, string? paymentId = null, string? transactionId = null, Dictionary<string, object>? metadata = null)
+    public static PaymentResult CreateSuccess(Money amount, string? paymentId = null, string? transactionId = null, Guid? invoiceId = null, Dictionary<string, object>? metadata = null)
     {
-        return new PaymentResult { Success = true, Status = PaymentStatus.Succeeded, Amount = amount, PaymentId = paymentId, TransactionId = transactionId, Metadata = metadata, ProcessedAt = DateTime.UtcNow };
+        return new PaymentResult { Success = true, Status = PaymentStatus.Succeeded, Amount = amount, PaymentId = paymentId, TransactionId = transactionId, InvoiceId = invoiceId, Metadata = metadata, ProcessedAt = DateTime.UtcNow };
     }
 
     /// <summary>
     ///     Creates a failed payment result
     /// </summary>
-    public static PaymentResult Failed(string errorMessage, string? errorCode = null, PaymentStatus status = PaymentStatus.Failed)
+    public static PaymentResult Failed(string errorMessage, string? errorCode = null, PaymentStatus status = PaymentStatus.Failed, Guid? invoiceId = null)
     {
-        return new PaymentResult { Success = false, Status = status, Amount = Money.Zero(), ErrorMessage = errorMessage, ErrorCode = errorCode, ProcessedAt = DateTime.UtcNow };
+        return new PaymentResult { Success = false, Status = status, Amount = Money.Zero(), ErrorMessage = errorMessage, ErrorCode = errorCode, InvoiceId = invoiceId, ProcessedAt = DateTime.UtcNow };
     }
 
     /// <summary>
     ///     Creates a pending payment result
     /// </summary>
-    public static PaymentResult Pending(Money amount, string? paymentId = null)
+    public static PaymentResult Pending(Money amount, string? paymentId = null, Guid? invoiceId = null)
     {
-        return new PaymentResult { Success = false, Status = PaymentStatus.Pending, Amount = amount, PaymentId = paymentId, ProcessedAt = DateTime.UtcNow };
+        return new PaymentResult { Success = false, Status = PaymentStatus.Pending, Amount = amount, PaymentId = paymentId, InvoiceId = invoiceId, ProcessedAt = DateTime.UtcNow };
     }
 }

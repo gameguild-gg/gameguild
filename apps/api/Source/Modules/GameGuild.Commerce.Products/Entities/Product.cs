@@ -11,6 +11,13 @@ namespace GameGuild.Commerce.Products;
 ///     Represents a product in the system.
 ///     Inherits from EntityBase to provide GUID IDs, version control, timestamps, and soft delete functionality.
 /// </summary>
+/// <remarks>
+///     <para>
+///         <b>Creator Dependency:</b> Products have an optional creator relationship to User.
+///         For reduced coupling, use <see cref="GetCreatorInfo"/> to get an <see cref="ICreator"/>
+///         abstraction rather than accessing the User directly when full User functionality isn't needed.
+///     </para>
+/// </remarks>
 [Table("Products")]
 [Index(nameof(Name))]
 [Index(nameof(Type))]
@@ -69,9 +76,17 @@ public class Product : EntityBase
     public Guid? CreatorId { get; set; }
 
     /// <summary>
-    ///     Navigation property to the creator
+    ///     Navigation property to the creator.
+    ///     For reduced coupling, prefer using <see cref="GetCreatorInfo"/> when you only need basic creator data.
     /// </summary>
     public virtual User? Creator { get; set; }
+
+    /// <summary>
+    ///     Gets creator information as an <see cref="ICreator"/> abstraction.
+    ///     Reduces coupling by not requiring access to the full User entity.
+    /// </summary>
+    /// <returns>CreatorInfo if creator is loaded, null otherwise</returns>
+    public CreatorInfo? GetCreatorInfo() => Creator?.ToCreatorInfo();
 
     /// <summary>
     ///     JSON array of product IDs included in the bundle.

@@ -1,3 +1,4 @@
+using GameGuild.Commerce.Subscriptions;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Billing;
@@ -13,8 +14,9 @@ public class StripeBillingWebhookService : BillingWebhookService
 
     public StripeBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
-        ILogger<StripeBillingWebhookService> logger) 
-        : base(logger)
+        ILogger<StripeBillingWebhookService> logger,
+        ISubscriptionService subscriptionService) 
+        : base(logger, subscriptionService)
     {
         _webhookRepository = webhookRepository;
         _logger = logger;

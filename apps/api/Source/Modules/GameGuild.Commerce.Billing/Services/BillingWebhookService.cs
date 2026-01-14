@@ -1,158 +1,270 @@
+using GameGuild.Commerce.Subscriptions;
+using GameGuild.ValueObjects;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Billing;
 
 /// <summary>
-///     Service for handling billing webhooks from external providers
+///     Service for handling billing webhooks from external providers.
+///     Integrates with the Subscriptions module to process subscription and payment events.
 /// </summary>
-public abstract class BillingWebhookService(ILogger<BillingWebhookService> logger) : IBillingWebhookService
+public abstract class BillingWebhookService : IBillingWebhookService
 {
-    // TODO: Inject ISubscriptionService when Subscriptions module integration is complete
-    // private readonly ISubscriptionService _subscriptionService;
+    private readonly ILogger<BillingWebhookService> _logger;
+    private readonly ISubscriptionService _subscriptionService;
+
+    /// <summary>
+    ///     Initializes a new instance of the BillingWebhookService.
+    /// </summary>
+    /// <param name="logger">Logger for webhook events</param>
+    /// <param name="subscriptionService">Subscription service for processing subscription/payment events</param>
+    protected BillingWebhookService(ILogger<BillingWebhookService> logger, ISubscriptionService subscriptionService)
+    {
+        _logger = logger;
+        _subscriptionService = subscriptionService;
+    }
 
     /// <inheritdoc />
-    public Task HandleSubscriptionCreatedAsync(SubscriptionWebhookPayload payload)
+    public async Task HandleSubscriptionCreatedAsync(SubscriptionWebhookPayload payload)
     {
         try
         {
-            logger.LogInformation("Handling subscription created webhook for tenant {TenantId}, subscription {SubscriptionId}", payload.TenantId, payload.ExternalSubscriptionId);
+            _logger.LogInformation("Handling subscription created webhook for tenant {TenantId}, subscription {SubscriptionId}", 
+                payload.TenantId, payload.ExternalSubscriptionId);
 
-            // TODO: Integrate with Subscriptions module
-            // await _subscriptionService.CreateSubscriptionAsync(new CreateSubscriptionCommand(
-            //     payload.TenantId,
-            //     payload.PlanId,
-            //     payload.ExternalSubscriptionId,
-            //     payload.Status,
-            //     payload.Amount,
-            //     payload.StartDate,
-            //     payload.EndDate,
-            //     payload.NextBillingDate
-            // ));
+            // Create subscription via the subscription service
+            var subscription = await _subscriptionService.CreateAsync(
+                tenantId: payload.TenantId,
+                planId: payload.PlanId,
+                createdByUserId: Guid.Empty, // System-created via webhook
+                billingCycle: BillingCycle.Monthly, // Default, should be in payload
+                amount: Money.USD(payload.Amount),
+                startDate: payload.StartDate,
+                trialDays: null
+            ).ConfigureAwait(false);
 
-            logger.LogInformation("Successfully processed subscription created webhook");
+            // Set external IDs for future webhook correlation
+            await _subscriptionService.SetExternalIdsAsync(
+                subscription.Id,
+                payload.ExternalSubscriptionId,
+                externalCustomerId: null
+            ).ConfigureAwait(false);
 
-            return Task.CompletedTask;
+            _logger.LogInformation("Successfully created subscription {SubscriptionId} from webhook for tenant {TenantId}",
+                subscription.Id, payload.TenantId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error handling subscription created webhook");
-
+            _logger.LogError(ex, "Error handling subscription created webhook for tenant {TenantId}, subscription {SubscriptionId}",
+                payload.TenantId, payload.ExternalSubscriptionId);
             throw;
         }
     }
 
     /// <inheritdoc />
-    public Task HandleSubscriptionUpdatedAsync(SubscriptionWebhookPayload payload)
+    public async Task HandleSubscriptionUpdatedAsync(SubscriptionWebhookPayload payload)
     {
         try
         {
-            logger.LogInformation("Handling subscription updated webhook for tenant {TenantId}, subscription {SubscriptionId}", payload.TenantId, payload.ExternalSubscriptionId);
+            _logger.LogInformation("Handling subscription updated webhook for tenant {TenantId}, subscription {SubscriptionId}", 
+                payload.TenantId, payload.ExternalSubscriptionId);
 
-            // TODO: Integrate with Subscriptions module
-            // await _subscriptionService.UpdateSubscriptionAsync(new UpdateSubscriptionCommand(
-            //     payload.TenantId,
-            //     payload.ExternalSubscriptionId,
-            //     payload.Status,
-            //     payload.Amount,
-            //     payload.EndDate,
-            //     payload.NextBillingDate
-            // ));
+            // Find subscription by external ID
+            var subscription = await _subscriptionService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
+                .ConfigureAwait(false);
 
-            logger.LogInformation("Successfully processed subscription updated webhook");
+            if (subscription == null)
+            {
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
+                    payload.ExternalSubscriptionId);
+                return;
+            }
 
-            return Task.CompletedTask;
+            // Handle status changes
+            var newStatus = ParseSubscriptionStatus(payload.Status);
+            if (subscription.Status != newStatus)
+            {
+                await HandleStatusTransitionAsync(subscription, newStatus).ConfigureAwait(false);
+            }
+
+            _logger.LogInformation("Successfully processed subscription updated webhook for subscription {SubscriptionId}",
+                subscription.Id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error handling subscription updated webhook");
-
+            _logger.LogError(ex, "Error handling subscription updated webhook for tenant {TenantId}, subscription {SubscriptionId}",
+                payload.TenantId, payload.ExternalSubscriptionId);
             throw;
         }
     }
 
     /// <inheritdoc />
-    public Task HandleSubscriptionCanceledAsync(SubscriptionWebhookPayload payload)
+    public async Task HandleSubscriptionCanceledAsync(SubscriptionWebhookPayload payload)
     {
         try
         {
-            logger.LogInformation("Handling subscription canceled webhook for tenant {TenantId}, subscription {SubscriptionId}", payload.TenantId, payload.ExternalSubscriptionId);
+            _logger.LogInformation("Handling subscription canceled webhook for tenant {TenantId}, subscription {SubscriptionId}", 
+                payload.TenantId, payload.ExternalSubscriptionId);
 
-            // TODO: Integrate with Subscriptions module
-            // await _subscriptionService.CancelSubscriptionAsync(new CancelSubscriptionCommand(
-            //     payload.TenantId,
-            //     payload.ExternalSubscriptionId
-            // ));
+            // Find subscription by external ID
+            var subscription = await _subscriptionService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
+                .ConfigureAwait(false);
 
-            logger.LogInformation("Successfully processed subscription canceled webhook");
+            if (subscription == null)
+            {
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
+                    payload.ExternalSubscriptionId);
+                return;
+            }
 
-            return Task.CompletedTask;
+            // Cancel the subscription
+            await _subscriptionService.CancelAsync(
+                subscription.Id,
+                CancellationReason.ExternalRequest,
+                "Canceled via webhook from payment provider",
+                payload.EndDate
+            ).ConfigureAwait(false);
+
+            _logger.LogInformation("Successfully canceled subscription {SubscriptionId} from webhook",
+                subscription.Id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error handling subscription canceled webhook");
-
+            _logger.LogError(ex, "Error handling subscription canceled webhook for tenant {TenantId}, subscription {SubscriptionId}",
+                payload.TenantId, payload.ExternalSubscriptionId);
             throw;
         }
     }
 
     /// <inheritdoc />
-    public Task HandlePaymentSucceededAsync(PaymentWebhookPayload payload)
+    public async Task HandlePaymentSucceededAsync(PaymentWebhookPayload payload)
     {
         try
         {
-            logger.LogInformation("Handling payment succeeded webhook for tenant {TenantId}, payment {PaymentId}", payload.TenantId, payload.PaymentId);
+            _logger.LogInformation("Handling payment succeeded webhook for tenant {TenantId}, payment {PaymentId}", 
+                payload.TenantId, payload.PaymentId);
 
-            // TODO: Integrate with Subscriptions module to record payment
-            // await _subscriptionService.RecordPaymentAsync(new RecordPaymentCommand(
-            //     payload.TenantId,
-            //     payload.ExternalSubscriptionId,
-            //     payload.PaymentId,
-            //     payload.Amount,
-            //     payload.Currency,
-            //     payload.PaidAt,
-            //     payload.Status,
-            //     payload.Metadata
-            // ));
+            // Find subscription by external ID
+            var subscription = await _subscriptionService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
+                .ConfigureAwait(false);
 
-            logger.LogInformation("Successfully processed payment succeeded webhook");
+            if (subscription == null)
+            {
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
+                    payload.ExternalSubscriptionId);
+                return;
+            }
 
-            return Task.CompletedTask;
+            // Record the payment
+            await _subscriptionService.RecordPaymentAsync(
+                subscription.Id,
+                payload.Amount,
+                payload.Currency,
+                payload.PaidAt ?? DateTime.UtcNow
+            ).ConfigureAwait(false);
+
+            _logger.LogInformation("Successfully recorded payment {PaymentId} for subscription {SubscriptionId}",
+                payload.PaymentId, subscription.Id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error handling payment succeeded webhook");
-
+            _logger.LogError(ex, "Error handling payment succeeded webhook for tenant {TenantId}, payment {PaymentId}",
+                payload.TenantId, payload.PaymentId);
             throw;
         }
     }
 
     /// <inheritdoc />
-    public Task HandlePaymentFailedAsync(PaymentWebhookPayload payload)
+    public async Task HandlePaymentFailedAsync(PaymentWebhookPayload payload)
     {
         try
         {
-            logger.LogInformation("Handling payment failed webhook for tenant {TenantId}, payment {PaymentId}", payload.TenantId, payload.PaymentId);
+            _logger.LogInformation("Handling payment failed webhook for tenant {TenantId}, payment {PaymentId}", 
+                payload.TenantId, payload.PaymentId);
 
-            // TODO: Integrate with Subscriptions module to record payment failure
-            // await _subscriptionService.RecordPaymentFailureAsync(new RecordPaymentFailureCommand(
-            //     payload.TenantId,
-            //     payload.ExternalSubscriptionId,
-            //     payload.PaymentId,
-            //     payload.Amount,
-            //     payload.Currency,
-            //     payload.FailureReason,
-            //     payload.Metadata
-            // ));
+            // Find subscription by external ID
+            var subscription = await _subscriptionService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
+                .ConfigureAwait(false);
 
-            logger.LogInformation("Successfully processed payment failed webhook");
+            if (subscription == null)
+            {
+                _logger.LogWarning("Subscription not found for external ID {ExternalSubscriptionId}", 
+                    payload.ExternalSubscriptionId);
+                return;
+            }
 
-            return Task.CompletedTask;
+            // Record the payment failure
+            await _subscriptionService.RecordPaymentFailureAsync(
+                subscription.Id,
+                payload.FailureReason ?? "Payment failed via webhook",
+                payload.PaidAt ?? DateTime.UtcNow
+            ).ConfigureAwait(false);
+
+            _logger.LogInformation("Successfully recorded payment failure {PaymentId} for subscription {SubscriptionId}",
+                payload.PaymentId, subscription.Id);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error handling payment failed webhook");
-
+            _logger.LogError(ex, "Error handling payment failed webhook for tenant {TenantId}, payment {PaymentId}",
+                payload.TenantId, payload.PaymentId);
             throw;
         }
+    }
+
+    /// <summary>
+    ///     Handles status transitions for a subscription
+    /// </summary>
+    private async Task HandleStatusTransitionAsync(Subscription subscription, SubscriptionStatus newStatus)
+    {
+        switch (newStatus)
+        {
+            case SubscriptionStatus.Active:
+                if (subscription.Status is SubscriptionStatus.Pending or SubscriptionStatus.Trial or SubscriptionStatus.Suspended)
+                {
+                    await _subscriptionService.ActivateAsync(subscription.Id).ConfigureAwait(false);
+                }
+                break;
+
+            case SubscriptionStatus.Suspended:
+                if (subscription.Status == SubscriptionStatus.Active)
+                {
+                    await _subscriptionService.SuspendAsync(subscription.Id, "Suspended via webhook").ConfigureAwait(false);
+                }
+                break;
+
+            case SubscriptionStatus.Canceled:
+                await _subscriptionService.CancelAsync(subscription.Id, CancellationReason.ExternalRequest).ConfigureAwait(false);
+                break;
+
+            case SubscriptionStatus.Trial:
+                if (subscription.Status == SubscriptionStatus.Pending)
+                {
+                    await _subscriptionService.StartTrialAsync(subscription.Id, 14).ConfigureAwait(false);
+                }
+                break;
+
+            default:
+                _logger.LogDebug("No handler for status transition from {OldStatus} to {NewStatus}",
+                    subscription.Status, newStatus);
+                break;
+        }
+    }
+
+    /// <summary>
+    ///     Parses a status string to SubscriptionStatus enum
+    /// </summary>
+    private static SubscriptionStatus ParseSubscriptionStatus(string status)
+    {
+        return status.ToLowerInvariant() switch
+        {
+            "active" => SubscriptionStatus.Active,
+            "trialing" or "trial" => SubscriptionStatus.Trial,
+            "past_due" or "pastdue" => SubscriptionStatus.Suspended,
+            "canceled" or "cancelled" => SubscriptionStatus.Canceled,
+            "unpaid" => SubscriptionStatus.Suspended,
+            "incomplete" or "incomplete_expired" => SubscriptionStatus.Pending,
+            "paused" => SubscriptionStatus.Suspended,
+            _ => SubscriptionStatus.Pending
+        };
     }
 }

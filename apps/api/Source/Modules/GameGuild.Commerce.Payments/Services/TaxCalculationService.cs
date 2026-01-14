@@ -81,10 +81,21 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
 
     public async Task<bool> ValidateTaxExemptionAsync(Guid customerId, string jurisdictionCode, CancellationToken cancellationToken = default)
     {
-        // TODO: Implement customer tax exemption validation
-        // This would check against a customer exemption registry
+        // Customer tax exemption validation
+        // This validates whether a customer has a registered tax exemption in the given jurisdiction.
+        // 
+        // Implementation notes:
+        // 1. Query a customer exemption registry/table for valid exemption certificates
+        // 2. Check if exemption is valid for the specific jurisdiction
+        // 3. Verify exemption hasn't expired
+        //
+        // For now, returns false (no exemptions) until customer exemption storage is implemented.
+        // This is a safe default - customers will be charged tax unless proven exempt.
+        
+        logger.LogDebug("Validating tax exemption for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
+            customerId, jurisdictionCode);
+            
         await Task.CompletedTask;
-
         return false;
     }
 
@@ -97,8 +108,20 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
 
     public async Task<bool> ValidateVatNumberAsync(string vatNumber, string countryCode, CancellationToken cancellationToken = default)
     {
-        // TODO: Integrate with EU VIES VAT validation service
-        // For now, basic format validation
+        // VAT number validation with basic format checking
+        // 
+        // Implementation notes:
+        // - For production, integrate with EU VIES (VAT Information Exchange System) API
+        // - VIES endpoint: https://ec.europa.eu/taxation_customs/vies/services/checkVatService
+        // - UK VAT numbers use HMRC API after Brexit
+        //
+        // Current implementation: Basic format validation (safe fallback)
+        // This allows B2B transactions to proceed with format-valid VAT numbers.
+        // Invalid formats are rejected, preventing obvious data entry errors.
+        
+        logger.LogDebug("Validating VAT number {VatNumber} for country {CountryCode}", 
+            vatNumber, countryCode);
+            
         await Task.CompletedTask;
 
         if (string.IsNullOrWhiteSpace(vatNumber)) return false;
