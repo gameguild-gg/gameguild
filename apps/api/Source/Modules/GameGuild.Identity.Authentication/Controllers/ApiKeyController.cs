@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

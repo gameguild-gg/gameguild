@@ -6,19 +6,12 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Redis-backed distributed rate limiter using sliding window algorithm
 /// </summary>
-public class RedisDistributedRateLimiter : IDistributedRateLimiter
+public class RedisDistributedRateLimiter(
+    IConnectionMultiplexer redis,
+    ILogger<RedisDistributedRateLimiter> logger) : IDistributedRateLimiter
 {
-    private readonly IConnectionMultiplexer _redis;
-    private readonly ILogger<RedisDistributedRateLimiter> _logger;
+    private readonly IConnectionMultiplexer _redis = redis;
     private const string KeyPrefix = "ratelimit:";
-
-    public RedisDistributedRateLimiter(
-        IConnectionMultiplexer redis,
-        ILogger<RedisDistributedRateLimiter> logger)
-    {
-        _redis = redis;
-        _logger = logger;
-    }
 
     public async Task<bool> IsAllowedAsync(string key, int maxRequests, TimeSpan window, CancellationToken cancellationToken = default)
     {
@@ -39,7 +32,7 @@ public class RedisDistributedRateLimiter : IDistributedRateLimiter
             // 3. Check if under limit
             if (currentCount >= maxRequests)
             {
-                _logger.LogWarning("Rate limit exceeded for key {Key}: {CurrentCount}/{MaxRequests} in {Window}",
+                logger.LogWarning("Rate limit exceeded for key {Key}: {CurrentCount}/{MaxRequests} in {Window}",
                     key, currentCount, maxRequests, window);
                 return false;
             }
@@ -51,14 +44,14 @@ public class RedisDistributedRateLimiter : IDistributedRateLimiter
             // 5. Set expiry on key (cleanup)
             await db.KeyExpireAsync(redisKey, window.Add(TimeSpan.FromMinutes(1)));
 
-            _logger.LogDebug("Rate limit check passed for key {Key}: {CurrentCount}/{MaxRequests}",
+            logger.LogDebug("Rate limit check passed for key {Key}: {CurrentCount}/{MaxRequests}",
                 key, currentCount + 1, maxRequests);
 
             return true;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Redis rate limiter error for key {Key}. Allowing request (fail-open for availability).", key);
+            logger.LogError(ex, "Redis rate limiter error for key {Key}. Allowing request (fail-open for availability).", key);
             // Fail open - allow request if Redis is unavailable
             return true;
         }
@@ -69,7 +62,7 @@ public class RedisDistributedRateLimiter : IDistributedRateLimiter
         var db = _redis.GetDatabase();
         var redisKey = GetRedisKey(key);
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        var windowStart = now - (long)window.TotalMilliseconds();
+        var windowStart = now - (long)window.TotalMilliseconds;
 
         try
         {
@@ -82,7 +75,7 @@ public class RedisDistributedRateLimiter : IDistributedRateLimiter
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting current count for key {Key}", key);
+            logger.LogError(ex, "Error getting current count for key {Key}", key);
             return 0;
         }
     }
@@ -114,7 +107,7 @@ public class RedisDistributedRateLimiter : IDistributedRateLimiter
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting reset time for key {Key}", key);
+            logger.LogError(ex, "Error getting reset time for key {Key}", key);
             return null;
         }
     }
@@ -127,11 +120,11 @@ public class RedisDistributedRateLimiter : IDistributedRateLimiter
         try
         {
             await db.KeyDeleteAsync(redisKey);
-            _logger.LogInformation("Rate limit reset for key {Key}", key);
+            logger.LogInformation("Rate limit reset for key {Key}", key);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error resetting rate limit for key {Key}", key);
+            logger.LogError(ex, "Error resetting rate limit for key {Key}", key);
             throw;
         }
     }

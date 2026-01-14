@@ -1,6 +1,5 @@
 using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.CQRS.Models;
 using FluentValidation;
 
 namespace GameGuild.Identity.Authentication;

@@ -7,18 +7,11 @@ namespace GameGuild.Commerce.Payments;
 ///     Stripe payment gateway implementation.
 ///     Provides integration with Stripe's payment processing APIs.
 /// </summary>
-public class StripePaymentGateway : IPaymentGateway
+public class StripePaymentGateway(
+    IOptions<StripeGatewayOptions> options,
+    ILogger<StripePaymentGateway> logger) : IPaymentGateway
 {
-    private readonly ILogger<StripePaymentGateway> _logger;
-    private readonly StripeGatewayOptions _options;
-
-    public StripePaymentGateway(
-        IOptions<StripeGatewayOptions> options,
-        ILogger<StripePaymentGateway> logger)
-    {
-        _options = options.Value;
-        _logger = logger;
-    }
+    private readonly StripeGatewayOptions _options = options.Value;
 
     /// <inheritdoc />
     public string ProviderId => "stripe";
@@ -34,7 +27,7 @@ public class StripePaymentGateway : IPaymentGateway
         GatewayPaymentRequest request,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation(
+        logger.LogInformation(
             "Processing Stripe payment: {Amount} {Currency} with idempotency key {IdempotencyKey}",
             request.Amount, request.Currency, request.IdempotencyKey);
 
@@ -67,7 +60,7 @@ public class StripePaymentGateway : IPaymentGateway
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
             
             var transactionId = $"pi_{Guid.NewGuid():N}";
-            _logger.LogDebug("Generated simulated Stripe transaction: {TransactionId}", transactionId);
+            logger.LogDebug("Generated simulated Stripe transaction: {TransactionId}", transactionId);
             
             return new GatewayPaymentResult(
                 Success: true,
@@ -80,7 +73,7 @@ public class StripePaymentGateway : IPaymentGateway
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Stripe payment processing failed for idempotency key {IdempotencyKey}", request.IdempotencyKey);
+            logger.LogError(ex, "Stripe payment processing failed for idempotency key {IdempotencyKey}", request.IdempotencyKey);
             
             return new GatewayPaymentResult(
                 Success: false,
@@ -98,7 +91,7 @@ public class StripePaymentGateway : IPaymentGateway
         GatewayRefundRequest request,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation(
+        logger.LogInformation(
             "Processing Stripe refund for transaction {TransactionId} with idempotency key {IdempotencyKey}",
             request.OriginalTransactionId, request.IdempotencyKey);
 
@@ -122,7 +115,7 @@ public class StripePaymentGateway : IPaymentGateway
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
             
             var refundId = $"re_{Guid.NewGuid():N}";
-            _logger.LogDebug("Generated simulated Stripe refund: {RefundId}", refundId);
+            logger.LogDebug("Generated simulated Stripe refund: {RefundId}", refundId);
             
             return new GatewayRefundResult(
                 Success: true,
@@ -134,7 +127,7 @@ public class StripePaymentGateway : IPaymentGateway
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Stripe refund processing failed for transaction {TransactionId}", request.OriginalTransactionId);
+            logger.LogError(ex, "Stripe refund processing failed for transaction {TransactionId}", request.OriginalTransactionId);
             
             return new GatewayRefundResult(
                 Success: false,
@@ -169,7 +162,7 @@ public class StripePaymentGateway : IPaymentGateway
             // Basic validation for development/testing
             if (string.IsNullOrEmpty(signature) || string.IsNullOrEmpty(secret))
             {
-                _logger.LogWarning("Webhook signature validation failed: missing signature or secret");
+                logger.LogWarning("Webhook signature validation failed: missing signature or secret");
                 return Task.FromResult(false);
             }
 
@@ -178,14 +171,14 @@ public class StripePaymentGateway : IPaymentGateway
             var isValidFormat = signature.StartsWith("t=", StringComparison.Ordinal) && signature.Contains(",v1=");
             if (!isValidFormat)
             {
-                _logger.LogDebug("Webhook signature has non-standard format, accepting for development");
+                logger.LogDebug("Webhook signature has non-standard format, accepting for development");
             }
             
             return Task.FromResult(!string.IsNullOrEmpty(signature));
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Stripe webhook signature validation failed");
+            logger.LogWarning(ex, "Stripe webhook signature validation failed");
             return Task.FromResult(false);
         }
     }
@@ -195,7 +188,7 @@ public class StripePaymentGateway : IPaymentGateway
         GatewayCustomerRequest request,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Creating Stripe customer for email {Email}", request.Email);
+        logger.LogInformation("Creating Stripe customer for email {Email}", request.Email);
 
         try
         {
@@ -218,7 +211,7 @@ public class StripePaymentGateway : IPaymentGateway
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
             
             var customerId = $"cus_{Guid.NewGuid():N}";
-            _logger.LogDebug("Generated simulated Stripe customer: {CustomerId}", customerId);
+            logger.LogDebug("Generated simulated Stripe customer: {CustomerId}", customerId);
             
             return new GatewayCustomerResult(
                 Success: true,
@@ -228,7 +221,7 @@ public class StripePaymentGateway : IPaymentGateway
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Stripe customer creation failed for email {Email}", request.Email);
+            logger.LogError(ex, "Stripe customer creation failed for email {Email}", request.Email);
             
             return new GatewayCustomerResult(
                 Success: false,
@@ -243,7 +236,7 @@ public class StripePaymentGateway : IPaymentGateway
         GatewayPaymentMethodRequest request,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Attaching payment method to Stripe customer {CustomerId}", request.CustomerId);
+        logger.LogInformation("Attaching payment method to Stripe customer {CustomerId}", request.CustomerId);
 
         try
         {
@@ -265,7 +258,7 @@ public class StripePaymentGateway : IPaymentGateway
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
             
             var paymentMethodId = $"pm_{Guid.NewGuid():N}";
-            _logger.LogDebug("Generated simulated Stripe payment method: {PaymentMethodId}", paymentMethodId);
+            logger.LogDebug("Generated simulated Stripe payment method: {PaymentMethodId}", paymentMethodId);
             
             return new GatewayPaymentMethodResult(
                 Success: true,
@@ -279,7 +272,7 @@ public class StripePaymentGateway : IPaymentGateway
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Stripe payment method creation failed for customer {CustomerId}", request.CustomerId);
+            logger.LogError(ex, "Stripe payment method creation failed for customer {CustomerId}", request.CustomerId);
             
             return new GatewayPaymentMethodResult(
                 Success: false,
@@ -298,7 +291,7 @@ public class StripePaymentGateway : IPaymentGateway
         string externalSubscriptionId,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Cancelling Stripe subscription {SubscriptionId}", externalSubscriptionId);
+        logger.LogInformation("Cancelling Stripe subscription {SubscriptionId}", externalSubscriptionId);
 
         try
         {
@@ -316,7 +309,7 @@ public class StripePaymentGateway : IPaymentGateway
             // Simulated response for development/testing
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
             
-            _logger.LogDebug("Simulated Stripe subscription cancellation: {SubscriptionId}", externalSubscriptionId);
+            logger.LogDebug("Simulated Stripe subscription cancellation: {SubscriptionId}", externalSubscriptionId);
             
             return new GatewayCancellationResult(
                 Success: true,
@@ -326,7 +319,7 @@ public class StripePaymentGateway : IPaymentGateway
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Stripe subscription cancellation failed for {SubscriptionId}", externalSubscriptionId);
+            logger.LogError(ex, "Stripe subscription cancellation failed for {SubscriptionId}", externalSubscriptionId);
             
             return new GatewayCancellationResult(
                 Success: false,

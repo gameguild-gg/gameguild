@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using GameGuild.CQRS.Models;
-using GameGuild.Entities;
 using GameGuild.SharedKernel;
 using GameGuild.ValueObjects;
 using Microsoft.EntityFrameworkCore;

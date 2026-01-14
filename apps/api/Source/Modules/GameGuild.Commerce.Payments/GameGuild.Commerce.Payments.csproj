@@ -17,6 +17,7 @@
     <ItemGroup>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
         <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj"/>
+        <ProjectReference Include="..\GameGuild.Commerce.Core\GameGuild.Commerce.Core.csproj"/>
     </ItemGroup>
 
 </Project>

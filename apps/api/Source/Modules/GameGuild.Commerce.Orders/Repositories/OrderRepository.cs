@@ -1,6 +1,4 @@
 using GameGuild.Abstractions;
-using GameGuild.Commerce;
-using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Orders;
 

@@ -7,18 +7,11 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Service for managing JWT signing key rotation with automatic expiry and cleanup
 /// </summary>
-public class KeyRotationService : IKeyRotationService
+public class KeyRotationService(
+    IApplicationDbContext dbContext,
+    ILogger<KeyRotationService> logger) : IKeyRotationService
 {
-    private readonly IApplicationDbContext _dbContext;
-    private readonly ILogger<KeyRotationService> _logger;
-
-    public KeyRotationService(
-        IApplicationDbContext dbContext,
-        ILogger<KeyRotationService> logger)
-    {
-        _dbContext = dbContext;
-        _logger = logger;
-    }
+    private readonly IApplicationDbContext _dbContext = dbContext;
 
     public async Task<JwtSigningKey?> GetActiveSigningKeyAsync(CancellationToken cancellationToken = default)
     {
@@ -45,7 +38,7 @@ public class KeyRotationService : IKeyRotationService
 
     public async Task<JwtSigningKey> RotateKeyAsync(string reason = "scheduled", int validityDays = 90, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Starting JWT key rotation. Reason: {Reason}", reason);
+        logger.LogInformation("Starting JWT key rotation. Reason: {Reason}", reason);
 
         // Get current active key
         var currentKey = await GetActiveSigningKeyAsync(cancellationToken);
@@ -67,13 +60,13 @@ public class KeyRotationService : IKeyRotationService
         if (currentKey != null)
         {
             currentKey.Rotate(reason);
-            _logger.LogInformation(
+            logger.LogInformation(
                 "Rotated key {OldKeyId} (version {OldVersion}) to {NewKeyId} (version {NewVersion})",
                 currentKey.KeyId, currentKey.KeyVersion, newKey.KeyId, newKey.KeyVersion);
         }
         else
         {
-            _logger.LogInformation("Created initial signing key {KeyId} (version {Version})",
+            logger.LogInformation("Created initial signing key {KeyId} (version {Version})",
                 newKey.KeyId, newKey.KeyVersion);
         }
 
@@ -92,14 +85,14 @@ public class KeyRotationService : IKeyRotationService
 
         if (expiredKeys.Count == 0)
         {
-            _logger.LogDebug("No expired keys to clean up");
+            logger.LogDebug("No expired keys to clean up");
             return 0;
         }
 
         _dbContext.Set<JwtSigningKey>().RemoveRange(expiredKeys);
         await _dbContext.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Cleaned up {Count} expired JWT signing keys older than {CutoffDate}",
+        logger.LogInformation("Cleaned up {Count} expired JWT signing keys older than {CutoffDate}",
             expiredKeys.Count, cutoffDate);
 
         return expiredKeys.Count;
@@ -110,12 +103,12 @@ public class KeyRotationService : IKeyRotationService
         var activeKey = await GetActiveSigningKeyAsync(cancellationToken);
         if (activeKey == null)
         {
-            _logger.LogWarning("No active JWT signing key found. Creating initial key...");
+            logger.LogWarning("No active JWT signing key found. Creating initial key...");
             await RotateKeyAsync("initialization", validityDays: 90, cancellationToken);
         }
         else
         {
-            _logger.LogInformation("JWT signing key initialized. Active key: {KeyId}, expires: {ExpiresAt}",
+            logger.LogInformation("JWT signing key initialized. Active key: {KeyId}, expires: {ExpiresAt}",
                 activeKey.KeyId, activeKey.ExpiresAt);
         }
     }
