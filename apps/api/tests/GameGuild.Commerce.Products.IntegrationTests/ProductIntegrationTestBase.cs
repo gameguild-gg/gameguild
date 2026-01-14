@@ -9,12 +9,12 @@ namespace GameGuild.Commerce.Products.IntegrationTests;
 /// Base class for Products module integration tests.
 /// Provides WebApplicationFactory setup and common test utilities.
 /// </summary>
-public abstract class ProductIntegrationTestBase : IClassFixture<WebApplicationFactory<Program>>
+public abstract class ProductIntegrationTestBase : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>
 {
-    protected readonly WebApplicationFactory<Program> Factory;
+    protected readonly WebApplicationFactory<GameGuild.API.Program> Factory;
     protected readonly HttpClient Client;
 
-    protected ProductIntegrationTestBase(WebApplicationFactory<Program> factory)
+    protected ProductIntegrationTestBase(WebApplicationFactory<GameGuild.API.Program> factory)
     {
         Factory = factory.WithWebHostBuilder(builder =>
         {

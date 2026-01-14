@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Orders.IntegrationTests;
 /// </summary>
 public class OrderWorkflowIntegrationTests : OrderIntegrationTestBase
 {
-    public OrderWorkflowIntegrationTests(WebApplicationFactory<Program> factory) 
+    public OrderWorkflowIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory) 
         : base(factory)
     {
     }

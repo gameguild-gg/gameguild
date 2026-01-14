@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Products.IntegrationTests;
 /// </summary>
 public class ProductCatalogIntegrationTests : ProductIntegrationTestBase
 {
-    public ProductCatalogIntegrationTests(WebApplicationFactory<Program> factory) 
+    public ProductCatalogIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory) 
         : base(factory)
     {
     }

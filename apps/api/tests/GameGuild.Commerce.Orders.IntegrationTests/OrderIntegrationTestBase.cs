@@ -9,12 +9,12 @@ namespace GameGuild.Commerce.Orders.IntegrationTests;
 /// Base class for Orders module integration tests.
 /// Provides WebApplicationFactory setup and common test utilities.
 /// </summary>
-public abstract class OrderIntegrationTestBase : IClassFixture<WebApplicationFactory<Program>>
+public abstract class OrderIntegrationTestBase : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>
 {
-    protected readonly WebApplicationFactory<Program> Factory;
+    protected readonly WebApplicationFactory<GameGuild.API.Program> Factory;
     protected readonly HttpClient Client;
 
-    protected OrderIntegrationTestBase(WebApplicationFactory<Program> factory)
+    protected OrderIntegrationTestBase(WebApplicationFactory<GameGuild.API.Program> factory)
     {
         Factory = factory.WithWebHostBuilder(builder =>
         {
