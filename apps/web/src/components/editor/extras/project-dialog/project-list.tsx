@@ -11,7 +11,7 @@ import { ProjectListView } from "./project-list-view"
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2"
+  type: "type1" | "type2" | "type3"
   data: string
   tags: string[]
   size: number
@@ -42,7 +42,7 @@ interface ProjectListProps {
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectType?: "type1" | "type2",
+    projectType?: "type1" | "type2" | "type3",
     projectPreferences?: any
   ) => void
   showDeleteButton?: boolean
@@ -121,7 +121,7 @@ export function ProjectList({
           const exportProjectData = {
             id: downloadDialog.project.id,
             name: downloadDialog.project.name,
-            type: downloadDialog.project.type || "type1" as "type1" | "type2",
+            type: (downloadDialog.project.type || "type1") as "type1" | "type2" | "type3",
             data: downloadDialog.project.data,
             tags: downloadDialog.project.tags,
             size: new Blob([downloadDialog.project.data]).size,

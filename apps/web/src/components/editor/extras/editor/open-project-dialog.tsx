@@ -23,7 +23,7 @@ import type { ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-a
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2"
+  type: "type1" | "type2" | "type3"
   data: string
   tags: string[]
   size: number
@@ -35,7 +35,7 @@ interface ProjectData {
 }
 
 interface StorageAdapter {
-  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption, preferences?: any, type?: "type1" | "type2") => Promise<void>
+  save: (id: string, name: string, data: string, tags: string[], storageType?: StorageOption, preferences?: any, type?: "type1" | "type2" | "type3") => Promise<void>
   list: () => Promise<ProjectData[]>
   load: (id: string) => Promise<ProjectData | null>
   delete: (id: string) => Promise<void>
