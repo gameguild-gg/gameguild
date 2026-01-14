@@ -83,8 +83,8 @@ public class ProcessStripeWebhookCommandHandler(
         if (result.Processed)
         {
             logger.LogInformation(
-                "[WEBHOOK_METRIC] Provider={Provider} EventType={EventType} Status=Success EventId={EventId} AlreadyProcessed={AlreadyProcessed}",
-                provider, eventType, result.EventId, result.AlreadyProcessed);
+                "[WEBHOOK_METRIC] Provider={Provider} EventType={EventType} Status=Success EventId={EventId} WasAlreadyProcessed={WasAlreadyProcessed}",
+                provider, eventType, result.EventId, result.WasAlreadyProcessed);
         }
         else
         {

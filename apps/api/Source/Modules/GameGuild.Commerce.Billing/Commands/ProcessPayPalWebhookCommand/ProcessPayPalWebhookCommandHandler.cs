@@ -75,7 +75,7 @@ public class ProcessPayPalWebhookCommandHandler(
                 "PayPal webhook processed successfully: EventId={EventId}, EventType={EventType}, ElapsedMs={ElapsedMs}",
                 eventId, eventType, elapsedMs);
         }
-        else if (result.AlreadyHandled)
+        else if (result.WasAlreadyProcessed)
         {
             logger.LogDebug(
                 "PayPal webhook already processed: EventId={EventId}, EventType={EventType}",

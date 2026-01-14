@@ -119,7 +119,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
         try
         {
             using var reader = new StreamReader(Request.Body);
-            _ = await reader.ReadToEndAsync(ct);
+            var payload = await reader.ReadToEndAsync(ct);
 
             var merchantId = Request.Headers["Apple-Pay-Merchant-Id"].ToString();
             var signature = Request.Headers["Apple-Pay-Signature"].ToString();
@@ -138,8 +138,15 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
 
             logger.LogInformation("Processing Apple Pay webhook for merchant: {MerchantId}", merchantId);
 
-            // TODO: Implement actual Apple Pay webhook processing
-            return Ok(new { received = true, processed = false, message = "Apple Pay webhook processing not yet implemented" });
+            var result = await sender.Send(
+                new ProcessApplePayWebhookCommand(payload, merchantId, signature), ct).ConfigureAwait(false);
+
+            if (result.Processed || result.AlreadyHandled)
+            {
+                return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
+            }
+
+            return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
         }
         catch (Exception ex)
         {
@@ -242,9 +249,18 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
                 return BadRequest(new { error = "Missing required PayPal headers" });
             }
 
-            _ = await sender.Send(new ProcessPayPalWebhookCommand(payload), ct).ConfigureAwait(false);
+            var result = await sender.Send(new ProcessPayPalWebhookCommand(
+                payload, 
+                transmissionId, 
+                transmissionSig, 
+                transmissionTime), ct).ConfigureAwait(false);
 
-            return Ok(new { received = true });
+            if (result.Processed || result.AlreadyHandled)
+            {
+                return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
+            }
+
+            return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
         }
         catch (Exception ex)
         {
