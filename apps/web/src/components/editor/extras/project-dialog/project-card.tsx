@@ -48,6 +48,20 @@ export function ProjectCard({
 }: ProjectCardProps) {
   const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
 
+  // Get project type label
+  const getProjectTypeLabel = (type: "type1" | "type2" | "type3"): string => {
+    switch (type) {
+      case "type1":
+        return "Unique Project"
+      case "type2":
+        return "Dual Project"
+      case "type3":
+        return "Multiple Project"
+      default:
+        return "Project"
+    }
+  }
+
   // Format file size
   const formatSize = (sizeInKB: number): string => {
     if (sizeInKB < 1024) {
@@ -121,12 +135,17 @@ export function ProjectCard({
       >
         <div className="flex flex-col p-3 sm:p-4">
           <div className="mb-1.5 sm:mb-2 flex items-start justify-between gap-1">
-            <span
-              className="block truncate text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 leading-tight"
-              title={project.name}
-            >
-              {project.name}
-            </span>
+            <div className="flex-1 min-w-0">
+              <span
+                className="block truncate text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 leading-tight"
+                title={project.name}
+              >
+                {project.name}
+              </span>
+              <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium">
+                {getProjectTypeLabel(project.type)}
+              </span>
+            </div>
             {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
           </div>
           
@@ -307,9 +326,14 @@ export function ProjectCard({
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
-            <span className="font-semibold text-gray-900 dark:text-gray-100 truncate" title={project.name}>
-              {project.name}
-            </span>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="font-semibold text-gray-900 dark:text-gray-100 truncate" title={project.name}>
+                {project.name}
+              </span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                {getProjectTypeLabel(project.type)}
+              </span>
+            </div>
             {renderStorageIndicator(project.storageType, project.isLocallyAvailable)}
           </div>
           
