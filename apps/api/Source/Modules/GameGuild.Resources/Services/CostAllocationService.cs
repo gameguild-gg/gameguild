@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Resources;
 
@@ -10,15 +11,11 @@ public class CostAllocationService(
     ICostAllocationReportRepository reportRepository,
     IUsageRecordRepository usageRepository,
     IResourceQuotaRepository quotaRepository,
+    IOptions<ResourcesOptions> options,
     ILogger<CostAllocationService> logger
 ) : ICostAllocationService
 {
-    // Default cost per unit by resource type (can be configured)
-    // TODO: Move to configuration system or database for dynamic pricing
-    private readonly Dictionary<ResourceUsageType, decimal> _costPerUnit = new Dictionary<ResourceUsageType, decimal>
-    {
-        { ResourceUsageType.Users, 5.00m }, { ResourceUsageType.Projects, 10.00m }, { ResourceUsageType.Storage, 0.05m }, { ResourceUsageType.ApiCalls, 0.001m }
-    };
+    private readonly ResourcesOptions _options = options.Value;
 
     public async Task<CostAllocationReport> GenerateReportAsync(Guid tenantId, DateTime periodStart, DateTime periodEnd, CancellationToken cancellationToken = default)
     {
@@ -146,9 +143,12 @@ public class CostAllocationService(
         return true;
     }
 
-    private decimal GetCostPerUnit(ResourceUsageType type) { return _costPerUnit.GetValueOrDefault(type, 0.01m); }
+    private decimal GetCostPerUnit(ResourceUsageType type)
+    {
+        var typeName = type.ToString();
+        return _options.CostPerUnit.GetValueOrDefault(typeName, _options.DefaultCostPerUnit);
+    }
 
     // TODO: Integration with Billing module for invoice generation
     // TODO: Integration with Finance module for cost center validation
-    // TODO: Move pricing to configuration system for dynamic updates
 }

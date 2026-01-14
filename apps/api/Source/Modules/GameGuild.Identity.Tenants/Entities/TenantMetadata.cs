@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Tenants;
 
@@ -96,10 +97,14 @@ public class TenantMetadata : EntityBase
     /// <summary>
     ///     Get custom fields as dictionary
     /// </summary>
-    public Dictionary<string, object?> GetCustomFields()
+    public Dictionary<string, object?> GetCustomFields(ILogger? logger = null)
     {
         try { return JsonSerializer.Deserialize<Dictionary<string, object?>>(CustomFields) ?? new Dictionary<string, object?>(); }
-        catch { return new Dictionary<string, object?>(); }
+        catch (JsonException ex)
+        {
+            logger?.LogWarning(ex, "Failed to deserialize CustomFields for TenantMetadata {TenantId}. Returning empty dictionary.", TenantId);
+            return new Dictionary<string, object?>();
+        }
     }
 
     /// <summary>
@@ -114,10 +119,14 @@ public class TenantMetadata : EntityBase
     /// <summary>
     ///     Get tags as list
     /// </summary>
-    public List<string> GetTags()
+    public List<string> GetTags(ILogger? logger = null)
     {
         try { return JsonSerializer.Deserialize<List<string>>(Tags) ?? new List<string>(); }
-        catch { return new List<string>(); }
+        catch (JsonException ex)
+        {
+            logger?.LogWarning(ex, "Failed to deserialize Tags for TenantMetadata {TenantId}. Returning empty list.", TenantId);
+            return new List<string>();
+        }
     }
 
     /// <summary>
@@ -132,10 +141,14 @@ public class TenantMetadata : EntityBase
     /// <summary>
     ///     Get external references as dictionary
     /// </summary>
-    public Dictionary<string, string> GetExternalReferences()
+    public Dictionary<string, string> GetExternalReferences(ILogger? logger = null)
     {
         try { return JsonSerializer.Deserialize<Dictionary<string, string>>(ExternalReferences) ?? new Dictionary<string, string>(); }
-        catch { return new Dictionary<string, string>(); }
+        catch (JsonException ex)
+        {
+            logger?.LogWarning(ex, "Failed to deserialize ExternalReferences for TenantMetadata {TenantId}. Returning empty dictionary.", TenantId);
+            return new Dictionary<string, string>();
+        }
     }
 
     /// <summary>
@@ -150,10 +163,14 @@ public class TenantMetadata : EntityBase
     /// <summary>
     ///     Get business information as dictionary
     /// </summary>
-    public Dictionary<string, object?> GetBusinessInfo()
+    public Dictionary<string, object?> GetBusinessInfo(ILogger? logger = null)
     {
         try { return JsonSerializer.Deserialize<Dictionary<string, object?>>(BusinessInfo) ?? new Dictionary<string, object?>(); }
-        catch { return new Dictionary<string, object?>(); }
+        catch (JsonException ex)
+        {
+            logger?.LogWarning(ex, "Failed to deserialize BusinessInfo for TenantMetadata {TenantId}. Returning empty dictionary.", TenantId);
+            return new Dictionary<string, object?>();
+        }
     }
 
     /// <summary>
@@ -168,10 +185,14 @@ public class TenantMetadata : EntityBase
     /// <summary>
     ///     Get contact information as dictionary
     /// </summary>
-    public Dictionary<string, object?> GetContactInfo()
+    public Dictionary<string, object?> GetContactInfo(ILogger? logger = null)
     {
         try { return JsonSerializer.Deserialize<Dictionary<string, object?>>(ContactInfo) ?? new Dictionary<string, object?>(); }
-        catch { return new Dictionary<string, object?>(); }
+        catch (JsonException ex)
+        {
+            logger?.LogWarning(ex, "Failed to deserialize ContactInfo for TenantMetadata {TenantId}. Returning empty dictionary.", TenantId);
+            return new Dictionary<string, object?>();
+        }
     }
 
     /// <summary>

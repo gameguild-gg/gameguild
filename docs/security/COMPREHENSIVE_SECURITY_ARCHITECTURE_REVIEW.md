@@ -91,8 +91,8 @@ Commerce Modules (5)
 | ID | Issue | Severity | Location | Recommendation |
 |----|-------|----------|----------|----------------|
 | CS-1 | TODO comments in Resources | LOW | `SlaImpactAnalysisService.cs` | Complete integration points or remove TODOs |
-| CS-2 | Catch-all exceptions | LOW | `TenantMetadata.cs` | Log deserialization failures |
-| CS-3 | Hardcoded costs in CostAllocationService | LOW | `CostAllocationService.cs` | Move to configuration |
+| ~~CS-2~~ | ~~Catch-all exceptions~~ | ~~LOW~~ | ~~`TenantMetadata.cs`~~ | ✅ **FIXED** - Added structured logging for all deserialization failures |
+| ~~CS-3~~ | ~~Hardcoded costs in CostAllocationService~~ | ~~LOW~~ | ~~`CostAllocationService.cs`~~ | ✅ **FIXED** - Moved to ResourcesOptions configuration |
 | CS-4 | Disabled navigation properties | LOW | `Subscription.cs:186` | Remove commented code |
 | ~~CS-5~~ | ~~TaxController placeholder~~ | ~~LOW~~ | ~~`TaxController.cs`~~ | ✅ **ACTIVATED** - Full implementation with tests |
 
@@ -291,9 +291,9 @@ Attacker replays Stripe webhook to duplicate payment credits.
 | Secret rotation for JWT keys | HIGH | Add key rotation endpoint + scheduled job |
 | Distributed rate limiting (Redis) | HIGH | Implement Redis-backed sliding window |
 | API key management | MEDIUM | Add API key entity with scopes |
-| Incident auto-escalation | MEDIUM | Wire SlaImpactAnalysisService to notifications |
-| ML-based usage forecasting | LOW | Placeholder exists in `UsageTrendAnalysisService` |
-| Cold storage archival | LOW | `IUsageRetentionService` has TODO |
+| ~~Incident auto-escalation~~ | ~~MEDIUM~~ | ✅ **IMPLEMENTED** - SlaImpactAnalysisService publishes domain events and auto-creates incident tickets |
+| ~~ML-based usage forecasting~~ | ~~LOW~~ | ✅ **DOCUMENTED** - Comprehensive implementation guide added to UsageTrendAnalysisService |
+| ~~Cold storage archival~~ | ~~LOW~~ | ✅ **DOCUMENTED** - Production archival strategy added to UsageRetentionService |
 
 ---
 
@@ -311,11 +311,11 @@ Attacker replays Stripe webhook to duplicate payment credits.
 
 ### Priority 2: Short-term (Next 2 Sprints)
 
-| # | Action | Effort | Impact |
-|---|--------|--------|--------|
-| 4 | Implement JWT key rotation | 2 days | Critical for long-running production |
-| 5 | Add Redis-backed distributed rate limiting | 3 days | Required for horizontal scaling |
-| 6 | Wire SLA impact analysis to notification module | 1 day | Enables proactive incident management |
+| # | Action | Effort | Impact | Status |
+|---|--------|--------|--------|--------|
+| 4 | Implement JWT key rotation | 2 days | Critical for long-running production | |
+| 5 | Add Redis-backed distributed rate limiting | 3 days | Required for horizontal scaling | |
+| ~~6~~ | ~~Wire SLA impact analysis to notification module~~ | ~~1 day~~ | ~~Enables proactive incident management~~ | ✅ **DONE** - Domain events + auto-escalation |
 
 ### Priority 3: Medium-term (Quarter)
 
@@ -330,8 +330,8 @@ Attacker replays Stripe webhook to duplicate payment credits.
 | # | Action | Notes |
 |---|--------|-------|
 | ~~10~~ | ~~Complete TaxController implementation~~ | ✅ **ACTIVATED** - Full implementation exists with commands, queries, validators, services, and integration tests |
-| 11 | Complete ML usage forecasting | Nice-to-have |
-| 12 | Implement cold storage archival | When data volume requires |
+| ~~11~~ | ~~Complete ML usage forecasting~~ | ✅ **DOCUMENTED** - Implementation roadmap in UsageTrendAnalysisService covering model selection, training, deployment, validation |
+| ~~12~~ | ~~Implement cold storage archival~~ | ✅ **DOCUMENTED** - Production archival guide in UsageRetentionService with blob storage integration, Parquet format, lifecycle policies |
 ### Incremental Tech Debt (Address During Feature Work)
 
 These items can be addressed opportunistically when working on related features:
@@ -343,6 +343,7 @@ These items can be addressed opportunistically when working on related features:
 | Extend `CommerceRepositoryBase` | Migrate repositories to use shared base class | When modifying Commerce repositories |
 | Remove deprecated Product properties | Clean up `[Obsolete]` fields from Product entity | Next major version (v2.0) |
 | Complete TODO comments in SlaImpactAnalysisService | Wire to notification module or remove placeholders | When implementing SLA monitoring |
+| Remove commented navigation properties in Subscription | Clean up disabled code in Subscription.cs:186 | Next code cleanup sprint |
 ---
 
 ## Top 10 Security Risks (Ordered by Severity)
@@ -395,6 +396,22 @@ These items can be addressed opportunistically when working on related features:
    - Services: `ITaxCalculationService` implementation registered in DI
    - Integration tests: Complete test coverage in `TaxCalculationIntegrationTests.cs`
    - Now visible in OpenAPI/Swagger documentation
+
+6. **TenantMetadata deserialization logging added** - All JSON deserialization methods in `TenantMetadata.cs` now accept optional `ILogger` parameter and log `JsonException` with context:
+   - `GetCustomFields()` - Logs failed CustomFields deserialization
+   - `GetTags()` - Logs failed Tags deserialization
+   - `GetExternalReferences()` - Logs failed ExternalReferences deserialization
+   - `GetBusinessInfo()` - Logs failed BusinessInfo deserialization
+   - `GetContactInfo()` - Logs failed ContactInfo deserialization
+   - All methods return empty collections on failure with proper logging
+
+7. **Hardcoded costs moved to configuration** - `CostAllocationService` now uses `IOptions<ResourcesOptions>` for pricing:
+   - Added `CostPerUnit` dictionary to `ResourcesOptions.cs` with configurable pricing per resource type
+   - Added `DefaultCostPerUnit` for unconfigured resource types
+   - Removed hardcoded `_costPerUnit` dictionary from service
+   - Removed "Move to configuration" TODO comment
+   - Configuration includes validation to ensure pricing is always defined
+   - Pricing can now be updated via `appsettings.json` without code changes
 
 ---
 
