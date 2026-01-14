@@ -22,6 +22,12 @@ public record PaymentRecordResult
     public bool IsRejectedOutOfOrder { get; init; }
 
     /// <summary>
+    ///     Whether the payment was rejected because the subscription is cancelled/expired.
+    ///     Economic invariant: Cannot charge cancelled subscriptions.
+    /// </summary>
+    public bool IsRejectedCancelled { get; init; }
+
+    /// <summary>
     ///     The idempotency key for this payment
     /// </summary>
     public string? IdempotencyKey { get; init; }

@@ -84,7 +84,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 payload.TenantId, payload.ExternalSubscriptionId);
 
             // Find subscription by external ID
-            var subscription = await _subscriptionService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
+            var subscription = await _queryService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
                 .ConfigureAwait(false);
 
             if (subscription == null)
@@ -121,7 +121,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 payload.TenantId, payload.ExternalSubscriptionId);
 
             // Find subscription by external ID
-            var subscription = await _subscriptionService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
+            var subscription = await _queryService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
                 .ConfigureAwait(false);
 
             if (subscription == null)
@@ -132,7 +132,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
             }
 
             // Cancel the subscription
-            await _subscriptionService.CancelAsync(
+            await _lifecycleService.CancelAsync(
                 subscription.Id,
                 CancellationReason.Custom,
                 "Canceled via webhook from payment provider",
@@ -159,7 +159,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 payload.TenantId, payload.PaymentId);
 
             // Find subscription by external ID
-            var subscription = await _subscriptionService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
+            var subscription = await _queryService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
                 .ConfigureAwait(false);
 
             if (subscription == null)
@@ -170,7 +170,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
             }
 
             // Record the payment
-            await _subscriptionService.RecordPaymentAsync(
+            await _billingService.RecordPaymentAsync(
                 subscription.Id,
                 payload.Amount,
                 payload.Currency,
@@ -197,7 +197,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 payload.TenantId, payload.PaymentId);
 
             // Find subscription by external ID
-            var subscription = await _subscriptionService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
+            var subscription = await _queryService.GetByExternalIdAsync(payload.ExternalSubscriptionId)
                 .ConfigureAwait(false);
 
             if (subscription == null)
@@ -208,7 +208,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
             }
 
             // Record the payment failure
-            await _subscriptionService.RecordPaymentFailureAsync(
+            await _billingService.RecordPaymentFailureAsync(
                 subscription.Id,
                 payload.FailureReason ?? "Payment failed via webhook",
                 payload.PaidAt ?? DateTime.UtcNow
@@ -235,25 +235,25 @@ public abstract class BillingWebhookService : IBillingWebhookService
             case SubscriptionStatus.Active:
                 if (subscription.Status is SubscriptionStatus.PendingActivation or SubscriptionStatus.Trialing or SubscriptionStatus.Suspended)
                 {
-                    await _subscriptionService.ActivateAsync(subscription.Id).ConfigureAwait(false);
+                    await _lifecycleService.ActivateAsync(subscription.Id).ConfigureAwait(false);
                 }
                 break;
 
             case SubscriptionStatus.Suspended:
                 if (subscription.Status == SubscriptionStatus.Active)
                 {
-                    await _subscriptionService.SuspendAsync(subscription.Id, "Suspended via webhook").ConfigureAwait(false);
+                    await _lifecycleService.SuspendAsync(subscription.Id, "Suspended via webhook").ConfigureAwait(false);
                 }
                 break;
 
             case SubscriptionStatus.Cancelled:
-                await _subscriptionService.CancelAsync(subscription.Id, CancellationReason.Custom).ConfigureAwait(false);
+                await _lifecycleService.CancelAsync(subscription.Id, CancellationReason.Custom).ConfigureAwait(false);
                 break;
 
             case SubscriptionStatus.Trialing:
                 if (subscription.Status == SubscriptionStatus.PendingActivation)
                 {
-                    await _subscriptionService.StartTrialAsync(subscription.Id, 14).ConfigureAwait(false);
+                    await _lifecycleService.StartTrialAsync(subscription.Id, 14).ConfigureAwait(false);
                 }
                 break;
 

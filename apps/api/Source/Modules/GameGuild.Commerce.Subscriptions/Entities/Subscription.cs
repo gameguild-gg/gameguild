@@ -90,6 +90,53 @@ public class Subscription : EntityBase, ISubscription
     [Required]
     public Guid CreatedByUserId { get; private set; }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // ECONOMIC MODEL ALIGNMENT - Order linkage for audit trail
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    ///     ID of the fulfilled order that created this subscription.
+    ///     Required for audit trail - no subscription without payment proof.
+    ///     Null only for legacy/migrated subscriptions.
+    /// </summary>
+    /// <remarks>
+    ///     Economic invariant: New subscriptions MUST have a FulfilledOrderId.
+    ///     This prevents subscription creation without prior payment.
+    /// </remarks>
+    public Guid? FulfilledOrderId { get; private set; }
+
+    /// <summary>
+    ///     ID of the most recent order that modified this subscription.
+    ///     Updated on upgrades, downgrades, renewals.
+    /// </summary>
+    public Guid? LastModifyingOrderId { get; private set; }
+
+    /// <summary>
+    ///     Associates the originating fulfilled order with this subscription.
+    ///     Should be called immediately after creation.
+    /// </summary>
+    /// <param name="orderId">The fulfilled order ID</param>
+    /// <exception cref="InvalidOperationException">Thrown if already set to a different order</exception>
+    public void SetFulfilledOrderId(Guid orderId)
+    {
+        if (FulfilledOrderId.HasValue && FulfilledOrderId != orderId)
+            throw new InvalidOperationException($"Subscription {Id} already linked to order {FulfilledOrderId}");
+        
+        FulfilledOrderId = orderId;
+        LastModifyingOrderId = orderId;
+    }
+
+    /// <summary>
+    ///     Records that an order modified this subscription (upgrade/downgrade/renewal).
+    /// </summary>
+    /// <param name="orderId">The modifying order ID</param>
+    public void RecordModifyingOrder(Guid orderId)
+    {
+        LastModifyingOrderId = orderId;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+
     /// <summary>
     ///     Last processed renewal idempotency key (prevents duplicate charges)
     /// </summary>
@@ -513,6 +560,18 @@ public class Subscription : EntityBase, ISubscription
     {
         if (string.IsNullOrEmpty(idempotencyKey))
             throw new ArgumentException("Idempotency key is required for payment recording", nameof(idempotencyKey));
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // ECONOMIC INVARIANT: Cannot record payments for cancelled/expired subscriptions
+        // This prevents charging users for subscriptions they've already cancelled.
+        // ═══════════════════════════════════════════════════════════════════════
+        if (Status == SubscriptionStatus.Cancelled)
+            return PaymentRecordResult.RejectedCancelled(
+                $"Cannot record payment for cancelled subscription {Id}. Refund required.");
+        
+        if (Status == SubscriptionStatus.Expired)
+            return PaymentRecordResult.RejectedCancelled(
+                $"Cannot record payment for expired subscription {Id}. Renewal required.");
 
         // Idempotency check - if same payment already recorded, skip (idempotent)
         if (LastPaymentIdempotencyKey == idempotencyKey)
