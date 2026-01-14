@@ -46,6 +46,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // Apply Orders module configurations
         OrdersModule.ConfigureOrdersModel(modelBuilder);
 
+        // Apply Subscriptions module configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(GameGuild.Commerce.Subscriptions.Subscription).Assembly, 
+            type => type.Namespace?.StartsWith("GameGuild.Commerce.Subscriptions.Data.Configurations") == true);
+
         // NOTE: The following modules are currently disabled. Uncomment when enabling them.
         // // Apply Resources module configurations (using automatic discovery)
         // modelBuilder.ApplyConfigurationsFromAssembly(typeof(ResourceQuota).Assembly, type => type.Namespace?.StartsWith("GameGuild.Resources.Entities") == true);
@@ -235,6 +239,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Order> Orders { get => Set<Order>(); }
 
     public DbSet<OrderLineItem> OrderLineItems { get => Set<OrderLineItem>(); }
+
+    #endregion
+
+    #region Subscriptions Module
+
+    public DbSet<GameGuild.Commerce.Subscriptions.Subscription> Subscriptions { get => Set<GameGuild.Commerce.Subscriptions.Subscription>(); }
+
+    public DbSet<GameGuild.Commerce.Subscriptions.SubscriptionPlan> SubscriptionPlans { get => Set<GameGuild.Commerce.Subscriptions.SubscriptionPlan>(); }
 
     #endregion
 

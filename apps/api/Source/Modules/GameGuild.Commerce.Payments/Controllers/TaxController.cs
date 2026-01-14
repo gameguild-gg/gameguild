@@ -7,15 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Commerce.Payments;
 
-// TODO: Reactivate this controller when tax calculation features are ready for production
 /// <summary>
-///     Tax calculation and management controller
+///     Tax calculation and management controller.
+///     Provides endpoints for calculating taxes, retrieving tax jurisdictions, and managing tax rules.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Tags("taxes")]
-[ApiExplorerSettings(IgnoreApi = true)]
 public sealed class TaxController(ISender sender) : ControllerBase
 {
     /// <summary>
