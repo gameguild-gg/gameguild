@@ -1,31 +1,127 @@
 using GameGuild.CQRS;
+using GameGuild.ValueObjects;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Handler for retrying failed payments
 /// </summary>
-public sealed class RetryPaymentCommandHandler : ICommandHandler<RetryPaymentCommand, PaymentRetryResult>
+public sealed class RetryPaymentCommandHandler(
+    IPaymentRepository paymentRepository,
+    IPaymentGateway paymentGateway,
+    ILogger<RetryPaymentCommandHandler> logger) : ICommandHandler<RetryPaymentCommand, PaymentRetryResult>
 {
     public async Task<PaymentRetryResult> Handle(RetryPaymentCommand request, CancellationToken cancellationToken)
     {
-        // TODO: Implement payment retry logic
-        // 1. Validate original payment exists
-        // 2. Check retry eligibility
-        // 3. Retry payment processing
-        // 4. Update payment status
-        // 5. Handle retry success/failure
+        logger.LogInformation("Retrying payment {PaymentId}", request.PaymentId);
 
-        await Task.Delay(100, cancellationToken); // Placeholder
+        // 1. Get the original payment
+        var payment = await paymentRepository.GetByIdAsync(request.PaymentId, cancellationToken)
+            .ConfigureAwait(false);
 
+        if (payment == null)
+        {
+            logger.LogWarning("Payment {PaymentId} not found for retry", request.PaymentId);
+            return new PaymentRetryResult
+            {
+                Success = false,
+                RetryAttempt = 0,
+                FailureReason = $"Payment {request.PaymentId} not found"
+            };
+        }
+
+        // 2. Check if payment can be retried
+        if (!payment.CanRetry)
+        {
+            var reason = payment.MaxRetriesReached
+                ? $"Maximum retry attempts ({payment.MaxRetries}) reached"
+                : $"Payment in status {payment.Status} cannot be retried";
+
+            logger.LogWarning("Payment {PaymentId} cannot be retried: {Reason}", request.PaymentId, reason);
+
+            return new PaymentRetryResult
+            {
+                Success = false,
+                RetryAttempt = payment.RetryCount,
+                MaxRetriesReached = payment.MaxRetriesReached,
+                FailureReason = reason
+            };
+        }
+
+        // 3. Prepare for retry (increments retry count, resets status)
+        payment.PrepareForRetry();
+        await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+
+        logger.LogInformation("Payment {PaymentId} retry attempt {RetryCount}", request.PaymentId, payment.RetryCount);
+
+        // 4. Mark as processing
+        payment.MarkAsProcessing();
+        await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+
+        // 5. Retry through payment gateway with new idempotency key
+        var retryIdempotencyKey = $"{payment.IdempotencyKey}_retry_{payment.RetryCount}";
+        var gatewayRequest = new GatewayPaymentRequest(
+            IdempotencyKey: retryIdempotencyKey,
+            Amount: payment.Amount,
+            Currency: payment.Currency,
+            CustomerId: payment.ExternalCustomerId,
+            PaymentMethodId: payment.PaymentMethodId,
+            Description: $"Retry {payment.RetryCount} for payment {payment.Id}",
+            Metadata: new Dictionary<string, string>
+            {
+                ["original_payment_id"] = payment.Id.ToString(),
+                ["retry_count"] = payment.RetryCount.ToString()
+            });
+
+        var gatewayResult = await paymentGateway.ProcessPaymentAsync(gatewayRequest, cancellationToken)
+            .ConfigureAwait(false);
+
+        // 6. Update payment based on gateway result
+        PaymentResult? paymentResult = null;
+
+        if (gatewayResult.Success)
+        {
+            payment.MarkAsSucceeded(
+                gatewayResult.ExternalPaymentId ?? gatewayResult.TransactionId ?? Guid.NewGuid().ToString(),
+                gatewayResult.TransactionId);
+
+            logger.LogInformation("Payment {PaymentId} retry succeeded on attempt {RetryCount}",
+                request.PaymentId, payment.RetryCount);
+
+            paymentResult = new PaymentResult
+            {
+                Success = true,
+                TransactionId = gatewayResult.TransactionId,
+                PaymentId = payment.Id.ToString(),
+                Amount = new Money(payment.Amount, payment.Currency),
+                ProcessedAt = payment.ProcessedAt,
+                Status = PaymentStatus.Succeeded
+            };
+        }
+        else
+        {
+            payment.MarkAsFailed(
+                gatewayResult.ErrorMessage ?? "Payment retry failed",
+                gatewayResult.ErrorCode);
+
+            logger.LogWarning("Payment {PaymentId} retry failed on attempt {RetryCount}: {ErrorMessage}",
+                request.PaymentId, payment.RetryCount, gatewayResult.ErrorMessage);
+
+            paymentResult = PaymentResult.Failed(gatewayResult.ErrorMessage ?? "Payment retry failed");
+        }
+
+        await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+
+        // 7. Return retry result
         return new PaymentRetryResult
         {
-            Success = true,
-            RetryAttempt = 1,
-            NextRetryAt = null,
-            PaymentResult = null, // Will be populated from actual retry logic
-            MaxRetriesReached = false,
-            FailureReason = null
+            Success = gatewayResult.Success,
+            RetryAttempt = payment.RetryCount,
+            NextRetryAt = payment.NextRetryAt,
+            PaymentResult = paymentResult,
+            MaxRetriesReached = payment.MaxRetriesReached,
+            FailureReason = gatewayResult.Success ? null : gatewayResult.ErrorMessage
         };
     }
 }
