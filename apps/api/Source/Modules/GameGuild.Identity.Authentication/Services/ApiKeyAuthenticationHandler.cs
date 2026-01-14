@@ -3,6 +3,7 @@ using System.Text.Encodings.Web;
 using GameGuild.Abstractions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Identity.Authentication;
