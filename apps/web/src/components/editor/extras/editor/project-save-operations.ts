@@ -15,6 +15,7 @@ export interface SaveParams {
   }
   calculateProjectAssetsSize: (projectId: string) => Promise<void>
   setSaveAsDialogOpen: (open: boolean) => void
+  preferences?: any
 }
 
 export interface SaveAsParams {
@@ -51,6 +52,7 @@ export async function handleSave(params: SaveParams): Promise<void> {
     storageAdapter,
     calculateProjectAssetsSize,
     setSaveAsDialogOpen,
+    preferences,
   } = params
 
   if (!currentProjectId) {
@@ -85,7 +87,7 @@ export async function handleSave(params: SaveParams): Promise<void> {
   }
 
   try {
-    await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags, currentProjectStorageType)
+    await storageAdapter.save(currentProjectId, currentProjectName, stateToSave, projectTags, currentProjectStorageType, preferences)
 
     // Sync asset index with the saved project data
     await assetManager.syncProjectAssets(currentProjectId, stateToSave)
