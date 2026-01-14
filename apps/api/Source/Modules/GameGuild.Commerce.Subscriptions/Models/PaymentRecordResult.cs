@@ -56,6 +56,7 @@ public record PaymentRecordResult
             IsSuccess = true,
             IsAlreadyProcessed = false,
             IsRejectedOutOfOrder = false,
+            IsRejectedCancelled = false,
             IdempotencyKey = idempotencyKey,
             LastProcessedBillingCycle = billingCycle,
             Message = "Payment recorded successfully"
@@ -70,6 +71,7 @@ public record PaymentRecordResult
             IsSuccess = false,
             IsAlreadyProcessed = true,
             IsRejectedOutOfOrder = false,
+            IsRejectedCancelled = false,
             IdempotencyKey = idempotencyKey,
             LastProcessedBillingCycle = lastProcessedCycle,
             Message = "Payment already processed (idempotent)"
@@ -84,8 +86,23 @@ public record PaymentRecordResult
             IsSuccess = false,
             IsAlreadyProcessed = false,
             IsRejectedOutOfOrder = true,
+            IsRejectedCancelled = false,
             RequestedBillingCycle = requestedCycle,
             LastProcessedBillingCycle = lastProcessedCycle,
+            Message = message
+        };
+
+    /// <summary>
+    ///     Creates a rejection result for cancelled/expired subscriptions.
+    ///     Economic invariant: Cannot charge cancelled subscriptions - requires refund.
+    /// </summary>
+    public static PaymentRecordResult RejectedCancelled(string message)
+        => new()
+        {
+            IsSuccess = false,
+            IsAlreadyProcessed = false,
+            IsRejectedOutOfOrder = false,
+            IsRejectedCancelled = true,
             Message = message
         };
 }

@@ -33,7 +33,7 @@ public class UsageEnforcementMiddleware
     public async Task InvokeAsync(
         HttpContext httpContext,
         IActorContextAccessor actorContextAccessor,
-        ISubscriptionService subscriptionService,
+        ISubscriptionQueryService subscriptionQueryService,
         ISubscriptionPlanService subscriptionPlanService)
     {
         var actor = actorContextAccessor.ActorContext;
@@ -59,7 +59,7 @@ public class UsageEnforcementMiddleware
         try
         {
             // Get tenant's active subscription
-            var subscription = await subscriptionService.GetActiveTenantSubscriptionAsync(tenantId);
+            var subscription = await subscriptionQueryService.GetActiveTenantSubscriptionAsync(tenantId);
             
             if (subscription == null)
             {

@@ -1,8 +1,6 @@
 using GameGuild.ValueObjects;
 using FluentAssertions;
 using GameGuild.Commerce.Subscriptions;
-using GameGuild.Commerce.Subscriptions;
-using GameGuild.Commerce.Subscriptions;
 using Moq;
 using Xunit;
 
