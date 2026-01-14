@@ -83,5 +83,30 @@ public static class OrdersModule
                 .HasForeignKey(e => e.UserProductId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
+
+        // OrderAuditLog configuration - immutable audit trail for order state transitions
+        modelBuilder.Entity<OrderAuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.OrderId);
+            entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => e.OccurredAt);
+            entity.HasIndex(e => e.NewStatus);
+
+            entity.Property(e => e.OrderId).IsRequired();
+            entity.Property(e => e.PreviousStatus).IsRequired();
+            entity.Property(e => e.NewStatus).IsRequired();
+            entity.Property(e => e.OccurredAt).IsRequired();
+            entity.Property(e => e.Reason).HasMaxLength(1000);
+            entity.Property(e => e.ExternalPaymentId).HasMaxLength(200);
+            entity.Property(e => e.InitiatedBy).HasMaxLength(100);
+            entity.Property(e => e.IpAddress).HasMaxLength(45);
+            entity.Property(e => e.AdditionalContext).HasColumnType("jsonb");
+
+            entity.HasOne(e => e.Order)
+                .WithMany()
+                .HasForeignKey(e => e.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
     }
 }
