@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Entities;
 using GameGuild.Identity.Users;
+using GameGuild.SharedKernel;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Orders;
@@ -15,7 +16,7 @@ namespace GameGuild.Commerce.Orders;
 [Index(nameof(IdempotencyKey), IsUnique = true)]
 [Index(nameof(CreatedAt))]
 [Index(nameof(TenantId))]
-public class Order : EntityBase
+public class Order : StatefulEntity<OrderStatus>
 {
     /// <summary>Default constructor</summary>
     public Order() { }
@@ -36,7 +37,27 @@ public class Order : EntityBase
     public string IdempotencyKey { get; set; } = string.Empty;
 
     /// <summary>Current order status</summary>
-    public OrderStatus Status { get; set; } = OrderStatus.Pending;
+    public override OrderStatus Status { get; protected set; } = OrderStatus.Pending;
+
+    /// <summary>
+    ///     Valid state transitions for orders (monotonic state machine).
+    ///     Economic invariant: No backward transitions that would reverse economic effects.
+    ///     Extended to support Paid→Fulfilled flow for explicit fulfillment tracking.
+    /// </summary>
+    protected override IReadOnlyDictionary<OrderStatus, IReadOnlySet<OrderStatus>> ValidTransitions { get; } =
+        new Dictionary<OrderStatus, IReadOnlySet<OrderStatus>>
+        {
+            { OrderStatus.Pending, new HashSet<OrderStatus> { OrderStatus.Processing, OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
+            { OrderStatus.Processing, new HashSet<OrderStatus> { OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
+            { OrderStatus.Paid, new HashSet<OrderStatus> { OrderStatus.Fulfilled, OrderStatus.Failed } }, // Paid but not yet fulfilled
+            { OrderStatus.Fulfilled, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } }, // Terminal success state
+            { OrderStatus.Completed, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } }, // Legacy: treated as Fulfilled
+            { OrderStatus.Failed, new HashSet<OrderStatus>() }, // Terminal state
+            { OrderStatus.Cancelled, new HashSet<OrderStatus>() }, // Terminal state
+            { OrderStatus.Refunded, new HashSet<OrderStatus>() }, // Terminal state
+            { OrderStatus.PartiallyRefunded, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.Disputed } },
+            { OrderStatus.Disputed, new HashSet<OrderStatus> { OrderStatus.Fulfilled, OrderStatus.Completed, OrderStatus.Refunded } }
+        };
 
     /// <summary>Subtotal before discounts and taxes</summary>
     [Column(TypeName = "decimal(10,2)")]
@@ -161,48 +182,16 @@ public class Order : EntityBase
     }
 
     /// <summary>
-    ///     Valid state transitions for orders (monotonic state machine).
-    ///     Economic invariant: No backward transitions that would reverse economic effects.
-    ///     Extended to support Paid→Fulfilled flow for explicit fulfillment tracking.
-    /// </summary>
-    private static readonly Dictionary<OrderStatus, HashSet<OrderStatus>> ValidTransitions = new()
-    {
-        { OrderStatus.Pending, new HashSet<OrderStatus> { OrderStatus.Processing, OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
-        { OrderStatus.Processing, new HashSet<OrderStatus> { OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
-        { OrderStatus.Paid, new HashSet<OrderStatus> { OrderStatus.Fulfilled, OrderStatus.Failed } }, // Paid but not yet fulfilled
-        { OrderStatus.Fulfilled, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } }, // Terminal success state
-        { OrderStatus.Completed, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } }, // Legacy: treated as Fulfilled
-        { OrderStatus.Failed, new HashSet<OrderStatus>() }, // Terminal state
-        { OrderStatus.Cancelled, new HashSet<OrderStatus>() }, // Terminal state
-        { OrderStatus.Refunded, new HashSet<OrderStatus>() }, // Terminal state
-        { OrderStatus.PartiallyRefunded, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.Disputed } },
-        { OrderStatus.Disputed, new HashSet<OrderStatus> { OrderStatus.Fulfilled, OrderStatus.Completed, OrderStatus.Refunded } }
-    };
-
-    /// <summary>
-    ///     Validates if a state transition is allowed (monotonic enforcement)
-    /// </summary>
-    public bool CanTransitionTo(OrderStatus newStatus)
-    {
-        if (!ValidTransitions.TryGetValue(Status, out var allowed))
-            return false;
-        return allowed.Contains(newStatus);
-    }
-
-    /// <summary>
     ///     Transitions to a new status with validation and raises domain event for audit trail
     /// </summary>
     /// <param name="newStatus">The new status to transition to</param>
     /// <param name="reason">Optional reason for the transition (e.g., failure reason, cancellation reason)</param>
     /// <param name="externalPaymentId">Optional external payment ID from payment gateway</param>
     /// <exception cref="InvalidOperationException">Thrown when transition is not allowed</exception>
-    private void TransitionTo(OrderStatus newStatus, string? reason = null, string? externalPaymentId = null)
+    private void TransitionToWithReason(OrderStatus newStatus, string? reason = null, string? externalPaymentId = null)
     {
-        if (!CanTransitionTo(newStatus))
-            throw new InvalidOperationException($"Invalid order state transition: {Status} -> {newStatus}");
-        
         var previousStatus = Status;
-        Status = newStatus;
+        TransitionTo(newStatus); // Base class validation
         
         // Raise domain event for audit trail
         Raise(new OrderStateChangedEvent(
@@ -212,6 +201,21 @@ public class Order : EntityBase
             newStatus, 
             reason,
             externalPaymentId));
+    }
+
+    /// <summary>
+    ///     Called after a successful state transition.
+    ///     Raises domain event for audit trail.
+    /// </summary>
+    protected override void OnStatusChanged(OrderStatus oldStatus, OrderStatus newStatus)
+    {
+        Raise(new OrderStateChangedEvent(
+            Id,
+            TenantId ?? Guid.Empty,
+            oldStatus,
+            newStatus,
+            reason: null,
+            externalPaymentId: null));
     }
 
     /// <summary>Add a line item to the order</summary>
@@ -266,7 +270,7 @@ public class Order : EntityBase
     /// <param name="externalPaymentId">External payment ID from payment gateway for reconciliation</param>
     public void MarkAsPaid(string? paymentProviderReference = null, string? paymentMethod = null, string? externalPaymentId = null)
     {
-        TransitionTo(OrderStatus.Completed, reason: null, externalPaymentId: externalPaymentId);
+        TransitionToWithReason(OrderStatus.Completed, reason: null, externalPaymentId: externalPaymentId);
         PaidAt = DateTime.UtcNow;
         PaymentProviderReference = paymentProviderReference;
         PaymentMethod = paymentMethod;
@@ -283,7 +287,7 @@ public class Order : EntityBase
     /// <param name="externalPaymentId">External payment gateway reference</param>
     public void MarkAsPaidPendingFulfillment(Guid paymentId, string? externalPaymentId = null)
     {
-        TransitionTo(OrderStatus.Paid, reason: null, externalPaymentId: externalPaymentId);
+        TransitionToWithReason(OrderStatus.Paid, reason: null, externalPaymentId: externalPaymentId);
         PaymentId = paymentId;
         PaidAt = DateTime.UtcNow;
         ExternalPaymentId = externalPaymentId;
@@ -310,7 +314,7 @@ public class Order : EntityBase
             return;
         }
 
-        TransitionTo(OrderStatus.Fulfilled, reason: "Entitlements granted");
+        TransitionToWithReason(OrderStatus.Fulfilled, reason: "Entitlements granted");
         FulfilledAt = DateTime.UtcNow;
         Touch();
     }
@@ -334,7 +338,7 @@ public class Order : EntityBase
     /// <param name="reason">Reason for the failure</param>
     public void MarkAsFailed(string? reason = null)
     {
-        TransitionTo(OrderStatus.Failed, reason: reason);
+        TransitionToWithReason(OrderStatus.Failed, reason: reason);
         Metadata = reason;
         Touch();
     }
@@ -343,7 +347,7 @@ public class Order : EntityBase
     /// <param name="reason">Reason for cancellation</param>
     public void Cancel(string? reason = null)
     {
-        TransitionTo(OrderStatus.Cancelled, reason: reason);
+        TransitionToWithReason(OrderStatus.Cancelled, reason: reason);
         Metadata = reason;
         Touch();
     }
@@ -354,7 +358,7 @@ public class Order : EntityBase
     public void ProcessRefund(decimal amount, string reason)
     {
         var newStatus = amount >= Total ? OrderStatus.Refunded : OrderStatus.PartiallyRefunded;
-        TransitionTo(newStatus, reason: reason);
+        TransitionToWithReason(newStatus, reason: reason);
         RefundAmount = amount;
         RefundReason = reason;
         RefundedAt = DateTime.UtcNow;

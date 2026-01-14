@@ -100,15 +100,46 @@ public class AuthService(
                 throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
             }
 
-            // TODO: Analyze user login patterns for additional security
-            // if (userId.HasValue)
-            // {
-            //     var userAnalysis = await anomalyDetectionService.AnalyzeUserLoginPatternsAsync(userId.Value, ipAddress, userAgent);
-            //     if (userAnalysis.IsNewLocation || userAnalysis.IsNewDevice)
-            //     {
-            //         logger.LogInformation("User login from new location/device: UserId={UserId}", userId.Value);
-            //     }
-            // }
+            // Analyze login attempt for anomalies
+            var attemptContext = new AuthenticationAttemptContext
+            {
+                UserId = userId!.Value,
+                IpAddress = ipAddress,
+                UserAgent = userAgent ?? "Unknown",
+                DeviceFingerprint = null, // TODO: Get from request header
+                Timestamp = DateTime.UtcNow
+            };
+
+            var anomalyResult = await anomalyDetectionService.AnalyzeLoginAttemptAsync(attemptContext);
+
+            // Require step-up authentication for high-risk logins
+            if (anomalyResult.RiskLevel >= RiskLevel.High)
+            {
+                logger.LogWarning("High-risk login attempt detected: UserId={UserId}, RiskLevel={RiskLevel}, Anomalies={Anomalies}",
+                    userId.Value, anomalyResult.RiskLevel, string.Join(", ", anomalyResult.DetectedAnomalies));
+
+                // Generate step-up token with 5-minute expiry
+                var stepUpToken = Guid.NewGuid().ToString("N");
+                var stepUpExpiresAt = DateTime.UtcNow.AddMinutes(5);
+
+                // TODO: Store step-up token in cache/database for validation
+                // await stepUpTokenStore.StoreAsync(stepUpToken, userId.Value, stepUpExpiresAt);
+
+                return new SignInResponse
+                {
+                    Success = false,
+                    Message = "Additional verification required",
+                    RequiresStepUp = true,
+                    StepUpToken = stepUpToken,
+                    StepUpExpiresAt = stepUpExpiresAt,
+                    RiskLevel = anomalyResult.RiskLevel,
+                    RiskFactors = anomalyResult.DetectedAnomalies.ToList(),
+                    AvailableMethods = ["TOTP", "Email"], // TODO: Get from user's enabled MFA methods
+                    UserId = userId.Value,
+                    Email = request.Email,
+                    TenantId = request.TenantId
+                };
+            }
 
             // Create device info for refresh token
             var deviceInfo = new DeviceInfo { Fingerprint = Guid.NewGuid().ToString(), IpAddress = ipAddress, UserAgent = userAgent, DeviceName = "Test Device", DeviceType = "Web" };

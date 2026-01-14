@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using GameGuild.CQRS.Models;
 using GameGuild.Entities;
+using GameGuild.SharedKernel;
 using GameGuild.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,21 +22,22 @@ namespace GameGuild.Commerce.Subscriptions;
 [Index(nameof(LastPaymentAt))]
 [Index(nameof(TrialEndDate))]
 [Index(nameof(CancelledAt))]
-public class Subscription : EntityBase, ISubscription
+public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
 {
     /// <summary>
     ///     Valid state transitions for subscriptions (monotonic state machine)
     /// </summary>
-    private static readonly Dictionary<SubscriptionStatus, HashSet<SubscriptionStatus>> ValidTransitions = new()
-    {
-        { SubscriptionStatus.PendingActivation, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Trialing, SubscriptionStatus.Cancelled } },
-        { SubscriptionStatus.Trialing, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Cancelled, SubscriptionStatus.Expired } },
-        { SubscriptionStatus.Active, new HashSet<SubscriptionStatus> { SubscriptionStatus.PastDue, SubscriptionStatus.Suspended, SubscriptionStatus.Cancelled } },
-        { SubscriptionStatus.PastDue, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Suspended, SubscriptionStatus.Cancelled } },
-        { SubscriptionStatus.Suspended, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Cancelled } },
-        { SubscriptionStatus.Cancelled, new HashSet<SubscriptionStatus>() }, // Terminal state
-        { SubscriptionStatus.Expired, new HashSet<SubscriptionStatus>() } // Terminal state
-    };
+    protected override IReadOnlyDictionary<SubscriptionStatus, IReadOnlySet<SubscriptionStatus>> ValidTransitions { get; } =
+        new Dictionary<SubscriptionStatus, IReadOnlySet<SubscriptionStatus>>
+        {
+            { SubscriptionStatus.PendingActivation, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Trialing, SubscriptionStatus.Cancelled } },
+            { SubscriptionStatus.Trialing, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Cancelled, SubscriptionStatus.Expired } },
+            { SubscriptionStatus.Active, new HashSet<SubscriptionStatus> { SubscriptionStatus.PastDue, SubscriptionStatus.Suspended, SubscriptionStatus.Cancelled } },
+            { SubscriptionStatus.PastDue, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Suspended, SubscriptionStatus.Cancelled } },
+            { SubscriptionStatus.Suspended, new HashSet<SubscriptionStatus> { SubscriptionStatus.Active, SubscriptionStatus.Cancelled } },
+            { SubscriptionStatus.Cancelled, new HashSet<SubscriptionStatus>() }, // Terminal state
+            { SubscriptionStatus.Expired, new HashSet<SubscriptionStatus>() } // Terminal state
+        };
 
     /// <summary>
     ///     Parameterless constructor for EF Core
@@ -69,27 +71,6 @@ public class Subscription : EntityBase, ISubscription
         CurrentPeriodStart = periodStart;
         CurrentPeriodEnd = periodEnd;
         NextBillingDate = nextBilling;
-    }
-
-    /// <summary>
-    ///     Validates if a state transition is allowed (monotonic enforcement)
-    /// </summary>
-    public bool CanTransitionTo(SubscriptionStatus newStatus)
-    {
-        if (!ValidTransitions.TryGetValue(Status, out var allowed))
-            return false;
-        return allowed.Contains(newStatus);
-    }
-
-    /// <summary>
-    ///     Transitions to a new status with validation
-    /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when transition is not allowed</exception>
-    private void TransitionTo(SubscriptionStatus newStatus)
-    {
-        if (!CanTransitionTo(newStatus))
-            throw new InvalidOperationException($"Invalid subscription state transition: {Status} -> {newStatus}");
-        Status = newStatus;
     }
 
     /// <summary>
@@ -260,7 +241,7 @@ public class Subscription : EntityBase, ISubscription
     /// <summary>
     ///     Current status of the subscription
     /// </summary>
-    public SubscriptionStatus Status { get; private set; }
+    public override SubscriptionStatus Status { get; protected set; }
 
     /// <summary>
     ///     Reference to the subscription plan

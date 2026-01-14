@@ -1,3 +1,5 @@
+using GameGuild.Identity.Authentication.Services.RiskAssessment;
+
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
@@ -94,4 +96,33 @@ public class SignInResponse
     ///     MFA session ID if MFA is required
     /// </summary>
     public string? MfaSessionId { get; set; }
-}
+
+    /// <summary>
+    ///     Whether step-up authentication is required due to high-risk login
+    /// </summary>
+    public bool RequiresStepUp { get; set; }
+
+    /// <summary>
+    ///     Temporary token for completing step-up authentication
+    /// </summary>
+    public string? StepUpToken { get; set; }
+
+    /// <summary>
+    ///     When the step-up token expires
+    /// </summary>
+    public DateTime? StepUpExpiresAt { get; set; }
+
+    /// <summary>
+    ///     Risk level detected during authentication
+    /// </summary>
+    public RiskLevel? RiskLevel { get; set; }
+
+    /// <summary>
+    ///     List of risk factors detected
+    /// </summary>
+    public List<string>? RiskFactors { get; set; }
+
+    /// <summary>
+    ///     Available step-up authentication methods
+    /// </summary>
+    public List<string>? AvailableMethods { get; set; }
