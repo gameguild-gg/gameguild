@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import type { LexicalEditor } from "lexical"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
@@ -44,6 +44,23 @@ export function EditorLayoutSequential({
   projectId,
   mode,
 }: EditorLayoutSequentialProps) {
+  const panelContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+
+  const handleSidebarPanelSelect = (index: number) => {
+    onPanelIndexChange(index)
+    // Scroll only when clicking from sidebar
+    const currentPanel = structure.panels[index]
+    if (currentPanel) {
+      const panelElement = panelContainerRefs.current.get(currentPanel.id)
+      if (panelElement) {
+        panelElement.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        })
+      }
+    }
+  }
+
   const handlePanelAdd = (type: PanelLayoutType) => {
     const newStructure = addPanel(structure, type)
     onStructureChange(newStructure)
@@ -113,7 +130,7 @@ export function EditorLayoutSequential({
         <PanelNavigationSidebar
           panels={structure.panels}
           currentPanelIndex={currentPanelIndex}
-          onPanelSelect={onPanelIndexChange}
+          onPanelSelect={handleSidebarPanelSelect}
           onPanelAdd={handlePanelAdd}
           onPanelRemove={handlePanelRemove}
           onPanelReorder={handlePanelReorder}
@@ -122,10 +139,19 @@ export function EditorLayoutSequential({
       </div>
 
       {/* Continuous Scroll Container - All panels visible */}
-      <div className="flex-1 overflow-y-auto max-h-[calc(100vh-16rem)] bg-gray-50 dark:bg-gray-950">
+      <div className="flex-1 overflow-y-auto max-h-[calc(100vh-12rem)] bg-gray-50 dark:bg-gray-950">
         <div className="space-y-4 p-6">
           {structure.panels.map((panel, index) => (
-            <div key={panel.id}>
+            <div 
+              key={panel.id}
+              ref={(el) => {
+                if (el) {
+                  panelContainerRefs.current.set(panel.id, el)
+                } else {
+                  panelContainerRefs.current.delete(panel.id)
+                }
+              }}
+            >
               <div
                 className={`border-2 transition-all rounded-lg overflow-hidden ${
                   currentPanelIndex === index
