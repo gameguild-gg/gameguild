@@ -99,6 +99,7 @@ public static class DependencyInjection
         // SLA Incident Escalation Services
         services.AddScoped<ISlaNotificationSender, LoggingSlaNotificationSender>();
         services.AddScoped<ISlaIncidentEscalationService, SlaIncidentEscalationService>();
+        services.AddScoped<IIncidentTicketProvider, DefaultIncidentTicketProvider>();
     }
 
     /// <summary>

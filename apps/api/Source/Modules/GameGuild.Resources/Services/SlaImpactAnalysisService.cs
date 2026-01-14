@@ -9,6 +9,7 @@ public class SlaImpactAnalysisService(
     ISlaImpactAnalysisRepository analysisRepository,
     IResourceQuotaRepository quotaRepository,
     ISlaIncidentEscalationService escalationService,
+    IIncidentTicketProvider incidentTicketProvider,
     ILogger<SlaImpactAnalysisService> logger
 ) : ISlaImpactAnalysisService
 {
@@ -157,9 +158,9 @@ public class SlaImpactAnalysisService(
 
         if (violation == null) { throw new ArgumentException($"Violation {violationId} not found", nameof(violationId)); }
 
-        // TODO: Integration with Incident Management module
-        // For now, generate a placeholder ticket ID
-        var ticketId = $"INC-{DateTime.UtcNow:yyyyMMdd}-{violationId.ToString().Substring(0, 8).ToUpper()}";
+        // Create incident ticket using the injected provider
+        // The provider can be implemented by Incident Management module for real integration
+        var ticketId = await incidentTicketProvider.CreateTicketAsync(violation, cancellationToken);
 
         violation.IncidentCreated = true;
         violation.IncidentTicketId = ticketId;
@@ -240,15 +241,23 @@ public class SlaImpactAnalysisService(
         return result;
     }
 
-    public Task<IEnumerable<SlaImpactAnalysis>> GetCriticalOngoingViolationsAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<SlaImpactAnalysis>> GetCriticalOngoingViolationsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
     {
-        // TODO: Repository method requires tenantId but interface doesn't accept one
-        // This needs to be resolved - either add tenantId parameter or create a new repository method
-        // For now, throw NotImplementedException
-        throw new NotImplementedException("GetCriticalOngoingViolationsAsync requires design clarification for tenant filtering");
+        if (!tenantId.HasValue)
+        {
+            throw new ArgumentException("TenantId is required for getting critical ongoing violations", nameof(tenantId));
+        }
+
+        var unresolved = await analysisRepository.GetUnresolvedAsync(tenantId.Value, cancellationToken);
+
+        return unresolved
+            .Where(v => v.Severity >= SlaViolationSeverity.High && !v.IsResolved)
+            .OrderByDescending(v => v.Severity)
+            .ThenByDescending(v => v.ViolationStartTime);
     }
 
-    // TODO: Integration with Incident Management module for ticket creation
-    // TODO: Integration with Monitoring module for real-time alerting
-    // TODO: Integration with Notification module for stakeholder alerts
+    // Integration Points:
+    // - Incident Management: IIncidentTicketProvider abstraction (injected, implemented by Incident Management module)
+    // - Monitoring/Alerting: ISlaIncidentEscalationService handles auto-escalation and notifications
+    // - Stakeholder Notifications: ISlaNotificationSender (used by SlaIncidentEscalationService)
 }

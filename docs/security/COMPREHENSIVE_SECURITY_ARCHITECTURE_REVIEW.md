@@ -90,7 +90,7 @@ Commerce Modules (5)
 
 | ID | Issue | Severity | Location | Recommendation |
 |----|-------|----------|----------|----------------|
-| CS-1 | TODO comments in Resources | LOW | `SlaImpactAnalysisService.cs` | Complete integration points or remove TODOs |
+| ~~CS-1~~ | ~~TODO comments in Resources~~ | ~~LOW~~ | ~~`SlaImpactAnalysisService.cs`~~ | ✅ **COMPLETED** - Created `IIncidentTicketProvider` abstraction, fixed `GetCriticalOngoingViolationsAsync`, documented integration points |
 | ~~CS-2~~ | ~~Catch-all exceptions~~ | ~~LOW~~ | ~~`TenantMetadata.cs`~~ | ✅ **FIXED** - Added structured logging for all deserialization failures |
 | ~~CS-3~~ | ~~Hardcoded costs in CostAllocationService~~ | ~~LOW~~ | ~~`CostAllocationService.cs`~~ | ✅ **FIXED** - Moved to ResourcesOptions configuration |
 | CS-4 | Disabled navigation properties | LOW | `Subscription.cs:186` | Remove commented code |
