@@ -1,4 +1,5 @@
 using GameGuild.Abstractions;
+using GameGuild.Commerce;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Products;
@@ -6,15 +7,15 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Repository implementation for PromoCode entities
 /// </summary>
-public class PromoCodeRepository(IApplicationDbContext context) : IPromoCodeRepository
+public class PromoCodeRepository(IApplicationDbContext context) 
+    : CommerceRepositoryBase<PromoCode>(context), IPromoCodeRepository
 {
-    private DbSet<PromoCode> PromoCodes => context.Set<PromoCode>();
-    private DbSet<PromoCodeUse> PromoCodeUses => context.Set<PromoCodeUse>();
+    private DbSet<PromoCodeUse> PromoCodeUses => Context.Set<PromoCodeUse>();
 
     /// <inheritdoc />
     public async Task<PromoCode?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await PromoCodes
+        return await Entities
             .Include(p => p.Product)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken)
             .ConfigureAwait(false);
@@ -23,7 +24,7 @@ public class PromoCodeRepository(IApplicationDbContext context) : IPromoCodeRepo
     /// <inheritdoc />
     public async Task<PromoCode?> GetByCodeAsync(string code, CancellationToken cancellationToken = default)
     {
-        return await PromoCodes
+        return await Entities
             .Include(p => p.Product)
             .FirstOrDefaultAsync(p => p.Code == code, cancellationToken)
             .ConfigureAwait(false);
@@ -33,7 +34,7 @@ public class PromoCodeRepository(IApplicationDbContext context) : IPromoCodeRepo
     public async Task<IEnumerable<PromoCode>> GetActiveCodesAsync(CancellationToken cancellationToken = default)
     {
         var now = DateTime.UtcNow;
-        return await PromoCodes
+        return await Entities
             .Where(p => p.IsActive)
             .Where(p => p.ValidFrom == null || p.ValidFrom <= now)
             .Where(p => p.ValidUntil == null || p.ValidUntil > now)
@@ -45,7 +46,7 @@ public class PromoCodeRepository(IApplicationDbContext context) : IPromoCodeRepo
     /// <inheritdoc />
     public async Task<IEnumerable<PromoCode>> GetByProductIdAsync(Guid productId, CancellationToken cancellationToken = default)
     {
-        return await PromoCodes
+        return await Entities
             .Where(p => p.ProductId == productId || p.ProductId == null)
             .Where(p => p.IsActive)
             .OrderByDescending(p => p.StackingPriority)
@@ -63,7 +64,7 @@ public class PromoCodeRepository(IApplicationDbContext context) : IPromoCodeRepo
         int take = 50,
         CancellationToken cancellationToken = default)
     {
-        var query = PromoCodes.AsQueryable();
+        var query = Entities.AsQueryable();
 
         if (isActive.HasValue)
         {
@@ -120,20 +121,20 @@ public class PromoCodeRepository(IApplicationDbContext context) : IPromoCodeRepo
     /// <inheritdoc />
     public async Task AddAsync(PromoCode promoCode, CancellationToken cancellationToken = default)
     {
-        await PromoCodes.AddAsync(promoCode, cancellationToken).ConfigureAwait(false);
+        await Entities.AddAsync(promoCode, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public Task UpdateAsync(PromoCode promoCode, CancellationToken cancellationToken = default)
     {
-        PromoCodes.Update(promoCode);
+        Entities.Update(promoCode);
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public Task DeleteAsync(PromoCode promoCode, CancellationToken cancellationToken = default)
     {
-        PromoCodes.Remove(promoCode);
+        Entities.Remove(promoCode);
         return Task.CompletedTask;
     }
 
@@ -146,18 +147,18 @@ public class PromoCodeRepository(IApplicationDbContext context) : IPromoCodeRepo
     /// <inheritdoc />
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await PromoCodes.AnyAsync(p => p.Id == id, cancellationToken).ConfigureAwait(false);
+        return await Entities.AnyAsync(p => p.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default)
     {
-        return await PromoCodes.AnyAsync(p => p.Code == code, cancellationToken).ConfigureAwait(false);
+        return await Entities.AnyAsync(p => p.Code == code, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

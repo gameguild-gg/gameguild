@@ -1,4 +1,5 @@
 using GameGuild.Abstractions;
+using GameGuild.Commerce;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Payments;
@@ -6,18 +7,17 @@ namespace GameGuild.Commerce.Payments;
 /// <summary>
 ///     Repository for financial ledger entries
 /// </summary>
-public class FinancialLedgerRepository(IApplicationDbContext context) : IFinancialLedgerRepository
+public class FinancialLedgerRepository(IApplicationDbContext context) 
+    : CommerceRepositoryBase<FinancialLedgerEntry>(context), IFinancialLedgerRepository
 {
-    private DbSet<FinancialLedgerEntry> FinancialLedgerEntries { get => context.Set<FinancialLedgerEntry>(); }
-
     public async Task<FinancialLedgerEntry?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await FinancialLedgerEntries.FirstOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false);
+        return await Entities.FirstOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<List<FinancialLedgerEntry>> GetByAccountAsync(string account, int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await FinancialLedgerEntries.Where(e => e.DebitAccount == account || e.CreditAccount == account)
+        return await Entities.Where(e => e.DebitAccount == account || e.CreditAccount == account)
             .OrderByDescending(e => e.CreatedAt)
             .Skip(skip)
             .Take(take)
@@ -27,16 +27,16 @@ public class FinancialLedgerRepository(IApplicationDbContext context) : IFinanci
 
     public async Task<List<FinancialLedgerEntry>> GetUnreconciledAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await FinancialLedgerEntries.Where(e => !e.IsReconciled).OrderByDescending(e => e.CreatedAt).Skip(skip).Take(take).ToListAsync(cancellationToken).ConfigureAwait(false);
+        return await Entities.Where(e => !e.IsReconciled).OrderByDescending(e => e.CreatedAt).Skip(skip).Take(take).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task AddAsync(FinancialLedgerEntry entry, CancellationToken cancellationToken = default) { await FinancialLedgerEntries.AddAsync(entry, cancellationToken).ConfigureAwait(false); }
+    public async Task AddAsync(FinancialLedgerEntry entry, CancellationToken cancellationToken = default) { await Entities.AddAsync(entry, cancellationToken).ConfigureAwait(false); }
 
     public async Task UpdateAsync(FinancialLedgerEntry entry, CancellationToken cancellationToken = default)
     {
-        FinancialLedgerEntries.Update(entry);
+        Entities.Update(entry);
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    public async Task SaveChangesAsync(CancellationToken cancellationToken = default) { await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false); }
+    public async Task SaveChangesAsync(CancellationToken cancellationToken = default) { await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false); }
 }

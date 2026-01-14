@@ -1,4 +1,5 @@
 using GameGuild.Abstractions;
+using GameGuild.Commerce;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Products;
@@ -6,14 +7,13 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Repository implementation for UserProduct entities
 /// </summary>
-public class UserProductRepository(IApplicationDbContext context) : IUserProductRepository
+public class UserProductRepository(IApplicationDbContext context) 
+    : CommerceRepositoryBase<UserProduct>(context), IUserProductRepository
 {
-    private DbSet<UserProduct> UserProducts => context.Set<UserProduct>();
-
     /// <inheritdoc />
     public async Task<UserProduct?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await UserProducts
+        return await Entities
             .Include(up => up.Product)
             .FirstOrDefaultAsync(up => up.Id == id, cancellationToken)
             .ConfigureAwait(false);
@@ -25,7 +25,7 @@ public class UserProductRepository(IApplicationDbContext context) : IUserProduct
         Guid productId,
         CancellationToken cancellationToken = default)
     {
-        return await UserProducts
+        return await Entities
             .Include(up => up.Product)
             .FirstOrDefaultAsync(up => up.UserId == userId && up.ProductId == productId, cancellationToken)
             .ConfigureAwait(false);
@@ -37,7 +37,7 @@ public class UserProductRepository(IApplicationDbContext context) : IUserProduct
         ProductAccessStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        var query = UserProducts
+        var query = Entities
             .Include(up => up.Product)
             .Where(up => up.UserId == userId);
 
@@ -58,7 +58,7 @@ public class UserProductRepository(IApplicationDbContext context) : IUserProduct
         ProductAccessStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        var query = UserProducts.Where(up => up.ProductId == productId);
+        var query = Entities.Where(up => up.ProductId == productId);
 
         if (status.HasValue)
         {
@@ -77,7 +77,7 @@ public class UserProductRepository(IApplicationDbContext context) : IUserProduct
         Guid productId,
         CancellationToken cancellationToken = default)
     {
-        return await UserProducts.AnyAsync(
+        return await Entities.AnyAsync(
             up => up.UserId == userId &&
                   up.ProductId == productId &&
                   up.AccessStatus == ProductAccessStatus.Active,
@@ -88,20 +88,20 @@ public class UserProductRepository(IApplicationDbContext context) : IUserProduct
     /// <inheritdoc />
     public async Task AddAsync(UserProduct userProduct, CancellationToken cancellationToken = default)
     {
-        await UserProducts.AddAsync(userProduct, cancellationToken).ConfigureAwait(false);
+        await Entities.AddAsync(userProduct, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public Task UpdateAsync(UserProduct userProduct, CancellationToken cancellationToken = default)
     {
-        UserProducts.Update(userProduct);
+        Entities.Update(userProduct);
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public Task DeleteAsync(UserProduct userProduct, CancellationToken cancellationToken = default)
     {
-        UserProducts.Remove(userProduct);
+        Entities.Remove(userProduct);
         return Task.CompletedTask;
     }
 
@@ -110,7 +110,7 @@ public class UserProductRepository(IApplicationDbContext context) : IUserProduct
         DateTime thresholdDate,
         CancellationToken cancellationToken = default)
     {
-        return await UserProducts
+        return await Entities
             .Include(up => up.Product)
             .Where(up => up.AccessStatus == ProductAccessStatus.Active &&
                          up.AccessEndDate != null &&
@@ -125,7 +125,7 @@ public class UserProductRepository(IApplicationDbContext context) : IUserProduct
     public async Task<IEnumerable<UserProduct>> GetExpiredSubscriptionsAsync(
         CancellationToken cancellationToken = default)
     {
-        return await UserProducts
+        return await Entities
             .Include(up => up.Product)
             .Where(up => up.AccessStatus == ProductAccessStatus.Active &&
                          up.AcquisitionType == ProductAcquisitionType.Subscription &&
@@ -138,6 +138,6 @@ public class UserProductRepository(IApplicationDbContext context) : IUserProduct
     /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

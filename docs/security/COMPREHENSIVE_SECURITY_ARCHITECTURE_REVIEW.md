@@ -591,14 +591,14 @@ These items can be addressed opportunistically when working on related features:
 |------|----------------|-------|---------------------|
 | ~~Migrate subscription handlers to base class~~ | ✅ **COMPLETE** - 6/8 handlers use `SubscriptionCommandHandlerBase`. Remaining 2 legitimately cannot (creation handler + custom return type). | 8 handlers audited | None - migration complete |
 | Update logging to primary constructor pattern | 🟡 **INCREMENTAL** - 20+ services use `_logger` field pattern | Codebase-wide | When touching any service file |
-| ~~Extend CommerceRepositoryBase~~ | 🔴 **NOT STARTED** - 0/11 Commerce repositories use base class. All use direct `IApplicationDbContext` injection. | 11 repositories identified | When modifying Commerce repositories |
+| ~~Extend CommerceRepositoryBase~~ | ✅ **COMPLETE** - 11/11 Commerce repositories migrated: ProductRepository, OrderRepository, BillingWebhookRepository, SubscriptionRepository, ProductPricingRepository, UserProductRepository, PromoCodeRepository, AuditTrailRepository, PaymentRepository, FinancialLedgerRepository, RevenueEventRepository | All repositories inherit from CommerceRepositoryBase<TEntity>, eliminating code duplication for soft-delete filtering, CRUD operations, and SaveChangesAsync patterns | Completed |
 | ~~Remove deprecated Product properties~~ | ✅ **COMPLETED** - Removed all 6 `[Obsolete]` items from Product.cs: `BundleItemsJson`, `ReferralCommissionPercentage`, `MaxAffiliateDiscount`, `AffiliateCommissionPercentage`, `GetBundleItemIds()`, `SetBundleItemIds()` | Product.cs entity cleaned | None - cleanup complete |
 | ~~Remove commented navigation properties in Subscription~~ | ✅ **VERIFIED CLEAN** - No commented code exists. Single active navigation property at line 232. | Subscription.cs | None - already clean |
 
 **Tech Debt Summary:**
 - ✅ **Completed**: Subscription handlers (6/8 migrated, 2 legitimate exceptions), Subscription.cs cleanup, Product.cs obsolete code removal
 - 🟡 **Incremental**: Logging pattern (opportunistic fixes when touching files)
-- 🔴 **Backlog**: CommerceRepositoryBase migration (11 repositories) - low priority, fix during repository modifications
+- ✅ **COMPLETE**: CommerceRepositoryBase migration (11/11 repositories) - all Commerce repositories now use base class
 
 **Recommendation:** All high-impact tech debt items completed. Remaining incremental items are correctly categorized as "fix during related work" rather than blocking issues.
 
