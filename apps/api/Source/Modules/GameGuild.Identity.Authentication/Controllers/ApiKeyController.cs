@@ -13,9 +13,9 @@ namespace GameGuild.Identity.Authentication;
 [Authorize]
 public class ApiKeyController : ControllerBase
 {
-    private readonly ICqrsDispatcher _dispatcher;
+    private readonly IMediator _dispatcher;
 
-    public ApiKeyController(ICqrsDispatcher dispatcher)
+    public ApiKeyController(IMediator dispatcher)
     {
         _dispatcher = dispatcher;
     }

@@ -1,5 +1,3 @@
-using GameGuild.Identity.Authentication.Services.RiskAssessment;
-
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>

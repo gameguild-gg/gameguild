@@ -48,9 +48,8 @@ public static class ProductsModule
             entity.Property(e => e.Description).HasMaxLength(4000);
             entity.Property(e => e.ShortDescription).HasMaxLength(500);
             entity.Property(e => e.ImageUrl).HasMaxLength(500);
-            entity.Property(e => e.ReferralCommissionPercentage).HasPrecision(5, 2);
-            entity.Property(e => e.MaxAffiliateDiscount).HasPrecision(5, 2);
-            entity.Property(e => e.AffiliateCommissionPercentage).HasPrecision(5, 2);
+            // Note: ReferralCommissionPercentage, MaxAffiliateDiscount, AffiliateCommissionPercentage
+            // are now [NotMapped] - use ProductCommissionConfig entity instead
 
             entity.HasMany(e => e.Pricing)
                 .WithOne(p => p.Product)

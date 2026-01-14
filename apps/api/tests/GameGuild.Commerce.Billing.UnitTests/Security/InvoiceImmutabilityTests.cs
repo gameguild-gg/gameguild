@@ -200,9 +200,9 @@ public class InvoiceImmutabilityTests
 
     [Theory]
     [InlineData(InvoiceStatus.Draft)]
-    [InlineData(InvoiceStatus.Issued)]
+    [InlineData(InvoiceStatus.Open)]
     [InlineData(InvoiceStatus.Paid)]
-    [InlineData(InvoiceStatus.Failed)]
+    [InlineData(InvoiceStatus.PastDue)]
     [InlineData(InvoiceStatus.Void)]
     public void Invoice_AllStatusValues_AreValid(InvoiceStatus status)
     {

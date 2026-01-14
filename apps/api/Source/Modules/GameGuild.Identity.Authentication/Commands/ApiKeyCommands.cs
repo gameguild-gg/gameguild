@@ -1,5 +1,6 @@
 using GameGuild.Abstractions;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.Models;
 using FluentValidation;
 using Microsoft.Extensions.Logging;

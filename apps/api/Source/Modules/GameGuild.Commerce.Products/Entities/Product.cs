@@ -222,4 +222,91 @@ public class Product : EntityBase
     {
         return BundleItems.OrderBy(bi => bi.DisplayOrder).Select(bi => bi.IncludedProductId);
     }
+
+    #region Deprecated API (backwards compatibility)
+
+    /// <summary>
+    ///     Referral commission percentage. Delegated to CommissionConfig.
+    /// </summary>
+    [Obsolete("Use CommissionConfig.ReferralCommissionPercentage instead")]
+    [NotMapped]
+    public decimal ReferralCommissionPercentage
+    {
+        get => CommissionConfig?.ReferralCommissionPercentage ?? 30m;
+        set
+        {
+            if (CommissionConfig != null)
+            {
+                // Cannot set via this deprecated property - use CommissionConfig methods
+                throw new InvalidOperationException("Use CommissionConfig to update commission settings");
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Affiliate commission percentage. Delegated to CommissionConfig.
+    /// </summary>
+    [Obsolete("Use CommissionConfig.AffiliateCommissionPercentage instead")]
+    [NotMapped]
+    public decimal AffiliateCommissionPercentage
+    {
+        get => CommissionConfig?.AffiliateCommissionPercentage ?? 30m;
+        set
+        {
+            if (CommissionConfig != null)
+            {
+                throw new InvalidOperationException("Use CommissionConfig to update commission settings");
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Maximum affiliate discount. Delegated to CommissionConfig.
+    /// </summary>
+    [Obsolete("Use CommissionConfig.MaxAffiliateDiscount instead")]
+    [NotMapped]
+    public decimal MaxAffiliateDiscount
+    {
+        get => CommissionConfig?.MaxAffiliateDiscount ?? 0m;
+        set
+        {
+            if (CommissionConfig != null)
+            {
+                throw new InvalidOperationException("Use CommissionConfig to update commission settings");
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Gets bundle item IDs. Delegated to GetBundleProductIds().
+    /// </summary>
+    [Obsolete("Use GetBundleProductIds() or BundleItems collection instead")]
+    public List<Guid> GetBundleItemIds() => GetBundleProductIds().ToList();
+
+    /// <summary>
+    ///     Sets bundle item IDs. Use AddToBundleTypeSafe() for new code.
+    /// </summary>
+    [Obsolete("Use AddToBundleTypeSafe() and RemoveFromBundle() methods instead")]
+    public void SetBundleItemIds(IEnumerable<Guid>? bundleItemIds)
+    {
+        if (!IsBundle)
+            throw new InvalidOperationException("Cannot set bundle items on a non-bundle product");
+
+        if (bundleItemIds == null)
+        {
+            BundleItems.Clear();
+            return;
+        }
+
+        // Clear existing and add new items
+        BundleItems.Clear();
+        var order = 0;
+        foreach (var productId in bundleItemIds)
+        {
+            var bundleItem = ProductBundleItem.Create(Id, productId, 1, order++, true, TenantId);
+            BundleItems.Add(bundleItem);
+        }
+    }
+
+    #endregion
 }

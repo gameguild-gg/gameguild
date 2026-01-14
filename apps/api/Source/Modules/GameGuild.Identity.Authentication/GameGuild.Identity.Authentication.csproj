@@ -14,6 +14,7 @@
         <PackageReference Include="Fido2"/>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj"/>
+        <ProjectReference Include="..\GameGuild.Identity.Context\GameGuild.Identity.Context.csproj"/>
         <ProjectReference Include="..\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj"/>
         <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj"/>
     </ItemGroup>
