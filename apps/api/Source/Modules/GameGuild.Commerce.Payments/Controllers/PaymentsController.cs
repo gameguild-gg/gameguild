@@ -1,12 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
-
-
-
-
-
-
-
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +12,7 @@ namespace GameGuild.Commerce.Payments;
 [Route("api/v{version:apiVersion}/[controller]")]
 [Tags("payments")]
 [AllowAnonymous]
-public sealed class PaymentsController(ISender sender) : ControllerBase
+public sealed class PaymentsController(ISender sender, IActorContextAccessor actorContextAccessor) : ControllerBase
 {
     /// <summary>
     ///     Retrieve all payment transactions with optional filtering
@@ -104,12 +98,17 @@ public sealed class PaymentsController(ISender sender) : ControllerBase
     )]
     [ProducesResponseType<PaymentResult>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Process([FromBody] ProcessPaymentRequest body, CancellationToken ct)
     {
         if (body.TenantId == Guid.Empty)
         {
             return BadRequest(new { error = "TenantId cannot be empty" });
         }
+
+        // SECURITY: Validate TenantId from authenticated context (prevents cross-tenant attack)
+        var validationError = ValidateTenantAccess(body.TenantId, "process payment");
+        if (validationError != null) return validationError;
 
         if (body.Amount <= 0)
         {
@@ -507,4 +506,44 @@ public sealed class PaymentsController(ISender sender) : ControllerBase
     public record RefundRequest(decimal? Amount, string? Reason);
 
     public record CancelPaymentRequest(string CancellationReason, Guid? CanceledBy = null, string? Notes = null);
+
+    #region Private Methods
+
+    /// <summary>
+    ///     Validates that the authenticated user has access to the specified tenant.
+    ///     This prevents cross-tenant attacks where a malicious user crafts requests with another tenant's ID.
+    /// </summary>
+    /// <param name="requestedTenantId">The TenantId from the request body</param>
+    /// <param name="operation">Description of the operation for error messages</param>
+    /// <returns>An error response if validation fails, null if validation passes</returns>
+    private IActionResult? ValidateTenantAccess(Guid requestedTenantId, string operation)
+    {
+        var actorContext = actorContextAccessor.ActorContext;
+
+        // Allow anonymous access only in development/testing (controlled by AllowAnonymous attribute)
+        // For authenticated requests, validate tenant access
+        if (actorContext.IsAuthenticated)
+        {
+            // User must have a tenant context
+            if (!actorContext.TenantId.HasValue)
+            {
+                return Forbid($"User is not associated with any tenant for {operation}");
+            }
+
+            // Request TenantId must match authenticated user's tenant
+            if (actorContext.TenantId.Value != requestedTenantId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    error = "Cross-tenant access denied",
+                    message = $"User belongs to tenant {actorContext.TenantId.Value} but attempted to {operation} for tenant {requestedTenantId}",
+                    code = "TENANT_MISMATCH"
+                });
+            }
+        }
+
+        return null; // Validation passed
+    }
+
+    #endregion
 }

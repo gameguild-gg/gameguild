@@ -165,36 +165,4 @@ internal class StripeWebhookPayload
     };
 }
 
-/// <summary>
-///     Result of webhook processing
-/// </summary>
-public record WebhookProcessingResult
-{
-    public bool Succeeded { get; init; }
-    public bool WasAlreadyProcessed { get; init; }
-    public string EventId { get; init; } = string.Empty;
-    public string? ErrorMessage { get; init; }
-    public DateTime? ProcessedAt { get; init; }
-
-    public static WebhookProcessingResult Success(string eventId) => new()
-    {
-        Succeeded = true,
-        EventId = eventId,
-        ProcessedAt = DateTime.UtcNow
-    };
-
-    public static WebhookProcessingResult AlreadyProcessed(string eventId, DateTime? originalProcessedAt) => new()
-    {
-        Succeeded = true,
-        WasAlreadyProcessed = true,
-        EventId = eventId,
-        ProcessedAt = originalProcessedAt
-    };
-
-    public static WebhookProcessingResult Failed(string eventId, string errorMessage) => new()
-    {
-        Succeeded = false,
-        EventId = eventId,
-        ErrorMessage = errorMessage
-    };
-}
+// WebhookProcessingResult is defined in Models/WebhookProcessingResult.cs

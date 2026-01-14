@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using GameGuild.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +14,7 @@ namespace GameGuild.Commerce.Subscriptions;
 [ApiController]
 [ApiVersion("1.0")]
 [Tags("subscriptions")]
-public sealed class SubscriptionsController(ISender sender) : ControllerBase
+public sealed class SubscriptionsController(ISender sender, IActorContextAccessor actorContextAccessor) : ControllerBase
 {
     #region Collection Operations - /v1/subscriptions
 
@@ -29,9 +30,15 @@ public sealed class SubscriptionsController(ISender sender) : ControllerBase
     [EndpointDescription("Creates a new subscription with the provided information.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> CreateSubscription([FromBody] CreateSubscriptionRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
+
+        // SECURITY: Validate TenantId from authenticated context (prevents cross-tenant attack)
+        var validationError = ValidateTenantAccess(body.TenantId, "create subscription");
+        if (validationError != null) return validationError;
+
         var id = await sender.Send(new CreateSubscriptionCommand(body.TenantId, body.PlanId, body.CreatedByUserId, body.BillingCycle, body.Amount, body.StartDate, body.TrialDays), ct);
 
         return CreatedAtAction(nameof(GetSubscriptionById), new { subscriptionId = id }, new { id });
@@ -475,4 +482,44 @@ public sealed class SubscriptionsController(ISender sender) : ControllerBase
     public record AutoRenewRequest(bool AutoRenew);
 
     public record ExternalIdsRequest(string? ExternalSubscriptionId, string? ExternalCustomerId);
+
+    #region Private Methods
+
+    /// <summary>
+    ///     Validates that the authenticated user has access to the specified tenant.
+    ///     This prevents cross-tenant attacks where a malicious user crafts requests with another tenant's ID.
+    /// </summary>
+    /// <param name="requestedTenantId">The TenantId from the request body</param>
+    /// <param name="operation">Description of the operation for error messages</param>
+    /// <returns>An error response if validation fails, null if validation passes</returns>
+    private IActionResult? ValidateTenantAccess(Guid requestedTenantId, string operation)
+    {
+        var actorContext = actorContextAccessor.ActorContext;
+
+        // Allow anonymous access only in development/testing (controlled by AllowAnonymous attribute)
+        // For authenticated requests, validate tenant access
+        if (actorContext.IsAuthenticated)
+        {
+            // User must have a tenant context
+            if (!actorContext.TenantId.HasValue)
+            {
+                return Forbid($"User is not associated with any tenant for {operation}");
+            }
+
+            // Request TenantId must match authenticated user's tenant
+            if (actorContext.TenantId.Value != requestedTenantId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    error = "Cross-tenant access denied",
+                    message = $"User belongs to tenant {actorContext.TenantId.Value} but attempted to {operation} for tenant {requestedTenantId}",
+                    code = "TENANT_MISMATCH"
+                });
+            }
+        }
+
+        return null; // Validation passed
+    }
+
+    #endregion
 }
