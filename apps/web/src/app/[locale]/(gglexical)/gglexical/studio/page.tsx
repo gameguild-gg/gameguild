@@ -1200,21 +1200,25 @@ export default function Page() {
                           {/* Panel Content */}
                           {panel.type === "single" ? (
                             <div className="bg-white dark:bg-gray-900">
-                              <EditorLayoutType1
-                                editorRef={panelEditorRefs.get(panel.id) as any}
-                                editorState={typeof panel.state === "string" ? panel.state : JSON.stringify(panel.state || "")}
-                                onEditorChange={(newState) => {
-                                  const newStructure = updatePanelState(sequentialStructure, panel.id, { state: newState })
-                                  setSequentialStructure(newStructure)
-                                }}
-                                onLoadingChange={(setLoading) => {
-                                  if (currentPanelIndex === index) {
-                                    setLoadingRef.current = setLoading
-                                  }
-                                }}
-                                projectId={currentProjectId}
-                                mode={currentProjectMode}
-                              />
+                              <div className="max-w-4xl mx-auto">
+                                <div className="sm:p-2 md:p-6">
+                                  <EditorLayoutType1
+                                    editorRef={panelEditorRefs.get(panel.id) as any}
+                                    editorState={typeof panel.state === "string" ? panel.state : JSON.stringify(panel.state || "")}
+                                    onEditorChange={(newState) => {
+                                      const newStructure = updatePanelState(sequentialStructure, panel.id, { state: newState })
+                                      setSequentialStructure(newStructure)
+                                    }}
+                                    onLoadingChange={(setLoading) => {
+                                      if (currentPanelIndex === index) {
+                                        setLoadingRef.current = setLoading
+                                      }
+                                    }}
+                                    projectId={currentProjectId}
+                                    mode={currentProjectMode}
+                                  />
+                                </div>
+                              </div>
                             </div>
                           ) : (
                             <div className="bg-white dark:bg-gray-900">
