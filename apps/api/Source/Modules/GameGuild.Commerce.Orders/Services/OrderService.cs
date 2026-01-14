@@ -1,16 +1,18 @@
+using GameGuild.Abstractions;
 using GameGuild.Commerce.Products;
 
 namespace GameGuild.Commerce.Orders;
 
 /// <summary>
-/// Service for managing orders and purchases with idempotency and price snapshotting
+/// Service for managing orders and purchases with idempotency, price snapshotting, and transaction boundaries
 /// </summary>
 public class OrderService(
     IOrderRepository orderRepository,
     IProductRepository productRepository,
     IProductPricingRepository pricingRepository,
     IPromoCodeService promoCodeService,
-    IEntitlementService entitlementService) : IOrderService
+    IEntitlementService entitlementService,
+    IApplicationDbContext dbContext) : IOrderService
 {
     /// <inheritdoc />
     public async Task<OrderResult> CreateOrderAsync(
@@ -126,36 +128,50 @@ public class OrderService(
             return OrderResult.Failed($"Cannot complete order in {order.Status} status");
         }
 
-        // Grant entitlements for each line item
-        foreach (var lineItem in order.LineItems)
+        // Use explicit transaction boundary to ensure atomicity of order completion
+        // This prevents partial state if any operation fails (e.g., entitlement granted but order not marked paid)
+        await using var transaction = await dbContext.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
+        
+        try
         {
-            var acquisitionType = lineItem.IsSubscription
-                ? ProductAcquisitionType.Subscription
-                : ProductAcquisitionType.Purchase;
-
-            var entitlementResult = await entitlementService.GrantEntitlementAsync(
-                order.UserId,
-                lineItem.ProductId,
-                acquisitionType,
-                lineItem.LineTotal,
-                order.Currency,
-                expiresAt: null, // Will be set by subscription logic if applicable
-                orderId: order.Id,
-                cancellationToken).ConfigureAwait(false);
-
-            if (entitlementResult.Success && entitlementResult.UserProduct != null)
+            // Grant entitlements for each line item
+            foreach (var lineItem in order.LineItems)
             {
-                lineItem.UserProductId = entitlementResult.UserProduct.Id;
+                var acquisitionType = lineItem.IsSubscription
+                    ? ProductAcquisitionType.Subscription
+                    : ProductAcquisitionType.Purchase;
+
+                var entitlementResult = await entitlementService.GrantEntitlementAsync(
+                    order.UserId,
+                    lineItem.ProductId,
+                    acquisitionType,
+                    lineItem.LineTotal,
+                    order.Currency,
+                    expiresAt: null, // Will be set by subscription logic if applicable
+                    orderId: order.Id,
+                    cancellationToken).ConfigureAwait(false);
+
+                if (entitlementResult.Success && entitlementResult.UserProduct != null)
+                {
+                    lineItem.UserProductId = entitlementResult.UserProduct.Id;
+                }
             }
+
+            // Mark as paid
+            order.MarkAsPaid(paymentProviderReference, paymentMethod);
+
+            await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
+            await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            
+            await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+
+            return OrderResult.Succeeded(order);
         }
-
-        // Mark as paid
-        order.MarkAsPaid(paymentProviderReference, paymentMethod);
-
-        await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
-        await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-        return OrderResult.Succeeded(order);
+        catch (Exception)
+        {
+            await transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
+            throw;
+        }
     }
 
     /// <inheritdoc />

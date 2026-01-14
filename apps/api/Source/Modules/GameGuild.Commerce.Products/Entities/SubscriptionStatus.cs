@@ -3,15 +3,18 @@ using System.ComponentModel;
 namespace GameGuild.Commerce.Products;
 
 /// <summary>
-/// Subscription status for user product lifecycle management
+/// Entitlement subscription status for user product lifecycle management.
+/// NOTE: This is separate from GameGuild.Commerce.Subscriptions.SubscriptionStatus which
+/// tracks the Subscription entity state. This enum tracks the user's entitlement status
+/// for subscription-based products.
 /// </summary>
-public enum SubscriptionStatus
+public enum EntitlementSubscriptionStatus
 {
-    /// <summary>Subscription is active and paid</summary>
+    /// <summary>Subscription entitlement is active and paid</summary>
     [Description("Active subscription")]
     Active = 0,
 
-    /// <summary>Subscription is in trial period</summary>
+    /// <summary>Subscription entitlement is in trial period</summary>
     [Description("Trial period")]
     Trial = 1,
 
@@ -23,19 +26,19 @@ public enum SubscriptionStatus
     [Description("Cancelled - active until period end")]
     CancelledPending = 3,
 
-    /// <summary>Subscription fully cancelled</summary>
+    /// <summary>Subscription entitlement fully cancelled</summary>
     [Description("Cancelled")]
     Cancelled = 4,
 
-    /// <summary>Subscription expired</summary>
+    /// <summary>Subscription entitlement expired</summary>
     [Description("Expired")]
     Expired = 5,
 
-    /// <summary>Subscription paused</summary>
+    /// <summary>Subscription entitlement paused</summary>
     [Description("Paused")]
     Paused = 6,
 
-    /// <summary>Subscription suspended for non-payment</summary>
+    /// <summary>Subscription entitlement suspended for non-payment</summary>
     [Description("Suspended")]
     Suspended = 7
 }
