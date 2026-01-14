@@ -468,6 +468,7 @@ export default function Page() {
       calculateProjectAssetsSize,
       setSaveAsDialogOpen,
       preferences,
+      type: currentProjectType,
     })
   }
 
