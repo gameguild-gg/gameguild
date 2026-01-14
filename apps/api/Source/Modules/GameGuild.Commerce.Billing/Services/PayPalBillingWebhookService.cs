@@ -11,15 +11,18 @@ namespace GameGuild.Commerce.Billing;
 public class PayPalBillingWebhookService : BillingWebhookService
 {
     private readonly IBillingWebhookRepository _webhookRepository;
+    private readonly IPayPalWebhookVerifier _webhookVerifier;
     private readonly ILogger<PayPalBillingWebhookService> _logger;
 
     public PayPalBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
+        IPayPalWebhookVerifier webhookVerifier,
         ILogger<PayPalBillingWebhookService> logger,
         ISubscriptionService subscriptionService)
         : base(logger, subscriptionService)
     {
         _webhookRepository = webhookRepository;
+        _webhookVerifier = webhookVerifier;
         _logger = logger;
     }
 
@@ -31,6 +34,8 @@ public class PayPalBillingWebhookService : BillingWebhookService
     /// <param name="transmissionId">PayPal transmission ID for verification</param>
     /// <param name="transmissionTime">PayPal transmission time</param>
     /// <param name="transmissionSig">PayPal signature for verification</param>
+    /// <param name="certUrl">PayPal certificate URL for verification</param>
+    /// <param name="authAlgo">PayPal auth algorithm for verification</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Processing result</returns>
     public async Task<WebhookProcessingResult> ProcessPayPalWebhookAsync(
@@ -39,6 +44,8 @@ public class PayPalBillingWebhookService : BillingWebhookService
         string transmissionId,
         string transmissionTime,
         string transmissionSig,
+        string? certUrl = null,
+        string? authAlgo = null,
         CancellationToken cancellationToken = default)
     {
         _logger.LogInformation("Processing PayPal webhook: TransmissionId={TransmissionId}", transmissionId);
@@ -72,16 +79,22 @@ public class PayPalBillingWebhookService : BillingWebhookService
             // Store the event first (before processing) to handle concurrent retries
             webhookEvent = await _webhookRepository.CreateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
 
-            // Verify webhook signature with PayPal
-            // Note: In production, call PayPal API to verify the webhook signature
-            var isValid = await VerifyPayPalWebhookSignatureAsync(
-                webhookId, transmissionId, transmissionTime, transmissionSig, payload, cancellationToken).ConfigureAwait(false);
+            // Verify webhook signature with PayPal API
+            var verificationResult = await _webhookVerifier.VerifyWebhookSignatureAsync(
+                transmissionId,
+                transmissionTime,
+                transmissionSig,
+                certUrl ?? string.Empty,
+                authAlgo ?? "SHA256withRSA",
+                payload,
+                cancellationToken).ConfigureAwait(false);
 
-            if (!isValid)
+            if (!verificationResult.IsValid)
             {
-                webhookEvent.MarkAsFailed("Invalid webhook signature");
+                _logger.LogWarning("PayPal webhook signature verification failed: {Error}", verificationResult.ErrorMessage);
+                webhookEvent.MarkAsFailed($"Invalid webhook signature: {verificationResult.ErrorMessage}");
                 await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
-                return WebhookProcessingResult.Failed(eventId, "Invalid webhook signature");
+                return WebhookProcessingResult.Failed(eventId, verificationResult.ErrorMessage ?? "Invalid webhook signature");
             }
 
             // Route to appropriate handler based on event type
@@ -103,35 +116,6 @@ public class PayPalBillingWebhookService : BillingWebhookService
 
             return WebhookProcessingResult.Failed(eventId, ex.Message);
         }
-    }
-
-    /// <summary>
-    ///     Verifies PayPal webhook signature.
-    ///     In production, this should call PayPal's verify-webhook-signature API.
-    /// </summary>
-    private async Task<bool> VerifyPayPalWebhookSignatureAsync(
-        string webhookId,
-        string transmissionId,
-        string transmissionTime,
-        string transmissionSig,
-        string payload,
-        CancellationToken cancellationToken)
-    {
-        // Production implementation would:
-        // 1. Call PayPal API: POST /v1/notifications/verify-webhook-signature
-        // 2. Pass: webhook_id, transmission_id, transmission_time, transmission_sig, webhook_event
-        // 3. Verify response verification_status == "SUCCESS"
-        
-        _logger.LogDebug(
-            "Verifying PayPal webhook signature. WebhookId={WebhookId}, TransmissionId={TransmissionId}",
-            webhookId, transmissionId);
-
-        // For now, return true if all required fields are present
-        // TODO: Implement actual PayPal API verification
-        await Task.CompletedTask;
-        return !string.IsNullOrEmpty(transmissionId) && 
-               !string.IsNullOrEmpty(transmissionSig) &&
-               !string.IsNullOrEmpty(payload);
     }
 
     /// <summary>

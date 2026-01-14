@@ -6,53 +6,60 @@ namespace GameGuild.Commerce.Billing;
 
 /// <summary>
 ///     Apple Pay-specific implementation of the billing webhook service.
-///     Handles webhook events from Apple Pay payment gateway.
+///     Handles App Store Server Notifications V2 webhook events.
 /// </summary>
 public class ApplePayBillingWebhookService : BillingWebhookService
 {
     private readonly IBillingWebhookRepository _webhookRepository;
+    private readonly IAppleReceiptValidator _receiptValidator;
     private readonly ILogger<ApplePayBillingWebhookService> _logger;
 
     public ApplePayBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
+        IAppleReceiptValidator receiptValidator,
         ILogger<ApplePayBillingWebhookService> logger,
         ISubscriptionService subscriptionService)
         : base(logger, subscriptionService)
     {
         _webhookRepository = webhookRepository;
+        _receiptValidator = receiptValidator;
         _logger = logger;
     }
 
     /// <summary>
-    ///     Process an Apple Pay webhook event with idempotency checking.
+    ///     Process an App Store Server Notification V2 webhook.
     /// </summary>
-    /// <param name="payload">Raw JSON payload</param>
-    /// <param name="merchantId">Apple Pay merchant ID from headers</param>
-    /// <param name="signature">Apple Pay signature for verification</param>
+    /// <param name="signedPayload">The signed JWS payload from Apple</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Processing result</returns>
-    public async Task<WebhookProcessingResult> ProcessApplePayWebhookAsync(
-        string payload,
-        string merchantId,
-        string signature,
+    public async Task<WebhookProcessingResult> ProcessAppStoreNotificationAsync(
+        string signedPayload,
         CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Processing Apple Pay webhook for merchant: {MerchantId}", merchantId);
+        _logger.LogInformation("Processing App Store Server Notification V2");
 
-        // Parse payload to extract event info
-        var (eventId, eventType, transactionId) = ParseApplePayPayload(payload);
+        // Validate the signed notification using Apple's certificate chain
+        var validationResult = await _receiptValidator.ValidateNotificationAsync(signedPayload, cancellationToken)
+            .ConfigureAwait(false);
 
-        if (string.IsNullOrEmpty(eventId))
+        if (!validationResult.IsValid)
         {
-            // Generate event ID from transaction ID if not present
-            eventId = $"apple_{transactionId ?? Guid.NewGuid().ToString()}";
+            _logger.LogWarning("Apple notification validation failed: {Error}", validationResult.ErrorMessage);
+            return WebhookProcessingResult.Failed("unknown", validationResult.ErrorMessage ?? "Validation failed");
         }
 
+        // Use notification UUID as event ID for idempotency
+        var eventId = validationResult.DecodedPayload?.NotificationUuid ?? 
+                      validationResult.TransactionId ??
+                      Guid.NewGuid().ToString();
+        var eventType = validationResult.NotificationType ?? "unknown";
+
         // Check for duplicate event (idempotency)
-        var existingEvent = await _webhookRepository.GetByExternalEventIdAsync(eventId, "apple_pay", cancellationToken).ConfigureAwait(false);
+        var existingEvent = await _webhookRepository.GetByExternalEventIdAsync(eventId, "apple_app_store", cancellationToken)
+            .ConfigureAwait(false);
         if (existingEvent != null)
         {
-            _logger.LogInformation("Duplicate Apple Pay webhook detected: {EventId}. Returning success.", eventId);
+            _logger.LogInformation("Duplicate Apple notification detected: {EventId}. Returning success.", eventId);
             return WebhookProcessingResult.AlreadyProcessed(eventId, existingEvent.ProcessedAt);
         }
 
@@ -60,9 +67,9 @@ public class ApplePayBillingWebhookService : BillingWebhookService
         var webhookEvent = new BillingWebhookEvent
         {
             ExternalEventId = eventId,
-            Provider = "apple_pay",
+            Provider = "apple_app_store",
             EventType = eventType,
-            Payload = payload,
+            Payload = signedPayload,
             ProcessingAttempts = 1
         };
 
@@ -71,29 +78,21 @@ public class ApplePayBillingWebhookService : BillingWebhookService
             // Store the event first (before processing) to handle concurrent retries
             webhookEvent = await _webhookRepository.CreateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
 
-            // Verify merchant ID
-            var isValid = await VerifyApplePayMerchantAsync(merchantId, signature, payload, cancellationToken).ConfigureAwait(false);
-
-            if (!isValid)
-            {
-                webhookEvent.MarkAsFailed("Invalid merchant ID or signature");
-                await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
-                return WebhookProcessingResult.Failed(eventId, "Invalid merchant ID or signature");
-            }
-
-            // Route to appropriate handler based on event type
-            await RouteApplePayEventAsync(eventType, payload, cancellationToken).ConfigureAwait(false);
+            // Route to appropriate handler based on notification type
+            await RouteAppStoreNotificationAsync(validationResult, cancellationToken).ConfigureAwait(false);
 
             // Mark as processed
             webhookEvent.MarkAsProcessed();
             await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
 
-            _logger.LogInformation("Successfully processed Apple Pay webhook: {EventId} ({EventType})", eventId, eventType);
+            _logger.LogInformation(
+                "Successfully processed Apple notification: {EventId} ({NotificationType}/{Subtype})",
+                eventId, eventType, validationResult.Subtype);
             return WebhookProcessingResult.Success(eventId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to process Apple Pay webhook: {EventId}", eventId);
+            _logger.LogError(ex, "Failed to process Apple notification: {EventId}", eventId);
 
             webhookEvent.MarkAsFailed(ex.Message);
             await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
@@ -103,26 +102,108 @@ public class ApplePayBillingWebhookService : BillingWebhookService
     }
 
     /// <summary>
-    ///     Verifies Apple Pay merchant and signature.
+    ///     Routes an App Store notification to the appropriate handler.
     /// </summary>
-    private async Task<bool> VerifyApplePayMerchantAsync(
-        string merchantId,
-        string signature,
-        string payload,
+    private async Task RouteAppStoreNotificationAsync(
+        AppleNotificationValidationResult notification,
         CancellationToken cancellationToken)
     {
-        // Production implementation would:
-        // 1. Verify merchant ID is in allowed list
-        // 2. Verify signature using Apple's certificate chain
-        // 3. Validate payment data format
-        
-        _logger.LogDebug("Verifying Apple Pay webhook. MerchantId={MerchantId}", merchantId);
+        var payload = notification.DecodedPayload;
+        if (payload == null) return;
 
-        // TODO: Implement actual Apple Pay verification
-        await Task.CompletedTask;
-        return !string.IsNullOrEmpty(merchantId) && 
-               !string.IsNullOrEmpty(signature) &&
-               !string.IsNullOrEmpty(payload);
+        // Create a webhook payload for the handler
+        var subscriptionPayload = new ApplePaySubscriptionWebhookPayload
+        {
+            TenantId = Guid.Empty, // Will be resolved from transaction lookup
+            ExternalSubscriptionId = notification.OriginalTransactionId ?? string.Empty,
+            Status = payload.NotificationType ?? string.Empty,
+            ProductId = notification.ProductId,
+            OriginalTransactionId = notification.OriginalTransactionId,
+            Environment = notification.Environment
+        };
+
+        // Route based on notification type
+        // See: https://developer.apple.com/documentation/appstoreservernotifications/notificationtype
+        switch (payload.NotificationType?.ToUpperInvariant())
+        {
+            case "SUBSCRIBED":
+                await HandleSubscriptionCreatedAsync(subscriptionPayload).ConfigureAwait(false);
+                break;
+
+            case "DID_RENEW":
+                // Subscription successfully renewed
+                var paymentPayload = new ApplePayPaymentWebhookPayload
+                {
+                    TenantId = Guid.Empty,
+                    PaymentId = notification.TransactionId ?? string.Empty,
+                    ExternalSubscriptionId = notification.OriginalTransactionId ?? string.Empty,
+                    TransactionId = notification.TransactionId,
+                    OriginalTransactionId = notification.OriginalTransactionId,
+                    ProductId = notification.ProductId,
+                    PaidAt = DateTime.UtcNow
+                };
+                await HandlePaymentSucceededAsync(paymentPayload).ConfigureAwait(false);
+                break;
+
+            case "DID_FAIL_TO_RENEW":
+                var failedPayload = new ApplePayPaymentWebhookPayload
+                {
+                    TenantId = Guid.Empty,
+                    PaymentId = notification.TransactionId ?? string.Empty,
+                    ExternalSubscriptionId = notification.OriginalTransactionId ?? string.Empty,
+                    FailureReason = payload.Subtype ?? "Billing retry"
+                };
+                await HandlePaymentFailedAsync(failedPayload).ConfigureAwait(false);
+                break;
+
+            case "EXPIRED":
+                subscriptionPayload.Status = "expired";
+                await HandleSubscriptionCanceledAsync(subscriptionPayload).ConfigureAwait(false);
+                break;
+
+            case "DID_CHANGE_RENEWAL_STATUS":
+                // User changed auto-renewal status
+                if (payload.Subtype == "AUTO_RENEW_DISABLED")
+                {
+                    subscriptionPayload.Status = "auto_renew_disabled";
+                    await HandleSubscriptionUpdatedAsync(subscriptionPayload).ConfigureAwait(false);
+                }
+                break;
+
+            case "GRACE_PERIOD_EXPIRED":
+                subscriptionPayload.Status = "grace_period_expired";
+                await HandleSubscriptionCanceledAsync(subscriptionPayload).ConfigureAwait(false);
+                break;
+
+            case "REFUND":
+            case "REFUND_REVERSED":
+            case "REFUND_DECLINED":
+                // Handle refund events
+                _logger.LogInformation(
+                    "Apple refund event received: Type={Type}, TransactionId={TransactionId}",
+                    payload.NotificationType, notification.TransactionId);
+                break;
+
+            default:
+                _logger.LogInformation(
+                    "Unhandled Apple notification type: {Type}/{Subtype}",
+                    payload.NotificationType, payload.Subtype);
+                break;
+        }
+    }
+
+    /// <summary>
+    ///     Legacy method for backward compatibility.
+    /// </summary>
+    [Obsolete("Use ProcessAppStoreNotificationAsync for App Store Server Notifications V2")]
+    public async Task<WebhookProcessingResult> ProcessApplePayWebhookAsync(
+        string payload,
+        string merchantId,
+        string signature,
+        CancellationToken cancellationToken = default)
+    {
+        // For legacy Apple Pay payment webhooks, use signed payload validation
+        return await ProcessAppStoreNotificationAsync(payload, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>

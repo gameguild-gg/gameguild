@@ -17,6 +17,7 @@ namespace GameGuild.Commerce.Billing;
 [Index(nameof(ExternalId), IsUnique = true)]
 [Index(nameof(DueDate))]
 [Index(nameof(IssuedAt))]
+[Index(nameof(PaymentId), IsUnique = true, Name = "IX_invoices_PaymentId_Unique")]
 public class Invoice : EntityBase
 {
     /// <summary>
