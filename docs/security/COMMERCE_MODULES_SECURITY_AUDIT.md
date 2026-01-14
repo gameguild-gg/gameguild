@@ -1571,17 +1571,17 @@ public void DeductFunds(decimal amount, ...)
 
 | Test File | Location | Test Count |
 |-----------|----------|------------|
-| `SingleChargeGuaranteeTests.cs` | `GameGuild.Subscriptions.UnitTests/Security/` | 8 tests |
-| `WebhookIdempotencyTests.cs` | `GameGuild.Billing.UnitTests/Security/` | 10 tests |
-| `UpgradeDowngradeSafetyTests.cs` | `GameGuild.Subscriptions.UnitTests/Security/` | 12 tests |
-| `CancellationWithoutResidueTests.cs` | `GameGuild.Subscriptions.UnitTests/Security/` | 15 tests |
-| `TenantIsolationTests.cs` | `GameGuild.Subscriptions.UnitTests/Security/` | 14 tests |
-| `SafeBillingRetryTests.cs` | `GameGuild.Billing.UnitTests/Security/` | 15 tests |
-| `InvoiceImmutabilityTests.cs` | `GameGuild.Billing.UnitTests/Security/` | 18 tests |
-| `CommerceSecurityIntegrationTests.cs` | `GameGuild.Subscriptions.IntegrationTests/Security/` | 12 tests |
-| `CommerceSecurityLoadTests.cs` | `GameGuild.Subscriptions.PerformanceTests/Security/` | 10 benchmarks |
-| `TaxCalculationTests.cs` | `GameGuild.Payments.UnitTests/Security/` | 35 tests |
-| `TaxCalculationIntegrationTests.cs` | `GameGuild.Payments.IntegrationTests/Security/` | 15 tests |
+| `SingleChargeGuaranteeTests.cs` | `GameGuild.Commerce.Subscriptions.UnitTests/Security/` | 8 tests |
+| `WebhookIdempotencyTests.cs` | `GameGuild.Commerce.Billing.UnitTests/Security/` | 10 tests |
+| `UpgradeDowngradeSafetyTests.cs` | `GameGuild.Commerce.Subscriptions.UnitTests/Security/` | 12 tests |
+| `CancellationWithoutResidueTests.cs` | `GameGuild.Commerce.Subscriptions.UnitTests/Security/` | 15 tests |
+| `TenantIsolationTests.cs` | `GameGuild.Commerce.Subscriptions.UnitTests/Security/` | 14 tests |
+| `SafeBillingRetryTests.cs` | `GameGuild.Commerce.Billing.UnitTests/Security/` | 15 tests |
+| `InvoiceImmutabilityTests.cs` | `GameGuild.Commerce.Billing.UnitTests/Security/` | 18 tests |
+| `CommerceSecurityIntegrationTests.cs` | `GameGuild.Commerce.Subscriptions.IntegrationTests/Security/` | 12 tests |
+| `CommerceSecurityLoadTests.cs` | `GameGuild.Commerce.Subscriptions.PerformanceTests/Security/` | 10 benchmarks |
+| `TaxCalculationTests.cs` | `GameGuild.Commerce.Payments.UnitTests/Security/` | 35 tests |
+| `TaxCalculationIntegrationTests.cs` | `GameGuild.Commerce.Payments.IntegrationTests/Security/` | 15 tests |
 
 **Total Tests Added:** 164+ security-critical tests covering all P0 and P1 items
 
