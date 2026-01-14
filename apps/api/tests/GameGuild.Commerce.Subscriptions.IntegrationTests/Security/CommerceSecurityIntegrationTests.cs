@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.API.Database;
+using GameGuild.Commerce.Subscriptions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;

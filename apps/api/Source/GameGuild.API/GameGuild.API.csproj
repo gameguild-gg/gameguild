@@ -7,6 +7,15 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="GameGuild.Commerce.Orders.IntegrationTests" />
+        <InternalsVisibleTo Include="GameGuild.Commerce.Products.IntegrationTests" />
+        <InternalsVisibleTo Include="GameGuild.Commerce.Payments.IntegrationTests" />
+        <InternalsVisibleTo Include="GameGuild.Commerce.Subscriptions.IntegrationTests" />
+        <InternalsVisibleTo Include="GameGuild.Commerce.Billing.IntegrationTests" />
+        <InternalsVisibleTo Include="GameGuild.API.IntegrationTests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
         <PackageReference Include="Microsoft.EntityFrameworkCore" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design">

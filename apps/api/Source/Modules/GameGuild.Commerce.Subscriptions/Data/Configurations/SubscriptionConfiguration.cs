@@ -67,6 +67,12 @@ public class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
 
         builder.Property(x => x.Metadata).HasMaxLength(2000);
 
+        // Configure optimistic concurrency control via RowVersion
+        // Prevents race conditions during payment processing, cancellation, and suspension
+        builder.Property(x => x.RowVersion)
+            .IsRowVersion()
+            .IsConcurrencyToken();
+
         // Configure relationships
         builder.HasOne(x => x.Plan).WithMany().HasForeignKey(x => x.PlanId).OnDelete(DeleteBehavior.Restrict);
 

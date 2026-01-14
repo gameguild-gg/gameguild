@@ -229,6 +229,16 @@ public class Subscription : EntityBase, ISubscription
     [MaxLength(2000)]
     public string? Metadata { get; private set; }
 
+    /// <summary>
+    ///     Row version for optimistic concurrency control.
+    ///     Prevents payment processing race conditions (e.g., concurrent renewal and cancellation).
+    /// </summary>
+    /// <remarks>
+    ///     Economic invariant: Concurrent modifications to subscription state
+    ///     (payment recording, cancellation, suspension) are detected and handled.
+    /// </remarks>
+    public byte[]? RowVersion { get; set; }
+
     // Navigation properties
     public virtual SubscriptionPlan Plan { get; set; } = null!;
 

@@ -19,7 +19,7 @@ public class UsageEnforcementMiddlewareTests
     private readonly Mock<RequestDelegate> _mockNext;
     private readonly Mock<ILogger<UsageEnforcementMiddleware>> _mockLogger;
     private readonly Mock<IActorContextAccessor> _mockActorContextAccessor;
-    private readonly Mock<ISubscriptionService> _mockSubscriptionService;
+    private readonly Mock<ISubscriptionQueryService> _mockSubscriptionQueryService;
     private readonly Mock<ISubscriptionPlanService> _mockSubscriptionPlanService;
     private readonly IMemoryCache _memoryCache;
     private readonly UsageEnforcementMiddleware _middleware;
@@ -30,7 +30,7 @@ public class UsageEnforcementMiddlewareTests
         _mockNext = new Mock<RequestDelegate>();
         _mockLogger = new Mock<ILogger<UsageEnforcementMiddleware>>();
         _mockActorContextAccessor = new Mock<IActorContextAccessor>();
-        _mockSubscriptionService = new Mock<ISubscriptionService>();
+        _mockSubscriptionQueryService = new Mock<ISubscriptionQueryService>();
         _mockSubscriptionPlanService = new Mock<ISubscriptionPlanService>();
         _memoryCache = new MemoryCache(new MemoryCacheOptions());
         _middleware = new UsageEnforcementMiddleware(_mockNext.Object, _mockLogger.Object, _memoryCache);
@@ -55,7 +55,7 @@ public class UsageEnforcementMiddlewareTests
         subType.GetProperty("PlanId")?.SetValue(subscription, planId);
         subType.GetProperty("Plan")?.SetValue(subscription, plan);
         
-        _mockSubscriptionService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
+        _mockSubscriptionQueryService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(subscription);
         
         _mockSubscriptionPlanService.Setup(x => x.GetByIdAsync(planId, It.IsAny<CancellationToken>()))
@@ -70,11 +70,11 @@ public class UsageEnforcementMiddlewareTests
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
-        _mockSubscriptionService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockSubscriptionQueryService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -86,11 +86,11 @@ public class UsageEnforcementMiddlewareTests
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
-        _mockSubscriptionService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockSubscriptionQueryService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -102,11 +102,11 @@ public class UsageEnforcementMiddlewareTests
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
-        _mockSubscriptionService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockSubscriptionQueryService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -118,11 +118,11 @@ public class UsageEnforcementMiddlewareTests
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
-        _mockSubscriptionService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mockSubscriptionQueryService.Verify(x => x.GetActiveTenantSubscriptionAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public class UsageEnforcementMiddlewareTests
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
@@ -156,7 +156,7 @@ public class UsageEnforcementMiddlewareTests
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _httpContext.Response.Headers.Should().ContainKey("X-RateLimit-Limit");
@@ -180,7 +180,7 @@ public class UsageEnforcementMiddlewareTests
         _memoryCache.Set(cacheKey, 5L, TimeSpan.FromMinutes(5));
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _httpContext.Response.StatusCode.Should().Be(429);
@@ -201,7 +201,7 @@ public class UsageEnforcementMiddlewareTests
         _memoryCache.Set(cacheKey, 100L, TimeSpan.FromMinutes(5));
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
@@ -232,7 +232,7 @@ public class UsageEnforcementMiddlewareTests
         var cacheKey = $"api_calls_{tenantId}_{DateTime.UtcNow:yyyyMM}";
 
         // Act - First call
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         var count = _memoryCache.Get<long>(cacheKey);
@@ -240,7 +240,7 @@ public class UsageEnforcementMiddlewareTests
 
         // Act - Second call
         var httpContext2 = new DefaultHttpContext { Request = { Path = "/api/posts" }, Response = { Body = new MemoryStream() } };
-        await _middleware.InvokeAsync(httpContext2, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(httpContext2, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         count = _memoryCache.Get<long>(cacheKey);
@@ -254,12 +254,12 @@ public class UsageEnforcementMiddlewareTests
         var tenantId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockActorContextAccessor.Setup(x => x.ActorContext.TenantId).Returns(tenantId);
-        _mockSubscriptionService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
+        _mockSubscriptionQueryService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Database error"));
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        var act = async () => await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        var act = async () => await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         await act.Should().NotThrowAsync();
@@ -278,7 +278,7 @@ public class UsageEnforcementMiddlewareTests
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
@@ -293,12 +293,12 @@ public class UsageEnforcementMiddlewareTests
         var tenantId = Guid.NewGuid();
         _httpContext.Request.Path = "/api/users";
         _mockActorContextAccessor.Setup(x => x.ActorContext.TenantId).Returns(tenantId);
-        _mockSubscriptionService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
+        _mockSubscriptionQueryService.Setup(x => x.GetActiveTenantSubscriptionAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((GameGuild.Commerce.Subscriptions.Subscription?)null);
         _mockNext.Setup(x => x(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _mockNext.Verify(x => x(_httpContext), Times.Once);
@@ -318,7 +318,7 @@ public class UsageEnforcementMiddlewareTests
         _memoryCache.Set(cacheKey, 10L, TimeSpan.FromMinutes(5));
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _mockLogger.Verify(
@@ -355,7 +355,7 @@ public class UsageEnforcementMiddlewareTests
         _memoryCache.Set(cacheKey, 50L, TimeSpan.FromMinutes(5));
 
         // Act
-        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionService.Object, _mockSubscriptionPlanService.Object);
+        await _middleware.InvokeAsync(_httpContext, _mockActorContextAccessor.Object, _mockSubscriptionQueryService.Object, _mockSubscriptionPlanService.Object);
 
         // Assert
         _httpContext.Response.Body.Seek(0, SeekOrigin.Begin);
