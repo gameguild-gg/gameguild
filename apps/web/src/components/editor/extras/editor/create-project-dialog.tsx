@@ -70,6 +70,16 @@ export function CreateProjectDialog({
   const [projectType, setProjectType] = useState<string>("type1") // Project type (type1, type2, type3, etc.)
   const [layoutType, setLayoutType] = useState<LayoutType>("single") // Layout detection: single or dual
 
+  // Sync layout with project type: Type 3 = Sequential
+  useEffect(() => {
+    if (projectType === "type3") {
+      setLayoutType("sequential")
+    } else if (layoutType === "sequential") {
+      // If switching away from type3 and layout is sequential, reset to single
+      setLayoutType("single")
+    }
+  }, [projectType])
+
   // Close tag dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -296,16 +306,18 @@ export function CreateProjectDialog({
                 id="layout-type"
                 value={layoutType}
                 onChange={(e) => setLayoutType(e.target.value as LayoutType)}
-                className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                disabled={projectType === "type3"}
+                className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="single">Single Panel</option>
                 <option value="dual">Dual Panel</option>
-                <option value="sequential">Sequential Panels</option>
+                {projectType === "type3" && <option value="sequential">Sequential Panels</option>}
               </select>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {layoutType === "single" && "Vertical single editor"}
                 {layoutType === "dual" && "Horizontal split layout"}
                 {layoutType === "sequential" && "Multiple vertical panels (like PowerPoint slides)"}
+                {projectType === "type3" && " (Auto-set for Type 3)"}
               </p>
             </div>
           </div>
@@ -323,10 +335,10 @@ export function CreateProjectDialog({
               >
                 <option value="type1">Type 1</option>
                 <option value="type2">Type 2</option>
-                <option value="type3">Type 3</option>
+                <option value="type3">Type 3 (Sequential)</option>
               </select>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Project classification (all types currently function the same)
+                {projectType === "type3" ? "Sequential panel structure (like PowerPoint)" : "Project classification"}
               </p>
             </div>
 
