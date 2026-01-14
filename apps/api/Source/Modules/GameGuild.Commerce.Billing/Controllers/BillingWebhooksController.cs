@@ -141,7 +141,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
             var result = await sender.Send(
                 new ProcessApplePayWebhookCommand(payload, merchantId, signature), ct).ConfigureAwait(false);
 
-            if (result.Processed || result.AlreadyHandled)
+            if (result.Processed || result.WasAlreadyProcessed)
             {
                 return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
             }
@@ -255,7 +255,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
                 transmissionSig, 
                 transmissionTime), ct).ConfigureAwait(false);
 
-            if (result.Processed || result.AlreadyHandled)
+            if (result.Processed || result.WasAlreadyProcessed)
             {
                 return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
             }

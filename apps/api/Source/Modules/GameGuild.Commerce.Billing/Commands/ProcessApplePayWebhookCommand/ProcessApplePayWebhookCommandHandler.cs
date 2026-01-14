@@ -75,7 +75,7 @@ public class ProcessApplePayWebhookCommandHandler(
                 "Apple Pay webhook processed successfully: EventId={EventId}, EventType={EventType}, ElapsedMs={ElapsedMs}",
                 eventId, eventType, elapsedMs);
         }
-        else if (result.AlreadyHandled)
+        else if (result.WasAlreadyProcessed)
         {
             logger.LogDebug(
                 "Apple Pay webhook already processed: EventId={EventId}, EventType={EventType}",
