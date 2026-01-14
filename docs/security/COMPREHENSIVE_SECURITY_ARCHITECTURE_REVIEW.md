@@ -202,7 +202,16 @@ Attacker replays Stripe webhook to duplicate payment credits.
 | 10 | Complete TaxController implementation | When tax features needed |
 | 11 | Add ML usage forecasting | Nice-to-have |
 | 12 | Implement cold storage archival | When data volume requires |
+### Incremental Tech Debt (Address During Feature Work)
 
+These items can be addressed opportunistically when working on related features:
+
+| Item | Description | Trigger |
+|------|-------------|---------|
+| Migrate subscription handlers to base class | Complete migration of remaining ~20 handlers to `SubscriptionCommandHandlerBase` | When modifying subscription commands |
+| Update logging to primary constructor pattern | Remove underscore prefix from logger fields (use `logger` not `_logger`) | When touching any service file |
+| Extend `CommerceRepositoryBase` | Migrate repositories to use shared base class | When modifying Commerce repositories |
+| Remove deprecated Product properties | Clean up `[Obsolete]` fields from Product entity | Next major version (v2.0) |
 ---
 
 ## Top 10 Security Risks (Ordered by Severity)
