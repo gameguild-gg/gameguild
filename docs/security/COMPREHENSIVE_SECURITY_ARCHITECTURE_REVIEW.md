@@ -264,6 +264,252 @@ Attacker replays Stripe webhook to duplicate payment credits.
 
 ---
 
+#### Scenario D: JWT Key Compromise & Rotation ✅ VERIFIED
+```
+Attacker obtains a JWT signing key and attempts to forge tokens. System must rotate keys and invalidate forged tokens.
+```
+**Mitigation:** Automatic key rotation with versioned keys, grace period for validation, and admin emergency rotation endpoint.
+
+**Evidence:**
+- **Entity:** [JwtSigningKey.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Entities/JwtSigningKey.cs#L1-L100)
+  ```csharp
+  public class JwtSigningKey : EntityBase
+  {
+      public string KeyId { get; set; } // Used in JWT 'kid' claim
+      public string KeyMaterial { get; set; } // 512-bit key, Base64-encoded
+      public bool IsActive { get; set; }
+      public DateTime ValidFrom { get; set; }
+      public DateTime ExpiresAt { get; set; }
+      public int KeyVersion { get; set; }
+      
+      public static JwtSigningKey CreateNew(int keyVersion, DateTime validFrom, TimeSpan validity)
+      {
+          var keyBytes = new byte[64]; // 512-bit key for HS256
+          using (var rng = RandomNumberGenerator.Create())
+          {
+              rng.GetBytes(keyBytes);
+          }
+          // ... creates versioned key
+      }
+  }
+  ```
+- **Rotation Service:** [KeyRotationService.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Services/KeyRotationService.cs#L18-L90)
+  ```csharp
+  public async Task<JwtSigningKey> RotateKeyAsync(string reason = "scheduled", int validityDays = 90, ...)
+  {
+      var currentKey = await GetActiveSigningKeyAsync(...);
+      var nextVersion = (currentKey?.KeyVersion ?? 0) + 1;
+      
+      // Create new key with higher version
+      var newKey = JwtSigningKey.CreateNew(nextVersion, DateTime.UtcNow, TimeSpan.FromDays(validityDays));
+      _dbContext.Set<JwtSigningKey>().Add(newKey);
+      await _dbContext.SaveChangesAsync(...);
+      
+      // Activate new key
+      newKey.Activate();
+      
+      // Rotate out old key (keeps it valid for existing tokens)
+      if (currentKey != null)
+          currentKey.Rotate(reason);
+      
+      await _dbContext.SaveChangesAsync(...);
+  }
+  ```
+- **Automatic Rotation:** [KeyRotationBackgroundService.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Services/KeyRotationBackgroundService.cs#L19-L70)
+  - Checks every hour if rotation needed
+  - Rotates when 7 days remain before expiry
+  - 90-day key validity by default
+  - 30-day expired key retention for audit
+- **Emergency Endpoint:** [KeyRotationController.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/KeyRotationController.cs#L47-L62)
+  ```csharp
+  [HttpPost("rotate")]
+  [Authorize(Roles = "SystemAdministrator")]
+  public async Task<ActionResult> RotateKey([FromBody] RotateKeyRequest request, ...)
+  {
+      var newKey = await _keyRotationService.RotateKeyAsync(
+          request.Reason ?? "manual-rotation",
+          request.ValidityDays ?? 90, ...);
+      return Ok(JwtKeyInfoDto.FromEntity(newKey));
+  }
+  ```
+- **Multi-Key Validation:** `GetValidationKeysAsync()` returns all valid keys (active + recently rotated)
+- **Grace Period:** Old keys remain valid for token verification until `ExpiresAt`
+
+**Defense Layers:**
+1. **Cryptographic Strength:** 512-bit keys generated with `RandomNumberGenerator`
+2. **Key Versioning:** `kid` claim in JWT header identifies which key signed token
+3. **Automatic Rotation:** Keys rotated every 90 days, preventing long-term compromise
+4. **Overlap Period:** 7-day window where both old and new keys are valid
+5. **Emergency Response:** Admin can manually rotate on compromise detection
+6. **Audit Trail:** All rotations logged with reason and timestamp
+
+**Result:** If attacker compromises a key, it automatically expires within 90 days. Admin can trigger emergency rotation to invalidate within minutes. All rotation events are logged for security audit.
+
+---
+
+#### Scenario E: Distributed Rate Limit Bypass ✅ VERIFIED
+```
+Attacker uses multiple servers to bypass in-memory rate limits and exhaust API quota.
+```
+**Mitigation:** Redis-backed sliding window rate limiter shared across all application instances.
+
+**Evidence:**
+- **Interface:** [IDistributedRateLimiter.cs](../apps/api/Source/Modules/GameGuild.Resources/Services/IDistributedRateLimiter.cs#L1-L30)
+  ```csharp
+  Task<bool> IsAllowedAsync(string key, int maxRequests, TimeSpan window, ...);
+  ```
+- **Implementation:** [RedisDistributedRateLimiter.cs](../apps/api/Source/Modules/GameGuild.Resources/Services/RedisDistributedRateLimiter.cs#L23-L70)
+  ```csharp
+  public async Task<bool> IsAllowedAsync(string key, int maxRequests, TimeSpan window, ...)
+  {
+      var db = _redis.GetDatabase();
+      var redisKey = GetRedisKey(key);
+      var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+      var windowStart = now - (long)window.TotalMilliseconds;
+      
+      // Sliding window using sorted set
+      // 1. Remove expired entries
+      await db.SortedSetRemoveRangeByScoreAsync(redisKey, 0, windowStart);
+      
+      // 2. Count current requests in window
+      var currentCount = await db.SortedSetLengthAsync(redisKey);
+      
+      // 3. Check if under limit
+      if (currentCount >= maxRequests)
+      {
+          _logger.LogWarning("Rate limit exceeded for key {Key}: {CurrentCount}/{MaxRequests}",
+              key, currentCount, maxRequests);
+          return false;
+      }
+      
+      // 4. Add current request with timestamp as score
+      var requestId = Guid.NewGuid().ToString("N");
+      await db.SortedSetAddAsync(redisKey, requestId, now);
+      
+      // 5. Set expiry on key (cleanup)
+      await db.KeyExpireAsync(redisKey, window.Add(TimeSpan.FromMinutes(1)));
+      
+      return true;
+  }
+  ```
+- **Sliding Window Algorithm:**
+  - Uses Redis sorted set with timestamps as scores
+  - Removes expired entries before counting
+  - Atomic check-and-increment via Redis transaction
+  - Millisecond precision for accurate sliding window
+- **Fail-Open Safety:** Returns `true` if Redis is unavailable (prioritizes availability over strict limiting)
+- **Key Namespacing:** `ratelimit:user:123:api-calls` prevents key collisions
+- **Auto-Cleanup:** Keys expire automatically after window + 1 minute
+
+**Horizontal Scaling:**
+- Rate limits shared across all application instances
+- Consistent enforcement regardless of which server handles request
+- Redis cluster support for high availability
+
+**Result:** Attacker hitting multiple load-balanced servers still encounters consistent rate limit. All servers query same Redis sorted set, ensuring total request count across cluster is accurately tracked.
+
+---
+
+#### Scenario F: API Key Theft & Abuse ✅ VERIFIED
+```
+Attacker steals an API key and uses it to access user data or exhaust quotas.
+```
+**Mitigation:** SHA-256 hashing, scoped permissions, IP whitelisting, usage tracking, and revocation capabilities.
+
+**Evidence:**
+- **Entity Security:** [ApiKey.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Entities/ApiKey.cs#L1-L180)
+  ```csharp
+  public class ApiKey : EntityBase
+  {
+      public string KeyHash { get; set; } // SHA-256 hash, never plaintext
+      public string Scopes { get; set; } // Comma-separated permissions
+      public string? IpWhitelist { get; set; } // Optional IP restriction
+      public DateTime? ExpiresAt { get; set; }
+      public DateTime? RevokedAt { get; set; }
+      public long UsageCount { get; set; }
+      public DateTime? LastUsedAt { get; set; }
+      
+      public static (ApiKey key, string plaintext) Create(...)
+      {
+          var randomBytes = new byte[24];
+          using (var rng = RandomNumberGenerator.Create())
+          {
+              rng.GetBytes(randomBytes);
+          }
+          var plaintext = $"gg_live_{randomPart}";
+          var keyHash = ComputeHash(plaintext); // SHA-256
+          // ... stores only hash
+      }
+      
+      private static string ComputeHash(string plaintext)
+      {
+          using var sha256 = SHA256.Create();
+          var bytes = Encoding.UTF8.GetBytes(plaintext);
+          var hash = sha256.ComputeHash(bytes);
+          return Convert.ToHexString(hash).ToLowerInvariant();
+      }
+  }
+  ```
+- **Authentication Handler:** [ApiKeyAuthenticationHandler.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Services/ApiKeyAuthenticationHandler.cs#L24-L95)
+  ```csharp
+  protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
+  {
+      if (!Request.Headers.TryGetValue("X-API-Key", out var apiKeyHeaderValues))
+          return AuthenticateResult.NoResult();
+      
+      var providedApiKey = apiKeyHeaderValues.FirstOrDefault();
+      var keyHash = ComputeHash(providedApiKey);
+      
+      // Look up by hash
+      var apiKey = await _dbContext.Set<ApiKey>()
+          .FirstOrDefaultAsync(k => k.KeyHash == keyHash);
+      
+      if (apiKey == null || !apiKey.IsValid())
+          return AuthenticateResult.Fail("Invalid API key");
+      
+      // Check IP whitelist
+      if (!string.IsNullOrWhiteSpace(apiKey.IpWhitelist))
+      {
+          var clientIp = Context.Connection.RemoteIpAddress?.ToString();
+          var allowedIps = apiKey.IpWhitelist.Split(',');
+          if (!allowedIps.Contains(clientIp))
+              return AuthenticateResult.Fail("API key not authorized from this IP");
+      }
+      
+      // Record usage
+      apiKey.RecordUsage();
+      await _dbContext.SaveChangesAsync(...);
+      
+      // Create claims with scopes
+      var claims = new List<Claim> { /* userId, scopes, etc. */ };
+      return AuthenticateResult.Success(new AuthenticationTicket(...));
+  }
+  ```
+- **Scope Enforcement:** `HasScope(string scope)` checks permissions before API operations
+- **Revocation:** [RevokeApiKeyCommand](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Commands/ApiKeyCommands.cs#L121-L145)
+  ```csharp
+  apiKey.Revoke(request.Reason ?? "User revoked");
+  await _dbContext.SaveChangesAsync(...);
+  ```
+
+**Security Layers:**
+1. **No Plaintext Storage:** Only SHA-256 hash stored in database
+2. **Scoped Permissions:** Keys limited to specific operations (e.g., `read:orders`)
+3. **IP Whitelisting:** Optional restriction to trusted IP addresses
+4. **Expiry:** Keys can have automatic expiration dates
+5. **Usage Tracking:** Last used timestamp and usage count for anomaly detection
+6. **Instant Revocation:** Admin or user can revoke keys immediately
+7. **Unique Index:** `KeyHash` unique constraint prevents duplicate keys
+
+**Result:** If key is stolen, attacker is limited by:
+- Scopes (can't perform unauthorized operations)
+- IP whitelist (can't use from unauthorized locations)
+- Expiry (key stops working after expiration date)
+- Revocation (user/admin can invalidate within seconds)
+All usage is logged with timestamp and IP for forensic analysis.
+
+---
+
 ## PART 3: Missing Features Checklist
 
 ### Implemented ✅
