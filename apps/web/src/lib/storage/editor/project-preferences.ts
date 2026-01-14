@@ -1,5 +1,6 @@
 import type { ShikiTheme } from "@/components/editor/extras/code-studio/types"
 import type { ProjectMode, NodeRestrictions } from "./project-modes"
+import type { PreviewMode } from "./panel-structure"
 
 // Project-level preferences structure
 export interface ProjectPreferences {
@@ -7,6 +8,7 @@ export interface ProjectPreferences {
     shikiTheme?: ShikiTheme
     mode?: ProjectMode
     restrictions?: NodeRestrictions
+    previewMode?: PreviewMode // Preview mode for sequential panels
   }
   nodes: {
     [nodeType: string]: {
@@ -16,6 +18,9 @@ export interface ProjectPreferences {
     }
   }
 }
+
+// Type for keys that can be overridden at node level
+type NodeOverridableKey = keyof ProjectPreferences['nodes'][string]
 
 // Default preferences
 export const DEFAULT_PROJECT_PREFERENCES: ProjectPreferences = {
@@ -37,7 +42,7 @@ export const DEFAULT_PROJECT_PREFERENCES: ProjectPreferences = {
  * Get preference value for a specific node type
  * Priority: node-specific > global
  */
-export function getProjectPreference<K extends keyof ProjectPreferences['global']>(
+export function getProjectPreference<K extends NodeOverridableKey>(
   preferences: ProjectPreferences | undefined,
   nodeType: string,
   key: K
@@ -82,11 +87,11 @@ export function setGlobalProjectPreference<K extends keyof ProjectPreferences['g
 /**
  * Set a node-specific preference (overrides global)
  */
-export function setNodeProjectPreference<K extends keyof ProjectPreferences['global']>(
+export function setNodeProjectPreference<K extends NodeOverridableKey>(
   preferences: ProjectPreferences | undefined,
   nodeType: string,
   key: K,
-  value: ProjectPreferences['global'][K]
+  value: ProjectPreferences['nodes'][string][K]
 ): ProjectPreferences {
   const prefs = preferences || { ...DEFAULT_PROJECT_PREFERENCES }
   
@@ -105,7 +110,7 @@ export function setNodeProjectPreference<K extends keyof ProjectPreferences['glo
 /**
  * Check if a node has a specific preference override
  */
-export function hasNodeProjectPreference<K extends keyof ProjectPreferences['global']>(
+export function hasNodeProjectPreference<K extends NodeOverridableKey>(
   preferences: ProjectPreferences | undefined,
   nodeType: string,
   key: K
@@ -116,7 +121,7 @@ export function hasNodeProjectPreference<K extends keyof ProjectPreferences['glo
 /**
  * Clear a node-specific preference (will fallback to global)
  */
-export function clearNodeProjectPreference<K extends keyof ProjectPreferences['global']>(
+export function clearNodeProjectPreference<K extends NodeOverridableKey>(
   preferences: ProjectPreferences | undefined,
   nodeType: string,
   key: K
