@@ -759,13 +759,13 @@ public interface IOrderService
 
 #### Architecture Assessment (Updated)
 
-| Aspect                  | Rating      | Notes                                                   |
-| ----------------------- | ----------- | ------------------------------------------------------- |
-| Implementation Status   | ✅ Fixed    | Repository fully implemented with IApplicationDbContext |
-| Webhook Handlers        | ⚠️ Skeleton | Base handlers return Task.CompletedTask (still TODO)    |
-| Invoice Support         | ✅ Fixed    | Invoice entity created with immutable design            |
-| Idempotency             | ✅ Fixed    | CreateAsync() checks ExternalEventId for duplicates     |
-| Concrete Implementation | ✅ Fixed    | StripeBillingWebhookService with idempotency            |
+| Aspect                  | Rating         | Notes                                                        |
+| ----------------------- | -------------- | ------------------------------------------------------------ |
+| Implementation Status   | ✅ Fixed       | Repository fully implemented with IApplicationDbContext      |
+| Webhook Handlers        | ✅ Implemented | All handlers integrated with ISubscriptionService            |
+| Invoice Support         | ✅ Fixed       | Invoice entity created with immutable design                 |
+| Idempotency             | ✅ Fixed       | CreateAsync() checks ExternalEventId for duplicates          |
+| Concrete Implementation | ✅ Fixed       | StripeBillingWebhookService + PayPal/Apple Pay services      |
 
 #### Issues Fixed
 
