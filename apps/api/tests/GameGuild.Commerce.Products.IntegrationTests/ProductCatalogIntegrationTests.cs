@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.API;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 

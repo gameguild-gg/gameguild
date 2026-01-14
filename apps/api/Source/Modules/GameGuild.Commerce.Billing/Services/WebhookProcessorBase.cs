@@ -4,6 +4,29 @@ using Microsoft.Extensions.Options;
 namespace GameGuild.Commerce.Billing;
 
 /// <summary>
+///     Result of tenant validation in webhook processing.
+/// </summary>
+public sealed record TenantValidationResult
+{
+    public bool IsValid { get; init; }
+    public Guid TenantId { get; init; }
+    public string? ErrorMessage { get; init; }
+
+    public static TenantValidationResult Success(Guid tenantId) => new()
+    {
+        IsValid = true,
+        TenantId = tenantId
+    };
+
+    public static TenantValidationResult Failure(string errorMessage) => new()
+    {
+        IsValid = false,
+        TenantId = Guid.Empty,
+        ErrorMessage = errorMessage
+    };
+}
+
+/// <summary>
 ///     Base class for webhook processors implementing Template Method pattern.
 ///     Encapsulates the common flow: validate signature → check idempotency → store event → process → update status.
 ///     Includes configurable retry logic with exponential backoff.
@@ -36,6 +59,110 @@ public abstract class WebhookProcessorBase
     ///     Gets the configured webhook settings.
     /// </summary>
     protected WebhookSettings Settings => _webhookSettings;
+
+    /// <summary>
+    ///     Validates tenant context for webhook processing.
+    ///     Economic invariant: All financial operations require valid tenant context.
+    /// </summary>
+    /// <remarks>
+    ///     Fail-closed behavior: If tenant cannot be determined or validated, the webhook
+    ///     processing should be rejected to prevent cross-tenant data corruption.
+    /// </remarks>
+    /// <param name="tenantIdFromPayload">Tenant ID extracted from webhook payload metadata</param>
+    /// <param name="subscriptionExternalId">External subscription ID for cross-reference validation</param>
+    /// <param name="validateSubscriptionOwnership">
+    ///     Callback to validate that the subscription belongs to the claimed tenant.
+    ///     Should return true if ownership is confirmed.
+    /// </param>
+    /// <returns>Validation result with tenant ID if valid</returns>
+    protected async Task<TenantValidationResult> ValidateTenantContextAsync(
+        Guid? tenantIdFromPayload,
+        string? subscriptionExternalId,
+        Func<Guid, string, Task<bool>>? validateSubscriptionOwnership = null)
+    {
+        // Rule 1: Tenant ID must be present
+        if (!tenantIdFromPayload.HasValue || tenantIdFromPayload.Value == Guid.Empty)
+        {
+            _logger.LogWarning(
+                "Webhook rejected: Missing or empty tenant ID in payload. " +
+                "Provider: {Provider}, SubscriptionExternalId: {ExternalId}",
+                ProviderName,
+                subscriptionExternalId ?? "null");
+
+            return TenantValidationResult.Failure(
+                "Missing tenant context. Webhook metadata must include valid tenant ID.");
+        }
+
+        var tenantId = tenantIdFromPayload.Value;
+
+        // Rule 2: If subscription ID provided, validate ownership (prevents cross-tenant attacks)
+        if (!string.IsNullOrEmpty(subscriptionExternalId) && validateSubscriptionOwnership != null)
+        {
+            try
+            {
+                var ownershipValid = await validateSubscriptionOwnership(tenantId, subscriptionExternalId);
+
+                if (!ownershipValid)
+                {
+                    _logger.LogWarning(
+                        "Webhook rejected: Subscription ownership validation failed. " +
+                        "Provider: {Provider}, ClaimedTenant: {TenantId}, SubscriptionExternalId: {ExternalId}",
+                        ProviderName,
+                        tenantId,
+                        subscriptionExternalId);
+
+                    return TenantValidationResult.Failure(
+                        $"Subscription {subscriptionExternalId} does not belong to tenant {tenantId}.");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fail-closed: If we can't validate, reject the webhook
+                _logger.LogError(
+                    ex,
+                    "Webhook rejected: Failed to validate subscription ownership. " +
+                    "Provider: {Provider}, TenantId: {TenantId}, SubscriptionExternalId: {ExternalId}",
+                    ProviderName,
+                    tenantId,
+                    subscriptionExternalId);
+
+                return TenantValidationResult.Failure(
+                    "Failed to validate subscription ownership. Processing rejected.");
+            }
+        }
+
+        _logger.LogDebug(
+            "Tenant context validated for webhook. Provider: {Provider}, TenantId: {TenantId}",
+            ProviderName,
+            tenantId);
+
+        return TenantValidationResult.Success(tenantId);
+    }
+
+    /// <summary>
+    ///     Extracts tenant ID from webhook metadata.
+    ///     Override in derived classes for provider-specific metadata extraction.
+    /// </summary>
+    /// <param name="metadata">Provider-specific metadata dictionary</param>
+    /// <returns>Tenant ID if found, null otherwise</returns>
+    protected virtual Guid? ExtractTenantIdFromMetadata(IDictionary<string, string>? metadata)
+    {
+        if (metadata == null)
+            return null;
+
+        // Common metadata key patterns across providers
+        var tenantIdKeys = new[] { "tenant_id", "tenantId", "TenantId", "tenant-id" };
+
+        foreach (var key in tenantIdKeys)
+        {
+            if (metadata.TryGetValue(key, out var value) && Guid.TryParse(value, out var tenantId))
+            {
+                return tenantId;
+            }
+        }
+
+        return null;
+    }
 
     /// <summary>
     ///     Template Method: Process a webhook with standard idempotency, retry logic, and error handling.
