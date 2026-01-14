@@ -66,7 +66,12 @@ public class UserWallet : EntityBase
         Transactions.Add(transaction);
     }
 
-    /// <summary>Deduct funds from the wallet</summary>
+    /// <summary>
+    /// Deduct funds from the wallet with optimistic concurrency protection.
+    /// The EntityBase.Version property is automatically checked on save via EF Core
+    /// ConcurrencyCheck, preventing double-spend in concurrent scenarios.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if wallet is inactive, locked, or has insufficient funds</exception>
     public void DeductFunds(decimal amount, string description, string? referenceId = null)
     {
         if (!IsActive) throw new InvalidOperationException("Wallet is not active");
@@ -76,6 +81,10 @@ public class UserWallet : EntityBase
 
         Balance -= amount;
         LastTransactionAt = DateTime.UtcNow;
+
+        // Touch() increments the Version property which triggers EF Core's
+        // concurrency check on SaveChangesAsync(), preventing double-spend
+        Touch();
 
         var transaction = new WalletTransaction
         {
@@ -90,6 +99,7 @@ public class UserWallet : EntityBase
     {
         IsLocked = true;
         LockReason = reason;
+        Touch();
     }
 
     /// <summary>Unlock the wallet</summary>
@@ -97,5 +107,6 @@ public class UserWallet : EntityBase
     {
         IsLocked = false;
         LockReason = null;
+        Touch();
     }
 }

@@ -77,7 +77,7 @@ public class UserProduct : EntityBase
     public Guid? OrderId { get; set; }
 
     /// <summary>Current subscription status (for subscription products)</summary>
-    public SubscriptionStatus? SubscriptionStatus { get; set; }
+    public EntitlementSubscriptionStatus? SubscriptionStatus { get; set; }
 
     /// <summary>External subscription provider reference</summary>
     [MaxLength(200)]
@@ -125,7 +125,7 @@ public class UserProduct : EntityBase
         RevocationReason = reason;
         if (SubscriptionStatus.HasValue)
         {
-            SubscriptionStatus = Subscriptions.SubscriptionStatus.Cancelled;
+            SubscriptionStatus = EntitlementSubscriptionStatus.Cancelled;
         }
         Touch();
     }

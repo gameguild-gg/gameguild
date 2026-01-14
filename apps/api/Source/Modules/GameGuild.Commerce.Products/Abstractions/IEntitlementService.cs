@@ -85,7 +85,7 @@ public record EntitlementInfo(
     DateTime? AccessStartDate,
     DateTime? AccessEndDate,
     bool IsSubscription,
-    SubscriptionStatus? SubscriptionStatus,
+    EntitlementSubscriptionStatus? SubscriptionStatus,
     decimal PricePaid,
     string Currency);
 

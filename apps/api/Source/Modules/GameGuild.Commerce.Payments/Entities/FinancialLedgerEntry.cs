@@ -27,15 +27,33 @@ public class FinancialLedgerEntry : EntityBase
     /// <summary>Entry type</summary>
     public LedgerEntryType EntryType { get; set; }
 
-    /// <summary>Debit account</summary>
+    /// <summary>
+    /// Debit account (legacy string format for backward compatibility)
+    /// Prefer using DebitLedgerAccount for new code.
+    /// </summary>
     [Required]
     [MaxLength(100)]
     public string DebitAccount { get; set; } = string.Empty;
 
-    /// <summary>Credit account</summary>
+    /// <summary>
+    /// Credit account (legacy string format for backward compatibility)
+    /// Prefer using CreditLedgerAccount for new code.
+    /// </summary>
     [Required]
     [MaxLength(100)]
     public string CreditAccount { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Strongly-typed debit account (preferred).
+    /// Stored as int in database, maps to LedgerAccount enum.
+    /// </summary>
+    public LedgerAccount? DebitLedgerAccount { get; set; }
+
+    /// <summary>
+    /// Strongly-typed credit account (preferred).
+    /// Stored as int in database, maps to LedgerAccount enum.
+    /// </summary>
+    public LedgerAccount? CreditLedgerAccount { get; set; }
 
     /// <summary>Entry amount</summary>
     [Column(TypeName = "decimal(18,2)")]
@@ -77,7 +95,11 @@ public class FinancialLedgerEntry : EntityBase
     /// <summary>Fiscal period (month)</summary>
     public int FiscalPeriod { get; set; }
 
-    /// <summary>Reconcile the entry</summary>
+    /// <summary>Reconcile the entry (IMMUTABLE - cannot be undone)</summary>
+    /// <remarks>
+    /// Once reconciled, ledger entries cannot be unreconciled to protect audit trail integrity.
+    /// Any corrections must be made via new adjusting entries.
+    /// </remarks>
     public void Reconcile(Guid reconciledBy, string? notes = null)
     {
         if (IsReconciled) throw new InvalidOperationException("Entry is already reconciled");
@@ -88,13 +110,6 @@ public class FinancialLedgerEntry : EntityBase
         if (notes != null) Notes = notes;
     }
 
-    /// <summary>Unreconcile the entry</summary>
-    public void Unreconcile()
-    {
-        if (!IsReconciled) throw new InvalidOperationException("Entry is not reconciled");
-
-        IsReconciled = false;
-        ReconciledAt = null;
-        ReconciledBy = null;
-    }
+    // NOTE: Unreconcile() has been removed to ensure audit trail immutability.
+    // Reconciled entries cannot be changed. Create adjusting entries instead.
 }

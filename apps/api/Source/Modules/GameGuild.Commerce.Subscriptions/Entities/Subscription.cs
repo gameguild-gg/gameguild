@@ -172,10 +172,11 @@ public class Subscription : EntityBase, ISubscription
     public virtual SubscriptionPlan Plan { get; set; } = null!;
 
     /// <summary>
-    ///     Explicit interface implementation to expose TenantId as Guid
-    ///     The base EntityBase has TenantId as Guid?, but ISubscription expects Guid
+    ///     Explicit interface implementation to expose TenantId as Guid.
+    ///     Throws InvalidOperationException if TenantId is null (fail-closed behavior).
     /// </summary>
-    Guid ISubscription.TenantId { get => TenantId ?? Guid.Empty; }
+    /// <exception cref="InvalidOperationException">Thrown when TenantId is null</exception>
+    Guid ISubscription.TenantId { get => TenantId ?? throw new InvalidOperationException("TenantId is required for subscription entities but was null. This indicates a data integrity issue."); }
 
     // public virtual User CreatedByUser { get; set; } = null!;
 

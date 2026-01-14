@@ -119,7 +119,7 @@ public class EntitlementService(
 
         if (acquisitionType == ProductAcquisitionType.Subscription)
         {
-            userProduct.SubscriptionStatus = SubscriptionStatus.Active;
+            userProduct.SubscriptionStatus = EntitlementSubscriptionStatus.Active;
         }
 
         await userProductRepository.AddAsync(userProduct, cancellationToken).ConfigureAwait(false);
@@ -175,7 +175,7 @@ public class EntitlementService(
         if (userProduct.AccessEndDate.HasValue && userProduct.AccessEndDate.Value < DateTime.UtcNow)
         {
             userProduct.AccessStatus = ProductAccessStatus.Expired;
-            userProduct.SubscriptionStatus = SubscriptionStatus.Expired;
+            userProduct.SubscriptionStatus = EntitlementSubscriptionStatus.Expired;
             userProduct.Touch();
 
             await userProductRepository.UpdateAsync(userProduct, cancellationToken).ConfigureAwait(false);
@@ -218,7 +218,7 @@ public class EntitlementService(
         foreach (var userProduct in expiredProducts)
         {
             userProduct.AccessStatus = ProductAccessStatus.Expired;
-            userProduct.SubscriptionStatus = SubscriptionStatus.Expired;
+            userProduct.SubscriptionStatus = EntitlementSubscriptionStatus.Expired;
             userProduct.Touch();
 
             await userProductRepository.UpdateAsync(userProduct, cancellationToken).ConfigureAwait(false);
