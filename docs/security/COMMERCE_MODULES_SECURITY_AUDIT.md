@@ -231,6 +231,11 @@ Commerce Module Maturity: 100/100 (Production-Ready)
 | 35  | Apple Pay webhook payload types                                    | Created `ApplePaySubscriptionWebhookPayload` and `ApplePayPaymentWebhookPayload`                     |
 | 36  | WebhookProcessingResult property fix                               | Changed `AlreadyHandled` to `WasAlreadyProcessed` across all handlers                                |
 | 37  | ProcessPayPalWebhookCommand fix                                    | Controller now passes required PayPal IPN headers                                                    |
+| 38  | PayPal signature verification service                              | `IPayPalSignatureVerificationService` + `PayPalSignatureVerificationService` with OAuth2 + API      |
+| 39  | Apple Pay receipt validation service                               | `IApplePayReceiptValidationService` + `ApplePayReceiptValidationService` with App Store Server API  |
+| 40  | Invoice.PaymentId unique index                                     | Database-level enforcement via `[Index(nameof(PaymentId), IsUnique = true)]`                         |
+| 41  | ProcessPayPalWebhookCommand CertUrl/AuthAlgo                       | Added CertUrl and AuthAlgo parameters for proper signature verification                              |
+| 42  | ProcessApplePayWebhookCommandHandler updated                       | Now uses `ProcessAppStoreNotificationAsync` for App Store Server Notifications V2                   |
 
 ### Remaining Work
 
