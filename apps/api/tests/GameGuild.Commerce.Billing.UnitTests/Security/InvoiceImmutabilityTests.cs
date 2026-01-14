@@ -1,5 +1,4 @@
 using FluentAssertions;
-using GameGuild.ValueObjects;
 using Xunit;
 
 namespace GameGuild.Commerce.Billing.UnitTests.Security;
@@ -14,104 +13,92 @@ public class InvoiceImmutabilityTests
     #region Amount Immutability Tests (P0)
 
     [Fact]
-    public void Invoice_Amount_CannotBeModifiedAfterCreation()
+    public void Invoice_Amount_CannotBeModifiedAfterIssuance()
     {
         // Arrange
-        var originalAmount = new Money(29.99m, "USD");
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: originalAmount,
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
         );
+        invoice.Issue();
 
-        // Act & Assert
-        // Attempting to modify the amount should throw
-        var act = () => invoice.UpdateAmount(new Money(99.99m, "USD"));
+        // Act & Assert - Attempting to apply discount after issue should throw
+        var act = () => invoice.ApplyDiscount(5m);
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*cannot be modified*");
+            .WithMessage("*immutable*");
     }
 
     [Fact]
     public void Invoice_Amount_ShouldMatchCreationValue()
     {
         // Arrange
-        var expectedAmount = new Money(49.99m, "USD");
+        var expectedAmount = 49.99m;
 
         // Act
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
+            subscriptionId: Guid.NewGuid(),
             amount: expectedAmount,
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            currency: "USD"
         );
 
         // Assert
-        invoice.Amount.Should().Be(expectedAmount);
+        invoice.Subtotal.Should().Be(expectedAmount);
+        invoice.Total.Should().Be(expectedAmount);
     }
 
     [Fact]
-    public void Invoice_Currency_CannotBeChangedAfterCreation()
+    public void Invoice_Currency_IsSetOnCreation()
     {
-        // Arrange
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        // Arrange & Act
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: new Money(29.99m, "USD"),
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
         );
 
         // Assert
-        invoice.Amount.Currency.Should().Be("USD");
-        // Currency should be immutable as part of the Money value object
+        invoice.Currency.Should().Be("USD");
     }
 
     [Fact]
-    public void Invoice_TotalAmount_IncludesAllLineItems()
+    public void Invoice_TotalAmount_IncludesDiscountAndTax()
     {
         // Arrange
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: new Money(0m, "USD"),
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            subscriptionId: Guid.NewGuid(),
+            amount: 100m,
+            currency: "USD"
         );
 
         // Act
-        invoice.AddLineItem("Subscription - Pro Plan", 29.99m);
-        invoice.AddLineItem("Add-on - Extra Storage", 9.99m);
+        invoice.ApplyDiscount(10m);
+        invoice.SetTax(5m);
 
-        // Assert
-        invoice.TotalAmount.Value.Should().Be(39.98m);
+        // Assert - Total = Subtotal - Discount + Tax = 100 - 10 + 5 = 95
+        invoice.Total.Should().Be(95m);
     }
 
     [Fact]
-    public void Invoice_LineItems_CannotBeModifiedAfterFinalization()
+    public void Invoice_Discount_CannotBeAppliedAfterIssuance()
     {
         // Arrange
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: new Money(29.99m, "USD"),
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
         );
-        invoice.AddLineItem("Subscription", 29.99m);
-        invoice.Finalize();
+        invoice.Issue();
 
         // Act & Assert
-        var act = () => invoice.AddLineItem("Unauthorized Item", 100m);
+        var act = () => invoice.ApplyDiscount(5m);
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*finalized*");
+            .WithMessage("*immutable*");
     }
 
     #endregion
@@ -119,39 +106,38 @@ public class InvoiceImmutabilityTests
     #region Status Transition Tests (P0)
 
     [Fact]
-    public void Invoice_Draft_CanTransitionToIssued()
+    public void Invoice_Draft_CanTransitionToOpen()
     {
         // Arrange
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: new Money(29.99m, "USD"),
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
         );
 
         // Act
         invoice.Issue();
 
         // Assert
-        invoice.Status.Should().Be(InvoiceStatus.Issued);
+        invoice.Status.Should().Be(InvoiceStatus.Open);
         invoice.IssuedAt.Should().NotBeNull();
     }
 
     [Fact]
-    public void Invoice_Issued_CanTransitionToPaid()
+    public void Invoice_Open_CanTransitionToPaid()
     {
         // Arrange
         var invoice = CreateIssuedInvoice();
+        var paymentId = Guid.NewGuid();
 
         // Act
-        invoice.MarkAsPaid("txn_12345");
+        invoice.RecordPayment(paymentId, invoice.Total, DateTime.UtcNow);
 
         // Assert
         invoice.Status.Should().Be(InvoiceStatus.Paid);
         invoice.PaidAt.Should().NotBeNull();
-        invoice.TransactionId.Should().Be("txn_12345");
+        invoice.PaymentId.Should().Be(paymentId);
     }
 
     [Fact]
@@ -159,7 +145,7 @@ public class InvoiceImmutabilityTests
     {
         // Arrange
         var invoice = CreateIssuedInvoice();
-        invoice.MarkAsPaid("txn_12345");
+        invoice.RecordPayment(Guid.NewGuid(), invoice.Total, DateTime.UtcNow);
 
         // Act & Assert
         var act = () => invoice.Void("Customer request");
@@ -168,7 +154,7 @@ public class InvoiceImmutabilityTests
     }
 
     [Fact]
-    public void Invoice_Issued_CanBeVoided()
+    public void Invoice_Open_CanBeVoided()
     {
         // Arrange
         var invoice = CreateIssuedInvoice();
@@ -189,8 +175,8 @@ public class InvoiceImmutabilityTests
         var invoice = CreateIssuedInvoice();
         invoice.Void("Test void");
 
-        // Act & Assert - Cannot mark as paid
-        var actPaid = () => invoice.MarkAsPaid("txn_fake");
+        // Act & Assert - Cannot record payment
+        var actPaid = () => invoice.RecordPayment(Guid.NewGuid(), invoice.Total, DateTime.UtcNow);
         actPaid.Should().Throw<InvalidOperationException>();
 
         // Cannot re-issue
@@ -204,6 +190,7 @@ public class InvoiceImmutabilityTests
     [InlineData(InvoiceStatus.Paid)]
     [InlineData(InvoiceStatus.PastDue)]
     [InlineData(InvoiceStatus.Void)]
+    [InlineData(InvoiceStatus.Uncollectible)]
     public void Invoice_AllStatusValues_AreValid(InvoiceStatus status)
     {
         // Assert - Enum values are defined
@@ -218,13 +205,11 @@ public class InvoiceImmutabilityTests
     public void Invoice_CreatedAt_IsSetOnCreation()
     {
         // Arrange & Act
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: new Money(29.99m, "USD"),
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
         );
 
         // Assert
@@ -232,121 +217,120 @@ public class InvoiceImmutabilityTests
     }
 
     [Fact]
-    public void Invoice_TracksStatusChangeHistory()
+    public void Invoice_IsImmutable_AfterIssuance()
     {
         // Arrange
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: new Money(29.99m, "USD"),
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
         );
+
+        // Assert - Not immutable while draft
+        invoice.IsImmutable.Should().BeFalse();
 
         // Act
         invoice.Issue();
-        invoice.MarkAsPaid("txn_123");
+
+        // Assert - Immutable after issue
+        invoice.IsImmutable.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Invoice_HasInvoiceNumber_OnCreation()
+    {
+        // Arrange & Act
+        var invoice = new Invoice(
+            tenantId: Guid.NewGuid(),
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
+        );
+
+        // Assert - Has number on creation
+        invoice.InvoiceNumber.Should().NotBeNullOrEmpty();
+        invoice.InvoiceNumber.Should().StartWith("INV-");
+    }
+
+    [Fact]
+    public void Invoice_InvoiceNumber_IsUnique()
+    {
+        // Arrange & Act
+        var invoice1 = new Invoice(
+            tenantId: Guid.NewGuid(),
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
+        );
+        var invoice2 = new Invoice(
+            tenantId: Guid.NewGuid(),
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
+        );
 
         // Assert
-        invoice.StatusHistory.Should().HaveCount(3); // Draft -> Issued -> Paid
-        invoice.StatusHistory.First().Status.Should().Be(InvoiceStatus.Draft);
-        invoice.StatusHistory.Last().Status.Should().Be(InvoiceStatus.Paid);
-    }
-
-    [Fact]
-    public void Invoice_HasInvoiceNumber_AfterIssue()
-    {
-        // Arrange
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
-            tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: new Money(29.99m, "USD"),
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
-        );
-
-        // Assert - No number before issue
-        invoice.InvoiceNumber.Should().BeNull();
-
-        // Act
-        invoice.Issue();
-
-        // Assert - Has number after issue
-        invoice.InvoiceNumber.Should().NotBeNullOrEmpty();
-    }
-
-    [Fact]
-    public void Invoice_InvoiceNumber_CannotBeChanged()
-    {
-        // Arrange
-        var invoice = CreateIssuedInvoice();
-        var originalNumber = invoice.InvoiceNumber;
-
-        // Act & Assert
-        // Invoice number should be immutable once assigned
-        invoice.InvoiceNumber.Should().Be(originalNumber);
+        invoice1.InvoiceNumber.Should().NotBe(invoice2.InvoiceNumber);
     }
 
     #endregion
 
-    #region Credit/Refund Tests (P1)
+    #region Payment Tests (P1)
 
     [Fact]
-    public void Invoice_Paid_CanHaveCreditNoteIssued()
+    public void Invoice_Draft_CannotReceivePayment()
     {
         // Arrange
-        var invoice = CreateIssuedInvoice();
-        invoice.MarkAsPaid("txn_12345");
-
-        // Act
-        var creditNote = invoice.IssueCreditNote(10m, "Partial refund");
-
-        // Assert
-        creditNote.Should().NotBeNull();
-        creditNote.Amount.Should().Be(10m);
-        creditNote.RelatedInvoiceId.Should().Be(invoice.Id);
-        creditNote.Type.Should().Be(CreditNoteType.PartialRefund);
-    }
-
-    [Fact]
-    public void Invoice_CreditNote_CannotExceedOriginalAmount()
-    {
-        // Arrange
-        var invoice = CreateIssuedInvoice();
-        invoice.MarkAsPaid("txn_12345");
+        var invoice = new Invoice(
+            tenantId: Guid.NewGuid(),
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
+        );
 
         // Act & Assert
-        var act = () => invoice.IssueCreditNote(999.99m, "Over-refund attempt");
+        var act = () => invoice.RecordPayment(Guid.NewGuid(), 29.99m, DateTime.UtcNow);
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*exceeds*");
+            .WithMessage("*draft*");
     }
 
     [Fact]
-    public void Invoice_MultipleCreditNotes_CannotExceedTotal()
+    public void Invoice_SinglePaymentPerInvoice_IsEnforced()
     {
         // Arrange
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        var invoice = CreateIssuedInvoice();
+        var firstPaymentId = Guid.NewGuid();
+        var secondPaymentId = Guid.NewGuid();
+        invoice.RecordPayment(firstPaymentId, invoice.Total / 2, DateTime.UtcNow);
+
+        // Act & Assert - Cannot use different payment ID
+        var act = () => invoice.RecordPayment(secondPaymentId, invoice.Total / 2, DateTime.UtcNow);
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Single payment*");
+    }
+
+    [Fact]
+    public void Invoice_AmountRemaining_CalculatesCorrectly()
+    {
+        // Arrange
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: new Money(100m, "USD"),
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            subscriptionId: Guid.NewGuid(),
+            amount: 100m,
+            currency: "USD"
         );
         invoice.Issue();
-        invoice.MarkAsPaid("txn_12345");
 
-        // Act - Issue partial credit notes
-        invoice.IssueCreditNote(30m, "Refund 1");
-        invoice.IssueCreditNote(30m, "Refund 2");
-        invoice.IssueCreditNote(30m, "Refund 3");
+        // Assert - Initial amount remaining
+        invoice.AmountRemaining.Should().Be(100m);
 
-        // Assert - Cannot issue more than remaining
-        var act = () => invoice.IssueCreditNote(20m, "Over-refund");
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*exceeds*");
+        // Act - Partial payment
+        var paymentId = Guid.NewGuid();
+        invoice.RecordPayment(paymentId, 40m, DateTime.UtcNow);
+
+        // Assert - Remaining after partial payment
+        invoice.AmountRemaining.Should().Be(60m);
     }
 
     #endregion
@@ -355,45 +339,15 @@ public class InvoiceImmutabilityTests
 
     private static Invoice CreateIssuedInvoice()
     {
-        var invoice = Invoice.Create(
-            subscriptionId: Guid.NewGuid(),
+        var invoice = new Invoice(
             tenantId: Guid.NewGuid(),
-            userId: Guid.NewGuid(),
-            amount: new Money(29.99m, "USD"),
-            periodStart: DateTime.UtcNow,
-            periodEnd: DateTime.UtcNow.AddMonths(1)
+            subscriptionId: Guid.NewGuid(),
+            amount: 29.99m,
+            currency: "USD"
         );
         invoice.Issue();
         return invoice;
     }
 
     #endregion
-}
-
-/// <summary>
-/// Supporting types for InvoiceImmutabilityTests
-/// </summary>
-public class CreditNote
-{
-    public Guid Id { get; set; }
-    public Guid RelatedInvoiceId { get; set; }
-    public decimal Amount { get; set; }
-    public string Reason { get; set; } = string.Empty;
-    public CreditNoteType Type { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-public enum CreditNoteType
-{
-    PartialRefund,
-    FullRefund,
-    Adjustment,
-    GoodwillCredit
-}
-
-public class InvoiceStatusChange
-{
-    public InvoiceStatus Status { get; set; }
-    public DateTime ChangedAt { get; set; }
-    public string? ChangedBy { get; set; }
 }

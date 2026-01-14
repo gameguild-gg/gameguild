@@ -1,14 +1,17 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace GameGuild.ValueObjects;
 
 /// <summary>
 ///     Represents a money value with currency
 /// </summary>
+[Owned]
 public record Money
 {
     /// <summary>
     ///     Parameterless constructor for EF Core
     /// </summary>
-    private Money()
+    protected Money()
     {
         Amount = 0;
         Currency = "USD";

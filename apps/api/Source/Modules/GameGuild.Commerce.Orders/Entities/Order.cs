@@ -17,11 +17,8 @@ namespace GameGuild.Commerce.Orders;
 [Index(nameof(TenantId))]
 public class Order : StatefulEntity<OrderStatus>
 {
-    /// <summary>Default constructor</summary>
+    /// <summary>Default constructor for EF Core</summary>
     public Order() { }
-
-    /// <summary>Constructor for partial initialization</summary>
-    public Order(object partial) : base(partial) { }
 
     /// <summary>User who placed the order</summary>
     [Required]

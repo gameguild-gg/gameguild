@@ -191,8 +191,7 @@ public class OrderService(
             return false;
         }
 
-        order.Status = OrderStatus.Cancelled;
-        order.Metadata = reason;
+        order.Cancel(reason);
         order.Touch();
 
         await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);

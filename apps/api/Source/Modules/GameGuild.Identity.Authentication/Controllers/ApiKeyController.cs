@@ -30,9 +30,9 @@ public class ApiKeyController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _dispatcher.Send(command, cancellationToken);
-        return result.Match<IActionResult>(
-            success => Ok(result.Value),
-            failure => BadRequest(new { errors = result.Errors }));
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(new { error = result.Error });
     }
 
     /// <summary>
@@ -43,9 +43,9 @@ public class ApiKeyController : ControllerBase
     public async Task<IActionResult> ListApiKeys(CancellationToken cancellationToken)
     {
         var result = await _dispatcher.Send(new ListApiKeysQuery(), cancellationToken);
-        return result.Match<IActionResult>(
-            success => Ok(result.Value),
-            failure => BadRequest(new { errors = result.Errors }));
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(new { error = result.Error });
     }
 
     /// <summary>
@@ -65,9 +65,9 @@ public class ApiKeyController : ControllerBase
         };
 
         var result = await _dispatcher.Send(command, cancellationToken);
-        return result.Match<IActionResult>(
-            success => Ok(new { message = "API key revoked successfully" }),
-            failure => BadRequest(new { errors = result.Errors }));
+        return result.IsSuccess
+            ? Ok(new { message = "API key revoked successfully" })
+            : BadRequest(new { error = result.Error });
     }
 }
 

@@ -3,6 +3,7 @@ using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Models;
 using FluentValidation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -73,12 +74,12 @@ public class CreateApiKeyHandler : IRequestHandler<CreateApiKeyCommand, Result<C
 
     public async Task<Result<CreateApiKeyResponse>> Handle(CreateApiKeyCommand request, CancellationToken cancellationToken)
     {
-        var actor = _actorContext.GetActorContext();
-        if (!actor.UserId.HasValue)
-            return Result<CreateApiKeyResponse>.Failure("User must be authenticated to create API keys");
+        var actor = _actorContext.ActorContext;
+        if (!actor.SubjectIdAsGuid.HasValue)
+            return Result.Failure<CreateApiKeyResponse>(Error.Failure("Auth.Required", "User must be authenticated to create API keys"));
 
         var (apiKey, plaintext) = ApiKey.Create(
-            actor.UserId.Value,
+            actor.SubjectIdAsGuid.Value,
             actor.TenantId ?? Guid.Empty,
             request.Name,
             request.Scopes,
@@ -89,9 +90,9 @@ public class CreateApiKeyHandler : IRequestHandler<CreateApiKeyCommand, Result<C
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("API key created: {KeyId} for user {UserId} with scopes {Scopes}",
-            apiKey.Id, actor.UserId.Value, string.Join(", ", request.Scopes));
+            apiKey.Id, actor.SubjectIdAsGuid.Value, string.Join(", ", request.Scopes));
 
-        return Result<CreateApiKeyResponse>.Ok(CreateApiKeyResponse.FromEntity(apiKey, plaintext));
+        return Result.Success(CreateApiKeyResponse.FromEntity(apiKey, plaintext));
     }
 }
 
@@ -145,16 +146,16 @@ public class ListApiKeysHandler : IRequestHandler<ListApiKeysQuery, Result<List<
 
     public async Task<Result<List<ApiKeyDto>>> Handle(ListApiKeysQuery request, CancellationToken cancellationToken)
     {
-        var actor = _actorContext.GetActorContext();
-        if (!actor.UserId.HasValue)
-            return Result<List<ApiKeyDto>>.Failure("User must be authenticated");
+        var actor = _actorContext.ActorContext;
+        if (!actor.SubjectIdAsGuid.HasValue)
+            return Result.Failure<List<ApiKeyDto>>(Error.Failure("Auth.Required", "User must be authenticated"));
 
         var keys = await _dbContext.Set<ApiKey>()
-            .Where(k => k.UserId == actor.UserId.Value)
+            .Where(k => k.UserId == actor.SubjectIdAsGuid.Value)
             .OrderByDescending(k => k.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        return Result<List<ApiKeyDto>>.Ok(keys.Select(ApiKeyDto.FromEntity).ToList());
+        return Result.Success(keys.Select(ApiKeyDto.FromEntity).ToList());
     }
 }
 
@@ -184,22 +185,22 @@ public class RevokeApiKeyHandler : IRequestHandler<RevokeApiKeyCommand, Result<b
 
     public async Task<Result<bool>> Handle(RevokeApiKeyCommand request, CancellationToken cancellationToken)
     {
-        var actor = _actorContext.GetActorContext();
-        if (!actor.UserId.HasValue)
-            return Result<bool>.Failure("User must be authenticated");
+        var actor = _actorContext.ActorContext;
+        if (!actor.SubjectIdAsGuid.HasValue)
+            return Result.Failure<bool>(Error.Failure("Auth.Required", "User must be authenticated"));
 
         var apiKey = await _dbContext.Set<ApiKey>()
-            .FirstOrDefaultAsync(k => k.Id == request.KeyId && k.UserId == actor.UserId.Value, cancellationToken);
+            .FirstOrDefaultAsync(k => k.Id == request.KeyId && k.UserId == actor.SubjectIdAsGuid.Value, cancellationToken);
 
         if (apiKey == null)
-            return Result<bool>.Failure("API key not found");
+            return Result.Failure<bool>(Error.NotFound("ApiKey.NotFound", "API key not found"));
 
         apiKey.Revoke(request.Reason ?? "User revoked");
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("API key revoked: {KeyId} by user {UserId}. Reason: {Reason}",
-            request.KeyId, actor.UserId.Value, request.Reason);
+            request.KeyId, actor.SubjectIdAsGuid.Value, request.Reason);
 
-        return Result<bool>.Ok(true);
+        return Result.Success(true);
     }
 }
