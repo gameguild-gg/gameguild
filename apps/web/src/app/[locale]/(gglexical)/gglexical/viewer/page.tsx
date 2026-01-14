@@ -10,6 +10,8 @@ import Link from "next/link"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewRendererType1 } from "@/components/editor/extras/preview/preview-renderer-type1"
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
+import { PreviewRendererSequentialContinuous } from "@/components/editor/extras/preview/preview-renderer-sequential-continuous"
+import { PreviewRendererSequentialSlide } from "@/components/editor/extras/preview/preview-renderer-sequential-slide"
 import { useRouter } from "next/navigation"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { detectProjectLayout, extractEditorStates, type LayoutType } from "@/lib/storage/editor/layout-detector"
@@ -149,24 +151,39 @@ export default function PreviewPage() {
     window.history.pushState(null, '', `#${projectData.id}`)
   }
 
-  const getLayoutAndStates = (): { layout: LayoutType; states: { single: any | null; left: any | null; right: any | null } } => {
+  const getLayoutAndStates = (): { 
+    layout: LayoutType; 
+    states: { single: any | null; left: any | null; right: any | null };
+    isSequential: boolean;
+    sequentialData?: any;
+    projectType?: string;
+    previewMode?: "continuous" | "slide";
+  } => {
     if (!currentProject) {
       return {
         layout: "single",
-        states: { single: null, left: null, right: null }
+        states: { single: null, left: null, right: null },
+        isSequential: false,
       }
     }
     
     const layoutInfo = detectProjectLayout(currentProject.data)
     const states = extractEditorStates(currentProject.data, layoutInfo.layoutType)
     
+    // Get preview mode from preferences (default to continuous)
+    const previewMode = currentProject.preferences?.global?.previewMode || "continuous"
+    
     return {
       layout: layoutInfo.layoutType,
-      states
+      states,
+      isSequential: layoutInfo.isSequential,
+      sequentialData: layoutInfo.sequentialData,
+      projectType: currentProject.type,
+      previewMode,
     }
   }
 
-  const { layout: currentLayout, states } = getLayoutAndStates()
+  const { layout: currentLayout, states, isSequential, sequentialData, projectType, previewMode } = getLayoutAndStates()
 
   return (
     <>
@@ -280,9 +297,23 @@ export default function PreviewPage() {
               </div>
             </div>
 
-            {currentProject && (states.single || (states.left && states.right)) ? (
+            {currentProject && (states.single || (states.left && states.right) || isSequential) ? (
               <>
-                {currentLayout === "single" && states.single ? (
+                {isSequential && sequentialData ? (
+                  previewMode === "slide" ? (
+                    <PreviewRendererSequentialSlide
+                      structure={sequentialData}
+                      projectId={currentProject.id}
+                      projectName={currentProject.name}
+                    />
+                  ) : (
+                    <PreviewRendererSequentialContinuous
+                      structure={sequentialData}
+                      projectId={currentProject.id}
+                      projectName={currentProject.name}
+                    />
+                  )
+                ) : currentLayout === "single" && states.single ? (
                   <PreviewRendererType1
                     serializedState={states.single as any}
                     currentProject={currentProject}

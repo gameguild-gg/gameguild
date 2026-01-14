@@ -81,7 +81,7 @@ export function useProjectDialog({ isDbInitialized, storageAdapter }: UseProject
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectType?: "type1" | "type2",
+    projectType?: "type1" | "type2" | "type3",
     projectPreferences?: any
   ) => {
     try {
