@@ -29,13 +29,14 @@ import { EnhancedStorageAdapter, type ProjectPreferences } from "@/lib/storage/e
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
 import { type ProjectMode, NODE_RESTRICTIONS, PROJECT_MODES } from "@/lib/storage/editor/project-modes"
+import { detectProjectLayout, extractEditorStates, createProjectData, type LayoutType } from "@/lib/storage/editor/layout-detector"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
 import type { SerializedEditorState } from "lexical"
 
-export type ProjectLayoutType = "type1" | "type2"
+export type ProjectType = "type1" | "type2" | "type3"
 
 export interface ProjectDataType1 {
   data: string // Single editor JSON state
@@ -49,8 +50,8 @@ export interface ProjectDataType2 {
 interface ProjectData {
   id: string
   name: string
-  type: ProjectLayoutType // Layout type
-  data: string // For type1: direct JSON, for type2: stringified {left, right}
+  type: ProjectType // Project type (not layout - layout is auto-detected)
+  data: string // If dual panel: {left, right}, if single panel: direct state
   tags: string[]
   size: number
   createdAt: string
@@ -84,8 +85,9 @@ function formatSize(sizeInKB: number): string {
 
 export default function Page() {
   const router = useRouter()
-  // Layout type and state management
-  const [currentLayoutType, setCurrentLayoutType] = useState<ProjectLayoutType>("type1")
+  // Layout detection and state management
+  const [currentLayout, setCurrentLayout] = useState<LayoutType>("single")
+  const [currentProjectType, setCurrentProjectType] = useState<ProjectType>("type1")
   
   // Type1 states (single editor)
   const [editorState, setEditorState] = useState<string>("")
@@ -138,7 +140,7 @@ export default function Page() {
   const [previewState, setPreviewState] = useState<SerializedEditorState | null>(null)
   const [previewLeftState, setPreviewLeftState] = useState<SerializedEditorState | null>(null)
   const [previewRightState, setPreviewRightState] = useState<SerializedEditorState | null>(null)
-  const [previewLayoutType, setPreviewLayoutType] = useState<ProjectLayoutType>("type1")
+  const [previewLayout, setPreviewLayout] = useState<LayoutType>("single")
   const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
   const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>("free-page")
 
@@ -193,7 +195,8 @@ export default function Page() {
         setCurrentProjectStorageType,
         setProjectTags,
         setIsFirstTime,
-        setCurrentLayoutType,
+        setCurrentLayout,
+        setCurrentProjectType: (type: string) => setCurrentProjectType(type as ProjectType),
         setEditorState,
         setLeftEditorState,
         setRightEditorState,
@@ -214,15 +217,14 @@ export default function Page() {
 
   // Atualizar informações de armazenamento sempre que o editor mudar
   useEffect(() => {
-    if (currentLayoutType === "type1" && editorState) {
-      const size = estimateSize(editorState)
-      setCurrentProjectSize(size)
-    } else if (currentLayoutType === "type2" && (leftEditorState || rightEditorState)) {
-      const combinedData = JSON.stringify({ left: leftEditorState, right: rightEditorState })
-      const size = estimateSize(combinedData)
-      setCurrentProjectSize(size)
-    }
-  }, [editorState, leftEditorState, rightEditorState, currentLayoutType])
+    const dataToCalculate = createProjectData(currentLayout, {
+      single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
+      left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
+      right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
+    })
+    const size = estimateSize(dataToCalculate)
+    setCurrentProjectSize(size)
+  }, [editorState, leftEditorState, rightEditorState, currentLayout])
 
   // Calculate assets size when project changes or editor content changes
   useEffect(() => {
@@ -234,7 +236,7 @@ export default function Page() {
   }, [currentProjectId, isDbInitialized, editorState, leftEditorState, rightEditorState])
 
   const storageAdapter = {
-    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: "type1" | "type2" = "type1") => {
+    save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: string = "type1") => {
       if (!id || !name || !data) {
         console.warn("Invalid id, name or data")
         return
@@ -248,7 +250,7 @@ export default function Page() {
       console.log(`Saving project "${name}" (${id}) to ${storageType} - Size: ${formatSize(originalSize)}`)
 
       try {
-        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type)
+        await dbStorage.current.save(id, name, data, tags, storageType, preferences, type as any)
         console.log(`Saved project "${name}" (${id}) to ${storageType} successfully`)
       } catch (error) {
         console.error("Failed to save project:", error)
@@ -399,17 +401,18 @@ export default function Page() {
 
   const handleSave = async () => {
     // Prepare the correct state based on layout type
-    const dataToSave = currentLayoutType === "type1" 
-      ? editorState 
-      : JSON.stringify({ left: leftEditorState, right: rightEditorState })
+    const dataToSave = createProjectData(currentLayout, {
+      single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
+      left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
+      right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
+    })
     
-    const refToUse = currentLayoutType === "type1" ? editorRef : leftEditorRef
+    const refToUse = currentLayout === "single" ? editorRef : leftEditorRef
     
     await saveProject({
       currentProjectId,
       currentProjectName,
       currentProjectStorageType,
-      layoutType: currentLayoutType,
       editorState: dataToSave,
       editorRef: refToUse,
       projectTags,
@@ -421,15 +424,16 @@ export default function Page() {
 
   const handleSaveAs = async (storageOption: "local" | "gameguild-cloud" | "google-drive" = "local") => {
     // Prepare the correct state based on layout type
-    const dataToSave = currentLayoutType === "type1" 
-      ? editorState 
-      : JSON.stringify({ left: leftEditorState, right: rightEditorState })
+    const dataToSave = createProjectData(currentLayout, {
+      single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
+      left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
+      right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
+    })
     
-    const refToUse = currentLayoutType === "type1" ? editorRef : leftEditorRef
+    const refToUse = currentLayout === "single" ? editorRef : leftEditorRef
     
     await saveAsProject({
       newProjectName,
-      layoutType: currentLayoutType,
       editorState: dataToSave,
       editorRef: refToUse,
       projectTags,
@@ -482,7 +486,7 @@ export default function Page() {
     if (!autoSaveEnabled || !currentProjectId || !isDbInitialized) return
 
     // Check if we have any content to save
-    const hasContent = currentLayoutType === "type1" 
+    const hasContent = currentLayout === "single" 
       ? editorState 
       : (leftEditorState || rightEditorState)
     
@@ -497,9 +501,11 @@ export default function Page() {
     const autoSaveTimer = setTimeout(async () => {
       try {
         // Prepare the correct state based on layout type
-        const dataToSave = currentLayoutType === "type1" 
-          ? editorState 
-          : JSON.stringify({ left: leftEditorState, right: rightEditorState })
+        const dataToSave = createProjectData(currentLayout, {
+          single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
+          left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
+          right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
+        })
         
         await storageAdapter.save(
           currentProjectId, 
@@ -508,7 +514,7 @@ export default function Page() {
           projectTags,
           currentProjectStorageType,
           undefined,
-          currentLayoutType
+          currentProjectType
         )
         
         // Show a very subtle auto-save notification
@@ -533,7 +539,7 @@ export default function Page() {
     }, 2000) // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(autoSaveTimer)
-  }, [editorState, leftEditorState, rightEditorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayoutType, currentProjectStorageType, lastProjectLoadTime])
+  }, [editorState, leftEditorState, rightEditorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime])
 
 
 
@@ -564,11 +570,13 @@ export default function Page() {
 
   const handleTitleSave = async () => {
     // Prepare the correct state and ref based on layout type
-    const stateToUse = currentLayoutType === "type1" 
-      ? editorState 
-      : JSON.stringify({ left: leftEditorState, right: rightEditorState })
+    const stateToUse = createProjectData(currentLayout, {
+      single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
+      left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
+      right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
+    })
     
-    const refToUse = currentLayoutType === "type1" ? editorRef : leftEditorRef
+    const refToUse = currentLayout === "single" ? editorRef : leftEditorRef
     
     await titleSave({
       editingProjectName,
@@ -582,7 +590,6 @@ export default function Page() {
       setEditingProjectName,
       setIsEditingTitle,
       loadSavedProjectsList,
-      layoutType: currentLayoutType,
     })
   }
 
@@ -617,7 +624,7 @@ export default function Page() {
 
     try {
       // Handle preview based on layout type
-      if (currentLayoutType === "type1") {
+      if (currentLayout === "single") {
         if (!editorState) {
           toast.error("No content", {
             description: "Editor is empty",
@@ -626,13 +633,13 @@ export default function Page() {
           return
         }
         
-        // Parse and set type1 preview state
+        // Parse and set single panel preview state
         const parsed = JSON.parse(editorState)
         setPreviewState(parsed)
-        setPreviewLayoutType("type1")
+        setPreviewLayout("single")
         setPreviewOpen(true)
       } else {
-        // Type2: Both editors
+        // Dual panel: Both editors
         if (!leftEditorState && !rightEditorState) {
           toast.error("No content", {
             description: "Editors are empty",
@@ -641,7 +648,7 @@ export default function Page() {
           return
         }
         
-        // Parse both editor states for type2
+        // Parse both editor states for dual panel
         const leftParsed = leftEditorState ? JSON.parse(leftEditorState) : null
         const rightParsed = rightEditorState ? JSON.parse(rightEditorState) : null
         
@@ -655,7 +662,7 @@ export default function Page() {
         
         setPreviewLeftState(leftParsed)
         setPreviewRightState(rightParsed)
-        setPreviewLayoutType("type2")
+        setPreviewLayout("dual")
         setPreviewOpen(true)
       }
     } catch (error) {
@@ -671,7 +678,7 @@ export default function Page() {
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
         <div className="container mx-auto py-8">
-          <div className={`mx-auto space-y-6 px-4 sm:px-4 lg:px-4 ${currentLayoutType === "type1" ? "max-w-4xl" : "max-w-9xl"}`}>
+          <div className={`mx-auto space-y-6 px-4 sm:px-4 lg:px-4 ${currentLayout === "single" ? "max-w-4xl" : "max-w-9xl"}`}>
             {/* Professional Header */}
             <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
               <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
@@ -774,7 +781,8 @@ export default function Page() {
                     rightEditorRef={rightEditorRef}
                     setLoadingRef={setLoadingRef}
                     onProjectLoad={(projectData) => {
-                      const layoutType = projectData.type || "type1"
+                      // Detectar layout automaticamente baseado na estrutura de data
+                      const layoutInfo = detectProjectLayout(projectData.data)
                       
                       // Extract mode from preferences or default to free-page
                       const projectMode = projectData.preferences?.global?.mode || "free-page"
@@ -782,61 +790,42 @@ export default function Page() {
                       // Update project metadata
                       setCurrentProjectId(projectData.id)
                       setCurrentProjectName(projectData.name)
+                      setCurrentProjectType(projectData.type)  // tipo do projeto
+                      setCurrentLayout(layoutInfo.layoutType)  // layout detectado
                       setCurrentProjectStorageType(projectData.storageType || "local")
                       setProjectTags(projectData.tags || [])
-                      setCurrentLayoutType(layoutType)
                       setCurrentProjectMode(projectMode)
                       setIsFirstTime(false)
                       
                       // Mark project load time to prevent auto-save for 1 second
                       setLastProjectLoadTime(Date.now())
                       
-                      // Load editor data based on layout type
+                      // Extract editor states baseado no layout detectado
+                      const states = extractEditorStates(projectData.data, layoutInfo.layoutType)
+                      
+                      // Load editor data based on detected layout
                       setTimeout(() => {
                         try {
-                          if (layoutType === "type1" && editorRef.current) {
-                            // Type1: Single editor
-                            let parsedData
-                            try {
-                              parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
-                            } catch (parseError) {
-                              throw new Error("Project data is not valid JSON")
-                            }
-
-                            if (!parsedData || typeof parsedData !== 'object' || !parsedData.root) {
+                          if (layoutInfo.isSinglePanel && editorRef.current && states.single) {
+                            // Single panel: carregar editor único
+                            if (!states.single.root) {
                               throw new Error("Invalid Lexical format")
                             }
-
-                            const editorState = editorRef.current.parseEditorState(JSON.stringify(parsedData))
+                            const editorState = editorRef.current.parseEditorState(JSON.stringify(states.single))
                             editorRef.current.setEditorState(editorState)
-                            setEditorState(JSON.stringify(parsedData))
-
-                          } else if (layoutType === "type2" && leftEditorRef.current && rightEditorRef.current) {
-                            // Type2: Dual editors
-                            let parsedData
-                            try {
-                              parsedData = typeof projectData.data === 'string' ? JSON.parse(projectData.data) : projectData.data
-                            } catch (parseError) {
-                              throw new Error("Project data is not valid JSON")
-                            }
-
-                            if (!parsedData || !parsedData.left || !parsedData.right) {
-                              throw new Error("Type2 project must have left and right properties")
-                            }
-
-                            // Load left editor
-                            const leftParsed = typeof parsedData.left === 'string' ? JSON.parse(parsedData.left) : parsedData.left
-                            if (!leftParsed.root) throw new Error("Invalid left editor format")
-                            const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(leftParsed))
+                            setEditorState(JSON.stringify(states.single))
+                          } else if (layoutInfo.isDualPanel && leftEditorRef.current && rightEditorRef.current && states.left && states.right) {
+                            // Dual panel: carregar ambos editores
+                            if (!states.left.root) throw new Error("Invalid left editor format")
+                            if (!states.right.root) throw new Error("Invalid right editor format")
+                            
+                            const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(states.left))
                             leftEditorRef.current.setEditorState(leftEditorState)
-                            setLeftEditorState(JSON.stringify(leftParsed))
+                            setLeftEditorState(JSON.stringify(states.left))
 
-                            // Load right editor
-                            const rightParsed = typeof parsedData.right === 'string' ? JSON.parse(parsedData.right) : parsedData.right
-                            if (!rightParsed.root) throw new Error("Invalid right editor format")
-                            const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(rightParsed))
+                            const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(states.right))
                             rightEditorRef.current.setEditorState(rightEditorState)
-                            setRightEditorState(JSON.stringify(rightParsed))
+                            setRightEditorState(JSON.stringify(states.right))
                           }
                         } catch (error) {
                           console.error("Failed to load editor data:", error)
@@ -846,7 +835,7 @@ export default function Page() {
                             icon: "❌",
                           })
                         }
-                      }, 100) // Give React time to render new layout type
+                      }, 100)
                       
                       // Update URL hash with project ID
                       window.history.pushState(null, '', `#${projectData.id}`)
@@ -915,32 +904,49 @@ export default function Page() {
               availableTags={availableTags}
               onProjectCreate={(projectData) => {
                 const emptyState =
-                  '{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}'
+                  {"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}
                 
-                // Set the layout type and mode from the project data
-                setCurrentLayoutType(projectData.type)
-                setCurrentProjectMode(projectData.mode)
+                // Project data já vem com layout definido - detectar automaticamente  
+                // Se não tiver data, criar estrutura baseada no tipo de layout desejado
+                let dataString: string
+                let layoutType: LayoutType
+                
+                if (projectData.layout === "dual") {
+                  // Dual panel
+                  dataString = createProjectData("dual", { left: emptyState, right: emptyState })
+                  layoutType = "dual"
+                } else {
+                  // Single panel (default)
+                  dataString = createProjectData("single", { single: emptyState })
+                  layoutType = "single"
+                }
+                
+                // Set the layout and project type from the project data
+                setCurrentLayout(layoutType)
+                setCurrentProjectType((projectData.type || "type1") as ProjectType)
+                setCurrentProjectMode(projectData.mode || "free-page")
                 
                 // Mark project creation time to prevent auto-save for 1 second
                 setLastProjectLoadTime(Date.now())
                 
                 // Wait for layout to render, then initialize editors
                 setTimeout(() => {
-                  if (projectData.type === "type1") {
+                  const emptyStateString = JSON.stringify(emptyState)
+                  if (layoutType === "single") {
                     if (editorRef.current) {
-                      editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyState))
+                      editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyStateString))
                     }
-                    setEditorState(emptyState)
+                    setEditorState(emptyStateString)
                   } else {
-                    // type2 - initialize both editors
+                    // dual panel - initialize both editors
                     if (leftEditorRef.current) {
-                      leftEditorRef.current.setEditorState(leftEditorRef.current.parseEditorState(emptyState))
+                      leftEditorRef.current.setEditorState(leftEditorRef.current.parseEditorState(emptyStateString))
                     }
                     if (rightEditorRef.current) {
-                      rightEditorRef.current.setEditorState(rightEditorRef.current.parseEditorState(emptyState))
+                      rightEditorRef.current.setEditorState(rightEditorRef.current.parseEditorState(emptyStateString))
                     }
-                    setLeftEditorState(emptyState)
-                    setRightEditorState(emptyState)
+                    setLeftEditorState(emptyStateString)
+                    setRightEditorState(emptyStateString)
                   }
                 }, 100)
                 
@@ -958,7 +964,7 @@ export default function Page() {
             />
 
             {/* Editor Container - Render based on layout type */}
-            {currentLayoutType === "type1" ? (
+            {currentLayout === "single" ? (
               <EditorLayoutType1
                 editorRef={editorRef}
                 editorState={editorState}
@@ -1020,16 +1026,16 @@ export default function Page() {
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent 
-          className={previewLayoutType === "type2" ? "!max-w-none p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
-          style={previewLayoutType === "type2" ? { width: '95vw', maxWidth: '95vw' } : undefined}
+          className={previewLayout === "dual" ? "max-w-none! p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
+          style={previewLayout === "dual" ? { width: '95vw', maxWidth: '95vw' } : undefined}
         >
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
           </DialogHeader>
-          {previewLayoutType === "type1" && previewState && (
+          {previewLayout === "single" && previewState && (
             <PreviewRenderer serializedState={previewState} />
           )}
-          {previewLayoutType === "type2" && previewLeftState && previewRightState && (
+          {previewLayout === "dual" && previewLeftState && previewRightState && (
             <div className="w-full max-h-[80vh] overflow-y-auto">
               <PreviewRendererType2 leftState={previewLeftState} rightState={previewRightState} />
             </div>

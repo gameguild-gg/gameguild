@@ -2,13 +2,15 @@
  * Project Modes System
  * 
  * Defines the three project modes and their node restrictions:
- * - free-page: No restrictions, supports both type1 and type2 layouts
- * - code-page: Type2 layout with code-studio nodes only on right panel
- * - quiz-page: Type2 layout with quiz nodes only on right panel
+ * - free-page: No restrictions, supports both single and dual layouts
+ * - code-page: Optimized for code-studio nodes on right/single panel
+ * - quiz-page: Optimized for quiz nodes on right/single panel
+ * 
+ * Note: Layout type (single/dual) is now automatically detected from project data structure.
+ *       "type" field in ProjectData refers to project type (type1, type2, etc.), not layout.
  */
 
 export type ProjectMode = "free-page" | "code-page" | "quiz-page"
-export type ProjectLayoutType = "type1" | "type2"
 
 type NodeList = string | string[] | null
 
@@ -20,9 +22,9 @@ export interface NodeRestrictions {
 
 export interface ProjectModeConfig {
   mode: ProjectMode
-  layoutType: ProjectLayoutType
   restrictions: NodeRestrictions
   description: string
+  suggestedLayout?: "single" | "dual"  // sugestão de layout, mas não obrigatório
 }
 
 /**
@@ -55,19 +57,19 @@ export const NODE_RESTRICTIONS: Record<ProjectMode, NodeRestrictions> = {
  */
 export const PROJECT_MODES: Record<ProjectMode, Omit<ProjectModeConfig, 'mode'>> = {
   "free-page": {
-    layoutType: "type1",  // default suggestion
+    suggestedLayout: "single",
     restrictions: NODE_RESTRICTIONS["free-page"],
     description: "Free mode - no restrictions, choose single or dual layout"
   },
   "code-page": {
-    layoutType: "type2",  // default suggestion (works best with dual)
+    suggestedLayout: "dual",
     restrictions: NODE_RESTRICTIONS["code-page"],
-    description: "Code mode - optimized for code studio, works with both layouts"
+    description: "Code mode - optimized for code studio, works best with dual layout"
   },
   "quiz-page": {
-    layoutType: "type2",  // default suggestion (works best with dual)
+    suggestedLayout: "dual",
     restrictions: NODE_RESTRICTIONS["quiz-page"],
-    description: "Quiz mode - optimized for quiz nodes, works with both layouts"
+    description: "Quiz mode - optimized for quiz nodes, works best with dual layout"
   }
 }
 
@@ -130,16 +132,8 @@ export function isNodeAllowed(
 }
 
 /**
- * Get default layout type for a mode
+ * Get suggested layout type for a mode (optional, não obrigatório)
  */
-export function getDefaultLayoutForMode(mode: ProjectMode): ProjectLayoutType {
-  return PROJECT_MODES[mode].layoutType
-}
-
-/**
- * Check if mode supports layout type selection
- * All modes now support both type1 and type2
- */
-export function canSelectLayoutType(mode: ProjectMode): boolean {
-  return true  // All modes support layout selection
+export function getSuggestedLayoutForMode(mode: ProjectMode): "single" | "dual" {
+  return PROJECT_MODES[mode].suggestedLayout || "single"
 }
