@@ -22,6 +22,7 @@ public static class PaymentsModule
         // Register repositories (using shared ApplicationDbContext)
         services.AddScoped<IAuditTrailRepository, AuditTrailRepository>();
         services.AddScoped<IFinancialLedgerRepository, FinancialLedgerRepository>();
+        services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IRevenueEventRepository, RevenueEventRepository>();
 
         // Register services
