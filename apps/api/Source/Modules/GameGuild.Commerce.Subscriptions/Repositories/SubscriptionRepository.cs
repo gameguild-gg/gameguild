@@ -1,6 +1,8 @@
 using GameGuild.Abstractions;
+using GameGuild.Commerce;
 using GameGuild.Models;
 using GameGuild.ValueObjects;
+using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Subscriptions;
 
@@ -147,7 +149,7 @@ public class SubscriptionRepository(IApplicationDbContext context)
 
     public async Task<PagedResult<Subscription>> GetPagedAsync(int page, int pageSize, SubscriptionStatus? status = null, Guid? tenantId = null, Guid? planId = null, CancellationToken cancellationToken = default)
     {
-        var query = Query.Include(s => s.Plan);
+        IQueryable<Subscription> query = Query.Include(s => s.Plan);
 
         if (status.HasValue) query = query.Where(s => s.Status == status.Value);
 

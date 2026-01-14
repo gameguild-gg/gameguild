@@ -126,3 +126,4 @@ public class SignInResponse
     ///     Available step-up authentication methods
     /// </summary>
     public List<string>? AvailableMethods { get; set; }
+}
