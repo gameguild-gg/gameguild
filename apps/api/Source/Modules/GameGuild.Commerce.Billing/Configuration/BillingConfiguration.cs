@@ -21,6 +21,11 @@ public abstract class BillingConfiguration
     public PayPalSettings PayPal { get; set; } = new PayPalSettings();
 
     /// <summary>
+    ///     Apple Pay configuration settings
+    /// </summary>
+    public ApplePaySettings ApplePay { get; set; } = new ApplePaySettings();
+
+    /// <summary>
     ///     Webhook configuration settings
     /// </summary>
     public WebhookSettings Webhook { get; set; } = new WebhookSettings();

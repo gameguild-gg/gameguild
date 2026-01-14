@@ -32,6 +32,8 @@ public class ProcessPayPalWebhookCommandHandler(
                 request.TransmissionId,
                 request.TransmissionTime,
                 request.TransmissionSignature,
+                request.CertUrl,
+                request.AuthAlgo,
                 cancellationToken).ConfigureAwait(false);
 
             stopwatch.Stop();

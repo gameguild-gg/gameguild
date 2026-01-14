@@ -26,10 +26,10 @@ public class ProcessApplePayWebhookCommandHandler(
 
         try
         {
-            var result = await applePayWebhookService.ProcessApplePayWebhookAsync(
+            // Use ProcessAppStoreNotificationAsync for App Store Server Notifications V2
+            // The Payload is the signed JWS from Apple, which contains the full notification
+            var result = await applePayWebhookService.ProcessAppStoreNotificationAsync(
                 request.Payload,
-                request.MerchantId,
-                request.Signature,
                 cancellationToken).ConfigureAwait(false);
 
             stopwatch.Stop();

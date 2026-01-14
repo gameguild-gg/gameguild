@@ -11,18 +11,18 @@ namespace GameGuild.Commerce.Billing;
 public class PayPalBillingWebhookService : BillingWebhookService
 {
     private readonly IBillingWebhookRepository _webhookRepository;
-    private readonly IPayPalWebhookVerifier _webhookVerifier;
+    private readonly IPayPalSignatureVerificationService _signatureVerificationService;
     private readonly ILogger<PayPalBillingWebhookService> _logger;
 
     public PayPalBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
-        IPayPalWebhookVerifier webhookVerifier,
+        IPayPalSignatureVerificationService signatureVerificationService,
         ILogger<PayPalBillingWebhookService> logger,
         ISubscriptionService subscriptionService)
         : base(logger, subscriptionService)
     {
         _webhookRepository = webhookRepository;
-        _webhookVerifier = webhookVerifier;
+        _signatureVerificationService = signatureVerificationService;
         _logger = logger;
     }
 
@@ -80,12 +80,13 @@ public class PayPalBillingWebhookService : BillingWebhookService
             webhookEvent = await _webhookRepository.CreateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
 
             // Verify webhook signature with PayPal API
-            var verificationResult = await _webhookVerifier.VerifyWebhookSignatureAsync(
+            var verificationResult = await _signatureVerificationService.VerifySignatureAsync(
+                webhookId,
                 transmissionId,
                 transmissionTime,
                 transmissionSig,
-                certUrl ?? string.Empty,
-                authAlgo ?? "SHA256withRSA",
+                certUrl,
+                authAlgo,
                 payload,
                 cancellationToken).ConfigureAwait(false);
 

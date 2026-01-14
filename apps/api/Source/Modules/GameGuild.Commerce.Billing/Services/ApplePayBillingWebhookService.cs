@@ -11,18 +11,18 @@ namespace GameGuild.Commerce.Billing;
 public class ApplePayBillingWebhookService : BillingWebhookService
 {
     private readonly IBillingWebhookRepository _webhookRepository;
-    private readonly IAppleReceiptValidator _receiptValidator;
+    private readonly IApplePayReceiptValidationService _receiptValidationService;
     private readonly ILogger<ApplePayBillingWebhookService> _logger;
 
     public ApplePayBillingWebhookService(
         IBillingWebhookRepository webhookRepository,
-        IAppleReceiptValidator receiptValidator,
+        IApplePayReceiptValidationService receiptValidationService,
         ILogger<ApplePayBillingWebhookService> logger,
         ISubscriptionService subscriptionService)
         : base(logger, subscriptionService)
     {
         _webhookRepository = webhookRepository;
-        _receiptValidator = receiptValidator;
+        _receiptValidationService = receiptValidationService;
         _logger = logger;
     }
 
@@ -39,7 +39,7 @@ public class ApplePayBillingWebhookService : BillingWebhookService
         _logger.LogInformation("Processing App Store Server Notification V2");
 
         // Validate the signed notification using Apple's certificate chain
-        var validationResult = await _receiptValidator.ValidateNotificationAsync(signedPayload, cancellationToken)
+        var validationResult = await _receiptValidationService.VerifyNotificationAsync(signedPayload, cancellationToken)
             .ConfigureAwait(false);
 
         if (!validationResult.IsValid)
@@ -48,10 +48,8 @@ public class ApplePayBillingWebhookService : BillingWebhookService
             return WebhookProcessingResult.Failed("unknown", validationResult.ErrorMessage ?? "Validation failed");
         }
 
-        // Use notification UUID as event ID for idempotency
-        var eventId = validationResult.DecodedPayload?.NotificationUuid ?? 
-                      validationResult.TransactionId ??
-                      Guid.NewGuid().ToString();
+        // Use transaction ID as event ID for idempotency
+        var eventId = validationResult.TransactionId ?? Guid.NewGuid().ToString();
         var eventType = validationResult.NotificationType ?? "unknown";
 
         // Check for duplicate event (idempotency)
@@ -105,18 +103,15 @@ public class ApplePayBillingWebhookService : BillingWebhookService
     ///     Routes an App Store notification to the appropriate handler.
     /// </summary>
     private async Task RouteAppStoreNotificationAsync(
-        AppleNotificationValidationResult notification,
+        AppleNotificationVerificationResult notification,
         CancellationToken cancellationToken)
     {
-        var payload = notification.DecodedPayload;
-        if (payload == null) return;
-
         // Create a webhook payload for the handler
         var subscriptionPayload = new ApplePaySubscriptionWebhookPayload
         {
             TenantId = Guid.Empty, // Will be resolved from transaction lookup
             ExternalSubscriptionId = notification.OriginalTransactionId ?? string.Empty,
-            Status = payload.NotificationType ?? string.Empty,
+            Status = notification.NotificationType ?? string.Empty,
             ProductId = notification.ProductId,
             OriginalTransactionId = notification.OriginalTransactionId,
             Environment = notification.Environment
@@ -124,7 +119,7 @@ public class ApplePayBillingWebhookService : BillingWebhookService
 
         // Route based on notification type
         // See: https://developer.apple.com/documentation/appstoreservernotifications/notificationtype
-        switch (payload.NotificationType?.ToUpperInvariant())
+        switch (notification.NotificationType?.ToUpperInvariant())
         {
             case "SUBSCRIBED":
                 await HandleSubscriptionCreatedAsync(subscriptionPayload).ConfigureAwait(false);
@@ -151,7 +146,7 @@ public class ApplePayBillingWebhookService : BillingWebhookService
                     TenantId = Guid.Empty,
                     PaymentId = notification.TransactionId ?? string.Empty,
                     ExternalSubscriptionId = notification.OriginalTransactionId ?? string.Empty,
-                    FailureReason = payload.Subtype ?? "Billing retry"
+                    FailureReason = notification.Subtype ?? "Billing retry"
                 };
                 await HandlePaymentFailedAsync(failedPayload).ConfigureAwait(false);
                 break;
@@ -163,7 +158,7 @@ public class ApplePayBillingWebhookService : BillingWebhookService
 
             case "DID_CHANGE_RENEWAL_STATUS":
                 // User changed auto-renewal status
-                if (payload.Subtype == "AUTO_RENEW_DISABLED")
+                if (notification.Subtype == "AUTO_RENEW_DISABLED")
                 {
                     subscriptionPayload.Status = "auto_renew_disabled";
                     await HandleSubscriptionUpdatedAsync(subscriptionPayload).ConfigureAwait(false);
@@ -181,13 +176,13 @@ public class ApplePayBillingWebhookService : BillingWebhookService
                 // Handle refund events
                 _logger.LogInformation(
                     "Apple refund event received: Type={Type}, TransactionId={TransactionId}",
-                    payload.NotificationType, notification.TransactionId);
+                    notification.NotificationType, notification.TransactionId);
                 break;
 
             default:
                 _logger.LogInformation(
                     "Unhandled Apple notification type: {Type}/{Subtype}",
-                    payload.NotificationType, payload.Subtype);
+                    notification.NotificationType, notification.Subtype);
                 break;
         }
     }

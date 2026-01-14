@@ -233,13 +233,12 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
             using var reader = new StreamReader(Request.Body);
             var payload = await reader.ReadToEndAsync(ct);
 
-            // PayPal IPN requires specific headers for verification
+            // PayPal webhook requires specific headers for signature verification
             var transmissionId = Request.Headers["PayPal-Transmission-Id"].ToString();
             var transmissionTime = Request.Headers["PayPal-Transmission-Time"].ToString();
             var transmissionSig = Request.Headers["PayPal-Transmission-Sig"].ToString();
-            // Note: certUrl and authAlgo headers are available but not yet used in verification
-            // var certUrl = Request.Headers["PayPal-Cert-Url"].ToString();
-            // var authAlgo = Request.Headers["PayPal-Auth-Algo"].ToString();
+            var certUrl = Request.Headers["PayPal-Cert-Url"].ToString();
+            var authAlgo = Request.Headers["PayPal-Auth-Algo"].ToString();
 
             if (string.IsNullOrEmpty(transmissionId) || 
                 string.IsNullOrEmpty(transmissionTime) || 
@@ -253,7 +252,9 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
                 payload, 
                 transmissionId, 
                 transmissionSig, 
-                transmissionTime), ct).ConfigureAwait(false);
+                transmissionTime,
+                string.IsNullOrEmpty(certUrl) ? null : certUrl,
+                string.IsNullOrEmpty(authAlgo) ? null : authAlgo), ct).ConfigureAwait(false);
 
             if (result.Processed || result.WasAlreadyProcessed)
             {

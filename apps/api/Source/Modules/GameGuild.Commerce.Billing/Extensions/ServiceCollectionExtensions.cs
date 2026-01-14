@@ -19,9 +19,15 @@ public static class ServiceCollectionExtensions
 
         // Register configuration
         services.Configure<BillingConfiguration>(configuration.GetSection(BillingConfiguration.SectionName));
+        services.Configure<PayPalSettings>(configuration.GetSection($"{BillingConfiguration.SectionName}:PayPal"));
+        services.Configure<ApplePaySettings>(configuration.GetSection($"{BillingConfiguration.SectionName}:ApplePay"));
 
         // Register repositories
         services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
+
+        // Register verification services
+        services.AddHttpClient<IPayPalSignatureVerificationService, PayPalSignatureVerificationService>();
+        services.AddHttpClient<IApplePayReceiptValidationService, ApplePayReceiptValidationService>();
 
         // Register webhook services for each payment provider
         services.AddScoped<IBillingWebhookService, StripeBillingWebhookService>();
