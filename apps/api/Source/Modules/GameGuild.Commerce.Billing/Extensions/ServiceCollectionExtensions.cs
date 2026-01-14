@@ -23,8 +23,11 @@ public static class ServiceCollectionExtensions
         // Register repositories
         services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
 
-        // Register webhook service (uses concrete implementation that integrates with Subscriptions)
+        // Register webhook services for each payment provider
         services.AddScoped<IBillingWebhookService, StripeBillingWebhookService>();
+        services.AddScoped<StripeBillingWebhookService>();
+        services.AddScoped<PayPalBillingWebhookService>();
+        services.AddScoped<ApplePayBillingWebhookService>();
 
         return services;
     }
@@ -36,7 +39,12 @@ public static class ServiceCollectionExtensions
     {
         // Register webhook-specific services
         services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
+        
+        // Register all webhook service implementations
         services.AddScoped<IBillingWebhookService, StripeBillingWebhookService>();
+        services.AddScoped<StripeBillingWebhookService>();
+        services.AddScoped<PayPalBillingWebhookService>();
+        services.AddScoped<ApplePayBillingWebhookService>();
 
         return services;
     }

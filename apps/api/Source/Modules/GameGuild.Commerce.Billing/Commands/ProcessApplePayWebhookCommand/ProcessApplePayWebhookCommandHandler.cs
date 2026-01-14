@@ -5,33 +5,31 @@ using System.Text.Json;
 namespace GameGuild.Commerce.Billing;
 
 /// <summary>
-///     Handler for ProcessPayPalWebhookCommand.
-///     Delegates to PayPalBillingWebhookService for actual processing.
+///     Handler for ProcessApplePayWebhookCommand.
+///     Delegates to ApplePayBillingWebhookService for actual processing.
 /// </summary>
-public class ProcessPayPalWebhookCommandHandler(
-    PayPalBillingWebhookService paypalWebhookService,
-    ILogger<ProcessPayPalWebhookCommandHandler> logger
-) : ICommandHandler<ProcessPayPalWebhookCommand, WebhookProcessingResult>
+public class ProcessApplePayWebhookCommandHandler(
+    ApplePayBillingWebhookService applePayWebhookService,
+    ILogger<ProcessApplePayWebhookCommandHandler> logger
+) : ICommandHandler<ProcessApplePayWebhookCommand, WebhookProcessingResult>
 {
-    public async Task<WebhookProcessingResult> Handle(ProcessPayPalWebhookCommand request, CancellationToken cancellationToken)
+    public async Task<WebhookProcessingResult> Handle(ProcessApplePayWebhookCommand request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
 
         var (eventId, eventType) = ExtractEventInfo(request.Payload);
         logger.LogInformation(
-            "Processing PayPal webhook: EventId={EventId}, EventType={EventType}, PayloadLength={Length}",
+            "Processing Apple Pay webhook: EventId={EventId}, EventType={EventType}, PayloadLength={Length}",
             eventId, eventType, request.Payload.Length);
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
         try
         {
-            var result = await paypalWebhookService.ProcessPayPalWebhookAsync(
-                request.WebhookId ?? string.Empty,
+            var result = await applePayWebhookService.ProcessApplePayWebhookAsync(
                 request.Payload,
-                request.TransmissionId,
-                request.TransmissionTime,
-                request.TransmissionSignature,
+                request.MerchantId,
+                request.Signature,
                 cancellationToken).ConfigureAwait(false);
 
             stopwatch.Stop();
@@ -43,7 +41,7 @@ public class ProcessPayPalWebhookCommandHandler(
         {
             stopwatch.Stop();
             logger.LogError(ex,
-                "PayPal webhook processing failed: EventId={EventId}, ElapsedMs={ElapsedMs}",
+                "Apple Pay webhook processing failed: EventId={EventId}, ElapsedMs={ElapsedMs}",
                 eventId, stopwatch.ElapsedMilliseconds);
             throw;
         }
@@ -56,8 +54,10 @@ public class ProcessPayPalWebhookCommandHandler(
             using var doc = JsonDocument.Parse(payload);
             var root = doc.RootElement;
             
-            var eventId = root.TryGetProperty("id", out var idProp) ? idProp.GetString() ?? "unknown" : "unknown";
-            var eventType = root.TryGetProperty("event_type", out var typeProp) ? typeProp.GetString() ?? "unknown" : "unknown";
+            var eventId = root.TryGetProperty("eventId", out var idProp) 
+                ? idProp.GetString() ?? "unknown" 
+                : (root.TryGetProperty("transactionId", out var txProp) ? txProp.GetString() ?? "unknown" : "unknown");
+            var eventType = root.TryGetProperty("eventType", out var typeProp) ? typeProp.GetString() ?? "unknown" : "unknown";
             
             return (eventId, eventType);
         }
@@ -72,19 +72,19 @@ public class ProcessPayPalWebhookCommandHandler(
         if (result.Processed)
         {
             logger.LogInformation(
-                "PayPal webhook processed successfully: EventId={EventId}, EventType={EventType}, ElapsedMs={ElapsedMs}",
+                "Apple Pay webhook processed successfully: EventId={EventId}, EventType={EventType}, ElapsedMs={ElapsedMs}",
                 eventId, eventType, elapsedMs);
         }
         else if (result.AlreadyHandled)
         {
             logger.LogDebug(
-                "PayPal webhook already processed: EventId={EventId}, EventType={EventType}",
+                "Apple Pay webhook already processed: EventId={EventId}, EventType={EventType}",
                 eventId, eventType);
         }
         else
         {
             logger.LogWarning(
-                "PayPal webhook processing failed: EventId={EventId}, EventType={EventType}, Error={Error}, ElapsedMs={ElapsedMs}",
+                "Apple Pay webhook processing failed: EventId={EventId}, EventType={EventType}, Error={Error}, ElapsedMs={ElapsedMs}",
                 eventId, eventType, result.ErrorMessage, elapsedMs);
         }
     }

@@ -658,37 +658,56 @@ public interface IOrderService
 
 #### Remaining Issues
 
-1. **NONE: All Major Subscriptions Issues Resolved**
-   - State machine enforcement ✅
-   - Renewal idempotency ✅
-   - Payment recording idempotency ✅
-   - Proration calculation ✅
+**All Major Subscriptions Issues Resolved:**
+- State machine enforcement ✅
+- Renewal idempotency ✅
+- Payment recording idempotency ✅
+- Proration calculation ✅
+- Out-of-order payment protection ✅
+- TenantId fail-closed validation ✅
+- EntitlementSubscriptionStatus clearly distinguished from SubscriptionStatus ✅
 
-2. **NOTE: ISubscription.TenantId Hardened**
+#### Historical Fixes (Now Resolved)
+
+1. **✅ FIXED: ISubscription.TenantId Hardened**
    ```csharp
    // ISubscription.TenantId now throws instead of returning Guid.Empty
-   Guid ISubscription.TenantId => TenantId ?? throw new InvalidOperationException("TenantId is required");
+   Guid ISubscription.TenantId => TenantId ?? throw new InvalidOperationException(
+       "TenantId is required for subscription entities but was null. This indicates a data integrity issue.");
    ```
 
-3. **NOTE: Duplicate SubscriptionStatus Resolved**
+2. **✅ FIXED: Duplicate SubscriptionStatus Resolved**
    - `Products.SubscriptionStatus` renamed to `EntitlementSubscriptionStatus`
    - Clear distinction between entitlement status and subscription lifecycle status
+   - Proper XML documentation distinguishing the two enums
 
-4. **MEDIUM: RecordPayment Missing Idempotency**
+3. **✅ FIXED: RecordPayment Has Full Idempotency**
    ```csharp
-   // Subscription.cs:378 - No external payment ID check
-   public void RecordPayment(decimal amount, string currency, DateTime paymentDate)
+   // Subscription.cs - RecordPayment with idempotency key and out-of-order protection
+   public PaymentRecordResult RecordPayment(decimal amount, string currency, DateTime paymentDate, 
+       string idempotencyKey, int? forBillingCycle = null)
    {
-       LastPaymentAt = paymentDate;
-       BillingCycleCount++;  // Can be called multiple times
+       if (string.IsNullOrEmpty(idempotencyKey))
+           throw new ArgumentException("Idempotency key is required for payment recording");
+       
+       // Idempotency check - if same payment already recorded, skip
+       if (LastPaymentIdempotencyKey == idempotencyKey)
+           return PaymentRecordResult.AlreadyProcessed(idempotencyKey, LastProcessedBillingCycle);
+       
+       // Out-of-order protection
+       if (forBillingCycle.HasValue && forBillingCycle.Value < LastProcessedBillingCycle)
+           return PaymentRecordResult.RejectedOutOfOrder(forBillingCycle.Value, LastProcessedBillingCycle, ...);
+       
+       // Record payment with full tracking
+       LastPaymentIdempotencyKey = idempotencyKey;
+       LastProcessedBillingCycle = forBillingCycle ?? BillingCycleCount;
+       // ...
    }
    ```
 
-5. **LOW: Nullable TenantId in Interface**
-   ```csharp
-   // ISubscription.cs - Returns Guid.Empty for null
-   Guid ISubscription.TenantId { get => TenantId ?? Guid.Empty; }
-   ```
+4. **✅ FIXED: Nullable TenantId Hardened**
+   - Interface implementation now throws `InvalidOperationException` for null TenantId
+   - Fail-closed behavior prevents silent data integrity issues
 
 #### Positive Findings
 
@@ -696,6 +715,10 @@ public interface IOrderService
 ✅ `ExternalId` and `ExternalCustomerId` for payment provider integration  
 ✅ Billing cycle calculation is deterministic  
 ✅ Auto-renewal flag with proper guards  
+✅ `PaymentRecordResult` provides detailed feedback (Success, AlreadyProcessed, RejectedOutOfOrder)  
+✅ `LastProcessedBillingCycle` prevents out-of-order payment corruption  
+✅ `LastPaymentIdempotencyKey` and `LastRenewalIdempotencyKey` for idempotency  
+✅ Price version locking via `LockedPriceVersionId` protects against mid-cycle price changes  
 
 ---
 
