@@ -20,6 +20,7 @@ import { EditableProjectTitle } from "@/components/editor/extras/editor/editable
 import { ProjectStorageInfo } from "@/components/editor/extras/editor/project-storage-info"
 import { ProjectModeIndicator } from "@/components/editor/extras/editor/project-mode-indicator"
 import { PanelNavigationSidebar } from "@/components/editor/extras/editor/panel-navigation-sidebar"
+import { PreviewModeSelector } from "@/components/editor/extras/editor/preview-mode-selector"
 import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/components/editor/extras/editor/project-title-operations"
 import { handleSave as saveProject, handleSaveAs as saveAsProject } from "@/components/editor/extras/editor/project-save-operations"
 import { calculateProjectAssetsSize as calculateAssets } from "@/components/editor/extras/editor/project-assets-operations"
@@ -950,43 +951,10 @@ export default function Page() {
                   
                   {/* Preview Mode Selector (Sequential Layout Only) */}
                   {currentLayout === "sequential" && sequentialStructure && (
-                    <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-300 dark:border-gray-600">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        Preview Mode:
-                      </span>
-                      <Button
-                        variant={previewMode === "continuous" ? "default" : "outline"}
-                        size="sm"
-                        onClick={async () => {
-                          setPreviewMode("continuous")
-                          toast.success("Preview mode changed", {
-                            description: "Preview will show all panels in continuous scroll",
-                            duration: 2000
-                          })
-                        }}
-                        className="gap-2 h-8"
-                        title="Show all panels in continuous scroll"
-                      >
-                        <Monitor className="h-3.5 w-3.5" />
-                        Continuous
-                      </Button>
-                      <Button
-                        variant={previewMode === "slide" ? "default" : "outline"}
-                        size="sm"
-                        onClick={async () => {
-                          setPreviewMode("slide")
-                          toast.success("Preview mode changed", {
-                            description: "Preview will show one panel at a time",
-                            duration: 2000
-                          })
-                        }}
-                        className="gap-2 h-8"
-                        title="Show one panel at a time (presentation mode)"
-                      >
-                        <Presentation className="h-3.5 w-3.5" />
-                        Slide
-                      </Button>
-                    </div>
+                    <PreviewModeSelector
+                      previewMode={previewMode}
+                      onPreviewModeChange={setPreviewMode}
+                    />
                   )}
                 </div>
 
