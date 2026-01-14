@@ -118,15 +118,16 @@ public class UserWalletTests
     [Fact]
     public void DeductFunds_ShouldCallTouchForOptimisticConcurrency()
     {
-        // Arrange - Critical: DeductFunds must call Touch() for concurrency protection
+        // Arrange - Critical: DeductFunds must call Touch() which updates UpdatedAt
+        // EF Core uses this for change tracking and optimistic concurrency
         var wallet = CreateActiveWallet(initialBalance: 100m);
-        var initialVersion = wallet.Version;
+        var initialUpdatedAt = wallet.UpdatedAt;
 
         // Act
         wallet.DeductFunds(30m, "Test purchase");
 
-        // Assert - Version should be incremented via Touch()
-        wallet.Version.Should().BeGreaterThan(initialVersion);
+        // Assert - UpdatedAt should be updated via Touch()
+        wallet.UpdatedAt.Should().BeAfter(initialUpdatedAt);
     }
 
     [Fact]
@@ -244,32 +245,35 @@ public class UserWalletTests
     }
 
     [Fact]
-    public void Lock_ShouldIncrementVersion()
+    public void Lock_ShouldUpdateTimestamp()
     {
         // Arrange
         var wallet = CreateActiveWallet();
-        var initialVersion = wallet.Version;
+        var initialUpdatedAt = wallet.UpdatedAt;
 
         // Act
         wallet.Lock("Test");
 
-        // Assert
-        wallet.Version.Should().BeGreaterThan(initialVersion);
+        // Assert - Touch() updates UpdatedAt
+        wallet.UpdatedAt.Should().BeAfter(initialUpdatedAt);
     }
 
     [Fact]
-    public void Unlock_ShouldIncrementVersion()
+    public void Unlock_ShouldUpdateTimestamp()
     {
         // Arrange
         var wallet = CreateActiveWallet();
         wallet.Lock("Test");
-        var versionAfterLock = wallet.Version;
+        var updatedAtAfterLock = wallet.UpdatedAt;
+
+        // Small delay to ensure timestamp difference
+        System.Threading.Thread.Sleep(1);
 
         // Act
         wallet.Unlock();
 
-        // Assert
-        wallet.Version.Should().BeGreaterThan(versionAfterLock);
+        // Assert - Touch() updates UpdatedAt
+        wallet.UpdatedAt.Should().BeAfter(updatedAtAfterLock);
     }
 
     #endregion
@@ -277,22 +281,24 @@ public class UserWalletTests
     #region Double-Spend Prevention Tests
 
     [Fact]
-    public void DeductFunds_MultipleCallsShouldDecrementVersionEachTime()
+    public void DeductFunds_MultipleCallsShouldUpdateTimestampEachTime()
     {
-        // Arrange - Simulates that each deduction increments version for concurrency check
+        // Arrange - Simulates that each deduction calls Touch() for change tracking
         var wallet = CreateActiveWallet(initialBalance: 300m);
-        var version1 = wallet.Version;
+        var updatedAt1 = wallet.UpdatedAt;
 
         // Act
+        System.Threading.Thread.Sleep(1);
         wallet.DeductFunds(100m, "Deduction 1");
-        var version2 = wallet.Version;
+        var updatedAt2 = wallet.UpdatedAt;
 
+        System.Threading.Thread.Sleep(1);
         wallet.DeductFunds(100m, "Deduction 2");
-        var version3 = wallet.Version;
+        var updatedAt3 = wallet.UpdatedAt;
 
-        // Assert
-        version2.Should().BeGreaterThan(version1);
-        version3.Should().BeGreaterThan(version2);
+        // Assert - Each deduction updates timestamp
+        updatedAt2.Should().BeAfter(updatedAt1);
+        updatedAt3.Should().BeAfter(updatedAt2);
         wallet.Balance.Should().Be(100m);
     }
 
