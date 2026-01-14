@@ -121,7 +121,7 @@ public class ApplePayReceiptValidationService : IApplePayReceiptValidationServic
     }
 
     /// <inheritdoc />
-    public async Task<AppleNotificationVerificationResult> VerifyNotificationAsync(
+    public Task<AppleNotificationVerificationResult> VerifyNotificationAsync(
         string signedPayload,
         CancellationToken cancellationToken = default)
     {
@@ -132,7 +132,7 @@ public class ApplePayReceiptValidationService : IApplePayReceiptValidationServic
 
             if (notification == null)
             {
-                return AppleNotificationVerificationResult.Failed("Failed to decode signed notification");
+                return Task.FromResult(AppleNotificationVerificationResult.Failed("Failed to decode signed notification"));
             }
 
             // Verify the notification is for our app
@@ -141,7 +141,7 @@ public class ApplePayReceiptValidationService : IApplePayReceiptValidationServic
             {
                 _logger.LogWarning("Notification bundle ID mismatch. Expected={Expected}, Received={Received}",
                     _settings.BundleId, data?.BundleId);
-                return AppleNotificationVerificationResult.Failed("Bundle ID mismatch");
+                return Task.FromResult(AppleNotificationVerificationResult.Failed("Bundle ID mismatch"));
             }
 
             // Decode the signed transaction info if present
@@ -155,7 +155,7 @@ public class ApplePayReceiptValidationService : IApplePayReceiptValidationServic
                 "Apple notification verified. Type={NotificationType}, Subtype={Subtype}, TransactionId={TransactionId}",
                 notification.NotificationType, notification.Subtype, transactionInfo?.TransactionId);
 
-            return AppleNotificationVerificationResult.Success(
+            return Task.FromResult(AppleNotificationVerificationResult.Success(
                 notification.NotificationType,
                 notification.Subtype,
                 transactionInfo?.TransactionId ?? string.Empty,
@@ -164,12 +164,12 @@ public class ApplePayReceiptValidationService : IApplePayReceiptValidationServic
                 transactionInfo?.ExpiresDate.HasValue == true
                     ? DateTimeOffset.FromUnixTimeMilliseconds(transactionInfo.ExpiresDate.Value).UtcDateTime
                     : null,
-                data?.Environment ?? "unknown");
+                data?.Environment ?? "unknown"));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error verifying Apple notification");
-            return AppleNotificationVerificationResult.Failed(ex.Message);
+            return Task.FromResult(AppleNotificationVerificationResult.Failed(ex.Message));
         }
     }
 
