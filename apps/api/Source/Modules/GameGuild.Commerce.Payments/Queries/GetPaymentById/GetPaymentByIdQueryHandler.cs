@@ -3,19 +3,22 @@ using GameGuild.CQRS;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Handler for getting payment by ID
+///     Handler for getting payment by ID.
 /// </summary>
+/// <remarks>
+///     See <see cref="GetAllPaymentsQueryHandler"/> for implementation notes on payment data sources.
+/// </remarks>
 public sealed class GetPaymentByIdQueryHandler : IQueryHandler<GetPaymentByIdQuery, PaymentResult?>
 {
-    public async Task<PaymentResult?> Handle(GetPaymentByIdQuery request, CancellationToken cancellationToken)
+    public Task<PaymentResult?> Handle(GetPaymentByIdQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Implement payment retrieval logic
-        // 1. Query database for payment by ID
-        // 2. Apply security checks
-        // 3. Return payment result or null if not found
-
-        await Task.Delay(100, cancellationToken); // Placeholder
-
-        return null; // Not found placeholder
+        // Payment lookup by ID implementation notes:
+        // 1. Check ledger entries via IFinancialLedgerRepository
+        // 2. Query payment gateway for external payment records
+        // 3. Apply authorization checks based on tenant context
+        //
+        // Returns null (not found) until Payment entity or gateway lookup is implemented.
+        
+        return Task.FromResult<PaymentResult?>(null);
     }
 }
