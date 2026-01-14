@@ -171,11 +171,19 @@ export function CreateProjectDialog({
       }
       
       // Create data structure based on selected layout
-      const projectData = createProjectData(layoutType, {
-        single: layoutType === "single" ? emptyState : null,
-        left: layoutType === "dual" ? emptyState : null,
-        right: layoutType === "dual" ? emptyState : null,
-      })
+      // For sequential layout, the parent component will create the structure
+      let projectData: string
+      
+      if (layoutType === "sequential") {
+        // Temporary placeholder - will be replaced by parent component
+        projectData = JSON.stringify({ version: "sequential-v1", panels: [] })
+      } else {
+        projectData = createProjectData(layoutType, {
+          single: layoutType === "single" ? emptyState : null,
+          left: layoutType === "dual" ? emptyState : null,
+          right: layoutType === "dual" ? emptyState : null,
+        })
+      }
       
       await storageAdapter.save(
         newProjectId, 
@@ -292,9 +300,12 @@ export function CreateProjectDialog({
               >
                 <option value="single">Single Panel</option>
                 <option value="dual">Dual Panel</option>
+                <option value="sequential">Sequential Panels</option>
               </select>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {layoutType === "single" ? "Vertical single editor" : "Horizontal split layout"}
+                {layoutType === "single" && "Vertical single editor"}
+                {layoutType === "dual" && "Horizontal split layout"}
+                {layoutType === "sequential" && "Multiple vertical panels (like PowerPoint slides)"}
               </p>
             </div>
           </div>
