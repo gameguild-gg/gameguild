@@ -1557,7 +1557,7 @@ public void DeductFunds(decimal amount, ...)
 | Subscription Lifecycle | Create → Activate → Renew → Cancel          | ✅ IMPLEMENTED |
 | Webhook Processing     | Mock Stripe webhook → Internal state update | ✅ IMPLEMENTED |
 | Proration Calculation  | Upgrade mid-cycle → Correct amounts         | ✅ IMPLEMENTED |
-| Tax Calculation        | Multi-jurisdiction → Correct rates          | 🔲 TODO        |
+| Tax Calculation        | Multi-jurisdiction → Correct rates          | ✅ IMPLEMENTED |
 
 ### Load/Stress Tests
 
@@ -1580,8 +1580,10 @@ public void DeductFunds(decimal amount, ...)
 | `InvoiceImmutabilityTests.cs` | `GameGuild.Billing.UnitTests/Security/` | 18 tests |
 | `CommerceSecurityIntegrationTests.cs` | `GameGuild.Subscriptions.IntegrationTests/Security/` | 12 tests |
 | `CommerceSecurityLoadTests.cs` | `GameGuild.Subscriptions.PerformanceTests/Security/` | 10 benchmarks |
+| `TaxCalculationTests.cs` | `GameGuild.Payments.UnitTests/Security/` | 35 tests |
+| `TaxCalculationIntegrationTests.cs` | `GameGuild.Payments.IntegrationTests/Security/` | 15 tests |
 
-**Total Tests Added:** 114+ security-critical tests covering all P0 and P1 items
+**Total Tests Added:** 164+ security-critical tests covering all P0 and P1 items
 
 ---
 

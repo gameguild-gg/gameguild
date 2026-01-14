@@ -104,15 +104,21 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.UserProfiles.Inte
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.UserProfiles.PerformanceTests", "Tests\GameGuild.UserProfiles.PerformanceTests\GameGuild.UserProfiles.PerformanceTests.csproj", "{AB123456-1234-5678-9ABC-345678901234}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Subscriptions.UnitTests", "Tests\GameGuild.Subscriptions.UnitTests\GameGuild.Subscriptions.UnitTests.csproj", "{571568B5-CE69-4399-8A33-4B30F0310AC7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Subscriptions.UnitTests", "Tests\GameGuild.Commerce.Subscriptions.UnitTests\GameGuild.Commerce.Subscriptions.UnitTests.csproj", "{571568B5-CE69-4399-8A33-4B30F0310AC7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Subscriptions.IntegrationTests", "Tests\GameGuild.Subscriptions.IntegrationTests\GameGuild.Subscriptions.IntegrationTests.csproj", "{ECF99133-3B0C-464F-9CF1-05C96CCF649A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Subscriptions.IntegrationTests", "Tests\GameGuild.Commerce.Subscriptions.IntegrationTests\GameGuild.Commerce.Subscriptions.IntegrationTests.csproj", "{ECF99133-3B0C-464F-9CF1-05C96CCF649A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Subscriptions.PerformanceTests", "Tests\GameGuild.Subscriptions.PerformanceTests\GameGuild.Subscriptions.PerformanceTests.csproj", "{8BA0A063-AE96-4663-8347-5B226EA1610F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Subscriptions.PerformanceTests", "Tests\GameGuild.Commerce.Subscriptions.PerformanceTests\GameGuild.Commerce.Subscriptions.PerformanceTests.csproj", "{8BA0A063-AE96-4663-8347-5B226EA1610F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Payments.IntegrationTests", "Tests\GameGuild.Payments.IntegrationTests\GameGuild.Payments.IntegrationTests.csproj", "{2F8A9B4C-1D5E-4FA3-9C2B-8E6D7A3F4B1C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Payments.IntegrationTests", "Tests\GameGuild.Commerce.Payments.IntegrationTests\GameGuild.Commerce.Payments.IntegrationTests.csproj", "{2F8A9B4C-1D5E-4FA3-9C2B-8E6D7A3F4B1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Billing.IntegrationTests", "Tests\GameGuild.Billing.IntegrationTests\GameGuild.Billing.IntegrationTests.csproj", "{A49C0D27-87C2-5ED8-6C3E-8BCFBD10A222}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Payments.UnitTests", "Tests\GameGuild.Commerce.Payments.UnitTests\GameGuild.Commerce.Payments.UnitTests.csproj", "{2F8A9B4C-1D5E-4FA3-9C2B-8E6D7A3F4B2D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Billing.IntegrationTests", "Tests\GameGuild.Commerce.Billing.IntegrationTests\GameGuild.Commerce.Billing.IntegrationTests.csproj", "{A49C0D27-87C2-5ED8-6C3E-8BCFBD10A222}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Billing.UnitTests", "Tests\GameGuild.Commerce.Billing.UnitTests\GameGuild.Commerce.Billing.UnitTests.csproj", "{A49C0D27-87C2-5ED8-6C3E-8BCFBD10A333}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Commerce.Orders.UnitTests", "Tests\GameGuild.Commerce.Orders.UnitTests\GameGuild.Commerce.Orders.UnitTests.csproj", "{C49C0D27-87C2-5ED8-6C3E-8BCFBD10A444}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameGuild.Features.UnitTests", "Tests\GameGuild.Features.UnitTests\GameGuild.Features.UnitTests.csproj", "{F9BE8038-ECA5-4004-8AAE-3E0A6F9E6E7C}"
 EndProject

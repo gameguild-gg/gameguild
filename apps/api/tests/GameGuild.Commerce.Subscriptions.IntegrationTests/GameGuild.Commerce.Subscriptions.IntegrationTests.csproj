@@ -6,10 +6,10 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <RootNamespace>GameGuild.Commerce.Subscriptions.IntegrationTests</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet"/>
         <PackageReference Include="coverlet.collector"/>
         <PackageReference Include="FluentAssertions"/>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing"/>

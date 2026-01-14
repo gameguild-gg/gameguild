@@ -1,10 +1,12 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace GameGuild.Commerce.Billing;
 
 /// <summary>
 ///     Base class for webhook processors implementing Template Method pattern.
 ///     Encapsulates the common flow: validate signature → check idempotency → store event → process → update status.
+///     Includes configurable retry logic with exponential backoff.
 /// </summary>
 /// <remarks>
 ///     Provider-specific implementations should override the abstract/virtual methods to customize behavior.
@@ -13,6 +15,7 @@ public abstract class WebhookProcessorBase
 {
     private readonly IBillingWebhookRepository _webhookRepository;
     private readonly ILogger _logger;
+    private readonly WebhookSettings _webhookSettings;
 
     /// <summary>
     ///     The payment provider identifier (e.g., PaymentProviders.Stripe).
@@ -21,14 +24,21 @@ public abstract class WebhookProcessorBase
 
     protected WebhookProcessorBase(
         IBillingWebhookRepository webhookRepository,
+        IOptions<BillingConfiguration> billingConfiguration,
         ILogger logger)
     {
         _webhookRepository = webhookRepository;
+        _webhookSettings = billingConfiguration.Value.Webhook;
         _logger = logger;
     }
 
     /// <summary>
-    ///     Template Method: Process a webhook with standard idempotency and error handling.
+    ///     Gets the configured webhook settings.
+    /// </summary>
+    protected WebhookSettings Settings => _webhookSettings;
+
+    /// <summary>
+    ///     Template Method: Process a webhook with standard idempotency, retry logic, and error handling.
     /// </summary>
     /// <param name="eventId">Unique event identifier for idempotency</param>
     /// <param name="eventType">The event type (e.g., customer.subscription.created)</param>
@@ -64,8 +74,8 @@ public abstract class WebhookProcessorBase
             ExternalEventId = eventId,
             Provider = ProviderName,
             EventType = eventType,
-            Payload = payload,
-            ProcessingAttempts = 1
+            Payload = _webhookSettings.StorePayloads ? payload : null,
+            ProcessingAttempts = 0
         };
 
         try
@@ -75,29 +85,93 @@ public abstract class WebhookProcessorBase
                 .CreateAsync(webhookEvent, cancellationToken)
                 .ConfigureAwait(false);
 
-            // Step 4: Route to provider-specific handler
-            await RouteEventAsync(eventType, payload, cancellationToken).ConfigureAwait(false);
+            // Step 4: Process with retry logic
+            await ProcessWithRetryAsync(webhookEvent, eventType, payload, cancellationToken)
+                .ConfigureAwait(false);
 
-            // Step 5: Mark as processed
-            webhookEvent.MarkAsProcessed();
-            await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
-
-            _logger.LogInformation(
-                "Successfully processed {Provider} webhook: {EventId}",
-                ProviderName, eventId);
             return WebhookProcessingResult.Success(eventId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Failed to process {Provider} webhook: {EventId}",
-                ProviderName, eventId);
-
-            webhookEvent.MarkAsFailed(ex.Message);
-            await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+                "Failed to process {Provider} webhook: {EventId} after {Attempts} attempts",
+                ProviderName, eventId, webhookEvent.ProcessingAttempts);
 
             return WebhookProcessingResult.Failed(eventId, ex.Message);
         }
+    }
+
+    /// <summary>
+    ///     Processes the webhook with configurable retry logic.
+    /// </summary>
+    private async Task ProcessWithRetryAsync(
+        BillingWebhookEvent webhookEvent,
+        string eventType,
+        string payload,
+        CancellationToken cancellationToken)
+    {
+        var maxAttempts = _webhookSettings.RetryPolicy.Enabled
+            ? _webhookSettings.MaxRetryAttempts
+            : 1;
+
+        Exception? lastException = null;
+
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            webhookEvent.ProcessingAttempts = attempt;
+
+            try
+            {
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(TimeSpan.FromSeconds(_webhookSettings.ProcessingTimeoutSeconds));
+
+                await RouteEventAsync(eventType, payload, cts.Token).ConfigureAwait(false);
+
+                // Success
+                webhookEvent.MarkAsProcessed();
+                await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+
+                _logger.LogInformation(
+                    "Successfully processed {Provider} webhook: {EventId} on attempt {Attempt}",
+                    ProviderName, webhookEvent.ExternalEventId, attempt);
+
+                return;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // External cancellation requested, don't retry
+                throw;
+            }
+            catch (Exception ex)
+            {
+                lastException = ex;
+
+                _logger.LogWarning(ex,
+                    "Attempt {Attempt}/{MaxAttempts} failed for {Provider} webhook: {EventId}",
+                    attempt, maxAttempts, ProviderName, webhookEvent.ExternalEventId);
+
+                // Update webhook event with failure info
+                webhookEvent.MarkAsFailed(ex.Message);
+                await _webhookRepository.UpdateAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+
+                // Wait before retry (if not last attempt)
+                if (attempt < maxAttempts && _webhookSettings.RetryPolicy.Enabled)
+                {
+                    var delay = _webhookSettings.RetryPolicy.CalculateDelay(attempt);
+
+                    _logger.LogDebug(
+                        "Waiting {Delay} before retry attempt {NextAttempt} for webhook {EventId}",
+                        delay, attempt + 1, webhookEvent.ExternalEventId);
+
+                    await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                }
+            }
+        }
+
+        // All retries exhausted
+        throw new WebhookProcessingException(
+            $"Failed to process webhook {webhookEvent.ExternalEventId} after {maxAttempts} attempts",
+            lastException);
     }
 
     /// <summary>
@@ -111,6 +185,15 @@ public abstract class WebhookProcessorBase
         string eventType,
         string payload,
         CancellationToken cancellationToken);
+}
+
+/// <summary>
+///     Exception thrown when webhook processing fails after all retry attempts.
+/// </summary>
+public class WebhookProcessingException : Exception
+{
+    public WebhookProcessingException(string message) : base(message) { }
+    public WebhookProcessingException(string message, Exception? innerException) : base(message, innerException) { }
 }
 
 /// <summary>
