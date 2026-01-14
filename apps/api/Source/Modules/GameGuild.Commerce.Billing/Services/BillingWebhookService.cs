@@ -120,7 +120,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
             // Cancel the subscription
             await _subscriptionService.CancelAsync(
                 subscription.Id,
-                CancellationReason.ExternalRequest,
+                CancellationReason.Custom,
                 "Canceled via webhook from payment provider",
                 payload.EndDate
             ).ConfigureAwait(false);
@@ -233,7 +233,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 break;
 
             case SubscriptionStatus.Cancelled:
-                await _subscriptionService.CancelAsync(subscription.Id, CancellationReason.ExternalRequest).ConfigureAwait(false);
+                await _subscriptionService.CancelAsync(subscription.Id, CancellationReason.Custom).ConfigureAwait(false);
                 break;
 
             case SubscriptionStatus.Trialing:
