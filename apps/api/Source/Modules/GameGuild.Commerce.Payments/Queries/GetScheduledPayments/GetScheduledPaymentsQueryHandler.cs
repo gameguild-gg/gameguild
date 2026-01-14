@@ -3,16 +3,23 @@ using GameGuild.CQRS;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Handler for getting scheduled payments
+///     Handler for getting scheduled payments.
 /// </summary>
+/// <remarks>
+///     Scheduled payments are typically managed via:
+///     - Subscription renewal schedules in the Subscriptions module
+///     - Payment gateway scheduling (e.g., Stripe Billing)
+/// </remarks>
 public class GetScheduledPaymentsQueryHandler : IQueryHandler<GetScheduledPaymentsQuery, IEnumerable<PaymentResult>>
 {
-    public async Task<IEnumerable<PaymentResult>> Handle(GetScheduledPaymentsQuery request, CancellationToken cancellationToken)
+    public Task<IEnumerable<PaymentResult>> Handle(GetScheduledPaymentsQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Implement actual payment repository query for scheduled payments
-        // This should query payments with status = "scheduled" or future execution dates
-        await Task.CompletedTask;
-
-        return [];
+        // Scheduled payment queries should integrate with:
+        // - ISubscriptionService.GetDueForRenewalAsync() for upcoming renewals
+        // - Payment gateway scheduled payment APIs
+        //
+        // Returns empty collection until scheduling requirements are finalized.
+        
+        return Task.FromResult<IEnumerable<PaymentResult>>([]);
     }
 }

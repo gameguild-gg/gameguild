@@ -3,16 +3,23 @@ using GameGuild.CQRS;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Handler for getting refunded payments
+///     Handler for getting refunded payments.
 /// </summary>
+/// <remarks>
+///     Refund tracking is typically managed via:
+///     - FinancialLedgerEntry with refund transaction type
+///     - Payment gateway refund records
+/// </remarks>
 public class GetRefundedPaymentsQueryHandler : IQueryHandler<GetRefundedPaymentsQuery, IEnumerable<PaymentResult>>
 {
-    public async Task<IEnumerable<PaymentResult>> Handle(GetRefundedPaymentsQuery request, CancellationToken cancellationToken)
+    public Task<IEnumerable<PaymentResult>> Handle(GetRefundedPaymentsQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Implement actual payment repository query for refunded payments
-        // This should query payments with status = "refunded" or partial refunds
-        await Task.CompletedTask;
-
-        return [];
+        // Refund queries should integrate with:
+        // - IFinancialLedgerRepository for refund ledger entries
+        // - Payment gateway refund history
+        //
+        // Returns empty collection until refund tracking is fully implemented.
+        
+        return Task.FromResult<IEnumerable<PaymentResult>>([]);
     }
 }

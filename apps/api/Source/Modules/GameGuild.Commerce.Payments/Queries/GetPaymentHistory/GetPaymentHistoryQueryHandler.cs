@@ -3,20 +3,32 @@ using GameGuild.CQRS;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Handler for getting payment history
+///     Handler for getting payment history.
 /// </summary>
+/// <remarks>
+///     Payment history combines data from:
+///     - FinancialLedgerEntry for transaction records
+///     - RevenueEvent for revenue tracking
+///     - Subscription payment records
+/// </remarks>
 public sealed class GetPaymentHistoryQueryHandler : IQueryHandler<GetPaymentHistoryQuery, List<PaymentHistoryResult>>
 {
-    public async Task<List<PaymentHistoryResult>> Handle(GetPaymentHistoryQuery request, CancellationToken cancellationToken)
+    public Task<List<PaymentHistoryResult>> Handle(GetPaymentHistoryQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Implement payment history retrieval logic
-        // 1. Query database for payment history
-        // 2. Apply filters (user, date range, status, etc.)
-        // 3. Apply pagination
-        // 4. Return formatted results
+        // Payment history queries should integrate with:
+        // - IFinancialLedgerRepository for transaction history
+        // - IRevenueEventRepository for revenue records
+        // - ISubscriptionService for subscription payment history
+        //
+        // Implementation would:
+        // 1. Query ledger entries with pagination
+        // 2. Apply user/tenant filters
+        // 3. Apply date range and status filters
+        // 4. Format as PaymentHistoryResult DTOs
+        //
+        // Returns empty list until history tracking is fully implemented.
 
-        await Task.Delay(100, cancellationToken); // Placeholder
-
-        return new List<PaymentHistoryResult>(); // Empty list placeholder
+        return Task.FromResult(new List<PaymentHistoryResult>());
     }
 }
+

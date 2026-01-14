@@ -38,5 +38,10 @@ public enum CancellationReason
     /// <summary>
     ///     Custom reason
     /// </summary>
-    Custom
+    Custom,
+
+    /// <summary>
+    ///     Cancellation requested by external system (e.g., via webhook from payment provider)
+    /// </summary>
+    ExternalRequest
 }

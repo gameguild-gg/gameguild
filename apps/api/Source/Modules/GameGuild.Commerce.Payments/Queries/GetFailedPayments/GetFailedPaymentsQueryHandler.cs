@@ -3,20 +3,25 @@ using GameGuild.CQRS;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Handler for getting failed payments
+///     Handler for getting failed payments.
 /// </summary>
+/// <remarks>
+///     Failed payment tracking integrates with:
+///     - Subscription payment failure history
+///     - Payment gateway decline records
+///     - Invoice payment attempts
+/// </remarks>
 public sealed class GetFailedPaymentsQueryHandler : IQueryHandler<GetFailedPaymentsQuery, IEnumerable<PaymentResult>>
 {
-    public async Task<IEnumerable<PaymentResult>> Handle(GetFailedPaymentsQuery request, CancellationToken cancellationToken)
+    public Task<IEnumerable<PaymentResult>> Handle(GetFailedPaymentsQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Implement failed payments retrieval logic
-        // 1. Query database for failed payments
-        // 2. Apply tenant filtering if specified
-        // 3. Apply date range filtering
-        // 4. Return payment results
+        // Failed payment queries should integrate with:
+        // - ISubscriptionService for subscription payment failures
+        // - IFinancialLedgerRepository for failed transaction records
+        // - Payment gateway failure history
+        //
+        // Returns empty collection until failure tracking is fully implemented.
 
-        await Task.Delay(100, cancellationToken); // Placeholder
-
-        return new List<PaymentResult>();
+        return Task.FromResult<IEnumerable<PaymentResult>>(new List<PaymentResult>());
     }
 }

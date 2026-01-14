@@ -3,23 +3,31 @@ using GameGuild.CQRS;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Handler for getting overdue payments that require collection or retry
+///     Handler for getting overdue payments that require collection or retry.
 /// </summary>
+/// <remarks>
+///     Overdue payment tracking involves:
+///     - Invoice due date tracking
+///     - Subscription payment failure tracking
+///     - Retry scheduling and escalation
+/// </remarks>
 public sealed class GetOverduePaymentsQueryHandler : IQueryHandler<GetOverduePaymentsQuery, IEnumerable<PaymentResult>>
 {
-    public async Task<IEnumerable<PaymentResult>> Handle(GetOverduePaymentsQuery request, CancellationToken cancellationToken)
+    public Task<IEnumerable<PaymentResult>> Handle(GetOverduePaymentsQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Implement overdue payments retrieval logic
-        // 1. Query database for payments past their due date
-        // 2. Apply overdue threshold filtering (days past due)
-        // 3. Apply tenant filtering if specified
-        // 4. Apply date range filtering for original due dates
-        // 5. Include retry attempt information and next actions
-        // 6. Calculate overdue period and escalation status
-        // 7. Return payment results with overdue context
+        // Overdue payment queries should integrate with:
+        // - Invoice entities with past-due status
+        // - Subscription payment failure history
+        // - Dunning management workflows
+        //
+        // Implementation would:
+        // 1. Query invoices past their due date
+        // 2. Apply overdue threshold filtering
+        // 3. Include retry attempt information
+        // 4. Calculate escalation status
+        //
+        // Returns empty collection until Invoice/dunning integration is complete.
 
-        await Task.Delay(100, cancellationToken); // Placeholder
-
-        return new List<PaymentResult>();
+        return Task.FromResult<IEnumerable<PaymentResult>>(new List<PaymentResult>());
     }
 }

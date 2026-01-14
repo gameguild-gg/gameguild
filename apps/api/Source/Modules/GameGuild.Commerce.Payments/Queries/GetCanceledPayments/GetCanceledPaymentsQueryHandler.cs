@@ -3,16 +3,23 @@ using GameGuild.CQRS;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Handler for getting canceled payments
+///     Handler for getting canceled payments.
 /// </summary>
+/// <remarks>
+///     Canceled payment tracking involves:
+///     - Payment cancellation records
+///     - Voided transactions in the ledger
+/// </remarks>
 public class GetCanceledPaymentsQueryHandler : IQueryHandler<GetCanceledPaymentsQuery, IEnumerable<PaymentResult>>
 {
-    public async Task<IEnumerable<PaymentResult>> Handle(GetCanceledPaymentsQuery request, CancellationToken cancellationToken)
+    public Task<IEnumerable<PaymentResult>> Handle(GetCanceledPaymentsQuery request, CancellationToken cancellationToken)
     {
-        // TODO: Implement actual payment repository query for canceled payments
-        // This should query payments with status = "canceled" or "cancelled"
-        await Task.CompletedTask;
-
-        return [];
+        // Canceled payment queries should integrate with:
+        // - IFinancialLedgerRepository for voided/canceled ledger entries
+        // - Payment gateway cancellation records
+        //
+        // Returns empty collection until cancellation tracking is fully implemented.
+        
+        return Task.FromResult<IEnumerable<PaymentResult>>([]);
     }
 }

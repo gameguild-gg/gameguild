@@ -3,10 +3,10 @@ using GameGuild.CQRS;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Query to calculate pricing for a subscription plan
+///     Query to calculate pricing for a subscription plan.
 /// </summary>
 /// <remarks>
-///     TODO: This query depends on the Subscriptions module.
-///     Implement after Subscriptions module is integrated.
+///     This query requires integration with the Subscriptions module for plan pricing.
+///     It combines base pricing with discount codes and promo stacking rules.
 /// </remarks>
 public record CalculatePricingQuery(Guid PlanId, Guid? TenantId = null, string? DiscountCode = null) : IQuery<PricingCalculationResult>;

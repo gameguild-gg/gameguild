@@ -38,7 +38,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 planId: payload.PlanId,
                 createdByUserId: Guid.Empty, // System-created via webhook
                 billingCycle: BillingCycle.Monthly, // Default, should be in payload
-                amount: Money.USD(payload.Amount),
+                amount: new Money(payload.Amount, "USD"),
                 startDate: payload.StartDate,
                 trialDays: null
             ).ConfigureAwait(false);
@@ -219,7 +219,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
         switch (newStatus)
         {
             case SubscriptionStatus.Active:
-                if (subscription.Status is SubscriptionStatus.Pending or SubscriptionStatus.Trial or SubscriptionStatus.Suspended)
+                if (subscription.Status is SubscriptionStatus.PendingActivation or SubscriptionStatus.Trialing or SubscriptionStatus.Suspended)
                 {
                     await _subscriptionService.ActivateAsync(subscription.Id).ConfigureAwait(false);
                 }
@@ -232,12 +232,12 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 }
                 break;
 
-            case SubscriptionStatus.Canceled:
+            case SubscriptionStatus.Cancelled:
                 await _subscriptionService.CancelAsync(subscription.Id, CancellationReason.ExternalRequest).ConfigureAwait(false);
                 break;
 
-            case SubscriptionStatus.Trial:
-                if (subscription.Status == SubscriptionStatus.Pending)
+            case SubscriptionStatus.Trialing:
+                if (subscription.Status == SubscriptionStatus.PendingActivation)
                 {
                     await _subscriptionService.StartTrialAsync(subscription.Id, 14).ConfigureAwait(false);
                 }
@@ -258,13 +258,13 @@ public abstract class BillingWebhookService : IBillingWebhookService
         return status.ToLowerInvariant() switch
         {
             "active" => SubscriptionStatus.Active,
-            "trialing" or "trial" => SubscriptionStatus.Trial,
-            "past_due" or "pastdue" => SubscriptionStatus.Suspended,
-            "canceled" or "cancelled" => SubscriptionStatus.Canceled,
+            "trialing" or "trial" => SubscriptionStatus.Trialing,
+            "past_due" or "pastdue" => SubscriptionStatus.PastDue,
+            "canceled" or "cancelled" => SubscriptionStatus.Cancelled,
             "unpaid" => SubscriptionStatus.Suspended,
-            "incomplete" or "incomplete_expired" => SubscriptionStatus.Pending,
+            "incomplete" or "incomplete_expired" => SubscriptionStatus.PendingActivation,
             "paused" => SubscriptionStatus.Suspended,
-            _ => SubscriptionStatus.Pending
+            _ => SubscriptionStatus.PendingActivation
         };
     }
 }

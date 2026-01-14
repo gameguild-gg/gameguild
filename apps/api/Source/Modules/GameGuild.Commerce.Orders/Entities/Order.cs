@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GameGuild.CQRS;
 using GameGuild.Entities;
 using GameGuild.Identity.Users;
 using Microsoft.EntityFrameworkCore;
@@ -62,6 +63,13 @@ public class Order : EntityBase
     /// <summary>External payment provider reference</summary>
     [MaxLength(200)]
     public string? PaymentProviderReference { get; set; }
+
+    /// <summary>
+    ///     External payment ID from payment gateway (Stripe charge ID, PayPal transaction ID, etc.).
+    ///     Used for reconciliation with payment provider records.
+    /// </summary>
+    [MaxLength(200)]
+    public string? ExternalPaymentId { get; set; }
 
     /// <summary>Payment method used</summary>
     [MaxLength(50)]
@@ -150,14 +158,28 @@ public class Order : EntityBase
     }
 
     /// <summary>
-    ///     Transitions to a new status with validation
+    ///     Transitions to a new status with validation and raises domain event for audit trail
     /// </summary>
+    /// <param name="newStatus">The new status to transition to</param>
+    /// <param name="reason">Optional reason for the transition (e.g., failure reason, cancellation reason)</param>
+    /// <param name="externalPaymentId">Optional external payment ID from payment gateway</param>
     /// <exception cref="InvalidOperationException">Thrown when transition is not allowed</exception>
-    private void TransitionTo(OrderStatus newStatus)
+    private void TransitionTo(OrderStatus newStatus, string? reason = null, string? externalPaymentId = null)
     {
         if (!CanTransitionTo(newStatus))
             throw new InvalidOperationException($"Invalid order state transition: {Status} -> {newStatus}");
+        
+        var previousStatus = Status;
         Status = newStatus;
+        
+        // Raise domain event for audit trail
+        Raise(new OrderStateChangedEvent(
+            Id, 
+            TenantId ?? Guid.Empty, 
+            previousStatus, 
+            newStatus, 
+            reason,
+            externalPaymentId));
     }
 
     /// <summary>Add a line item to the order</summary>
@@ -206,29 +228,45 @@ public class Order : EntityBase
         Touch();
     }
 
-    /// <summary>Mark order as paid (with state machine validation)</summary>
-    public void MarkAsPaid(string? paymentProviderReference = null, string? paymentMethod = null)
+    /// <summary>Mark order as paid (with state machine validation and audit trail)</summary>
+    /// <param name="paymentProviderReference">Optional payment provider reference</param>
+    /// <param name="paymentMethod">Optional payment method description</param>
+    /// <param name="externalPaymentId">External payment ID from payment gateway for reconciliation</param>
+    public void MarkAsPaid(string? paymentProviderReference = null, string? paymentMethod = null, string? externalPaymentId = null)
     {
-        TransitionTo(OrderStatus.Completed);
+        TransitionTo(OrderStatus.Completed, reason: null, externalPaymentId: externalPaymentId);
         PaidAt = DateTime.UtcNow;
         PaymentProviderReference = paymentProviderReference;
         PaymentMethod = paymentMethod;
+        ExternalPaymentId = externalPaymentId;
         Touch();
     }
 
-    /// <summary>Mark order as failed (with state machine validation)</summary>
+    /// <summary>Mark order as failed (with state machine validation and audit trail)</summary>
+    /// <param name="reason">Reason for the failure</param>
     public void MarkAsFailed(string? reason = null)
     {
-        TransitionTo(OrderStatus.Failed);
+        TransitionTo(OrderStatus.Failed, reason: reason);
         Metadata = reason;
         Touch();
     }
 
-    /// <summary>Process refund (with state machine validation)</summary>
+    /// <summary>Cancel the order (with state machine validation and audit trail)</summary>
+    /// <param name="reason">Reason for cancellation</param>
+    public void Cancel(string? reason = null)
+    {
+        TransitionTo(OrderStatus.Cancelled, reason: reason);
+        Metadata = reason;
+        Touch();
+    }
+
+    /// <summary>Process refund (with state machine validation and audit trail)</summary>
+    /// <param name="amount">Amount to refund</param>
+    /// <param name="reason">Reason for the refund</param>
     public void ProcessRefund(decimal amount, string reason)
     {
         var newStatus = amount >= Total ? OrderStatus.Refunded : OrderStatus.PartiallyRefunded;
-        TransitionTo(newStatus);
+        TransitionTo(newStatus, reason: reason);
         RefundAmount = amount;
         RefundReason = reason;
         RefundedAt = DateTime.UtcNow;
