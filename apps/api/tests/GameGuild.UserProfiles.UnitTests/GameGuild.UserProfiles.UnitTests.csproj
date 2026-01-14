@@ -19,11 +19,11 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="Moq" />
         <PackageReference Include="FluentAssertions" />
-        <PackageReference Include="NBomber" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="AutoFixture" />
-        <PackageReference Include="BenchmarkDotNet" />
+        <PackageReference Include="AutoFixture.Xunit2" />
     </ItemGroup>
 
     <ItemGroup>
