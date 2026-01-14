@@ -1507,62 +1507,81 @@ public void DeductFunds(decimal amount, ...)
 
 ---
 
-## 7. Test Plan (Mandatory)
+## 7. Test Plan (Mandatory) ✅ IMPLEMENTED
+
+**Implementation Date:** January 15, 2026  
+**Status:** All P0 Critical Tests Implemented
 
 ### Critical Tests (Must Have Before Production)
 
-| Test Category                    | Test Case                                                    | Priority |
-| -------------------------------- | ------------------------------------------------------------ | -------- |
-| **Single Charge Guarantee**      |                                                              |          |
-|                                  | Renewal with same idempotency key returns cached result      | P0       |
-|                                  | RecordPayment with duplicate external ID is rejected         | P0       |
-|                                  | Concurrent renewal calls produce single charge               | P0       |
-| **Webhook Idempotency**          |                                                              |          |
-|                                  | Same ExternalEventId processed only once                     | P0       |
-|                                  | Webhook retry after timeout returns 200 without reprocessing | P0       |
-|                                  | Failed webhook stored and retryable                          | P0       |
-| **Upgrade/Downgrade Safety**     |                                                              |          |
-|                                  | Plan upgrade calculates correct proration                    | P0       |
-|                                  | Plan downgrade credits unused period                         | P0       |
-|                                  | Mid-cycle upgrade charges correct amount                     | P0       |
-|                                  | Downgrade effective at period end                            | P1       |
-| **Cancellation Without Residue** |                                                              |          |
-|                                  | Cancelled subscription cannot renew                          | P0       |
-|                                  | Cancellation sets correct EndDate                            | P0       |
-|                                  | Auto-renew disabled on cancellation                          | P0       |
-|                                  | Entitlements remain until EndDate                            | P1       |
-| **Tenant Isolation**             |                                                              |          |
-|                                  | User cannot create subscription for other tenant             | P0       |
-|                                  | User cannot view other tenant's payments                     | P0       |
-|                                  | TenantId required for all financial entities                 | P0       |
-|                                  | Cross-tenant subscription access denied                      | P0       |
-| **Safe Billing Retries**         |                                                              |          |
-|                                  | Failed payment can be retried                                | P0       |
-|                                  | Retry creates new attempt, not duplicate                     | P0       |
-|                                  | Max retries enforced                                         | P1       |
-|                                  | Subscription moves to PastDue after failures                 | P1       |
-| **Invoice Immutability**         |                                                              |          |
-|                                  | Invoice amount cannot change after issuance                  | P0       |
-|                                  | Invoice status transitions are valid                         | P0       |
-|                                  | Voided invoice cannot be unvoided                            | P1       |
+| Test Category                    | Test Case                                                    | Priority | Status         |
+| -------------------------------- | ------------------------------------------------------------ | -------- | -------------- |
+| **Single Charge Guarantee**      |                                                              |          |                |
+|                                  | Renewal with same idempotency key returns cached result      | P0       | ✅ IMPLEMENTED |
+|                                  | RecordPayment with duplicate external ID is rejected         | P0       | ✅ IMPLEMENTED |
+|                                  | Concurrent renewal calls produce single charge               | P0       | ✅ IMPLEMENTED |
+| **Webhook Idempotency**          |                                                              |          |                |
+|                                  | Same ExternalEventId processed only once                     | P0       | ✅ IMPLEMENTED |
+|                                  | Webhook retry after timeout returns 200 without reprocessing | P0       | ✅ IMPLEMENTED |
+|                                  | Failed webhook stored and retryable                          | P0       | ✅ IMPLEMENTED |
+| **Upgrade/Downgrade Safety**     |                                                              |          |                |
+|                                  | Plan upgrade calculates correct proration                    | P0       | ✅ IMPLEMENTED |
+|                                  | Plan downgrade credits unused period                         | P0       | ✅ IMPLEMENTED |
+|                                  | Mid-cycle upgrade charges correct amount                     | P0       | ✅ IMPLEMENTED |
+|                                  | Downgrade effective at period end                            | P1       | ✅ IMPLEMENTED |
+| **Cancellation Without Residue** |                                                              |          |                |
+|                                  | Cancelled subscription cannot renew                          | P0       | ✅ IMPLEMENTED |
+|                                  | Cancellation sets correct EndDate                            | P0       | ✅ IMPLEMENTED |
+|                                  | Auto-renew disabled on cancellation                          | P0       | ✅ IMPLEMENTED |
+|                                  | Entitlements remain until EndDate                            | P1       | ✅ IMPLEMENTED |
+| **Tenant Isolation**             |                                                              |          |                |
+|                                  | User cannot create subscription for other tenant             | P0       | ✅ IMPLEMENTED |
+|                                  | User cannot view other tenant's payments                     | P0       | ✅ IMPLEMENTED |
+|                                  | TenantId required for all financial entities                 | P0       | ✅ IMPLEMENTED |
+|                                  | Cross-tenant subscription access denied                      | P0       | ✅ IMPLEMENTED |
+| **Safe Billing Retries**         |                                                              |          |                |
+|                                  | Failed payment can be retried                                | P0       | ✅ IMPLEMENTED |
+|                                  | Retry creates new attempt, not duplicate                     | P0       | ✅ IMPLEMENTED |
+|                                  | Max retries enforced                                         | P1       | ✅ IMPLEMENTED |
+|                                  | Subscription moves to PastDue after failures                 | P1       | ✅ IMPLEMENTED |
+| **Invoice Immutability**         |                                                              |          |                |
+|                                  | Invoice amount cannot change after issuance                  | P0       | ✅ IMPLEMENTED |
+|                                  | Invoice status transitions are valid                         | P0       | ✅ IMPLEMENTED |
+|                                  | Voided invoice cannot be unvoided                            | P1       | ✅ IMPLEMENTED |
 
 ### Integration Tests
 
-| Test Case              | Description                                 |
-| ---------------------- | ------------------------------------------- |
-| End-to-End Purchase    | Product → Order → Payment → Entitlement     |
-| Subscription Lifecycle | Create → Activate → Renew → Cancel          |
-| Webhook Processing     | Mock Stripe webhook → Internal state update |
-| Proration Calculation  | Upgrade mid-cycle → Correct amounts         |
-| Tax Calculation        | Multi-jurisdiction → Correct rates          |
+| Test Case              | Description                                 | Status         |
+| ---------------------- | ------------------------------------------- | -------------- |
+| End-to-End Purchase    | Product → Order → Payment → Entitlement     | ✅ IMPLEMENTED |
+| Subscription Lifecycle | Create → Activate → Renew → Cancel          | ✅ IMPLEMENTED |
+| Webhook Processing     | Mock Stripe webhook → Internal state update | ✅ IMPLEMENTED |
+| Proration Calculation  | Upgrade mid-cycle → Correct amounts         | ✅ IMPLEMENTED |
+| Tax Calculation        | Multi-jurisdiction → Correct rates          | 🔲 TODO        |
 
 ### Load/Stress Tests
 
-| Test Case                | Target                                    |
-| ------------------------ | ----------------------------------------- |
-| Concurrent Renewals      | 100 subscriptions renewing simultaneously |
-| Webhook Flood            | 1000 webhooks/second burst                |
-| Wallet Concurrent Access | 50 concurrent deductions from same wallet |
+| Test Case                | Target                                    | Status         |
+| ------------------------ | ----------------------------------------- | -------------- |
+| Concurrent Renewals      | 100 subscriptions renewing simultaneously | ✅ IMPLEMENTED |
+| Webhook Flood            | 1000 webhooks/second burst                | ✅ IMPLEMENTED |
+| Wallet Concurrent Access | 50 concurrent deductions from same wallet | ✅ IMPLEMENTED |
+
+### Test Files Created
+
+| Test File | Location | Test Count |
+|-----------|----------|------------|
+| `SingleChargeGuaranteeTests.cs` | `GameGuild.Subscriptions.UnitTests/Security/` | 8 tests |
+| `WebhookIdempotencyTests.cs` | `GameGuild.Billing.UnitTests/Security/` | 10 tests |
+| `UpgradeDowngradeSafetyTests.cs` | `GameGuild.Subscriptions.UnitTests/Security/` | 12 tests |
+| `CancellationWithoutResidueTests.cs` | `GameGuild.Subscriptions.UnitTests/Security/` | 15 tests |
+| `TenantIsolationTests.cs` | `GameGuild.Subscriptions.UnitTests/Security/` | 14 tests |
+| `SafeBillingRetryTests.cs` | `GameGuild.Billing.UnitTests/Security/` | 15 tests |
+| `InvoiceImmutabilityTests.cs` | `GameGuild.Billing.UnitTests/Security/` | 18 tests |
+| `CommerceSecurityIntegrationTests.cs` | `GameGuild.Subscriptions.IntegrationTests/Security/` | 12 tests |
+| `CommerceSecurityLoadTests.cs` | `GameGuild.Subscriptions.PerformanceTests/Security/` | 10 benchmarks |
+
+**Total Tests Added:** 114+ security-critical tests covering all P0 and P1 items
 
 ---
 
