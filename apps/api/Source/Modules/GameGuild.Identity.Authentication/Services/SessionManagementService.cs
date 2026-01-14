@@ -216,6 +216,75 @@ public sealed class SessionManagementService(ILogger<SessionManagementService> l
         };
     }
 
+    public async Task<List<ActivityTimelineEntry>> GetActivityTimelineAsync(Guid userId, int daysBack = 30, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Getting activity timeline for user {UserId} for the last {DaysBack} days", userId, daysBack);
+
+        var timeline = new List<ActivityTimelineEntry>();
+        var since = DateTime.UtcNow.AddDays(-daysBack);
+
+        // Get all sessions (active and inactive) for the time period
+        var allSessions = await sessionRepository.GetByUserIdAsync(userId, cancellationToken);
+        var relevantSessions = allSessions.Where(s => s.CreatedAt >= since).ToList();
+
+        // Add session creation events
+        foreach (var session in relevantSessions)
+        {
+            timeline.Add(new ActivityTimelineEntry
+            {
+                Id = Guid.NewGuid(),
+                Timestamp = session.CreatedAt,
+                ActivityType = "SessionCreated",
+                Description = $"New session started from {session.IpAddress}",
+                IpAddress = session.IpAddress,
+                UserAgent = session.UserAgent,
+                DeviceFingerprint = session.DeviceFingerprint,
+                SessionId = session.Id,
+                IsSuspicious = false,
+                RiskLevel = RiskLevel.Low
+            });
+
+            // Add session termination if not active
+            if (!session.IsActive && session.LastUsedAt > session.CreatedAt)
+            {
+                timeline.Add(new ActivityTimelineEntry
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = session.LastUsedAt,
+                    ActivityType = "SessionTerminated",
+                    Description = $"Session ended",
+                    IpAddress = session.IpAddress,
+                    UserAgent = session.UserAgent,
+                    DeviceFingerprint = session.DeviceFingerprint,
+                    SessionId = session.Id,
+                    IsSuspicious = false,
+                    RiskLevel = RiskLevel.Low
+                });
+            }
+        }
+
+        // Get trusted devices added in the time period
+        var trustedDevices = await trustedDeviceRepository.GetByUserIdAsync(userId, cancellationToken);
+        var recentTrustedDevices = trustedDevices.Where(d => d.TrustedAt >= since).ToList();
+
+        foreach (var device in recentTrustedDevices)
+        {
+            timeline.Add(new ActivityTimelineEntry
+            {
+                Id = Guid.NewGuid(),
+                Timestamp = device.TrustedAt,
+                ActivityType = "DeviceTrusted",
+                Description = $"Device '{device.DeviceName}' was marked as trusted",
+                DeviceFingerprint = device.DeviceFingerprint,
+                IsSuspicious = false,
+                RiskLevel = RiskLevel.Low
+            });
+        }
+
+        // Sort by timestamp descending (most recent first)
+        return timeline.OrderByDescending(t => t.Timestamp).ToList();
+    }
+
     private string GenerateDeviceFingerprint(string ipAddress, string userAgent)
     {
         var combined = $"{ipAddress}:{userAgent}";

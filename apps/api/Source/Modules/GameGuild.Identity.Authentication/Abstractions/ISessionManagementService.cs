@@ -33,4 +33,13 @@ public interface ISessionManagementService
     Task CleanupExpiredSessionsAsync(CancellationToken cancellationToken = default);
 
     Task<SessionSecurityAnalysis> AnalyzeSessionSecurityAsync(Guid userId, string ipAddress, string userAgent, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Gets the activity timeline for a user showing session events over time.
+    /// </summary>
+    /// <param name="userId">The user ID</param>
+    /// <param name="daysBack">Number of days to look back (default 30)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of activity timeline entries</returns>
+    Task<List<ActivityTimelineEntry>> GetActivityTimelineAsync(Guid userId, int daysBack = 30, CancellationToken cancellationToken = default);
 }

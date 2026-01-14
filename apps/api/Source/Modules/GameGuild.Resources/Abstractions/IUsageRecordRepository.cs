@@ -48,4 +48,13 @@ public interface IUsageRecordRepository
     Task<long> GetCurrentUserUsageAsync(Guid userId, ResourceUsageType type, CancellationToken cancellationToken = default);
 
     Task<bool> DeleteByUserAndTypeAsync(Guid userId, ResourceUsageType type, CancellationToken cancellationToken = default);
+
+    // Stats methods for retention tracking
+    Task<int> GetTotalRecordCountAsync(Guid? tenantId = null, CancellationToken cancellationToken = default);
+
+    Task<int> GetArchivedRecordCountAsync(Guid? tenantId = null, CancellationToken cancellationToken = default);
+
+    Task<DateTime?> GetOldestRecordDateAsync(Guid? tenantId = null, CancellationToken cancellationToken = default);
+
+    Task<long> GetEstimatedStorageBytesAsync(Guid? tenantId = null, bool archivedOnly = false, CancellationToken cancellationToken = default);
 }

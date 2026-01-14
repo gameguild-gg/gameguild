@@ -168,109 +168,26 @@ public class UsageRetentionService(IUsageRetentionPolicyRepository policyReposit
         return deleted ? 1 : 0;
     }
 
-    public Task<RetentionStats> GetRetentionStatsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
+    public async Task<RetentionStats> GetRetentionStatsAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
     {
-        // This would require additional repository methods to get aggregated stats
-        // For now, return basic stats
-        logger.LogWarning("GetRetentionStatsAsync not fully implemented - returning placeholder");
+        var totalRecords = await usageRepository.GetTotalRecordCountAsync(tenantId, cancellationToken);
+        var archivedRecords = await usageRepository.GetArchivedRecordCountAsync(tenantId, cancellationToken);
+        var oldestDate = await usageRepository.GetOldestRecordDateAsync(tenantId, cancellationToken);
+        var totalStorageBytes = await usageRepository.GetEstimatedStorageBytesAsync(tenantId, archivedOnly: false, cancellationToken);
+        var archivedStorageBytes = await usageRepository.GetEstimatedStorageBytesAsync(tenantId, archivedOnly: true, cancellationToken);
 
-        return Task.FromResult(new RetentionStats { TotalRecords = 0, ArchivedRecords = 0, ActiveRecords = 0, TotalStorageBytes = 0, ArchivedStorageBytes = 0, OldestRecordDate = null });
+        logger.LogInformation(
+            "Retrieved retention stats: TenantId={TenantId}, Total={Total}, Archived={Archived}, OldestDate={OldestDate}",
+            tenantId, totalRecords, archivedRecords, oldestDate);
+
+        return new RetentionStats
+        {
+            TotalRecords = totalRecords,
+            ArchivedRecords = archivedRecords,
+            ActiveRecords = totalRecords - archivedRecords,
+            TotalStorageBytes = totalStorageBytes,
+            ArchivedStorageBytes = archivedStorageBytes,
+            OldestRecordDate = oldestDate
+        };
     }
-
-    // TODO: Integration with Storage module for cold storage management
-    // TODO: Integration with Backup module for data archival
-    // TODO: Implement GetRetentionStatsAsync with proper repository methods
-    
-    /* COLD STORAGE ARCHIVAL IMPLEMENTATION GUIDE
-     * 
-     * Current State: ArchiveUsageRecordsAsync sets IsArchived flag in database.
-     * Production Enhancement: Move archived data to external blob storage (Azure Blob, S3, local filesystem).
-     * 
-     * IMPLEMENTATION APPROACH:
-     * 
-     * 1. STORAGE DESTINATION OPTIONS:
-     *    - Azure Blob Storage (recommended for Azure deployments)
-     *      - Use Azure.Storage.Blobs NuGet package
-     *      - Configure BlobServiceClient with connection string or managed identity
-     *      - Organize as: {tenant-id}/{year}/{month}/{resource-type}/usage-{date}.parquet
-     *    
-     *    - AWS S3 (for AWS deployments)
-     *      - Use AWSSDK.S3 NuGet package
-     *      - Use IAM roles for authentication
-     *      - Similar partitioning scheme
-     *    
-     *    - Local filesystem (dev/testing or on-premises)
-     *      - Use System.IO for file operations
-     *      - Mount NAS/SAN storage for production
-     * 
-     * 2. ARCHIVAL FORMAT SELECTION:
-     *    - Parquet (RECOMMENDED for analytics workloads)
-     *      - Columnar format with excellent compression (~10x vs JSON)
-     *      - Query-efficient for aggregations and filtering
-     *      - Use Apache.Arrow or Parquet.NET library
-     *      - Schema: TenantId, ResourceType, UsageAmount, PeriodStart, PeriodEnd, Metadata (JSON), ArchivedAt
-     *    
-     *    - CSV (for human readability and broad compatibility)
-     *      - Simple text format, easy to import/export
-     *      - Less efficient storage and querying
-     *    
-     *    - JSON Lines (jsonl) for semi-structured metadata
-     *      - One JSON object per line for streaming processing
-     *      - Good for preserving complex metadata
-     * 
-     * 3. ARCHIVAL WORKFLOW:
-     *    a. Query records older than threshold (e.g., 90 days)
-     *    b. Batch records by tenant/month/type (partitioning strategy)
-     *    c. Serialize to chosen format (Parquet/CSV/JSON)
-     *    d. Upload to blob storage with metadata tags:
-     *       - tenant-id, resource-type, period-start, period-end, record-count, compressed-size
-     *    e. Verify upload success (check ETag/MD5)
-     *    f. Mark database records as archived with blob reference (BlobUri property)
-     *    g. Optional: Delete from hot database after retention period (e.g., 30 days post-archive)
-     * 
-     * 4. RETRIEVAL PATTERN:
-     *    - Implement GetArchivedUsageAsync(tenantId, dateRange) method
-     *    - Check if data exists in hot storage (database)
-     *    - If not found, query blob storage index/metadata
-     *    - Download blob, deserialize, and return data
-     *    - Cache frequently accessed archives in Redis/memory cache
-     * 
-     * 5. LIFECYCLE MANAGEMENT:
-     *    - Configure blob storage lifecycle policies:
-     *      - Move to Cool tier after 30 days (Azure)
-     *      - Move to Archive tier after 180 days (Azure)
-     *      - Transition to Glacier for S3 (AWS)
-     *    - Set up automated deletion after legal retention period (e.g., 7 years)
-     * 
-     * 6. MONITORING & OBSERVABILITY:
-     *    - Track archival metrics: records archived, bytes stored, compression ratio
-     *    - Alert on archival failures or storage quota approaching limits
-     *    - Log blob URIs for audit trail
-     *    - Implement cost tracking for storage consumption
-     * 
-     * 7. EXAMPLE INTERFACE ADDITIONS:
-     *    Task<ArchivalResult> ArchiveToColdStorageAsync(Guid tenantId, DateTime olderThan, CancellationToken ct);
-     *    Task<IEnumerable<UsageRecord>> RetrieveFromColdStorageAsync(Guid tenantId, DateRange range, CancellationToken ct);
-     *    Task<ColdStorageStats> GetColdStorageStatsAsync(Guid? tenantId, CancellationToken ct);
-     * 
-     * 8. INTEGRATION POINTS:
-     *    - Add IArchiveStorageProvider abstraction with implementations:
-     *      - AzureBlobArchiveProvider, S3ArchiveProvider, FileSystemArchiveProvider
-     *    - Configure via appsettings.json:
-     *      "ArchivalSettings": {
-     *        "Provider": "AzureBlob",
-     *        "ConnectionString": "...",
-     *        "ContainerName": "usage-archives",
-     *        "Format": "Parquet",
-     *        "CompressionCodec": "Snappy"
-     *      }
-     *    - Register in DI container with factory pattern for multi-provider support
-     * 
-     * MIGRATION STRATEGY:
-     * 1. Implement IArchiveStorageProvider + Parquet serialization
-     * 2. Add background job to archive old records (Hangfire/Quartz)
-     * 3. Run archival job once to migrate historical data
-     * 4. Enable automated archival in retention policies
-     * 5. Monitor storage costs and adjust retention thresholds
-     */
 }

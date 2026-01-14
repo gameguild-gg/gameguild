@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Resources;
@@ -9,8 +8,9 @@ namespace GameGuild.Resources;
 public class SlaImpactAnalysisService(
     ISlaImpactAnalysisRepository analysisRepository,
     IResourceQuotaRepository quotaRepository,
-    IPublisher publisher,
-    ILogger<SlaImpactAnalysisService> logger) : ISlaImpactAnalysisService
+    ISlaIncidentEscalationService escalationService,
+    ILogger<SlaImpactAnalysisService> logger
+) : ISlaImpactAnalysisService
 {
     public async Task<SlaImpactAnalysis> RecordViolationAsync(
         Guid resourceQuotaId,
@@ -49,31 +49,24 @@ public class SlaImpactAnalysisService(
 
         logger.LogWarning("SLA violation recorded: Type={Type}, Severity={Severity}, Quota={QuotaId}, Expected={Expected}, Actual={Actual}", violationType, severity, resourceQuotaId, expectedValue, actualValue);
 
-        // Publish domain event for notification/incident creation
-        await publisher.Publish(new SlaViolationRecordedEvent(
-            ViolationId: savedViolation.Id,
-            TenantId: quota.TenantId!.Value,
-            ResourceQuotaId: resourceQuotaId,
-            ViolationType: violationType,
-            Severity: severity,
-            ExpectedValue: expectedValue,
-            ActualValue: actualValue,
-            DeviationPercentage: savedViolation.DeviationPercentage,
-            RequiresEscalation: savedViolation.RequiresEscalation,
-            UserId: userId,
-            Timestamp: DateTime.UtcNow), cancellationToken);
-
-        // Auto-create incident ticket if escalation required
-        if (savedViolation.RequiresEscalation && !savedViolation.IncidentCreated)
+        // Auto-escalate high/critical violations
+        if (severity >= SlaViolationSeverity.High)
         {
             try
             {
-                var ticketId = await CreateIncidentTicketAsync(savedViolation.Id, cancellationToken);
-                logger.LogInformation("Auto-created incident ticket {TicketId} for SLA violation {ViolationId}", ticketId, savedViolation.Id);
+                var escalationResult = await escalationService.EscalateViolationAsync(savedViolation, cancellationToken);
+
+                if (escalationResult.WasEscalated)
+                {
+                    logger.LogInformation(
+                        "Violation {ViolationId} auto-escalated: Incident={IncidentId}, NotifiedUsers={UserCount}",
+                        savedViolation.Id, escalationResult.IncidentId, escalationResult.NotifiedUserIds.Count);
+                }
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to auto-create incident ticket for SLA violation {ViolationId}", savedViolation.Id);
+                // Don't fail the violation recording if escalation fails
+                logger.LogError(ex, "Failed to auto-escalate violation {ViolationId}", savedViolation.Id);
             }
         }
 
@@ -133,15 +126,6 @@ public class SlaImpactAnalysisService(
         await analysisRepository.UpdateAsync(violation, cancellationToken);
 
         logger.LogInformation("SLA violation {ViolationId} resolved by user {UserId}", violationId, resolvedByUserId);
-
-        // Publish domain event for resolution tracking
-        await publisher.Publish(new SlaViolationResolvedEvent(
-            ViolationId: violationId,
-            TenantId: violation.TenantId!.Value,
-            ResolvedByUserId: resolvedByUserId,
-            ResolutionDuration: violation.ResolvedAt!.Value - violation.ViolationStartTime,
-            MitigationActions: mitigationActions,
-            Timestamp: DateTime.UtcNow), cancellationToken);
 
         return true;
     }

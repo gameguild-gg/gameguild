@@ -481,4 +481,133 @@ public class AuthenticationAnomalyDetectionService : IAuthenticationAnomalyDetec
         // Future: Send to SIEM or alert system
         await Task.CompletedTask.ConfigureAwait(false);
     }
+
+    public async Task<AuthenticationAnomalyResult> AnalyzeLoginAttemptAsync(AuthenticationAttemptContext context)
+    {
+        var result = new AuthenticationAnomalyResult
+        {
+            IsAnomalous = false,
+            RiskLevel = RiskLevel.Low,
+            RiskScore = 0,
+            DetectedAnomalies = new List<string>()
+        };
+
+        try
+        {
+            // Check if we have a user ID for historical analysis
+            if (context.UserId.HasValue)
+            {
+                var userId = context.UserId.Value;
+                var since = DateTime.UtcNow.AddHours(-24);
+                var recentAttempts = await _authAttemptRepository.GetRecentAttemptsAsync(userId, since, cancellationToken: default);
+
+                if (!recentAttempts.Any())
+                {
+                    result.RiskScore += 10;
+                    result.DetectedAnomalies.Add("FirstAttemptOrLongAbsence");
+                }
+
+                // Check for IP address changes
+                var lastSuccessful = await _authAttemptRepository.GetLastSuccessfulAttemptAsync(userId, cancellationToken: default);
+                if (lastSuccessful != null && lastSuccessful.IpAddress != context.IpAddress)
+                {
+                    result.RiskScore += 20;
+                    result.DetectedAnomalies.Add("IpAddressChange");
+                }
+
+                // Check for user agent changes
+                if (lastSuccessful != null && !string.IsNullOrEmpty(lastSuccessful.UserAgent) && 
+                    lastSuccessful.UserAgent != context.UserAgent)
+                {
+                    result.RiskScore += 15;
+                    result.DetectedAnomalies.Add("UserAgentChange");
+                }
+
+                // Check for impossible travel if location is available
+                if (context.Location != null && lastSuccessful != null)
+                {
+                    var timeBetween = context.AttemptedAt - lastSuccessful.AttemptedAt;
+                    var previousLocation = ParseLocation(lastSuccessful.Location);
+
+                    if (previousLocation != null)
+                    {
+                        var isImpossibleTravel = await DetectImpossibleTravelAsync(
+                            userId, context.Location, previousLocation, timeBetween);
+
+                        if (isImpossibleTravel)
+                        {
+                            result.RiskScore += 50;
+                            result.DetectedAnomalies.Add("ImpossibleTravel");
+                        }
+                    }
+                }
+
+                // Check for device fingerprint changes
+                if (!string.IsNullOrEmpty(context.DeviceFingerprint) && lastSuccessful != null &&
+                    !string.IsNullOrEmpty(lastSuccessful.DeviceFingerprint) &&
+                    lastSuccessful.DeviceFingerprint != context.DeviceFingerprint)
+                {
+                    result.RiskScore += 15;
+                    result.DetectedAnomalies.Add("DeviceFingerprintChange");
+                }
+            }
+
+            // Check for brute force attacks
+            if (!string.IsNullOrEmpty(context.Identifier))
+            {
+                var isBruteForce = await DetectBruteForceAsync(context.Identifier);
+                if (isBruteForce)
+                {
+                    result.RiskScore += 40;
+                    result.DetectedAnomalies.Add("BruteForceDetected");
+                }
+            }
+
+            // Check for unusual time patterns
+            if (context.IsWeekend || context.TimeOfDay.Hours < 6 || context.TimeOfDay.Hours > 22)
+            {
+                result.RiskScore += 5;
+                result.DetectedAnomalies.Add("UnusualTimeOfDay");
+            }
+
+            // Calculate final risk level
+            result.RiskLevel = result.RiskScore switch
+            {
+                >= 80 => RiskLevel.Critical,
+                >= 60 => RiskLevel.High,
+                >= 30 => RiskLevel.Medium,
+                _ => RiskLevel.Low
+            };
+
+            result.IsAnomalous = result.RiskScore >= 30;
+
+            if (result.IsAnomalous)
+            {
+                _logger.LogWarning(
+                    "Anomalous login attempt detected - UserId: {UserId}, IP: {IpAddress}, RiskScore: {RiskScore}, Anomalies: {Anomalies}",
+                    context.UserId, context.IpAddress, result.RiskScore, string.Join(", ", result.DetectedAnomalies)
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error analyzing login attempt context");
+        }
+
+        return result;
+    }
+
+    private static LocationInfo? ParseLocation(string? locationString)
+    {
+        if (string.IsNullOrEmpty(locationString))
+            return null;
+
+        var parts = locationString.Split('-');
+        if (parts.Length >= 2)
+        {
+            return new LocationInfo { Country = parts[0], City = parts[1] };
+        }
+
+        return new LocationInfo { Country = locationString };
+    }
 }

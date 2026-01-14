@@ -176,4 +176,56 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
 
         return true;
     }
+
+    public async Task<int> GetTotalRecordCountAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
+    {
+        var query = UsageRecords.AsQueryable();
+
+        if (tenantId.HasValue)
+            query = query.Where(r => r.TenantId!.Value == tenantId.Value);
+
+        return await query.CountAsync(cancellationToken);
+    }
+
+    public async Task<int> GetArchivedRecordCountAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
+    {
+        var query = UsageRecords.AsQueryable();
+
+        if (tenantId.HasValue)
+            query = query.Where(r => r.TenantId!.Value == tenantId.Value);
+
+        // Count records that have archived:true in their metadata
+        return await query
+            .Where(r => r.Metadata != null && r.Metadata.Contains("\"archived\":true"))
+            .CountAsync(cancellationToken);
+    }
+
+    public async Task<DateTime?> GetOldestRecordDateAsync(Guid? tenantId = null, CancellationToken cancellationToken = default)
+    {
+        var query = UsageRecords.AsQueryable();
+
+        if (tenantId.HasValue)
+            query = query.Where(r => r.TenantId!.Value == tenantId.Value);
+
+        return await query
+            .OrderBy(r => r.PeriodStart)
+            .Select(r => (DateTime?)r.PeriodStart)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<long> GetEstimatedStorageBytesAsync(Guid? tenantId = null, bool archivedOnly = false, CancellationToken cancellationToken = default)
+    {
+        var query = UsageRecords.AsQueryable();
+
+        if (tenantId.HasValue)
+            query = query.Where(r => r.TenantId!.Value == tenantId.Value);
+
+        if (archivedOnly)
+            query = query.Where(r => r.Metadata != null && r.Metadata.Contains("\"archived\":true"));
+
+        // Estimate ~200 bytes per record for typical usage record storage
+        var recordCount = await query.CountAsync(cancellationToken);
+
+        return recordCount * 200L;
+    }
 }

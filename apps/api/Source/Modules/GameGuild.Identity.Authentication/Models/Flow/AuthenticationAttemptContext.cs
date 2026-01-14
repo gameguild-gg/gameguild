@@ -3,8 +3,13 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     Context information for an authentication attempt.
 /// </summary>
-public abstract class AuthenticationAttemptContext
+public class AuthenticationAttemptContext
 {
+    /// <summary>
+    ///     User ID if known (for session validation, anomaly detection).
+    /// </summary>
+    public Guid? UserId { get; set; }
+
     /// <summary>
     ///     User identifier (email, username, or wallet address) being authenticated.
     /// </summary>
@@ -64,6 +69,11 @@ public abstract class AuthenticationAttemptContext
     ///     When the attempt occurred.
     /// </summary>
     public DateTime AttemptedAt { get; set; }
+
+    /// <summary>
+    ///     Alias for AttemptedAt to match test usage.
+    /// </summary>
+    public DateTime Timestamp { get => AttemptedAt; set => AttemptedAt = value; }
 
     /// <summary>
     ///     Time of day (for behavioral analysis).

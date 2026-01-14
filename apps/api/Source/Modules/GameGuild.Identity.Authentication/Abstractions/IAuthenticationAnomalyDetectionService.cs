@@ -51,4 +51,12 @@ public interface IAuthenticationAnomalyDetectionService
     /// </summary>
     /// <param name="activity">Details of the suspicious activity</param>
     Task RecordSuspiciousActivityAsync(SuspiciousActivity activity);
+
+    /// <summary>
+    ///     Analyzes a login attempt context for anomalies.
+    ///     Combines IP, user agent, device, and location analysis.
+    /// </summary>
+    /// <param name="context">The authentication attempt context</param>
+    /// <returns>Analysis result with detected anomalies and risk level</returns>
+    Task<AuthenticationAnomalyResult> AnalyzeLoginAttemptAsync(AuthenticationAttemptContext context);
 }

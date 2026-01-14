@@ -80,85 +80,79 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
 
     public async Task<long> ForecastUsageAsync(Guid tenantId, ResourceUsageType type, DateTime targetDate, CancellationToken cancellationToken = default)
     {
-        // Get recent trends (last 90 days)
+        // Get recent usage records (last 90 days) for linear regression
         var fromDate = DateTime.UtcNow.AddDays(-90);
 
-        var trends = await trendRepository.GetByTenantAsync(tenantId, type, fromDate, null, cancellationToken);
+        var usageRecords = await usageRepository.GetByTenantAsync(tenantId, type, fromDate, null, cancellationToken);
+        var recordsList = usageRecords.OrderBy(r => r.PeriodStart).ToList();
 
-        var trendsList = trends.ToList();
-
-        if (trendsList.Count == 0)
+        if (recordsList.Count == 0)
         {
-            logger.LogWarning("No trends found for forecasting tenant {TenantId}, type {Type}", tenantId, type);
-
+            logger.LogWarning("No usage records found for forecasting tenant {TenantId}, type {Type}", tenantId, type);
             return 0;
         }
 
-        // Use average growth rate and last known average
-        var lastTrend = trendsList.OrderByDescending(t => t.PeriodEnd).First();
+        // Use linear regression for forecasting
+        var forecast = CalculateLinearRegressionForecast(recordsList, targetDate);
 
-        var forecast = lastTrend.ForecastNextPeriod();
+        // Ensure non-negative forecast
+        forecast = Math.Max(0, forecast);
 
-        logger.LogInformation("Forecast for tenant {TenantId}, type {Type} on {Date}: {Forecast}", tenantId, type, targetDate, forecast);
+        logger.LogInformation(
+            "Forecast for tenant {TenantId}, type {Type} on {Date}: {Forecast} (based on {RecordCount} records)",
+            tenantId, type, targetDate, forecast, recordsList.Count);
 
-        return (long) forecast;
+        return forecast;
+    }
 
-        // TODO: ML-BASED FORECASTING IMPLEMENTATION
-        // When ML/AI module becomes available, replace simple linear projection with:
-        // 
-        // 1. Feature Engineering:
-        //    - Extract time-series features (trend, seasonality, day-of-week, month-of-year)
-        //    - Calculate moving averages (7-day, 30-day)
-        //    - Compute lag features (t-1, t-7, t-30 usage values)
-        //    - Include external features (tenant growth, plan tier, subscription age)
-        //
-        // 2. Model Selection (choose based on data characteristics):
-        //    - ARIMA/SARIMA for seasonal patterns
-        //    - Prophet (Facebook) for trend + seasonality + holidays
-        //    - LSTM (RNN) for complex patterns with long memory
-        //    - XGBoost/Random Forest for feature-rich forecasting
-        //
-        // 3. Implementation Approach:
-        //    a) Use ML.NET for in-process forecasting:
-        //       var mlContext = new MLContext();
-        //       var forecastEngine = mlContext.Forecasting.ForecastBySsa(...);
-        //    
-        //    b) OR integrate with external ML service (Azure ML, AWS SageMaker):
-        //       var prediction = await mlService.PredictAsync(new UsageForecastRequest {
-        //           TenantId = tenantId,
-        //           ResourceType = type,
-        //           HistoricalData = trendsList,
-        //           ForecastHorizon = (targetDate - DateTime.UtcNow).Days
-        //       });
-        //
-        // 4. Model Training & Deployment:
-        //    - Train models offline on historical data (batch job)
-        //    - Store trained models in blob storage or model registry
-        //    - Load models on-demand or cache in memory
-        //    - Retrain periodically (weekly/monthly) as new data arrives
-        //
-        // 5. Confidence Intervals:
-        //    - Return prediction intervals (95% confidence)
-        //    - Flag predictions with low confidence
-        //    - Incorporate uncertainty into quota planning
-        //
-        // 6. Validation & Metrics:
-        //    - Track MAPE (Mean Absolute Percentage Error)
-        //    - Monitor forecast drift over time
-        //    - A/B test new models before deployment
-        //
-        // Example integration signature:
-        // public async Task<UsageForecast> ForecastUsageAsync(...)
-        // {
-        //     var prediction = await mlForecastService.PredictAsync(...);
-        //     return new UsageForecast {
-        //         ExpectedUsage = prediction.PointEstimate,
-        //         LowerBound = prediction.ConfidenceInterval.Lower,
-        //         UpperBound = prediction.ConfidenceInterval.Upper,
-        //         Confidence = prediction.Confidence,
-        //         ModelVersion = prediction.ModelId
-        //     };
-        // }
+    /// <summary>
+    ///     Calculates a usage forecast using simple linear regression (least squares method).
+    ///     This is a basic ML approach that fits a line y = mx + b to historical data.
+    /// </summary>
+    private static long CalculateLinearRegressionForecast(List<UsageRecord> records, DateTime targetDate)
+    {
+        if (records.Count < 2)
+        {
+            return records.Count == 1 ? records[0].UsageAmount : 0;
+        }
+
+        // Convert dates to numeric values (days since first record)
+        var baseDate = records.First().PeriodStart;
+        var dataPoints = records
+            .Select(r => new
+            {
+                X = (r.PeriodStart - baseDate).TotalDays,
+                Y = (double)r.UsageAmount
+            })
+            .ToList();
+
+        var n = dataPoints.Count;
+
+        // Calculate sums for linear regression
+        var sumX = dataPoints.Sum(p => p.X);
+        var sumY = dataPoints.Sum(p => p.Y);
+        var sumXY = dataPoints.Sum(p => p.X * p.Y);
+        var sumX2 = dataPoints.Sum(p => p.X * p.X);
+
+        // Calculate slope (m) and intercept (b) using least squares
+        // m = (n * Σxy - Σx * Σy) / (n * Σx² - (Σx)²)
+        // b = (Σy - m * Σx) / n
+        var denominator = n * sumX2 - sumX * sumX;
+
+        if (Math.Abs(denominator) < 0.0001)
+        {
+            // Essentially horizontal line - return average
+            return (long)(sumY / n);
+        }
+
+        var slope = (n * sumXY - sumX * sumY) / denominator;
+        var intercept = (sumY - slope * sumX) / n;
+
+        // Calculate forecast for target date
+        var targetDays = (targetDate - baseDate).TotalDays;
+        var forecastValue = slope * targetDays + intercept;
+
+        return (long)Math.Round(forecastValue);
     }
 
     public async Task<Dictionary<string, int>> GetPatternDistributionAsync(Guid? tenantId = null, ResourceUsageType? type = null, CancellationToken cancellationToken = default)
@@ -244,7 +238,4 @@ public class UsageTrendAnalysisService(IResourceUsageTrendRepository trendReposi
         // Stable pattern
         return "Stable";
     }
-
-    // TODO: Integration with ML/AI module for advanced pattern recognition
-    // TODO: Integration with Monitoring module for real-time alerts
 }

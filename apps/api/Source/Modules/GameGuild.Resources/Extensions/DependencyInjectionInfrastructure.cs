@@ -95,6 +95,10 @@ public static class DependencyInjection
         services.AddScoped<IUsageTrendAnalysisService, UsageTrendAnalysisService>();
         services.AddScoped<ISlaImpactAnalysisService, SlaImpactAnalysisService>();
         services.AddScoped<ICostAllocationService, CostAllocationService>();
+
+        // SLA Incident Escalation Services
+        services.AddScoped<ISlaNotificationSender, LoggingSlaNotificationSender>();
+        services.AddScoped<ISlaIncidentEscalationService, SlaIncidentEscalationService>();
     }
 
     /// <summary>
