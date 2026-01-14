@@ -28,7 +28,6 @@ export type PreviewMode = "continuous" | "slide"
 export interface SequentialPanelStructure {
   version: "sequential-v1"
   panels: PanelData[]
-  previewMode?: PreviewMode // Modo de preview: contínuo ou slide (padrão: continuous)
 }
 
 /**
@@ -119,7 +118,6 @@ export function createEmptySequentialStructure(): SequentialPanelStructure {
   
   return {
     version: "sequential-v1",
-    previewMode: "continuous",
     panels: [
       {
         id: generatePanelId(),
@@ -271,19 +269,6 @@ export function updatePanelState(
     panels: structure.panels.map(panel =>
       panel.id === panelId ? { ...panel, ...state } : panel
     )
-  }
-}
-
-/**
- * Atualiza o modo de preview (continuous ou slide)
- */
-export function updatePreviewMode(
-  structure: SequentialPanelStructure,
-  mode: PreviewMode
-): SequentialPanelStructure {
-  return {
-    ...structure,
-    previewMode: mode
   }
 }
 

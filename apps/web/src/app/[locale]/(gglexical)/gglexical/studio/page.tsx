@@ -48,7 +48,6 @@ import {
   reorderPanels,
   updatePanelName,
   updatePanelState,
-  updatePreviewMode,
   serializeSequentialStructure
 } from "@/lib/storage/editor/panel-structure"
 
@@ -164,6 +163,7 @@ export default function Page() {
   const [sequentialStructure, setSequentialStructure] = useState<SequentialPanelStructure | null>(null)
   const [currentPanelIndex, setCurrentPanelIndex] = useState(0)
   const [panelEditorRefs, setPanelEditorRefs] = useState<Map<string, React.RefObject<LexicalEditor>>>(new Map())
+  const [previewMode, setPreviewMode] = useState<PreviewMode>("continuous")
   
   const [nextUrl, setNextUrl] = useState<string | null>(null)
   const [exitDialogOpen, setExitDialogOpen] = useState(false)
@@ -448,6 +448,15 @@ export default function Page() {
     
     const refToUse = currentLayout === "single" ? editorRef : leftEditorRef
     
+    // Prepare preferences with previewMode for sequential layout
+    const preferences = currentLayout === "sequential" ? {
+      global: {
+        mode: currentProjectMode,
+        previewMode: previewMode
+      },
+      nodes: {}
+    } : undefined
+    
     await saveProject({
       currentProjectId,
       currentProjectName,
@@ -458,6 +467,7 @@ export default function Page() {
       storageAdapter,
       calculateProjectAssetsSize,
       setSaveAsDialogOpen,
+      preferences,
     })
   }
 
@@ -849,6 +859,10 @@ export default function Page() {
                         setSequentialStructure(layoutInfo.sequentialData)
                         setCurrentPanelIndex(0)
                         
+                        // Load previewMode from preferences or default to continuous
+                        const savedPreviewMode = projectData.preferences?.global?.previewMode || "continuous"
+                        setPreviewMode(savedPreviewMode as PreviewMode)
+                        
                         // Initialize editor refs for all panels
                         const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
                         layoutInfo.sequentialData.panels.forEach(panel => {
@@ -933,11 +947,10 @@ export default function Page() {
                         Preview Mode:
                       </span>
                       <Button
-                        variant={sequentialStructure.previewMode === "continuous" ? "default" : "outline"}
+                        variant={previewMode === "continuous" ? "default" : "outline"}
                         size="sm"
-                        onClick={() => {
-                          const newStructure = updatePreviewMode(sequentialStructure, "continuous")
-                          setSequentialStructure(newStructure)
+                        onClick={async () => {
+                          setPreviewMode("continuous")
                           toast.success("Preview mode changed", {
                             description: "Preview will show all panels in continuous scroll",
                             duration: 2000
@@ -950,11 +963,10 @@ export default function Page() {
                         Continuous
                       </Button>
                       <Button
-                        variant={sequentialStructure.previewMode === "slide" ? "default" : "outline"}
+                        variant={previewMode === "slide" ? "default" : "outline"}
                         size="sm"
-                        onClick={() => {
-                          const newStructure = updatePreviewMode(sequentialStructure, "slide")
-                          setSequentialStructure(newStructure)
+                        onClick={async () => {
+                          setPreviewMode("slide")
                           toast.success("Preview mode changed", {
                             description: "Preview will show one panel at a time",
                             duration: 2000
