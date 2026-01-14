@@ -9,5 +9,7 @@ public class WebhookRetryResult
 
     public string? ErrorMessage { get; set; }
 
+    public string? Message { get; set; }
+
     public int AttemptNumber { get; set; }
 }

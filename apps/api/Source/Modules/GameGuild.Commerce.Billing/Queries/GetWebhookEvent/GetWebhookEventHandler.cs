@@ -6,27 +6,48 @@ namespace GameGuild.Commerce.Billing;
 /// <summary>
 ///     Handler for getting webhook events
 /// </summary>
-public class GetWebhookEventHandler(ILogger<GetWebhookEventHandler> logger) : IQueryHandler<GetWebhookEventQuery, BillingWebhookEventDto?>
+public class GetWebhookEventHandler(
+    IBillingWebhookRepository webhookRepository,
+    ILogger<GetWebhookEventHandler> logger) : IQueryHandler<GetWebhookEventQuery, BillingWebhookEventDto?>
 {
     public async Task<BillingWebhookEventDto?> Handle(GetWebhookEventQuery query, CancellationToken cancellationToken)
     {
         try
         {
-            // TODO: Get webhook event from repository
-            // var webhookEvent = await _webhookRepository.GetByIdAsync(Guid.Parse(query.EventId), cancellationToken);
+            if (!Guid.TryParse(query.EventId, out var eventId))
+            {
+                logger.LogWarning("Invalid event ID format: {EventId}", query.EventId);
+                return null;
+            }
 
-            // For now, return mock result
-            return await Task.FromResult(
-                new BillingWebhookEventDto
-                {
-                    Id = Guid.Parse(query.EventId), Provider = "stripe", ExternalEventId = "evt_test_12345", EventType = "payment_intent.succeeded", IsProcessed = true, CreatedAt = DateTime.UtcNow
-                }
-            );
+            var webhookEvent = await webhookRepository.GetByIdAsync(eventId, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (webhookEvent == null)
+            {
+                logger.LogDebug("Webhook event not found: {EventId}", query.EventId);
+                return null;
+            }
+
+            return new BillingWebhookEventDto
+            {
+                Id = webhookEvent.Id,
+                Provider = webhookEvent.Provider,
+                ExternalEventId = webhookEvent.ExternalEventId,
+                EventType = webhookEvent.EventType,
+                IsProcessed = webhookEvent.IsProcessed,
+                IsFailed = webhookEvent.IsFailed,
+                ProcessingAttempts = webhookEvent.ProcessingAttempts,
+                ErrorMessage = webhookEvent.ErrorMessage,
+                ProcessedAt = webhookEvent.ProcessedAt,
+                CreatedAt = webhookEvent.CreatedAt,
+                TenantId = webhookEvent.TenantId,
+                SubscriptionId = webhookEvent.SubscriptionId
+            };
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting webhook event {EventId}", query.EventId);
-
             return null;
         }
     }
