@@ -1,6 +1,6 @@
 import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
-import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/layout-detector"
+import { detectProjectLayout, extractEditorStates, type LayoutType } from "@/lib/storage/editor/layout-detector"
 
 // Parameter interface
 export interface CheckSelectedProjectParams {
@@ -22,7 +22,7 @@ export interface CheckSelectedProjectParams {
   setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
   setProjectTags: (tags: string[]) => void
   setIsFirstTime: (value: boolean) => void
-  setCurrentLayout: (layout: "single" | "dual") => void // Layout auto-detected
+  setCurrentLayout: (layout: LayoutType) => void // Layout auto-detected (single, dual, or sequential)
   setCurrentProjectType: (type: string) => void // Project type
   setEditorState: (state: string) => void
   setLeftEditorState: (state: string) => void
