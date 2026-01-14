@@ -26,6 +26,7 @@ import { calculateProjectAssetsSize as calculateAssets } from "@/components/edit
 import { checkSelectedProject as checkProject } from "@/components/editor/extras/editor/project-load-operations"
 import { EditorLayoutType1 } from "@/components/editor/extras/editor/editor-layout-type1"
 import { EditorLayoutType2 } from "@/components/editor/extras/editor/editor-layout-type2"
+import { EditorLayoutSequential } from "@/components/editor/extras/editor/editor-layout-sequential"
 import { EnhancedStorageAdapter, type ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -1114,187 +1115,19 @@ export default function Page() {
 
             {/* Editor Container - Render based on layout type */}
             {currentLayout === "sequential" && sequentialStructure ? (
-              <div className="flex gap-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
-                {/* Panel Navigation Sidebar */}
-                <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                  <PanelNavigationSidebar
-                    panels={sequentialStructure.panels}
-                    currentPanelIndex={currentPanelIndex}
-                    onPanelSelect={(index: number) => {
-                      setCurrentPanelIndex(index)
-                    }}
-                    onPanelAdd={(type: PanelLayoutType) => {
-                      const newStructure = addPanel(sequentialStructure, type)
-                      setSequentialStructure(newStructure)
-                      // Initialize ref for new panel
-                      const lastPanel = newStructure.panels[newStructure.panels.length - 1]
-                      const newRefs = new Map(panelEditorRefs)
-                      if (lastPanel) {
-                        newRefs.set(lastPanel.id, { current: undefined as any })
-                      }
-                      setPanelEditorRefs(newRefs)
-                      // Navigate to new panel
-                      setCurrentPanelIndex(newStructure.panels.length - 1)
-                    }}
-                    onPanelRemove={(panelId: string) => {
-                      if (sequentialStructure.panels.length === 1) {
-                        toast.error("Cannot remove last panel", {
-                          description: "At least one panel is required",
-                          duration: 3000
-                        })
-                        return
-                      }
-                      const newStructure = removePanel(sequentialStructure, panelId)
-                      setSequentialStructure(newStructure)
-                      // Remove ref
-                      const newRefs = new Map(panelEditorRefs)
-                      newRefs.delete(panelId)
-                      setPanelEditorRefs(newRefs)
-                      // Adjust current index if needed
-                      if (currentPanelIndex >= newStructure.panels.length) {
-                        setCurrentPanelIndex(newStructure.panels.length - 1)
-                      }
-                    }}
-                    onPanelReorder={(fromIndex: number, toIndex: number) => {
-                      const newStructure = reorderPanels(sequentialStructure, fromIndex, toIndex)
-                      setSequentialStructure(newStructure)
-                      // Update current index to follow the moved panel
-                      if (currentPanelIndex === fromIndex) {
-                        setCurrentPanelIndex(toIndex)
-                      } else if (currentPanelIndex === toIndex) {
-                        setCurrentPanelIndex(fromIndex < toIndex ? toIndex - 1 : toIndex + 1)
-                      }
-                    }}
-                    onPanelNameChange={(panelId: string, name: string) => {
-                      const newStructure = updatePanelName(sequentialStructure, panelId, name)
-                      setSequentialStructure(newStructure)
-                    }}
-                  />
-                </div>
-                
-                {/* Continuous Scroll Container - All panels visible */}
-                <div className="flex-1 overflow-y-auto max-h-[calc(100vh-16rem)] bg-gray-50 dark:bg-gray-950">
-                  <div className="space-y-4 p-6">
-                    {sequentialStructure.panels.map((panel, index) => (
-                      <div key={panel.id}>
-                        <div 
-                          className={`border-2 transition-all rounded-lg overflow-hidden ${
-                            currentPanelIndex === index
-                              ? 'border-blue-500 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800'
-                              : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                          }`}
-                          onClick={() => setCurrentPanelIndex(index)}
-                        >
-                          {/* Panel Header */}
-                          <div className="bg-white dark:bg-gray-900 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {panel.name || `Panel ${panel.order + 1}`}
-                              </span>
-                              <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                                {panel.type === "single" ? "Single" : "Dual"}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {/* Panel Content */}
-                          {panel.type === "single" ? (
-                            <div className="bg-white dark:bg-gray-900">
-                              <div className="max-w-4xl mx-auto">
-                                <div className="sm:p-2 md:p-6">
-                                  <EditorLayoutType1
-                                    editorRef={panelEditorRefs.get(panel.id) as any}
-                                    editorState={typeof panel.state === "string" ? panel.state : JSON.stringify(panel.state || "")}
-                                    onEditorChange={(newState) => {
-                                      const newStructure = updatePanelState(sequentialStructure, panel.id, { state: newState })
-                                      setSequentialStructure(newStructure)
-                                    }}
-                                    onLoadingChange={(setLoading) => {
-                                      if (currentPanelIndex === index) {
-                                        setLoadingRef.current = setLoading
-                                      }
-                                    }}
-                                    projectId={currentProjectId}
-                                    mode={currentProjectMode}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="bg-white dark:bg-gray-900">
-                              <EditorLayoutType2
-                                leftEditorRef={panelEditorRefs.get(`${panel.id}-left`) as any}
-                                rightEditorRef={panelEditorRefs.get(`${panel.id}-right`) as any}
-                                leftEditorState={typeof panel.left === "string" ? panel.left : JSON.stringify(panel.left || "")}
-                                rightEditorState={typeof panel.right === "string" ? panel.right : JSON.stringify(panel.right || "")}
-                                onLeftEditorChange={(newState) => {
-                                  const newStructure = updatePanelState(sequentialStructure, panel.id, { left: newState })
-                                  setSequentialStructure(newStructure)
-                                }}
-                                onRightEditorChange={(newState) => {
-                                  const newStructure = updatePanelState(sequentialStructure, panel.id, { right: newState })
-                                  setSequentialStructure(newStructure)
-                                }}
-                                onLoadingChange={(setLoading) => {
-                                  if (currentPanelIndex === index) {
-                                    setLoadingRef.current = setLoading
-                                  }
-                                }}
-                                projectId={currentProjectId}
-                                mode={currentProjectMode}
-                              />
-                            </div>
-                          )}
-                        </div>
-                        
-                        {/* Add Panel Button */}
-                        <div className="flex justify-center my-4">
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const newStructure = addPanel(sequentialStructure, "single", index + 1)
-                                setSequentialStructure(newStructure)
-                                const lastPanel = newStructure.panels[index + 1]
-                                const newRefs = new Map(panelEditorRefs)
-                                if (lastPanel) {
-                                  newRefs.set(lastPanel.id, { current: undefined as any })
-                                }
-                                setPanelEditorRefs(newRefs)
-                                setCurrentPanelIndex(index + 1)
-                              }}
-                              className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
-                            >
-                              <Plus className="h-4 w-4" />
-                              Add Single Panel
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const newStructure = addPanel(sequentialStructure, "dual", index + 1)
-                                setSequentialStructure(newStructure)
-                                const lastPanel = newStructure.panels[index + 1]
-                                const newRefs = new Map(panelEditorRefs)
-                                if (lastPanel) {
-                                  newRefs.set(lastPanel.id, { current: undefined as any })
-                                }
-                                setPanelEditorRefs(newRefs)
-                                setCurrentPanelIndex(index + 1)
-                              }}
-                              className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
-                            >
-                              <Plus className="h-4 w-4" />
-                              Add Dual Panel
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <EditorLayoutSequential
+                structure={sequentialStructure}
+                onStructureChange={setSequentialStructure}
+                currentPanelIndex={currentPanelIndex}
+                onPanelIndexChange={setCurrentPanelIndex}
+                panelEditorRefs={panelEditorRefs}
+                onPanelEditorRefsChange={setPanelEditorRefs}
+                onLoadingChange={(setLoading) => {
+                  setLoadingRef.current = setLoading
+                }}
+                projectId={currentProjectId}
+                mode={currentProjectMode}
+              />
             ) : currentLayout === "single" ? (
               <EditorLayoutType1
                 editorRef={editorRef}
