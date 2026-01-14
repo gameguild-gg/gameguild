@@ -67,6 +67,7 @@ Commerce Module Maturity: 98/100 (Production-Ready)
 ```
 
 **Architecture Note:** The Orders module has been extracted from Products into its own dedicated module (`GameGuild.Commerce.Orders`). This separation improves:
+
 - Single Responsibility: Products handles catalog/pricing, Orders handles purchase lifecycle
 - Testability: Order logic can be tested independently
 - Scalability: Orders can scale separately from Product catalog operations
@@ -1516,7 +1517,7 @@ The GameGuild Commerce modules have achieved **production-ready status** after c
 |------|----------|--------|
 | ~~PaymentResult InvoiceId link~~ | ~~LOW~~ | ✅ DONE |
 | ~~Webhook handler implementations~~ | ~~LOW~~ | ✅ DONE |
-| Order audit events | LOW | 1 day |
+| ~~Order audit events~~ | ~~LOW~~ | ✅ DONE |
 | PayPal/Apple Pay webhooks | LOW | 5 days |
 
 ### Overall Maturity Assessment
