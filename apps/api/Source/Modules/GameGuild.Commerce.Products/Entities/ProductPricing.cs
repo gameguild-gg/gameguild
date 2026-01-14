@@ -148,7 +148,7 @@ public class ProductPricing : EntityBase
     {
         return Versions
             .Where(v => v.EffectiveFrom <= asOfDate && (v.EffectiveTo == null || v.EffectiveTo > asOfDate))
-            .OrderByDescending(v => v.Version)
+            .OrderByDescending(v => v.PriceVersion)
             .FirstOrDefault();
     }
 
@@ -177,17 +177,19 @@ public class ProductPricing : EntityBase
     }
 
     /// <summary>
-    ///     Factory method to create a new ProductPricing with initial version
+    ///     Factory method to create a new ProductPricing with initial version (full parameters)
     /// </summary>
     public static (ProductPricing Pricing, ProductPricingVersion InitialVersion) CreateWithVersion(
         Guid productId,
         string name,
         decimal basePrice,
-        decimal? salePrice = null,
-        string currency = "USD",
-        bool isDefault = false,
-        Guid? tenantId = null,
-        Guid? createdByUserId = null)
+        string currency,
+        decimal? salePrice,
+        DateTime? saleStartDate,
+        DateTime? saleEndDate,
+        bool isDefault,
+        Guid? createdByUserId = null,
+        Guid? tenantId = null)
     {
         if (productId == Guid.Empty)
             throw new ArgumentException("Product ID is required", nameof(productId));
@@ -203,6 +205,8 @@ public class ProductPricing : EntityBase
             BasePrice = basePrice,
             SalePrice = salePrice,
             Currency = currency,
+            SaleStartDate = saleStartDate,
+            SaleEndDate = saleEndDate,
             IsDefault = isDefault,
             CurrentVersion = 1,
             TenantId = tenantId,
@@ -213,5 +217,21 @@ public class ProductPricing : EntityBase
         var initialVersion = pricing.CreateInitialVersion(createdByUserId);
 
         return (pricing, initialVersion);
+    }
+
+    /// <summary>
+    ///     Factory method to create a new ProductPricing with initial version (minimal parameters)
+    /// </summary>
+    public static (ProductPricing Pricing, ProductPricingVersion InitialVersion) CreateWithVersion(
+        Guid productId,
+        string name,
+        decimal basePrice,
+        decimal? salePrice = null,
+        string currency = "USD",
+        bool isDefault = false,
+        Guid? tenantId = null,
+        Guid? createdByUserId = null)
+    {
+        return CreateWithVersion(productId, name, basePrice, currency, salePrice, null, null, isDefault, createdByUserId, tenantId);
     }
 }

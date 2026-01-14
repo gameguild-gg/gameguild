@@ -3,7 +3,7 @@ using GameGuild.CQRS;
 namespace GameGuild.Commerce.Products;
 
 /// <summary>
-/// Command to set or update product pricing
+/// Command to set or update product pricing with audit trail
 /// </summary>
 /// <param name="ProductId">Product ID</param>
 /// <param name="Name">Pricing option name</param>
@@ -14,6 +14,7 @@ namespace GameGuild.Commerce.Products;
 /// <param name="SaleEndDate">Sale end date</param>
 /// <param name="IsDefault">Whether this is the default pricing</param>
 /// <param name="PricingId">Existing pricing ID to update (null = create new)</param>
+/// <param name="UpdatedByUserId">User making the change for audit trail</param>
 public record SetProductPricingCommand(
     Guid ProductId,
     string Name,
@@ -23,5 +24,6 @@ public record SetProductPricingCommand(
     DateTime? SaleStartDate = null,
     DateTime? SaleEndDate = null,
     bool IsDefault = false,
-    Guid? PricingId = null
+    Guid? PricingId = null,
+    Guid? UpdatedByUserId = null
 ) : ICommand<ProductPricingDto>;

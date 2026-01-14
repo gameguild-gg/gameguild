@@ -12,8 +12,8 @@ public class CreateProductCommandHandler(IProductRepository productRepository)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        // Create new product entity
-        var product = Product.Create(
+        // Create new product entity with commission configuration
+        var (product, commissionConfig) = Product.CreateWithCommission(
             request.Name,
             request.Type,
             request.Description,
@@ -22,22 +22,27 @@ public class CreateProductCommandHandler(IProductRepository productRepository)
             request.CreatorId,
             request.IsBundle,
             request.ReferralCommissionPercentage,
-            request.MaxAffiliateDiscount,
             request.AffiliateCommissionPercentage,
+            request.MaxAffiliateDiscount,
             request.TenantId
         );
+
+        // Associate the commission config
+        product.CommissionConfig = commissionConfig;
 
         // Set bundle items if applicable
         if (request.IsBundle && request.BundleItems?.Count > 0)
         {
+#pragma warning disable CS0618 // Suppress obsolete warning for backwards compatibility
             product.SetBundleItemIds(request.BundleItems);
+#pragma warning restore CS0618
         }
 
         // Add to repository
         await productRepository.AddAsync(product, cancellationToken).ConfigureAwait(false);
         await productRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        // Map to DTO
+        // Map to DTO - use commission config values if available
         return new ProductDto(
             product.Id,
             product.Name,
@@ -47,10 +52,12 @@ public class CreateProductCommandHandler(IProductRepository productRepository)
             product.Type,
             product.IsBundle,
             product.CreatorId,
+#pragma warning disable CS0618 // Suppress obsolete warning for backwards compatibility
             product.GetBundleItemIds(),
-            product.ReferralCommissionPercentage,
-            product.MaxAffiliateDiscount,
-            product.AffiliateCommissionPercentage,
+#pragma warning restore CS0618
+            commissionConfig.ReferralCommissionPercentage,
+            commissionConfig.MaxAffiliateDiscount,
+            commissionConfig.AffiliateCommissionPercentage,
             product.CreatedAt,
             product.UpdatedAt
         );

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.Commerce.Products;
 
 /// <summary>
-/// Handler for setting product pricing
+/// Handler for setting product pricing with immutable price versioning
 /// </summary>
 public class SetProductPricingCommandHandler(
     IProductRepository productRepository,
@@ -28,40 +28,51 @@ public class SetProductPricingCommandHandler(
         }
 
         ProductPricing pricing;
+        ProductPricingVersion? version = null;
 
         if (request.PricingId.HasValue)
         {
-            // Update existing pricing
+            // Update existing pricing using immutable versioning
             pricing = product.Pricing.FirstOrDefault(p => p.Id == request.PricingId.Value)
                 ?? throw new InvalidOperationException($"Pricing {request.PricingId} not found for product {request.ProductId}");
 
             pricing.Name = request.Name;
-            pricing.BasePrice = request.BasePrice;
             pricing.Currency = request.Currency;
-            pricing.SalePrice = request.SalePrice;
             pricing.SaleStartDate = request.SaleStartDate;
             pricing.SaleEndDate = request.SaleEndDate;
-            pricing.UpdatedAt = DateTime.UtcNow;
+
+            // Use UpdatePrices method for immutable price changes with version tracking
+            if (pricing.BasePrice != request.BasePrice || pricing.SalePrice != request.SalePrice)
+            {
+                version = pricing.UpdatePrices(
+                    request.BasePrice,
+                    request.SalePrice,
+                    "Price update via SetProductPricing command",
+                    request.UpdatedByUserId);
+
+                // Add version to context
+                await dbContext.Set<ProductPricingVersion>().AddAsync(version, cancellationToken).ConfigureAwait(false);
+            }
         }
         else
         {
-            // Create new pricing
-            pricing = new ProductPricing
-            {
-                Id = Guid.NewGuid(),
-                ProductId = request.ProductId,
-                Name = request.Name,
-                BasePrice = request.BasePrice,
-                Currency = request.Currency,
-                SalePrice = request.SalePrice,
-                SaleStartDate = request.SaleStartDate,
-                SaleEndDate = request.SaleEndDate,
-                IsDefault = request.IsDefault,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
+            // Create new pricing with initial version
+            var (newPricing, initialVersion) = ProductPricing.CreateWithVersion(
+                request.ProductId,
+                request.Name,
+                request.BasePrice,
+                request.Currency,
+                request.SalePrice,
+                request.SaleStartDate,
+                request.SaleEndDate,
+                request.IsDefault,
+                request.UpdatedByUserId);
+
+            pricing = newPricing;
+            version = initialVersion;
 
             await dbContext.Set<ProductPricing>().AddAsync(pricing, cancellationToken).ConfigureAwait(false);
+            await dbContext.Set<ProductPricingVersion>().AddAsync(version, cancellationToken).ConfigureAwait(false);
         }
 
         // If this pricing is set as default, unset other defaults

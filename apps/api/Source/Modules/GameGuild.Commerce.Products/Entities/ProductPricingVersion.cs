@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Products;
 ///     This ensures active subscriptions and orders reference stable price points.
 /// </summary>
 [Table("product_pricing_versions")]
-[Index(nameof(ProductPricingId), nameof(Version), IsUnique = true)]
+[Index(nameof(ProductPricingId), nameof(PriceVersion), IsUnique = true)]
 [Index(nameof(ProductPricingId), nameof(EffectiveFrom))]
 [Index(nameof(IsActive))]
 public class ProductPricingVersion : EntityBase
@@ -34,9 +34,11 @@ public class ProductPricingVersion : EntityBase
     public virtual ProductPricing ProductPricing { get; private set; } = null!;
 
     /// <summary>
-    ///     Sequential version number (1, 2, 3, ...)
+    ///     Sequential price version number (1, 2, 3, ...)
+    ///     Named PriceVersion to avoid hiding EntityBase.Version
     /// </summary>
-    public int Version { get; private set; }
+    [Column("price_version")]
+    public int PriceVersion { get; private set; }
 
     /// <summary>
     ///     Base price at this version (immutable after creation)
@@ -87,28 +89,28 @@ public class ProductPricingVersion : EntityBase
     ///     The previous active version will be marked as inactive.
     /// </summary>
     /// <param name="pricing">The ProductPricing to snapshot</param>
-    /// <param name="version">Version number</param>
+    /// <param name="priceVersion">Price version number</param>
     /// <param name="effectiveFrom">When this version becomes effective</param>
     /// <param name="changeReason">Optional reason for the price change</param>
     /// <param name="createdByUserId">User creating the version</param>
     /// <returns>New immutable pricing version</returns>
     public static ProductPricingVersion Create(
         ProductPricing pricing,
-        int version,
+        int priceVersion,
         DateTime effectiveFrom,
         string? changeReason = null,
         Guid? createdByUserId = null)
     {
         ArgumentNullException.ThrowIfNull(pricing);
 
-        if (version < 1)
-            throw new ArgumentException("Version must be 1 or greater", nameof(version));
+        if (priceVersion < 1)
+            throw new ArgumentException("Price version must be 1 or greater", nameof(priceVersion));
 
         return new ProductPricingVersion
         {
             Id = Guid.NewGuid(),
             ProductPricingId = pricing.Id,
-            Version = version,
+            PriceVersion = priceVersion,
             BasePrice = pricing.BasePrice,
             SalePrice = pricing.SalePrice,
             Currency = pricing.Currency,

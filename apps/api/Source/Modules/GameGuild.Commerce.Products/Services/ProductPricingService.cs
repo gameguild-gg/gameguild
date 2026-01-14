@@ -1,7 +1,7 @@
 namespace GameGuild.Commerce.Products;
 
 /// <summary>
-/// Service for managing product pricing
+/// Service for managing product pricing with immutable price versioning
 /// </summary>
 public class ProductPricingService(
     IProductRepository productRepository,
@@ -77,7 +77,7 @@ public class ProductPricingService(
     }
 
     /// <inheritdoc />
-    public async Task<ProductPricing> UpdatePricingAsync(ProductPricing pricing)
+    public async Task<ProductPricing> UpdatePricingAsync(ProductPricing pricing, Guid? updatedByUserId = null, string? changeReason = null)
     {
         ArgumentNullException.ThrowIfNull(pricing);
 
@@ -96,13 +96,24 @@ public class ProductPricingService(
             throw new InvalidOperationException($"Pricing {pricing.Id} not found for product {pricing.ProductId}");
         }
 
-        // Update properties
+        // Update non-price properties directly
         existingPricing.Name = pricing.Name;
-        existingPricing.BasePrice = pricing.BasePrice;
-        existingPricing.SalePrice = pricing.SalePrice;
         existingPricing.Currency = pricing.Currency;
         existingPricing.SaleStartDate = pricing.SaleStartDate;
         existingPricing.SaleEndDate = pricing.SaleEndDate;
+
+        // Use immutable versioning for price changes
+        if (existingPricing.BasePrice != pricing.BasePrice || existingPricing.SalePrice != pricing.SalePrice)
+        {
+            var version = existingPricing.UpdatePrices(
+                pricing.BasePrice,
+                pricing.SalePrice,
+                changeReason ?? "Price update via ProductPricingService",
+                updatedByUserId);
+
+            // Add version for tracking (repository should persist this)
+            existingPricing.Versions.Add(version);
+        }
 
         if (pricing.IsDefault && !existingPricing.IsDefault)
         {
