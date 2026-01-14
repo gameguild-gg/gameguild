@@ -387,7 +387,7 @@ public async Task<bool> ExistsAsync(string externalEventId, string provider, Can
 | Separation of Concerns | ✅ Fixed       | Commission logic extracted to `ProductCommissionConfig`      |
 | Price Versioning       | ✅ Implemented | `ProductPricingVersion` provides immutable price history     |
 | Bundle Type Safety     | ✅ Implemented | `ProductBundleItem` replaces JSON string with proper entity  |
-| Coupling               | ⚠️ Medium      | Direct dependency on Identity.Users for Creator (acceptable) |
+| Coupling               | ✅ Improved    | `ICreator` + `CreatorInfo` DTO reduces Products→Identity coupling |
 
 #### Issues Fixed
 

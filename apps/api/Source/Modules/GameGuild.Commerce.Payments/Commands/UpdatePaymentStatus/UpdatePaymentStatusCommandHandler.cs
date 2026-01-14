@@ -1,23 +1,78 @@
 using GameGuild.CQRS;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Handler for updating payment status
 /// </summary>
-public sealed class UpdatePaymentStatusCommandHandler : ICommandHandler<UpdatePaymentStatusCommand, bool>
+public sealed class UpdatePaymentStatusCommandHandler(
+    IPaymentRepository paymentRepository,
+    ILogger<UpdatePaymentStatusCommandHandler> logger) : ICommandHandler<UpdatePaymentStatusCommand, bool>
 {
     public async Task<bool> Handle(UpdatePaymentStatusCommand request, CancellationToken cancellationToken)
     {
-        // TODO: Implement payment status update logic
-        // 1. Validate payment exists
-        // 2. Validate status transition is allowed
-        // 3. Update payment status
-        // 4. Log status change
-        // 5. Trigger any related processes
+        logger.LogInformation("Updating payment {PaymentId} status to {Status}",
+            request.PaymentId, request.Status);
 
-        await Task.Delay(100, cancellationToken); // Placeholder
+        // 1. Get the payment
+        var payment = await paymentRepository.GetByIdAsync(request.PaymentId, cancellationToken)
+            .ConfigureAwait(false);
 
-        return true; // Success
+        if (payment == null)
+        {
+            logger.LogWarning("Payment {PaymentId} not found for status update", request.PaymentId);
+            return false;
+        }
+
+        // 2. Validate status transition
+        if (!payment.CanTransitionTo(request.Status))
+        {
+            logger.LogWarning("Payment {PaymentId} cannot transition from {CurrentStatus} to {NewStatus}",
+                request.PaymentId, payment.Status, request.Status);
+            return false;
+        }
+
+        // 3. Apply status change based on the target status
+        switch (request.Status)
+        {
+            case PaymentStatus.Processing:
+                payment.MarkAsProcessing(request.TransactionId);
+                break;
+
+            case PaymentStatus.Succeeded:
+                var externalPaymentId = request.TransactionId ?? Guid.NewGuid().ToString();
+                payment.MarkAsSucceeded(externalPaymentId, request.TransactionId);
+                break;
+
+            case PaymentStatus.Failed:
+                payment.MarkAsFailed("Status updated to failed via UpdatePaymentStatusCommand");
+                break;
+
+            case PaymentStatus.RequiresAction:
+                payment.MarkAsRequiresAction(request.TransactionId);
+                break;
+
+            case PaymentStatus.Cancelled:
+                payment.Cancel("Status updated to cancelled via UpdatePaymentStatusCommand");
+                break;
+
+            case PaymentStatus.Disputed:
+                payment.MarkAsDisputed();
+                break;
+
+            default:
+                logger.LogWarning("Unsupported status transition to {Status} for payment {PaymentId}",
+                    request.Status, request.PaymentId);
+                return false;
+        }
+
+        // 4. Save changes
+        await paymentRepository.UpdateAsync(payment, cancellationToken).ConfigureAwait(false);
+
+        logger.LogInformation("Payment {PaymentId} status updated to {Status}",
+            request.PaymentId, request.Status);
+
+        return true;
     }
 }

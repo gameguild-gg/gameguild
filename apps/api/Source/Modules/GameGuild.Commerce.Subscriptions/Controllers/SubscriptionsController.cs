@@ -146,10 +146,30 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     [EndpointSummary("Get subscription metrics")]
     [EndpointDescription("Retrieves subscription metrics and analytics.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetSubscriptionMetrics(CancellationToken ct)
+    public async Task<IActionResult> GetSubscriptionMetrics(CancellationToken ct)
     {
-        // TODO: Implement proper metrics functionality
-        return Ok(new { TotalSubscriptions = 0, ActiveSubscriptions = 0, Revenue = 0 });
+        // Get metrics via repository queries
+        var statusCounts = await sender.Send(new GetSubscriptionStatusCountsQuery(), ct);
+        var now = DateTime.UtcNow;
+        var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        // Calculate metrics from status counts
+        var totalSubscriptions = statusCounts.Values.Sum();
+        var activeSubscriptions = statusCounts.GetValueOrDefault(SubscriptionStatus.Active, 0);
+        var trialingSubscriptions = statusCounts.GetValueOrDefault(SubscriptionStatus.Trialing, 0);
+        var pastDueSubscriptions = statusCounts.GetValueOrDefault(SubscriptionStatus.PastDue, 0);
+        var cancelledSubscriptions = statusCounts.GetValueOrDefault(SubscriptionStatus.Cancelled, 0);
+
+        return Ok(new
+        {
+            TotalSubscriptions = totalSubscriptions,
+            ActiveSubscriptions = activeSubscriptions,
+            TrialingSubscriptions = trialingSubscriptions,
+            PastDueSubscriptions = pastDueSubscriptions,
+            CancelledSubscriptions = cancelledSubscriptions,
+            StatusBreakdown = statusCounts,
+            ReportGeneratedAt = DateTime.UtcNow
+        });
     }
 
     /// <summary>
@@ -162,10 +182,10 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     [EndpointSummary("Get expiring subscriptions")]
     [EndpointDescription("Retrieves subscriptions that are expiring within the specified number of days.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public IActionResult GetExpiringSubscriptions([FromQuery] int days = 30, CancellationToken ct = default)
+    public async Task<IActionResult> GetExpiringSubscriptions([FromQuery] int days = 30, CancellationToken ct = default)
     {
-        // TODO: Implement proper expiring subscriptions functionality
-        return Ok(new List<object>());
+        var expiringSubscriptions = await sender.Send(new GetExpiringSubscriptionsQuery(days), ct);
+        return Ok(expiringSubscriptions);
     }
 
     #endregion

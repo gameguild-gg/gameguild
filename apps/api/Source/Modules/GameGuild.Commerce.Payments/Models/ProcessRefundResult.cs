@@ -56,7 +56,17 @@ public sealed record ProcessRefundResult
     public decimal ProcessingFee { get; init; }
 
     /// <summary>
-    ///     Success indicator
+    ///     Whether the refund operation was successful
+    /// </summary>
+    public bool IsSuccess { get; init; }
+
+    /// <summary>
+    ///     Error message if refund failed
+    /// </summary>
+    public string? ErrorMessage { get; init; }
+
+    /// <summary>
+    ///     Success indicator (computed from status)
     /// </summary>
     public bool IsSuccessful { get => Status == TransactionStatus.Completed; }
 }
