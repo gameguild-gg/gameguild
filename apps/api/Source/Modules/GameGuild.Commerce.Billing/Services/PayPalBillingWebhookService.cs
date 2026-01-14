@@ -54,7 +54,7 @@ public class PayPalBillingWebhookService : BillingWebhookService
         var eventId = transmissionId;
 
         // Check for duplicate event (idempotency)
-        var existingEvent = await _webhookRepository.GetByExternalEventIdAsync(eventId, "paypal", cancellationToken).ConfigureAwait(false);
+        var existingEvent = await _webhookRepository.GetByExternalEventIdAsync(eventId, PaymentProviders.PayPal, cancellationToken).ConfigureAwait(false);
         if (existingEvent != null)
         {
             _logger.LogInformation("Duplicate PayPal webhook detected: {TransmissionId}. Returning success.", transmissionId);
@@ -68,7 +68,7 @@ public class PayPalBillingWebhookService : BillingWebhookService
         var webhookEvent = new BillingWebhookEvent
         {
             ExternalEventId = eventId,
-            Provider = "paypal",
+            Provider = PaymentProviders.PayPal,
             EventType = eventType,
             Payload = payload,
             ProcessingAttempts = 1

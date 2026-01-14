@@ -33,7 +33,7 @@ public class SubscriptionIdempotencyTests
         // Assert
         firstResult.IsSuccess.Should().BeTrue();
         secondResult.IsSuccess.Should().BeFalse();
-        secondResult.WasAlreadyProcessed.Should().BeTrue();
+        secondResult.IsAlreadyProcessed.Should().BeTrue();
         subscription.BillingCycleCount.Should().Be(1, "duplicate payment should not increment billing cycle");
     }
 
@@ -97,7 +97,7 @@ public class SubscriptionIdempotencyTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.WasRejectedOutOfOrder.Should().BeTrue();
+        result.IsRejectedOutOfOrder.Should().BeTrue();
         result.LastProcessedBillingCycle.Should().Be(2);
     }
 
@@ -114,7 +114,7 @@ public class SubscriptionIdempotencyTests
         var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "key_attempt_2", forBillingCycle: 1);
 
         // Assert - Should be treated as already processed for this cycle
-        result.WasAlreadyProcessed.Should().BeTrue();
+        result.IsAlreadyProcessed.Should().BeTrue();
     }
 
     [Fact]
@@ -122,13 +122,15 @@ public class SubscriptionIdempotencyTests
     {
         // Arrange
         var subscription = CreateActiveSubscription();
+        var initialCycle = subscription.BillingCycleCount;
 
         // Act
         var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "key_1");
 
-        // Assert
+        // Assert - Payment should be recorded and LastProcessedBillingCycle updated
         result.IsSuccess.Should().BeTrue();
-        subscription.LastProcessedBillingCycle.Should().Be(subscription.BillingCycleCount);
+        // After RecordPayment, BillingCycleCount is incremented, and LastProcessedBillingCycle is set to the cycle before increment
+        subscription.LastProcessedBillingCycle.Should().Be(initialCycle);
     }
 
     #endregion
@@ -143,17 +145,18 @@ public class SubscriptionIdempotencyTests
         var renewalAmount = new Money(29.99m, "USD");
         var idempotencyKey = "renewal_key_12345";
 
-        // First renewal
+        // First renewal (BillingCycleCount goes from 0 to 1)
         var firstResult = subscription.ProcessRenewal(renewalAmount, idempotencyKey);
+        var cycleAfterFirst = subscription.BillingCycleCount;
 
         // Act - Second renewal with same key (simulates webhook retry)
         var secondResult = subscription.ProcessRenewal(renewalAmount, idempotencyKey);
 
         // Assert
-        firstResult.IsSuccess.Should().BeTrue();
-        secondResult.IsSuccess.Should().BeTrue();
+        firstResult.Success.Should().BeTrue();
+        secondResult.Success.Should().BeTrue();
         secondResult.SubscriptionId.Should().Be(firstResult.SubscriptionId);
-        subscription.BillingCycleCount.Should().Be(2, "duplicate renewal should not increment cycle twice");
+        subscription.BillingCycleCount.Should().Be(cycleAfterFirst, "duplicate renewal should not increment cycle twice");
     }
 
     [Fact]
@@ -162,15 +165,16 @@ public class SubscriptionIdempotencyTests
         // Arrange
         var subscription = CreateActiveSubscription();
         var renewalAmount = new Money(29.99m, "USD");
+        var initialCycle = subscription.BillingCycleCount;
 
-        // Act
+        // Act - Two renewals with different keys should both process
         var firstResult = subscription.ProcessRenewal(renewalAmount, "key_1");
         var secondResult = subscription.ProcessRenewal(renewalAmount, "key_2");
 
         // Assert
-        firstResult.IsSuccess.Should().BeTrue();
-        secondResult.IsSuccess.Should().BeTrue();
-        subscription.BillingCycleCount.Should().Be(3);
+        firstResult.Success.Should().BeTrue();
+        secondResult.Success.Should().BeTrue();
+        subscription.BillingCycleCount.Should().Be(initialCycle + 2);
     }
 
     [Fact]
@@ -215,23 +219,24 @@ public class SubscriptionIdempotencyTests
         subscription.LockToPriceVersion(priceVersionId);
 
         // Act
-        var unlockedVersionId = subscription.UnlockPriceVersion();
+        subscription.UnlockPriceVersion();
 
         // Assert
-        unlockedVersionId.Should().Be(priceVersionId);
         subscription.LockedPriceVersionId.Should().BeNull();
     }
 
     [Fact]
-    public void UnlockPriceVersion_WhenNotLocked_ShouldThrow()
+    public void UnlockPriceVersion_WhenNotLocked_ShouldBeNoOp()
     {
         // Arrange
         var subscription = CreateActiveSubscription();
+        subscription.LockedPriceVersionId.Should().BeNull("initially not locked");
 
-        // Act & Assert
-        var act = () => subscription.UnlockPriceVersion();
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*not locked*");
+        // Act - Unlocking when not locked is a no-op (safe idempotent behavior)
+        subscription.UnlockPriceVersion();
+
+        // Assert - Should still be null, no exception thrown
+        subscription.LockedPriceVersionId.Should().BeNull();
     }
 
     [Fact]

@@ -53,7 +53,7 @@ public class ApplePayBillingWebhookService : BillingWebhookService
         var eventType = validationResult.NotificationType ?? "unknown";
 
         // Check for duplicate event (idempotency)
-        var existingEvent = await _webhookRepository.GetByExternalEventIdAsync(eventId, "apple_app_store", cancellationToken)
+        var existingEvent = await _webhookRepository.GetByExternalEventIdAsync(eventId, PaymentProviders.AppleAppStore, cancellationToken)
             .ConfigureAwait(false);
         if (existingEvent != null)
         {
@@ -65,7 +65,7 @@ public class ApplePayBillingWebhookService : BillingWebhookService
         var webhookEvent = new BillingWebhookEvent
         {
             ExternalEventId = eventId,
-            Provider = "apple_app_store",
+            Provider = PaymentProviders.AppleAppStore,
             EventType = eventType,
             Payload = signedPayload,
             ProcessingAttempts = 1

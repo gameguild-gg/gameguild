@@ -1,22 +1,23 @@
-using GameGuild.CQRS;
-
 namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
-///     Command handler for setting subscription auto-renew
+///     Command handler for setting subscription auto-renew.
+///     Uses base handler to reduce boilerplate for fetch/validate/save pattern.
 /// </summary>
-public class SetSubscriptionAutoRenewCommandHandler(ISubscriptionRepository subscriptionRepository) : ICommandHandler<SetSubscriptionAutoRenewCommand>
+public class SetSubscriptionAutoRenewCommandHandler(ISubscriptionRepository subscriptionRepository)
+    : SubscriptionCommandHandlerBase<SetSubscriptionAutoRenewCommand>(subscriptionRepository)
 {
-    public async Task<Unit> Handle(SetSubscriptionAutoRenewCommand request, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    protected override Guid GetSubscriptionId(SetSubscriptionAutoRenewCommand request) =>
+        request.SubscriptionId;
+
+    /// <inheritdoc />
+    protected override Task ExecuteAsync(
+        Subscription subscription,
+        SetSubscriptionAutoRenewCommand request,
+        CancellationToken cancellationToken)
     {
-        var subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken).ConfigureAwait(false);
-
-        if (subscription == null) { throw new InvalidOperationException("Subscription not found"); }
-
         subscription.SetAutoRenew(request.AutoRenew);
-
-        await subscriptionRepository.UpdateAsync(subscription, cancellationToken);
-
-        return Unit.Value;
+        return Task.CompletedTask;
     }
 }

@@ -1,24 +1,23 @@
-﻿using GameGuild.CQRS;
-
-namespace GameGuild.Commerce.Subscriptions;
+﻿namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
-///     Handler for recording subscription payment failures
+///     Handler for recording subscription payment failures.
+///     Uses base handler to reduce boilerplate for fetch/validate/save pattern.
 /// </summary>
-public class RecordSubscriptionPaymentFailureCommandHandler(ISubscriptionRepository subscriptionRepository) : ICommandHandler<RecordSubscriptionPaymentFailureCommand>
+public class RecordSubscriptionPaymentFailureCommandHandler(ISubscriptionRepository subscriptionRepository)
+    : SubscriptionCommandHandlerBase<RecordSubscriptionPaymentFailureCommand>(subscriptionRepository)
 {
-    public async Task<Unit> Handle(RecordSubscriptionPaymentFailureCommand request, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    protected override Guid GetSubscriptionId(RecordSubscriptionPaymentFailureCommand request) =>
+        request.SubscriptionId;
+
+    /// <inheritdoc />
+    protected override Task ExecuteAsync(
+        Subscription subscription,
+        RecordSubscriptionPaymentFailureCommand request,
+        CancellationToken cancellationToken)
     {
-        var subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken);
-
-        if (subscription is null) throw new InvalidOperationException("Subscription not found");
-
-        // Record the payment failure
         subscription.RecordPaymentFailure(request.Reason, request.FailureDate);
-
-        // Save changes
-        await subscriptionRepository.UpdateAsync(subscription, cancellationToken);
-
-        return Unit.Value;
+        return Task.CompletedTask;
     }
 }

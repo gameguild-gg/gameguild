@@ -69,8 +69,8 @@ public class FinancialLedgerEntryTests
         var entry = new FinancialLedgerEntry
         {
             Id = Guid.NewGuid(),
-            DebitLedgerAccount = LedgerAccount.CashAndBankAccounts,
-            CreditLedgerAccount = LedgerAccount.RevenueSubscriptions,
+            DebitLedgerAccount = LedgerAccount.Cash,
+            CreditLedgerAccount = LedgerAccount.SubscriptionRevenue,
             Amount = 100m,
             Currency = "USD",
             Description = "Subscription payment",
@@ -79,8 +79,8 @@ public class FinancialLedgerEntryTests
         };
 
         // Assert
-        entry.DebitLedgerAccount.Should().Be(LedgerAccount.CashAndBankAccounts);
-        entry.CreditLedgerAccount.Should().Be(LedgerAccount.RevenueSubscriptions);
+        entry.DebitLedgerAccount.Should().Be(LedgerAccount.Cash);
+        entry.CreditLedgerAccount.Should().Be(LedgerAccount.SubscriptionRevenue);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class FinancialLedgerEntryTests
     #region Entry Type Tests
 
     [Theory]
-    [InlineData(LedgerEntryType.Payment)]
+    [InlineData(LedgerEntryType.Revenue)]
     [InlineData(LedgerEntryType.Refund)]
     [InlineData(LedgerEntryType.Adjustment)]
     [InlineData(LedgerEntryType.Transfer)]
@@ -165,11 +165,11 @@ public class FinancialLedgerEntryTests
         return new FinancialLedgerEntry
         {
             Id = Guid.NewGuid(),
-            EntryType = LedgerEntryType.Payment,
+            EntryType = LedgerEntryType.Revenue,
             DebitAccount = "1000",
             CreditAccount = "4000",
-            DebitLedgerAccount = LedgerAccount.CashAndBankAccounts,
-            CreditLedgerAccount = LedgerAccount.RevenueSubscriptions,
+            DebitLedgerAccount = LedgerAccount.Cash,
+            CreditLedgerAccount = LedgerAccount.SubscriptionRevenue,
             Amount = 99.99m,
             Currency = "USD",
             Description = "Test payment entry",

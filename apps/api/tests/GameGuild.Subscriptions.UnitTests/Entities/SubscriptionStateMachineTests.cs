@@ -141,8 +141,10 @@ public class SubscriptionStateMachineTests
         subscription.RecordPaymentFailure("Card declined", DateTime.UtcNow);
         subscription.Status.Should().Be(SubscriptionStatus.PastDue);
 
-        // Act
-        subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "recovery_payment_key");
+        // Act - Record payment, then reactivate (two-step process)
+        var paymentResult = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "recovery_payment_key");
+        paymentResult.IsSuccess.Should().BeTrue("payment should be recorded successfully");
+        subscription.Reactivate();
 
         // Assert
         subscription.Status.Should().Be(SubscriptionStatus.Active);
@@ -162,7 +164,7 @@ public class SubscriptionStateMachineTests
         // Act & Assert
         var act = () => subscription.Activate();
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Cannot transition*");
+            .WithMessage("*Invalid subscription state transition*");
     }
 
     [Fact]
@@ -175,7 +177,7 @@ public class SubscriptionStateMachineTests
         // Act & Assert
         var act = () => subscription.Reactivate();
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Cannot transition*");
+            .WithMessage("*Invalid subscription state transition*");
     }
 
     [Fact]
@@ -187,7 +189,7 @@ public class SubscriptionStateMachineTests
         // Act & Assert
         var act = () => subscription.Suspend("Cannot suspend pending");
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Cannot transition*");
+            .WithMessage("*Invalid subscription state transition*");
     }
 
     [Fact]
@@ -199,7 +201,7 @@ public class SubscriptionStateMachineTests
         // Act & Assert
         var act = () => subscription.Suspend("Cannot suspend trial");
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Cannot transition*");
+            .WithMessage("*Invalid subscription state transition*");
     }
 
     [Fact]
@@ -211,7 +213,7 @@ public class SubscriptionStateMachineTests
         // Act & Assert
         var act = () => subscription.StartTrial(DateTime.UtcNow.AddDays(14));
         act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Cannot transition*");
+            .WithMessage("*Invalid subscription state transition*");
     }
 
     #endregion

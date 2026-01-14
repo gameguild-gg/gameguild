@@ -41,7 +41,7 @@ public class StripeBillingWebhookService : BillingWebhookService
         _logger.LogInformation("Processing Stripe webhook: {EventType} with ID {EventId}", eventType, eventId);
 
         // Check for duplicate event (idempotency)
-        var existingEvent = await _webhookRepository.GetByExternalEventIdAsync(eventId, "stripe", cancellationToken).ConfigureAwait(false);
+        var existingEvent = await _webhookRepository.GetByExternalEventIdAsync(eventId, PaymentProviders.Stripe, cancellationToken).ConfigureAwait(false);
         if (existingEvent != null)
         {
             _logger.LogInformation("Duplicate Stripe webhook detected: {EventId}. Returning success.", eventId);
@@ -53,7 +53,7 @@ public class StripeBillingWebhookService : BillingWebhookService
         var webhookEvent = new BillingWebhookEvent
         {
             ExternalEventId = eventId,
-            Provider = "stripe",
+            Provider = PaymentProviders.Stripe,
             EventType = eventType,
             Payload = payload,
             ProcessingAttempts = 1

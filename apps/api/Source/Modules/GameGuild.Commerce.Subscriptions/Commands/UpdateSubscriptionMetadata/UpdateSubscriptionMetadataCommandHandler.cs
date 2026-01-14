@@ -1,24 +1,23 @@
-﻿using GameGuild.CQRS;
-
-namespace GameGuild.Commerce.Subscriptions;
+﻿namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
-///     Handler for updating subscription metadata
+///     Handler for updating subscription metadata.
+///     Uses base handler to reduce boilerplate for fetch/validate/save pattern.
 /// </summary>
-public class UpdateSubscriptionMetadataCommandHandler(ISubscriptionRepository subscriptionRepository) : ICommandHandler<UpdateSubscriptionMetadataCommand>
+public class UpdateSubscriptionMetadataCommandHandler(ISubscriptionRepository subscriptionRepository)
+    : SubscriptionCommandHandlerBase<UpdateSubscriptionMetadataCommand>(subscriptionRepository)
 {
-    public async Task<Unit> Handle(UpdateSubscriptionMetadataCommand request, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    protected override Guid GetSubscriptionId(UpdateSubscriptionMetadataCommand request) =>
+        request.SubscriptionId;
+
+    /// <inheritdoc />
+    protected override Task ExecuteAsync(
+        Subscription subscription,
+        UpdateSubscriptionMetadataCommand request,
+        CancellationToken cancellationToken)
     {
-        var subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken);
-
-        if (subscription is null) throw new InvalidOperationException("Subscription not found");
-
-        // Update the metadata
         subscription.UpdateMetadata(request.Metadata);
-
-        // Save changes
-        await subscriptionRepository.UpdateAsync(subscription, cancellationToken);
-
-        return Unit.Value;
+        return Task.CompletedTask;
     }
 }

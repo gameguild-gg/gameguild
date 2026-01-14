@@ -130,7 +130,7 @@ public class OrderTests
     {
         // Arrange - Failed is a terminal state
         var order = CreatePendingOrder();
-        order.Fail("Payment processor error");
+        order.MarkAsFailed("Payment processor error");
 
         // Assert
         order.CanTransitionTo(OrderStatus.Pending).Should().BeFalse();
@@ -237,7 +237,7 @@ public class OrderTests
         var order = CreatePendingOrder();
 
         // Act
-        order.Fail("Payment declined");
+        order.MarkAsFailed("Payment declined");
 
         // Assert
         order.Status.Should().Be(OrderStatus.Failed);

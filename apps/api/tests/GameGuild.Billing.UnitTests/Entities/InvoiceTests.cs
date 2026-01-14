@@ -252,7 +252,7 @@ public class InvoiceTests
         var invoice = CreateIssuedInvoice();
 
         // Act
-        invoice.MarkUncollectible("Multiple payment attempts failed");
+        invoice.MarkUncollectible();
 
         // Assert
         invoice.Status.Should().Be(InvoiceStatus.Uncollectible);

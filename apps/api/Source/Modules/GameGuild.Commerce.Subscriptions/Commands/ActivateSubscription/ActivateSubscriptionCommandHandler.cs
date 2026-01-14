@@ -1,22 +1,23 @@
-using GameGuild.CQRS;
-
 namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
-///     Command handler for activating a subscription
+///     Command handler for activating a subscription.
+///     Uses base handler to reduce boilerplate for fetch/validate/save pattern.
 /// </summary>
-public class ActivateSubscriptionCommandHandler(ISubscriptionRepository subscriptionRepository) : ICommandHandler<ActivateSubscriptionCommand>
+public class ActivateSubscriptionCommandHandler(ISubscriptionRepository subscriptionRepository)
+    : SubscriptionCommandHandlerBase<ActivateSubscriptionCommand>(subscriptionRepository)
 {
-    public async Task<Unit> Handle(ActivateSubscriptionCommand request, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    protected override Guid GetSubscriptionId(ActivateSubscriptionCommand request) =>
+        request.SubscriptionId;
+
+    /// <inheritdoc />
+    protected override Task ExecuteAsync(
+        Subscription subscription,
+        ActivateSubscriptionCommand request,
+        CancellationToken cancellationToken)
     {
-        var subscription = await subscriptionRepository.GetByIdAsync(request.SubscriptionId, cancellationToken);
-
-        if (subscription == null) { throw new InvalidOperationException("Subscription not found"); }
-
         subscription.Activate();
-
-        await subscriptionRepository.UpdateAsync(subscription, cancellationToken);
-
-        return Unit.Value;
+        return Task.CompletedTask;
     }
 }
