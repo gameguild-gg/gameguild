@@ -4,9 +4,12 @@
  * Detecta automaticamente o tipo de layout baseado na estrutura dos dados do projeto.
  * - Single Panel: dados diretamente na raiz
  * - Dual Panel: dados com estrutura {left, right}
+ * - Sequential: array de painéis (nova estrutura v1)
  */
 
-export type LayoutType = "single" | "dual"
+import { isSequentialStructure, parseSequentialStructure, type SequentialPanelStructure } from './panel-structure'
+
+export type LayoutType = "single" | "dual" | "sequential"
 
 export interface LayoutDetectionResult {
   layoutType: LayoutType
@@ -14,6 +17,8 @@ export interface LayoutDetectionResult {
   hasRight: boolean
   isSinglePanel: boolean
   isDualPanel: boolean
+  isSequential: boolean
+  sequentialData?: SequentialPanelStructure
 }
 
 export interface EditorStates {
@@ -29,6 +34,20 @@ export interface EditorStates {
  */
 export function detectProjectLayout(data: string): LayoutDetectionResult {
   try {
+    // Check if it's sequential structure first
+    if (isSequentialStructure(data)) {
+      const sequentialData = parseSequentialStructure(data)
+      return {
+        layoutType: "sequential",
+        hasLeft: false,
+        hasRight: false,
+        isSinglePanel: false,
+        isDualPanel: false,
+        isSequential: true,
+        sequentialData,
+      }
+    }
+    
     const parsed = JSON.parse(data)
     
     // Verifica se tem estrutura de dual panel (left e right)
@@ -42,6 +61,7 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
       hasRight,
       isSinglePanel: !isDualPanel,
       isDualPanel,
+      isSequential: false,
     }
   } catch (error) {
     console.error("Failed to parse project data for layout detection:", error)
@@ -52,6 +72,7 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
       hasRight: false,
       isSinglePanel: true,
       isDualPanel: false,
+      isSequential: false,
     }
   }
 }
@@ -97,19 +118,24 @@ export function extractEditorStates(data: string, layoutType: LayoutType): Edito
 /**
  * Cria a estrutura de dados correta baseado no layout type
  * @param layoutType - Tipo de layout
- * @param states - Estados dos editores
+ * @param states - Estados dos editores (ou estrutura sequencial)
  * @returns String JSON formatada corretamente
  */
-export function createProjectData(layoutType: LayoutType, states: Partial<EditorStates>): string {
+export function createProjectData(layoutType: LayoutType, states: Partial<EditorStates> | SequentialPanelStructure): string {
+  // Se for estrutura sequencial completa, apenas serializar
+  if ('version' in states && 'panels' in states) {
+    return JSON.stringify(states)
+  }
+  
   if (layoutType === "dual") {
     // Dual panel: criar estrutura {left, right}
     return JSON.stringify({
-      left: states.left || createEmptyEditorState(),
-      right: states.right || createEmptyEditorState(),
+      left: (states as EditorStates).left || createEmptyEditorState(),
+      right: (states as EditorStates).right || createEmptyEditorState(),
     })
   } else {
     // Single panel: dados diretos
-    return JSON.stringify(states.single || createEmptyEditorState())
+    return JSON.stringify((states as EditorStates).single || createEmptyEditorState())
   }
 }
 
