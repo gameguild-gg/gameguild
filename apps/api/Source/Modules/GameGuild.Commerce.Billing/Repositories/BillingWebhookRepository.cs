@@ -1,4 +1,5 @@
 using GameGuild.Abstractions;
+using GameGuild.Commerce;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -8,22 +9,21 @@ namespace GameGuild.Commerce.Billing;
 ///     Repository implementation for billing webhook events.
 ///     Uses ExternalEventId as the idempotency key to prevent duplicate processing.
 /// </summary>
-public class BillingWebhookRepository(IApplicationDbContext context, ILogger<BillingWebhookRepository> logger) : IBillingWebhookRepository
+public class BillingWebhookRepository(IApplicationDbContext context, ILogger<BillingWebhookRepository> logger) 
+    : CommerceRepositoryBase<BillingWebhookEvent>(context), IBillingWebhookRepository
 {
-    private DbSet<BillingWebhookEvent> WebhookEvents => context.Set<BillingWebhookEvent>();
-
     /// <inheritdoc />
     public async Task<BillingWebhookEvent?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Getting webhook event by ID: {Id}", id);
-        return await WebhookEvents.FirstOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false);
+        return await Entities.FirstOrDefaultAsync(e => e.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<BillingWebhookEvent?> GetByExternalEventIdAsync(string externalEventId, string provider, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Getting webhook event by external ID: {ExternalEventId} for provider: {Provider}", externalEventId, provider);
-        return await WebhookEvents
+        return await Entities
             .FirstOrDefaultAsync(e => e.ExternalEventId == externalEventId && e.Provider == provider, cancellationToken)
             .ConfigureAwait(false);
     }
@@ -32,7 +32,7 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
     public async Task<IEnumerable<BillingWebhookEvent>> GetByProviderAsync(string provider, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Getting webhook events for provider: {Provider}", provider);
-        return await WebhookEvents
+        return await Entities
             .Where(e => e.Provider == provider)
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync(cancellationToken)
@@ -43,7 +43,7 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
     public async Task<IEnumerable<BillingWebhookEvent>> GetFailedEventsAsync(int maxAttempts = 3, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Getting failed webhook events with max attempts: {MaxAttempts}", maxAttempts);
-        return await WebhookEvents
+        return await Entities
             .Where(e => e.IsFailed && e.ProcessingAttempts < maxAttempts)
             .OrderBy(e => e.CreatedAt)
             .ToListAsync(cancellationToken)
@@ -65,8 +65,8 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
         }
         
         logger.LogInformation("Creating webhook event: {ExternalEventId} for provider: {Provider}", webhookEvent.ExternalEventId, webhookEvent.Provider);
-        await WebhookEvents.AddAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await Entities.AddAsync(webhookEvent, cancellationToken).ConfigureAwait(false);
+        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return webhookEvent;
     }
 
@@ -76,8 +76,8 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
         ArgumentNullException.ThrowIfNull(webhookEvent);
         logger.LogInformation("Updating webhook event: {Id}", webhookEvent.Id);
         
-        WebhookEvents.Update(webhookEvent);
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        Entities.Update(webhookEvent);
+        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return webhookEvent;
     }
 
@@ -89,8 +89,8 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
         var webhookEvent = await GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
         if (webhookEvent is not null)
         {
-            WebhookEvents.Remove(webhookEvent);
-            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            Entities.Remove(webhookEvent);
+            await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -98,7 +98,7 @@ public class BillingWebhookRepository(IApplicationDbContext context, ILogger<Bil
     public async Task<bool> ExistsAsync(string externalEventId, string provider, CancellationToken cancellationToken = default)
     {
         logger.LogDebug("Checking if webhook event exists: {ExternalEventId} for provider: {Provider}", externalEventId, provider);
-        return await WebhookEvents
+        return await Entities
             .AnyAsync(e => e.ExternalEventId == externalEventId && e.Provider == provider, cancellationToken)
             .ConfigureAwait(false);
     }

@@ -1,4 +1,5 @@
 using GameGuild.Abstractions;
+using GameGuild.Commerce;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Orders;
@@ -6,22 +7,13 @@ namespace GameGuild.Commerce.Orders;
 /// <summary>
 /// Repository implementation for Order entities
 /// </summary>
-public class OrderRepository(IApplicationDbContext context) : IOrderRepository
+public class OrderRepository(IApplicationDbContext context) 
+    : CommerceRepositoryBase<Order>(context), IOrderRepository
 {
-    private DbSet<Order> Orders => context.Set<Order>();
-
-    /// <inheritdoc />
-    public async Task<Order?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await Orders
-            .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
-            .ConfigureAwait(false);
-    }
-
     /// <inheritdoc />
     public async Task<Order?> GetByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken = default)
     {
-        return await Orders
+        return await Entities
             .Include(o => o.LineItems)
             .FirstOrDefaultAsync(o => o.IdempotencyKey == idempotencyKey, cancellationToken)
             .ConfigureAwait(false);
@@ -33,7 +25,7 @@ public class OrderRepository(IApplicationDbContext context) : IOrderRepository
         OrderStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        var query = Orders
+        var query = Entities
             .Include(o => o.LineItems)
             .Where(o => o.UserId == userId);
 
@@ -54,7 +46,7 @@ public class OrderRepository(IApplicationDbContext context) : IOrderRepository
         OrderStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        var query = Orders
+        var query = Entities
             .Include(o => o.LineItems)
             .Where(o => o.TenantId == tenantId);
 
@@ -76,7 +68,7 @@ public class OrderRepository(IApplicationDbContext context) : IOrderRepository
         OrderStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        var query = Orders
+        var query = Entities
             .Include(o => o.LineItems)
             .Where(o => o.CreatedAt >= startDate && o.CreatedAt <= endDate);
 
@@ -94,7 +86,7 @@ public class OrderRepository(IApplicationDbContext context) : IOrderRepository
     /// <inheritdoc />
     public async Task<Order?> GetWithLineItemsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await Orders
+        return await Entities
             .Include(o => o.LineItems)
                 .ThenInclude(li => li.Product)
             .FirstOrDefaultAsync(o => o.Id == id, cancellationToken)
@@ -104,13 +96,13 @@ public class OrderRepository(IApplicationDbContext context) : IOrderRepository
     /// <inheritdoc />
     public async Task AddAsync(Order order, CancellationToken cancellationToken = default)
     {
-        await Orders.AddAsync(order, cancellationToken).ConfigureAwait(false);
+        await Entities.AddAsync(order, cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public Task UpdateAsync(Order order, CancellationToken cancellationToken = default)
     {
-        Orders.Update(order);
+        Entities.Update(order);
         return Task.CompletedTask;
     }
 
@@ -118,13 +110,13 @@ public class OrderRepository(IApplicationDbContext context) : IOrderRepository
     public Task DeleteAsync(Order order, CancellationToken cancellationToken = default)
     {
         order.SoftDelete();
-        Orders.Update(order);
+        Entities.Update(order);
         return Task.CompletedTask;
     }
 
     /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

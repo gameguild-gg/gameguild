@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using GameGuild.Abstractions;
 using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,14 +10,12 @@ namespace GameGuild.Commerce;
 ///     Provides standard soft-delete filtering, ordering, and query methods.
 /// </summary>
 /// <typeparam name="TEntity">The entity type</typeparam>
-/// <typeparam name="TContext">The DbContext type</typeparam>
-public abstract class CommerceRepositoryBase<TEntity, TContext>
+public abstract class CommerceRepositoryBase<TEntity>
     where TEntity : EntityBase
-    where TContext : DbContext
 {
-    protected readonly TContext Context;
+    protected readonly IApplicationDbContext Context;
 
-    protected CommerceRepositoryBase(TContext context)
+    protected CommerceRepositoryBase(IApplicationDbContext context)
     {
         Context = context;
     }
@@ -24,7 +23,7 @@ public abstract class CommerceRepositoryBase<TEntity, TContext>
     /// <summary>
     ///     Gets the DbSet for the entity type.
     /// </summary>
-    protected abstract DbSet<TEntity> Entities { get; }
+    protected virtual DbSet<TEntity> Entities => Context.Set<TEntity>();
 
     /// <summary>
     ///     Gets a queryable with standard filters applied (soft-delete excluded).

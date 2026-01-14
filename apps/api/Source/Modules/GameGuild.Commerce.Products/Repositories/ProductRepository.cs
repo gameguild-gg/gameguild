@@ -1,4 +1,5 @@
 using GameGuild.Abstractions;
+using GameGuild.Commerce;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Products;
@@ -6,7 +7,8 @@ namespace GameGuild.Commerce.Products;
 /// <summary>
 /// Repository implementation for Product entities
 /// </summary>
-public class ProductRepository(IApplicationDbContext context) : IProductRepository
+public class ProductRepository(IApplicationDbContext context) 
+    : CommerceRepositoryBase<Product>(context), IProductRepository
 {
     public async Task<Product?> GetByIdAsync(
         Guid id,
@@ -14,8 +16,7 @@ public class ProductRepository(IApplicationDbContext context) : IProductReposito
         bool includePricing = false,
         bool includeCreator = false)
     {
-        var query = context.Set<Product>()
-            .Where(p => p.Id == id && p.DeletedAt == null);
+        var query = Query.Where(p => p.Id == id);
 
         if (includePricing)
             query = query.Include(p => p.Pricing);
@@ -34,7 +35,7 @@ public class ProductRepository(IApplicationDbContext context) : IProductReposito
         string sortDirection = "DESC",
         CancellationToken cancellationToken = default)
     {
-        var query = context.Set<Product>().Where(p => p.DeletedAt == null);
+        var query = Query;
 
         // Apply filters
         if (type.HasValue)
@@ -84,31 +85,28 @@ public class ProductRepository(IApplicationDbContext context) : IProductReposito
 
     public async Task AddAsync(Product product, CancellationToken cancellationToken = default)
     {
-        await context.Set<Product>().AddAsync(product, cancellationToken).ConfigureAwait(false);
+        await Entities.AddAsync(product, cancellationToken).ConfigureAwait(false);
     }
 
     public Task UpdateAsync(Product product, CancellationToken cancellationToken = default)
     {
-        context.Set<Product>().Update(product);
+        Entities.Update(product);
         return Task.CompletedTask;
     }
 
     public Task DeleteAsync(Product product, CancellationToken cancellationToken = default)
     {
-        context.Set<Product>().Remove(product);
+        Entities.Remove(product);
         return Task.CompletedTask;
     }
 
     public async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await context.Set<Product>()
-            .Where(p => p.DeletedAt == null)
-            .AnyAsync(p => p.Id == id, cancellationToken)
-            .ConfigureAwait(false);
+        return await Query.AnyAsync(p => p.Id == id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }
