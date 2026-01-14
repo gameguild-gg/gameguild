@@ -40,7 +40,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         AuthorizationModule.ConfigureAuthorizationModel(modelBuilder);
 
         // Apply Products module configurations
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(Product).Assembly, type => type.Namespace?.StartsWith("GameGuild.Products") == true);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(Product).Assembly, type => 
+            type.Namespace?.StartsWith("GameGuild.Commerce.Products") == true);
 
         // Apply Orders module configurations
         OrdersModule.ConfigureOrdersModel(modelBuilder);
