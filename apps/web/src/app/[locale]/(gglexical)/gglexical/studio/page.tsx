@@ -225,6 +225,12 @@ export default function Page() {
         setEditorState,
         setLeftEditorState,
         setRightEditorState,
+        setSequentialStructure,
+        setCurrentPanelIndex,
+        setPanelEditorRefs,
+        setPreviewMode,
+        setCurrentProjectMode,
+        setLastProjectLoadTime,
       })
     }
     

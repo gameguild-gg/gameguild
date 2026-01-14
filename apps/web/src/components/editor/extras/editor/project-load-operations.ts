@@ -1,6 +1,7 @@
 import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
 import { detectProjectLayout, extractEditorStates, type LayoutType } from "@/lib/storage/editor/layout-detector"
+import type { SequentialPanelStructure, PreviewMode } from "@/lib/storage/editor/panel-structure"
 
 // Parameter interface
 export interface CheckSelectedProjectParams {
@@ -12,6 +13,7 @@ export interface CheckSelectedProjectParams {
       data: string // Layout auto-detected from data structure
       tags: string[]
       storageType?: "local" | "gameguild-cloud" | "google-drive"
+      preferences?: any
     } | null>
   }
   editorRef: React.RefObject<LexicalEditor | null>
@@ -27,6 +29,12 @@ export interface CheckSelectedProjectParams {
   setEditorState: (state: string) => void
   setLeftEditorState: (state: string) => void
   setRightEditorState: (state: string) => void
+  setSequentialStructure?: (structure: SequentialPanelStructure) => void
+  setCurrentPanelIndex?: (index: number) => void
+  setPanelEditorRefs?: (refs: Map<string, React.RefObject<LexicalEditor>>) => void
+  setPreviewMode?: (mode: PreviewMode) => void
+  setCurrentProjectMode?: (mode: any) => void
+  setLastProjectLoadTime?: (time: number) => void
 }
 
 /**
@@ -48,6 +56,12 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     setEditorState,
     setLeftEditorState,
     setRightEditorState,
+    setSequentialStructure,
+    setCurrentPanelIndex,
+    setPanelEditorRefs,
+    setPreviewMode,
+    setCurrentProjectMode,
+    setLastProjectLoadTime,
   } = params
 
   try {
@@ -60,6 +74,9 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
           // Detect layout automaticamente from data structure
           const layoutInfo = detectProjectLayout(projectData.data)
           
+          // Extract mode from preferences or default to free-page
+          const projectMode = projectData.preferences?.global?.mode || "free-page"
+          
           // Set layout and type
           setCurrentLayout(layoutInfo.layoutType)
           setCurrentProjectType(projectData.type)
@@ -70,6 +87,48 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
           setCurrentProjectStorageType(projectData.storageType || "local")
           setProjectTags(projectData.tags || [])
           setIsFirstTime(false)
+          
+          // Set project mode if setter provided
+          if (setCurrentProjectMode) {
+            setCurrentProjectMode(projectMode)
+          }
+          
+          // Mark project load time if setter provided
+          if (setLastProjectLoadTime) {
+            setLastProjectLoadTime(Date.now())
+          }
+          
+          // Handle sequential layout
+          if (layoutInfo.isSequential && layoutInfo.sequentialData) {
+            if (setSequentialStructure && setCurrentPanelIndex && setPanelEditorRefs && setPreviewMode) {
+              setSequentialStructure(layoutInfo.sequentialData)
+              setCurrentPanelIndex(0)
+              
+              // Load previewMode from preferences or default to continuous
+              const savedPreviewMode = projectData.preferences?.global?.previewMode || "continuous"
+              setPreviewMode(savedPreviewMode as PreviewMode)
+              
+              // Initialize editor refs for all panels
+              const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
+              layoutInfo.sequentialData.panels.forEach(panel => {
+                newRefs.set(panel.id, { current: undefined as any })
+              })
+              setPanelEditorRefs(newRefs)
+              
+              // Update URL hash if not already set
+              if (window.location.hash !== `#${projectData.id}`) {
+                window.history.pushState(null, '', `#${projectData.id}`)
+              }
+              
+              toast.success("Projeto carregado", {
+                description: `"${projectData.name}" foi aberto com sucesso`,
+                duration: 2500,
+                icon: "📂",
+              })
+              
+              return // Exit early for sequential layout
+            }
+          }
           
           // Extract editor states
           const states = extractEditorStates(projectData.data, layoutInfo.layoutType)
