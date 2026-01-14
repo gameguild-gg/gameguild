@@ -10,39 +10,43 @@ public class PricingTierConfiguration : IEntityTypeConfiguration<PricingTier>
 {
     public void Configure(EntityTypeBuilder<PricingTier> builder)
     {
-        // Configure table name (snake_case convention)
-        builder.ToTable("pricingtier", "gameguild.payments");
+        // Configure table name with constraints
+        builder.ToTable("pricing_tiers", tb =>
+        {
+            tb.HasCheckConstraint("CK_PricingTier_Quantity_Valid", "min_quantity IS NULL OR max_quantity IS NULL OR min_quantity <= max_quantity");
+            tb.HasCheckConstraint("CK_PricingTier_Price_NonNegative", "price IS NULL OR price >= 0");
+            tb.HasCheckConstraint("CK_PricingTier_Discount_Valid", "discount_percentage IS NULL OR (discount_percentage >= 0 AND discount_percentage <= 100)");
+        });
 
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).HasColumnName("id").IsRequired();
+        // Property configurations
+        builder.Property(x => x.PricingRuleId)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for PricingTier
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        builder.Property(x => x.MinQuantity)
+            .HasColumnName("min_quantity");
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(x => x.MaxQuantity)
+            .HasColumnName("max_quantity");
 
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_pricingtier_tenant_id");
+        builder.Property(x => x.Price)
+            .HasColumnType("decimal(18,2)");
 
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.Property(x => x.DiscountPercentage)
+            .HasColumnName("discount_percentage")
+            .HasColumnType("decimal(5,2)");
+
+        // Relationship configurations
+        builder.HasOne(x => x.PricingRule)
+            .WithMany()
+            .HasForeignKey(x => x.PricingRuleId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure indexes for performance
+        builder.HasIndex(x => x.PricingRuleId).HasDatabaseName("ix_pricing_tiers_pricing_rule_id");
+        builder.HasIndex(x => x.MinQuantity).HasDatabaseName("ix_pricing_tiers_min_quantity");
+        builder.HasIndex(x => x.MaxQuantity).HasDatabaseName("ix_pricing_tiers_max_quantity");
     }
 }

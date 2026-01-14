@@ -10,39 +10,52 @@ public class TaxRateConfiguration : IEntityTypeConfiguration<TaxRate>
 {
     public void Configure(EntityTypeBuilder<TaxRate> builder)
     {
-        // Configure table name (snake_case convention)
-        builder.ToTable("taxrate", "gameguild.payments");
+        // Configure table name
+        builder.ToTable("tax_rates", tb =>
+        {
+            tb.HasCheckConstraint("CK_TaxRate_Rate_Valid", "rate >= 0 AND rate <= 1");
+        });
 
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).HasColumnName("id").IsRequired();
+        // Property configurations
+        builder.Property(x => x.TaxJurisdictionId)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for TaxRate
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        builder.Property(x => x.TaxType)
+            .IsRequired();
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(x => x.Rate)
+            .HasColumnType("decimal(5,4)")
+            .IsRequired();
 
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_taxrate_tenant_id");
+        builder.Property(x => x.ProductCategory)
+            .HasMaxLength(100);
 
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.Property(x => x.EffectiveFrom)
+            .IsRequired();
+
+        builder.Property(x => x.IsActive)
+            .IsRequired();
+
+        builder.Property(x => x.MinimumTaxableAmount)
+            .HasColumnType("decimal(18,2)");
+
+        builder.Property(x => x.MaximumTaxableAmount)
+            .HasColumnType("decimal(18,2)");
+
+        // Relationship configurations
+        builder.HasOne(x => x.TaxJurisdiction)
+            .WithMany()
+            .HasForeignKey(x => x.TaxJurisdictionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure indexes for performance
+        builder.HasIndex(x => x.TaxJurisdictionId).HasDatabaseName("ix_tax_rates_jurisdiction_id");
+        builder.HasIndex(x => x.TaxType).HasDatabaseName("ix_tax_rates_tax_type");
+        builder.HasIndex(x => x.IsActive).HasDatabaseName("ix_tax_rates_is_active");
+        builder.HasIndex(x => x.EffectiveFrom).HasDatabaseName("ix_tax_rates_effective_from");
+        builder.HasIndex(x => x.EffectiveTo).HasDatabaseName("ix_tax_rates_effective_to");
     }
 }

@@ -10,39 +10,37 @@ public class PromoStackingRuleConfiguration : IEntityTypeConfiguration<PromoStac
 {
     public void Configure(EntityTypeBuilder<PromoStackingRule> builder)
     {
-        // Configure table name (snake_case convention)
-        builder.ToTable("promostackingrule", "gameguild.payments");
+        // Configure table name
+        builder.ToTable("promo_stacking_rules");
 
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).HasColumnName("id").IsRequired();
+        // Property configurations
+        builder.Property(x => x.PromoCodeId)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for PromoStackingRule
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        builder.Property(x => x.StackBehavior)
+            .IsRequired();
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(x => x.AllowedPromoCodeIds)
+            .HasMaxLength(2000);
 
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_promostackingrule_tenant_id");
+        builder.Property(x => x.ExcludedPromoCodeIds)
+            .HasMaxLength(2000);
 
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.Property(x => x.PromoCodeTypes)
+            .HasMaxLength(1000);
+
+        builder.Property(x => x.Priority)
+            .IsRequired();
+
+        builder.Property(x => x.Description)
+            .HasMaxLength(500);
+
+        // Configure indexes for performance
+        builder.HasIndex(x => x.PromoCodeId).HasDatabaseName("ix_promo_stacking_rules_promo_code_id");
+        builder.HasIndex(x => x.StackBehavior).HasDatabaseName("ix_promo_stacking_rules_stack_behavior");
+        builder.HasIndex(x => x.Priority).HasDatabaseName("ix_promo_stacking_rules_priority");
     }
 }

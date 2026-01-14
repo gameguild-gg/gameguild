@@ -10,36 +10,52 @@ public class BillingWebhookEventConfiguration : IEntityTypeConfiguration<Billing
 {
     public void Configure(EntityTypeBuilder<BillingWebhookEvent> builder)
     {
+        // Configure table
+        builder.ToTable("BillingWebhookEvents");
+
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).IsRequired();
+        // Property configurations
+        builder.Property(x => x.Provider)
+            .HasMaxLength(50)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for BillingWebhookEvent
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        builder.Property(x => x.ExternalEventId)
+            .HasMaxLength(255)
+            .IsRequired();
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(x => x.EventType)
+            .HasMaxLength(100)
+            .IsRequired();
 
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_billingwebhookevent_tenant_id");
+        builder.Property(x => x.Payload)
+            .IsRequired();
 
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.Property(x => x.ErrorMessage)
+            .HasMaxLength(2000);
+
+        // Configure indexes for performance and idempotency
+        builder.HasIndex(x => new { x.ExternalEventId, x.Provider })
+            .IsUnique()
+            .HasDatabaseName("ix_billing_webhook_events_external_id_provider");
+        
+        builder.HasIndex(x => x.EventType)
+            .HasDatabaseName("ix_billing_webhook_events_event_type");
+        
+        builder.HasIndex(x => x.IsProcessed)
+            .HasDatabaseName("ix_billing_webhook_events_is_processed");
+        
+        builder.HasIndex(x => x.IsFailed)
+            .HasDatabaseName("ix_billing_webhook_events_is_failed");
+        
+        builder.HasIndex(x => x.TenantId)
+            .HasDatabaseName("ix_billing_webhook_events_tenant_id");
+        
+        builder.HasIndex(x => x.SubscriptionId)
+            .HasDatabaseName("ix_billing_webhook_events_subscription_id");
+        
+        builder.HasIndex(x => x.CreatedAt)
+            .HasDatabaseName("ix_billing_webhook_events_created_at");
     }
 }

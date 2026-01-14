@@ -10,39 +10,44 @@ public class TaxRuleConfiguration : IEntityTypeConfiguration<TaxRule>
 {
     public void Configure(EntityTypeBuilder<TaxRule> builder)
     {
-        // Configure table name (snake_case convention)
-        builder.ToTable("taxrule", "gameguild.payments");
+        // Configure table name
+        builder.ToTable("tax_rules");
 
         // Configure primary key
         builder.HasKey(x => x.Id);
 
-        // Configure Id property
-        builder.Property(x => x.Id).HasColumnName("id").IsRequired();
+        // Property configurations
+        builder.Property(x => x.Name)
+            .HasMaxLength(200)
+            .IsRequired();
 
-        // TODO: Add specific property configurations for TaxRule
-        // Example:
-        // builder.Property(x => x.Name)
-        //     .HasColumnName("name")
-        //     .HasMaxLength(255)
-        //     .IsRequired();
+        builder.Property(x => x.Description)
+            .HasMaxLength(1000);
 
-        // TODO: Add relationship configurations
-        // Example:
-        // builder.HasOne(x => x.Tenant)
-        //     .WithMany()
-        //     .HasForeignKey(x => x.TenantId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder.Property(x => x.TaxJurisdictionId)
+            .IsRequired();
 
-        // Configure indexes
-        // builder.HasIndex(x => x.TenantId).HasDatabaseName("idx_taxrule_tenant_id");
+        builder.Property(x => x.RuleType)
+            .IsRequired();
 
-        // Configure created/updated timestamps if inherited from EntityBase
-        // builder.Property(x => x.CreatedAt)
-        //     .HasColumnName("created_at")
-        //     .IsRequired();
-        // 
-        // builder.Property(x => x.UpdatedAt)
-        //     .HasColumnName("updated_at")
-        //     .IsRequired();
+        builder.Property(x => x.Priority)
+            .IsRequired();
+
+        builder.Property(x => x.IsActive)
+            .IsRequired();
+
+        // Relationship configurations
+        builder.HasOne(x => x.TaxJurisdiction)
+            .WithMany(j => j.TaxRules)
+            .HasForeignKey(x => x.TaxJurisdictionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Configure indexes for performance
+        builder.HasIndex(x => x.TaxJurisdictionId).HasDatabaseName("ix_tax_rules_jurisdiction_id");
+        builder.HasIndex(x => x.RuleType).HasDatabaseName("ix_tax_rules_rule_type");
+        builder.HasIndex(x => x.IsActive).HasDatabaseName("ix_tax_rules_is_active");
+        builder.HasIndex(x => x.Priority).HasDatabaseName("ix_tax_rules_priority");
+        builder.HasIndex(x => x.EffectiveFrom).HasDatabaseName("ix_tax_rules_effective_from");
+        builder.HasIndex(x => x.EffectiveTo).HasDatabaseName("ix_tax_rules_effective_to");
     }
 }
