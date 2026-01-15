@@ -489,10 +489,24 @@ public class AssetTokenOptions
 
 | Issue | Impact | Evidence | Recommended Fix |
 |-------|--------|----------|-----------------|
-| **N+1 Queries** | DB connection exhaustion under load | `ResourceQuotaService.cs:158` | Batch queries with `ToDictionaryAsync()` |
-| **Token Validation Loop** | O(n) per request | `AssetTokenService.ValidateToken()` iterates `AccessPolicy` enum | Pre-compute valid signatures, cache tokens |
+| ~~**N+1 Queries**~~ | ~~DB connection exhaustion under load~~ | ~~`ResourceQuotaService.cs:158`~~ | ~~Batch queries with `ToDictionaryAsync()`~~ ✅ **FIXED** - Uses `GetByTenantAndTypesAsync()` batch query |
+| ~~**Token Validation Loop**~~ | ~~O(n) per request~~ | ~~`AssetTokenService.ValidateToken()` iterates `AccessPolicy` enum~~ | ~~Pre-compute valid signatures, cache tokens~~ ✅ **FIXED** - Token caching with `ConcurrentDictionary`, O(1) on cache hit |
 | ~~**Unbounded Result Sets**~~ | ~~Memory pressure on large tenants~~ | ~~`GetResourceUsageRecordsQuery` returns all matching records~~ | ~~Add pagination~~ ✅ **FIXED** - Uses `PagedResult<T>` with max 200 per page |
-| **No Connection Pooling Config** | Connection starvation | Default EF Core settings | Configure `MaxPoolSize` in connection string |
+| ~~**No Connection Pooling Config**~~ | ~~Connection starvation~~ | ~~Default EF Core settings~~ | ~~Configure `MaxPoolSize` in connection string~~ ✅ **FIXED** - Connection strings now include `Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300` |
+
+### Token Caching Architecture ✅ (Added 2026-01-15)
+
+- `AssetTokenService` now caches validated tokens in `ConcurrentDictionary<string, (AssetTokenPayload, long)>`
+- Cache key: `{token}:{assetReferenceId}:{tenantId}` for O(1) lookup
+- Maximum 10,000 cache entries to prevent memory exhaustion
+- Automatic eviction of expired entries when cache is full
+- O(n) signature verification only on cache miss
+
+### Connection Pooling Configuration ✅ (Added 2026-01-15)
+
+- `DatabaseOptions` class extended with pooling properties: `MaxPoolSize`, `MinPoolSize`, `ConnectionIdleLifetimeSeconds`, `ConnectionLifetimeSeconds`
+- Connection strings in `appsettings.json` and `appsettings.Development.json` updated with explicit pool settings
+- Default configuration: 100 max connections, 5 min connections, 300s idle lifetime
 
 ### Caching Architecture ✅
 
@@ -511,7 +525,7 @@ public class AssetTokenOptions
 | 2 | ~~IDOR on tenant-scoped endpoints~~ | ~~HIGH~~ | [TenantResourcesController.cs:33](apps/api/Source/Modules/GameGuild.Resources/Controllers/TenantResourcesController.cs#L33) | ~~Cross-tenant data access via URL manipulation.~~ Tenant membership validation added. | ✅ **FIXED 2026-01-15** |
 | 3 | ~~Global PermissionAuthorizationFilter disabled~~ | ~~HIGH~~ | [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739) | ~~Defense-in-depth gap.~~ Re-enabled globally. | ✅ **FIXED 2026-01-15** |
 | 4 | No rate limiting on Resources endpoints | **MEDIUM** | All 9 controllers lack `[EnableRateLimiting]` | Enumeration attacks, tenant ID guessing via timing | ⚠️ OPEN |
-| 5 | ValidateToken O(n) complexity | **HIGH** | `AssetTokenService.ValidateToken()` | DoS vulnerability via signature verification | ⚠️ OPEN |
+| 5 | ~~ValidateToken O(n) complexity~~ | ~~HIGH~~ | `AssetTokenService.ValidateToken()` | ~~DoS vulnerability via signature verification.~~ Token caching with `ConcurrentDictionary` provides O(1) lookup on cache hit, max 10K entries with expiry eviction. | ✅ **FIXED 2026-01-15** |
 | 6 | ~~N+1 query in CheckMultipleLimitsAsync~~ | ~~MEDIUM~~ | [ResourceQuotaService.cs:158](apps/api/Source/Modules/GameGuild.Resources/Services/ResourceQuotaService.cs#L158) | ~~Performance degradation.~~ Batch query via `GetByTenantAndTypesAsync`. | ✅ **FIXED 2026-01-15** |
 | 7 | ~~Resources administrative endpoints publicly exposed~~ | ~~MEDIUM~~ | [ResourcesController.cs](apps/api/Source/Modules/GameGuild.Resources/Controllers/ResourcesController.cs) | ~~Cross-tenant usage aggregation~~ | ✅ **FIXED** - Now requires admin role |
 | 8 | ~~Unbounded result sets~~ | ~~MEDIUM~~ | [GetResourceUsageRecordsQuery.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/GetResourceUsageRecords/GetResourceUsageRecordsQuery.cs) | ~~Memory pressure on large tenants, OOM risk.~~ Pagination implemented with PageSize (max 200). | ✅ **FIXED 2026-01-15** |
@@ -698,12 +712,14 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | `GetResourceUsageRecordsQuery` | Pagination with `PagedResult<T>` | PageNumber, PageSize (max 200) parameters, prevents OOM |
 | `GetResourceUsageRecordsQueryHandler` | Type disambiguation | Uses `Models.PagedResult<UsageRecord>` to resolve CQRS/Models ambiguity |
 | `DependencyInjectionInfrastructure` | Type disambiguation | Uses `Models.PagedResult<UsageRecord>` in DI registration |
+| `AssetTokenService` | Token caching | `ConcurrentDictionary` cache with O(1) lookup, 10K max entries, expiry eviction |
+| `DatabaseOptions` | Connection pooling config | Added `MaxPoolSize`, `MinPoolSize`, `ConnectionIdleLifetimeSeconds`, `ConnectionLifetimeSeconds` |
+| `appsettings.json` | Connection pooling | Added `Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300` to connection strings |
 
 ### Remaining Actions Required
 
-1. ⚠️ **HIGH:** Fix token validation O(n) complexity in `AssetTokenService`
-2. ⚠️ **MEDIUM:** Add `[EnableRateLimiting]` to Resources endpoints
-3. ✅ **VERIFY:** Run integration tests confirming 401/403 responses
+1. ⚠️ **MEDIUM:** Add `[EnableRateLimiting]` to Resources endpoints
+2. ✅ **VERIFY:** Run integration tests confirming 401/403 responses
 
 ---
 
