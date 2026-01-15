@@ -1,54 +1,7 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
-namespace GameGuild.Assets.Security;
-
-/// <summary>
-/// Interface for virus scanning service.
-/// Mitigates: Malware Upload (#7)
-/// </summary>
-public interface IVirusScanService
-{
-    /// <summary>
-    /// Scans a stream for viruses/malware.
-    /// </summary>
-    /// <param name="content">The content stream to scan</param>
-    /// <param name="fileName">Original filename for context</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Scan result with status and details</returns>
-    Task<VirusScanResult> ScanAsync(
-        Stream content,
-        string fileName,
-        CancellationToken ct = default);
-
-    /// <summary>
-    /// Scans content stored in object storage.
-    /// </summary>
-    /// <param name="bucketName">S3 bucket name</param>
-    /// <param name="objectKey">S3 object key</param>
-    /// <param name="ct">Cancellation token</param>
-    Task<VirusScanResult> ScanStoredAsync(
-        string bucketName,
-        string objectKey,
-        CancellationToken ct = default);
-
-    /// <summary>
-    /// Gets the health status of the virus scan service.
-    /// </summary>
-    Task<bool> IsHealthyAsync(CancellationToken ct = default);
-}
-
-/// <summary>
-/// Result of a virus scan.
-/// </summary>
-public record VirusScanResult(
-    bool IsClean,
-    string Status,
-    string? ThreatName = null,
-    string? ThreatType = null,
-    string? ScanEngine = null,
-    string? ScanEngineVersion = null,
-    TimeSpan ScanDuration = default,
-    string? Details = null);
+namespace GameGuild.Assets.VirusScan;
 
 /// <summary>
 /// Configuration for virus scanning.
@@ -63,9 +16,9 @@ public class VirusScanOptions
     public bool Enabled { get; set; } = true;
 
     /// <summary>
-    /// Scan mode: Sync (block upload), Async (scan after upload), or Both
+    /// Scan mode: Sync (block upload), Async (scan after upload), or Hybrid
     /// </summary>
-    public VirusScanMode Mode { get; set; } = VirusScanMode.Async;
+    public VirusScanMode Mode { get; set; } = VirusScanMode.Hybrid;
 
     /// <summary>
     /// MIME types that require synchronous scanning (high-risk).
@@ -92,7 +45,7 @@ public class VirusScanOptions
         "application/x-ms-installer",
         "application/x-java-archive",   // JAR
         "application/java-archive",
-        "application/x-rar-compressed", // RAR (often contains malware)
+        "application/x-rar-compressed", // RAR
         "application/vnd.rar",
         "application/x-7z-compressed",  // 7z
         "application/zip",              // ZIP
@@ -147,16 +100,63 @@ public enum VirusScanMode
 }
 
 /// <summary>
-/// Placeholder implementation of virus scanning (replace with ClamAV or commercial solution).
+/// Result of a virus scan.
+/// </summary>
+public record VirusScanResult(
+    bool IsClean,
+    string Status,
+    string? ThreatName = null,
+    string? ThreatType = null,
+    string? ScanEngine = null,
+    string? ScanEngineVersion = null,
+    TimeSpan ScanDuration = default,
+    string? Details = null);
+
+/// <summary>
+/// Interface for virus scanning service.
+/// Mitigates: Malware Upload (Threat #7)
+/// </summary>
+public interface IVirusScanService
+{
+    /// <summary>
+    /// Scans a stream for viruses/malware.
+    /// </summary>
+    Task<VirusScanResult> ScanAsync(
+        Stream content,
+        string fileName,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Scans content stored in object storage.
+    /// </summary>
+    Task<VirusScanResult> ScanStoredAsync(
+        string bucketName,
+        string objectKey,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets the health status of the virus scan service.
+    /// </summary>
+    Task<bool> IsHealthyAsync(CancellationToken ct = default);
+
+    /// <summary>
+    /// Determines if a MIME type requires synchronous scanning.
+    /// </summary>
+    bool RequiresSyncScan(string mimeType);
+}
+
+/// <summary>
+/// Placeholder implementation of virus scanning.
+/// In production, replace with ClamAV or commercial antivirus integration.
 /// </summary>
 public class VirusScanService : IVirusScanService
 {
     private readonly VirusScanOptions _options;
-    private readonly Microsoft.Extensions.Logging.ILogger<VirusScanService> _logger;
+    private readonly ILogger<VirusScanService> _logger;
 
     public VirusScanService(
-        Microsoft.Extensions.Options.IOptions<VirusScanOptions> options,
-        Microsoft.Extensions.Logging.ILogger<VirusScanService> logger)
+        IOptions<VirusScanOptions> options,
+        ILogger<VirusScanService> logger)
     {
         _options = options.Value;
         _logger = logger;
@@ -225,7 +225,6 @@ public class VirusScanService : IVirusScanService
         CancellationToken ct = default)
     {
         // TODO: Implement scanning of stored objects
-        // Could use S3 event triggers or direct ClamAV integration
         await Task.Delay(10, ct);
 
         return new VirusScanResult(
@@ -241,9 +240,6 @@ public class VirusScanService : IVirusScanService
         return Task.FromResult(true);
     }
 
-    /// <summary>
-    /// Determines if a MIME type requires synchronous scanning.
-    /// </summary>
     public bool RequiresSyncScan(string mimeType)
     {
         if (_options.Mode == VirusScanMode.Sync)

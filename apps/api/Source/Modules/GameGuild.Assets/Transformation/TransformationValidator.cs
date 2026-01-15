@@ -1,12 +1,14 @@
-namespace GameGuild.Assets.Security;
+using Microsoft.Extensions.Options;
+
+namespace GameGuild.Assets.Transformation;
 
 /// <summary>
 /// Configuration for transformation limits.
-/// Mitigates: Transformation Downgrade Attack (#5)
+/// Mitigates: Transformation Downgrade Attack (Threat #5)
 /// </summary>
-public class TransformationLimitsOptions
+public class TransformationOptions
 {
-    public const string SectionName = "Assets:TransformationLimits";
+    public const string SectionName = "Assets:Transformation";
 
     /// <summary>
     /// Maximum output dimension (width or height) in pixels.
@@ -30,7 +32,6 @@ public class TransformationLimitsOptions
 
     /// <summary>
     /// Allowed transformations per asset kind.
-    /// Key: AssetKind, Value: allowed operations
     /// </summary>
     public Dictionary<string, AllowedTransformations> KindLimits { get; set; } = new()
     {
@@ -132,10 +133,9 @@ public interface ITransformationValidator
 /// </summary>
 public class TransformationValidator : ITransformationValidator
 {
-    private readonly TransformationLimitsOptions _options;
+    private readonly TransformationOptions _options;
 
-    public TransformationValidator(
-        Microsoft.Extensions.Options.IOptions<TransformationLimitsOptions> options)
+    public TransformationValidator(IOptions<TransformationOptions> options)
     {
         _options = options.Value;
     }
@@ -259,4 +259,12 @@ public class TransformationValidator : ITransformationValidator
         // Default: no transformations allowed
         return new AllowedTransformations();
     }
+}
+
+/// <summary>
+/// Backward compatibility alias for TransformationOptions.
+/// </summary>
+public class TransformationLimitsOptions : TransformationOptions
+{
+    public new const string SectionName = "Assets:TransformationLimits";
 }
