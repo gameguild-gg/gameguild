@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace GameGuild.Commerce.Products;
 
 /// <summary>
@@ -5,7 +7,8 @@ namespace GameGuild.Commerce.Products;
 /// </summary>
 public class EntitlementService(
     IUserProductRepository userProductRepository,
-    IProductRepository productRepository) : IEntitlementService
+    IProductRepository productRepository,
+    ILogger<EntitlementService> logger) : IEntitlementService
 {
     /// <inheritdoc />
     public async Task<bool> HasAccessAsync(
@@ -74,6 +77,16 @@ public class EntitlementService(
         Guid? orderId = null,
         CancellationToken cancellationToken = default)
     {
+        // Economic Model: Warn when entitlements are granted without Order reference
+        // This creates unauditable entitlements and should only occur for admin corrections or migrations
+        if (!orderId.HasValue)
+        {
+            logger.LogWarning(
+                "Entitlement granted without OrderId for User {UserId}, Product {ProductId}. " +
+                "This bypasses audit trail and should only occur for admin corrections or legacy migrations.",
+                userId, productId);
+        }
+
         // Check if already has access
         var existingAccess = await userProductRepository.GetByUserAndProductAsync(
             userId, productId, cancellationToken).ConfigureAwait(false);
