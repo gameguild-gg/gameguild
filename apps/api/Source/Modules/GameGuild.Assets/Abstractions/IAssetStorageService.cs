@@ -90,6 +90,15 @@ public interface IAssetStorageService
         string uploadId,
         string objectKey,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Uploads content to quarantine bucket (for infected files).
+    /// </summary>
+    Task UploadToQuarantineAsync(
+        Stream content,
+        string objectKey,
+        IDictionary<string, string> metadata,
+        CancellationToken ct = default);
 }
 
 /// <summary>

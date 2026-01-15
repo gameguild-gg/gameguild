@@ -235,6 +235,36 @@ public class AssetStorageService : IAssetStorageService
         await _s3Client.AbortMultipartUploadAsync(request, ct);
     }
 
+    public async Task UploadToQuarantineAsync(
+        Stream content,
+        string objectKey,
+        IDictionary<string, string> metadata,
+        CancellationToken ct = default)
+    {
+        // Quarantine bucket name follows convention: {bucket}-quarantine
+        var quarantineBucket = $"{_options.BucketName}-quarantine";
+
+        var request = new Amazon.S3.Model.PutObjectRequest
+        {
+            BucketName = quarantineBucket,
+            Key = objectKey,
+            InputStream = content,
+            ContentType = "application/octet-stream", // Don't trust original MIME type for quarantined files
+            AutoCloseStream = false,
+            DisablePayloadSigning = true
+        };
+
+        // Add all provided metadata
+        foreach (var (key, value) in metadata)
+        {
+            request.Metadata.Add(key, value);
+        }
+
+        request.Metadata.Add("quarantined-at", DateTime.UtcNow.ToString("O"));
+
+        await _s3Client.PutObjectAsync(request, ct);
+    }
+
     private static string GenerateObjectKey(string contentHash, string mimeType, bool isTransformed)
     {
         // Structure: {prefix}/{hash[0:2]}/{hash[2:4]}/{hash}.{ext}

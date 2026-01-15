@@ -6,6 +6,7 @@ using GameGuild.Abstractions;
 using GameGuild.Assets.Configuration;
 using GameGuild.Assets.Commands;
 using GameGuild.Assets.Queries;
+using GameGuild.Assets.Security;
 using GameGuild.CQRS;
 using FluentValidation;
 
@@ -32,6 +33,20 @@ public static class AssetsModuleExtensions
             configuration.GetSection(AssetUploadConfiguration.SectionName));
         services.Configure<AssetAccessOptions>(
             configuration.GetSection(AssetAccessOptions.SectionName));
+
+        // Security Options (Threat Mitigations)
+        services.Configure<AssetRateLimitOptions>(
+            configuration.GetSection(AssetRateLimitOptions.SectionName));
+        services.Configure<TransformationLimitsOptions>(
+            configuration.GetSection(TransformationLimitsOptions.SectionName));
+        services.Configure<VirusScanOptions>(
+            configuration.GetSection(VirusScanOptions.SectionName));
+        services.Configure<AssetGarbageCollectionOptions>(
+            configuration.GetSection(AssetGarbageCollectionOptions.SectionName));
+        services.Configure<TenantIsolationOptions>(
+            configuration.GetSection(TenantIsolationOptions.SectionName));
+        services.Configure<DownloadWindowOptions>(
+            configuration.GetSection(DownloadWindowOptions.SectionName));
 
         // S3 Client
         services.AddSingleton<IAmazonS3>(sp =>
@@ -66,6 +81,16 @@ public static class AssetsModuleExtensions
         services.AddScoped<IAssetUploadService, AssetUploadService>();
         services.AddScoped<IAssetAccessService, AssetAccessService>();
         services.AddScoped<IAssetModerationService, AssetModerationService>();
+
+        // Security Services (Threat Mitigations)
+        services.AddScoped<IAssetRateLimitService, AssetRateLimitService>();
+        services.AddScoped<ITransformationValidator, TransformationValidator>();
+        services.AddScoped<IVirusScanService, VirusScanService>();
+        services.AddScoped<IAssetGarbageCollectionService, AssetGarbageCollectionService>();
+        services.AddScoped<ITenantAssetValidationService, TenantAssetValidationService>();
+        services.AddScoped<IDownloadWindowService, DownloadWindowService>();
+        services.AddScoped<IOrderValidationService, PlaceholderOrderValidationService>();
+        services.AddScoped<ISecureUploadService, SecureUploadService>();
 
         // Validators
         services.AddValidatorsFromAssemblyContaining<UploadAssetValidator>(ServiceLifetime.Scoped);

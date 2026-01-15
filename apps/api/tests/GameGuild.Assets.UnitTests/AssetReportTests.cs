@@ -65,7 +65,7 @@ public class AssetReportTests
     }
 
     [Fact]
-    public void SubmitReview_WithNoAction_ShouldResolveReport()
+    public void SubmitReview_WithNoAction_ShouldDismissReport()
     {
         // Arrange
         var report = CreateTestReport();
@@ -75,7 +75,7 @@ public class AssetReportTests
         report.SubmitReview(reviewerId, ReviewDecision.NoAction, "Content is acceptable");
 
         // Assert
-        report.Status.Should().Be(ReportStatus.Resolved);
+        report.Status.Should().Be(ReportStatus.Dismissed);
         report.Decision.Should().Be(ReviewDecision.NoAction);
         report.ReviewedByUserId.Should().Be(reviewerId);
         report.ReviewNotes.Should().Be("Content is acceptable");

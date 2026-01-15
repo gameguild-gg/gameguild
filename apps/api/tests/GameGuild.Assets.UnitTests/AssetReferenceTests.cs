@@ -40,7 +40,9 @@ public class AssetReferenceTests
             contentId,
             userId,
             "document.pdf",
-            AssetAccessPolicy.Private);
+            AssetAccessPolicy.Private,
+            null,
+            null);
 
         // Assert
         reference.ParentResourceType.Should().BeNull();
@@ -91,7 +93,9 @@ public class AssetReferenceTests
             contentId,
             userId,
             "test.jpg",
-            policy);
+            policy,
+            null,
+            null);
 
         // Assert
         reference.AccessPolicy.Should().Be(policy);
@@ -147,6 +151,8 @@ public class AssetReferenceTests
             Guid.NewGuid(),
             Guid.NewGuid(),
             "test-file.jpg",
-            AssetAccessPolicy.Private);
+            AssetAccessPolicy.Private,
+            null,
+            null);
     }
 }

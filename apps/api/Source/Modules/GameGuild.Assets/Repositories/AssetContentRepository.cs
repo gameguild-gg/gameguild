@@ -106,4 +106,26 @@ public class AssetContentRepository : IAssetContentRepository
             .Where(x => x.Id == id)
             .ExecuteDeleteAsync(ct);
     }
+
+    public async Task<List<AssetContent>> GetMarkedForDeletionAsync(
+        DateTime cutoffDate,
+        int limit,
+        CancellationToken ct = default)
+    {
+        return await _context.Set<AssetContent>()
+            .Where(x => x.MarkedForDeletionAt != null && x.MarkedForDeletionAt < cutoffDate)
+            .Where(x => x.ReferenceCount == 0)
+            .Where(x => x.IsDeletable)
+            .OrderBy(x => x.MarkedForDeletionAt)
+            .Take(limit)
+            .ToListAsync(ct);
+    }
+
+    public async Task<int> GetCurrentReferenceCountAsync(Guid id, CancellationToken ct = default)
+    {
+        return await _context.Set<AssetContent>()
+            .Where(x => x.Id == id)
+            .Select(x => x.ReferenceCount)
+            .FirstOrDefaultAsync(ct);
+    }
 }

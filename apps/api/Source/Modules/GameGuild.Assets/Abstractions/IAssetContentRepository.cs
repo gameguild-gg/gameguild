@@ -57,4 +57,19 @@ public interface IAssetContentRepository
     /// Deletes an asset content (hard delete).
     /// </summary>
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets content marked for deletion before the specified date.
+    /// Used for garbage collection.
+    /// </summary>
+    Task<List<AssetContent>> GetMarkedForDeletionAsync(
+        DateTime cutoffDate,
+        int limit = 100,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets the current reference count (with row version check).
+    /// Used for safe GC operations.
+    /// </summary>
+    Task<int> GetCurrentReferenceCountAsync(Guid id, CancellationToken ct = default);
 }
