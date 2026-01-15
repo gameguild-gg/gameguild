@@ -83,11 +83,21 @@ public static class DependencyInjection
         // Register Application Services
         // ResourceQuotaService with caching decorator for improved read performance
         services.AddScoped<ResourceQuotaService>();
+        
+        // Register the unified IResourceQuotaService with caching decorator
         services.AddScoped<IResourceQuotaService>(sp =>
             new CachedResourceQuotaService(
                 sp.GetRequiredService<ResourceQuotaService>(),
                 sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>(),
                 sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<CachedResourceQuotaService>>()));
+
+        // ISP: Register segregated interfaces pointing to the same implementation
+        // This allows consumers to depend only on the interface they need
+        services.AddScoped<IResourceQuotaReader>(sp => sp.GetRequiredService<IResourceQuotaService>());
+        services.AddScoped<IResourceQuotaWriter>(sp => sp.GetRequiredService<IResourceQuotaService>());
+        services.AddScoped<IResourceQuotaEnforcer>(sp => sp.GetRequiredService<IResourceQuotaService>());
+        services.AddScoped<IResourceQuotaAnalytics>(sp => sp.GetRequiredService<IResourceQuotaService>());
+        services.AddScoped<IResourceQuotaMaintenance>(sp => sp.GetRequiredService<IResourceQuotaService>());
 
         services.AddScoped<IUsageService, UsageService>();
         services.AddScoped<IResourceThrottlingService, ResourceThrottlingService>();

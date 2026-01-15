@@ -211,11 +211,24 @@ GameGuild.Resources/
 | **SRP** | ✅ GOOD | Clear separation: Quota vs Usage vs Throttling |
 | **OCP** | ✅ GOOD | New resource types added via enum extension |
 | **LSP** | ✅ GOOD | `CachedResourceQuotaService` properly decorates |
-| **ISP** | ⚠️ FAIR | `IResourceQuotaService` has 15+ methods - could be split |
+| **ISP** | ✅ FIXED | Segregated into 5 focused interfaces (see below) |
 | **DIP** | ✅ GOOD | All dependencies via interfaces |
 
-**Code Smells Identified:**
-1. `IResourceQuotaService` is a "fat interface" with 15+ methods
+**ISP Fix Applied:** The original `IResourceQuotaService` (15+ methods) has been split into:
+
+| Interface | Methods | Purpose |
+|-----------|---------|---------|
+| `IResourceQuotaReader` | 4 | Read-only quota/usage queries |
+| `IResourceQuotaWriter` | 2 | Admin quota configuration (set, delete) |
+| `IResourceQuotaEnforcer` | 5 | Consumption and limit enforcement |
+| `IResourceQuotaAnalytics` | 2 | Reporting and analytics |
+| `IResourceQuotaMaintenance` | 3 | Background maintenance tasks |
+
+The unified `IResourceQuotaService` now inherits from all five interfaces for backward compatibility.
+DI registration updated to resolve each segregated interface independently.
+
+**Remaining Code Smells:**
+1. ~~`IResourceQuotaService` is a "fat interface" with 15+ methods~~ ✅ FIXED
 2. `ResourceUsageType` enum may grow unbounded - consider registration pattern
 
 ### A.1.6 Security & Risk Review
@@ -240,12 +253,12 @@ GameGuild.Resources/
 
 ### A.1.8 Recommended Minimal Refactors
 
-| # | Change | Effort | Priority |
-|---|--------|--------|----------|
-| 1 | Add `ResourceUsageType.Assets` enum value | 5 min | P0 |
-| 2 | Add `ResourceUsageType.AssetStorage` enum value | 5 min | P0 |
-| 3 | Add `ResourceUsageType.AssetDownloads` enum value | 5 min | P1 |
-| 4 | Split `IResourceQuotaService` into query/command interfaces | 2 hrs | P3 |
+| # | Change | Effort | Priority | Status |
+|---|--------|--------|----------|--------|
+| 1 | Add `ResourceUsageType.Assets` enum value | 5 min | P0 | ⏳ TODO |
+| 2 | Add `ResourceUsageType.AssetStorage` enum value | 5 min | P0 | ⏳ TODO |
+| 3 | Add `ResourceUsageType.AssetDownloads` enum value | 5 min | P1 | ⏳ TODO |
+| 4 | Split `IResourceQuotaService` into query/command interfaces | 2 hrs | P3 | ✅ DONE |
 
 ### A.1.9 Required Tests
 
