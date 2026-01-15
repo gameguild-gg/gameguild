@@ -358,7 +358,7 @@ interface EditorProps {
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId?: string | null
   mode?: ProjectMode
-  panel?: "left" | "right" | "single"
+  blockId?: string  // Block identifier (b1, b2, b3, etc.)
   currentProjectType?: "type1" | "type2" | "type3"
   storageAdapter?: any
   currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
@@ -419,7 +419,7 @@ const MATCHERS: LinkMatcher[] = [
 ]
 
 // Atualizar a função Editor para incluir o EditorRefPlugin:
-export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId, mode, panel, currentProjectType, storageAdapter, currentStorageType }: EditorProps) {
+export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId, mode, blockId, currentProjectType, storageAdapter, currentStorageType }: EditorProps) {
   const [isLoadingProject, setIsLoadingProject] = useState(false)
 
   useEffect(() => {
@@ -453,7 +453,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             />
             <FloatingContentInsertPlugin 
               mode={mode} 
-              panel={panel} 
+              blockId={blockId} 
               currentProjectId={projectId || undefined}
               currentProjectType={currentProjectType}
               storageAdapter={storageAdapter}

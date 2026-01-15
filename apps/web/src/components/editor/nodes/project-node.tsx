@@ -18,8 +18,7 @@ export interface ProjectData {
   projectName: string
   projectType: "type1" | "type2"
   editorState: SerializedEditorState | null
-  leftEditorState?: SerializedEditorState | null
-  rightEditorState?: SerializedEditorState | null
+  blockStates?: Record<string, SerializedEditorState | null> // For type2: {b1, b2, b3...}
   isLocalCopy: boolean
   isReference?: boolean // True when same level - only stores projectId reference
   wasReference?: boolean // Track if it was originally a reference before becoming local copy
@@ -124,16 +123,17 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
 
           // Parse project data
           let editorState = null
-          let leftEditorState = null
-          let rightEditorState = null
+          let blockStates: Record<string, SerializedEditorState | null> | undefined = undefined
 
           try {
             const data = JSON.parse(fullProject.data)
             if (fullProject.type === "type1") {
               editorState = data
             } else if (fullProject.type === "type2") {
-              leftEditorState = data.left || null
-              rightEditorState = data.right || null
+              // Expect blocks format: {blocks: {b1, b2, b3...}}
+              if (data.blocks) {
+                blockStates = data.blocks
+              }
             }
           } catch (error) {
             console.error("Failed to parse project data:", error)
@@ -142,8 +142,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
           const loadedProjectData: ProjectData = {
             ...projectData,
             editorState,
-            leftEditorState,
-            rightEditorState,
+            blockStates,
             size: fullProject.size,
           }
 
@@ -193,8 +192,8 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
     })
   }
 
-  // Handle left editor changes - update node data
-  const handleLeftEditorChange = (newState: string) => {
+  // Handle block editor changes - update node data
+  const handleBlockEditorChange = (blockId: string, newState: string) => {
     editor.update(() => {
       const node = $getNodeByKey(nodeKey)
       if (!node || !$isProjectNode(node)) return
@@ -202,25 +201,10 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
       const parsedState = JSON.parse(newState)
       const updatedData: ProjectData = {
         ...projectData,
-        leftEditorState: parsedState,
-      }
-
-      const writableNode = node.getWritable() as ProjectNode
-      writableNode.setData(updatedData)
-      setProjectData(updatedData)
-    })
-  }
-
-  // Handle right editor changes - update node data
-  const handleRightEditorChange = (newState: string) => {
-    editor.update(() => {
-      const node = $getNodeByKey(nodeKey)
-      if (!node || !$isProjectNode(node)) return
-
-      const parsedState = JSON.parse(newState)
-      const updatedData: ProjectData = {
-        ...projectData,
-        rightEditorState: parsedState,
+        blockStates: {
+          ...(projectData.blockStates || {}),
+          [blockId]: parsedState
+        }
       }
 
       const writableNode = node.getWritable() as ProjectNode
@@ -330,8 +314,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
           projectName: projectData.projectName,
           projectType: projectData.projectType,
           editorState: null,
-          leftEditorState: null,
-          rightEditorState: null,
+          blockStates: undefined,
           isLocalCopy: false,
           isReference: true,
           wasReference: undefined,
@@ -372,8 +355,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
 
       // Parse project data based on type
       let editorState = null
-      let leftEditorState = null
-      let rightEditorState = null
+      let blockStates: Record<string, SerializedEditorState | null> | undefined = undefined
 
       try {
         const data = JSON.parse(originalProject.data)
@@ -381,8 +363,10 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
         if (originalProject.type === "type1") {
           editorState = data
         } else if (originalProject.type === "type2") {
-          leftEditorState = data.left || null
-          rightEditorState = data.right || null
+          // Expect blocks format: {blocks: {b1, b2, b3...}}
+          if (data.blocks) {
+            blockStates = data.blocks
+          }
         }
       } catch (error) {
         console.error("Failed to parse project data:", error)
@@ -399,8 +383,7 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
         projectName: originalProject.name,
         projectType: originalProject.type,
         editorState,
-        leftEditorState,
-        rightEditorState,
+        blockStates,
         isLocalCopy: false,
         isReference: false,
         wasReference: undefined,
@@ -554,29 +537,24 @@ function ProjectComponent({ nodeKey, data, editor }: { nodeKey: NodeKey; data: P
               <PreviewRenderer serializedState={loadedData.editorState} />
             )}
           </div>
-        ) : loadedData.projectType === "type2" && loadedData.leftEditorState && loadedData.rightEditorState ? (
+        ) : loadedData.projectType === "type2" && loadedData.blockStates && Object.keys(loadedData.blockStates).length >= 2 ? (
           <div className="w-full">
             {loadedData.isLocalCopy ? (
               <div className="grid grid-cols-2 gap-4">
-                <Editor
-                  initialState={JSON.stringify(loadedData.leftEditorState)}
-                  onChange={handleLeftEditorChange}
-                  className="border-0"
-                  mode="free-page"
-                  panel="left"
-                />
-                <Editor
-                  initialState={JSON.stringify(loadedData.rightEditorState)}
-                  onChange={handleRightEditorChange}
-                  className="border-0"
-                  mode="free-page"
-                  panel="right"
-                />
+                {Object.entries(loadedData.blockStates).slice(0, 2).map(([blockId, blockState]) => (
+                  <Editor
+                    key={blockId}
+                    initialState={JSON.stringify(blockState)}
+                    onChange={(newState) => handleBlockEditorChange(blockId, newState)}
+                    className="border-0"
+                    mode="free-page"
+                    blockId={blockId}
+                  />
+                ))}
               </div>
             ) : (
               <PreviewRendererType2 
-                leftState={loadedData.leftEditorState} 
-                rightState={loadedData.rightEditorState} 
+                blockStates={loadedData.blockStates as Record<string, SerializedEditorState>}
               />
             )}
           </div>

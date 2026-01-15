@@ -22,15 +22,15 @@ export const INSERT_NODE_COMMAND: LexicalCommand<{ nodeType: string }> = createC
 
 interface NodeValidationPluginProps {
   mode: ProjectMode
-  panel?: "left" | "right" | "single"  // "single" for type1 layouts
+  blockId?: string  // Block identifier (b1, b2, b3, etc.)
 }
 
-export function NodeValidationPlugin({ mode, panel }: NodeValidationPluginProps) {
+export function NodeValidationPlugin({ mode, blockId }: NodeValidationPluginProps) {
   const [editor] = useLexicalComposerContext()
 
   useEffect(() => {
-    // If no panel specified or free-page mode, allow everything
-    if (!panel || mode === "free-page") {
+    // If no blockId specified or free-page mode, allow everything
+    if (!blockId || mode === "free-page") {
       return
     }
 
@@ -41,7 +41,7 @@ export function NodeValidationPlugin({ mode, panel }: NodeValidationPluginProps)
         const { nodeType } = payload
         
         // Check if node is allowed
-        if (!isNodeAllowed(nodeType, panel, mode)) {
+        if (!isNodeAllowed(nodeType, blockId, mode)) {
           // Get friendly names for nodes
           const nodeFriendlyNames: Record<string, string> = {
             "code-studio": "Code Studio",
@@ -49,11 +49,11 @@ export function NodeValidationPlugin({ mode, panel }: NodeValidationPluginProps)
           }
           
           const friendlyName = nodeFriendlyNames[nodeType] || nodeType
-          const panelName = panel === "left" ? "left panel" : "right panel"
+          const blockName = `block ${blockId}`
           
           // Show error toast
           toast.error(`Cannot insert ${friendlyName}`, {
-            description: `${friendlyName} nodes are not allowed in the ${panelName} for this project mode.`,
+            description: `${friendlyName} nodes are not allowed in ${blockName} for this project mode.`,
             duration: 3000,
             icon: "🚫"
           })
@@ -69,7 +69,7 @@ export function NodeValidationPlugin({ mode, panel }: NodeValidationPluginProps)
     return () => {
       removeListener()
     }
-  }, [editor, mode, panel])
+  }, [editor, mode, blockId])
 
   return null
 }

@@ -5,14 +5,14 @@ import { FileText, Copy, ExternalLink, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SerializedContentRenderer } from "../../extras/preview/serialized-content-renderer"
 import { toast } from "sonner"
+import type { SerializedEditorState } from "lexical"
 
 interface ProjectNodeData {
   projectId: string
   projectName: string
   projectType: "type1" | "type2"
   editorState: any
-  leftEditorState?: any
-  rightEditorState?: any
+  blockStates?: Record<string, SerializedEditorState | null>
   isLocalCopy: boolean
   isReference?: boolean
   wasReference?: boolean
@@ -52,16 +52,17 @@ export function PreviewProject({ node, storageAdapter }: PreviewProjectProps) {
 
           // Parse project data
           let editorState = null
-          let leftEditorState = null
-          let rightEditorState = null
+          let blockStates: Record<string, SerializedEditorState | null> | undefined = undefined
 
           try {
             const data = JSON.parse(fullProject.data)
             if (fullProject.type === "type1") {
               editorState = data
             } else if (fullProject.type === "type2") {
-              leftEditorState = data.left || null
-              rightEditorState = data.right || null
+              // Parse blocks from data
+              if (data.blocks && typeof data.blocks === "object") {
+                blockStates = data.blocks
+              }
             }
           } catch (error) {
             console.error("Failed to parse project data:", error)
@@ -70,8 +71,7 @@ export function PreviewProject({ node, storageAdapter }: PreviewProjectProps) {
           const loadedProjectData: ProjectNodeData = {
             ...node.data,
             editorState,
-            leftEditorState,
-            rightEditorState,
+            blockStates,
             size: fullProject.size,
           }
 
@@ -183,14 +183,15 @@ export function PreviewProject({ node, storageAdapter }: PreviewProjectProps) {
           <div className="w-full">
             <SerializedContentRenderer serializedState={loadedData.editorState} />
           </div>
-        ) : loadedData.projectType === "type2" && loadedData.leftEditorState && loadedData.rightEditorState ? (
-          <div className="w-full grid grid-cols-2 gap-4">
-            <div>
-              <SerializedContentRenderer serializedState={loadedData.leftEditorState} />
-            </div>
-            <div>
-              <SerializedContentRenderer serializedState={loadedData.rightEditorState} />
-            </div>
+        ) : loadedData.projectType === "type2" && loadedData.blockStates && Object.keys(loadedData.blockStates).length > 0 ? (
+          <div className="w-full grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(Object.keys(loadedData.blockStates).length, 3)}, minmax(0, 1fr))` }}>
+            {Object.entries(loadedData.blockStates).map(([blockId, state]) => 
+              state ? (
+                <div key={blockId}>
+                  <SerializedContentRenderer serializedState={state} />
+                </div>
+              ) : null
+            )}
           </div>
         ) : (
           <div className="flex items-center justify-center py-12 px-4">

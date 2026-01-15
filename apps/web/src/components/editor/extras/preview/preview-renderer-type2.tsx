@@ -6,15 +6,26 @@ import { PreviewRenderer } from "./preview-renderer"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
 interface PreviewRendererType2Props {
-  leftState: SerializedEditorState
-  rightState: SerializedEditorState
+  blockStates: Record<string, SerializedEditorState>
   projectId?: string
   storageAdapter?: {
     load: (id: string) => Promise<any>
   }
 }
 
-export function PreviewRendererType2({ leftState, rightState, projectId, storageAdapter }: PreviewRendererType2Props) {
+export function PreviewRendererType2({ blockStates, projectId, storageAdapter }: PreviewRendererType2Props) {
+  // Get first two blocks (b1, b2) for dual-panel display
+  const blockEntries = Object.entries(blockStates)
+  const firstBlock = blockEntries[0]
+  const secondBlock = blockEntries[1]
+  
+  if (!firstBlock || !secondBlock) {
+    return <div className="p-8 text-center text-gray-500">Need at least 2 blocks for dual preview</div>
+  }
+  
+  const [firstBlockId, firstState] = firstBlock
+  const [secondBlockId, secondState] = secondBlock
+  
   const [leftWidth, setLeftWidth] = useState(50) // Percentage
   const [isDragging, setIsDragging] = useState(false)
   const [isLeftCollapsed, setIsLeftCollapsed] = useState(false)
@@ -140,7 +151,7 @@ export function PreviewRendererType2({ leftState, rightState, projectId, storage
           </div>
         ) : (
           <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto overflow-x-hidden break-words">
-            <PreviewRenderer serializedState={leftState} projectId={projectId} storageAdapter={storageAdapter} />
+            <PreviewRenderer serializedState={firstState} projectId={projectId} storageAdapter={storageAdapter} />
           </div>
         )}
       </div>
@@ -198,7 +209,7 @@ export function PreviewRendererType2({ leftState, rightState, projectId, storage
           </div>
         ) : (
           <div className="p-6 sm:p-8 md:p-12 h-full overflow-y-auto overflow-x-hidden break-words">
-            <PreviewRenderer serializedState={rightState} projectId={projectId} storageAdapter={storageAdapter} />
+            <PreviewRenderer serializedState={secondState} projectId={projectId} storageAdapter={storageAdapter} />
           </div>
         )}
       </div>

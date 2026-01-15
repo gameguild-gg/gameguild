@@ -28,9 +28,9 @@ export const DEFAULT_PROJECT_PREFERENCES: ProjectPreferences = {
     shikiTheme: "github",
     mode: "free-page",
     restrictions: {
-      left: [null, null],
-      right: [null, null],
-      single: [null, null]
+      blocks: {
+        b1: [null, null]
+      }
     }
   },
   nodes: {}

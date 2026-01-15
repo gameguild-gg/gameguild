@@ -17,8 +17,7 @@ export interface CheckSelectedProjectParams {
     } | null>
   }
   editorRef: React.RefObject<LexicalEditor | null>
-  leftEditorRef: React.RefObject<LexicalEditor | null>
-  rightEditorRef: React.RefObject<LexicalEditor | null>
+  blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
   setCurrentProjectId: (id: string) => void
   setCurrentProjectName: (name: string) => void
   setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
@@ -27,8 +26,7 @@ export interface CheckSelectedProjectParams {
   setCurrentLayout: (layout: LayoutType) => void // Layout auto-detected (single, dual, or sequential)
   setCurrentProjectType: (type: string) => void // Project type
   setEditorState: (state: string) => void
-  setLeftEditorState: (state: string) => void
-  setRightEditorState: (state: string) => void
+  setBlockStates: (states: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void
   setSequentialStructure?: (structure: SequentialPanelStructure) => void
   setCurrentPanelIndex?: (index: number) => void
   setPanelEditorRefs?: (refs: Map<string, React.RefObject<LexicalEditor>>) => void
@@ -44,8 +42,7 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
   const {
     storageAdapter,
     editorRef,
-    leftEditorRef,
-    rightEditorRef,
+    blockRefs,
     setCurrentProjectId,
     setCurrentProjectName,
     setCurrentProjectStorageType,
@@ -54,8 +51,7 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     setCurrentLayout,
     setCurrentProjectType,
     setEditorState,
-    setLeftEditorState,
-    setRightEditorState,
+    setBlockStates,
     setSequentialStructure,
     setCurrentPanelIndex,
     setPanelEditorRefs,
@@ -136,31 +132,32 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
           // Wait for layout to render before loading editor data
           setTimeout(() => {
             try {
-              if (layoutInfo.isSinglePanel && editorRef.current && states.single) {
-                // Single panel layout
-                if (!states.single.root) {
+              if (layoutInfo.isSinglePanel && editorRef.current && states.blocks.b1) {
+                // Single panel layout - uses b1
+                if (!states.blocks.b1.root) {
                   throw new Error("Project data is not in expected Lexical format")
                 }
                 
-                const editorState = editorRef.current.parseEditorState(JSON.stringify(states.single))
+                const editorState = editorRef.current.parseEditorState(JSON.stringify(states.blocks.b1))
                 editorRef.current.setEditorState(editorState)
-                setEditorState(JSON.stringify(states.single))
+                setEditorState(JSON.stringify(states.blocks.b1))
                 
-              } else if (layoutInfo.isDualPanel && leftEditorRef.current && rightEditorRef.current && states.left && states.right) {
-                // Dual panel layout
-                if (!states.left.root || !states.right.root) {
-                  throw new Error("Dual panel data is not in expected Lexical format")
-                }
+              } else if (layoutInfo.isMultiPanel && states.blocks) {
+                // Multi panel layout - load all blocks dynamically
+                const newBlockStates: Record<string, string> = {}
                 
-                // Set left editor
-                const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(states.left))
-                leftEditorRef.current.setEditorState(leftEditorState)
-                setLeftEditorState(JSON.stringify(states.left))
+                Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
+                  if (blockState && blockState.root) {
+                    // Initialize ref if needed
+                    if (!blockRefs.current[blockId]) {
+                      blockRefs.current[blockId] = null
+                    }
+                    // Store state
+                    newBlockStates[blockId] = JSON.stringify(blockState)
+                  }
+                })
                 
-                // Set right editor
-                const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(states.right))
-                rightEditorRef.current.setEditorState(rightEditorState)
-                setRightEditorState(JSON.stringify(states.right))
+                setBlockStates(newBlockStates)
               }
             } catch (error) {
               console.error("Failed to load editor data:", error)

@@ -15,12 +15,8 @@ export interface PanelData {
   name?: string // Nome opcional do painel (ex: "Introdução", "Capítulo 1")
   order: number // Ordem do painel na sequência
   
-  // Estado do editor (para single panel)
-  state?: SerializedEditorState | string
-  
-  // Estados dos editores (para dual panel)
-  left?: SerializedEditorState | string
-  right?: SerializedEditorState | string
+  // Blocos do painel (b1 para single, b1+b2 para dual, etc)
+  blocks: Record<string, SerializedEditorState | string>
 }
 
 export type PreviewMode = "continuous" | "slide"
@@ -43,7 +39,8 @@ export function isSequentialStructure(data: string): boolean {
 }
 
 /**
- * Converte formato antigo (single ou dual) para o novo formato sequencial
+ * Converte formato para estrutura sequencial
+ * Espera dados já no formato blocks: {b1, b2, b3...}
  */
 export function migrateToSequentialStructure(data: string): SequentialPanelStructure {
   try {
@@ -54,23 +51,26 @@ export function migrateToSequentialStructure(data: string): SequentialPanelStruc
       return parsed as SequentialPanelStructure
     }
     
-    // Se é formato dual (tem left e right)
-    if (parsed.left && parsed.right) {
+    // Se é formato com blocos
+    if (parsed.blocks && typeof parsed.blocks === 'object') {
+      const blocks = parsed.blocks
       return {
         version: "sequential-v1",
         panels: [
           {
             id: generatePanelId(),
-            type: "dual",
+            type: Object.keys(blocks).length > 1 ? "dual" : "single",
             order: 0,
-            left: typeof parsed.left === 'string' ? parsed.left : JSON.stringify(parsed.left),
-            right: typeof parsed.right === 'string' ? parsed.right : JSON.stringify(parsed.right),
+            blocks: Object.entries(blocks).reduce((acc, [key, value]: [string, any]) => {
+              acc[key] = typeof value === 'string' ? value : JSON.stringify(value)
+              return acc
+            }, {} as Record<string, string>)
           }
         ]
       }
     }
     
-    // Formato single (estado direto)
+    // Formato single (estado direto) - assume b1
     return {
       version: "sequential-v1",
       panels: [
@@ -78,7 +78,9 @@ export function migrateToSequentialStructure(data: string): SequentialPanelStruc
           id: generatePanelId(),
           type: "single",
           order: 0,
-          state: typeof parsed === 'string' ? parsed : JSON.stringify(parsed),
+          blocks: {
+            b1: typeof parsed === 'string' ? parsed : JSON.stringify(parsed)
+          }
         }
       ]
     }
@@ -124,7 +126,9 @@ export function createEmptySequentialStructure(): SequentialPanelStructure {
         type: "single",
         order: 0,
         name: "Panel 1",
-        state: JSON.stringify(emptyState)
+        blocks: {
+          b1: JSON.stringify(emptyState)
+        }
       }
     ]
   }
@@ -163,13 +167,12 @@ export function addPanel(
     type,
     order: position !== undefined ? position : structure.panels.length,
     name: `Panel ${structure.panels.length + 1}`,
-  }
-  
-  if (type === "single") {
-    newPanel.state = JSON.stringify(emptyState)
-  } else {
-    newPanel.left = JSON.stringify(emptyState)
-    newPanel.right = JSON.stringify(emptyState)
+    blocks: type === "single" ? {
+      b1: JSON.stringify(emptyState)
+    } : {
+      b1: JSON.stringify(emptyState),
+      b2: JSON.stringify(emptyState)
+    }
   }
   
   const newPanels = [...structure.panels]
@@ -262,12 +265,12 @@ export function updatePanelName(
 export function updatePanelState(
   structure: SequentialPanelStructure,
   panelId: string,
-  state: Partial<Pick<PanelData, 'state' | 'left' | 'right'>>
+  blocks: Record<string, SerializedEditorState | string>
 ): SequentialPanelStructure {
   return {
     ...structure,
     panels: structure.panels.map(panel =>
-      panel.id === panelId ? { ...panel, ...state } : panel
+      panel.id === panelId ? { ...panel, blocks } : panel
     )
   }
 }

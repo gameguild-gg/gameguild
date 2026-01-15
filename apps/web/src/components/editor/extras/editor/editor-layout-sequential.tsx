@@ -184,13 +184,16 @@ export function EditorLayoutSequential({
                         <EditorLayoutType1
                           editorRef={panelEditorRefs.get(panel.id) as any}
                           editorState={
-                            typeof panel.state === "string"
-                              ? panel.state
-                              : JSON.stringify(panel.state || "")
+                            panel.blocks && Object.keys(panel.blocks).length > 0
+                              ? (typeof Object.values(panel.blocks)[0] === "string"
+                                  ? Object.values(panel.blocks)[0] as string
+                                  : JSON.stringify(Object.values(panel.blocks)[0] || ""))
+                              : ""
                           }
                           onEditorChange={(newState) => {
+                            const firstBlockId = Object.keys(panel.blocks || {})[0] || "b1";
                             const newStructure = updatePanelState(structure, panel.id, {
-                              state: newState,
+                              [firstBlockId]: newState,
                             })
                             onStructureChange(newStructure)
                           }}
@@ -210,28 +213,19 @@ export function EditorLayoutSequential({
                 ) : (
                   <div className="bg-white dark:bg-gray-900">
                     <EditorLayoutType2
-                      leftEditorRef={panelEditorRefs.get(`${panel.id}-left`) as any}
-                      rightEditorRef={panelEditorRefs.get(`${panel.id}-right`) as any}
-                      leftEditorState={
-                        typeof panel.left === "string"
-                          ? panel.left
-                          : JSON.stringify(panel.left || "")
-                      }
-                      rightEditorState={
-                        typeof panel.right === "string"
-                          ? panel.right
-                          : JSON.stringify(panel.right || "")
-                      }
-                      onLeftEditorChange={(newState) => {
-                        const newStructure = updatePanelState(structure, panel.id, {
-                          left: newState,
-                        })
-                        onStructureChange(newStructure)
-                      }}
-                      onRightEditorChange={(newState) => {
-                        const newStructure = updatePanelState(structure, panel.id, {
-                          right: newState,
-                        })
+                      blockRefs={{ current: Object.keys(panel.blocks || {}).reduce((acc, blockId) => {
+                        acc[blockId] = panelEditorRefs.get(`${panel.id}-${blockId}`)?.current || null;
+                        return acc;
+                      }, {} as Record<string, LexicalEditor | null>) }}
+                      blockStates={Object.entries(panel.blocks || {}).reduce((acc, [blockId, blockState]) => {
+                        acc[blockId] = typeof blockState === "string"
+                          ? blockState
+                          : JSON.stringify(blockState || "");
+                        return acc;
+                      }, {} as Record<string, string>)}
+                      onBlockChange={(blockId: string, newState: string) => {
+                        const newBlocks = { ...panel.blocks, [blockId]: newState };
+                        const newStructure = updatePanelState(structure, panel.id, newBlocks)
                         onStructureChange(newStructure)
                       }}
                       onLoadingChange={(setLoading) => {

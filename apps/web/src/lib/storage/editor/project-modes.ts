@@ -15,9 +15,10 @@ export type ProjectMode = "free-page" | "code-page" | "quiz-page"
 type NodeList = string | string[] | null
 
 export interface NodeRestrictions {
-  left?: [NodeList, NodeList]   // [bloqueados, liberados] - primeiro define bloqueio, segundo define permissão
-  right?: [NodeList, NodeList]  // '*' bloqueia/libera todos, string específico, ou null para nenhum
-  single?: [NodeList, NodeList] // ex: ['*', 'code-studio'] = bloqueia todos exceto code-studio
+  blocks: Record<string, [NodeList, NodeList]>  // {b1: [bloqueados, liberados], b2: [...], ...}
+  // [bloqueados, liberados] - primeiro define bloqueio, segundo define permissão
+  // '*' bloqueia/libera todos, string específico, ou null para nenhum
+  // ex: {b1: ['*', 'code-studio']} = bloqueia todos exceto code-studio no b1
 }
 
 export interface ProjectModeConfig {
@@ -36,19 +37,24 @@ export interface ProjectModeConfig {
  */
 export const NODE_RESTRICTIONS: Record<ProjectMode, NodeRestrictions> = {
   "free-page": {
-    left: [null, null],   // nenhum bloqueio, todos permitidos
-    right: [null, null],  // nenhum bloqueio, todos permitidos
-    single: [null, null]  // nenhum bloqueio, todos permitidos
+    blocks: {
+      b1: [null, null],   // nenhum bloqueio, todos permitidos
+      // Outros blocos herdam a mesma regra por padrão
+    }
   },
   "code-page": {
-    left: ['code-studio', null],      // bloqueia code-studio na esquerda
-    right: ['*', 'code-studio'],      // bloqueia todos exceto code-studio
-    single: ['*', 'code-studio']      // bloqueia todos exceto code-studio
+    blocks: {
+      b1: ['code-studio', null],      // bloqueia code-studio no b1 (painel esquerdo/principal)
+      b2: ['*', 'code-studio'],        // bloqueia todos exceto code-studio no b2
+      // Outros blocos herdam regra do b2
+    }
   },
   "quiz-page": {
-    left: ['quiz', null],        // bloqueia quiz na esquerda
-    right: ['*', 'quiz'],        // bloqueia todos exceto quiz
-    single: ['*', 'quiz']        // bloqueia todos exceto quiz
+    blocks: {
+      b1: ['quiz', null],        // bloqueia quiz no b1 (painel esquerdo/principal)
+      b2: ['*', 'quiz'],         // bloqueia todos exceto quiz no b2
+      // Outros blocos herdam regra do b2
+    }
   }
 }
 
@@ -74,29 +80,41 @@ export const PROJECT_MODES: Record<ProjectMode, Omit<ProjectModeConfig, 'mode'>>
 }
 
 /**
- * Check if a node type is allowed in a specific panel for a given mode
+ * Check if a node type is allowed in a specific block for a given mode
  * @param nodeType - The type of node to check
- * @param panel - The panel to check ("left", "right", or "single" for type1 layouts)
+ * @param blockId - The block to check ("b1", "b2", etc.)
  * @param mode - The project mode
  */
 export function isNodeAllowed(
   nodeType: string,
-  panel: "left" | "right" | "single",
+  blockId: string,
   mode: ProjectMode
 ): boolean {
   const restrictions = NODE_RESTRICTIONS[mode]
   
-  if (!restrictions) {
+  if (!restrictions || !restrictions.blocks) {
     return true
   }
 
-  const panelRestrictions = restrictions[panel]
+  // Buscar restrições específicas do bloco, ou usar padrão
+  let blockRestrictions = restrictions.blocks[blockId]
   
-  if (!panelRestrictions) {
-    return true  // sem restrições neste painel
+  // Se não tem restrição específica, tentar usar b1 como padrão para single
+  // ou b2 como padrão para outros blocos
+  if (!blockRestrictions) {
+    if (blockId === 'b1') {
+      blockRestrictions = restrictions.blocks.b1 || [null, null]
+    } else {
+      // Outros blocos herdam de b2, ou b1 se b2 não existir
+      blockRestrictions = restrictions.blocks.b2 || restrictions.blocks.b1 || [null, null]
+    }
+  }
+  
+  if (!blockRestrictions) {
+    return true  // sem restrições neste bloco
   }
 
-  const [blocked, allowed] = panelRestrictions
+  const [blocked, allowed] = blockRestrictions
   
   // Helper para verificar se nodeType está em uma lista
   const isInList = (list: NodeList, type: string): boolean => {

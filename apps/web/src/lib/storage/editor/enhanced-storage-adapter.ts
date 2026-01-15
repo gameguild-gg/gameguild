@@ -9,7 +9,7 @@ export interface ProjectData {
   id: string
   name: string
   type: "type1" | "type2" | "type3" // Project type (not layout - layout is auto-detected from data structure)
-  data: string // If dual panel: {left, right}, if single panel: direct state
+  data: string // Serialized project data (format detected by layout-detector)
   tags: string[]
   size: number
   createdAt: string

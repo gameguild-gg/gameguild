@@ -126,32 +126,28 @@ export function PreviewRendererSequentialSlide({
 
           {/* Panel Content */}
           <div className="p-6">
-            {currentPanel.type === "single" && currentPanel.state ? (
+            {currentPanel.type === "single" && currentPanel.blocks && Object.keys(currentPanel.blocks).length > 0 ? (
               <div className="max-w-4xl mx-auto">
                 <div className="sm:p-2 md:p-6">
                   <PreviewRenderer
                     serializedState={
-                      typeof currentPanel.state === "string"
-                        ? JSON.parse(currentPanel.state)
-                        : currentPanel.state
+                      typeof Object.values(currentPanel.blocks)[0] === "string"
+                        ? JSON.parse(Object.values(currentPanel.blocks)[0] as string)
+                        : Object.values(currentPanel.blocks)[0]
                     }
                     projectId={projectId}
                     storageAdapter={storageAdapter}
                   />
                 </div>
               </div>
-            ) : currentPanel.type === "dual" && currentPanel.left && currentPanel.right ? (
+            ) : currentPanel.type === "dual" && currentPanel.blocks && Object.keys(currentPanel.blocks).length >= 2 ? (
               <PreviewRendererType2
-                leftState={
-                  typeof currentPanel.left === "string"
-                    ? JSON.parse(currentPanel.left)
-                    : currentPanel.left
-                }
-                rightState={
-                  typeof currentPanel.right === "string"
-                    ? JSON.parse(currentPanel.right)
-                    : currentPanel.right
-                }
+                blockStates={Object.entries(currentPanel.blocks).reduce((acc, [blockId, blockState]) => {
+                  acc[blockId] = typeof blockState === "string"
+                    ? JSON.parse(blockState)
+                    : blockState;
+                  return acc;
+                }, {} as Record<string, any>)}
                 projectId={projectId}
                 storageAdapter={storageAdapter}
               />
