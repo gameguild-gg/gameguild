@@ -1,0 +1,92 @@
+using GameGuild.CQRS;
+using FluentValidation;
+
+namespace GameGuild.Assets.Queries;
+
+/// <summary>
+/// Query to get assets by parent resource.
+/// </summary>
+public record GetAssetsByParentQuery(
+    string ParentResourceType,
+    Guid ParentResourceId,
+    Guid? UserId,
+    Guid TenantId) : IRequest<Result<IReadOnlyList<AssetDto>>>;
+
+public class GetAssetsByParentValidator : AbstractValidator<GetAssetsByParentQuery>
+{
+    public GetAssetsByParentValidator()
+    {
+        RuleFor(x => x.ParentResourceType).NotEmpty().MaximumLength(100);
+        RuleFor(x => x.ParentResourceId).NotEmpty();
+        RuleFor(x => x.TenantId).NotEmpty();
+    }
+}
+
+public class GetAssetsByParentHandler : IRequestHandler<GetAssetsByParentQuery, Result<IReadOnlyList<AssetDto>>>
+{
+    private readonly IAssetReferenceRepository _referenceRepository;
+    private readonly IAssetAccessService _accessService;
+
+    public GetAssetsByParentHandler(
+        IAssetReferenceRepository referenceRepository,
+        IAssetAccessService accessService)
+    {
+        _referenceRepository = referenceRepository;
+        _accessService = accessService;
+    }
+
+    public async Task<Result<IReadOnlyList<AssetDto>>> HandleAsync(
+        GetAssetsByParentQuery request,
+        CancellationToken ct = default)
+    {
+        var references = await _referenceRepository.GetByParentAsync(
+            request.ParentResourceType,
+            request.ParentResourceId,
+            ct);
+
+        var result = new List<AssetDto>();
+
+        foreach (var reference in references)
+        {
+            // Check access for each asset
+            var validation = await _accessService.ValidateAccessAsync(
+                reference.Id,
+                request.UserId,
+                request.TenantId,
+                ct);
+
+            if (!validation.IsValid)
+                continue;
+
+            AssetContentDto? contentDto = null;
+            if (reference.Content != null)
+            {
+                contentDto = new AssetContentDto(
+                    reference.Content.Id,
+                    reference.Content.ContentHash,
+                    reference.Content.MimeType,
+                    reference.Content.SizeBytes,
+                    reference.Content.Width,
+                    reference.Content.Height,
+                    reference.Content.VirusScanStatus,
+                    reference.Content.ModerationStatus);
+            }
+
+            result.Add(new AssetDto(
+                reference.Id,
+                reference.AssetContentId,
+                reference.CreatedByUserId,
+                reference.DisplayName,
+                reference.AccessPolicy,
+                reference.ParentResourceType,
+                reference.ParentResourceId,
+                reference.AccessCount,
+                reference.LastAccessedAt,
+                reference.CreatedAt,
+                reference.UpdatedAt,
+                contentDto));
+        }
+
+        return Result<IReadOnlyList<AssetDto>>.Success(result);
+    }
+}
