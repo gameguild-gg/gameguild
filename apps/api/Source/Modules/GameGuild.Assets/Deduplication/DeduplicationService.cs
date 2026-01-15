@@ -57,13 +57,21 @@ public class DeduplicationService : IDeduplicationService
 {
     private readonly IAssetContentRepository _contentRepository;
     private readonly DeduplicationOptions _options;
+    private readonly ILogger<DeduplicationService> _logger;
+
+    /// <summary>
+    /// Size for perceptual hash computation (8x8 = 64 bits)
+    /// </summary>
+    private const int HashSize = 8;
 
     public DeduplicationService(
         IAssetContentRepository contentRepository,
-        Microsoft.Extensions.Options.IOptions<DeduplicationOptions> options)
+        Microsoft.Extensions.Options.IOptions<DeduplicationOptions> options,
+        ILogger<DeduplicationService> logger)
     {
         _contentRepository = contentRepository;
         _options = options.Value;
+        _logger = logger;
     }
 
     public async Task<string> ComputeContentHashAsync(Stream content, CancellationToken ct = default)
@@ -75,22 +83,113 @@ public class DeduplicationService : IDeduplicationService
         return Convert.ToHexString(hashBytes).ToLowerInvariant();
     }
 
-    public Task<string?> ComputePerceptualHashAsync(Stream content, string mimeType, CancellationToken ct = default)
+    public async Task<string?> ComputePerceptualHashAsync(Stream content, string mimeType, CancellationToken ct = default)
     {
         if (!_options.EnablePerceptualHashing)
         {
-            return Task.FromResult<string?>(null);
+            return null;
         }
 
         // Only compute perceptual hash for images
         if (!mimeType.StartsWith("image/"))
         {
-            return Task.FromResult<string?>(null);
+            return null;
         }
 
-        // TODO: Implement perceptual hashing using a library like ImageSharp
-        // For now, return null (perceptual hashing not implemented)
-        return Task.FromResult<string?>(null);
+        try
+        {
+            // Reset stream position if needed
+            if (content.CanSeek && content.Position != 0)
+            {
+                content.Position = 0;
+            }
+
+            // Load image and compute average hash (aHash)
+            using var image = await Image.LoadAsync<Rgba32>(content, ct);
+            
+            // Resize to 8x8 (HashSize x HashSize)
+            image.Mutate(x => x
+                .Resize(HashSize, HashSize)
+                .Grayscale());
+
+            // Calculate average pixel value
+            double totalBrightness = 0;
+            for (int y = 0; y < HashSize; y++)
+            {
+                for (int x = 0; x < HashSize; x++)
+                {
+                    var pixel = image[x, y];
+                    // Already grayscale, so R=G=B
+                    totalBrightness += pixel.R;
+                }
+            }
+            var avgBrightness = totalBrightness / (HashSize * HashSize);
+
+            // Build hash: 1 if pixel >= average, 0 otherwise
+            ulong hash = 0;
+            for (int y = 0; y < HashSize; y++)
+            {
+                for (int x = 0; x < HashSize; x++)
+                {
+                    var pixel = image[x, y];
+                    if (pixel.R >= avgBrightness)
+                    {
+                        var bitPosition = (y * HashSize) + x;
+                        hash |= 1UL << bitPosition;
+                    }
+                }
+            }
+
+            // Reset stream position for subsequent reads
+            if (content.CanSeek)
+            {
+                content.Position = 0;
+            }
+
+            // Return as 16-char hex string (64 bits)
+            return hash.ToString("x16");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to compute perceptual hash for image");
+            
+            // Reset stream position on error
+            if (content.CanSeek)
+            {
+                content.Position = 0;
+            }
+            
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Computes Hamming distance between two perceptual hashes.
+    /// Lower distance = more similar images.
+    /// </summary>
+    public static int ComputeHammingDistance(string hash1, string hash2)
+    {
+        if (string.IsNullOrEmpty(hash1) || string.IsNullOrEmpty(hash2))
+            return int.MaxValue;
+
+        if (!ulong.TryParse(hash1, System.Globalization.NumberStyles.HexNumber, null, out var h1) ||
+            !ulong.TryParse(hash2, System.Globalization.NumberStyles.HexNumber, null, out var h2))
+            return int.MaxValue;
+
+        var xor = h1 ^ h2;
+        return System.Numerics.BitOperations.PopCount(xor);
+    }
+
+    /// <summary>
+    /// Checks if two perceptual hashes are similar based on configured threshold.
+    /// </summary>
+    public bool AreSimilar(string? hash1, string? hash2)
+    {
+        if (string.IsNullOrEmpty(hash1) || string.IsNullOrEmpty(hash2))
+            return false;
+
+        var distance = ComputeHammingDistance(hash1, hash2);
+        return distance <= _options.PerceptualHashThreshold;
     }
 
     public async Task<Guid?> FindExistingContentAsync(string contentHash, CancellationToken ct = default)

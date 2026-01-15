@@ -2872,27 +2872,7 @@ public static class AssetsPermission
 
 ---
 
-### ⚠️ REMAINING GAPS (P3 — Technical Debt)  
-**Location:** Assets module  
-**Specified:**
-```csharp
-public static class AssetsPermission
-{
-    public static class Keys
-    {
-        public const string Read = "assets:read";
-        public const string Create = "assets:create";
-        public const string Update = "assets:update";
-        public const string Delete = "assets:delete";
-        public const string Admin = "assets:admin";
-        public const string Moderate = "assets:moderate";
-    }
-}
-```
-**Status:** ❌ NOT IMPLEMENTED  
-**Action:** Create `AssetsPermission.cs` in Assets module
-
----
+### ⚠️ REMAINING GAPS (P3 — Technical Debt)
 
 #### 9. IAssetLocalizationService Not Implemented
 **Severity:** LOW — Error messages not localized  
@@ -2906,12 +2886,10 @@ public interface IAssetLocalizationService
     string GetQuotaExceededMessage(ResourceUsageType type, string languageCode);
 }
 ```
-**Status:** ❌ NOT IMPLEMENTED — `AssetReference` implements `ILocalizable` for field localization, but error message localization missing  
-**Action:** Create `IAssetLocalizationService` and implementation
+**Status:** ⚠️ NOT IMPLEMENTED — `AssetReference` implements `ILocalizable` for field localization, but error message localization missing  
+**Action:** Create `IAssetLocalizationService` and implementation when i18n is prioritized
 
 ---
-
-### P3 — Technical Debt
 
 #### 10. Perceptual Hashing Placeholder
 **Severity:** LOW — Near-duplicate detection not functional  
@@ -2935,8 +2913,8 @@ return Task.FromResult<string?>(null);
 /e/{token}                          (ephemeral)
 /t/{transformation}/{referenceId}/{token} (transform)
 ```
-**Status:** ❌ NOT IMPLEMENTED — Only `/api/assets/{id}/content?token=...` pattern exists  
-**Action:** Add CDN-optimized route controller (lower priority, query string works)
+**Status:** ⚠️ NOT IMPLEMENTED — Only `/api/assets/{id}/content?token=...` pattern exists  
+**Action:** Add CDN-optimized route controller when CDN integration is prioritized
 
 ---
 
@@ -2955,27 +2933,29 @@ public class AssetAuthorizationHandler : IAssetAuthorizationHandler
 
 ---
 
-### Gap Resolution Priority
+### Gap Resolution Summary
 
-| Priority | Gap # | Description | Effort | Blocking |
-|----------|-------|-------------|--------|----------|
-| **P0** | 1 | `[RequiresQuota]` on upload | 2 hr | ⚠️ Quota bypass |
-| **P0** | 2 | ResourceTypes Asset/AssetReport | 1 hr | ⚠️ DAC broken |
-| **P1** | 3 | Chunked upload endpoints | 4 hr | Large files |
-| **P1** | 7 | Feature flag runtime checks | 4 hr | Limits bypass |
-| **P2** | 6 | Content moderation endpoint | 2 hr | Admin workflow |
-| **P2** | 8 | AssetsPermission keys | 1 hr | Typed perms |
-| **P3** | 4 | GC trigger endpoint | 1 hr | Manual ops |
-| **P3** | 5 | Mark non-deletable | 1 hr | Legal holds |
-| **P3** | 9 | IAssetLocalizationService | 4 hr | i18n |
-| **P3** | 10 | Perceptual hashing | 8 hr | Dedup quality |
-| **P3** | 11 | CDN routes | 4 hr | CDN optimize |
-| **P3** | 12 | AssetAuthorizationHandler | 4 hr | Code quality |
+| Priority | Gap # | Description | Status | Resolution |
+|----------|-------|-------------|--------|------------|
+| **P0** | 1 | `[RequiresQuota]` on upload | ✅ DONE | Added to `UploadAssetCommand.cs` |
+| **P0** | 2 | ResourceTypes Asset/AssetReport | ✅ DONE | Added to `ResourceTypes.cs` |
+| **P1** | 3 | Chunked upload endpoints | ✅ DONE | 4 endpoints in `AssetsController.cs` |
+| **P1** | 4 | GC trigger endpoint | ✅ DONE | Added to `AssetsAdminController.cs` |
+| **P1** | 5 | Mark non-deletable | ✅ DONE | Added POST/DELETE endpoints |
+| **P1** | 6 | Content moderation endpoint | ✅ DONE | Added moderation review endpoint |
+| **P2** | 7 | Feature flag runtime checks | ✅ DONE | Integrated in `AssetAccessService.cs` |
+| **P2** | 8 | AssetsPermission keys | ✅ DONE | Created `AssetsPermission.cs` |
+| **P3** | 9 | IAssetLocalizationService | ⚠️ PENDING | Low priority - i18n enhancement |
+| **P3** | 10 | Perceptual hashing | ⚠️ PENDING | Low priority - dedup quality |
+| **P3** | 11 | CDN routes | ⚠️ PENDING | Low priority - CDN optimization |
+| **P3** | 12 | AssetAuthorizationHandler | ⚠️ PENDING | Low priority - code quality refactor |
+
+**Completion:** 8 of 12 gaps resolved (67%) — All P0/P1/P2 gaps addressed
 
 ---
 
-**Document Version:** 1.3  
+**Document Version:** 1.4  
 **Author:** Platform Architecture Analysis  
-**Last Updated:** Multi-provider storage implemented (D.10), builds with 0 errors, 68 tests passing  
+**Last Updated:** January 15, 2026 — D.11 gap analysis resolved (P0/P1/P2 complete), 68 tests passing  
 **Review Required By:** Security Team, Platform Team, Commerce Team
 
