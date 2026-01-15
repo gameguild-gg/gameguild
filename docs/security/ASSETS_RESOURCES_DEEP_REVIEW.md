@@ -399,23 +399,40 @@ await transaction.CommitAsync();
 
 | Issue | Location | Severity |
 |-------|----------|----------|
-| **N+1 Query** | `ResourceQuotaService.cs:158` - `foreach` with `await` | MEDIUM |
-| **N+1 Query** | `CheckResourceUsageLimitsQueryHandler.cs:46` - `foreach` with `await UpdateAsync` | MEDIUM |
+| ~~**N+1 Query**~~ | ~~`ResourceQuotaService.cs:158` - `foreach` with `await`~~ | ~~MEDIUM~~ ✅ **FIXED** |
+| ~~**N+1 Query**~~ | ~~`CheckResourceUsageLimitsQueryHandler.cs:46` - `foreach` with `await UpdateAsync`~~ | ~~MEDIUM~~ ✅ **FIXED** |
 | **Magic Numbers** | Token validity (86400s), time window (28800s) hard-coded | LOW |
 | **Missing Unit Tests** | `ResourceQuotaBehavior` rollback path untested | LOW |
 
-**N+1 Query Evidence:**
+**N+1 Query Fixes Applied (2026-01-15):**
+
 ```csharp
-// ResourceQuotaService.cs:158
+// ResourceQuotaService.cs - BEFORE (N+1)
 foreach (var kvp in requestedAmounts) 
 { 
     results[kvp.Key] = await CheckLimitsAsync(tenantId, kvp.Key, kvp.Value, cancellationToken); 
 }
 
-// Fix: Use batch query pattern
-var quotas = await _dbContext.ResourceQuotas
-    .Where(q => q.TenantId == tenantId && requestedAmounts.Keys.Contains(q.UsageType))
-    .ToDictionaryAsync(q => q.UsageType, cancellationToken);
+// ResourceQuotaService.cs - AFTER (Batch query)
+var quotas = await quotaRepository.GetByTenantAndTypesAsync(
+    tenantId,
+    requestedAmounts.Keys,
+    cancellationToken);
+// ... in-memory processing with single DB roundtrip
+```
+
+```csharp
+// CheckResourceUsageLimitsQueryHandler.cs - BEFORE (N+1 writes)
+foreach (var quota in quotasToUpdate) 
+{ 
+    await resourceQuotaRepository.UpdateAsync(quota, cancellationToken); 
+}
+
+// CheckResourceUsageLimitsQueryHandler.cs - AFTER (Batch save)
+if (quotasToUpdate.Count > 0)
+{
+    await dbContext.SaveChangesAsync(cancellationToken);
+}
 ```
 
 ---
