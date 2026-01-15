@@ -729,10 +729,41 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | `DeleteResourceQuotaCommandHandler` | Added audit logging | Publishes `QuotaChangedEvent` with ActorId for SOC2/ISO 27001 compliance |
 | `ResetResourceQuotaCommandHandler` | Added audit logging | Publishes `QuotaChangedEvent` with ActorId for SOC2/ISO 27001 compliance |
 
+### ✅ Authorization Integration Tests Added (2026-01-15)
+
+Created `ResourcesAuthorizationIntegrationTests.cs` with 12 integration tests verifying:
+
+| Test | Scenario | Expected Result |
+|------|----------|-----------------|
+| `TenantQuotas_Anonymous_Returns401` | Unauthenticated access to tenant quotas | 401 Unauthorized |
+| `TenantQuotas_AuthenticatedWrongTenant_Returns403` | Cross-tenant access attempt | 403 Forbidden |
+| `TenantQuotas_AuthenticatedCorrectTenant_Succeeds` | Valid tenant member access | 2xx Success |
+| `TenantResources_Anonymous_Returns401` | Unauthenticated access to usage records | 401 Unauthorized |
+| `TenantResources_CrossTenantAccess_Returns403` | Cross-tenant usage record access | 403 Forbidden |
+| `UserQuotas_Anonymous_Returns401` | Unauthenticated access to user quotas | 401 Unauthorized |
+| `UserQuotas_OtherUserAccess_Returns403` | Access to another user's quotas | 403 Forbidden |
+| `UserQuotas_OwnAccess_Succeeds` | User accessing own quotas | 2xx Success |
+| `ResourcesAdmin_Anonymous_Returns401` | Unauthenticated admin endpoint access | 401 Unauthorized |
+| `ResourcesAdmin_NonAdmin_Returns403` | Non-admin accessing admin endpoint | 403 Forbidden |
+| `ResourcesAdmin_SystemAdmin_Succeeds` | System admin accessing admin endpoint | 2xx Success |
+| `SystemAdmin_CanAccessAnyTenant` | System admin cross-tenant bypass | 2xx Success |
+| `SystemAdmin_CanAccessAnyUser` | System admin user bypass | 2xx Success |
+
+### ✅ Global Authorization Filter Re-enabled (2026-01-15)
+
+`ResourcePermissionAuthorizationFilter` re-enabled in `ServiceCollectionExtensions.cs`:
+```csharp
+// Add permission authorization filter globally to all controllers
+// This provides defense-in-depth by requiring explicit [AllowAnonymous] to opt-out
+// Re-enabled 2026-01-15 per ASSETS_RESOURCES_DEEP_REVIEW.md security audit
+if (options.EnablePermissionAuthorizationFilter)
+    mvcOptions.Filters.Add<ResourcePermissionAuthorizationFilter>();
+```
+
 ### Remaining Actions Required
 
-1. ✅ **VERIFY:** Run integration tests confirming 401/403 responses
-2. ✅ **VERIFY:** Run load tests to validate rate limiting and token caching performance
+1. ⚠️ **PENDING (Manual):** Run OWASP ZAP security audit against Resources API
+2. ⚠️ **PENDING:** Final integration test pass + security sign-off
 
 ---
 
@@ -746,12 +777,12 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | 3-5 | ~~Implement tenant membership validation~~ | Security Lead | Service + unit tests | ✅ **DONE** (uses `ITenantMembershipChecker`) |
 | 6-7 | ~~Inject validator into all tenant-scoped controller actions~~ | Dev Team | Updated controllers | ✅ **DONE** |
 | 6-7 | ~~Add user ownership validation to user-scoped controllers~~ | Dev Team | Updated controllers | ✅ **DONE** |
-| 8-10 | Write integration tests for 401/403 responses | QA | Test suite (8+ tests) | ⚠️ PENDING |
-| 11-12 | ~~Re-enable global `PermissionAuthorizationFilter` or equivalent~~ | Architecture | Config change + validation | ✅ **DONE** |
+| 8-10 | ~~Write integration tests for 401/403 responses~~ | QA | 12 tests in `ResourcesAuthorizationIntegrationTests.cs` | ✅ **DONE 2026-01-15** |
+| 11-12 | ~~Re-enable global `PermissionAuthorizationFilter` or equivalent~~ | Architecture | `ResourcePermissionAuthorizationFilter` enabled globally | ✅ **DONE 2026-01-15** |
 | 13-15 | ~~Add `[EnableRateLimiting]` to Resources endpoints~~ | Dev Team | `PerTenant`/`PerUser` policies on all 9 controllers | ✅ **DONE 2026-01-15** |
-| 16-20 | Security audit: run OWASP ZAP against Resources API | Security | Audit report | ⚠️ PENDING |
-| 21-25 | Fix any additional findings from security audit | Dev Team | Remediation PRs | ⚠️ PENDING |
-| 26-30 | Final integration test pass + sign-off | QA + Security | Go-live approval | ⚠️ PENDING |
+| 16-20 | Security audit: run OWASP ZAP against Resources API | Security | Audit report | ⚠️ PENDING (Manual) |
+| 21-25 | Fix any additional findings from security audit | Dev Team | Remediation PRs | ⚠️ PENDING (Depends on OWASP scan) |
+| 26-30 | Final integration test pass + sign-off | QA + Security | Go-live approval | ⚠️ PENDING (Awaiting sign-off) |
 
 ### 60-Day Sprint (Performance & Reliability) - ✅ COMPLETE
 
@@ -765,16 +796,16 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | 7 | ~~Configure connection pooling for high load~~ | DevOps | Connection strings updated with pool settings | ✅ **DONE 2026-01-15** |
 | 8 | Load testing: 1000 concurrent quota operations | QA | Performance report | ⚠️ PENDING |
 
-### 90-Day Sprint (Maintainability & Observability)
+### 90-Day Sprint (Maintainability & Observability) - ✅ CORE ITEMS COMPLETE
 
-| Week | Task | Owner | Deliverable |
-|------|------|-------|-------------|
-| 9 | Extract magic numbers to `IOptions<>` configuration | Dev Team | Config refactor |
-| 10 | Add rollback path unit tests for `ResourceQuotaBehavior` | Dev Team | Test coverage |
-| 10 | Document threat model in module READMEs | Security | Documentation |
-| 11 | Add OpenTelemetry tracing to quota operations | DevOps | Observability |
-| 11 | Create alerting rules for quota exceeded events | DevOps | Monitoring |
-| 12 | Performance baseline documentation | Architecture | Performance SLOs |
+| Week | Task | Owner | Deliverable | Status |
+|------|------|-------|-------------|--------|
+| 9 | ~~Extract magic numbers to `IOptions<>` configuration~~ | Dev Team | Already configurable via `AssetTokenOptions`, `DatabaseOptions` | ✅ **NOT NEEDED** |
+| 10 | ~~Add rollback path unit tests for `ResourceQuotaBehavior`~~ | Dev Team | `Handle_RollsBackQuota_WhenCommandFails`, `Handle_LogsError_WhenRollbackFails` | ✅ **DONE 2026-01-15** |
+| 10 | ~~Document threat model in module READMEs~~ | Security | `GameGuild.Resources/README.md`, `GameGuild.Assets/README.md` with STRIDE | ✅ **DONE 2026-01-15** |
+| 11 | Add OpenTelemetry tracing to quota operations | DevOps | Observability | ⚠️ PENDING (Future enhancement) |
+| 11 | Create alerting rules for quota exceeded events | DevOps | Monitoring | ⚠️ PENDING (Future enhancement) |
+| 12 | Performance baseline documentation | Architecture | Performance SLOs | ⚠️ PENDING (Future enhancement) |
 
 ---
 

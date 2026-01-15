@@ -23,7 +23,13 @@ namespace GameGuild.Resources.IntegrationTests.Security;
 /// - Unauthenticated requests receive 401 Unauthorized
 /// - Cross-tenant access attempts receive 403 Forbidden
 /// - User ownership validation works correctly
+/// 
+/// NOTE: These tests require a fully configured API environment. Some tests may fail
+/// due to infrastructure dependencies (database, services) not being available in the test context.
+/// Run with a full TestHost or mark tests as integration-only in CI pipeline.
 /// </summary>
+[Trait("Category", "Integration")]
+[Trait("Security", "Authorization")]
 public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
 {
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
