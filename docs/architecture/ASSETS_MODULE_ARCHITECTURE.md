@@ -639,9 +639,9 @@ GameGuild.Localization/
 
 | Test Name | Purpose | Status |
 |-----------|---------|--------|
-| `ResourceLocalization_EnforcesTenantIsolation` | No cross-tenant leakage | Existing |
-| `LocalizableResource_FallsBackToDefaultLanguage` | Fallback behavior | Existing |
-| `TranslationWorkflow_ProgressesThroughStates` | Workflow correctness | Existing |
+| `ResourceLocalization_EnforcesTenantIsolation` | No cross-tenant leakage | ✅ ADDED |
+| `LocalizableResource_FallsBackToDefaultLanguage` | Fallback behavior | ✅ ADDED |
+| `TranslationWorkflow_ProgressesThroughStates` | Workflow correctness | ✅ ADDED |
 | `LocalizationContext_ReadsFromRequestHeaders` | Dynamic culture | ✅ ADDED |
 | `LocalizedContent_SanitizesXSS` | Security | ✅ ADDED |
 | `CachedLocalizationService_CachesAndInvalidates` | Cache behavior | ✅ ADDED |
@@ -660,8 +660,10 @@ GameGuild.Localization/
 - `Models/LocalizableEntityBaseTests.cs` - 18 tests for OCP base class
 - `Models/TranslationWorkflowEntityTests.cs` - 12 tests for persistence entities
 - `Extensions/LocalizationQueryExtensionsTests.cs` - 12 tests for query extensions
+- `ResourceLocalizationTests.cs` - 8 tests for tenant isolation and language fallback
+- `TranslationWorkflowStateTests.cs` - 26 tests for workflow state transitions
 
-**Total Tests: 188 (all passing)**
+**Total Tests: 222 (all passing)**
 
 ---
 
