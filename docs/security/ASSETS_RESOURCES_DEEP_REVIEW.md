@@ -212,7 +212,7 @@ private bool ValidateUserOwnership(Guid userId)
 }
 ```
 
-**Root Cause Analysis (Historical):**
+**Root Cause Analysis (Historical — Fixed 2026-01-15):**
 
 1. **Global filter disabled:** `PermissionAuthorizationFilter` is commented out in [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739):
    ```csharp
@@ -220,18 +220,24 @@ private bool ValidateUserOwnership(Guid userId)
    // if (options.EnablePermissionAuthorizationFilter)
    //     mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
    ```
+   **Status:** ⚠️ Still disabled, but mitigated by explicit `[Authorize]` on all controllers.
 
-2. **No explicit `[Authorize]`:** Unlike `AssetsController`, none of the Resources controllers have the `[Authorize]` attribute.
+2. ~~**No explicit `[Authorize]`:** Unlike `AssetsController`, none of the Resources controllers have the `[Authorize]` attribute.~~
+   **Status:** ✅ **FIXED** — All 9 controllers now have `[Authorize]` or `[Authorize(Policy = "RequireAdminRole")]`.
 
-3. **Tenant context not enforced:** Controllers accept `{tenantId:guid}` from URL but never validate if the caller is authorized for that tenant.
+3. ~~**Tenant context not enforced:** Controllers accept `{tenantId:guid}` from URL but never validate if the caller is authorized for that tenant.~~
+   **Status:** ✅ **FIXED** — `ValidateTenantMembershipAsync()` implemented in all 4 tenant-scoped controllers.
 
-**Attack Scenario (Verified via Code Review):**
+4. ~~**User ownership not enforced:** Controllers accept `{userId:guid}` from URL but never validate if the caller owns that resource.~~
+   **Status:** ✅ **FIXED** — `ValidateUserOwnership()` implemented in all 4 user-scoped controllers.
+
+**Attack Scenario (No Longer Valid After Fix):**
 ```http
 # Anonymous request to enumerate tenant quotas
 curl -X GET https://api.gameguild.com/v1/tenants/12345678-aaaa-bbbb-cccc-123456789012/quotas
 
-# Response: 200 OK with full quota configuration
-# Expected: 401 Unauthorized
+# Before Fix: 200 OK with full quota configuration ❌
+# After Fix:  401 Unauthorized ✅
 ```
 
 ---
@@ -267,48 +273,52 @@ Request → [Authorize] → AssetAuthorizationHandler.HandleRequirementAsync()
   - System admins can bypass (configurable via `AllowCrossTenantForAdmins`)
   - Global access tenants supported for internal services
 
-### Resources Module ❌ CRITICAL
+### Resources Module ✅ FIXED (2026-01-15)
 
-**Authorization Bypass Paths Identified:**
+**Authorization Bypass Paths — ALL FIXED:**
 
-| Path | Bypass Type | Risk |
-|------|-------------|------|
-| Direct controller access | No `[Authorize]` | Anonymous data access |
-| IDOR via URL | No tenant membership check | Cross-tenant data access |
-| CQRS bypass | Controllers don't use quota-protected commands | Quota enforcement skipped |
-| Admin endpoints | No admin role check | Privilege escalation |
+| Path | Previous Vulnerability | Fix Applied | Status |
+|------|----------------------|-------------|--------|
+| Direct controller access | No `[Authorize]` | `[Authorize]` added to all 9 controllers | ✅ FIXED |
+| IDOR via URL | No tenant membership check | `ValidateTenantMembershipAsync()` added | ✅ FIXED |
+| User data access | No ownership check | `ValidateUserOwnership()` added | ✅ FIXED |
+| Admin endpoints | No admin role check | `[Authorize(Policy = "RequireAdminRole")]` | ✅ FIXED |
 
-**IDOR Vulnerability (Confirmed):**
+**IDOR Vulnerability (FIXED):**
 
-The `TenantResourcesController.GetUsageRecords()` accepts `tenantId` from URL without validation:
+The `TenantResourcesController.GetUsageRecords()` now validates tenant membership:
 
 ```csharp
-// TenantResourcesController.cs:33
+// TenantResourcesController.cs - AFTER FIX
 [HttpGet("v{version:apiVersion}/tenants/{tenantId:guid}/resources/usage-records")]
+[ProducesResponseType(StatusCodes.Status403Forbidden)]
 public async Task<IActionResult> GetUsageRecords(Guid tenantId, ...)
 {
-    // BUG: No validation that caller is member of tenantId
+    // ✅ FIXED: Validate tenant membership before processing
+    if (!await ValidateTenantMembershipAsync(tenantId, ct))
+        return Forbid();
+    
     return Ok(await sender.Send(
         new GetResourceUsageRecordsQuery(tenantId, usageType, startDate, endDate), 
         ct).ConfigureAwait(false));
 }
 ```
 
-**Exploit:**
+**Attack Scenario (Now Prevented):**
 ```http
 # Authenticated as Tenant A user
 GET /v1/tenants/{TENANT_B_ID}/resources/usage-records
-# Returns Tenant B's data → IDOR confirmed
+
+# Before Fix: 200 OK with Tenant B's data ❌
+# After Fix:  403 Forbidden ✅
 ```
 
-**Where Authorization IS Enforced (Internal Path):**
+**Defense in Depth Layers:**
 
-The `ResourceQuotaBehavior` correctly enforces:
-- Tenant context required (`Actor.TenantId.HasValue`)
-- Fail-closed on missing tenant
-- Atomic quota consumption
-
-However, this only protects CQRS commands decorated with `[RequiresQuota]`, NOT direct controller endpoint access.
+1. **Layer 1:** `[Authorize]` attribute → Rejects unauthenticated requests (401)
+2. **Layer 2:** `ValidateTenantMembershipAsync()` → Rejects cross-tenant access (403)
+3. **Layer 3:** `ValidateUserOwnership()` → Rejects access to other users' data (403)
+4. **Layer 4:** `ResourceQuotaBehavior` → Enforces quotas on CQRS commands (fail-closed)
 
 ---
 
@@ -397,7 +407,7 @@ var quotas = await _dbContext.ResourceQuotas
 | **T5: Malicious File Upload** | ClamAV virus scanning + content type validation | ✅ Mitigated |
 | **T6: Tenant Data Leakage** | `TenantAssetValidationService` fail-closed | ✅ Mitigated |
 | **T7: Quota Bypass** | `ResourceQuotaBehavior` with atomic consumption | ✅ Mitigated |
-| **T8: IDOR on Resources** | `[Authorize]` added | ⚠️ **PARTIAL** - Needs tenant membership validation |
+| **T8: IDOR on Resources** | Tenant membership + user ownership validation | ✅ **FIXED 2026-01-15** |
 | **T9: Unauthenticated Resource Access** | `[Authorize]` on all 9 controllers | ✅ **FIXED 2026-01-15** |
 
 ### Security Risk Register
@@ -405,8 +415,8 @@ var quotas = await _dbContext.ResourceQuotas
 | Risk ID | Risk | Severity | Attack Scenario | Current Mitigation | Status |
 |---------|------|----------|-----------------|-------------------|--------|
 | SR-001 | ~~Missing `[Authorize]` on Resources controllers~~ | ~~CRITICAL~~ | ~~Anonymous user enumerates all tenant quotas and usage~~ | `[Authorize]` added to all 9 controllers | ✅ **FIXED** |
-| SR-002 | IDOR on tenant-scoped endpoints | **HIGH** | Authenticated user queries other tenants' data via URL manipulation | Authentication required, but no tenant membership check | ⚠️ OPEN |
-| SR-003 | Global auth filter commented out | **HIGH** | Any new controller added without `[Authorize]` is unprotected | Developer vigilance only | ⚠️ OPEN |
+| SR-002 | ~~IDOR on tenant-scoped endpoints~~ | ~~HIGH~~ | ~~Authenticated user queries other tenants' data via URL manipulation~~ | `ValidateTenantMembershipAsync()` on all tenant controllers | ✅ **FIXED** |
+| SR-003 | Global auth filter commented out | **HIGH** | Any new controller added without `[Authorize]` is unprotected | Mitigated by explicit `[Authorize]` on all existing controllers | ⚠️ OPEN |
 | SR-004 | No rate limiting on Resources endpoints | **HIGH** | Attacker enumerates tenant IDs via timing attacks | None | ⚠️ OPEN |
 | SR-005 | ValidateToken iterates all AccessPolicy values | **HIGH** | O(n) signature verification per request; DoS with many policies | Token caching | ⚠️ OPEN |
 | SR-006 | N+1 queries in quota operations | **MEDIUM** | Performance degradation under load | None | ⚠️ OPEN |
