@@ -31,6 +31,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
     let Reveal: any;
     let Markdown: any;
     let Highlight: any;
+    let RevealMath: any;
 
     const loadRevealJS = async () => {
       try {
@@ -58,10 +59,14 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
         const highlightModule = await import(
           'reveal.js/plugin/highlight/highlight.esm.js'
         );
+        const mathModule = await import(
+          'reveal.js/plugin/math/math.esm.js'
+        );
 
         Reveal = revealModule.default;
         Markdown = markdownModule.default;
         Highlight = highlightModule.default;
+        RevealMath = mathModule.default;
 
         if (!containerRef.current || !slidesRef.current) return;
 
@@ -73,7 +78,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
 
         // Initialize Reveal.js with markdown and auto-resize support
         const revealInstance = new Reveal(containerRef.current, {
-          plugins: [Markdown, Highlight],
+          plugins: [Markdown, Highlight, RevealMath.MathJax3],
           width: containerWidth || 960,
           height: containerHeight || 700,
           margin: 0.04,
