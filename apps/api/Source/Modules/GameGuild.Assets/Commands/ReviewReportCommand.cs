@@ -1,0 +1,61 @@
+using GameGuild.CQRS;
+using FluentValidation;
+
+namespace GameGuild.Assets.Commands;
+
+/// <summary>
+/// Command to review a moderation report (admin only).
+/// </summary>
+public record ReviewReportCommand(
+    Guid ReportId,
+    Guid ReviewerId,
+    ReviewDecision Decision,
+    string? Notes = null) : IRequest<Result<ReviewReportResponse>>;
+
+public record ReviewReportResponse(
+    Guid ReportId,
+    ReportStatus Status,
+    ReviewDecision Decision);
+
+public class ReviewReportValidator : AbstractValidator<ReviewReportCommand>
+{
+    public ReviewReportValidator()
+    {
+        RuleFor(x => x.ReportId).NotEmpty();
+        RuleFor(x => x.ReviewerId).NotEmpty();
+        RuleFor(x => x.Decision).IsInEnum();
+        RuleFor(x => x.Notes).MaximumLength(2000).When(x => x.Notes != null);
+    }
+}
+
+public class ReviewReportHandler : IRequestHandler<ReviewReportCommand, Result<ReviewReportResponse>>
+{
+    private readonly IAssetModerationService _moderationService;
+
+    public ReviewReportHandler(IAssetModerationService moderationService)
+    {
+        _moderationService = moderationService;
+    }
+
+    public async Task<Result<ReviewReportResponse>> HandleAsync(
+        ReviewReportCommand request,
+        CancellationToken ct = default)
+    {
+        var success = await _moderationService.SubmitReviewAsync(
+            request.ReportId,
+            request.ReviewerId,
+            request.Decision,
+            request.Notes,
+            ct);
+
+        if (!success)
+        {
+            return Result<ReviewReportResponse>.Failure("Report not found");
+        }
+
+        return Result<ReviewReportResponse>.Success(new ReviewReportResponse(
+            request.ReportId,
+            ReportStatus.Resolved,
+            request.Decision));
+    }
+}
