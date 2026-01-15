@@ -1,5 +1,7 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,8 +18,37 @@ namespace GameGuild.Resources;
 [ApiVersion("1.0")]
 [Tags("tenants/quotas")]
 [Authorize]
-public sealed class TenantQuotasController(ISender sender) : ControllerBase
+public sealed class TenantQuotasController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor,
+    ITenantMembershipChecker tenantMembershipChecker) : ControllerBase
 {
+    /// <summary>
+    ///     Validates that the current actor is a member of the specified tenant.
+    ///     Fail-closed: Returns false if actor is not authenticated or not a member.
+    /// </summary>
+    private async Task<bool> ValidateTenantMembershipAsync(Guid tenantId, CancellationToken ct)
+    {
+        var actor = actorContextAccessor.Actor;
+        
+        // Fail-closed: No actor means no access
+        if (actor is null || !actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
+            return false;
+        
+        // System admins bypass tenant membership check
+        if (actor.IsSystemAdmin)
+            return true;
+        
+        // If actor's current tenant matches, allow access
+        if (actor.TenantId.HasValue && actor.TenantId.Value == tenantId)
+            return true;
+        
+        // Check actual tenant membership in database
+        return await tenantMembershipChecker.IsUserMemberOfTenantAsync(
+            actor.SubjectIdAsGuid.Value, 
+            tenantId, 
+            ct);
+    }
     #region Collection Operations - /v1/tenants/{tenantId}/quotas
 
     /// <summary>
@@ -30,9 +61,13 @@ public sealed class TenantQuotasController(ISender sender) : ControllerBase
     [EndpointSummary("Get all quotas for a tenant")]
     [EndpointDescription("Retrieves all configured resource quotas for a specific tenant organization.")]
     [ProducesResponseType<IEnumerable<ResourceQuotaResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetTenantQuotas(Guid tenantId, CancellationToken ct = default)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         var query = new GetTenantResourceQuotasQuery(tenantId);
         var result = await sender.Send(query, ct).ConfigureAwait(false);
 
@@ -50,9 +85,13 @@ public sealed class TenantQuotasController(ISender sender) : ControllerBase
     [EndpointSummary("Get specific quota for a resource type")]
     [EndpointDescription("Retrieves the quota configuration for a specific resource type for a tenant.")]
     [ProducesResponseType<ResourceQuotaResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetQuota(Guid tenantId, ResourceUsageType type, CancellationToken ct = default)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         var query = new GetResourceQuotaQuery(tenantId, type);
         var result = await sender.Send(query, ct).ConfigureAwait(false);
 
@@ -78,8 +117,12 @@ public sealed class TenantQuotasController(ISender sender) : ControllerBase
     [EndpointDescription("Creates or updates the quota configuration for a specific resource type for a tenant.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> SetQuota(Guid tenantId, ResourceUsageType type, [FromBody] SetQuotaRequest body, CancellationToken ct = default)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new SetResourceQuotaCommand(tenantId, type, body.SoftLimit, body.HardLimit, body.Period, body.IsActive, body.ResetTime);
@@ -99,9 +142,13 @@ public sealed class TenantQuotasController(ISender sender) : ControllerBase
     [EndpointSummary("Delete a quota for a resource type")]
     [EndpointDescription("Removes the quota configuration for a specific resource type for a tenant.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteQuota(Guid tenantId, ResourceUsageType type, CancellationToken ct = default)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         var command = new DeleteResourceQuotaCommand(tenantId, type);
         await sender.Send(command, ct).ConfigureAwait(false);
 
@@ -123,9 +170,13 @@ public sealed class TenantQuotasController(ISender sender) : ControllerBase
     [EndpointSummary("Reset quota usage to zero")]
     [EndpointDescription("Resets the current usage counter for a specific resource quota to zero without changing the quota limits.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ResetQuota(Guid tenantId, ResourceUsageType type, CancellationToken ct = default)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         var command = new ResetResourceQuotaCommand(tenantId, type);
         await sender.Send(command, ct).ConfigureAwait(false);
 
@@ -145,9 +196,13 @@ public sealed class TenantQuotasController(ISender sender) : ControllerBase
     [EndpointDescription("Activates or deactivates a resource quota. Inactive quotas are not enforced.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ToggleQuota(Guid tenantId, ResourceUsageType type, [FromBody] ToggleResourceQuotaRequest body, CancellationToken ct = default)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new ToggleResourceQuotaCommand(tenantId, type, body.IsActive);
@@ -169,9 +224,13 @@ public sealed class TenantQuotasController(ISender sender) : ControllerBase
     [EndpointDescription("Validates whether a proposed usage amount would exceed the configured quota limits without recording any usage.")]
     [ProducesResponseType<ResourceQuotaEnforcementResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckQuota(Guid tenantId, ResourceUsageType type, [FromBody] CheckResourceQuotaRequest body, CancellationToken ct = default)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var query = new CheckResourceQuotaQuery(tenantId, type, body.Amount);

@@ -30,7 +30,7 @@ public sealed class TenantResourcesController(
     /// </summary>
     private async Task<bool> ValidateTenantMembershipAsync(Guid tenantId, CancellationToken ct)
     {
-        var actor = actorContextAccessor.Actor;
+        var actor = actorContextAccessor.ActorContext;
         
         // Fail-closed: No actor means no access
         if (actor is null || !actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
