@@ -39,12 +39,4 @@ public sealed class RequiresQuotaAttribute : Attribute
     ///     Optional source identifier for usage tracking
     /// </summary>
     public string? Source { get; init; }
-
-    /// <summary>
-    ///     Whether to throw exception on quota exceeded (true) or just log warning (false).
-    ///     DEPRECATED: Hard limits should always be enforced. This option will be removed in a future version.
-    ///     Setting to false is a security risk as it allows quota bypass.
-    /// </summary>
-    [Obsolete("EnforceHardLimit=false is deprecated and will be ignored. Hard limits are always enforced for security. This property will be removed in a future version.")]
-    public bool EnforceHardLimit { get; init; } = true;
 }

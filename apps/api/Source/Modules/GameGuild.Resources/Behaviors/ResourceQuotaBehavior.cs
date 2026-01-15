@@ -103,17 +103,6 @@ public class ResourceQuotaBehavior<TRequest, TResponse> : IPipelineBehavior<TReq
                         amount
                     );
 
-                    // EnforceHardLimit is deprecated - always enforce
-                    #pragma warning disable CS0618 // Type or member is obsolete
-                    if (!quotaAttribute.EnforceHardLimit)
-                    {
-                        _logger.LogWarning(
-                            "EnforceHardLimit=false is deprecated and ignored. " +
-                            "Hard limits are always enforced for security. Resource: {ResourceType}",
-                            resourceType);
-                    }
-                    #pragma warning restore CS0618
-
                     throw new QuotaExceededException(
                         errorMessage,
                         resourceType,
