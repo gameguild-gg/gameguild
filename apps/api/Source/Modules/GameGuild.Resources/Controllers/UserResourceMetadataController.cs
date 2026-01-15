@@ -1,8 +1,10 @@
 using Asp.Versioning;
+using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GameGuild.Resources;
 
@@ -16,6 +18,7 @@ namespace GameGuild.Resources;
 [ApiVersion("1.0")]
 [Tags("users/resources/metadata")]
 [Authorize]
+[EnableRateLimiting(RateLimitPolicies.PerUser)]
 public sealed class UserResourceMetadataController(
     IResourceMetadataRepository metadataRepository,
     IActorContextAccessor actorContextAccessor) : ControllerBase
