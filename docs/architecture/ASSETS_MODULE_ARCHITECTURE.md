@@ -2547,29 +2547,195 @@ See **PART B** for complete specification including:
 
 ---
 
-## D.9 Open Questions & Assumptions
+## D.9 Open Questions & Assumptions ✅ RESOLVED
 
-### Open Questions
+### Open Questions — Resolved
 
-| # | Question | Impact | Recommendation |
-|---|----------|--------|----------------|
-| 1 | Which virus scanning service to use? | Pipeline integration | Start with ClamAV (open source), migrate to commercial if needed |
-| 2 | Which auto-moderation service? | Pipeline integration | AWS Rekognition or Azure Content Moderator based on cloud provider |
-| 3 | CDN provider? | Caching configuration | CloudFront (AWS), Fastly, or Cloudflare based on existing infra |
-| 4 | Max file size per upload? | Quota design | Recommend 100MB default, configurable per plan |
-| 5 | How long to keep quarantined files? | Storage cost | Recommend 30 days for investigation, then auto-delete |
+| # | Question | Impact | Resolution |
+|---|----------|--------|------------|
+| 1 | Which virus scanning service to use? | Pipeline integration | ✅ ClamAV implemented via `IVirusScanService` with sync/async/hybrid modes |
+| 2 | Which auto-moderation service? | Pipeline integration | ✅ Abstracted via `IAssetModerationService` — plug in AWS Rekognition, Azure, or custom |
+| 3 | CDN provider? | Caching configuration | ✅ CDN URL configurable per-provider and per-tenant via `CdnUrlPrefix` setting |
+| 4 | Max file size per upload? | Quota design | ✅ Configurable via `AssetUploadConfiguration.MaxFileSizeBytes` (default 100MB) |
+| 5 | How long to keep quarantined files? | Storage cost | ✅ Configurable via `VirusScanOptions.QuarantineRetentionDays` (default 30 days) |
 
-### Assumptions
+### Assumptions — Validated & Implemented
 
-1. **S3-compatible storage available** — MinIO for dev, AWS S3/R2 for prod
-2. **CDN in front of asset serving** — Required for performance and cache headers
-3. **Background workers supported** — For GC, processing, cleanup
-4. **Existing auth system works** — JWT tokens provide TenantId and UserId
-5. **Feature flags can be evaluated sync** — For transformation limit checks
+| # | Assumption | Status | Implementation |
+|---|------------|--------|----------------|
+| 1 | S3-compatible storage | ✅ IMPLEMENTED | Multi-provider support (see below) |
+| 2 | CDN in front of assets | ✅ CONFIGURABLE | `CdnUrlPrefix` setting per provider/tenant |
+| 3 | Background workers | ✅ IMPLEMENTED | `AssetGarbageCollectionService`, `TransformedAssetCleanupService` |
+| 4 | Existing auth system | ✅ VERIFIED | JWT tokens via `IActorContext` provide TenantId/UserId |
+| 5 | Feature flags sync eval | ✅ VERIFIED | `IFeatureService` for transformation limits |
 
 ---
 
-**Document Version:** 1.0  
+## D.10 Multi-Provider Storage Architecture ✅ IMPLEMENTED
+
+The Assets module now supports **multiple cloud storage providers** with both **global (application-level)** and **tenant-level** configuration. This allows:
+
+1. **Platform administrators** to set a default storage provider
+2. **Tenants** to optionally configure their own storage (BYOS - Bring Your Own Storage)
+3. **Secure credential management** with encrypted configuration
+
+### Supported Storage Providers
+
+| Provider | Type | Use Case | Configuration Class |
+|----------|------|----------|---------------------|
+| **AWS S3** | `S3Compatible` | Production, enterprise | `S3CompatibleConfiguration` |
+| **MinIO** | `S3Compatible` | Development, self-hosted | `S3CompatibleConfiguration` |
+| **Google Cloud Storage** | `GoogleCloudStorage` | GCP environments | `GoogleCloudStorageConfiguration` |
+| **Azure Blob Storage** | `AzureBlobStorage` | Azure environments | `AzureBlobStorageConfiguration` |
+| **Cloudflare R2** | `CloudflareR2` | Cost-effective, no egress fees | `CloudflareR2Configuration` |
+| **Backblaze B2** | `BackblazeB2` | Budget-friendly storage | `BackblazeB2Configuration` |
+| **DigitalOcean Spaces** | `S3Compatible` | Simple cloud storage | `S3CompatibleConfiguration` |
+| **Wasabi** | `S3Compatible` | Hot storage, no egress fees | `S3CompatibleConfiguration` |
+| **Local Filesystem** | `LocalFileSystem` | Development only | `LocalFileSystemConfiguration` |
+
+### Architecture Overview
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│                        IStorageServiceFactory                            │
+├──────────────────────────────────────────────────────────────────────────┤
+│ GetStorageServiceAsync(tenantId) ──► Tenant config? ──► Tenant Storage   │
+│                                            │                             │
+│                                            └──► No ──► Global Storage    │
+└──────────────────────────────────────────────────────────────────────────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    ▼               ▼               ▼
+            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+            │   AWS S3    │ │   MinIO     │ │    GCS      │
+            │  Provider   │ │  Provider   │ │  Provider   │
+            └─────────────┘ └─────────────┘ └─────────────┘
+                    ▼               ▼               ▼
+            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+            │   Azure     │ │ Cloudflare  │ │ Backblaze   │
+            │   Blob      │ │     R2      │ │     B2      │
+            └─────────────┘ └─────────────┘ └─────────────┘
+```
+
+### Global Configuration (appsettings.json)
+
+```json
+{
+  "Assets": {
+    "Storage": {
+      "DefaultProviderType": "S3Compatible",
+      "AllowTenantStorage": true,
+      "BucketName": "assets",
+      "TransformedBucketName": "assets-transformed",
+      "QuarantineBucketName": "assets-quarantine",
+      "CdnUrlPrefix": "https://cdn.example.com",
+      "PresignedUrlExpiryMinutes": 60,
+      
+      "S3Compatible": {
+        "ServiceUrl": "",
+        "AccessKeyId": "${AWS_ACCESS_KEY_ID}",
+        "SecretAccessKey": "${AWS_SECRET_ACCESS_KEY}",
+        "Region": "us-east-1",
+        "ForcePathStyle": false
+      },
+
+      "GoogleCloudStorage": {
+        "ProjectId": "my-project",
+        "CredentialsJson": "${GCS_CREDENTIALS_JSON}",
+        "UseApplicationDefaultCredentials": false
+      },
+
+      "AzureBlobStorage": {
+        "ConnectionString": "${AZURE_STORAGE_CONNECTION_STRING}",
+        "UseManagedIdentity": false
+      },
+
+      "CloudflareR2": {
+        "AccountId": "${CLOUDFLARE_ACCOUNT_ID}",
+        "AccessKeyId": "${R2_ACCESS_KEY_ID}",
+        "SecretAccessKey": "${R2_SECRET_ACCESS_KEY}"
+      }
+    }
+  }
+}
+```
+
+### MinIO Development Configuration
+
+```json
+{
+  "Assets": {
+    "Storage": {
+      "DefaultProviderType": "S3Compatible",
+      "S3Compatible": {
+        "ServiceUrl": "http://localhost:9000",
+        "AccessKeyId": "minioadmin",
+        "SecretAccessKey": "minioadmin",
+        "Region": "us-east-1",
+        "ForcePathStyle": true,
+        "UseHttp": true
+      }
+    }
+  }
+}
+```
+
+### Tenant Storage Configuration
+
+Tenants can configure their own storage via the Admin UI or API:
+
+```csharp
+// Entity: TenantStorageConfiguration
+public class TenantStorageConfiguration : EntityBase
+{
+    public Guid TenantId { get; }
+    public StorageProviderType ProviderType { get; }
+    public bool IsEnabled { get; }
+    public string Name { get; }
+    public string EncryptedConfiguration { get; }  // Credentials encrypted at rest
+    public string BucketName { get; }
+    public string TransformedBucketName { get; }
+    public string? CdnUrlPrefix { get; }
+    public DateTime? LastValidated { get; }
+    public bool? LastValidationSuccess { get; }
+}
+```
+
+### API Endpoints for Storage Configuration
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/admin/storage/providers` | GET | List supported providers |
+| `/api/admin/storage/global` | GET | Get global storage config |
+| `/api/admin/storage/tenant` | GET | Get tenant storage config |
+| `/api/admin/storage/tenant` | POST | Create tenant storage config |
+| `/api/admin/storage/tenant` | PUT | Update tenant storage config |
+| `/api/admin/storage/tenant/test` | POST | Test storage configuration |
+| `/api/admin/storage/tenant/enable` | POST | Enable tenant storage |
+| `/api/admin/storage/tenant/disable` | POST | Disable (use global) |
+
+### Security Considerations
+
+1. **Credential Encryption**: All storage credentials encrypted using ASP.NET Data Protection API
+2. **Validation Required**: Configurations must pass connectivity test before enabling
+3. **Audit Logging**: All storage configuration changes logged
+4. **Permission Required**: Only tenant admins with `storage:configure` permission
+5. **Fallback Safety**: If tenant storage fails, automatically falls back to global
+
+### Key Components
+
+| Component | File | Purpose |
+|-----------|------|---------|
+| `StorageProviderType` | `Storage/StorageProviderType.cs` | Enum of supported providers |
+| `StorageProviderConfiguration` | `Storage/StorageProviderConfigurations.cs` | Base config + provider-specific configs |
+| `TenantStorageConfiguration` | `Storage/TenantStorageConfiguration.cs` | Entity for tenant storage settings |
+| `IStorageServiceFactory` | `Storage/StorageServiceFactory.cs` | Factory to get correct storage per tenant |
+| `IStorageConfigurationEncryption` | `Storage/StorageServiceFactory.cs` | Encrypt/decrypt credentials |
+
+---
+
+**Document Version:** 1.1  
 **Author:** Platform Architecture Analysis  
+**Last Updated:** Multi-provider storage architecture added  
 **Review Required By:** Security Team, Platform Team, Commerce Team
 
