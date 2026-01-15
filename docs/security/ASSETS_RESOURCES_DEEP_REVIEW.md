@@ -22,10 +22,9 @@ This deep review evaluates the **GameGuild.Assets** and **GameGuild.Resources** 
 **✅ CRITICAL FIX #3 APPLIED:** User ownership validation implemented in all 4 user-scoped controllers.
 
 **Remaining Issues:**
-- ⚠️ **HIGH:** Global `PermissionAuthorizationFilter` still disabled
 - ⚠️ **MEDIUM:** No rate limiting on Resources endpoints
 
-Both the Assets and Resources modules now demonstrate proper security patterns with complete authentication, tenant membership validation, and user ownership checks.
+Both the Assets and Resources modules now demonstrate proper security patterns with complete authentication, tenant membership validation, user ownership checks, and global authorization filter enabled.
 
 ---
 
@@ -340,10 +339,36 @@ GET /v1/tenants/{TENANT_B_ID}/resources/usage-records
 
 ### Resources Entities
 
-| Entity | Invariants | Concurrency | Status |
-|--------|------------|-------------|--------|
-| `ResourceQuota` | SoftLimit ≤ HardLimit, Used ≥ 0 | `[Timestamp] RowVersion` | ✅ |
-| `ResourceUsageRecord` | Amount > 0, valid DateRange | None | ⚠️ |
+| Entity | Invariants | Validation | Concurrency | Status |
+|--------|------------|------------|-------------|--------|
+| `ResourceQuota` | SoftLimit ≤ HardLimit, Used ≥ 0 | FluentValidation | `[Timestamp] RowVersion` | ✅ |
+| `UsageRecord` | Count > 0, PeriodEnd > PeriodStart | `RecordResourceUsageCommandValidator` | Append-only (N/A) | ✅ |
+
+**Validation Implemented (FIXED 2026-01-15):**
+
+The `UsageRecord` entity uses FluentValidation via command validators:
+
+```csharp
+// RecordResourceUsageCommandValidator.cs
+public class RecordResourceUsageCommandValidator : AbstractValidator<RecordResourceUsageCommand>
+{
+    public RecordResourceUsageCommandValidator()
+    {
+        RuleFor(x => x.TenantId).NotEmpty().WithMessage("Tenant ID is required");
+        RuleFor(x => x.ResourceUsageType).IsInEnum().WithMessage("Invalid usage type");
+        RuleFor(x => x.Count).GreaterThan(0).WithMessage("Usage count must be greater than zero");
+        RuleFor(x => x.PeriodStart).NotEmpty().WithMessage("Period start date is required");
+        RuleFor(x => x.PeriodEnd)
+            .NotEmpty().WithMessage("Period end date is required")
+            .GreaterThan(x => x.PeriodStart).WithMessage("Period end must be after period start");
+        RuleFor(x => x.Metadata).MaximumLength(1000)
+            .When(x => !string.IsNullOrEmpty(x.Metadata))
+            .WithMessage("Metadata cannot exceed 1000 characters");
+    }
+}
+```
+
+> **Note:** `UsageRecord` entities are append-only audit records. Concurrency tokens are not required since records are never updated after creation.
 
 **Concurrency Pattern:**
 ```csharp
@@ -807,16 +832,21 @@ public async Task<IActionResult> GetUsageRecords(
 }
 ```
 
-### Fix #3: Re-enable Global Authorization Filter
+### Fix #3: Re-enable Global Authorization Filter ✅ IMPLEMENTED
 
 **Location:** `ServiceCollectionExtensions.cs:739-740`
 
+**Status:** ✅ **FIXED 2026-01-15**
+
 ```csharp
-// Before (commented out)
+// BEFORE (commented out)
+// TODO: Re-enable after core bootstrap is stable
 // if (options.EnablePermissionAuthorizationFilter)
 //     mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
 
-// After (uncommented and enabled)
+// AFTER (re-enabled with defense-in-depth comment)
+// Add permission authorization filter globally to all controllers
+// This provides defense-in-depth by requiring explicit [AllowAnonymous] to opt-out
 if (options.EnablePermissionAuthorizationFilter)
     mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
 ```
