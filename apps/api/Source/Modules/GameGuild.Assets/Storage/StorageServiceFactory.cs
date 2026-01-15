@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -421,11 +422,13 @@ public class StorageConfigurationEncryption : IStorageConfigurationEncryption
     public string Encrypt(StorageProviderConfiguration configuration)
     {
         var json = JsonSerializer.Serialize(configuration, configuration.GetType());
+        // IDataProtector.Protect(string) returns string directly
         return _protector.Protect(json);
     }
 
     public StorageProviderConfiguration Decrypt(string encryptedJson, StorageProviderType providerType)
     {
+        // IDataProtector.Unprotect(string) returns string directly
         var json = _protector.Unprotect(encryptedJson);
         
         return providerType switch

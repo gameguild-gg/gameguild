@@ -2734,8 +2734,223 @@ public class TenantStorageConfiguration : EntityBase
 
 ---
 
-**Document Version:** 1.1  
+## D.11 Implementation Gap Analysis 🔍
+
+### Gap Summary
+
+This section documents the gaps between the architecture specification and the current implementation. These are items that were specified but not yet fully implemented.
+
+| Category | Specified | Implemented | Gap |
+|----------|-----------|-------------|-----|
+| API Endpoints | 14 | 11 | 3 missing |
+| ResourceTypes | Asset, AssetReport | None | 2 missing |
+| Quota Enforcement | `[RequiresQuota]` on upload | None | Not applied |
+| Feature Flag Runtime | Runtime checks | None | Not consumed |
+| Permission Keys | `AssetsPermission.Keys` | None | Not defined |
+| Perceptual Hashing | Full implementation | Placeholder | TODO stub |
+
+---
+
+### P0 — Critical Gaps (Security/Quota)
+
+#### 1. `[RequiresQuota]` Attribute Missing on Upload Command
+**Severity:** HIGH — Storage quota not enforced  
+**Location:** `Commands/UploadAssetCommand.cs`  
+**Specified:**
+```csharp
+[RequiresQuota(ResourceUsageType.Assets, 1)]
+[RequiresQuota(ResourceUsageType.AssetStorage, /* calculated */)]
+public record UploadAssetCommand(...);
+```
+**Status:** ❌ NOT IMPLEMENTED — Upload bypasses quota enforcement  
+**Action:** Add `[RequiresQuota]` attributes to `UploadAssetCommand`
+
+---
+
+#### 2. ResourceTypes Missing Asset/AssetReport
+**Severity:** MEDIUM — DAC/ABAC policies cannot reference Asset resources  
+**Location:** `GameGuild.Identity.Authorization/Models/ResourceTypes.cs`  
+**Specified:**
+```csharp
+public static readonly ConcreteResourceType Asset = new("Asset", "Binary assets and media files");
+public static readonly ConcreteResourceType AssetReport = new("AssetReport", "Content moderation reports");
+```
+**Status:** ❌ NOT IMPLEMENTED — `ResourceTypes.All` array does not include Asset or AssetReport  
+**Action:** Add Asset and AssetReport to ResourceTypes.cs
+
+---
+
+### P1 — Missing Endpoints
+
+#### 3. Chunked Upload Controller Endpoints
+**Severity:** MEDIUM — Large file uploads not exposed via API  
+**Location:** `Controllers/AssetsController.cs`  
+**Specified:**
+```
+POST /api/assets/upload/chunked/init
+POST /api/assets/upload/chunked/{uploadId}/part
+POST /api/assets/upload/chunked/{uploadId}/complete
+```
+**Status:** ⚠️ PARTIAL — Service layer exists (`InitiateChunkedUploadAsync`, `UploadChunkAsync`, `CompleteChunkedUploadAsync`) but no controller endpoints  
+**Action:** Add chunked upload endpoints to `AssetsController`
+
+---
+
+#### 4. Admin GC Trigger Endpoint
+**Severity:** LOW — Manual GC not available  
+**Location:** `Controllers/AssetsAdminController.cs`  
+**Specified:**
+```
+POST /api/admin/assets/gc/run
+```
+**Status:** ❌ NOT IMPLEMENTED — Only `GET gc-candidates` exists  
+**Action:** Add manual GC trigger endpoint
+
+---
+
+#### 5. Admin Mark Non-Deletable Endpoint
+**Severity:** LOW — Cannot protect legally-required assets  
+**Location:** `Controllers/AssetsAdminController.cs`  
+**Specified:**
+```
+POST /api/admin/assets/{contentId}/undeletable
+```
+**Status:** ❌ NOT IMPLEMENTED  
+**Action:** Add endpoint to set `IsDeletable = false`
+
+---
+
+#### 6. Content Moderation Review Endpoint
+**Severity:** MEDIUM — Cannot directly moderate content (only reports)  
+**Location:** `Controllers/AssetsAdminController.cs`  
+**Specified:**
+```
+POST /api/admin/assets/{contentId}/moderation/review
+```
+**Status:** ⚠️ PARTIAL — Only report review exists (`/reports/{reportId}/review`), no content-level moderation  
+**Action:** Add content moderation review endpoint
+
+---
+
+### P2 — Integration Gaps
+
+#### 7. Feature Flag Runtime Checks Missing
+**Severity:** MEDIUM — Feature limits not enforced at runtime  
+**Location:** Throughout Assets module  
+**Specified:**
+```csharp
+var enabled = await _features.EvaluateAsync(AssetFeatureFlags.TransformationsEnabled, ctx);
+```
+**Status:** ❌ NOT IMPLEMENTED — `AssetFeatureFlags` constants defined but `IFeatureFlagEvaluationService` not injected or used  
+**Action:** Inject feature service and add runtime checks in `TransformationValidator`, `AssetAccessService`
+
+---
+
+#### 8. AssetsPermission Keys Not Defined
+**Severity:** MEDIUM — Cannot use typed permission checks  
+**Location:** Assets module  
+**Specified:**
+```csharp
+public static class AssetsPermission
+{
+    public static class Keys
+    {
+        public const string Read = "assets:read";
+        public const string Create = "assets:create";
+        public const string Update = "assets:update";
+        public const string Delete = "assets:delete";
+        public const string Admin = "assets:admin";
+        public const string Moderate = "assets:moderate";
+    }
+}
+```
+**Status:** ❌ NOT IMPLEMENTED  
+**Action:** Create `AssetsPermission.cs` in Assets module
+
+---
+
+#### 9. IAssetLocalizationService Not Implemented
+**Severity:** LOW — Error messages not localized  
+**Location:** Assets module  
+**Specified:**
+```csharp
+public interface IAssetLocalizationService
+{
+    string GetModerationRejectionReason(string[] labels, string languageCode);
+    string GetAccessDeniedMessage(AssetAccessPolicy policy, string languageCode);
+    string GetQuotaExceededMessage(ResourceUsageType type, string languageCode);
+}
+```
+**Status:** ❌ NOT IMPLEMENTED — `AssetReference` implements `ILocalizable` for field localization, but error message localization missing  
+**Action:** Create `IAssetLocalizationService` and implementation
+
+---
+
+### P3 — Technical Debt
+
+#### 10. Perceptual Hashing Placeholder
+**Severity:** LOW — Near-duplicate detection not functional  
+**Location:** `Deduplication/DeduplicationService.cs`  
+**Specified:** Full perceptual hash implementation for image similarity  
+**Status:** ⚠️ STUB ONLY
+```csharp
+// TODO: Implement perceptual hashing using a library like ImageSharp
+return Task.FromResult<string?>(null);
+```
+**Action:** Implement using ImageSharp or Shipwreck/Phash library
+
+---
+
+#### 11. CDN Serving Routes Not Exposed
+**Severity:** LOW — CDN-friendly path-based tokens not available  
+**Location:** Controllers  
+**Specified:**
+```
+/assets/{referenceId}/{token}       (direct)
+/e/{token}                          (ephemeral)
+/t/{transformation}/{referenceId}/{token} (transform)
+```
+**Status:** ❌ NOT IMPLEMENTED — Only `/api/assets/{id}/content?token=...` pattern exists  
+**Action:** Add CDN-optimized route controller (lower priority, query string works)
+
+---
+
+#### 12. AssetAuthorizationHandler Not Implemented
+**Severity:** LOW — Authorization logic inline in controllers  
+**Location:** Assets module  
+**Specified:**
+```csharp
+public class AssetAuthorizationHandler : IAssetAuthorizationHandler
+{
+    // DAC-based access control via IAuthorizationService
+}
+```
+**Status:** ⚠️ INLINE — `TenantAssetValidationService` handles tenant isolation, but no dedicated authorization handler  
+**Action:** Extract authorization logic to dedicated handler (refactoring, not blocking)
+
+---
+
+### Gap Resolution Priority
+
+| Priority | Gap # | Description | Effort | Blocking |
+|----------|-------|-------------|--------|----------|
+| **P0** | 1 | `[RequiresQuota]` on upload | 2 hr | ⚠️ Quota bypass |
+| **P0** | 2 | ResourceTypes Asset/AssetReport | 1 hr | ⚠️ DAC broken |
+| **P1** | 3 | Chunked upload endpoints | 4 hr | Large files |
+| **P1** | 7 | Feature flag runtime checks | 4 hr | Limits bypass |
+| **P2** | 6 | Content moderation endpoint | 2 hr | Admin workflow |
+| **P2** | 8 | AssetsPermission keys | 1 hr | Typed perms |
+| **P3** | 4 | GC trigger endpoint | 1 hr | Manual ops |
+| **P3** | 5 | Mark non-deletable | 1 hr | Legal holds |
+| **P3** | 9 | IAssetLocalizationService | 4 hr | i18n |
+| **P3** | 10 | Perceptual hashing | 8 hr | Dedup quality |
+| **P3** | 11 | CDN routes | 4 hr | CDN optimize |
+| **P3** | 12 | AssetAuthorizationHandler | 4 hr | Code quality |
+
+---
+
+**Document Version:** 1.2  
 **Author:** Platform Architecture Analysis  
-**Last Updated:** Multi-provider storage architecture added  
+**Last Updated:** Gap analysis added — 12 gaps identified across 4 priority levels  
 **Review Required By:** Security Team, Platform Team, Commerce Team
 

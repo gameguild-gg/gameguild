@@ -9,6 +9,16 @@ namespace GameGuild.Assets.Storage;
 public class TenantStorageConfiguration : EntityBase
 {
     /// <summary>
+    /// Tenant ID this configuration belongs to (overrides base for object initializer).
+    /// </summary>
+    public new Guid? TenantId { get; private set; }
+
+    /// <summary>
+    /// User who created this configuration.
+    /// </summary>
+    public new Guid? CreatedBy { get; private set; }
+
+    /// <summary>
     /// Storage provider type (S3, GCS, Azure, etc.)
     /// </summary>
     public StorageProviderType ProviderType { get; private set; }
@@ -91,9 +101,10 @@ public class TenantStorageConfiguration : EntityBase
         if (string.IsNullOrWhiteSpace(bucketName))
             throw new ArgumentException("BucketName is required", nameof(bucketName));
 
-        var config = new TenantStorageConfiguration
+        return new TenantStorageConfiguration
         {
             Id = Guid.NewGuid(),
+            TenantId = tenantId,
             ProviderType = providerType,
             Name = name,
             EncryptedConfiguration = encryptedConfiguration,
@@ -102,12 +113,8 @@ public class TenantStorageConfiguration : EntityBase
             Region = region,
             CdnUrlPrefix = cdnUrlPrefix,
             IsEnabled = false, // Must be validated before enabling
+            CreatedBy = createdBy
         };
-        
-        config.SetTenantId(tenantId);
-        config.SetCreatedBy(createdBy);
-        
-        return config;
     }
 
     public void Enable()
