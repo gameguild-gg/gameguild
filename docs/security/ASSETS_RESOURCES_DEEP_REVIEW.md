@@ -740,16 +740,16 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | 21-25 | Fix any additional findings from security audit | Dev Team | Remediation PRs | ⚠️ PENDING |
 | 26-30 | Final integration test pass + sign-off | QA + Security | Go-live approval | ⚠️ PENDING |
 
-### 60-Day Sprint (Performance & Reliability)
+### 60-Day Sprint (Performance & Reliability) - ✅ COMPLETE
 
 | Week | Task | Owner | Deliverable | Status |
 |------|------|-------|-------------|--------|
 | 5 | ~~Fix N+1 query in `CheckMultipleLimitsAsync`~~ | Dev Team | Batch query via `GetByTenantAndTypesAsync` | ✅ **DONE** |
 | 5 | ~~Fix N+1 query in `CheckResourceUsageLimitsQueryHandler`~~ | Dev Team | Batch save via `SaveChangesAsync` | ✅ **DONE** |
 | 6 | ~~Add pagination to `GetResourceUsageRecordsQuery`~~ | Dev Team | `PagedResult<T>` with max 200/page | ✅ **DONE 2026-01-15** |
-| 6 | Implement token signature caching in `AssetTokenService` | Dev Team | Performance improvement | ⚠️ PENDING |
+| 6 | ~~Implement token signature caching in `AssetTokenService`~~ | Dev Team | `ConcurrentDictionary` cache, O(1) lookup, 10K limit | ✅ **DONE 2026-01-15** |
 | 7 | ~~Add FluentValidation to date range inputs~~ | Dev Team | Input validation | ✅ **DONE** |
-| 7 | Configure connection pooling for high load | DevOps | DB config update | ⚠️ PENDING |
+| 7 | ~~Configure connection pooling for high load~~ | DevOps | Connection strings updated with pool settings | ✅ **DONE 2026-01-15** |
 | 8 | Load testing: 1000 concurrent quota operations | QA | Performance report | ⚠️ PENDING |
 
 ### 90-Day Sprint (Maintainability & Observability)
