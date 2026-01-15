@@ -28,6 +28,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Localization\GameGuild.Localization.csproj" />
     </ItemGroup>
 
 </Project>

@@ -400,13 +400,17 @@ GameGuild.Features/
 | Location | TenantId Enforcement | Status |
 |----------|---------------------|--------|
 | `FeatureFlag.TenantId` | Inherited from `EntityBase` | ✅ CORRECT |
-| `FeatureContext.TenantId` | Optional with warning log | ⚠️ DEFENSIVE |
-| `FeatureFlagEvaluationService` | Logs warning if TenantId missing | ⚠️ DEFENSIVE |
+| `FeatureContext.TenantId` | Optional, fail-closed when tenant targeting exists | ✅ FAIL-CLOSED |
+| `FeatureFlagEvaluationService` | Delegates to targeting handlers | ✅ CORRECT |
+| `TenantTargetingHandler` | Fail-closed if tenant rules exist but no TenantId | ✅ FAIL-CLOSED |
 | Targeting rules | Tenant targeting handler checks | ✅ CORRECT |
 
-**Issue Found:** `FeatureContext.TenantId` is nullable. If null, targeting rules that depend on tenant may silently fail-open.
+**Fix Applied:** `TenantTargetingHandler` now implements fail-closed policy:
+- If tenant targeting rules exist on a feature flag but no `TenantId` is provided in context
+- Feature is disabled (returns `IsEnabled = false`) rather than passing to next handler
+- Warning is logged for security observability
 
-**Verdict:** ⚠️ Defensive but not fail-closed. Evaluation proceeds without tenant context.
+**Verdict:** ✅ Fail-closed for tenant-scoped features. Non-tenant-scoped features work correctly.
 
 ### A.2.5 Code Quality Review (KISS/DRY/SOLID)
 
@@ -426,27 +430,43 @@ GameGuild.Features/
 
 | Risk | Severity | Mitigation Status |
 |------|----------|-------------------|
-| Feature leak to wrong tenant | MEDIUM | ⚠️ Warning logged, not blocked |
-| Feature bypass via missing context | LOW | ⚠️ Falls back to default value |
+| Feature leak to wrong tenant | MEDIUM | ✅ Fail-closed in TenantTargetingHandler |
+| Feature bypass via missing context | LOW | ✅ TenantTargetingHandler returns disabled |
 | Kill switch circumvention | HIGH | ✅ `IsKillSwitch` property checked first |
 | Stale cache serving wrong state | MEDIUM | ✅ Distributed cache with TTL |
+
+**Fix Applied:** `TenantTargetingHandler` now blocks feature access when tenant-targeting rules exist but no TenantId is provided. This prevents cross-tenant feature leakage.
 
 ### A.2.7 Performance Review
 
 | Concern | Status | Notes |
 |---------|--------|-------|
-| N+1 on targeting rules | ⚠️ WATCH | Targets loaded per evaluation |
+| N+1 on targeting rules | ✅ OK | Targets eager-loaded via `FeatureFlagByKeySpecification` |
 | Caching | ✅ OK | Distributed cache decorator |
 | Strategy selection | ✅ OK | O(n) where n = strategy count (small) |
 | Hot path (high QPS) | ✅ OK | Cache-first architecture |
 
+**Note:** Targeting rules are already eager-loaded in `FeatureFlagByKeySpecification` with `AddInclude(x => x.Targets)`.
+
 ### A.2.8 Recommended Minimal Refactors
 
-| # | Change | Effort | Priority |
-|---|--------|--------|----------|
-| 1 | Add asset-related feature flag keys | 30 min | P1 |
-| 2 | Consider fail-closed for missing TenantId in production | 1 hr | P2 |
-| 3 | Eager-load targeting rules with feature flag | 30 min | P3 |
+| # | Change | Effort | Priority | Status |
+|---|--------|--------|----------|--------|
+| 1 | Add asset-related feature flag keys | 30 min | P1 | Pending |
+| 2 | Implement fail-closed for missing TenantId | 1 hr | P2 | ✅ DONE |
+| 3 | Eager-load targeting rules with feature flag | 30 min | P3 | ✅ Already done |
+
+### A.2.9 Required Tests
+
+| Test Name | Purpose | Status |
+|-----------|---------|--------|
+| `TenantTargetingHandler_FailsClosed_WhenNoTenantIdProvided` | Cross-tenant security | ✅ ADDED |
+| `TenantTargetingHandler_ReturnsEnabled_WhenTenantIsTargeted` | Positive targeting | ✅ ADDED |
+| `TenantTargetingHandler_ReturnsNull_WhenNoTenantTargetingRules` | Non-interference | ✅ ADDED |
+| `TenantTargetingHandler_NoCrossTenantLeakage_WhenMissingContext` | Multi-tenant security | ✅ ADDED |
+| `TenantTargetingHandler_LogsWarning_WhenFailingClosed` | Observability | ✅ ADDED |
+
+**Test File:** `Tests/GameGuild.Features.UnitTests/Handlers/TenantTargetingHandlerTests.cs` (6 tests)
 
 ### A.2.9 Required Tests
 

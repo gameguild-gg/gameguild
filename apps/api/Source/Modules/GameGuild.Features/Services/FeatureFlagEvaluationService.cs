@@ -33,13 +33,15 @@ public class FeatureFlagEvaluationService(
 
         var startTime = DateTime.UtcNow;
 
-        // Economic Model: Warn when feature access is checked without tenant context
-        // This could lead to cross-tenant feature leakage if targeting rules depend on tenant
+        // Security Note: Missing TenantId is logged for observability, but actual fail-closed 
+        // enforcement happens in TenantTargetingHandler when tenant-specific rules exist.
+        // This ensures tenant-agnostic features work correctly while tenant-specific features
+        // fail-closed to prevent cross-tenant feature leakage.
         if (!context.TenantId.HasValue)
         {
-            _logger.LogWarning(
+            _logger.LogDebug(
                 "Feature flag '{FeatureKey}' evaluated without TenantId context. " +
-                "This may cause cross-tenant feature leakage if tenant-specific targeting is used.",
+                "Tenant-targeting handlers will apply fail-closed policy if tenant rules exist.",
                 featureKey);
         }
 
