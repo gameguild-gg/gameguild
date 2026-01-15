@@ -1,3 +1,10 @@
+# [2.39.0](https://github.com/gameguild-gg/gameguild/compare/v2.38.0...v2.39.0) (2026-01-15)
+
+
+### Features
+
+* **ai4games2:** Add Week 3 Utility AI module ([6ca9031](https://github.com/gameguild-gg/gameguild/commit/6ca9031ff23d2a1bc6e51a26724b33042eddba68))
+
 # [2.38.0](https://github.com/gameguild-gg/gameguild/compare/v2.37.0...v2.38.0) (2026-01-12)
 
 
