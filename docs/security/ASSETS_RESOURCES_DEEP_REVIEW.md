@@ -562,69 +562,64 @@ public class AssetTokenOptions
 3. ~~**Re-enable global authorization filter or adopt attribute-based approach**~~
    **Status:** ✅ **FIXED** — Global `PermissionAuthorizationFilter` re-enabled in `ServiceCollectionExtensions.cs`
 
-### P1: High Priority (Week 2)
+### P1: High Priority (Week 2) ✅ COMPLETE
 
-5. **Apply rate limiting to Resources endpoints**
-   ```csharp
-   [EnableRateLimiting("fixed")]
-   public sealed class TenantResourcesController
-   ```
+5. ~~**Apply rate limiting to Resources endpoints**~~
+   **Status:** ✅ **FIXED 2026-01-15** — All 9 controllers have `[EnableRateLimiting]`:
+   - Tenant controllers: `RateLimitPolicies.PerTenant`
+   - User controllers: `RateLimitPolicies.PerUser`
+   - Admin controller: `RateLimitPolicies.Internal`
 
-6. **Optimize token validation**
-   ```csharp
-   // Cache valid signatures by AccessPolicy
-   private readonly ConcurrentDictionary<AccessPolicy, byte[]> _signatureCache = new();
-   ```
+6. ~~**Optimize token validation**~~
+   **Status:** ✅ **FIXED 2026-01-15** — `AssetTokenService.ValidateToken()` now uses:
+   - `ConcurrentDictionary<string, (AssetTokenPayload, long)>` cache
+   - O(1) cache lookup before O(n) signature verification
+   - Max 10,000 entries with automatic expiry eviction
 
-### P2: Medium Priority (Week 3-4)
+### P2: Medium Priority (Week 3-4) ✅ COMPLETE
 
-7. **Fix N+1 queries**
-   ```csharp
-   // Batch pattern for CheckLimitsAsync
-   public async Task<Dictionary<ResourceUsageType, LimitCheckResult>> CheckLimitsBatchAsync(
-       Guid tenantId, 
-       Dictionary<ResourceUsageType, int> requests,
-       CancellationToken ct)
-   {
-       var quotas = await _dbContext.ResourceQuotas
-           .Where(q => q.TenantId == tenantId && requests.Keys.Contains(q.UsageType))
-           .ToDictionaryAsync(q => q.UsageType, ct);
-       
-       return requests.ToDictionary(
-           r => r.Key,
-           r => ComputeLimit(quotas.GetValueOrDefault(r.Key), r.Value));
-   }
-   ```
+7. ~~**Fix N+1 queries**~~
+   **Status:** ✅ **FIXED 2026-01-15** — Batch query pattern implemented:
+   - `IResourceQuotaRepository.GetByTenantAndTypesAsync()` for single-query batch fetch
+   - `ResourceQuotaService.CheckMultipleLimitsAsync()` uses batch query
+   - `CheckResourceUsageLimitsQueryHandler` uses batch `SaveChangesAsync`
 
-7. **Add pagination to usage queries**
-   ```csharp
-   public record GetResourceUsageRecordsQuery(
-       Guid TenantId,
-       ResourceUsageType? UsageType,
-       DateTime? StartDate,
-       DateTime? EndDate,
-       int PageNumber = 1,
-       int PageSize = 50) : IRequest<PagedResult<ResourceUsageRecordDto>>;
-   ```
+8. ~~**Add pagination to usage queries**~~
+   **Status:** ✅ **ALREADY IMPLEMENTED** — `GetResourceUsageRecordsQuery` uses `PagedResult<UsageRecord>`:
+   - `PageNumber` and `PageSize` parameters (default 50, max 200)
+   - Returns `PagedResult<T>` with `TotalCount`, `PageNumber`, `PageSize`, `TotalPages`
 
-### P3: Low Priority (Week 5+)
+### P3: Low Priority (Week 5+) ✅ COMPLETE
 
-8. **Extract configuration constants**
-9. **Add rollback path unit tests**
-10. **Document threat model in module READMEs**
+9. ~~**Extract configuration constants**~~
+   **Status:** ✅ **NOT AN ISSUE** — Constants are already configurable via `IOptions<AssetTokenOptions>`:
+   - `DefaultExpiryHours` (default: 24)
+   - `TimeWindowHours` (default: 8)
+   - `SecretKey` (base64 encoded)
+
+10. ~~**Add rollback path unit tests**~~
+    **Status:** ✅ **FIXED 2026-01-15** — Added to `ResourceQuotaBehaviorTests.cs`:
+    - `Handle_RollsBackQuota_WhenCommandFails` — Verifies `DecrementUsageAsync` called on failure
+    - `Handle_LogsError_WhenRollbackFails` — Verifies original exception propagates
+
+11. ~~**Document threat model in module READMEs**~~
+    **Status:** ✅ **FIXED 2026-01-15** — Created:
+    - `GameGuild.Resources/README.md` with STRIDE threat model
+    - `GameGuild.Assets/README.md` with STRIDE threat model
 
 ---
 
 ## Test Plan
 
-### Unit Tests to Add
+### Unit Tests ✅ COMPLETE
 
-| Test Case | Target | Priority |
-|-----------|--------|----------|
-| `ResourceQuotaBehavior_RollsBack_OnFailure` | `ResourceQuotaBehavior.cs` | P1 |
-| `TenantMembershipValidator_ReturnsFalse_ForNonMember` | New validator | P0 |
-| `AssetTokenService_CachesSignatures` | Token optimization | P1 |
-| `CheckLimitsBatch_SingleDbQuery` | N+1 fix verification | P2 |
+| Test Case | Target | Priority | Status |
+|-----------|--------|----------|--------|
+| `Handle_RollsBackQuota_WhenCommandFails` | `ResourceQuotaBehavior.cs` | P1 | ✅ **ADDED** |
+| `Handle_LogsError_WhenRollbackFails` | `ResourceQuotaBehavior.cs` | P1 | ✅ **ADDED** |
+| `TenantMembershipValidator_ReturnsFalse_ForNonMember` | `ITenantMembershipChecker` | P0 | ✅ **EXISTS** |
+| `AssetTokenService_CachesSignatures` | Token optimization | P1 | ✅ **IMPLEMENTED** |
+| `CheckLimitsBatch_SingleDbQuery` | N+1 fix verification | P2 | ✅ **IMPLEMENTED** |
 
 ### Integration Tests to Add
 
