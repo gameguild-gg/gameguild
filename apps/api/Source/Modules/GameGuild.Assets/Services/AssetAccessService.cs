@@ -351,7 +351,7 @@ public class AssetAccessService : IAssetAccessService
         // Check feature flag for transformations
         var featureContext = CreateFeatureContext(null, null);
         var transformationsEnabled = await _featureService.IsEnabledAsync(
-            AssetFeatureFlags.TransformationsEnabled,
+            FeatureFlagConstants.AssetFeatureFlags.TransformationsEnabled,
             featureContext,
             ct);
 

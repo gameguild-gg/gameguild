@@ -10,54 +10,35 @@ public interface IAssetLocalizationService
     /// <summary>
     /// Gets a localized rejection reason for moderation labels.
     /// </summary>
-    /// <param name="labels">The detected moderation labels.</param>
-    /// <param name="languageCode">ISO language code (e.g., "en", "es", "pt-BR").</param>
-    /// <returns>Localized rejection reason.</returns>
     string GetModerationRejectionReason(string[] labels, string languageCode);
 
     /// <summary>
     /// Gets a localized access denied message based on policy.
     /// </summary>
-    /// <param name="policy">The access policy that denied access.</param>
-    /// <param name="languageCode">ISO language code.</param>
-    /// <returns>Localized access denied message.</returns>
     string GetAccessDeniedMessage(AssetAccessPolicy policy, string languageCode);
 
     /// <summary>
     /// Gets a localized quota exceeded message.
     /// </summary>
-    /// <param name="quotaType">The type of quota exceeded.</param>
-    /// <param name="currentUsage">Current usage amount.</param>
-    /// <param name="limit">The limit amount.</param>
-    /// <param name="languageCode">ISO language code.</param>
-    /// <returns>Localized quota exceeded message.</returns>
     string GetQuotaExceededMessage(string quotaType, long currentUsage, long limit, string languageCode);
 
     /// <summary>
     /// Gets a localized virus detected message.
     /// </summary>
-    /// <param name="fileName">The infected file name.</param>
-    /// <param name="languageCode">ISO language code.</param>
-    /// <returns>Localized virus detected message.</returns>
     string GetVirusDetectedMessage(string fileName, string languageCode);
 
     /// <summary>
     /// Gets a localized upload failed message.
     /// </summary>
-    /// <param name="reason">The failure reason key.</param>
-    /// <param name="languageCode">ISO language code.</param>
-    /// <returns>Localized upload failed message.</returns>
     string GetUploadFailedMessage(string reason, string languageCode);
 }
 
 /// <summary>
-/// Implementation of asset localization using the Localization module.
+/// Implementation of asset localization using built-in fallback messages.
 /// </summary>
 public class AssetLocalizationService : IAssetLocalizationService
 {
-    private readonly ILocalizationService _localizationService;
-
-    // Fallback messages when localization service is unavailable
+    // Fallback messages for different languages
     private static readonly Dictionary<string, Dictionary<string, string>> FallbackMessages = new()
     {
         ["en"] = new Dictionary<string, string>
@@ -116,11 +97,6 @@ public class AssetLocalizationService : IAssetLocalizationService
         }
     };
 
-    public AssetLocalizationService(ILocalizationService? localizationService = null)
-    {
-        _localizationService = localizationService!;
-    }
-
     public string GetModerationRejectionReason(string[] labels, string languageCode)
     {
         var localizedLabels = labels.Select(l => GetLocalizedLabel(l, languageCode));
@@ -134,9 +110,10 @@ public class AssetLocalizationService : IAssetLocalizationService
         var key = policy switch
         {
             AssetAccessPolicy.Private => "access.denied.private",
-            AssetAccessPolicy.TenantOnly => "access.denied.tenant",
-            AssetAccessPolicy.AuthenticatedUsers => "access.denied.authenticated",
-            _ => "access.denied.owner"
+            AssetAccessPolicy.TenantPublic => "access.denied.tenant",
+            AssetAccessPolicy.Authenticated => "access.denied.authenticated",
+            AssetAccessPolicy.OwnerOnly => "access.denied.owner",
+            _ => "access.denied.private"
         };
         return GetMessage(key, languageCode);
     }
@@ -176,26 +153,9 @@ public class AssetLocalizationService : IAssetLocalizationService
         return GetMessage(key, languageCode, fallback: label);
     }
 
-    private string GetMessage(string key, string languageCode, string? fallback = null)
+    private static string GetMessage(string key, string languageCode, string? fallback = null)
     {
-        // Try localization service first
-        if (_localizationService != null)
-        {
-            try
-            {
-                var result = _localizationService.GetString(key, languageCode);
-                if (!string.IsNullOrEmpty(result) && result != key)
-                {
-                    return result;
-                }
-            }
-            catch
-            {
-                // Fallback to built-in messages
-            }
-        }
-
-        // Normalize language code (e.g., "pt-BR" -> "pt-BR", "pt" -> check pt-BR first)
+        // Normalize language code
         var normalizedLang = NormalizeLanguageCode(languageCode);
 
         // Try exact match

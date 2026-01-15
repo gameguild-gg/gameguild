@@ -110,7 +110,7 @@ public class AssetTokenService : IAssetTokenService
             // Verify signature for all possible access policies
             foreach (var accessPolicy in Enum.GetValues<AssetAccessPolicy>())
             {
-                var payload = BuildPayload(assetReferenceId, timeWindow, expiryTimestamp, accessPolicy, string.Empty, tenantId);
+                var payload = BuildPayload(assetReferenceId, timeWindow, expiryTimestamp, accessPolicy, string.Empty, tenantId ?? Guid.Empty);
                 var expectedSignature = ComputeSignature(payload);
 
                 if (providedSignature.SequenceEqual(expectedSignature.AsSpan(0, 16)))
@@ -121,7 +121,7 @@ public class AssetTokenService : IAssetTokenService
                         expiryTimestamp,
                         accessPolicy,
                         string.Empty,
-                        tenantId);
+                        tenantId ?? Guid.Empty);
                 }
             }
 

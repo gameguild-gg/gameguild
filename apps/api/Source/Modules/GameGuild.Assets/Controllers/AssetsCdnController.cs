@@ -75,18 +75,14 @@ public class AssetsCdnController : ControllerBase
         }
 
         // Get content
-        var content = await _contentRepository.GetByIdAsync(reference.ContentId, ct);
+        var content = await _contentRepository.GetByIdAsync(reference.AssetContentId, ct);
         if (content == null)
         {
             return NotFound();
         }
 
         // Stream content
-        var stream = await _storageService.GetAsync(content.BucketName, content.ObjectKey, ct);
-        if (stream == null)
-        {
-            return NotFound();
-        }
+        var stream = await _storageService.DownloadAsync(content.BucketName, content.ObjectKey, ct);
 
         // Set cache headers for CDN
         Response.Headers.CacheControl = "public, max-age=86400"; // 24 hours
@@ -141,18 +137,14 @@ public class AssetsCdnController : ControllerBase
         }
 
         // Get content
-        var content = await _contentRepository.GetByIdAsync(reference.ContentId, ct);
+        var content = await _contentRepository.GetByIdAsync(reference.AssetContentId, ct);
         if (content == null)
         {
             return NotFound();
         }
 
         // Stream content
-        var stream = await _storageService.GetAsync(content.BucketName, content.ObjectKey, ct);
-        if (stream == null)
-        {
-            return NotFound();
-        }
+        var stream = await _storageService.DownloadAsync(content.BucketName, content.ObjectKey, ct);
 
         // Set cache headers (shorter for ephemeral)
         Response.Headers.CacheControl = "private, max-age=300"; // 5 minutes
@@ -165,10 +157,7 @@ public class AssetsCdnController : ControllerBase
     /// </summary>
     /// <remarks>
     /// URL format: /t/{transformation}/{referenceId}/{token}
-    /// Transformations: 
-    /// - thumb_100x100 - Thumbnail
-    /// - resize_800x600 - Resize
-    /// - crop_center_400x400 - Center crop
+    /// Transformations use standard format: w=100,h=100,fit=cover
     /// </remarks>
     [HttpGet("/t/{transformation}/{referenceId:guid}/{token}")]
     [ResponseCache(Duration = 604800, Location = ResponseCacheLocation.Any)] // 7 day cache for transforms
@@ -193,14 +182,14 @@ public class AssetsCdnController : ControllerBase
             });
         }
 
-        // Parse transformation
-        var transformSpec = ParseTransformation(transformation);
-        if (transformSpec == null)
+        // Parse transformation spec
+        var spec = TransformationSpec.Parse(transformation);
+        if (spec.IsIdentity)
         {
             return BadRequest(new ProblemDetails
             {
                 Title = "Invalid Transformation",
-                Detail = $"Unknown transformation: {transformation}"
+                Detail = "No valid transformation parameters provided"
             });
         }
 
@@ -213,8 +202,8 @@ public class AssetsCdnController : ControllerBase
 
         // Check if transformation already exists
         var transformedAsset = await _accessService.GetOrCreateTransformationAsync(
-            reference.ContentId,
-            transformSpec,
+            reference.AssetContentId,
+            spec,
             ct);
 
         if (transformedAsset == null)
@@ -227,15 +216,10 @@ public class AssetsCdnController : ControllerBase
         }
 
         // Stream transformed content
-        var stream = await _storageService.GetAsync(
+        var stream = await _storageService.DownloadAsync(
             transformedAsset.BucketName,
             transformedAsset.ObjectKey,
             ct);
-
-        if (stream == null)
-        {
-            return NotFound();
-        }
 
         // Set aggressive cache headers for transformed assets
         Response.Headers.CacheControl = "public, max-age=604800, immutable"; // 7 days, immutable
@@ -243,67 +227,4 @@ public class AssetsCdnController : ControllerBase
 
         return File(stream, transformedAsset.MimeType);
     }
-
-    private static TransformationSpec? ParseTransformation(string transformation)
-    {
-        if (string.IsNullOrEmpty(transformation))
-            return null;
-
-        var parts = transformation.Split('_');
-        if (parts.Length < 2)
-            return null;
-
-        return parts[0].ToLowerInvariant() switch
-        {
-            "thumb" when TryParseSize(parts[1], out var w1, out var h1) =>
-                new TransformationSpec(TransformationType.Thumbnail, w1, h1),
-            "resize" when TryParseSize(parts[1], out var w2, out var h2) =>
-                new TransformationSpec(TransformationType.Resize, w2, h2),
-            "crop" when parts.Length >= 3 && TryParseSize(parts[2], out var w3, out var h3) =>
-                new TransformationSpec(TransformationType.Crop, w3, h3, parts[1]),
-            _ => null
-        };
-    }
-
-    private static bool TryParseSize(string size, out int width, out int height)
-    {
-        width = 0;
-        height = 0;
-
-        var dimensions = size.Split('x');
-        if (dimensions.Length != 2)
-            return false;
-
-        return int.TryParse(dimensions[0], out width) &&
-               int.TryParse(dimensions[1], out height) &&
-               width > 0 && width <= 4096 &&
-               height > 0 && height <= 4096;
-    }
-}
-
-/// <summary>
-/// Specification for an asset transformation.
-/// </summary>
-public record TransformationSpec(
-    TransformationType Type,
-    int Width,
-    int Height,
-    string? Anchor = null);
-
-/// <summary>
-/// Types of transformations supported.
-/// </summary>
-public enum TransformationType
-{
-    /// <summary>Generate a thumbnail (crop to fit)</summary>
-    Thumbnail,
-    
-    /// <summary>Resize maintaining aspect ratio</summary>
-    Resize,
-    
-    /// <summary>Crop to exact dimensions</summary>
-    Crop,
-    
-    /// <summary>Convert to different format</summary>
-    Convert
 }

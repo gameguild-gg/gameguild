@@ -105,37 +105,39 @@ public sealed class AssetAccessRequirement : IAuthorizationRequirement
 /// </summary>
 public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccessRequirement>, IAssetAuthorizationHandler
 {
-    private readonly IActorContext _actorContext;
+    private readonly IActorContextAccessor _actorContextAccessor;
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAccessControlListService _aclService;
     private readonly ILogger<AssetAuthorizationHandler> _logger;
 
     public AssetAuthorizationHandler(
-        IActorContext actorContext,
+        IActorContextAccessor actorContextAccessor,
         IAssetReferenceRepository referenceRepository,
         IAccessControlListService aclService,
         ILogger<AssetAuthorizationHandler> logger)
     {
-        _actorContext = actorContext;
+        _actorContextAccessor = actorContextAccessor;
         _referenceRepository = referenceRepository;
         _aclService = aclService;
         _logger = logger;
     }
+
+    private ActorContext Actor => _actorContextAccessor.ActorContext;
 
     /// <inheritdoc />
     protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context,
         AssetAccessRequirement requirement)
     {
-        var actor = _actorContext.CurrentActor;
-        if (actor == null)
+        var actor = Actor;
+        if (!actor.IsAuthenticated)
         {
             _logger.LogDebug("No actor context available for authorization");
             return;
         }
 
         // Check if actor has the required permission directly
-        if (actor.HasPermission(requirement.RequiredPermission))
+        if (actor.HasPermission(requirement.RequiredPermission.Key))
         {
             _logger.LogDebug("Asset access granted via permission {Permission}", requirement.RequiredPermission.Key);
             context.Succeed(requirement);
@@ -145,7 +147,7 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
         // Check ownership if allowed and resource is provided
         if (requirement.AllowOwnerAccess && context.Resource is AssetReference asset)
         {
-            if (asset.CreatedBy == actor.Id)
+            if (asset.CreatedByUserId.ToString() == actor.SubjectId)
             {
                 _logger.LogDebug("Asset access granted via ownership for asset {AssetId}", asset.Id);
                 context.Succeed(requirement);
@@ -156,16 +158,16 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
         // Check ACL-based access
         if (context.Resource is AssetReference aclAsset && actor.TenantId.HasValue)
         {
-            var subject = new AclSubject(
-                UserId: actor.Id,
-                RoleIds: actor.Roles?.ToList() ?? new List<string>(),
-                GroupIds: actor.Groups?.ToList() ?? new List<Guid>());
+            var subject = AclSubject.ForUser(
+                userId: actor.SubjectIdAsGuid ?? Guid.Empty,
+                roleIds: null, // Roles are checked via permissions
+                groupIds: null);
 
             var minLevel = MapPermissionToAccessLevel(requirement.RequiredPermission);
             var hasAccess = await _aclService.HasAccessAsync(
                 subject,
                 actor.TenantId.Value,
-                ResourceTypes.Asset.Identifier,
+                ResourceTypes.Asset.Value,
                 aclAsset.Id.ToString(),
                 minLevel,
                 CancellationToken.None);
@@ -187,8 +189,8 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
     /// <inheritdoc />
     public Task<bool> CanCreateAsync(CancellationToken ct = default)
     {
-        var actor = _actorContext.CurrentActor;
-        return Task.FromResult(actor?.HasPermission(AssetsPermission.Create) ?? false);
+        var actor = Actor;
+        return Task.FromResult(actor.IsAuthenticated && actor.HasPermission(AssetsPermission.Create.Key));
     }
 
     /// <inheritdoc />
@@ -224,27 +226,27 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
     /// <inheritdoc />
     public Task<bool> IsAdminAsync(CancellationToken ct = default)
     {
-        var actor = _actorContext.CurrentActor;
-        return Task.FromResult(actor?.HasPermission(AssetsPermission.Admin) ?? false);
+        var actor = Actor;
+        return Task.FromResult(actor.IsAuthenticated && actor.HasPermission(AssetsPermission.Admin.Key));
     }
 
     /// <inheritdoc />
     public Task<bool> CanModerateAsync(CancellationToken ct = default)
     {
-        var actor = _actorContext.CurrentActor;
-        return Task.FromResult(actor?.HasPermission(AssetsPermission.Moderate) ?? false);
+        var actor = Actor;
+        return Task.FromResult(actor.IsAuthenticated && actor.HasPermission(AssetsPermission.Moderate.Key));
     }
 
     private async Task<bool> CheckAccessAsync(Guid assetId, Permission permission, CancellationToken ct)
     {
-        var actor = _actorContext.CurrentActor;
-        if (actor == null)
+        var actor = Actor;
+        if (!actor.IsAuthenticated)
         {
             return false;
         }
 
         // Direct permission check
-        if (actor.HasPermission(permission))
+        if (actor.HasPermission(permission.Key))
         {
             return true;
         }
@@ -256,7 +258,7 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
             return false;
         }
 
-        if (asset.CreatedBy == actor.Id)
+        if (asset.CreatedByUserId.ToString() == actor.SubjectId)
         {
             return true;
         }
@@ -264,16 +266,14 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
         // ACL check
         if (actor.TenantId.HasValue)
         {
-            var subject = new AclSubject(
-                UserId: actor.Id,
-                RoleIds: actor.Roles?.ToList() ?? new List<string>(),
-                GroupIds: actor.Groups?.ToList() ?? new List<Guid>());
+            var subject = AclSubject.ForUser(
+                userId: actor.SubjectIdAsGuid ?? Guid.Empty);
 
             var minLevel = MapPermissionToAccessLevel(permission);
             return await _aclService.HasAccessAsync(
                 subject,
                 actor.TenantId.Value,
-                ResourceTypes.Asset.Identifier,
+                ResourceTypes.Asset.Value,
                 assetId.ToString(),
                 minLevel,
                 ct);
@@ -289,7 +289,7 @@ public sealed class AssetAuthorizationHandler : AuthorizationHandler<AssetAccess
             AssetsPermission.Keys.Read => AccessLevel.Read,
             AssetsPermission.Keys.Create => AccessLevel.Write,
             AssetsPermission.Keys.Update => AccessLevel.Write,
-            AssetsPermission.Keys.Delete => AccessLevel.Delete,
+            AssetsPermission.Keys.Delete => AccessLevel.Admin, // Delete requires Admin level
             AssetsPermission.Keys.Admin => AccessLevel.Admin,
             AssetsPermission.Keys.Moderate => AccessLevel.Admin,
             AssetsPermission.Keys.Transform => AccessLevel.Read,
