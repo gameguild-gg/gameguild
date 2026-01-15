@@ -401,8 +401,8 @@ await transaction.CommitAsync();
 |-------|----------|----------|
 | ~~**N+1 Query**~~ | ~~`ResourceQuotaService.cs:158` - `foreach` with `await`~~ | ~~MEDIUM~~ ✅ **FIXED** |
 | ~~**N+1 Query**~~ | ~~`CheckResourceUsageLimitsQueryHandler.cs:46` - `foreach` with `await UpdateAsync`~~ | ~~MEDIUM~~ ✅ **FIXED** |
-| **Magic Numbers** | Token validity (86400s), time window (28800s) hard-coded | LOW |
-| **Missing Unit Tests** | `ResourceQuotaBehavior` rollback path untested | LOW |
+| ~~**Magic Numbers**~~ | ~~Token validity (86400s), time window (28800s) hard-coded~~ | ~~LOW~~ ✅ **ALREADY CONFIGURABLE** |
+| ~~**Missing Unit Tests**~~ | ~~`ResourceQuotaBehavior` rollback path untested~~ | ~~LOW~~ ✅ **FIXED** |
 
 **N+1 Query Fixes Applied (2026-01-15):**
 
@@ -435,6 +435,22 @@ if (quotasToUpdate.Count > 0)
 }
 ```
 
+**Magic Numbers — Already Configurable via `IOptions<AssetTokenOptions>`:**
+
+```csharp
+// AssetTokenOptions.cs
+public class AssetTokenOptions
+{
+    public const string SectionName = "Assets:Token";
+    public int DefaultExpiryHours { get; set; } = 24;  // Configurable (was 86400s)
+    public int TimeWindowHours { get; set; } = 8;       // Configurable (was 28800s)
+}
+```
+
+**Rollback Tests Added (2026-01-15):**
+- `Handle_RollsBackQuota_WhenCommandFails` — Verifies `DecrementUsageAsync` is called on failure
+- `Handle_LogsError_WhenRollbackFails` — Verifies original exception propagates even if rollback fails
+
 ---
 
 ## G. Security Review
@@ -463,7 +479,7 @@ if (quotasToUpdate.Count > 0)
 | SR-004 | No rate limiting on Resources endpoints | **MEDIUM** | Attacker enumerates tenant IDs via timing attacks | None | ⚠️ OPEN |
 | SR-005 | ValidateToken iterates all AccessPolicy values | **HIGH** | O(n) signature verification per request; DoS with many policies | Token caching | ⚠️ OPEN |
 | SR-006 | ~~N+1 queries in quota operations~~ | ~~MEDIUM~~ | ~~Performance degradation under load~~ | Batch query via `GetByTenantAndTypesAsync()` + batch save | ✅ **FIXED** |
-| SR-007 | Hard-coded token validity constants | **LOW** | Difficult to adjust without code change | None | ⚠️ OPEN |
+| SR-007 | ~~Hard-coded token validity constants~~ | ~~LOW~~ | ~~Difficult to adjust without code change~~ | Configurable via `IOptions<AssetTokenOptions>` | ✅ **NOT AN ISSUE** |
 
 ---
 
@@ -501,8 +517,8 @@ if (quotasToUpdate.Count > 0)
 | 8 | ~~Unbounded result sets~~ | ~~MEDIUM~~ | [GetResourceUsageRecordsQuery.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/GetResourceUsageRecords/GetResourceUsageRecordsQuery.cs) | ~~Memory pressure on large tenants, OOM risk.~~ Pagination implemented with PageSize (max 200). | ✅ **FIXED 2026-01-15** |
 | 9 | ~~Missing input validation on date ranges~~ | ~~MEDIUM~~ | [GetResourceUsageRecordsQueryValidator.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/GetResourceUsageRecords/GetResourceUsageRecordsQueryValidator.cs) | ~~Invalid date ranges accepted.~~ Validator limits range to 366 days, prevents future dates. | ✅ **FIXED** |
 | 10 | ~~User quota endpoints vulnerable to vertical escalation~~ | ~~MEDIUM~~ | [UserQuotasController.cs:74](apps/api/Source/Modules/GameGuild.Resources/Controllers/UserQuotasController.cs#L74) | ~~Any user can modify any other user's quota.~~ User ownership validation added. | ✅ **FIXED 2026-01-15** |
-| 11 | Hard-coded token validity constants | **LOW** | `AssetTokenService.cs` (86400s, 28800s) | Configuration rigidity, requires code change | ⚠️ OPEN |
-| 12 | Missing rollback test coverage | **LOW** | [ResourceQuotaBehaviorTests.cs](apps/api/Tests/GameGuild.Resources.UnitTests/Behaviors/ResourceQuotaBehaviorTests.cs) | Rollback path on command failure untested | ⚠️ OPEN |
+| 11 | ~~Hard-coded token validity constants~~ | ~~LOW~~ | `AssetTokenService.cs` | Already configurable via `IOptions<AssetTokenOptions>`. | ✅ **NOT AN ISSUE** |
+| 12 | ~~Missing rollback test coverage~~ | ~~LOW~~ | [ResourceQuotaBehaviorTests.cs](apps/api/Tests/GameGuild.Resources.UnitTests/Behaviors/ResourceQuotaBehaviorTests.cs) | 2 tests added: `Handle_RollsBackQuota_WhenCommandFails`, `Handle_LogsError_WhenRollbackFails`. | ✅ **FIXED 2026-01-15** |
 | 13 | Deprecated `EnforceHardLimit` property still present | **LOW** | [RequiresQuotaAttribute.cs:46](apps/api/Source/Modules/GameGuild.Resources/Attributes/RequiresQuotaAttribute.cs#L46) | Confusing API, developers may think it works | ⚠️ OPEN |
 | 14 | No audit logging for quota administrative changes | **LOW** | `TenantQuotasController.SetQuota()` | Compliance gap for SOC2/ISO 27001 | ⚠️ OPEN |
 | 15 | ~~UsageRecord missing validation~~ | ~~MEDIUM~~ | [RecordResourceUsageCommandValidator.cs](apps/api/Source/Modules/GameGuild.Resources/Commands/RecordResourceUsage/RecordResourceUsageCommandValidator.cs) | ~~Amount/DateRange not validated.~~ FluentValidation in place. | ✅ **FIXED** |
