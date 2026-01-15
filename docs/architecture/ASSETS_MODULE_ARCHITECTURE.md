@@ -465,19 +465,21 @@ GameGuild.Features/
 | `TenantTargetingHandler_ReturnsNull_WhenNoTenantTargetingRules` | Non-interference | ✅ ADDED |
 | `TenantTargetingHandler_NoCrossTenantLeakage_WhenMissingContext` | Multi-tenant security | ✅ ADDED |
 | `TenantTargetingHandler_LogsWarning_WhenFailingClosed` | Observability | ✅ ADDED |
+| `EvaluateAsync_LogsDebugMessage_WhenNoTenantIdProvided` | Defensive logging | ✅ ADDED |
+| `KillSwitch_OverridesAllTargeting` | Emergency shutoff works | ✅ ADDED |
+| `PercentageRollout_DeterministicForSameUser` | Consistent bucketing | ✅ ADDED |
+| `CacheDecorator_InvalidatesOnFlagUpdate` | Cache correctness | ✅ ADDED |
+| `TargetingChain_PriorityOrderRespected` | Correct handler order | ✅ ADDED |
+| `ExpiredFlag_ReturnsDefaultValue` | Expiration handling | ✅ ADDED |
 
-**Test File:** `Tests/GameGuild.Features.UnitTests/Handlers/TenantTargetingHandlerTests.cs` (6 tests)
+**Test Files Added:**
+- `Tests/GameGuild.Features.UnitTests/Handlers/TenantTargetingHandlerTests.cs` - 6 tests for tenant targeting fail-closed behavior
+- `Tests/GameGuild.Features.UnitTests/Services/FeatureFlagEvaluationServiceTests.cs` - 10 tests for evaluation service (logging, kill switch, expiration)
+- `Tests/GameGuild.Features.UnitTests/Services/Decorators/CachedFeatureFlagServiceTests.cs` - 7 tests for caching decorator behavior
+- `Tests/GameGuild.Features.UnitTests/Strategies/PercentageRolloutStrategyTests.cs` - 17 tests for deterministic percentage rollout
+- `Tests/GameGuild.Features.UnitTests/Strategies/TargetedEvaluationStrategyTests.cs` - 8 tests for targeting chain priority order
 
-### A.2.9 Required Tests
-
-| Test Name | Purpose |
-|-----------|---------|
-| `EvaluateAsync_LogsWarningWithoutTenantId` | Defensive logging |
-| `KillSwitch_OverridesAllTargeting` | Emergency shutoff works |
-| `PercentageRollout_DeterministicForSameUser` | Consistent bucketing |
-| `CacheDecorator_InvalidatesOnFlagUpdate` | Cache correctness |
-| `TargetingChain_PriorityOrderRespected` | Correct handler order |
-| `ExpiredFlag_ReturnsDefaultValue` | Expiration handling |
+**Total Tests: 48 (all passing)**
 
 ---
 
