@@ -79,11 +79,9 @@ public class TenantMembershipCheckerTests
         var activeMember = new TenantMember
         {
             UserId = userId,
-            IsActive = true,
-            Status = TenantMemberStatus.Active
+            TenantId = tenantId,
+            IsActive = true
         };
-        // Set TenantId via reflection since setter might be protected
-        typeof(TenantMember).GetProperty("TenantId")?.SetValue(activeMember, tenantId);
 
         mockRepository.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(activeMember);
@@ -108,8 +106,8 @@ public class TenantMembershipCheckerTests
         var inactiveMember = new TenantMember
         {
             UserId = userId,
-            IsActive = false,
-            Status = TenantMemberStatus.Inactive
+            TenantId = tenantId,
+            IsActive = false
         };
 
         mockRepository.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
@@ -125,29 +123,30 @@ public class TenantMembershipCheckerTests
     }
 
     [Fact]
-    public async Task TenantMembershipChecker_ReturnsFalse_ForSuspendedMember()
+    public async Task TenantMembershipChecker_ReturnsFalse_ForDeactivatedMember()
     {
         // Arrange
         var mockRepository = new Mock<ITenantMemberRepository>();
         var userId = Guid.NewGuid();
         var tenantId = Guid.NewGuid();
 
-        var suspendedMember = new TenantMember
+        var deactivatedMember = new TenantMember
         {
             UserId = userId,
-            IsActive = true,
-            Status = TenantMemberStatus.Suspended
+            TenantId = tenantId,
+            IsActive = false,
+            LeftAt = DateTime.UtcNow.AddDays(-1)
         };
 
         mockRepository.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(suspendedMember);
+            .ReturnsAsync(deactivatedMember);
 
         var checker = new TenantMembershipChecker(mockRepository.Object);
 
         // Act
         var result = await checker.IsUserMemberOfTenantAsync(userId, tenantId);
 
-        // Assert - Suspended members should not have access
+        // Assert - Deactivated members should not have access
         result.Should().BeFalse();
     }
 
@@ -200,7 +199,7 @@ public class TenantMembershipCheckerTests
         var tenantB = Guid.NewGuid();
 
         // User is member of TenantA
-        var memberOfA = new TenantMember { UserId = userId, IsActive = true, Status = TenantMemberStatus.Active };
+        var memberOfA = new TenantMember { UserId = userId, TenantId = tenantA, IsActive = true };
 
         mockRepository.Setup(r => r.GetByUserAndTenantAsync(userId, tenantA, It.IsAny<CancellationToken>()))
             .ReturnsAsync(memberOfA);
