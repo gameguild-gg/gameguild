@@ -1,19 +1,28 @@
 # GameGuild.Assets & GameGuild.Resources Deep Review
 
-**Date:** 2025-01-XX  
-**Reviewer:** AI Architecture Review Agent  
+**Date:** 2026-01-15  
+**Reviewer:** AI Architecture Review Agent (Claude Opus 4.5)  
 **Scope:** GameGuild.Assets, GameGuild.Resources modules  
-**Review Type:** Architecture, Security, Code Quality
+**Review Type:** Architecture, Security, Code Quality, AuthN/AuthZ Integration  
+**Last Updated:** 2026-01-15  
+**Status:** ✅ CRITICAL FIXES APPLIED
 
 ---
 
 ## Executive Summary
 
-This deep review evaluates the **GameGuild.Assets** and **GameGuild.Resources** modules for architecture coherence, security posture, design patterns, and integration quality. The review identified **2 CRITICAL**, **3 HIGH**, **4 MEDIUM**, and **3 LOW** severity findings.
+This deep review evaluates the **GameGuild.Assets** and **GameGuild.Resources** modules for architecture coherence, security posture, design patterns, and integration quality.
 
 ### Go/No-Go Assessment: **CONDITIONAL GO** ⚠️
 
-The modules are production-ready **after** addressing the 2 CRITICAL and 3 HIGH findings. The critical findings relate to missing authorization on all 9 Resources controllers and IDOR vulnerabilities in tenant-scoped endpoints.
+**✅ CRITICAL FIX #1 APPLIED:** All 9 Resources controllers now have `[Authorize]` attributes.
+
+**Remaining Issues:**
+- ⚠️ **HIGH:** IDOR vulnerability on tenant-scoped endpoints still requires `ITenantMembershipValidator` implementation
+- ⚠️ **HIGH:** Global `PermissionAuthorizationFilter` still disabled
+- ⚠️ **HIGH:** No rate limiting on Resources endpoints
+
+The Assets module demonstrates exemplary security patterns and can serve as the reference implementation. The Resources module now has basic authentication but **still needs tenant membership validation for complete IDOR protection**.
 
 ---
 
@@ -101,34 +110,78 @@ The modules are production-ready **after** addressing the 2 CRITICAL and 3 HIGH 
 
 ## C. Integration with Authentication
 
-### Assets Module ✅
+### Assets Module ✅ Comprehensive
 
-| Component | Auth Integration | Status |
-|-----------|------------------|--------|
-| `AssetsController` | `[Authorize]` attribute | ✅ |
-| `AssetsAdminController` | `[Authorize(Policy = "RequireAdminRole")]` | ✅ |
-| `SecureAssetDeliveryController` | HMAC token validation (bypass auth) | ✅ |
-| `AssetAuthorizationHandler` | Reads `IActorContextAccessor` | ✅ |
-| `TenantAssetValidationService` | Fail-closed on missing tenant | ✅ |
+| Component | Auth Integration | Status | Notes |
+|-----------|------------------|--------|-------|
+| `AssetsController` | `[Authorize]` attribute | ✅ | Rejects 401 for unauthenticated |
+| `AssetsAdminController` | `[Authorize(Policy = "RequireAdminRole")]` | ✅ | Admin-only operations |
+| `AssetsCdnController` | `[AllowAnonymous]` with HMAC tokens | ✅ | Token-based auth bypass for CDN |
+| `SecureAssetDeliveryController` | Token + `IActorContextAccessor` | ✅ | Hybrid auth model |
+| `AssetAuthorizationHandler` | Reads `IActorContextAccessor` | ✅ | Fail-closed on missing actor |
+| `TenantAssetValidationService` | Fail-closed on missing tenant | ✅ | `FailClosedOnMissingTenant = true` |
 
-### Resources Module ❌ CRITICAL
+**Identity Establishment Pattern (Assets):**
+```
+HTTP Request
+    │
+    ▼
+JWT Authentication Middleware → ActorContext populated
+    │
+    ▼
+[Authorize] → Rejects if !actor.IsAuthenticated
+    │
+    ▼
+Controller reads Actor via IActorContextAccessor
+    │
+    ▼
+AssetAuthorizationHandler validates permissions
+```
 
-| Component | Auth Integration | Status |
-|-----------|------------------|--------|
-| `ResourcesController` | **NONE** | ❌ CRITICAL |
-| `TenantQuotasController` | **NONE** | ❌ CRITICAL |
-| `TenantResourcesController` | **NONE** | ❌ CRITICAL |
-| `UserQuotasController` | **NONE** | ❌ CRITICAL |
-| All 9 controllers | **NONE** | ❌ CRITICAL |
-| `ResourceQuotaBehavior` | Reads `IActorContextAccessor` | ✅ |
+**Fail-Closed Behavior Verification:**
+- Missing identity → 401 Unauthorized (via `[Authorize]`)
+- Missing tenant → Access denied (via `TenantAssetValidationService`)
+- Invalid token → 403 Forbidden (via `AssetAccessService.ValidateToken`)
 
-**Root Cause:** Global `PermissionAuthorizationFilter` is commented out in [ServiceCollectionExtensions.cs#L738-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L738):
+### Resources Module ✅ FIXED (2026-01-15)
 
-```csharp
-// TODO: Re-enable after core bootstrap is stable
-// Add permission authorization filter globally to all controllers
-// if (options.EnablePermissionAuthorizationFilter)
-//     mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
+| Component | Auth Integration | Status | Notes |
+|-----------|------------------|--------|-------|
+| `ResourcesController` | `[Authorize(Policy = "RequireAdminRole")]` | ✅ FIXED | Admin-only for cross-tenant aggregates |
+| `TenantQuotasController` | `[Authorize]` | ✅ FIXED | Requires authentication |
+| `TenantResourcesController` | `[Authorize]` | ✅ FIXED | Requires authentication |
+| `TenantResourceMetadataController` | `[Authorize]` | ✅ FIXED | Requires authentication |
+| `TenantResourceSettingsController` | `[Authorize]` | ✅ FIXED | Requires authentication |
+| `UserQuotasController` | `[Authorize]` | ✅ FIXED | Requires authentication |
+| `UserResourcesController` | `[Authorize]` | ✅ FIXED | Requires authentication |
+| `UserResourceMetadataController` | `[Authorize]` | ✅ FIXED | Requires authentication |
+| `UserResourceSettingsController` | `[Authorize]` | ✅ FIXED | Requires authentication |
+| `ResourceQuotaBehavior` | Reads `IActorContextAccessor` | ✅ | Fail-closed, CQRS path protected |
+
+**⚠️ REMAINING ISSUE: Tenant Membership Validation**
+
+While authentication is now enforced, tenant-scoped endpoints still accept `{tenantId:guid}` from URL without validating if the authenticated user is a member of that tenant. This requires implementing `ITenantMembershipValidator`.
+
+**Root Cause Analysis (Historical):**
+
+1. **Global filter disabled:** `PermissionAuthorizationFilter` is commented out in [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739):
+   ```csharp
+   // TODO: Re-enable after core bootstrap is stable
+   // if (options.EnablePermissionAuthorizationFilter)
+   //     mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
+   ```
+
+2. **No explicit `[Authorize]`:** Unlike `AssetsController`, none of the Resources controllers have the `[Authorize]` attribute.
+
+3. **Tenant context not enforced:** Controllers accept `{tenantId:guid}` from URL but never validate if the caller is authorized for that tenant.
+
+**Attack Scenario (Verified via Code Review):**
+```http
+# Anonymous request to enumerate tenant quotas
+curl -X GET https://api.gameguild.com/v1/tenants/12345678-aaaa-bbbb-cccc-123456789012/quotas
+
+# Response: 200 OK with full quota configuration
+# Expected: 401 Unauthorized
 ```
 
 ---
@@ -139,31 +192,73 @@ The modules are production-ready **after** addressing the 2 CRITICAL and 3 HIGH 
 
 **DAC Pattern Implementation:**
 - `AssetAuthorizationHandler` implements DAC via `IAccessControlListService`
-- Owner bypass: asset owner has implicit full access
-- ACL checks: reads ACEs from `IAccessControlListService.GetAccessControlEntriesAsync()`
-- Resource-level permissions with cascading tenant context
+- Owner bypass: asset owner has implicit full access via `asset.CreatedByUserId == actor.SubjectId`
+- ACL checks: Reads ACEs from `IAccessControlListService.HasAccessAsync()`
+- Permission mapping: `AssetsPermission.Keys` → `AccessLevel` enum
 
 **Authorization Flow:**
 ```
-Request → [Authorize] → AssetAuthorizationHandler
+Request → [Authorize] → AssetAuthorizationHandler.HandleRequirementAsync()
                               │
-                              ├── Check Owner (bypass if owner)
-                              ├── Check ACL (via IAccessControlListService)
-                              └── Fail-closed if no match
+                              ├── 1. Check actor.HasPermission(requirement.RequiredPermission.Key)
+                              │   └── If yes → Succeed
+                              │
+                              ├── 2. Check ownership (if AllowOwnerAccess)
+                              │   └── If asset.CreatedByUserId == actor.SubjectId → Succeed
+                              │
+                              └── 3. Check ACL via IAccessControlListService
+                                  └── If HasAccessAsync returns true → Succeed
+                                  └── Otherwise → Fail (deny by default)
 ```
+
+**Tenant Context Verification:**
+- `TenantAssetValidationService.ValidateTenantAccess()` enforces:
+  - `actor.TenantId` must match `assetTenantId`
+  - System admins can bypass (configurable via `AllowCrossTenantForAdmins`)
+  - Global access tenants supported for internal services
 
 ### Resources Module ❌ CRITICAL
 
-**No authorization integration at controller level:**
-- Controllers accept `{tenantId:guid}` from URL without validation
-- No check if current user is member of specified tenant
-- No RBAC/DAC/ABAC enforcement at endpoint level
+**Authorization Bypass Paths Identified:**
 
-**IDOR Vulnerability:**
-```http
-GET /v1/tenants/{ANY-TENANT-ID}/resources/usage-records
+| Path | Bypass Type | Risk |
+|------|-------------|------|
+| Direct controller access | No `[Authorize]` | Anonymous data access |
+| IDOR via URL | No tenant membership check | Cross-tenant data access |
+| CQRS bypass | Controllers don't use quota-protected commands | Quota enforcement skipped |
+| Admin endpoints | No admin role check | Privilege escalation |
+
+**IDOR Vulnerability (Confirmed):**
+
+The `TenantResourcesController.GetUsageRecords()` accepts `tenantId` from URL without validation:
+
+```csharp
+// TenantResourcesController.cs:33
+[HttpGet("v{version:apiVersion}/tenants/{tenantId:guid}/resources/usage-records")]
+public async Task<IActionResult> GetUsageRecords(Guid tenantId, ...)
+{
+    // BUG: No validation that caller is member of tenantId
+    return Ok(await sender.Send(
+        new GetResourceUsageRecordsQuery(tenantId, usageType, startDate, endDate), 
+        ct).ConfigureAwait(false));
+}
 ```
-Any user (or anonymous!) can query any tenant's resource usage.
+
+**Exploit:**
+```http
+# Authenticated as Tenant A user
+GET /v1/tenants/{TENANT_B_ID}/resources/usage-records
+# Returns Tenant B's data → IDOR confirmed
+```
+
+**Where Authorization IS Enforced (Internal Path):**
+
+The `ResourceQuotaBehavior` correctly enforces:
+- Tenant context required (`Actor.TenantId.HasValue`)
+- Fail-closed on missing tenant
+- Atomic quota consumption
+
+However, this only protects CQRS commands decorated with `[RequiresQuota]`, NOT direct controller endpoint access.
 
 ---
 
@@ -252,20 +347,20 @@ var quotas = await _dbContext.ResourceQuotas
 | **T5: Malicious File Upload** | ClamAV virus scanning + content type validation | ✅ Mitigated |
 | **T6: Tenant Data Leakage** | `TenantAssetValidationService` fail-closed | ✅ Mitigated |
 | **T7: Quota Bypass** | `ResourceQuotaBehavior` with atomic consumption | ✅ Mitigated |
-| **T8: IDOR on Resources** | **NONE** | ❌ **CRITICAL** |
-| **T9: Unauthenticated Resource Access** | **NONE** | ❌ **CRITICAL** |
+| **T8: IDOR on Resources** | `[Authorize]` added | ⚠️ **PARTIAL** - Needs tenant membership validation |
+| **T9: Unauthenticated Resource Access** | `[Authorize]` on all 9 controllers | ✅ **FIXED 2026-01-15** |
 
 ### Security Risk Register
 
-| Risk ID | Risk | Severity | Attack Scenario | Current Mitigation | Priority |
-|---------|------|----------|-----------------|-------------------|----------|
-| SR-001 | Missing `[Authorize]` on Resources controllers | **CRITICAL** | Anonymous user enumerates all tenant quotas and usage | None | P0 |
-| SR-002 | IDOR on tenant-scoped endpoints | **CRITICAL** | Authenticated user queries other tenants' data via URL manipulation | None | P0 |
-| SR-003 | Global auth filter commented out | **HIGH** | Any new controller added without `[Authorize]` is unprotected | Developer vigilance only | P1 |
-| SR-004 | No rate limiting on Resources endpoints | **HIGH** | Attacker enumerates tenant IDs via timing attacks | None | P1 |
-| SR-005 | ValidateToken iterates all AccessPolicy values | **HIGH** | O(n) signature verification per request; DoS with many policies | Token caching | P1 |
-| SR-006 | N+1 queries in quota operations | **MEDIUM** | Performance degradation under load | None | P2 |
-| SR-007 | Hard-coded token validity constants | **LOW** | Difficult to adjust without code change | None | P3 |
+| Risk ID | Risk | Severity | Attack Scenario | Current Mitigation | Status |
+|---------|------|----------|-----------------|-------------------|--------|
+| SR-001 | ~~Missing `[Authorize]` on Resources controllers~~ | ~~CRITICAL~~ | ~~Anonymous user enumerates all tenant quotas and usage~~ | `[Authorize]` added to all 9 controllers | ✅ **FIXED** |
+| SR-002 | IDOR on tenant-scoped endpoints | **HIGH** | Authenticated user queries other tenants' data via URL manipulation | Authentication required, but no tenant membership check | ⚠️ OPEN |
+| SR-003 | Global auth filter commented out | **HIGH** | Any new controller added without `[Authorize]` is unprotected | Developer vigilance only | ⚠️ OPEN |
+| SR-004 | No rate limiting on Resources endpoints | **HIGH** | Attacker enumerates tenant IDs via timing attacks | None | ⚠️ OPEN |
+| SR-005 | ValidateToken iterates all AccessPolicy values | **HIGH** | O(n) signature verification per request; DoS with many policies | Token caching | ⚠️ OPEN |
+| SR-006 | N+1 queries in quota operations | **MEDIUM** | Performance degradation under load | None | ⚠️ OPEN |
+| SR-007 | Hard-coded token validity constants | **LOW** | Difficult to adjust without code change | None | ⚠️ OPEN |
 
 ---
 
@@ -282,28 +377,31 @@ var quotas = await _dbContext.ResourceQuotas
 
 ### Caching Architecture ✅
 
-- `CachedResourceQuotaService` implements decorator pattern
-- Hybrid cache (L1: IMemoryCache, L2: optional Redis)
-- Version-based invalidation via `ITenantSecurityVersionStore`
+- `CachedResourceQuotaService` implements decorator pattern correctly
+- Tenant-scoped cache keys prevent cross-tenant leakage: `quota:{tenantId}:{type}`
+- Write-through invalidation on mutations
+- 30-second cache TTL balances performance vs staleness
 
 ---
 
 ## Findings Table
 
-| # | Finding | Severity | Evidence | Why It Matters | Recommended Fix |
-|---|---------|----------|----------|----------------|-----------------|
-| 1 | All 9 Resources controllers lack `[Authorize]` | **CRITICAL** | [ResourcesController.cs:11](apps/api/Source/Modules/GameGuild.Resources/Controllers/ResourcesController.cs#L11) | Anonymous access to tenant data | Add `[Authorize]` to all controllers |
-| 2 | IDOR on tenant-scoped endpoints | **CRITICAL** | [TenantResourcesController.cs:27](apps/api/Source/Modules/GameGuild.Resources/Controllers/TenantResourcesController.cs#L27) | Cross-tenant data access | Add tenant membership validation |
-| 3 | Global PermissionAuthorizationFilter disabled | **HIGH** | [ServiceCollectionExtensions.cs:738](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L738) | Defense-in-depth gap | Re-enable or use alternative |
-| 4 | No rate limiting on Resources endpoints | **HIGH** | All 9 controllers | Enumeration attacks | Apply `[EnableRateLimiting]` |
-| 5 | ValidateToken O(n) complexity | **HIGH** | `AssetTokenService.ValidateToken()` | DoS vulnerability | Cache computed signatures |
-| 6 | N+1 query in CheckLimitsAsync | **MEDIUM** | [ResourceQuotaService.cs:158](apps/api/Source/Modules/GameGuild.Resources/Services/ResourceQuotaService.cs#L158) | Performance degradation | Batch query pattern |
-| 7 | N+1 query in UpdateAsync loop | **MEDIUM** | [CheckResourceUsageLimitsQueryHandler.cs:46](apps/api/Source/Modules/GameGuild.Resources/Queries/CheckResourceUsageLimits/CheckResourceUsageLimitsQueryHandler.cs#L46) | Connection exhaustion | Bulk update pattern |
-| 8 | Unbounded result sets | **MEDIUM** | `GetResourceUsageRecordsQuery` | Memory pressure | Add pagination |
-| 9 | Missing input validation on date ranges | **MEDIUM** | `TenantResourcesController.GetUsageRecords()` | Invalid queries | Add FluentValidation |
-| 10 | Hard-coded token constants | **LOW** | `AssetTokenService.cs` | Configuration rigidity | Move to `IOptions<>` |
-| 11 | Missing rollback test coverage | **LOW** | `ResourceQuotaBehavior` | Untested failure paths | Add unit tests |
-| 12 | Magic numbers in rate limiting | **LOW** | `AssetRateLimitService.cs` | Maintenance difficulty | Extract to configuration |
+| # | Finding | Severity | Evidence | Why It Matters | Status |
+|---|---------|----------|----------|----------------|--------|
+| 1 | ~~All 9 Resources controllers lack `[Authorize]`~~ | ~~CRITICAL~~ | [All Controllers](apps/api/Source/Modules/GameGuild.Resources/Controllers/) | ~~Anonymous access to tenant data~~ | ✅ **FIXED 2026-01-15** |
+| 2 | IDOR on tenant-scoped endpoints | **HIGH** | [TenantResourcesController.cs:33](apps/api/Source/Modules/GameGuild.Resources/Controllers/TenantResourcesController.cs#L33) | Cross-tenant data access via URL manipulation. Requires `ITenantMembershipValidator`. | ⚠️ OPEN |
+| 3 | Global PermissionAuthorizationFilter disabled | **HIGH** | [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739) | Defense-in-depth gap. New controllers may be accidentally unprotected. | ⚠️ OPEN |
+| 4 | No rate limiting on Resources endpoints | **HIGH** | All 9 controllers lack `[EnableRateLimiting]` | Enumeration attacks, tenant ID guessing via timing | ⚠️ OPEN |
+| 5 | ValidateToken O(n) complexity | **HIGH** | `AssetTokenService.ValidateToken()` | DoS vulnerability via signature verification | ⚠️ OPEN |
+| 6 | N+1 query in CheckMultipleLimitsAsync | **MEDIUM** | [ResourceQuotaService.cs:158](apps/api/Source/Modules/GameGuild.Resources/Services/ResourceQuotaService.cs#L158) | Performance degradation under concurrent load | ⚠️ OPEN |
+| 7 | ~~Resources administrative endpoints publicly exposed~~ | ~~MEDIUM~~ | [ResourcesController.cs](apps/api/Source/Modules/GameGuild.Resources/Controllers/ResourcesController.cs) | ~~Cross-tenant usage aggregation~~ | ✅ **FIXED** - Now requires admin role |
+| 8 | Unbounded result sets | **MEDIUM** | `GetResourceUsageRecordsQuery` returns all matching records | Memory pressure on large tenants, OOM risk | ⚠️ OPEN |
+| 9 | Missing input validation on date ranges | **MEDIUM** | [TenantResourcesController.cs:33](apps/api/Source/Modules/GameGuild.Resources/Controllers/TenantResourcesController.cs#L33) | Invalid date ranges accepted, potential for DoS | ⚠️ OPEN |
+| 10 | User quota endpoints vulnerable to vertical escalation | **MEDIUM** | [UserQuotasController.cs:74](apps/api/Source/Modules/GameGuild.Resources/Controllers/UserQuotasController.cs#L74) | Any user can modify any other user's quota. Requires ownership check. | ⚠️ OPEN |
+| 11 | Hard-coded token validity constants | **LOW** | `AssetTokenService.cs` (86400s, 28800s) | Configuration rigidity, requires code change | ⚠️ OPEN |
+| 12 | Missing rollback test coverage | **LOW** | [ResourceQuotaBehaviorTests.cs](apps/api/Tests/GameGuild.Resources.UnitTests/Behaviors/ResourceQuotaBehaviorTests.cs) | Rollback path on command failure untested | ⚠️ OPEN |
+| 13 | Deprecated `EnforceHardLimit` property still present | **LOW** | [RequiresQuotaAttribute.cs:46](apps/api/Source/Modules/GameGuild.Resources/Attributes/RequiresQuotaAttribute.cs#L46) | Confusing API, developers may think it works | ⚠️ OPEN |
+| 14 | No audit logging for quota administrative changes | **LOW** | `TenantQuotasController.SetQuota()` | Compliance gap for SOC2/ISO 27001 | ⚠️ OPEN |
 
 ---
 
@@ -457,16 +555,310 @@ var quotas = await _dbContext.ResourceQuotas
 
 The **GameGuild.Assets** module demonstrates exemplary security architecture with comprehensive threat mitigation, fail-closed patterns, and proper authorization integration. It should serve as the reference implementation for other modules.
 
-The **GameGuild.Resources** module has sound internal architecture (ISP, caching decorator, optimistic concurrency) but **lacks essential security controls at the controller layer**. The 2 CRITICAL findings (missing `[Authorize]`, IDOR vulnerability) must be addressed before any production deployment.
+The **GameGuild.Resources** module has sound internal architecture (ISP, caching decorator, optimistic concurrency) and **now has authentication enforced on all controllers** (fixed 2026-01-15).
 
-### Immediate Actions Required
+### ✅ Fixes Applied (2026-01-15)
 
-1. ❌ **STOP:** Do not deploy Resources module without auth fixes
-2. 🔧 **FIX:** Add `[Authorize]` to all 9 Resources controllers
-3. 🔧 **FIX:** Implement tenant membership validation
-4. 🔧 **FIX:** Re-enable or replace global authorization filter
-5. ✅ **VERIFY:** Run integration tests confirming 401/403 responses
+| Controller | Fix Applied |
+|------------|-------------|
+| `ResourcesController` | `[Authorize(Policy = "RequireAdminRole")]` |
+| `TenantQuotasController` | `[Authorize]` |
+| `TenantResourcesController` | `[Authorize]` |
+| `TenantResourceMetadataController` | `[Authorize]` |
+| `TenantResourceSettingsController` | `[Authorize]` |
+| `UserQuotasController` | `[Authorize]` |
+| `UserResourcesController` | `[Authorize]` |
+| `UserResourceMetadataController` | `[Authorize]` |
+| `UserResourceSettingsController` | `[Authorize]` |
+
+### Remaining Actions Required
+
+1. ⚠️ **HIGH:** Implement `ITenantMembershipValidator` for IDOR protection
+2. ⚠️ **HIGH:** Re-enable global `PermissionAuthorizationFilter`
+3. ⚠️ **HIGH:** Add `[EnableRateLimiting]` to Resources endpoints
+4. ✅ **VERIFY:** Run integration tests confirming 401/403 responses
 
 ---
 
-*Report generated by AI Architecture Review Agent*
+## 30/60/90-Day Roadmap
+
+### 30-Day Sprint (Critical Security)
+
+| Day | Task | Owner | Deliverable |
+|-----|------|-------|-------------|
+| 1-2 | Add `[Authorize]` to all 9 Resources controllers | Dev Team | PR with auth attributes |
+| 3-5 | Implement `ITenantMembershipValidator` service | Security Lead | Service + unit tests |
+| 6-7 | Inject validator into all tenant-scoped controller actions | Dev Team | Updated controllers |
+| 8-10 | Write integration tests for 401/403 responses | QA | Test suite (8+ tests) |
+| 11-12 | Re-enable global `PermissionAuthorizationFilter` or equivalent | Architecture | Config change + validation |
+| 13-15 | Add `[EnableRateLimiting]` to Resources endpoints | Dev Team | Rate limiting configured |
+| 16-20 | Security audit: run OWASP ZAP against Resources API | Security | Audit report |
+| 21-25 | Fix any additional findings from security audit | Dev Team | Remediation PRs |
+| 26-30 | Final integration test pass + sign-off | QA + Security | Go-live approval |
+
+### 60-Day Sprint (Performance & Reliability)
+
+| Week | Task | Owner | Deliverable |
+|------|------|-------|-------------|
+| 5 | Fix N+1 query in `CheckMultipleLimitsAsync` | Dev Team | Batch query implementation |
+| 5 | Fix N+1 query in `CheckResourceUsageLimitsQueryHandler` | Dev Team | Optimized handler |
+| 6 | Add pagination to `GetResourceUsageRecordsQuery` | Dev Team | Paginated API |
+| 6 | Implement token signature caching in `AssetTokenService` | Dev Team | Performance improvement |
+| 7 | Add FluentValidation to date range inputs | Dev Team | Input validation |
+| 7 | Configure connection pooling for high load | DevOps | DB config update |
+| 8 | Load testing: 1000 concurrent quota operations | QA | Performance report |
+
+### 90-Day Sprint (Maintainability & Observability)
+
+| Week | Task | Owner | Deliverable |
+|------|------|-------|-------------|
+| 9 | Extract magic numbers to `IOptions<>` configuration | Dev Team | Config refactor |
+| 10 | Add rollback path unit tests for `ResourceQuotaBehavior` | Dev Team | Test coverage |
+| 10 | Document threat model in module READMEs | Security | Documentation |
+| 11 | Add OpenTelemetry tracing to quota operations | DevOps | Observability |
+| 11 | Create alerting rules for quota exceeded events | DevOps | Monitoring |
+| 12 | Performance baseline documentation | Architecture | Performance SLOs |
+
+---
+
+## Top 10 Issues (Ordered by Severity)
+
+| Rank | Issue | Severity | Module | Status |
+|------|-------|----------|--------|--------|
+| 1 | ~~Missing `[Authorize]` on all 9 Resources controllers~~ | ~~CRITICAL~~ | Resources | ✅ **FIXED** |
+| 2 | IDOR on tenant-scoped endpoints (no membership validation) | **HIGH** | Resources | ⚠️ OPEN |
+| 3 | Global `PermissionAuthorizationFilter` disabled | **HIGH** | API | ⚠️ OPEN |
+| 4 | No rate limiting on Resources endpoints | **HIGH** | Resources | ⚠️ OPEN |
+| 5 | Token validation O(n) complexity per request | **HIGH** | Assets | ⚠️ OPEN |
+| 6 | N+1 query in `CheckMultipleLimitsAsync` | **MEDIUM** | Resources | ⚠️ OPEN |
+| 7 | ~~N+1 query in `CheckResourceUsageLimitsQueryHandler`~~ | **MEDIUM** | Resources | ⚠️ OPEN |
+| 8 | Unbounded result sets in usage queries | **MEDIUM** | Resources | ⚠️ OPEN |
+| 9 | Missing input validation on date ranges | **MEDIUM** | Resources | ⚠️ OPEN |
+| 10 | Hard-coded token validity constants | **LOW** | Assets | ⚠️ OPEN |
+
+---
+
+## Detailed Fix Recommendations
+
+### Fix #1: Add Authorization to Resources Controllers
+
+**Location:** All 9 controllers in `GameGuild.Resources/Controllers/`
+
+```csharp
+// Before
+[ApiController]
+[ApiVersion("1.0")]
+[Tags("resources")]
+public sealed class ResourcesController(ISender sender) : ControllerBase
+
+// After
+[ApiController]
+[ApiVersion("1.0")]
+[Tags("resources")]
+[Authorize]  // ADD THIS
+public sealed class ResourcesController(ISender sender) : ControllerBase
+```
+
+**Apply to:**
+- `ResourcesController.cs`
+- `TenantQuotasController.cs`
+- `TenantResourcesController.cs`
+- `TenantResourceMetadataController.cs`
+- `TenantResourceSettingsController.cs`
+- `UserQuotasController.cs`
+- `UserResourcesController.cs`
+- `UserResourceMetadataController.cs`
+- `UserResourceSettingsController.cs`
+
+### Fix #2: Implement Tenant Membership Validation
+
+**New Service:**
+
+```csharp
+// GameGuild.Identity.Tenants/Services/ITenantMembershipValidator.cs
+public interface ITenantMembershipValidator
+{
+    Task<bool> ValidateMembershipAsync(
+        Guid tenantId, 
+        ActorContext actor, 
+        CancellationToken ct = default);
+}
+
+public class TenantMembershipValidator : ITenantMembershipValidator
+{
+    private readonly ITenantMemberRepository _memberRepository;
+    private readonly ILogger<TenantMembershipValidator> _logger;
+
+    public async Task<bool> ValidateMembershipAsync(
+        Guid tenantId, 
+        ActorContext actor, 
+        CancellationToken ct = default)
+    {
+        // FAIL-CLOSED: Reject if no actor
+        if (!actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
+        {
+            _logger.LogWarning("Tenant membership validation failed: No authenticated actor");
+            return false;
+        }
+
+        // Check if actor's tenant matches requested tenant
+        if (actor.TenantId.HasValue && actor.TenantId.Value == tenantId)
+        {
+            return true;
+        }
+
+        // System admin bypass (optional, configurable)
+        if (actor.IsSystemAdmin)
+        {
+            _logger.LogInformation(
+                "Cross-tenant access allowed for system admin {UserId}", 
+                actor.SubjectId);
+            return true;
+        }
+
+        // Check membership in database
+        var isMember = await _memberRepository.IsMemberAsync(
+            tenantId, 
+            actor.SubjectIdAsGuid.Value, 
+            ct);
+
+        if (!isMember)
+        {
+            _logger.LogWarning(
+                "User {UserId} attempted access to tenant {TenantId} without membership",
+                actor.SubjectId, tenantId);
+        }
+
+        return isMember;
+    }
+}
+```
+
+**Apply in Controllers:**
+
+```csharp
+// TenantResourcesController.cs
+[HttpGet("v{version:apiVersion}/tenants/{tenantId:guid}/resources/usage-records")]
+public async Task<IActionResult> GetUsageRecords(
+    Guid tenantId, 
+    [FromQuery] ResourceUsageType? usageType, 
+    CancellationToken ct)
+{
+    // ADD: Tenant membership validation
+    if (!await _tenantValidator.ValidateMembershipAsync(tenantId, Actor, ct))
+    {
+        return Forbid();
+    }
+
+    return Ok(await sender.Send(
+        new GetResourceUsageRecordsQuery(tenantId, usageType, null, null), 
+        ct).ConfigureAwait(false));
+}
+```
+
+### Fix #3: Re-enable Global Authorization Filter
+
+**Location:** `ServiceCollectionExtensions.cs:739-740`
+
+```csharp
+// Before (commented out)
+// if (options.EnablePermissionAuthorizationFilter)
+//     mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
+
+// After (uncommented and enabled)
+if (options.EnablePermissionAuthorizationFilter)
+    mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
+```
+
+**Also update configuration:**
+```json
+// appsettings.json
+{
+  "Controllers": {
+    "EnablePermissionAuthorizationFilter": true
+  }
+}
+```
+
+### Fix #4: Batch Query for N+1 Optimization
+
+**Location:** `ResourceQuotaService.cs:150-162`
+
+```csharp
+// Before (N+1)
+public async Task<Dictionary<ResourceUsageType, ResourceLimitCheckResponse>> CheckMultipleLimitsAsync(
+    Guid tenantId,
+    Dictionary<ResourceUsageType, long> requestedAmounts,
+    CancellationToken cancellationToken = default)
+{
+    var results = new Dictionary<ResourceUsageType, ResourceLimitCheckResponse>();
+    foreach (var kvp in requestedAmounts) 
+    { 
+        results[kvp.Key] = await CheckLimitsAsync(tenantId, kvp.Key, kvp.Value, cancellationToken); 
+    }
+    return results;
+}
+
+// After (Batch Query)
+public async Task<Dictionary<ResourceUsageType, ResourceLimitCheckResponse>> CheckMultipleLimitsAsync(
+    Guid tenantId,
+    Dictionary<ResourceUsageType, long> requestedAmounts,
+    CancellationToken cancellationToken = default)
+{
+    // Single query to fetch all needed quotas
+    var quotas = await quotaRepository.GetByTenantAndTypesAsync(
+        tenantId, 
+        requestedAmounts.Keys, 
+        cancellationToken);
+
+    var quotaMap = quotas.ToDictionary(q => q.Type);
+
+    return requestedAmounts.ToDictionary(
+        kvp => kvp.Key,
+        kvp => ComputeLimitCheck(quotaMap.GetValueOrDefault(kvp.Key), kvp.Value));
+}
+
+private ResourceLimitCheckResponse ComputeLimitCheck(ResourceQuota? quota, long requestedAmount)
+{
+    if (quota == null)
+    {
+        return new ResourceLimitCheckResponse 
+        { 
+            Type = default, 
+            CanProceed = true, 
+            CurrentUsage = 0 
+        };
+    }
+
+    var effectiveUsage = quota.ShouldReset() ? 0 : quota.CurrentUsage;
+    var projectedUsage = effectiveUsage + requestedAmount;
+
+    return new ResourceLimitCheckResponse
+    {
+        Type = quota.Type,
+        CanProceed = !quota.HardLimit.HasValue || projectedUsage <= quota.HardLimit.Value,
+        CurrentUsage = effectiveUsage,
+        SoftLimit = quota.SoftLimit,
+        HardLimit = quota.HardLimit
+    };
+}
+```
+
+---
+
+## Verification Checklist
+
+After implementing fixes, verify:
+
+- [ ] All 9 Resources controllers return 401 for anonymous requests
+- [ ] Tenant-scoped endpoints return 403 for non-member access
+- [ ] Rate limiting is active on Resources endpoints
+- [ ] N+1 queries are eliminated (verify with SQL logging)
+- [ ] Integration tests pass for tenant isolation
+- [ ] Security scan shows no new vulnerabilities
+- [ ] Performance benchmarks show no regression
+
+---
+
+*Report generated by AI Architecture Review Agent - Claude Opus 4.5*  
+*Last updated: 2026-01-15*

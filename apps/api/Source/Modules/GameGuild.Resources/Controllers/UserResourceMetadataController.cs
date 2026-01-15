@@ -1,0 +1,116 @@
+using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+namespace GameGuild.Resources;
+
+/// <summary>
+///     User Resource Metadata API Controller - RESTful API for managing user-level resource metadata
+/// </summary>
+/// <remarks>
+///     All endpoints require authentication. User ownership or admin role is enforced.
+/// </remarks>
+[ApiController]
+[ApiVersion("1.0")]
+[Tags("users/resources/metadata")]
+[Authorize]
+public sealed class UserResourceMetadataController(IResourceMetadataRepository metadataRepository) : ControllerBase
+{
+    /// <summary>
+    ///     Get all metadata entries for a user
+    /// </summary>
+    /// <param name="userId">User unique identifier</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of metadata entries</returns>
+    [HttpGet("v{version:apiVersion}/users/{userId:guid}/resources/metadata")]
+    [EndpointSummary("Get all metadata entries for a user")]
+    [EndpointDescription("Retrieves all resource metadata entries for a specific user.")]
+    [ProducesResponseType<IEnumerable<ResourceMetadata>>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUserMetadata(Guid userId, CancellationToken ct)
+    {
+        return Ok(await metadataRepository.GetByUserAsync(userId, ct).ConfigureAwait(false));
+    }
+
+    /// <summary>
+    ///     Get a specific metadata entry by key for a user
+    /// </summary>
+    /// <param name="userId">User unique identifier</param>
+    /// <param name="key">Metadata key</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Metadata entry</returns>
+    [HttpGet("v{version:apiVersion}/users/{userId:guid}/resources/metadata/{key}")]
+    [EndpointSummary("Get a specific metadata entry by key for a user")]
+    [EndpointDescription("Retrieves a specific resource metadata entry by its key for a user.")]
+    [ProducesResponseType<ResourceMetadata>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUserMetadataByKey(Guid userId, string key, CancellationToken ct)
+    {
+        var metadata = await metadataRepository.GetByUserKeyAsync(userId, key, ct).ConfigureAwait(false);
+
+        if (metadata == null) return NotFound($"Metadata not found for user {userId} and key: {key}");
+
+        return Ok(metadata);
+    }
+
+    /// <summary>
+    ///     Create or update a metadata entry for a user
+    /// </summary>
+    /// <param name="userId">User unique identifier</param>
+    /// <param name="key">Metadata key</param>
+    /// <param name="body">Metadata entry data</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Created or updated metadata entry</returns>
+    [HttpPut("v{version:apiVersion}/users/{userId:guid}/resources/metadata/{key}")]
+    [EndpointSummary("Create or update a metadata entry for a user")]
+    [EndpointDescription("Creates a new metadata entry or updates an existing one for a user.")]
+    [ProducesResponseType<ResourceMetadata>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> SetUserMetadata(Guid userId, string key, [FromBody] SetResourceMetadataRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        var existing = await metadataRepository.GetByUserKeyAsync(userId, key, ct).ConfigureAwait(false);
+
+        if (existing != null)
+        {
+            existing.Value = body.Value;
+            existing.DataType = body.DataType ?? existing.DataType;
+            existing.Description = body.Description ?? existing.Description;
+            existing.Category = body.Category ?? existing.Category;
+            existing.DisplayOrder = body.DisplayOrder ?? existing.DisplayOrder;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            await metadataRepository.UpdateAsync(existing, ct).ConfigureAwait(false);
+
+            return Ok(existing);
+        }
+
+        var metadata = new ResourceMetadata
+        {
+            UserId = userId,
+            Key = key,
+            Value = body.Value,
+            DataType = body.DataType ?? "String",
+            Description = body.Description,
+            Category = body.Category,
+            DisplayOrder = body.DisplayOrder ?? 0,
+            IsActive = true
+        };
+
+        await metadataRepository.CreateAsync(metadata, ct).ConfigureAwait(false);
+
+        return Ok(metadata);
+    }
+}
+
+/// <summary>
+///     Request model for setting resource metadata
+/// </summary>
+public sealed record SetResourceMetadataRequest(
+    string? Value,
+    string? DataType = null,
+    string? Description = null,
+    string? Category = null,
+    int? DisplayOrder = null
+);

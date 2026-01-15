@@ -1,5 +1,8 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,11 +11,45 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Tenant Resources API Controller - RESTful API for tenant-level resource usage tracking
 /// </summary>
+/// <remarks>
+///     All endpoints require authentication. Tenant membership validation is enforced.
+/// </remarks>
 [ApiController]
 [ApiVersion("1.0")]
 [Tags("tenants/resources")]
-public sealed class TenantResourcesController(ISender sender, IResourceQuotaService quotaService) : ControllerBase
+[Authorize]
+public sealed class TenantResourcesController(
+    ISender sender,
+    IResourceQuotaService quotaService,
+    IActorContextAccessor actorContextAccessor,
+    ITenantMembershipChecker tenantMembershipChecker) : ControllerBase
 {
+    /// <summary>
+    ///     Validates that the current actor is a member of the specified tenant.
+    ///     Fail-closed: Returns false if actor is not authenticated or not a member.
+    /// </summary>
+    private async Task<bool> ValidateTenantMembershipAsync(Guid tenantId, CancellationToken ct)
+    {
+        var actor = actorContextAccessor.Actor;
+        
+        // Fail-closed: No actor means no access
+        if (actor is null || !actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
+            return false;
+        
+        // System admins bypass tenant membership check
+        if (actor.IsSystemAdmin)
+            return true;
+        
+        // If actor's current tenant matches, allow access
+        if (actor.TenantId.HasValue && actor.TenantId.Value == tenantId)
+            return true;
+        
+        // Check actual tenant membership in database
+        return await tenantMembershipChecker.IsUserMemberOfTenantAsync(
+            actor.SubjectIdAsGuid.Value, 
+            tenantId, 
+            ct);
+    }
     #region Collection Operations - /v1/tenants/{tenantId}/resources
 
     /// <summary>
@@ -28,9 +65,13 @@ public sealed class TenantResourcesController(ISender sender, IResourceQuotaServ
     [EndpointSummary("Get usage records for a tenant")]
     [EndpointDescription("Retrieves resource usage records for a specific tenant with optional filtering by type and date range.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUsageRecords(Guid tenantId, [FromQuery] ResourceUsageType? usageType, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         return Ok(await sender.Send(new GetResourceUsageRecordsQuery(tenantId, usageType, startDate, endDate), ct).ConfigureAwait(false));
     }
 
@@ -44,9 +85,13 @@ public sealed class TenantResourcesController(ISender sender, IResourceQuotaServ
     [EndpointSummary("Get current usage summary for a tenant")]
     [EndpointDescription("Retrieves the current aggregated resource usage summary for a specific tenant.")]
     [ProducesResponseType<Dictionary<ResourceUsageType, int>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetCurrentUsageSummary(Guid tenantId, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         return Ok(await sender.Send(new GetCurrentResourceUsageSummaryQuery(tenantId), ct).ConfigureAwait(false));
     }
 
@@ -61,9 +106,13 @@ public sealed class TenantResourcesController(ISender sender, IResourceQuotaServ
     [EndpointSummary("Check resource limits for a tenant")]
     [EndpointDescription("Checks current resource usage against configured limits for a specific tenant.")]
     [ProducesResponseType<Dictionary<ResourceUsageType, bool>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckLimits(Guid tenantId, [FromQuery] ResourceUsageType? usageType, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         return Ok(await sender.Send(new CheckResourceUsageLimitsQuery(tenantId, usageType), ct).ConfigureAwait(false));
     }
 
@@ -83,8 +132,12 @@ public sealed class TenantResourcesController(ISender sender, IResourceQuotaServ
     [EndpointDescription("Records a new resource usage entry for the specified tenant.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Record(Guid tenantId, [FromBody] RecordTenantResourceUsageRequest body, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var metadata = body.Metadata != null ? System.Text.Json.JsonSerializer.Serialize(body.Metadata) : null;
@@ -105,9 +158,13 @@ public sealed class TenantResourcesController(ISender sender, IResourceQuotaServ
     [EndpointDescription("Records a new resource usage entry after verifying it doesn't exceed configured quotas. Returns 429 if quota would be exceeded.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> RecordWithQuotaCheck(Guid tenantId, [FromBody] RecordTenantResourceUsageRequest body, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         // ATOMIC: Use TryAtomicConsumeAsync to avoid TOCTOU race condition
@@ -163,9 +220,13 @@ public sealed class TenantResourcesController(ISender sender, IResourceQuotaServ
     [EndpointDescription("Resets the resource usage counters for a specific tenant and resource type to zero.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Reset(Guid tenantId, [FromQuery] ResourceUsageType usageType, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         await sender.Send(new ResetResourceUsageCommand(tenantId, usageType), ct).ConfigureAwait(false);
 
         return NoContent();
