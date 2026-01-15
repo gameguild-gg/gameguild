@@ -91,6 +91,20 @@ public class ResourceQuotaRepository(IApplicationDbContext context) : IResourceQ
         return quotas.Where(q => q.IsHardLimitExceeded());
     }
 
+    /// <inheritdoc/>
+    public async Task<Dictionary<ResourceUsageType, ResourceQuota>> GetByTenantAndTypesAsync(
+        Guid tenantId,
+        IEnumerable<ResourceUsageType> types,
+        CancellationToken cancellationToken = default)
+    {
+        var typesList = types.ToList();
+        var quotas = await ResourceQuotas
+            .Where(q => q.TenantId!.Value == tenantId && typesList.Contains(q.Type))
+            .ToListAsync(cancellationToken);
+
+        return quotas.ToDictionary(q => q.Type);
+    }
+
     // User-level quota methods
     public async Task<ResourceQuota?> GetByUserAndTypeAsync(Guid userId, ResourceUsageType type, CancellationToken cancellationToken = default)
     {

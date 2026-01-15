@@ -153,9 +153,61 @@ public class ResourceQuotaService(
         CancellationToken cancellationToken = default
     )
     {
+        // Batch query to avoid N+1: fetch all needed quotas in a single DB roundtrip
+        var quotas = await quotaRepository.GetByTenantAndTypesAsync(
+            tenantId,
+            requestedAmounts.Keys,
+            cancellationToken);
+
         var results = new Dictionary<ResourceUsageType, ResourceLimitCheckResponse>();
 
-        foreach (var kvp in requestedAmounts) { results[kvp.Key] = await CheckLimitsAsync(tenantId, kvp.Key, kvp.Value, cancellationToken); }
+        foreach (var kvp in requestedAmounts)
+        {
+            var type = kvp.Key;
+            var requestedAmount = kvp.Value;
+
+            if (!quotas.TryGetValue(type, out var quota))
+            {
+                // No quota means unlimited
+                results[type] = new ResourceLimitCheckResponse
+                {
+                    Type = type,
+                    CanProceed = true,
+                    CurrentUsage = 0,
+                    SoftLimit = null,
+                    HardLimit = null
+                };
+                continue;
+            }
+
+            // Calculate effective current usage considering if reset is due
+            var effectiveCurrentUsage = quota.ShouldReset() ? 0 : quota.CurrentUsage;
+            var projectedUsage = effectiveCurrentUsage + requestedAmount;
+
+            // Check hard limit
+            if (quota.HardLimit.HasValue && projectedUsage > quota.HardLimit.Value)
+            {
+                results[type] = new ResourceLimitCheckResponse
+                {
+                    Type = type,
+                    CanProceed = false,
+                    CurrentUsage = effectiveCurrentUsage,
+                    SoftLimit = quota.SoftLimit,
+                    HardLimit = quota.HardLimit
+                };
+            }
+            else
+            {
+                results[type] = new ResourceLimitCheckResponse
+                {
+                    Type = type,
+                    CanProceed = true,
+                    CurrentUsage = effectiveCurrentUsage,
+                    SoftLimit = quota.SoftLimit,
+                    HardLimit = quota.HardLimit
+                };
+            }
+        }
 
         return results;
     }

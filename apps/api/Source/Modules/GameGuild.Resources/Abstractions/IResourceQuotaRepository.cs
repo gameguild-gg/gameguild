@@ -51,6 +51,19 @@ public interface IResourceQuotaRepository
     /// <returns>True if decrement was applied, false if quota not found</returns>
     Task<bool> DecrementUsageAsync(Guid tenantId, ResourceUsageType type, long amount, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    ///     Gets multiple quotas by tenant and types in a single query (batch operation).
+    ///     Used to avoid N+1 query patterns when checking multiple resource types.
+    /// </summary>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="types">Collection of resource usage types to fetch</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Dictionary mapping resource types to their quotas (missing types = no quota configured)</returns>
+    Task<Dictionary<ResourceUsageType, ResourceQuota>> GetByTenantAndTypesAsync(
+        Guid tenantId,
+        IEnumerable<ResourceUsageType> types,
+        CancellationToken cancellationToken = default);
+
     // User-level quota methods
     Task<ResourceQuota?> GetByUserAndTypeAsync(Guid userId, ResourceUsageType type, CancellationToken cancellationToken = default);
 

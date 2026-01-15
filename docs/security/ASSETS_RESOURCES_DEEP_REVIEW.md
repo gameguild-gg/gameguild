@@ -476,18 +476,19 @@ var quotas = await _dbContext.ResourceQuotas
 |---|---------|----------|----------|----------------|--------|
 | 1 | ~~All 9 Resources controllers lack `[Authorize]`~~ | ~~CRITICAL~~ | [All Controllers](apps/api/Source/Modules/GameGuild.Resources/Controllers/) | ~~Anonymous access to tenant data~~ | ✅ **FIXED 2026-01-15** |
 | 2 | ~~IDOR on tenant-scoped endpoints~~ | ~~HIGH~~ | [TenantResourcesController.cs:33](apps/api/Source/Modules/GameGuild.Resources/Controllers/TenantResourcesController.cs#L33) | ~~Cross-tenant data access via URL manipulation.~~ Tenant membership validation added. | ✅ **FIXED 2026-01-15** |
-| 3 | ~~Global PermissionAuthorizationFilter disabled~~ | ~~HIGH~~ | [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739) | ~~Defense-in-depth gap. New controllers may be accidentally unprotected.~~ Re-enabled. | ✅ **FIXED 2026-01-15** |
+| 3 | Global PermissionAuthorizationFilter disabled | **HIGH** | [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739) | Defense-in-depth gap. New controllers may be accidentally unprotected. | ⚠️ OPEN |
 | 4 | No rate limiting on Resources endpoints | **MEDIUM** | All 9 controllers lack `[EnableRateLimiting]` | Enumeration attacks, tenant ID guessing via timing | ⚠️ OPEN |
 | 5 | ValidateToken O(n) complexity | **HIGH** | `AssetTokenService.ValidateToken()` | DoS vulnerability via signature verification | ⚠️ OPEN |
 | 6 | N+1 query in CheckMultipleLimitsAsync | **MEDIUM** | [ResourceQuotaService.cs:158](apps/api/Source/Modules/GameGuild.Resources/Services/ResourceQuotaService.cs#L158) | Performance degradation under concurrent load | ⚠️ OPEN |
 | 7 | ~~Resources administrative endpoints publicly exposed~~ | ~~MEDIUM~~ | [ResourcesController.cs](apps/api/Source/Modules/GameGuild.Resources/Controllers/ResourcesController.cs) | ~~Cross-tenant usage aggregation~~ | ✅ **FIXED** - Now requires admin role |
 | 8 | Unbounded result sets | **MEDIUM** | `GetResourceUsageRecordsQuery` returns all matching records | Memory pressure on large tenants, OOM risk | ⚠️ OPEN |
-| 9 | Missing input validation on date ranges | **MEDIUM** | [TenantResourcesController.cs:33](apps/api/Source/Modules/GameGuild.Resources/Controllers/TenantResourcesController.cs#L33) | Invalid date ranges accepted, potential for DoS | ⚠️ OPEN |
+| 9 | ~~Missing input validation on date ranges~~ | ~~MEDIUM~~ | [GetResourceUsageRecordsQueryValidator.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/GetResourceUsageRecords/GetResourceUsageRecordsQueryValidator.cs) | ~~Invalid date ranges accepted.~~ Validator limits range to 366 days, prevents future dates. | ✅ **FIXED** |
 | 10 | ~~User quota endpoints vulnerable to vertical escalation~~ | ~~MEDIUM~~ | [UserQuotasController.cs:74](apps/api/Source/Modules/GameGuild.Resources/Controllers/UserQuotasController.cs#L74) | ~~Any user can modify any other user's quota.~~ User ownership validation added. | ✅ **FIXED 2026-01-15** |
 | 11 | Hard-coded token validity constants | **LOW** | `AssetTokenService.cs` (86400s, 28800s) | Configuration rigidity, requires code change | ⚠️ OPEN |
 | 12 | Missing rollback test coverage | **LOW** | [ResourceQuotaBehaviorTests.cs](apps/api/Tests/GameGuild.Resources.UnitTests/Behaviors/ResourceQuotaBehaviorTests.cs) | Rollback path on command failure untested | ⚠️ OPEN |
 | 13 | Deprecated `EnforceHardLimit` property still present | **LOW** | [RequiresQuotaAttribute.cs:46](apps/api/Source/Modules/GameGuild.Resources/Attributes/RequiresQuotaAttribute.cs#L46) | Confusing API, developers may think it works | ⚠️ OPEN |
 | 14 | No audit logging for quota administrative changes | **LOW** | `TenantQuotasController.SetQuota()` | Compliance gap for SOC2/ISO 27001 | ⚠️ OPEN |
+| 15 | ~~UsageRecord missing validation~~ | ~~MEDIUM~~ | [RecordResourceUsageCommandValidator.cs](apps/api/Source/Modules/GameGuild.Resources/Commands/RecordResourceUsage/RecordResourceUsageCommandValidator.cs) | ~~Amount/DateRange not validated.~~ FluentValidation in place. | ✅ **FIXED** |
 
 ---
 
@@ -647,11 +648,20 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | `UserResourceMetadataController` | `[Authorize]` + `ValidateUserOwnership()` |
 | `UserResourceSettingsController` | `[Authorize]` + `ValidateUserOwnership()` |
 
+### ✅ Validators Confirmed (2026-01-15)
+
+| Validator | Validations | Status |
+|-----------|-------------|--------|
+| `RecordResourceUsageCommandValidator` | TenantId required, Count > 0, PeriodEnd > PeriodStart, Metadata ≤ 1000 chars | ✅ In Place |
+| `RecordUserResourceUsageCommandValidator` | UserId required, Count > 0, PeriodStart ≤ PeriodEnd | ✅ In Place |
+| `GetResourceUsageRecordsQueryValidator` | TenantId required, DateRange ≤ 366 days, no future dates | ✅ In Place |
+
 ### Remaining Actions Required
 
 1. ⚠️ **HIGH:** Re-enable global `PermissionAuthorizationFilter`
-2. ⚠️ **MEDIUM:** Add `[EnableRateLimiting]` to Resources endpoints
-3. ✅ **VERIFY:** Run integration tests confirming 401/403 responses
+2. ⚠️ **HIGH:** Fix token validation O(n) complexity in `AssetTokenService`
+3. ⚠️ **MEDIUM:** Add `[EnableRateLimiting]` to Resources endpoints
+4. ✅ **VERIFY:** Run integration tests confirming 401/403 responses
 
 ---
 
@@ -704,13 +714,13 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | 1 | ~~Missing `[Authorize]` on all 9 Resources controllers~~ | ~~CRITICAL~~ | Resources | ✅ **FIXED** |
 | 2 | ~~IDOR on tenant-scoped endpoints (no membership validation)~~ | ~~HIGH~~ | Resources | ✅ **FIXED** |
 | 3 | ~~User ownership validation missing~~ | ~~HIGH~~ | Resources | ✅ **FIXED** |
-| 3 | ~~Global `PermissionAuthorizationFilter` disabled~~ | ~~HIGH~~ | API | ✅ **FIXED** |
-| 5 | No rate limiting on Resources endpoints | **MEDIUM** | Resources | ⚠️ OPEN |
-| 6 | Token validation O(n) complexity per request | **HIGH** | Assets | ⚠️ OPEN |
+| 4 | Global `PermissionAuthorizationFilter` disabled | **HIGH** | API | ⚠️ OPEN |
+| 5 | Token validation O(n) complexity per request | **HIGH** | Assets | ⚠️ OPEN |
+| 6 | No rate limiting on Resources endpoints | **MEDIUM** | Resources | ⚠️ OPEN |
 | 7 | N+1 query in `CheckMultipleLimitsAsync` | **MEDIUM** | Resources | ⚠️ OPEN |
 | 8 | Unbounded result sets in usage queries | **MEDIUM** | Resources | ⚠️ OPEN |
-| 9 | Missing input validation on date ranges | **MEDIUM** | Resources | ⚠️ OPEN |
-| 10 | Hard-coded token validity constants | **LOW** | Assets | ⚠️ OPEN |
+| 9 | ~~Missing input validation on date ranges~~ | ~~MEDIUM~~ | Resources | ✅ **FIXED** |
+| 10 | ~~UsageRecord missing validation~~ | ~~MEDIUM~~ | Resources | ✅ **FIXED** |
 
 ---
 
