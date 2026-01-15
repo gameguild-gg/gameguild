@@ -38,7 +38,7 @@ public abstract class LocalizableEntityBase<TLocalization> : EntityBase, ILocali
         var localization = new TLocalization
         {
             FieldName = fieldName,
-            LocalizedContent = content,
+            Content = content,
             LanguageId = language.Id,
             Language = language,
             Status = status
@@ -120,7 +120,7 @@ public abstract class LocalizableEntityBase<TLocalization> : EntityBase, ILocali
         var existing = GetLocalization(fieldName, language);
         if (existing != null)
         {
-            existing.LocalizedContent = content;
+            existing.Content = content;
             existing.Status = status;
             return existing;
         }

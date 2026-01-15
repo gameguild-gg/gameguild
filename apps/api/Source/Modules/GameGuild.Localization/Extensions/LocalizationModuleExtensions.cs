@@ -28,6 +28,9 @@ public static class LocalizationModuleExtensions
         // Error message localization service
         services.AddScoped<ILocalizedErrorService, LocalizedErrorService>();
 
+        // Batch loader for N+1 prevention (scoped for request-level caching)
+        services.AddScoped<IBatchLocalizationLoader, BatchLocalizationLoader>();
+
         // Translation services
         services.AddScoped<ITranslationWorkflowService, TranslationWorkflowService>();
         services.AddScoped<TranslationMemoryService>();

@@ -582,15 +582,16 @@ GameGuild.Localization/
 | **KISS** | ✅ GOOD | Simple model for field-level localization |
 | **DRY** | ✅ FIXED | `LocalizedErrorService` provides shared resolution |
 | **SRP** | ✅ GOOD | Clear separation of concerns |
-| **OCP** | ⚠️ FAIR | Adding new localizable entity requires code changes |
+| **OCP** | ✅ FIXED | `LocalizableEntityBase<T>` provides default implementation |
 | **LSP** | ✅ GOOD | N/A (no inheritance hierarchy used) |
 | **ISP** | ✅ FIXED | `ILocalizedErrorService`, `IContentSanitizer`, `ILocalizationService` added |
 | **DIP** | ✅ GOOD | Via interfaces |
 
 **Issues Resolved:**
 1. ~~`LocalizationContext` returns hardcoded "en-US"~~ → ✅ Now reads from request headers
-2. `TranslationWorkflowService` uses in-memory dictionaries - not production-ready (P3)
+2. ~~`TranslationWorkflowService` uses in-memory dictionaries~~ → ✅ Now uses `ITranslationWorkflowRepository` for persistence
 3. ~~No service for localizing error messages~~ → ✅ `ILocalizedErrorService` + `LocalizedErrorService` added
+4. ~~Adding new localizable entity requires code changes~~ → ✅ `LocalizableEntityBase<T>` abstract class provides default implementation of `ILocalizable`
 
 ### A.3.6 Security & Risk Review
 
@@ -604,9 +605,14 @@ GameGuild.Localization/
 
 | Concern | Status | Notes |
 |---------|--------|-------|
-| N+1 on localizations | ⚠️ WATCH | Localizations loaded per entity access |
+| N+1 on localizations | ✅ FIXED | `IBatchLocalizationLoader` + `LocalizationQueryExtensions` for eager loading |
 | Caching | ✅ FIXED | `CachedLocalizationService` decorator with 15-min TTL |
 | Translation memory | ✅ OK | In-memory (but not persistent) |
+
+**N+1 Prevention Added:**
+- `IBatchLocalizationLoader` - Batch loads localizations for multiple resources in a single query
+- `LocalizationQueryExtensions` - EF Core query extensions (`IncludeLocalizations`, `IncludeLocalizationsWithLanguage`)
+- Helper methods: `GetLocalizedField`, `GetLocalizedFieldByCode`, `HasLocalizationFor`, `GetAvailableLanguages`
 
 ### A.3.8 Recommended Minimal Refactors
 
@@ -616,7 +622,18 @@ GameGuild.Localization/
 | 2 | Make `LocalizationContext` read from request headers | 1 hr | P1 | ✅ DONE |
 | 3 | Add caching for frequently-accessed localizations | 2 hrs | P2 | ✅ DONE |
 | 4 | Add content sanitization in `ResourceLocalization` | 1 hr | P2 | ✅ DONE |
-| 5 | Persist `TranslationWorkflowService` to database | 4 hrs | P3 | Pending |
+| 5 | Persist `TranslationWorkflowService` to database | 4 hrs | P3 | ✅ DONE |
+| 6 | Add batch loader to prevent N+1 on localizations | 2 hrs | P2 | ✅ DONE |
+
+**Files Created for Persistence (A.3.8 #5):**
+- `Models/TranslationWorkflowEntity.cs` - EF Core entities (`TranslationWorkflowEntity`, `TranslationTaskEntity`) extending `EntityBase`
+- `Repositories/ITranslationWorkflowRepository.cs` - Repository interface
+- `Repositories/TranslationWorkflowRepository.cs` - Repository implementation using `IApplicationDbContext`
+- `Models/LocalizableEntityBase.cs` - Abstract base class implementing `ILocalizable` for OCP compliance
+
+**Files Created for N+1 Prevention (A.3.8 #6):**
+- `Services/BatchLocalizationLoader.cs` - `IBatchLocalizationLoader` for batch loading localizations
+- `Extensions/LocalizationQueryExtensions.cs` - EF Core query extensions for eager loading
 
 ### A.3.9 Required Tests
 
@@ -629,12 +646,22 @@ GameGuild.Localization/
 | `LocalizedContent_SanitizesXSS` | Security | ✅ ADDED |
 | `CachedLocalizationService_CachesAndInvalidates` | Cache behavior | ✅ ADDED |
 | `LocalizedErrorService_FormatsMessages` | Error formatting | ✅ ADDED |
+| `LocalizableEntityBase_ManagesLocalizations` | OCP base class | ✅ ADDED |
+| `TranslationWorkflowEntity_JsonSerialization` | Entity JSON mapping | ✅ ADDED |
+| `BatchLocalizationLoader_PreventN1` | N+1 prevention | ✅ ADDED |
+| `LocalizationQueryExtensions_EagerLoading` | Query helpers | ✅ ADDED |
 
 **Test Files Added:**
 - `Services/ContentSanitizerTests.cs` - 13 tests for XSS sanitization
 - `Services/CachedLocalizationServiceTests.cs` - 8 tests for cache behavior
 - `Services/LocalizedErrorServiceTests.cs` - 17 tests for error message formatting
 - `Services/LocalizationContextHttpTests.cs` - 12 tests for HTTP header reading
+- `Services/BatchLocalizationLoaderTests.cs` - 8 tests for batch loading
+- `Models/LocalizableEntityBaseTests.cs` - 18 tests for OCP base class
+- `Models/TranslationWorkflowEntityTests.cs` - 12 tests for persistence entities
+- `Extensions/LocalizationQueryExtensionsTests.cs` - 12 tests for query extensions
+
+**Total Tests: 188 (all passing)**
 
 ---
 
@@ -2239,36 +2266,59 @@ public static class AssetFeatureFlags
 
 1. ✅ **STRENGTH**: Clean entity model for field-level localization
 2. ✅ **STRENGTH**: Translation workflow for human translation management
-3. ⚠️ **GAP**: `LocalizationContext` returns hardcoded "en-US"
-4. ⚠️ **GAP**: No service for localizing error messages / system strings
-5. ⚠️ **GAP**: `TranslationWorkflowService` uses in-memory storage
+3. ✅ **FIXED**: `LocalizationContext` now reads from request headers
+4. ✅ **FIXED**: `ILocalizedErrorService` added for error message localization
+5. ✅ **FIXED**: `TranslationWorkflowService` now uses database persistence
+6. ✅ **FIXED**: N+1 prevention with batch loader and query extensions
 
-### Required Fixes
+### Fixes Applied
 
-```csharp
-// 1. Add ILocalizedErrorService interface
-public interface ILocalizedErrorService
-{
-    string GetLocalizedError(string errorCode, string languageCode, params object[] args);
-    string GetLocalizedValidationMessage(string propertyName, string validationType, string languageCode);
-}
+**1. LocalizationContext - Request Header Reading** ✅
+- `LocalizationContext` reads from `Accept-Language` and `X-Timezone` headers
+- Falls back to user preferences via `IUserLocalizationPreferenceProvider`
 
-// 2. Update LocalizationContext to read from request
-public class RequestAwareLocalizationContext : ILocalizationContext
-{
-    private readonly IHttpContextAccessor _httpContextAccessor;
-    
-    public CultureInfo CurrentCulture
-    {
-        get
-        {
-            var acceptLanguage = _httpContextAccessor.HttpContext?
-                .Request.Headers["Accept-Language"].FirstOrDefault();
-            return ParseCulture(acceptLanguage) ?? DefaultCulture;
-        }
-    }
-}
-```
+**2. Error Message Localization** ✅
+- Added `ILocalizedErrorService` interface
+- Added `LocalizedErrorService` implementation with resource-based messages
+
+**3. Translation Workflow Persistence** ✅
+- Created `TranslationWorkflowEntity` and `TranslationTaskEntity` EF Core entities
+- Created `ITranslationWorkflowRepository` interface
+- Created `TranslationWorkflowRepository` with `IApplicationDbContext`
+- Updated `TranslationWorkflowService` to use repository instead of in-memory dictionaries
+
+**4. OCP Compliance** ✅
+- Created `LocalizableEntityBase<T>` abstract class implementing `ILocalizable`
+- Provides default implementation for `AddLocalization`, `GetLocalization`, `UpsertLocalization`, etc.
+- New localizable entities only need to inherit, not implement
+
+**5. N+1 Prevention** ✅
+- Created `IBatchLocalizationLoader` for batch loading localizations in a single query
+- Created `LocalizationQueryExtensions` with EF Core eager loading helpers:
+  - `IncludeLocalizations<T>()` - Includes localizations for ILocalizable entities
+  - `IncludeLocalizationsWithLanguage<T>()` - Includes localizations with language data
+  - `GetLocalizedField()` - Gets localized value with fallback
+  - `GetLocalizedFieldByCode()` - Gets by language code
+  - `HasLocalizationFor()` - Checks existence
+  - `GetAvailableLanguages()` - Lists available languages
+  - `GetAllLocalizedFields()` - Gets all fields for a language
+
+**Files Created:**
+- `Models/TranslationWorkflowEntity.cs` - Persistence entities
+- `Models/LocalizableEntityBase.cs` - OCP-compliant base class
+- `Repositories/ITranslationWorkflowRepository.cs` - Repository interface
+- `Repositories/TranslationWorkflowRepository.cs` - Repository implementation
+- `Services/BatchLocalizationLoader.cs` - Batch loader for N+1 prevention
+- `Extensions/LocalizationQueryExtensions.cs` - EF Core query extensions
+
+**DI Registration Updated:**
+- `LocalizationModuleExtensions.cs` - Added `ITranslationWorkflowRepository`, `IBatchLocalizationLoader`
+
+**Tests Added (188 total):**
+- `Models/LocalizableEntityBaseTests.cs` - 18 tests
+- `Models/TranslationWorkflowEntityTests.cs` - 12 tests
+- `Services/BatchLocalizationLoaderTests.cs` - 8 tests
+- `Extensions/LocalizationQueryExtensionsTests.cs` - 12 tests
 
 ---
 
@@ -2302,7 +2352,7 @@ See **PART B** for complete specification including:
 | R5 | Token replay attack | Assets | HIGH | LOW | MEDIUM | 8-hour window rotation; 24-hour validity | Assets Team |
 | R6 | Storage quota exhaustion | Assets | MEDIUM | MEDIUM | LOW | Pre-upload quota check; `[RequiresQuota]` | Resources Team |
 | R7 | Feature flag tenant leakage | Features | MEDIUM | LOW | MEDIUM | Add fail-closed option for production | Features Team |
-| R8 | Missing error localization | Localization | LOW | HIGH | LOW | Implement `ILocalizedErrorService` | Localization Team |
+| ~~R8~~ | ~~Missing error localization~~ | ~~Localization~~ | ~~LOW~~ | ~~HIGH~~ | ~~LOW~~ | ✅ FIXED: `ILocalizedErrorService` implemented | Localization Team |
 
 ---
 
