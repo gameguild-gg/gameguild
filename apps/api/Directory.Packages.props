@@ -99,6 +99,9 @@
         <PackageVersion Include="Swashbuckle.AspNetCore" Version="9.0.3" />
         <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.4.0.108396" />
 
+        <!-- AWS SDK -->
+        <PackageVersion Include="AWSSDK.S3" Version="3.7.300" />
+
         <!-- Testing packages -->
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
         <PackageVersion Include="coverlet.collector" Version="6.0.4" />
