@@ -51,8 +51,9 @@ public class LocalizationContextHttpTests
         // Act
         var context = new LocalizationContext(httpContextAccessor);
 
-        // Assert
-        context.CurrentTimeZone.Id.Should().Contain("America/New_York").Or.Contain("Eastern");
+        // Assert - America/New_York may map to "America/New_York" on Linux or "Eastern Standard Time" on Windows
+        (context.CurrentTimeZone.Id.Contains("America/New_York") || 
+         context.CurrentTimeZone.Id.Contains("Eastern")).Should().BeTrue();
     }
 
     [Fact]

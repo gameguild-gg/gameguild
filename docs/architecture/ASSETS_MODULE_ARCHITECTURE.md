@@ -620,10 +620,16 @@ GameGuild.Localization/
 | `ResourceLocalization_EnforcesTenantIsolation` | No cross-tenant leakage | Existing |
 | `LocalizableResource_FallsBackToDefaultLanguage` | Fallback behavior | Existing |
 | `TranslationWorkflow_ProgressesThroughStates` | Workflow correctness | Existing |
-| `LocalizationContext_ReadsFromRequestHeaders` | Dynamic culture | ✅ Ready for test |
-| `LocalizedContent_SanitizesXSS` | Security | ✅ Ready for test |
-| `CachedLocalizationService_CachesAndInvalidates` | Cache behavior | ✅ Ready for test |
-| `LocalizedErrorService_FormatsMessages` | Error formatting | ✅ Ready for test |
+| `LocalizationContext_ReadsFromRequestHeaders` | Dynamic culture | ✅ ADDED |
+| `LocalizedContent_SanitizesXSS` | Security | ✅ ADDED |
+| `CachedLocalizationService_CachesAndInvalidates` | Cache behavior | ✅ ADDED |
+| `LocalizedErrorService_FormatsMessages` | Error formatting | ✅ ADDED |
+
+**Test Files Added:**
+- `Services/ContentSanitizerTests.cs` - 13 tests for XSS sanitization
+- `Services/CachedLocalizationServiceTests.cs` - 8 tests for cache behavior
+- `Services/LocalizedErrorServiceTests.cs` - 17 tests for error message formatting
+- `Services/LocalizationContextHttpTests.cs` - 12 tests for HTTP header reading
 
 ---
 

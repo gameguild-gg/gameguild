@@ -233,11 +233,14 @@ public class CachedLocalizationServiceTests
 
     private static ResourceLocalization CreateLocalization(Guid resourceId, Guid languageId, string? fieldName = null)
     {
-        return ResourceLocalization.Create(
-            resourceId,
-            languageId,
-            fieldName ?? "Title",
-            "Test Value",
-            false);
+        return new ResourceLocalization
+        {
+            ResourceId = resourceId,
+            LanguageId = languageId,
+            FieldName = fieldName ?? "Title",
+            Content = "Test Value",
+            ResourceType = "Test",
+            Status = LocalizationStatus.Draft
+        };
     }
 }

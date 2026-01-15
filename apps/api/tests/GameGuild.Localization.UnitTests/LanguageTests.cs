@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Entities;
 using GameGuild.Localization;
 using GameGuild.Resources;
 using Xunit;
