@@ -61,7 +61,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<CheckResourceQuotaQuery, ResourceQuotaEnforcementResult>, CheckResourceQuotaQueryHandler>();
 
         // Register Usage Queries
-        services.AddScoped<IQueryHandler<GetResourceUsageRecordsQuery, IEnumerable<UsageRecord>>, GetResourceUsageRecordsQueryHandler>();
+        services.AddScoped<IQueryHandler<GetResourceUsageRecordsQuery, PagedResult<UsageRecord>>, GetResourceUsageRecordsQueryHandler>();
         services.AddScoped<IQueryHandler<GetCurrentResourceUsageSummaryQuery, Dictionary<ResourceUsageType, int>>, GetCurrentResourceUsageSummaryQueryHandler>();
         services.AddScoped<IQueryHandler<GetResourceUsageByTypeQuery, Dictionary<Guid, int>>, GetResourceUsageByTypeQueryHandler>();
 

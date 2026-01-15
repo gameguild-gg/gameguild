@@ -1,4 +1,5 @@
 using GameGuild.Abstractions;
+using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Resources;
@@ -28,6 +29,35 @@ public class UsageRecordRepository(IApplicationDbContext context) : IUsageRecord
         if (toDate.HasValue) query = query.Where(r => r.PeriodStart <= toDate.Value);
 
         return await query.OrderByDescending(r => r.PeriodStart).ToListAsync(cancellationToken);
+    }
+    
+    /// <inheritdoc />
+    public async Task<PagedResult<UsageRecord>> GetPagedByTenantAsync(
+        Guid tenantId, 
+        ResourceUsageType? type = null, 
+        DateTime? fromDate = null, 
+        DateTime? toDate = null, 
+        int skip = 0, 
+        int take = 50, 
+        CancellationToken cancellationToken = default)
+    {
+        var query = UsageRecords.Where(r => r.TenantId!.Value == tenantId);
+
+        if (type.HasValue) query = query.Where(r => r.Type == type.Value);
+        if (fromDate.HasValue) query = query.Where(r => r.PeriodStart >= fromDate.Value);
+        if (toDate.HasValue) query = query.Where(r => r.PeriodStart <= toDate.Value);
+
+        // Get total count for pagination metadata
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply ordering and pagination
+        var items = await query
+            .OrderByDescending(r => r.PeriodStart)
+            .Skip(skip)
+            .Take(take)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<UsageRecord>(items, totalCount, skip, take);
     }
 
     public async Task<IEnumerable<UsageRecord>> GetByTenantAndTypeAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default)

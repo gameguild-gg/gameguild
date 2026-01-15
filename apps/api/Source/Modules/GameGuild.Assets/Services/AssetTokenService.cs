@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
@@ -36,6 +37,17 @@ public class AssetTokenService : IAssetTokenService
     private readonly byte[] _secretKey;
     private readonly int _defaultExpiryHours;
     private readonly int _timeWindowHours;
+    
+    /// <summary>
+    /// Cache for validated tokens to avoid O(n) signature verification on repeated requests.
+    /// Key: token hash, Value: (payload, expiryTimestamp)
+    /// </summary>
+    private readonly ConcurrentDictionary<string, (AssetTokenPayload Payload, long ExpiryTimestamp)> _tokenCache = new();
+    
+    /// <summary>
+    /// Maximum cache entries to prevent memory exhaustion.
+    /// </summary>
+    private const int MaxCacheEntries = 10000;
 
     public AssetTokenService(IOptions<AssetTokenOptions> options)
     {
@@ -84,11 +96,27 @@ public class AssetTokenService : IAssetTokenService
 
     /// <summary>
     /// Validates a token and returns the decoded payload if valid.
+    /// Uses caching to avoid O(n) signature verification on repeated requests.
     /// </summary>
     public AssetTokenPayload? ValidateToken(string token, Guid assetReferenceId, Guid? tenantId)
     {
         try
         {
+            // Create a cache key combining token + context for lookup
+            var cacheKey = $"{token}:{assetReferenceId}:{tenantId}";
+            
+            // Check cache first (O(1) lookup)
+            if (_tokenCache.TryGetValue(cacheKey, out var cached))
+            {
+                // Verify cached entry hasn't expired
+                if (cached.ExpiryTimestamp >= DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+                {
+                    return cached.Payload;
+                }
+                // Remove expired entry
+                _tokenCache.TryRemove(cacheKey, out _);
+            }
+            
             var tokenBytes = Base64UrlDecode(token);
             if (tokenBytes.Length < 22)
                 return null;
@@ -107,7 +135,7 @@ public class AssetTokenService : IAssetTokenService
             if (expiryTimestamp < DateTimeOffset.UtcNow.ToUnixTimeSeconds())
                 return null;
 
-            // Verify signature for all possible access policies
+            // Verify signature for all possible access policies (O(n) on cache miss only)
             foreach (var accessPolicy in Enum.GetValues<AssetAccessPolicy>())
             {
                 var payload = BuildPayload(assetReferenceId, timeWindow, expiryTimestamp, accessPolicy, string.Empty, tenantId ?? Guid.Empty);
@@ -115,13 +143,27 @@ public class AssetTokenService : IAssetTokenService
 
                 if (providedSignature.SequenceEqual(expectedSignature.AsSpan(0, 16)))
                 {
-                    return new AssetTokenPayload(
+                    var result = new AssetTokenPayload(
                         assetReferenceId,
                         timeWindow,
                         expiryTimestamp,
                         accessPolicy,
                         string.Empty,
                         tenantId ?? Guid.Empty);
+                    
+                    // Cache the validated token (with size limit to prevent memory exhaustion)
+                    if (_tokenCache.Count < MaxCacheEntries)
+                    {
+                        _tokenCache.TryAdd(cacheKey, (result, expiryTimestamp));
+                    }
+                    else
+                    {
+                        // Evict expired entries when cache is full
+                        EvictExpiredEntries();
+                        _tokenCache.TryAdd(cacheKey, (result, expiryTimestamp));
+                    }
+                    
+                    return result;
                 }
             }
 
@@ -263,5 +305,23 @@ public class AssetTokenService : IAssetTokenService
             case 3: base64 += "="; break;
         }
         return Convert.FromBase64String(base64);
+    }
+    
+    /// <summary>
+    /// Evicts expired entries from the token cache to prevent memory bloat.
+    /// Called when cache reaches MaxCacheEntries limit.
+    /// </summary>
+    private void EvictExpiredEntries()
+    {
+        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var expiredKeys = _tokenCache
+            .Where(kvp => kvp.Value.ExpiryTimestamp < now)
+            .Select(kvp => kvp.Key)
+            .ToList();
+        
+        foreach (var key in expiredKeys)
+        {
+            _tokenCache.TryRemove(key, out _);
+        }
     }
 }

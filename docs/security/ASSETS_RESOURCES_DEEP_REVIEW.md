@@ -459,10 +459,10 @@ if (quotasToUpdate.Count > 0)
 |---------|------|----------|-----------------|-------------------|--------|
 | SR-001 | ~~Missing `[Authorize]` on Resources controllers~~ | ~~CRITICAL~~ | ~~Anonymous user enumerates all tenant quotas and usage~~ | `[Authorize]` added to all 9 controllers | ✅ **FIXED** |
 | SR-002 | ~~IDOR on tenant-scoped endpoints~~ | ~~HIGH~~ | ~~Authenticated user queries other tenants' data via URL manipulation~~ | `ValidateTenantMembershipAsync()` on all tenant controllers | ✅ **FIXED** |
-| SR-003 | Global auth filter commented out | **HIGH** | Any new controller added without `[Authorize]` is unprotected | Mitigated by explicit `[Authorize]` on all existing controllers | ⚠️ OPEN |
-| SR-004 | No rate limiting on Resources endpoints | **HIGH** | Attacker enumerates tenant IDs via timing attacks | None | ⚠️ OPEN |
+| SR-003 | ~~Global auth filter commented out~~ | ~~HIGH~~ | ~~Any new controller added without `[Authorize]` is unprotected~~ | `PermissionAuthorizationFilter` re-enabled globally | ✅ **FIXED** |
+| SR-004 | No rate limiting on Resources endpoints | **MEDIUM** | Attacker enumerates tenant IDs via timing attacks | None | ⚠️ OPEN |
 | SR-005 | ValidateToken iterates all AccessPolicy values | **HIGH** | O(n) signature verification per request; DoS with many policies | Token caching | ⚠️ OPEN |
-| SR-006 | N+1 queries in quota operations | **MEDIUM** | Performance degradation under load | None | ⚠️ OPEN |
+| SR-006 | ~~N+1 queries in quota operations~~ | ~~MEDIUM~~ | ~~Performance degradation under load~~ | Batch query via `GetByTenantAndTypesAsync()` + batch save | ✅ **FIXED** |
 | SR-007 | Hard-coded token validity constants | **LOW** | Difficult to adjust without code change | None | ⚠️ OPEN |
 
 ---
@@ -493,10 +493,10 @@ if (quotasToUpdate.Count > 0)
 |---|---------|----------|----------|----------------|--------|
 | 1 | ~~All 9 Resources controllers lack `[Authorize]`~~ | ~~CRITICAL~~ | [All Controllers](apps/api/Source/Modules/GameGuild.Resources/Controllers/) | ~~Anonymous access to tenant data~~ | ✅ **FIXED 2026-01-15** |
 | 2 | ~~IDOR on tenant-scoped endpoints~~ | ~~HIGH~~ | [TenantResourcesController.cs:33](apps/api/Source/Modules/GameGuild.Resources/Controllers/TenantResourcesController.cs#L33) | ~~Cross-tenant data access via URL manipulation.~~ Tenant membership validation added. | ✅ **FIXED 2026-01-15** |
-| 3 | Global PermissionAuthorizationFilter disabled | **HIGH** | [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739) | Defense-in-depth gap. New controllers may be accidentally unprotected. | ⚠️ OPEN |
+| 3 | ~~Global PermissionAuthorizationFilter disabled~~ | ~~HIGH~~ | [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739) | ~~Defense-in-depth gap.~~ Re-enabled globally. | ✅ **FIXED 2026-01-15** |
 | 4 | No rate limiting on Resources endpoints | **MEDIUM** | All 9 controllers lack `[EnableRateLimiting]` | Enumeration attacks, tenant ID guessing via timing | ⚠️ OPEN |
 | 5 | ValidateToken O(n) complexity | **HIGH** | `AssetTokenService.ValidateToken()` | DoS vulnerability via signature verification | ⚠️ OPEN |
-| 6 | N+1 query in CheckMultipleLimitsAsync | **MEDIUM** | [ResourceQuotaService.cs:158](apps/api/Source/Modules/GameGuild.Resources/Services/ResourceQuotaService.cs#L158) | Performance degradation under concurrent load | ⚠️ OPEN |
+| 6 | ~~N+1 query in CheckMultipleLimitsAsync~~ | ~~MEDIUM~~ | [ResourceQuotaService.cs:158](apps/api/Source/Modules/GameGuild.Resources/Services/ResourceQuotaService.cs#L158) | ~~Performance degradation.~~ Batch query via `GetByTenantAndTypesAsync`. | ✅ **FIXED 2026-01-15** |
 | 7 | ~~Resources administrative endpoints publicly exposed~~ | ~~MEDIUM~~ | [ResourcesController.cs](apps/api/Source/Modules/GameGuild.Resources/Controllers/ResourcesController.cs) | ~~Cross-tenant usage aggregation~~ | ✅ **FIXED** - Now requires admin role |
 | 8 | Unbounded result sets | **MEDIUM** | `GetResourceUsageRecordsQuery` returns all matching records | Memory pressure on large tenants, OOM risk | ⚠️ OPEN |
 | 9 | ~~Missing input validation on date ranges~~ | ~~MEDIUM~~ | [GetResourceUsageRecordsQueryValidator.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/GetResourceUsageRecords/GetResourceUsageRecordsQueryValidator.cs) | ~~Invalid date ranges accepted.~~ Validator limits range to 366 days, prevents future dates. | ✅ **FIXED** |
@@ -506,6 +506,7 @@ if (quotasToUpdate.Count > 0)
 | 13 | Deprecated `EnforceHardLimit` property still present | **LOW** | [RequiresQuotaAttribute.cs:46](apps/api/Source/Modules/GameGuild.Resources/Attributes/RequiresQuotaAttribute.cs#L46) | Confusing API, developers may think it works | ⚠️ OPEN |
 | 14 | No audit logging for quota administrative changes | **LOW** | `TenantQuotasController.SetQuota()` | Compliance gap for SOC2/ISO 27001 | ⚠️ OPEN |
 | 15 | ~~UsageRecord missing validation~~ | ~~MEDIUM~~ | [RecordResourceUsageCommandValidator.cs](apps/api/Source/Modules/GameGuild.Resources/Commands/RecordResourceUsage/RecordResourceUsageCommandValidator.cs) | ~~Amount/DateRange not validated.~~ FluentValidation in place. | ✅ **FIXED** |
+| 16 | ~~N+1 query in CheckResourceUsageLimitsQueryHandler~~ | ~~MEDIUM~~ | [CheckResourceUsageLimitsQueryHandler.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/CheckResourceUsageLimits/CheckResourceUsageLimitsQueryHandler.cs) | ~~Multiple UpdateAsync calls.~~ Batch save via `SaveChangesAsync`. | ✅ **FIXED 2026-01-15** |
 
 ---
 
@@ -701,15 +702,15 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 
 ### 60-Day Sprint (Performance & Reliability)
 
-| Week | Task | Owner | Deliverable |
-|------|------|-------|-------------|
-| 5 | Fix N+1 query in `CheckMultipleLimitsAsync` | Dev Team | Batch query implementation |
-| 5 | Fix N+1 query in `CheckResourceUsageLimitsQueryHandler` | Dev Team | Optimized handler |
-| 6 | Add pagination to `GetResourceUsageRecordsQuery` | Dev Team | Paginated API |
-| 6 | Implement token signature caching in `AssetTokenService` | Dev Team | Performance improvement |
-| 7 | Add FluentValidation to date range inputs | Dev Team | Input validation |
-| 7 | Configure connection pooling for high load | DevOps | DB config update |
-| 8 | Load testing: 1000 concurrent quota operations | QA | Performance report |
+| Week | Task | Owner | Deliverable | Status |
+|------|------|-------|-------------|--------|
+| 5 | ~~Fix N+1 query in `CheckMultipleLimitsAsync`~~ | Dev Team | Batch query via `GetByTenantAndTypesAsync` | ✅ **DONE** |
+| 5 | ~~Fix N+1 query in `CheckResourceUsageLimitsQueryHandler`~~ | Dev Team | Batch save via `SaveChangesAsync` | ✅ **DONE** |
+| 6 | Add pagination to `GetResourceUsageRecordsQuery` | Dev Team | Paginated API | ⚠️ PENDING |
+| 6 | Implement token signature caching in `AssetTokenService` | Dev Team | Performance improvement | ⚠️ PENDING |
+| 7 | Add FluentValidation to date range inputs | Dev Team | Input validation | ⚠️ PENDING |
+| 7 | Configure connection pooling for high load | DevOps | DB config update | ⚠️ PENDING |
+| 8 | Load testing: 1000 concurrent quota operations | QA | Performance report | ⚠️ PENDING |
 
 ### 90-Day Sprint (Maintainability & Observability)
 
@@ -731,10 +732,10 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | 1 | ~~Missing `[Authorize]` on all 9 Resources controllers~~ | ~~CRITICAL~~ | Resources | ✅ **FIXED** |
 | 2 | ~~IDOR on tenant-scoped endpoints (no membership validation)~~ | ~~HIGH~~ | Resources | ✅ **FIXED** |
 | 3 | ~~User ownership validation missing~~ | ~~HIGH~~ | Resources | ✅ **FIXED** |
-| 4 | Global `PermissionAuthorizationFilter` disabled | **HIGH** | API | ⚠️ OPEN |
+| 4 | ~~Global `PermissionAuthorizationFilter` disabled~~ | ~~HIGH~~ | API | ✅ **FIXED** |
 | 5 | Token validation O(n) complexity per request | **HIGH** | Assets | ⚠️ OPEN |
 | 6 | No rate limiting on Resources endpoints | **MEDIUM** | Resources | ⚠️ OPEN |
-| 7 | N+1 query in `CheckMultipleLimitsAsync` | **MEDIUM** | Resources | ⚠️ OPEN |
+| 7 | ~~N+1 query in `CheckMultipleLimitsAsync`~~ | ~~MEDIUM~~ | Resources | ✅ **FIXED** |
 | 8 | Unbounded result sets in usage queries | **MEDIUM** | Resources | ⚠️ OPEN |
 | 9 | ~~Missing input validation on date ranges~~ | ~~MEDIUM~~ | Resources | ✅ **FIXED** |
 | 10 | ~~UsageRecord missing validation~~ | ~~MEDIUM~~ | Resources | ✅ **FIXED** |

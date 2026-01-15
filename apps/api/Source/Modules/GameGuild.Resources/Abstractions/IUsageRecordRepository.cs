@@ -1,4 +1,6 @@
 
+using GameGuild.Models;
+
 namespace GameGuild.Resources;
 
 /// <summary>
@@ -11,6 +13,18 @@ public interface IUsageRecordRepository
     Task<IEnumerable<UsageRecord>> GetByTenantAsync(Guid tenantId, CancellationToken cancellationToken = default);
 
     Task<IEnumerable<UsageRecord>> GetByTenantAsync(Guid tenantId, ResourceUsageType? type, DateTime? fromDate = null, DateTime? toDate = null, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    ///     Gets paginated usage records for a tenant with optional filters
+    /// </summary>
+    Task<PagedResult<UsageRecord>> GetPagedByTenantAsync(
+        Guid tenantId, 
+        ResourceUsageType? type = null, 
+        DateTime? fromDate = null, 
+        DateTime? toDate = null, 
+        int skip = 0, 
+        int take = 50, 
+        CancellationToken cancellationToken = default);
 
     Task<IEnumerable<UsageRecord>> GetByTenantAndTypeAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default);
 
