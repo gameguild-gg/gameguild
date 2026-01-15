@@ -24,9 +24,9 @@ This report provides:
 
 | Module | Status | Critical Issues | Recommended Priority |
 |--------|--------|-----------------|---------------------|
-| **Resources** | ✅ SOUND | ISP fixed: segregated quota interfaces | Complete |
+| **Resources** | ✅ COMPLETE | ISP + OCP fixed: segregated interfaces + registry pattern | Complete |
 | **Features** | ✅ SOUND | Minor: No asset transformation feature flags | P2 - Add feature keys |
-| **Localization** | ✅ FIXED | Error service, sanitization, caching added | Complete |
+| **Localization** | ✅ COMPLETE | Error service, sanitization, caching added | Complete |
 | **Assets** | 🆕 NEW | N/A - New module design | P0 - Implement |
 
 ### Key Risks for Assets Module
@@ -209,7 +209,7 @@ GameGuild.Resources/
 | **KISS** | ✅ GOOD | Simple attribute-based quota enforcement |
 | **DRY** | ✅ GOOD | Single `TryAtomicConsumeAsync` for all quota checks |
 | **SRP** | ✅ GOOD | Clear separation: Quota vs Usage vs Throttling |
-| **OCP** | ✅ GOOD | New resource types added via enum extension |
+| **OCP** | ✅ FIXED | New resource types via `ResourceUsageTypeRegistry.Register()` |
 | **LSP** | ✅ GOOD | `CachedResourceQuotaService` properly decorates |
 | **ISP** | ✅ FIXED | Segregated into 5 focused interfaces (see below) |
 | **DIP** | ✅ GOOD | All dependencies via interfaces |
@@ -217,7 +217,7 @@ GameGuild.Resources/
 **ISP Fix Applied:** The original `IResourceQuotaService` (15+ methods) has been split into:
 
 | Interface | Methods | Purpose |
-|-----------|---------|---------|
+|-----------|---------|---------||
 | `IResourceQuotaReader` | 4 | Read-only quota/usage queries |
 | `IResourceQuotaWriter` | 2 | Admin quota configuration (set, delete) |
 | `IResourceQuotaEnforcer` | 5 | Consumption and limit enforcement |
@@ -227,9 +227,31 @@ GameGuild.Resources/
 The unified `IResourceQuotaService` now inherits from all five interfaces for backward compatibility.
 DI registration updated to resolve each segregated interface independently.
 
-**Remaining Code Smells:**
-1. ~~`IResourceQuotaService` is a "fat interface" with 15+ methods~~ ✅ FIXED
-2. `ResourceUsageType` enum may grow unbounded - consider registration pattern
+**OCP Fix Applied:** `ResourceUsageType` enum extensibility solved via registration pattern:
+
+| Component | Purpose |
+|-----------|--------|
+| `ResourceUsageTypeInfo` | Record with Id, Key, DisplayName, Unit, metadata |
+| `ResourceUsageTypeRegistry` | Static registry with `Register()`, `GetById()`, `GetByKey()` |
+| `RegisterResourceUsageType()` | DI extension method for module startup |
+| `SealResourceUsageTypeRegistry()` | Freezes registry after startup for performance |
+
+**Example module registration:**
+```csharp
+services.RegisterResourceUsageType(new ResourceUsageTypeInfo
+{
+    Id = 1001,  // Custom IDs start at 1000
+    Key = "Assets",
+    DisplayName = "Assets",
+    Description = "File assets stored per tenant",
+    Unit = "count",
+    OwnerModule = "GameGuild.Assets"
+});
+```
+
+**All Code Smells Resolved:**
+1. ~~`IResourceQuotaService` is a "fat interface" with 15+ methods~~ ✅ FIXED (ISP)
+2. ~~`ResourceUsageType` enum may grow unbounded~~ ✅ FIXED (Registration pattern)
 
 ### A.1.6 Security & Risk Review
 
@@ -255,10 +277,11 @@ DI registration updated to resolve each segregated interface independently.
 
 | # | Change | Effort | Priority | Status |
 |---|--------|--------|----------|--------|
-| 1 | Add `ResourceUsageType.Assets` enum value | 5 min | P0 | ⏳ TODO |
-| 2 | Add `ResourceUsageType.AssetStorage` enum value | 5 min | P0 | ⏳ TODO |
-| 3 | Add `ResourceUsageType.AssetDownloads` enum value | 5 min | P1 | ⏳ TODO |
+| 1 | Add `ResourceUsageType.Assets` enum value | 5 min | P0 | ✅ Use registry instead |
+| 2 | Add `ResourceUsageType.AssetStorage` enum value | 5 min | P0 | ✅ Use registry instead |
+| 3 | Add `ResourceUsageType.AssetDownloads` enum value | 5 min | P1 | ✅ Use registry instead |
 | 4 | Split `IResourceQuotaService` into query/command interfaces | 2 hrs | P3 | ✅ DONE |
+| 5 | Replace enum with registration pattern for extensibility | 2 hrs | P2 | ✅ DONE |
 
 ### A.1.9 Required Tests
 
