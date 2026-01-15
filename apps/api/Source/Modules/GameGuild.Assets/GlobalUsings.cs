@@ -6,6 +6,7 @@ global using GameGuild.CQRS.Models;
 global using GameGuild.Models;
 global using GameGuild.Abstractions;
 global using GameGuild.Identity.Context.Actors;
+global using GameGuild.Identity.Authorization;
 
 // Internal namespace usings (Part C — Supporting Modules)
 global using GameGuild.Assets.Moderation;

@@ -142,6 +142,87 @@ public class AssetTokenService : IAssetTokenService
         return totalHours / _timeWindowHours;
     }
 
+    /// <summary>
+    /// Generates an ephemeral token (self-contained, with embedded asset reference).
+    /// </summary>
+    public string GenerateEphemeralToken(
+        Guid assetReferenceId,
+        TimeSpan expiry,
+        Guid? userId = null)
+    {
+        var expiresAt = DateTimeOffset.UtcNow.Add(expiry);
+        var expiryTimestamp = expiresAt.ToUnixTimeSeconds();
+
+        // Build payload: assetId:expiry:userId
+        var payloadString = $"ephemeral|{assetReferenceId}|{expiryTimestamp}|{userId?.ToString() ?? ""}";
+        var signature = ComputeSignature(payloadString);
+
+        // Encode: assetId (16 bytes) + expiry (4 bytes) + hasUser (1 byte) + userId (16 bytes if present) + sig (16 bytes)
+        var hasUser = userId.HasValue;
+        var tokenBytes = new byte[16 + 4 + 1 + (hasUser ? 16 : 0) + 16];
+        
+        assetReferenceId.ToByteArray().CopyTo(tokenBytes, 0);
+        BitConverter.GetBytes((int)(expiryTimestamp - GetBaseTimestamp())).CopyTo(tokenBytes, 16);
+        tokenBytes[20] = (byte)(hasUser ? 1 : 0);
+        
+        var offset = 21;
+        if (hasUser)
+        {
+            userId!.Value.ToByteArray().CopyTo(tokenBytes, offset);
+            offset += 16;
+        }
+        
+        signature.AsSpan(0, 16).CopyTo(tokenBytes.AsSpan(offset));
+
+        return Base64UrlEncode(tokenBytes);
+    }
+
+    /// <summary>
+    /// Validates an ephemeral token and extracts the asset reference.
+    /// </summary>
+    public EphemeralTokenPayload? ValidateEphemeralToken(string token)
+    {
+        try
+        {
+            var tokenBytes = Base64UrlDecode(token);
+            if (tokenBytes.Length < 37) // Minimum: 16 + 4 + 1 + 16 = 37
+                return null;
+
+            var assetReferenceId = new Guid(tokenBytes.AsSpan(0, 16));
+            var expiryOffset = BitConverter.ToInt32(tokenBytes, 16);
+            var expiryTimestamp = GetBaseTimestamp() + expiryOffset;
+            var hasUser = tokenBytes[20] == 1;
+
+            var offset = 21;
+            Guid? userId = null;
+            if (hasUser)
+            {
+                if (tokenBytes.Length < 53) // With user: 16 + 4 + 1 + 16 + 16 = 53
+                    return null;
+                userId = new Guid(tokenBytes.AsSpan(offset, 16));
+                offset += 16;
+            }
+
+            var providedSignature = tokenBytes.AsSpan(offset, 16);
+
+            // Verify signature
+            var payloadString = $"ephemeral|{assetReferenceId}|{expiryTimestamp}|{userId?.ToString() ?? ""}";
+            var expectedSignature = ComputeSignature(payloadString);
+
+            if (!providedSignature.SequenceEqual(expectedSignature.AsSpan(0, 16)))
+                return null;
+
+            return new EphemeralTokenPayload(
+                assetReferenceId,
+                DateTimeOffset.FromUnixTimeSeconds(expiryTimestamp),
+                userId);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private string BuildPayload(
         Guid assetReferenceId,
         int timeWindow,

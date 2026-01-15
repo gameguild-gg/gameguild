@@ -203,6 +203,37 @@ public static class Permissions
 
     /// <summary>System wildcard (all permissions)</summary>
     public const string SystemWildcard = SystemPermission.Keys.Wildcard;
+
+    // ========================
+    // ASSETS PERMISSIONS
+    // ========================
+
+    /// <summary>Read/download assets</summary>
+    public const string AssetsRead = AssetsPermission.Keys.Read;
+
+    /// <summary>Upload new assets</summary>
+    public const string AssetsCreate = AssetsPermission.Keys.Create;
+
+    /// <summary>Update asset metadata</summary>
+    public const string AssetsUpdate = AssetsPermission.Keys.Update;
+
+    /// <summary>Delete assets</summary>
+    public const string AssetsDelete = AssetsPermission.Keys.Delete;
+
+    /// <summary>Admin operations (GC, undeletable marks)</summary>
+    public const string AssetsAdmin = AssetsPermission.Keys.Admin;
+
+    /// <summary>Moderate asset content</summary>
+    public const string AssetsModerate = AssetsPermission.Keys.Moderate;
+
+    /// <summary>Apply asset transformations</summary>
+    public const string AssetsTransform = AssetsPermission.Keys.Transform;
+
+    /// <summary>Generate asset access URLs</summary>
+    public const string AssetsGenerateUrl = AssetsPermission.Keys.GenerateUrl;
+
+    /// <summary>Report assets for moderation</summary>
+    public const string AssetsReport = AssetsPermission.Keys.Report;
 }
 
 /// <summary>

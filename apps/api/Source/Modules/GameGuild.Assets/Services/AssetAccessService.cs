@@ -280,4 +280,99 @@ public class AssetAccessService : IAssetAccessService
 
         return url;
     }
+
+    /// <inheritdoc />
+    public async Task<TokenValidationResult> ValidateAccessTokenAsync(
+        Guid assetReferenceId,
+        string token,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return new TokenValidationResult(false, "Token is required");
+        }
+
+        // Validate token signature and expiration
+        var payload = _tokenService.ValidateToken(token, assetReferenceId, null);
+        if (payload == null)
+        {
+            return new TokenValidationResult(false, "Invalid or expired token");
+        }
+
+        // Check that the asset still exists
+        var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct);
+        if (reference == null || reference.IsDeleted)
+        {
+            return new TokenValidationResult(false, "Asset not found");
+        }
+
+        return new TokenValidationResult(
+            true,
+            null,
+            payload.UserId,
+            payload.ExpiresAt);
+    }
+
+    /// <inheritdoc />
+    public Task<EphemeralTokenValidationResult> ValidateEphemeralTokenAsync(
+        string token,
+        CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return Task.FromResult(new EphemeralTokenValidationResult(
+                false, Guid.Empty, false, "Token is required"));
+        }
+
+        // Decode ephemeral token (format: base64({assetId}:{expiry}:{signature}))
+        var ephemeralPayload = _tokenService.ValidateEphemeralToken(token);
+        if (ephemeralPayload == null)
+        {
+            return Task.FromResult(new EphemeralTokenValidationResult(
+                false, Guid.Empty, false, "Invalid ephemeral token"));
+        }
+
+        if (ephemeralPayload.ExpiresAt < DateTimeOffset.UtcNow)
+        {
+            return Task.FromResult(new EphemeralTokenValidationResult(
+                false, ephemeralPayload.AssetReferenceId, true, "Token has expired"));
+        }
+
+        return Task.FromResult(new EphemeralTokenValidationResult(
+            true, ephemeralPayload.AssetReferenceId));
+    }
+
+    /// <inheritdoc />
+    public async Task<TransformedAssetInfo?> GetOrCreateTransformationAsync(
+        Guid contentId,
+        TransformationSpec spec,
+        CancellationToken ct = default)
+    {
+        // Check feature flag for transformations
+        var featureContext = CreateFeatureContext(null, null);
+        var transformationsEnabled = await _featureService.IsEnabledAsync(
+            AssetFeatureFlags.TransformationsEnabled,
+            featureContext,
+            ct);
+
+        if (!transformationsEnabled)
+        {
+            _logger.LogWarning("Transformations disabled by feature flag");
+            return null;
+        }
+
+        // For now, return null - transformation implementation is in TransformationService
+        // This is a placeholder that would delegate to the transformation service
+        _logger.LogDebug(
+            "GetOrCreateTransformation called for content {ContentId} with spec {Spec}",
+            contentId, spec);
+
+        // TODO: Implement transformation lookup/creation via ITransformationService
+        // var transformedAsset = await _transformationService.GetOrCreateAsync(contentId, spec, ct);
+        // return transformedAsset != null
+        //     ? new TransformedAssetInfo(transformedAsset.Id, contentId, ...)
+        //     : null;
+
+        return null;
+    }
 }

@@ -477,3 +477,91 @@ public sealed class EntitlementsPermission : Permission
     /// <summary>Full management access to entitlements</summary>
     public static readonly EntitlementsPermission Manage = new(Keys.Manage, "Full management access to entitlements");
 }
+
+/// <summary>
+///     Strongly-typed permissions for asset operations.
+///     Provides compile-time safety for permission checks.
+/// </summary>
+/// <remarks>
+///     <para>
+///         Use <see cref="Keys"/> for attribute usage: [RequirePermission(AssetsPermission.Keys.Read)]
+///     </para>
+///     <para>
+///         Use the static readonly fields for runtime checks: actor.HasPermission(AssetsPermission.Read)
+///     </para>
+/// </remarks>
+public sealed class AssetsPermission : Permission
+{
+    private AssetsPermission(string key, string description)
+        : base(
+            resource: key.Split(':')[0],
+            action: key.Split(':')[1],
+            scope: key.Split(':').Length > 2 ? key.Split(':')[2] : null,
+            description: description)
+    {
+    }
+
+    /// <summary>
+    ///     Permission key constants for use in attributes.
+    /// </summary>
+    /// <example>
+    ///     [RequirePermission(AssetsPermission.Keys.Read)]
+    ///     public IActionResult GetAssets() { }
+    /// </example>
+    public static class Keys
+    {
+        /// <summary>Read/download assets</summary>
+        public const string Read = "assets:read";
+
+        /// <summary>Upload new assets</summary>
+        public const string Create = "assets:create";
+
+        /// <summary>Update asset metadata</summary>
+        public const string Update = "assets:update";
+
+        /// <summary>Delete assets</summary>
+        public const string Delete = "assets:delete";
+
+        /// <summary>Admin operations (GC, undeletable marks)</summary>
+        public const string Admin = "assets:admin";
+
+        /// <summary>Moderate content</summary>
+        public const string Moderate = "assets:moderate";
+
+        /// <summary>Apply transformations</summary>
+        public const string Transform = "assets:transform";
+
+        /// <summary>Generate access URLs</summary>
+        public const string GenerateUrl = "assets:generate-url";
+
+        /// <summary>Report assets for moderation</summary>
+        public const string Report = "assets:report";
+    }
+
+    /// <summary>Read/download assets</summary>
+    public static readonly AssetsPermission Read = new(Keys.Read, "Read/download assets");
+
+    /// <summary>Upload new assets</summary>
+    public static readonly AssetsPermission Create = new(Keys.Create, "Upload new assets");
+
+    /// <summary>Update asset metadata</summary>
+    public static readonly AssetsPermission Update = new(Keys.Update, "Update asset metadata");
+
+    /// <summary>Delete assets</summary>
+    public static readonly AssetsPermission Delete = new(Keys.Delete, "Delete assets");
+
+    /// <summary>Admin operations (GC, undeletable marks)</summary>
+    public static readonly AssetsPermission Admin = new(Keys.Admin, "Admin operations (GC, undeletable marks)");
+
+    /// <summary>Moderate content</summary>
+    public static readonly AssetsPermission Moderate = new(Keys.Moderate, "Moderate content");
+
+    /// <summary>Apply transformations</summary>
+    public static readonly AssetsPermission Transform = new(Keys.Transform, "Apply transformations");
+
+    /// <summary>Generate access URLs</summary>
+    public static readonly AssetsPermission GenerateUrl = new(Keys.GenerateUrl, "Generate access URLs");
+
+    /// <summary>Report assets for moderation</summary>
+    public static readonly AssetsPermission Report = new(Keys.Report, "Report assets for moderation");
+}
