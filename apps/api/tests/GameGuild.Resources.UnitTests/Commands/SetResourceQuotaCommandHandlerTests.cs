@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Moq;
 using Xunit;
 
@@ -8,12 +9,19 @@ namespace GameGuild.Resources.UnitTests.Commands;
 public class SetResourceQuotaCommandHandlerTests
 {
     private readonly Mock<IResourceQuotaRepository> _resourceQuotaRepositoryMock;
+    private readonly Mock<IPublisher> _publisherMock;
+    private readonly Mock<IActorContextAccessor> _actorContextAccessorMock;
     private readonly SetResourceQuotaCommandHandler _handler;
 
     public SetResourceQuotaCommandHandlerTests()
     {
         _resourceQuotaRepositoryMock = new Mock<IResourceQuotaRepository>();
-        _handler = new SetResourceQuotaCommandHandler(_resourceQuotaRepositoryMock.Object);
+        _publisherMock = new Mock<IPublisher>();
+        _actorContextAccessorMock = new Mock<IActorContextAccessor>();
+        _handler = new SetResourceQuotaCommandHandler(
+            _resourceQuotaRepositoryMock.Object,
+            _publisherMock.Object,
+            _actorContextAccessorMock.Object);
     }
 
     [Fact]

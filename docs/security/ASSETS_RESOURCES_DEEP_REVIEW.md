@@ -534,8 +534,8 @@ public class AssetTokenOptions
 | 10 | ~~User quota endpoints vulnerable to vertical escalation~~ | ~~MEDIUM~~ | [UserQuotasController.cs:74](apps/api/Source/Modules/GameGuild.Resources/Controllers/UserQuotasController.cs#L74) | ~~Any user can modify any other user's quota.~~ User ownership validation added. | ✅ **FIXED 2026-01-15** |
 | 11 | ~~Hard-coded token validity constants~~ | ~~LOW~~ | `AssetTokenService.cs` | Already configurable via `IOptions<AssetTokenOptions>`. | ✅ **NOT AN ISSUE** |
 | 12 | ~~Missing rollback test coverage~~ | ~~LOW~~ | [ResourceQuotaBehaviorTests.cs](apps/api/Tests/GameGuild.Resources.UnitTests/Behaviors/ResourceQuotaBehaviorTests.cs) | 2 tests added: `Handle_RollsBackQuota_WhenCommandFails`, `Handle_LogsError_WhenRollbackFails`. | ✅ **FIXED 2026-01-15** |
-| 13 | Deprecated `EnforceHardLimit` property still present | **LOW** | [RequiresQuotaAttribute.cs:46](apps/api/Source/Modules/GameGuild.Resources/Attributes/RequiresQuotaAttribute.cs#L46) | Confusing API, developers may think it works | ⚠️ OPEN |
-| 14 | No audit logging for quota administrative changes | **LOW** | `TenantQuotasController.SetQuota()` | Compliance gap for SOC2/ISO 27001 | ⚠️ OPEN |
+| 13 | ~~Deprecated `EnforceHardLimit` property still present~~ | ~~LOW~~ | [RequiresQuotaAttribute.cs](apps/api/Source/Modules/GameGuild.Resources/Attributes/RequiresQuotaAttribute.cs) | ~~Confusing API, developers may think it works.~~ Property removed entirely. | ✅ **FIXED 2026-01-15** |
+| 14 | ~~No audit logging for quota administrative changes~~ | ~~LOW~~ | `SetResourceQuotaCommandHandler`, `DeleteResourceQuotaCommandHandler`, `ResetResourceQuotaCommandHandler` | ~~Compliance gap for SOC2/ISO 27001.~~ `QuotaChangedEvent` published with ActorId for all quota operations. | ✅ **FIXED 2026-01-15** |
 | 15 | ~~UsageRecord missing validation~~ | ~~MEDIUM~~ | [RecordResourceUsageCommandValidator.cs](apps/api/Source/Modules/GameGuild.Resources/Commands/RecordResourceUsage/RecordResourceUsageCommandValidator.cs) | ~~Amount/DateRange not validated.~~ FluentValidation in place. | ✅ **FIXED** |
 | 16 | ~~N+1 query in CheckResourceUsageLimitsQueryHandler~~ | ~~MEDIUM~~ | [CheckResourceUsageLimitsQueryHandler.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/CheckResourceUsageLimits/CheckResourceUsageLimitsQueryHandler.cs) | ~~Multiple UpdateAsync calls.~~ Batch save via `SaveChangesAsync`. | ✅ **FIXED 2026-01-15** |
 | 17 | ~~PagedResult type ambiguity causing build errors~~ | ~~LOW~~ | [GetResourceUsageRecordsQuery.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/GetResourceUsageRecords/GetResourceUsageRecordsQuery.cs) | ~~Ambiguous reference between `GameGuild.CQRS.PagedResult` and `GameGuild.Models.PagedResult`.~~ Fixed with fully qualified `Models.PagedResult<T>`. | ✅ **FIXED 2026-01-15** |
@@ -724,6 +724,15 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | `AssetTokenService` | Token caching | `ConcurrentDictionary` cache with O(1) lookup, 10K max entries, expiry eviction |
 | `DatabaseOptions` | Connection pooling config | Added `MaxPoolSize`, `MinPoolSize`, `ConnectionIdleLifetimeSeconds`, `ConnectionLifetimeSeconds` |
 | `appsettings.json` | Connection pooling | Added `Maximum Pool Size=100;Minimum Pool Size=5;Connection Idle Lifetime=300` to connection strings |
+
+### ✅ Compliance Fixes Applied (2026-01-15)
+
+| Component | Fix Applied | Details |
+|-----------|-------------|---------|
+| `RequiresQuotaAttribute` | Removed deprecated `EnforceHardLimit` property | Eliminates confusing API; hard limits always enforced |
+| `SetResourceQuotaCommandHandler` | Added audit logging | Publishes `QuotaChangedEvent` with ActorId for SOC2/ISO 27001 compliance |
+| `DeleteResourceQuotaCommandHandler` | Added audit logging | Publishes `QuotaChangedEvent` with ActorId for SOC2/ISO 27001 compliance |
+| `ResetResourceQuotaCommandHandler` | Added audit logging | Publishes `QuotaChangedEvent` with ActorId for SOC2/ISO 27001 compliance |
 
 ### Remaining Actions Required
 

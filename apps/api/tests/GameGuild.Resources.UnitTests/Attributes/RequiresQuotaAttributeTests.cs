@@ -41,19 +41,6 @@ public class RequiresQuotaAttributeTests
     }
 
     [Fact]
-    [Obsolete("Test for deprecated property - can be removed when EnforceHardLimit is removed")]
-#pragma warning disable CS0618 // EnforceHardLimit is obsolete
-    public void EnforceHardLimit_ShouldDefaultToTrue()
-    {
-        // Arrange & Act
-        var attribute = new RequiresQuotaAttribute(ResourceUsageType.ApiCalls);
-
-        // Assert - hard limits are always enforced now
-        attribute.EnforceHardLimit.Should().BeTrue();
-    }
-#pragma warning restore CS0618
-
-    [Fact]
     public void Source_ShouldBeSettable()
     {
         // Arrange & Act
@@ -70,21 +57,17 @@ public class RequiresQuotaAttributeTests
     public void AllProperties_ShouldBeSettable()
     {
         // Arrange & Act
-#pragma warning disable CS0618 // EnforceHardLimit is obsolete - test verifies property exists but hard limits are always enforced
         var attribute = new RequiresQuotaAttribute(ResourceUsageType.Storage, 2048)
         {
             Source = "UploadFile",
-            RecordUsage = false,
-            EnforceHardLimit = false // Deprecated: hard limits are always enforced regardless
+            RecordUsage = false
         };
-#pragma warning restore CS0618
 
         // Assert
         attribute.ResourceType.Should().Be(ResourceUsageType.Storage);
         attribute.Amount.Should().Be(2048);
         attribute.Source.Should().Be("UploadFile");
         attribute.RecordUsage.Should().BeFalse();
-        // Note: EnforceHardLimit=false is ignored - hard limits are always enforced
     }
 
     [Theory]
