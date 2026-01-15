@@ -11,12 +11,16 @@ interface PreviewRendererSequentialSlideProps {
   structure: SequentialPanelStructure
   projectId: string
   projectName?: string
+  storageAdapter?: {
+    load: (id: string) => Promise<any>
+  }
 }
 
 export function PreviewRendererSequentialSlide({
   structure,
   projectId,
   projectName,
+  storageAdapter,
 }: PreviewRendererSequentialSlideProps) {
   const sortedPanels = [...structure.panels].sort((a, b) => a.order - b.order)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -132,6 +136,7 @@ export function PreviewRendererSequentialSlide({
                         : currentPanel.state
                     }
                     projectId={projectId}
+                    storageAdapter={storageAdapter}
                   />
                 </div>
               </div>
@@ -148,6 +153,7 @@ export function PreviewRendererSequentialSlide({
                     : currentPanel.right
                 }
                 projectId={projectId}
+                storageAdapter={storageAdapter}
               />
             ) : (
               <div className="py-8 text-center text-gray-500 dark:text-gray-400">
