@@ -10,37 +10,86 @@ public interface IAssetStorageService
     /// </summary>
     Task<StorageUploadResult> UploadAsync(
         Stream content,
-        string objectKey,
+        string contentHash,
         string mimeType,
+        bool isTransformed = false,
         CancellationToken ct = default);
 
     /// <summary>
     /// Downloads content from storage.
     /// </summary>
-    Task<Stream> DownloadAsync(string objectKey, CancellationToken ct = default);
+    Task<Stream> DownloadAsync(
+        string bucketName,
+        string objectKey,
+        CancellationToken ct = default);
 
     /// <summary>
-    /// Generates a presigned URL for direct download.
+    /// Generates a presigned URL for direct download or upload.
     /// </summary>
     Task<string> GeneratePresignedUrlAsync(
+        string bucketName,
         string objectKey,
         TimeSpan expiry,
+        bool isDownload = true,
         CancellationToken ct = default);
 
     /// <summary>
     /// Deletes content from storage.
     /// </summary>
-    Task DeleteAsync(string objectKey, CancellationToken ct = default);
+    Task DeleteAsync(
+        string bucketName,
+        string objectKey,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Checks if content exists.
     /// </summary>
-    Task<bool> ExistsAsync(string objectKey, CancellationToken ct = default);
+    Task<bool> ExistsAsync(
+        string bucketName,
+        string objectKey,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Gets content metadata.
     /// </summary>
-    Task<StorageMetadata?> GetMetadataAsync(string objectKey, CancellationToken ct = default);
+    Task<StorageMetadata?> GetMetadataAsync(
+        string bucketName,
+        string objectKey,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Initiates a multipart upload for large files.
+    /// </summary>
+    Task<string> InitiateMultipartUploadAsync(
+        string mimeType,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Uploads a part in a multipart upload.
+    /// </summary>
+    Task<string> UploadPartAsync(
+        string uploadId,
+        string objectKey,
+        int partNumber,
+        Stream content,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Completes a multipart upload.
+    /// </summary>
+    Task<StorageUploadResult> CompleteMultipartUploadAsync(
+        string uploadId,
+        string objectKey,
+        IReadOnlyList<string> partETags,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Aborts a multipart upload.
+    /// </summary>
+    Task AbortMultipartUploadAsync(
+        string uploadId,
+        string objectKey,
+        CancellationToken ct = default);
 }
 
 /// <summary>
@@ -49,14 +98,13 @@ public interface IAssetStorageService
 public record StorageUploadResult(
     string BucketName,
     string ObjectKey,
-    string ETag,
-    long SizeBytes);
+    string? ETag = null,
+    long? SizeBytes = null);
 
 /// <summary>
 /// Storage content metadata.
 /// </summary>
 public record StorageMetadata(
-    string ObjectKey,
     long SizeBytes,
     string MimeType,
     string ETag,

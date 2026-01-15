@@ -10,7 +10,7 @@ public record ReviewReportCommand(
     Guid ReportId,
     Guid ReviewerId,
     ReviewDecision Decision,
-    string? Notes = null) : IRequest<Result<ReviewReportResponse>>;
+    string? Notes = null) : IRequest<ReviewReportResponse?>;
 
 public record ReviewReportResponse(
     Guid ReportId,
@@ -28,7 +28,7 @@ public class ReviewReportValidator : AbstractValidator<ReviewReportCommand>
     }
 }
 
-public class ReviewReportHandler : IRequestHandler<ReviewReportCommand, Result<ReviewReportResponse>>
+public class ReviewReportHandler : IRequestHandler<ReviewReportCommand, ReviewReportResponse?>
 {
     private readonly IAssetModerationService _moderationService;
 
@@ -37,7 +37,7 @@ public class ReviewReportHandler : IRequestHandler<ReviewReportCommand, Result<R
         _moderationService = moderationService;
     }
 
-    public async Task<Result<ReviewReportResponse>> HandleAsync(
+    public async Task<ReviewReportResponse?> Handle(
         ReviewReportCommand request,
         CancellationToken ct = default)
     {
@@ -50,12 +50,12 @@ public class ReviewReportHandler : IRequestHandler<ReviewReportCommand, Result<R
 
         if (!success)
         {
-            return Result<ReviewReportResponse>.Failure("Report not found");
+            return null;
         }
 
-        return Result<ReviewReportResponse>.Success(new ReviewReportResponse(
+        return new ReviewReportResponse(
             request.ReportId,
             ReportStatus.Resolved,
-            request.Decision));
+            request.Decision);
     }
 }

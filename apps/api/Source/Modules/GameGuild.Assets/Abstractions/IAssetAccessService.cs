@@ -8,10 +8,20 @@ public interface IAssetAccessService
     /// <summary>
     /// Generates an access URL for an asset.
     /// </summary>
-    Task<AssetAccessUrl> GenerateAccessUrlAsync(
+    Task<AssetAccessUrl?> GenerateAccessUrlAsync(
         Guid assetReferenceId,
-        Guid userId,
+        Guid? userId,
+        Guid tenantId,
         TransformationSpec? transformation = null,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Generates a direct storage presigned URL (bypasses token system).
+    /// </summary>
+    Task<AssetAccessUrl?> GenerateDirectStorageUrlAsync(
+        Guid assetReferenceId,
+        Guid? userId,
+        Guid tenantId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -19,13 +29,17 @@ public interface IAssetAccessService
     /// </summary>
     Task<AssetAccessValidation> ValidateAccessAsync(
         Guid assetReferenceId,
-        string token,
+        Guid? userId,
+        Guid tenantId,
         CancellationToken ct = default);
 
     /// <summary>
-    /// Records an access to an asset.
+    /// Validates a token for asset access.
     /// </summary>
-    Task RecordAccessAsync(Guid assetReferenceId, CancellationToken ct = default);
+    bool ValidateToken(
+        string token,
+        Guid assetReferenceId,
+        Guid tenantId);
 }
 
 /// <summary>
@@ -33,17 +47,16 @@ public interface IAssetAccessService
 /// </summary>
 public record AssetAccessUrl(
     string Url,
-    DateTime ExpiresAt,
-    bool RequiresTransformation);
+    string Token,
+    DateTimeOffset ExpiresAt,
+    string MimeType);
 
 /// <summary>
 /// Result of access validation.
 /// </summary>
 public record AssetAccessValidation(
     bool IsValid,
-    AssetAccessDeniedReason? DeniedReason,
-    AssetReference? Reference,
-    TransformationSpec? Transformation);
+    AssetAccessDeniedReason? DeniedReason);
 
 /// <summary>
 /// Reason for access denial.
@@ -53,10 +66,9 @@ public enum AssetAccessDeniedReason
     NotFound,
     TokenInvalid,
     TokenExpired,
-    RateLimitExceeded,
+    AuthenticationRequired,
+    OwnershipRequired,
+    InvalidPolicy,
     ContentRejected,
-    ContentInfected,
-    FeatureDisabled,
-    InsufficientPermission,
-    DownloadWindowExpired
+    ContentInfected
 }

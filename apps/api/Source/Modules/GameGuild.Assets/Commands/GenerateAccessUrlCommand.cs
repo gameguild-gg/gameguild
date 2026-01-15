@@ -11,7 +11,7 @@ public record GenerateAccessUrlCommand(
     Guid? UserId,
     Guid TenantId,
     TransformationSpec? Transformation = null,
-    bool DirectStorageUrl = false) : IRequest<Result<GenerateAccessUrlResponse>>;
+    bool DirectStorageUrl = false) : IRequest<GenerateAccessUrlResponse?>;
 
 public record GenerateAccessUrlResponse(
     string Url,
@@ -28,7 +28,7 @@ public class GenerateAccessUrlValidator : AbstractValidator<GenerateAccessUrlCom
     }
 }
 
-public class GenerateAccessUrlHandler : IRequestHandler<GenerateAccessUrlCommand, Result<GenerateAccessUrlResponse>>
+public class GenerateAccessUrlHandler : IRequestHandler<GenerateAccessUrlCommand, GenerateAccessUrlResponse?>
 {
     private readonly IAssetAccessService _accessService;
 
@@ -37,7 +37,7 @@ public class GenerateAccessUrlHandler : IRequestHandler<GenerateAccessUrlCommand
         _accessService = accessService;
     }
 
-    public async Task<Result<GenerateAccessUrlResponse>> HandleAsync(
+    public async Task<GenerateAccessUrlResponse?> Handle(
         GenerateAccessUrlCommand request,
         CancellationToken ct = default)
     {
@@ -63,13 +63,13 @@ public class GenerateAccessUrlHandler : IRequestHandler<GenerateAccessUrlCommand
 
         if (accessUrl == null)
         {
-            return Result<GenerateAccessUrlResponse>.Failure("Unable to generate access URL. Asset may not exist or access denied.");
+            return null;
         }
 
-        return Result<GenerateAccessUrlResponse>.Success(new GenerateAccessUrlResponse(
+        return new GenerateAccessUrlResponse(
             accessUrl.Url,
             string.IsNullOrEmpty(accessUrl.Token) ? null : accessUrl.Token,
             accessUrl.ExpiresAt,
-            accessUrl.MimeType));
+            accessUrl.MimeType);
     }
 }

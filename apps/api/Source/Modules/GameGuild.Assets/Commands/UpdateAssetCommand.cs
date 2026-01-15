@@ -10,7 +10,7 @@ public record UpdateAssetCommand(
     Guid AssetReferenceId,
     Guid UserId,
     string? DisplayName = null,
-    AssetAccessPolicy? AccessPolicy = null) : IRequest<Result<UpdateAssetResponse>>;
+    AssetAccessPolicy? AccessPolicy = null) : IRequest<UpdateAssetResponse?>;
 
 public record UpdateAssetResponse(
     Guid AssetReferenceId,
@@ -27,7 +27,7 @@ public class UpdateAssetValidator : AbstractValidator<UpdateAssetCommand>
     }
 }
 
-public class UpdateAssetHandler : IRequestHandler<UpdateAssetCommand, Result<UpdateAssetResponse>>
+public class UpdateAssetHandler : IRequestHandler<UpdateAssetCommand, UpdateAssetResponse?>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
 
@@ -36,20 +36,20 @@ public class UpdateAssetHandler : IRequestHandler<UpdateAssetCommand, Result<Upd
         _referenceRepository = referenceRepository;
     }
 
-    public async Task<Result<UpdateAssetResponse>> HandleAsync(
+    public async Task<UpdateAssetResponse?> Handle(
         UpdateAssetCommand request,
         CancellationToken ct = default)
     {
         var reference = await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct);
         if (reference == null)
         {
-            return Result<UpdateAssetResponse>.Failure("Asset not found");
+            return null;
         }
 
         // Verify ownership
         if (!await _referenceRepository.IsOwnedByUserAsync(request.AssetReferenceId, request.UserId, ct))
         {
-            return Result<UpdateAssetResponse>.Failure("Access denied. You do not own this asset.");
+            return null;
         }
 
         // Apply updates
@@ -65,9 +65,9 @@ public class UpdateAssetHandler : IRequestHandler<UpdateAssetCommand, Result<Upd
 
         await _referenceRepository.UpdateAsync(reference, ct);
 
-        return Result<UpdateAssetResponse>.Success(new UpdateAssetResponse(
+        return new UpdateAssetResponse(
             reference.Id,
             reference.DisplayName,
-            reference.AccessPolicy));
+            reference.AccessPolicy);
     }
 }

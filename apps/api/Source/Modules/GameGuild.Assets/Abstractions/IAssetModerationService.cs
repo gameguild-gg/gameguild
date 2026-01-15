@@ -6,25 +6,39 @@ namespace GameGuild.Assets;
 public interface IAssetModerationService
 {
     /// <summary>
-    /// Submits content for auto-moderation.
+    /// Moderates content (virus scan, content analysis, etc.).
     /// </summary>
-    Task<ModerationResult> SubmitForModerationAsync(Guid contentId, CancellationToken ct = default);
-
-    /// <summary>
-    /// Reviews and approves/rejects content.
-    /// </summary>
-    Task<ModerationResult> ReviewContentAsync(
-        Guid contentId,
-        Guid reviewerId,
-        ModerationStatus status,
-        IEnumerable<string>? labels = null,
+    Task<ModerationResult> ModerateAsync(
+        Guid assetContentId,
+        Stream content,
+        string mimeType,
         CancellationToken ct = default);
 
     /// <summary>
-    /// Gets the moderation queue.
+    /// Gets pending reports for review.
     /// </summary>
-    Task<IReadOnlyList<AssetContent>> GetModerationQueueAsync(
+    Task<IReadOnlyList<AssetReport>> GetPendingReportsAsync(
         int limit = 100,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Submits a review for a report.
+    /// </summary>
+    Task<bool> SubmitReviewAsync(
+        Guid reportId,
+        Guid reviewerId,
+        ReviewDecision decision,
+        string? notes = null,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Creates a new content report.
+    /// </summary>
+    Task<AssetReport?> CreateReportAsync(
+        Guid assetReferenceId,
+        Guid reportedByUserId,
+        ReportReason reason,
+        string? description = null,
         CancellationToken ct = default);
 }
 
@@ -32,7 +46,8 @@ public interface IAssetModerationService
 /// Result of a moderation operation.
 /// </summary>
 public record ModerationResult(
-    Guid ContentId,
+    bool IsApproved,
     ModerationStatus Status,
-    IReadOnlyList<string> Labels,
-    bool RequiresHumanReview);
+    double Confidence,
+    string? DetectedIssue,
+    string? Error);

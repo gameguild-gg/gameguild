@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Assets;
 
 /// <summary>
-/// Options for asset upload configuration.
+/// Configuration options for asset upload.
 /// </summary>
-public class AssetUploadOptions
+public class AssetUploadConfiguration
 {
     public const string SectionName = "Assets:Upload";
 
@@ -25,7 +25,7 @@ public class AssetUploadService : IAssetUploadService
     private readonly IAssetContentRepository _contentRepository;
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetStorageService _storageService;
-    private readonly Microsoft.Extensions.Options.IOptions<AssetUploadOptions> _options;
+    private readonly Microsoft.Extensions.Options.IOptions<AssetUploadConfiguration> _options;
     private readonly ILogger<AssetUploadService> _logger;
     
     // In-memory store for chunked uploads (should be replaced with distributed cache in production)
@@ -35,7 +35,7 @@ public class AssetUploadService : IAssetUploadService
         IAssetContentRepository contentRepository,
         IAssetReferenceRepository referenceRepository,
         IAssetStorageService storageService,
-        Microsoft.Extensions.Options.IOptions<AssetUploadOptions> options,
+        Microsoft.Extensions.Options.IOptions<AssetUploadConfiguration> options,
         ILogger<AssetUploadService> logger)
     {
         _contentRepository = contentRepository;

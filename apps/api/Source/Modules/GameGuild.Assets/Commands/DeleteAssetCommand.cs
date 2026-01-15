@@ -9,7 +9,7 @@ namespace GameGuild.Assets.Commands;
 public record DeleteAssetCommand(
     Guid AssetReferenceId,
     Guid UserId,
-    bool ForceDelete = false) : IRequest<Result<DeleteAssetResponse>>;
+    bool ForceDelete = false) : IRequest<DeleteAssetResponse>;
 
 public record DeleteAssetResponse(
     bool Success,
@@ -24,7 +24,7 @@ public class DeleteAssetValidator : AbstractValidator<DeleteAssetCommand>
     }
 }
 
-public class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, Result<DeleteAssetResponse>>
+public class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, DeleteAssetResponse>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetContentRepository _contentRepository;
@@ -37,21 +37,21 @@ public class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, Result<Del
         _contentRepository = contentRepository;
     }
 
-    public async Task<Result<DeleteAssetResponse>> HandleAsync(
+    public async Task<DeleteAssetResponse> Handle(
         DeleteAssetCommand request,
         CancellationToken ct = default)
     {
         var reference = await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct);
         if (reference == null)
         {
-            return Result<DeleteAssetResponse>.Failure("Asset not found");
+            return new DeleteAssetResponse(false, false);
         }
 
         // Verify ownership (admin override with ForceDelete)
         if (!request.ForceDelete && 
             !await _referenceRepository.IsOwnedByUserAsync(request.AssetReferenceId, request.UserId, ct))
         {
-            return Result<DeleteAssetResponse>.Failure("Access denied. You do not own this asset.");
+            return new DeleteAssetResponse(false, false);
         }
 
         var contentId = reference.AssetContentId;
@@ -66,8 +66,6 @@ public class DeleteAssetHandler : IRequestHandler<DeleteAssetCommand, Result<Del
         var content = await _contentRepository.GetByIdAsync(contentId, ct);
         var contentMarkedForDeletion = content?.MarkedForDeletionAt != null;
 
-        return Result<DeleteAssetResponse>.Success(new DeleteAssetResponse(
-            true,
-            contentMarkedForDeletion));
+        return new DeleteAssetResponse(true, contentMarkedForDeletion);
     }
 }

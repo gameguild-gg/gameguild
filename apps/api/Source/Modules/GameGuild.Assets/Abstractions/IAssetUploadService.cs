@@ -13,13 +13,13 @@ public interface IAssetUploadService
         string fileName,
         string mimeType,
         Guid userId,
-        AssetUploadOptions? options = null,
+        UploadAssetOptions options,
         CancellationToken ct = default);
 
     /// <summary>
     /// Initializes a chunked upload for large files.
     /// </summary>
-    Task<ChunkedUploadSession> InitializeChunkedUploadAsync(
+    Task<ChunkedUploadSession> InitiateChunkedUploadAsync(
         string fileName,
         string mimeType,
         long totalSize,
@@ -29,51 +29,56 @@ public interface IAssetUploadService
     /// <summary>
     /// Uploads a chunk.
     /// </summary>
-    Task UploadChunkAsync(
-        Guid uploadId,
-        int partNumber,
-        Stream content,
+    Task<bool> UploadChunkAsync(
+        string uploadId,
+        int chunkIndex,
+        Stream chunkContent,
         CancellationToken ct = default);
 
     /// <summary>
     /// Completes a chunked upload.
     /// </summary>
     Task<AssetUploadResult> CompleteChunkedUploadAsync(
-        Guid uploadId,
-        AssetUploadOptions? options = null,
+        string uploadId,
+        UploadAssetOptions options,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Aborts a chunked upload.
+    /// </summary>
+    Task AbortChunkedUploadAsync(
+        string uploadId,
         CancellationToken ct = default);
 }
 
 /// <summary>
 /// Options for asset upload.
 /// </summary>
-public record AssetUploadOptions
-{
-    public string? DisplayName { get; init; }
-    public string? Description { get; init; }
-    public string? AltText { get; init; }
-    public AssetAccessPolicy AccessPolicy { get; init; } = AssetAccessPolicy.Private;
-    public string? ParentResourceType { get; init; }
-    public Guid? ParentResourceId { get; init; }
-    public IReadOnlyList<string>? Tags { get; init; }
-}
+public record UploadAssetOptions(
+    string? DisplayName = null,
+    AssetAccessPolicy AccessPolicy = AssetAccessPolicy.Private,
+    string? ParentResourceType = null,
+    Guid? ParentResourceId = null);
 
 /// <summary>
 /// Result of an asset upload.
 /// </summary>
 public record AssetUploadResult(
-    Guid AssetReferenceId,
-    Guid AssetContentId,
-    string ContentHash,
-    long SizeBytes,
-    AssetKind Kind,
-    bool WasDeduplicated);
+    bool Success,
+    Guid? AssetReferenceId,
+    Guid? AssetContentId,
+    string? Error);
 
 /// <summary>
 /// Session for chunked upload.
 /// </summary>
 public record ChunkedUploadSession(
-    Guid UploadId,
-    string UploadKey,
-    int TotalParts,
-    DateTime ExpiresAt);
+    string UploadId,
+    string ObjectKey,
+    Guid UserId,
+    string FileName,
+    string MimeType,
+    long TotalSize,
+    int TotalChunks,
+    DateTime ExpiresAt,
+    int UploadedChunks = 0);

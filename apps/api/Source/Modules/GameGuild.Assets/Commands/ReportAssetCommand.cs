@@ -10,7 +10,7 @@ public record ReportAssetCommand(
     Guid AssetReferenceId,
     Guid ReportedByUserId,
     ReportReason Reason,
-    string? Description = null) : IRequest<Result<ReportAssetResponse>>;
+    string? Description = null) : IRequest<ReportAssetResponse?>;
 
 public record ReportAssetResponse(
     Guid ReportId,
@@ -27,7 +27,7 @@ public class ReportAssetValidator : AbstractValidator<ReportAssetCommand>
     }
 }
 
-public class ReportAssetHandler : IRequestHandler<ReportAssetCommand, Result<ReportAssetResponse>>
+public class ReportAssetHandler : IRequestHandler<ReportAssetCommand, ReportAssetResponse?>
 {
     private readonly IAssetModerationService _moderationService;
     private readonly IAssetReferenceRepository _referenceRepository;
@@ -40,7 +40,7 @@ public class ReportAssetHandler : IRequestHandler<ReportAssetCommand, Result<Rep
         _referenceRepository = referenceRepository;
     }
 
-    public async Task<Result<ReportAssetResponse>> HandleAsync(
+    public async Task<ReportAssetResponse?> Handle(
         ReportAssetCommand request,
         CancellationToken ct = default)
     {
@@ -48,13 +48,13 @@ public class ReportAssetHandler : IRequestHandler<ReportAssetCommand, Result<Rep
         var reference = await _referenceRepository.GetByIdAsync(request.AssetReferenceId, ct);
         if (reference == null)
         {
-            return Result<ReportAssetResponse>.Failure("Asset not found");
+            return null;
         }
 
         // Cannot report your own asset
         if (reference.CreatedByUserId == request.ReportedByUserId)
         {
-            return Result<ReportAssetResponse>.Failure("You cannot report your own asset");
+            return null;
         }
 
         var report = await _moderationService.CreateReportAsync(
@@ -66,11 +66,9 @@ public class ReportAssetHandler : IRequestHandler<ReportAssetCommand, Result<Rep
 
         if (report == null)
         {
-            return Result<ReportAssetResponse>.Failure("You have already reported this asset");
+            return null;
         }
 
-        return Result<ReportAssetResponse>.Success(new ReportAssetResponse(
-            report.Id,
-            report.Status));
+        return new ReportAssetResponse(report.Id, report.Status);
     }
 }

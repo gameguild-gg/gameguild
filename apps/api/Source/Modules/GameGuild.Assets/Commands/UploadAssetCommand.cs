@@ -15,13 +15,14 @@ public record UploadAssetCommand(
     string? DisplayName = null,
     AssetAccessPolicy AccessPolicy = AssetAccessPolicy.Private,
     string? ParentResourceType = null,
-    Guid? ParentResourceId = null) : IRequest<Result<UploadAssetResponse>>;
+    Guid? ParentResourceId = null) : IRequest<UploadAssetResponse>;
 
 public record UploadAssetResponse(
     Guid AssetReferenceId,
     Guid AssetContentId,
     string ContentHash,
-    bool WasDeduped);
+    bool WasDeduped,
+    string? Error = null);
 
 public class UploadAssetValidator : AbstractValidator<UploadAssetCommand>
 {
@@ -37,7 +38,7 @@ public class UploadAssetValidator : AbstractValidator<UploadAssetCommand>
     }
 }
 
-public class UploadAssetHandler : IRequestHandler<UploadAssetCommand, Result<UploadAssetResponse>>
+public class UploadAssetHandler : IRequestHandler<UploadAssetCommand, UploadAssetResponse>
 {
     private readonly IAssetUploadService _uploadService;
     private readonly IAssetContentRepository _contentRepository;
@@ -50,7 +51,7 @@ public class UploadAssetHandler : IRequestHandler<UploadAssetCommand, Result<Upl
         _contentRepository = contentRepository;
     }
 
-    public async Task<Result<UploadAssetResponse>> HandleAsync(
+    public async Task<UploadAssetResponse> Handle(
         UploadAssetCommand request,
         CancellationToken ct = default)
     {
@@ -70,17 +71,18 @@ public class UploadAssetHandler : IRequestHandler<UploadAssetCommand, Result<Upl
 
         if (!result.Success)
         {
-            return Result<UploadAssetResponse>.Failure(result.Error ?? "Upload failed");
+            return new UploadAssetResponse(
+                Guid.Empty, Guid.Empty, string.Empty, false, result.Error ?? "Upload failed");
         }
 
         // Get content to check if it was deduped
         var content = await _contentRepository.GetByIdAsync(result.AssetContentId!.Value, ct);
         var wasDeduped = content?.ReferenceCount > 1;
 
-        return Result<UploadAssetResponse>.Success(new UploadAssetResponse(
+        return new UploadAssetResponse(
             result.AssetReferenceId!.Value,
             result.AssetContentId!.Value,
             content?.ContentHash ?? string.Empty,
-            wasDeduped));
+            wasDeduped);
     }
 }
