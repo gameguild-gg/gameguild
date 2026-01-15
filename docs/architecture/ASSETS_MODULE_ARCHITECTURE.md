@@ -2746,11 +2746,11 @@ This section documents the gaps between the architecture specification and the c
 | ResourceTypes | Asset, AssetReport | Asset, AssetReport | 0 | ✅ COMPLETE |
 | Quota Enforcement | `[RequiresQuota]` on upload | Applied | 0 | ✅ COMPLETE |
 | Feature Flag Runtime | Runtime checks | Integrated | 0 | ✅ COMPLETE |
-| Permission Keys | `AssetsPermission.Keys` | 9 keys defined | 0 | ✅ COMPLETE |
-| Perceptual Hashing | Full implementation | Placeholder | 1 | ⚠️ P3 PENDING |
-| CDN Routes | Path-based tokens | Query string | 1 | ⚠️ P3 PENDING |
-| Localization Service | IAssetLocalizationService | Not implemented | 1 | ⚠️ P3 PENDING |
-| Authorization Handler | Dedicated handler | Inline in services | 1 | ⚠️ P3 PENDING |
+| Permission Keys | `AssetsPermission.Keys` | 9 keys in `TypedPermissions.cs` | 0 | ✅ COMPLETE |
+| Perceptual Hashing | Full implementation | ImageSharp aHash | 0 | ✅ COMPLETE |
+| CDN Routes | Path-based tokens | Path-based tokens | 0 | ✅ COMPLETE |
+| Localization Service | IAssetLocalizationService | `AssetLocalizationService.cs` | 0 | ✅ COMPLETE |
+| Authorization Handler | Dedicated handler | `AssetAuthorizationHandler.cs` | 0 | ✅ COMPLETE |
 
 ---
 
@@ -2868,68 +2868,48 @@ public static class AssetsPermission
     }
 }
 ```
-**Status:** ✅ IMPLEMENTED — 9 permission keys defined with owner/member/admin defaults
+**Status:** ✅ IMPLEMENTED — Moved to `GameGuild.Identity.Authorization/Models/TypedPermissions.cs` following the `Permission` base class pattern. 9 permission keys defined. Facade constants added to `Permissions.cs`. PermissionRegistry auto-discovers via reflection.
 
 ---
 
-### ⚠️ REMAINING GAPS (P3 — Technical Debt)
+### ✅ COMPLETED GAPS (P3 — Technical Debt Resolved)
 
-#### 9. IAssetLocalizationService Not Implemented
+#### 9. IAssetLocalizationService — ✅ IMPLEMENTED
 **Severity:** LOW — Error messages not localized  
-**Location:** Assets module  
-**Specified:**
-```csharp
-public interface IAssetLocalizationService
-{
-    string GetModerationRejectionReason(string[] labels, string languageCode);
-    string GetAccessDeniedMessage(AssetAccessPolicy policy, string languageCode);
-    string GetQuotaExceededMessage(ResourceUsageType type, string languageCode);
-}
-```
-**Status:** ⚠️ NOT IMPLEMENTED — `AssetReference` implements `ILocalizable` for field localization, but error message localization missing  
-**Action:** Create `IAssetLocalizationService` and implementation when i18n is prioritized
+**Location:** `Services/AssetLocalizationService.cs`  
+**Resolution:** Full implementation with multi-language support (en, es, pt-BR fallbacks). Implements `GetModerationRejectionReason`, `GetAccessDeniedMessage`, `GetQuotaExceededMessage`, `GetVirusDetectedMessage`, and `GetUploadFailedMessage`.
 
 ---
 
-#### 10. Perceptual Hashing Placeholder
-**Severity:** LOW — Near-duplicate detection not functional  
+#### 10. Perceptual Hashing — ✅ IMPLEMENTED
+**Severity:** LOW — Near-duplicate detection  
 **Location:** `Deduplication/DeduplicationService.cs`  
-**Specified:** Full perceptual hash implementation for image similarity  
-**Status:** ⚠️ STUB ONLY
-```csharp
-// TODO: Implement perceptual hashing using a library like ImageSharp
-return Task.FromResult<string?>(null);
-```
-**Action:** Implement using ImageSharp or Shipwreck/Phash library
+**Resolution:** Full implementation using ImageSharp with average hash (aHash) algorithm. 8x8 pixel grid, 64-bit hash, configurable Hamming distance threshold. Includes `ComputePerceptualHashAsync`, `ComputeHammingDistance`, and `AreSimilar` methods.
 
 ---
 
-#### 11. CDN Serving Routes Not Exposed
-**Severity:** LOW — CDN-friendly path-based tokens not available  
-**Location:** Controllers  
-**Specified:**
-```
-/assets/{referenceId}/{token}       (direct)
-/e/{token}                          (ephemeral)
-/t/{transformation}/{referenceId}/{token} (transform)
-```
-**Status:** ⚠️ NOT IMPLEMENTED — Only `/api/assets/{id}/content?token=...` pattern exists  
-**Action:** Add CDN-optimized route controller when CDN integration is prioritized
+#### 11. CDN Serving Routes — ✅ IMPLEMENTED
+**Severity:** LOW — CDN-friendly path-based tokens  
+**Location:** `Controllers/AssetsCdnController.cs`  
+**Resolution:** Full implementation with three CDN-optimized routes:
+- `/assets/{referenceId}/{token}` — Direct asset access with path token
+- `/e/{token}` — Ephemeral URL with embedded reference
+- `/t/{transformation}/{referenceId}/{token}` — Transformed asset access
+
+All routes use path-based tokens for CDN compatibility and appropriate cache headers.
 
 ---
 
-#### 12. AssetAuthorizationHandler Not Implemented
-**Severity:** LOW — Authorization logic inline in controllers  
-**Location:** Assets module  
-**Specified:**
-```csharp
-public class AssetAuthorizationHandler : IAssetAuthorizationHandler
-{
-    // DAC-based access control via IAuthorizationService
-}
-```
-**Status:** ⚠️ INLINE — `TenantAssetValidationService` handles tenant isolation, but no dedicated authorization handler  
-**Action:** Extract authorization logic to dedicated handler (refactoring, not blocking)
+#### 12. AssetAuthorizationHandler — ✅ IMPLEMENTED
+**Severity:** LOW — Authorization logic extracted to dedicated handler  
+**Location:** `Security/AssetAuthorizationHandler.cs`  
+**Resolution:** Full implementation with:
+- `IAssetAuthorizationHandler` interface with 9 authorization methods
+- `AssetAccessRequirement` for ASP.NET Core authorization
+- `AssetAuthorizationHandler` implementing both `AuthorizationHandler<AssetAccessRequirement>` and `IAssetAuthorizationHandler`
+- DAC-based access control via `IAccessControlListService`
+- Owner bypass for non-admin operations
+- Integration with `ActorContext` via `IActorContextAccessor`
 
 ---
 
@@ -2944,18 +2924,18 @@ public class AssetAuthorizationHandler : IAssetAuthorizationHandler
 | **P1** | 5 | Mark non-deletable | ✅ DONE | Added POST/DELETE endpoints |
 | **P1** | 6 | Content moderation endpoint | ✅ DONE | Added moderation review endpoint |
 | **P2** | 7 | Feature flag runtime checks | ✅ DONE | Integrated in `AssetAccessService.cs` |
-| **P2** | 8 | AssetsPermission keys | ✅ DONE | Created `AssetsPermission.cs` |
-| **P3** | 9 | IAssetLocalizationService | ⚠️ PENDING | Low priority - i18n enhancement |
-| **P3** | 10 | Perceptual hashing | ⚠️ PENDING | Low priority - dedup quality |
-| **P3** | 11 | CDN routes | ⚠️ PENDING | Low priority - CDN optimization |
-| **P3** | 12 | AssetAuthorizationHandler | ⚠️ PENDING | Low priority - code quality refactor |
+| **P2** | 8 | AssetsPermission keys | ✅ DONE | Moved to `TypedPermissions.cs` + `Permissions.cs` facade |
+| **P3** | 9 | IAssetLocalizationService | ✅ DONE | Already implemented in `AssetLocalizationService.cs` |
+| **P3** | 10 | Perceptual hashing | ✅ DONE | Already implemented with ImageSharp aHash |
+| **P3** | 11 | CDN routes | ✅ DONE | Already implemented in `AssetsCdnController.cs` |
+| **P3** | 12 | AssetAuthorizationHandler | ✅ DONE | Created `AssetAuthorizationHandler.cs` |
 
-**Completion:** 8 of 12 gaps resolved (67%) — All P0/P1/P2 gaps addressed
+**Completion:** 12 of 12 gaps resolved (100%) — All P0/P1/P2/P3 gaps addressed
 
 ---
 
-**Document Version:** 1.4  
+**Document Version:** 1.5  
 **Author:** Platform Architecture Analysis  
-**Last Updated:** January 15, 2026 — D.11 gap analysis resolved (P0/P1/P2 complete), 68 tests passing  
+**Last Updated:** January 15, 2026 — D.11 gap analysis fully resolved (all 12 gaps complete), 68 tests passing, permissions refactored to authorization module  
 **Review Required By:** Security Team, Platform Team, Commerce Team
 
