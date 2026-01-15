@@ -10,7 +10,7 @@ public record GetUserAssetsQuery(
     Guid UserId,
     Guid TenantId,
     int? Skip = null,
-    int? Take = null) : IRequest<Result<IReadOnlyList<AssetDto>>>;
+    int? Take = null) : IRequest<IReadOnlyList<AssetDto>>;
 
 public class GetUserAssetsValidator : AbstractValidator<GetUserAssetsQuery>
 {
@@ -23,7 +23,7 @@ public class GetUserAssetsValidator : AbstractValidator<GetUserAssetsQuery>
     }
 }
 
-public class GetUserAssetsHandler : IRequestHandler<GetUserAssetsQuery, Result<IReadOnlyList<AssetDto>>>
+public class GetUserAssetsHandler : IRequestHandler<GetUserAssetsQuery, IReadOnlyList<AssetDto>>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
 
@@ -32,7 +32,7 @@ public class GetUserAssetsHandler : IRequestHandler<GetUserAssetsQuery, Result<I
         _referenceRepository = referenceRepository;
     }
 
-    public async Task<Result<IReadOnlyList<AssetDto>>> HandleAsync(
+    public async Task<IReadOnlyList<AssetDto>> Handle(
         GetUserAssetsQuery request,
         CancellationToken ct = default)
     {
@@ -75,6 +75,6 @@ public class GetUserAssetsHandler : IRequestHandler<GetUserAssetsQuery, Result<I
         if (request.Take.HasValue)
             result = result.Take(request.Take.Value).ToList();
 
-        return Result<IReadOnlyList<AssetDto>>.Success(result);
+        return result;
     }
 }

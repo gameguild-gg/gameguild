@@ -10,7 +10,7 @@ public record GetAssetQuery(
     Guid AssetReferenceId,
     Guid? UserId,
     Guid TenantId,
-    bool IncludeContentDetails = false) : IRequest<Result<AssetDto?>>;
+    bool IncludeContentDetails = false) : IRequest<AssetDto?>;
 
 public record AssetDto(
     Guid Id,
@@ -45,7 +45,7 @@ public class GetAssetValidator : AbstractValidator<GetAssetQuery>
     }
 }
 
-public class GetAssetHandler : IRequestHandler<GetAssetQuery, Result<AssetDto?>>
+public class GetAssetHandler : IRequestHandler<GetAssetQuery, AssetDto?>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetAccessService _accessService;
@@ -58,7 +58,7 @@ public class GetAssetHandler : IRequestHandler<GetAssetQuery, Result<AssetDto?>>
         _accessService = accessService;
     }
 
-    public async Task<Result<AssetDto?>> HandleAsync(
+    public async Task<AssetDto?> Handle(
         GetAssetQuery request,
         CancellationToken ct = default)
     {
@@ -68,7 +68,7 @@ public class GetAssetHandler : IRequestHandler<GetAssetQuery, Result<AssetDto?>>
 
         if (reference == null)
         {
-            return Result<AssetDto?>.Success(null);
+            return null;
         }
 
         // Check access
@@ -80,7 +80,7 @@ public class GetAssetHandler : IRequestHandler<GetAssetQuery, Result<AssetDto?>>
 
         if (!validation.IsValid)
         {
-            return Result<AssetDto?>.Failure($"Access denied: {validation.DeniedReason}");
+            return null;
         }
 
         AssetContentDto? contentDto = null;
@@ -97,7 +97,7 @@ public class GetAssetHandler : IRequestHandler<GetAssetQuery, Result<AssetDto?>>
                 reference.Content.ModerationStatus);
         }
 
-        return Result<AssetDto?>.Success(new AssetDto(
+        return new AssetDto(
             reference.Id,
             reference.AssetContentId,
             reference.CreatedByUserId,
@@ -109,6 +109,6 @@ public class GetAssetHandler : IRequestHandler<GetAssetQuery, Result<AssetDto?>>
             reference.LastAccessedAt,
             reference.CreatedAt,
             reference.UpdatedAt,
-            contentDto));
+            contentDto);
     }
 }

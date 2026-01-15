@@ -7,7 +7,7 @@ namespace GameGuild.Assets.Queries;
 /// Query to get pending moderation queue (admin only).
 /// </summary>
 public record GetModerationQueueQuery(
-    int Limit = 100) : IRequest<Result<IReadOnlyList<ReportDto>>>;
+    int Limit = 100) : IRequest<IReadOnlyList<ReportDto>>;
 
 public record ReportDto(
     Guid Id,
@@ -31,7 +31,7 @@ public class GetModerationQueueValidator : AbstractValidator<GetModerationQueueQ
     }
 }
 
-public class GetModerationQueueHandler : IRequestHandler<GetModerationQueueQuery, Result<IReadOnlyList<ReportDto>>>
+public class GetModerationQueueHandler : IRequestHandler<GetModerationQueueQuery, IReadOnlyList<ReportDto>>
 {
     private readonly IAssetModerationService _moderationService;
 
@@ -40,7 +40,7 @@ public class GetModerationQueueHandler : IRequestHandler<GetModerationQueueQuery
         _moderationService = moderationService;
     }
 
-    public async Task<Result<IReadOnlyList<ReportDto>>> HandleAsync(
+    public async Task<IReadOnlyList<ReportDto>> Handle(
         GetModerationQueueQuery request,
         CancellationToken ct = default)
     {
@@ -95,6 +95,6 @@ public class GetModerationQueueHandler : IRequestHandler<GetModerationQueueQuery
                 assetDto);
         }).ToList();
 
-        return Result<IReadOnlyList<ReportDto>>.Success(result);
+        return result;
     }
 }

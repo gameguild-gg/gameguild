@@ -10,7 +10,7 @@ public record GetAssetsByParentQuery(
     string ParentResourceType,
     Guid ParentResourceId,
     Guid? UserId,
-    Guid TenantId) : IRequest<Result<IReadOnlyList<AssetDto>>>;
+    Guid TenantId) : IRequest<IReadOnlyList<AssetDto>>;
 
 public class GetAssetsByParentValidator : AbstractValidator<GetAssetsByParentQuery>
 {
@@ -22,7 +22,7 @@ public class GetAssetsByParentValidator : AbstractValidator<GetAssetsByParentQue
     }
 }
 
-public class GetAssetsByParentHandler : IRequestHandler<GetAssetsByParentQuery, Result<IReadOnlyList<AssetDto>>>
+public class GetAssetsByParentHandler : IRequestHandler<GetAssetsByParentQuery, IReadOnlyList<AssetDto>>
 {
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetAccessService _accessService;
@@ -35,7 +35,7 @@ public class GetAssetsByParentHandler : IRequestHandler<GetAssetsByParentQuery, 
         _accessService = accessService;
     }
 
-    public async Task<Result<IReadOnlyList<AssetDto>>> HandleAsync(
+    public async Task<IReadOnlyList<AssetDto>> Handle(
         GetAssetsByParentQuery request,
         CancellationToken ct = default)
     {
@@ -87,6 +87,6 @@ public class GetAssetsByParentHandler : IRequestHandler<GetAssetsByParentQuery, 
                 contentDto));
         }
 
-        return Result<IReadOnlyList<AssetDto>>.Success(result);
+        return result;
     }
 }
