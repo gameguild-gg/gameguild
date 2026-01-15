@@ -18,4 +18,4 @@ public record GetResourceUsageRecordsQuery(
     DateTime? StartDate = null, 
     DateTime? EndDate = null,
     int PageNumber = 1,
-    int PageSize = 50) : IQuery<PagedResult<UsageRecord>>;
+    int PageSize = 50) : IQuery<Models.PagedResult<UsageRecord>>;

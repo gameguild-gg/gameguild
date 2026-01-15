@@ -475,7 +475,7 @@ if (quotasToUpdate.Count > 0)
 |-------|--------|----------|-----------------|
 | **N+1 Queries** | DB connection exhaustion under load | `ResourceQuotaService.cs:158` | Batch queries with `ToDictionaryAsync()` |
 | **Token Validation Loop** | O(n) per request | `AssetTokenService.ValidateToken()` iterates `AccessPolicy` enum | Pre-compute valid signatures, cache tokens |
-| **Unbounded Result Sets** | Memory pressure on large tenants | `GetResourceUsageRecordsQuery` returns all matching records | Add pagination |
+| ~~**Unbounded Result Sets**~~ | ~~Memory pressure on large tenants~~ | ~~`GetResourceUsageRecordsQuery` returns all matching records~~ | ~~Add pagination~~ ✅ **FIXED** - Uses `PagedResult<T>` with max 200 per page |
 | **No Connection Pooling Config** | Connection starvation | Default EF Core settings | Configure `MaxPoolSize` in connection string |
 
 ### Caching Architecture ✅
@@ -498,7 +498,7 @@ if (quotasToUpdate.Count > 0)
 | 5 | ValidateToken O(n) complexity | **HIGH** | `AssetTokenService.ValidateToken()` | DoS vulnerability via signature verification | ⚠️ OPEN |
 | 6 | ~~N+1 query in CheckMultipleLimitsAsync~~ | ~~MEDIUM~~ | [ResourceQuotaService.cs:158](apps/api/Source/Modules/GameGuild.Resources/Services/ResourceQuotaService.cs#L158) | ~~Performance degradation.~~ Batch query via `GetByTenantAndTypesAsync`. | ✅ **FIXED 2026-01-15** |
 | 7 | ~~Resources administrative endpoints publicly exposed~~ | ~~MEDIUM~~ | [ResourcesController.cs](apps/api/Source/Modules/GameGuild.Resources/Controllers/ResourcesController.cs) | ~~Cross-tenant usage aggregation~~ | ✅ **FIXED** - Now requires admin role |
-| 8 | Unbounded result sets | **MEDIUM** | `GetResourceUsageRecordsQuery` returns all matching records | Memory pressure on large tenants, OOM risk | ⚠️ OPEN |
+| 8 | ~~Unbounded result sets~~ | ~~MEDIUM~~ | [GetResourceUsageRecordsQuery.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/GetResourceUsageRecords/GetResourceUsageRecordsQuery.cs) | ~~Memory pressure on large tenants, OOM risk.~~ Pagination implemented with PageSize (max 200). | ✅ **FIXED 2026-01-15** |
 | 9 | ~~Missing input validation on date ranges~~ | ~~MEDIUM~~ | [GetResourceUsageRecordsQueryValidator.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/GetResourceUsageRecords/GetResourceUsageRecordsQueryValidator.cs) | ~~Invalid date ranges accepted.~~ Validator limits range to 366 days, prevents future dates. | ✅ **FIXED** |
 | 10 | ~~User quota endpoints vulnerable to vertical escalation~~ | ~~MEDIUM~~ | [UserQuotasController.cs:74](apps/api/Source/Modules/GameGuild.Resources/Controllers/UserQuotasController.cs#L74) | ~~Any user can modify any other user's quota.~~ User ownership validation added. | ✅ **FIXED 2026-01-15** |
 | 11 | Hard-coded token validity constants | **LOW** | `AssetTokenService.cs` (86400s, 28800s) | Configuration rigidity, requires code change | ⚠️ OPEN |
@@ -507,6 +507,7 @@ if (quotasToUpdate.Count > 0)
 | 14 | No audit logging for quota administrative changes | **LOW** | `TenantQuotasController.SetQuota()` | Compliance gap for SOC2/ISO 27001 | ⚠️ OPEN |
 | 15 | ~~UsageRecord missing validation~~ | ~~MEDIUM~~ | [RecordResourceUsageCommandValidator.cs](apps/api/Source/Modules/GameGuild.Resources/Commands/RecordResourceUsage/RecordResourceUsageCommandValidator.cs) | ~~Amount/DateRange not validated.~~ FluentValidation in place. | ✅ **FIXED** |
 | 16 | ~~N+1 query in CheckResourceUsageLimitsQueryHandler~~ | ~~MEDIUM~~ | [CheckResourceUsageLimitsQueryHandler.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/CheckResourceUsageLimits/CheckResourceUsageLimitsQueryHandler.cs) | ~~Multiple UpdateAsync calls.~~ Batch save via `SaveChangesAsync`. | ✅ **FIXED 2026-01-15** |
+| 17 | ~~PagedResult type ambiguity causing build errors~~ | ~~LOW~~ | [GetResourceUsageRecordsQuery.cs](apps/api/Source/Modules/GameGuild.Resources/Queries/GetResourceUsageRecords/GetResourceUsageRecordsQuery.cs) | ~~Ambiguous reference between `GameGuild.CQRS.PagedResult` and `GameGuild.Models.PagedResult`.~~ Fixed with fully qualified `Models.PagedResult<T>`. | ✅ **FIXED 2026-01-15** |
 
 ---
 
@@ -674,12 +675,19 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | `RecordUserResourceUsageCommandValidator` | UserId required, Count > 0, PeriodStart ≤ PeriodEnd | ✅ In Place |
 | `GetResourceUsageRecordsQueryValidator` | TenantId required, DateRange ≤ 366 days, no future dates | ✅ In Place |
 
+### ✅ Performance Fixes Applied (2026-01-15)
+
+| Component | Fix Applied | Details |
+|-----------|-------------|---------|
+| `GetResourceUsageRecordsQuery` | Pagination with `PagedResult<T>` | PageNumber, PageSize (max 200) parameters, prevents OOM |
+| `GetResourceUsageRecordsQueryHandler` | Type disambiguation | Uses `Models.PagedResult<UsageRecord>` to resolve CQRS/Models ambiguity |
+| `DependencyInjectionInfrastructure` | Type disambiguation | Uses `Models.PagedResult<UsageRecord>` in DI registration |
+
 ### Remaining Actions Required
 
-1. ⚠️ **HIGH:** Re-enable global `PermissionAuthorizationFilter`
-2. ⚠️ **HIGH:** Fix token validation O(n) complexity in `AssetTokenService`
-3. ⚠️ **MEDIUM:** Add `[EnableRateLimiting]` to Resources endpoints
-4. ✅ **VERIFY:** Run integration tests confirming 401/403 responses
+1. ⚠️ **HIGH:** Fix token validation O(n) complexity in `AssetTokenService`
+2. ⚠️ **MEDIUM:** Add `[EnableRateLimiting]` to Resources endpoints
+3. ✅ **VERIFY:** Run integration tests confirming 401/403 responses
 
 ---
 
@@ -706,9 +714,9 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 |------|------|-------|-------------|--------|
 | 5 | ~~Fix N+1 query in `CheckMultipleLimitsAsync`~~ | Dev Team | Batch query via `GetByTenantAndTypesAsync` | ✅ **DONE** |
 | 5 | ~~Fix N+1 query in `CheckResourceUsageLimitsQueryHandler`~~ | Dev Team | Batch save via `SaveChangesAsync` | ✅ **DONE** |
-| 6 | Add pagination to `GetResourceUsageRecordsQuery` | Dev Team | Paginated API | ⚠️ PENDING |
+| 6 | ~~Add pagination to `GetResourceUsageRecordsQuery`~~ | Dev Team | `PagedResult<T>` with max 200/page | ✅ **DONE 2026-01-15** |
 | 6 | Implement token signature caching in `AssetTokenService` | Dev Team | Performance improvement | ⚠️ PENDING |
-| 7 | Add FluentValidation to date range inputs | Dev Team | Input validation | ⚠️ PENDING |
+| 7 | ~~Add FluentValidation to date range inputs~~ | Dev Team | Input validation | ✅ **DONE** |
 | 7 | Configure connection pooling for high load | DevOps | DB config update | ⚠️ PENDING |
 | 8 | Load testing: 1000 concurrent quota operations | QA | Performance report | ⚠️ PENDING |
 
@@ -736,7 +744,7 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | 5 | Token validation O(n) complexity per request | **HIGH** | Assets | ⚠️ OPEN |
 | 6 | No rate limiting on Resources endpoints | **MEDIUM** | Resources | ⚠️ OPEN |
 | 7 | ~~N+1 query in `CheckMultipleLimitsAsync`~~ | ~~MEDIUM~~ | Resources | ✅ **FIXED** |
-| 8 | Unbounded result sets in usage queries | **MEDIUM** | Resources | ⚠️ OPEN |
+| 8 | ~~Unbounded result sets in usage queries~~ | ~~MEDIUM~~ | Resources | ✅ **FIXED** |
 | 9 | ~~Missing input validation on date ranges~~ | ~~MEDIUM~~ | Resources | ✅ **FIXED** |
 | 10 | ~~UsageRecord missing validation~~ | ~~MEDIUM~~ | Resources | ✅ **FIXED** |
 

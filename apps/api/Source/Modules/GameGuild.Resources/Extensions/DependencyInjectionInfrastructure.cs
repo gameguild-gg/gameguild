@@ -1,5 +1,6 @@
 using GameGuild.CQRS;
 using GameGuild.Configuration;
+using GameGuild.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -61,7 +62,7 @@ public static class DependencyInjection
         services.AddScoped<IQueryHandler<CheckResourceQuotaQuery, ResourceQuotaEnforcementResult>, CheckResourceQuotaQueryHandler>();
 
         // Register Usage Queries
-        services.AddScoped<IQueryHandler<GetResourceUsageRecordsQuery, PagedResult<UsageRecord>>, GetResourceUsageRecordsQueryHandler>();
+        services.AddScoped<IQueryHandler<GetResourceUsageRecordsQuery, Models.PagedResult<UsageRecord>>, GetResourceUsageRecordsQueryHandler>();
         services.AddScoped<IQueryHandler<GetCurrentResourceUsageSummaryQuery, Dictionary<ResourceUsageType, int>>, GetCurrentResourceUsageSummaryQueryHandler>();
         services.AddScoped<IQueryHandler<GetResourceUsageByTypeQuery, Dictionary<Guid, int>>, GetResourceUsageByTypeQueryHandler>();
 

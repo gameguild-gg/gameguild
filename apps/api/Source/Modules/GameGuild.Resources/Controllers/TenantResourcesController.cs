@@ -59,20 +59,29 @@ public sealed class TenantResourcesController(
     /// <param name="usageType">Optional filter by resource usage type</param>
     /// <param name="startDate">Optional filter by start date</param>
     /// <param name="endDate">Optional filter by end date</param>
+    /// <param name="pageNumber">Page number (1-based), defaults to 1</param>
+    /// <param name="pageSize">Number of records per page (1-200), defaults to 50</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>List of resource usage records</returns>
+    /// <returns>Paginated list of resource usage records</returns>
     [HttpGet("v{version:apiVersion}/tenants/{tenantId:guid}/resources/usage-records")]
     [EndpointSummary("Get usage records for a tenant")]
-    [EndpointDescription("Retrieves resource usage records for a specific tenant with optional filtering by type and date range.")]
+    [EndpointDescription("Retrieves paginated resource usage records for a specific tenant with optional filtering by type and date range.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetUsageRecords(Guid tenantId, [FromQuery] ResourceUsageType? usageType, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, CancellationToken ct)
+    public async Task<IActionResult> GetUsageRecords(
+        Guid tenantId, 
+        [FromQuery] ResourceUsageType? usageType, 
+        [FromQuery] DateTime? startDate, 
+        [FromQuery] DateTime? endDate,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken ct = default)
     {
         if (!await ValidateTenantMembershipAsync(tenantId, ct))
             return Forbid();
         
-        return Ok(await sender.Send(new GetResourceUsageRecordsQuery(tenantId, usageType, startDate, endDate), ct).ConfigureAwait(false));
+        return Ok(await sender.Send(new GetResourceUsageRecordsQuery(tenantId, usageType, startDate, endDate, pageNumber, pageSize), ct).ConfigureAwait(false));
     }
 
     /// <summary>

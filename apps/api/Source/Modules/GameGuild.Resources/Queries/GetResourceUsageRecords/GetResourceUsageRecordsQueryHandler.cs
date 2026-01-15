@@ -6,14 +6,14 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for getting resource usage records with pagination
 /// </summary>
-public class GetResourceUsageRecordsQueryHandler(IUsageRecordRepository usageRecordRepository) : IQueryHandler<GetResourceUsageRecordsQuery, PagedResult<UsageRecord>>
+public class GetResourceUsageRecordsQueryHandler(IUsageRecordRepository usageRecordRepository) : IQueryHandler<GetResourceUsageRecordsQuery, Models.PagedResult<UsageRecord>>
 {
     /// <summary>
     ///     Maximum allowed page size to prevent excessive memory usage
     /// </summary>
     private const int MaxPageSize = 200;
     
-    public async Task<PagedResult<UsageRecord>> Handle(GetResourceUsageRecordsQuery request, CancellationToken cancellationToken)
+    public async Task<Models.PagedResult<UsageRecord>> Handle(GetResourceUsageRecordsQuery request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         
