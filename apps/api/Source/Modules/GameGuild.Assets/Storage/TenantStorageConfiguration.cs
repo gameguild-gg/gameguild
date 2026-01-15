@@ -9,14 +9,9 @@ namespace GameGuild.Assets.Storage;
 public class TenantStorageConfiguration : EntityBase
 {
     /// <summary>
-    /// Tenant ID this configuration belongs to (overrides base for object initializer).
-    /// </summary>
-    public new Guid? TenantId { get; private set; }
-
-    /// <summary>
     /// User who created this configuration.
     /// </summary>
-    public new Guid? CreatedBy { get; private set; }
+    public Guid? CreatedBy { get; private set; }
 
     /// <summary>
     /// Storage provider type (S3, GCS, Azure, etc.)

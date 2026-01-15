@@ -16,7 +16,8 @@ namespace GameGuild.Assets.Controllers;
 [Authorize]
 public class AssetsController(
     ISender sender,
-    IActorContextAccessor actorContextAccessor) : ControllerBase
+    IActorContextAccessor actorContextAccessor,
+    IAssetUploadService uploadService) : ControllerBase
 {
     private ActorContext Actor => actorContextAccessor.ActorContext;
 
@@ -68,6 +69,157 @@ public class AssetsController(
             new { id = result.AssetReferenceId },
             result);
     }
+
+    #region Chunked Upload Endpoints
+
+    /// <summary>
+    /// Initialize a chunked upload for large files.
+    /// </summary>
+    /// <param name="fileName">Name of the file being uploaded</param>
+    /// <param name="mimeType">MIME type of the file</param>
+    /// <param name="totalSize">Total size of the file in bytes</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Chunked upload session with upload ID and chunk count</returns>
+    [HttpPost("upload/chunked/init")]
+    [ProducesResponseType(typeof(ChunkedUploadSession), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> InitiateChunkedUpload(
+        [FromQuery] string fileName,
+        [FromQuery] string mimeType,
+        [FromQuery] long totalSize,
+        CancellationToken ct = default)
+    {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        if (string.IsNullOrEmpty(fileName) || string.IsNullOrEmpty(mimeType) || totalSize <= 0)
+        {
+            return BadRequest(new ProblemDetails { Title = "Invalid file parameters" });
+        }
+
+        var session = await uploadService.InitiateChunkedUploadAsync(
+            fileName,
+            mimeType,
+            totalSize,
+            Actor.SubjectIdAsGuid.Value,
+            ct);
+
+        return Ok(session);
+    }
+
+    /// <summary>
+    /// Upload a chunk for an in-progress chunked upload.
+    /// </summary>
+    /// <param name="uploadId">The upload session ID</param>
+    /// <param name="chunkIndex">Zero-based chunk index</param>
+    /// <param name="chunk">The chunk data</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Success status</returns>
+    [HttpPost("upload/chunked/{uploadId}/part")]
+    [RequestSizeLimit(10 * 1024 * 1024)] // 10 MB per chunk
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UploadChunk(
+        string uploadId,
+        [FromQuery] int chunkIndex,
+        IFormFile chunk,
+        CancellationToken ct = default)
+    {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        if (chunk == null || chunk.Length == 0)
+        {
+            return BadRequest(new ProblemDetails { Title = "No chunk data provided" });
+        }
+
+        await using var stream = chunk.OpenReadStream();
+        var success = await uploadService.UploadChunkAsync(uploadId, chunkIndex, stream, ct);
+
+        if (!success)
+        {
+            return NotFound(new ProblemDetails { Title = "Upload session not found or expired" });
+        }
+
+        return Ok(new { uploadId, chunkIndex, success = true });
+    }
+
+    /// <summary>
+    /// Complete a chunked upload and create the asset.
+    /// </summary>
+    /// <param name="uploadId">The upload session ID</param>
+    /// <param name="displayName">Display name for the asset</param>
+    /// <param name="accessPolicy">Access policy for the asset</param>
+    /// <param name="parentResourceType">Optional parent resource type</param>
+    /// <param name="parentResourceId">Optional parent resource ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>The created asset reference</returns>
+    [HttpPost("upload/chunked/{uploadId}/complete")]
+    [ProducesResponseType(typeof(AssetUploadResult), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CompleteChunkedUpload(
+        string uploadId,
+        [FromQuery] string? displayName = null,
+        [FromQuery] AssetAccessPolicy accessPolicy = AssetAccessPolicy.Private,
+        [FromQuery] string? parentResourceType = null,
+        [FromQuery] Guid? parentResourceId = null,
+        CancellationToken ct = default)
+    {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        var options = new UploadAssetOptions(
+            displayName,
+            accessPolicy,
+            parentResourceType,
+            parentResourceId);
+
+        var result = await uploadService.CompleteChunkedUploadAsync(uploadId, options, ct);
+
+        if (!result.Success)
+        {
+            return BadRequest(new ProblemDetails { Title = result.Error ?? "Failed to complete upload" });
+        }
+
+        return CreatedAtAction(
+            nameof(GetAsset),
+            new { id = result.AssetReferenceId },
+            result);
+    }
+
+    /// <summary>
+    /// Abort an in-progress chunked upload.
+    /// </summary>
+    /// <param name="uploadId">The upload session ID</param>
+    /// <param name="ct">Cancellation token</param>
+    [HttpDelete("upload/chunked/{uploadId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> AbortChunkedUpload(
+        string uploadId,
+        CancellationToken ct = default)
+    {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        await uploadService.AbortChunkedUploadAsync(uploadId, ct);
+        return NoContent();
+    }
+
+    #endregion
 
     /// <summary>
     /// Get an asset by ID.

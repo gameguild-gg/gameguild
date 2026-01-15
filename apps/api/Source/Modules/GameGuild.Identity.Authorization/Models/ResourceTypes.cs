@@ -171,6 +171,16 @@ public static class ResourceTypes
     public static readonly ConcreteResourceType TestingParticipant = new("TestingParticipant", "Testing lab participants");
 
     // ========================
+    // ASSETS
+    // ========================
+
+    /// <summary>Asset resource type (binary assets and media files)</summary>
+    public static readonly ConcreteResourceType Asset = new("Asset", "Binary assets and media files");
+
+    /// <summary>Asset report resource type (content moderation reports)</summary>
+    public static readonly ConcreteResourceType AssetReport = new("AssetReport", "Content moderation reports for assets");
+
+    // ========================
     // VALIDATION
     // ========================
 
@@ -183,7 +193,8 @@ public static class ResourceTypes
         Project, Content, Document, Course, Program, Post,
         Product, Order, PromoCode, Entitlement,
         System, Audit, Policy,
-        TestingSession, TestingLocation, TestingFeedback, TestingRequest, TestingParticipant
+        TestingSession, TestingLocation, TestingFeedback, TestingRequest, TestingParticipant,
+        Asset, AssetReport
     };
 
     /// <summary>

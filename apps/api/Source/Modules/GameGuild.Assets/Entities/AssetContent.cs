@@ -213,11 +213,49 @@ public class AssetContent : EntityBase
     }
 
     /// <summary>
+    /// Sets the moderation status with full admin review details.
+    /// </summary>
+    public void SetModerationStatus(ModerationStatus status, Guid reviewedBy, string[]? labels = null, string? notes = null)
+    {
+        ModerationStatus = status;
+        ModerationCompletedAt = DateTime.UtcNow;
+        if (labels != null)
+        {
+            SetModerationLabels(labels);
+        }
+        // Note: reviewedBy and notes could be stored if we add properties for audit trail
+    }
+
+    /// <summary>
     /// Sets the virus scan status.
     /// </summary>
     public void SetVirusScanStatus(VirusScanStatus status, string? scanResult = null)
     {
         VirusScanStatus = status;
         VirusScanCompletedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Marks this content as non-deletable (legal hold).
+    /// </summary>
+    /// <param name="reason">Optional reason for the hold.</param>
+    public void MarkAsNonDeletable(string? reason = null)
+    {
+        IsDeletable = false;
+        MarkedForDeletionAt = null; // Clear any pending deletion
+        // Note: reason could be stored if we add a property
+    }
+
+    /// <summary>
+    /// Marks this content as deletable again.
+    /// </summary>
+    public void MarkAsDeletable()
+    {
+        IsDeletable = true;
+        // If still has no references, it will be picked up by next GC run
+        if (ReferenceCount == 0)
+        {
+            MarkedForDeletionAt = DateTime.UtcNow;
+        }
     }
 }

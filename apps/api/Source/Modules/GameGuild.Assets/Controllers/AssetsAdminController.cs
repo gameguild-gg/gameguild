@@ -196,6 +196,163 @@ public class AssetsAdminController(
 
         return Ok(new { content.Id, content.VirusScanStatus });
     }
+
+    #region Garbage Collection & Maintenance
+
+    /// <summary>
+    /// Trigger manual garbage collection.
+    /// </summary>
+    /// <remarks>
+    /// Runs the garbage collection process manually instead of waiting for the scheduled background job.
+    /// Only deletes content that has been marked for deletion and past the grace period.
+    /// </remarks>
+    [HttpPost("gc/run")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> TriggerGarbageCollection(
+        [FromServices] IAssetContentRepository contentRepository,
+        [FromServices] IAssetStorageService storageService,
+        [FromServices] ITransformedAssetRepository transformedRepository,
+        [FromQuery] int gracePeriodHours = 24,
+        [FromQuery] int limit = 100,
+        CancellationToken ct = default)
+    {
+        var candidates = await contentRepository.GetGarbageCollectionCandidatesAsync(
+            TimeSpan.FromHours(gracePeriodHours),
+            limit,
+            ct);
+
+        var deleted = 0;
+        var failed = 0;
+
+        foreach (var content in candidates)
+        {
+            try
+            {
+                // Delete transformed versions first
+                await transformedRepository.DeleteBySourceAsync(content.Id, ct);
+
+                // Delete from storage
+                await storageService.DeleteAsync(content.BucketName, content.ObjectKey, ct);
+
+                // Delete record
+                await contentRepository.DeleteAsync(content.Id, ct);
+
+                deleted++;
+            }
+            catch
+            {
+                failed++;
+            }
+        }
+
+        return Ok(new
+        {
+            candidatesFound = candidates.Count,
+            deleted,
+            failed
+        });
+    }
+
+    /// <summary>
+    /// Mark an asset content as non-deletable (legal hold).
+    /// </summary>
+    /// <remarks>
+    /// Prevents the asset from being garbage collected, even if all references are deleted.
+    /// Use for legal holds, compliance requirements, or audit preservation.
+    /// </remarks>
+    [HttpPost("{contentId:guid}/undeletable")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> MarkAsNonDeletable(
+        Guid contentId,
+        [FromBody] MarkNonDeletableRequest? request,
+        [FromServices] IAssetContentRepository contentRepository,
+        CancellationToken ct = default)
+    {
+        var content = await contentRepository.GetByIdAsync(contentId, ct);
+        if (content == null)
+        {
+            return NotFound();
+        }
+
+        content.MarkAsNonDeletable(request?.Reason);
+        await contentRepository.UpdateAsync(content, ct);
+
+        return Ok(new
+        {
+            content.Id,
+            content.IsDeletable,
+            Reason = request?.Reason
+        });
+    }
+
+    /// <summary>
+    /// Remove the non-deletable flag from an asset.
+    /// </summary>
+    [HttpDelete("{contentId:guid}/undeletable")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RemoveNonDeletable(
+        Guid contentId,
+        [FromServices] IAssetContentRepository contentRepository,
+        CancellationToken ct = default)
+    {
+        var content = await contentRepository.GetByIdAsync(contentId, ct);
+        if (content == null)
+        {
+            return NotFound();
+        }
+
+        content.MarkAsDeletable();
+        await contentRepository.UpdateAsync(content, ct);
+
+        return Ok(new { content.Id, content.IsDeletable });
+    }
+
+    #endregion
+
+    #region Content Moderation
+
+    /// <summary>
+    /// Review and moderate content directly.
+    /// </summary>
+    /// <remarks>
+    /// Unlike report review which handles user reports, this endpoint allows
+    /// direct moderation of content by admins for proactive moderation workflows.
+    /// </remarks>
+    [HttpPost("{contentId:guid}/moderation/review")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ReviewContentModeration(
+        Guid contentId,
+        [FromBody] ContentModerationRequest request,
+        [FromServices] IAssetContentRepository contentRepository,
+        CancellationToken ct = default)
+    {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
+        var content = await contentRepository.GetByIdAsync(contentId, ct);
+        if (content == null)
+        {
+            return NotFound();
+        }
+
+        content.SetModerationStatus(request.Status, Actor.SubjectIdAsGuid.Value, request.Labels, request.Notes);
+        await contentRepository.UpdateAsync(content, ct);
+
+        return Ok(new
+        {
+            content.Id,
+            content.ModerationStatus,
+            ReviewedBy = Actor.SubjectIdAsGuid.Value,
+            ReviewedAt = DateTime.UtcNow
+        });
+    }
+
+    #endregion
 }
 
 public record ReviewReportRequest(
@@ -205,3 +362,11 @@ public record ReviewReportRequest(
 public record UpdateVirusScanRequest(
     VirusScanStatus Status,
     string? ScanResult = null);
+
+public record MarkNonDeletableRequest(
+    string? Reason = null);
+
+public record ContentModerationRequest(
+    ModerationStatus Status,
+    string[]? Labels = null,
+    string? Notes = null);

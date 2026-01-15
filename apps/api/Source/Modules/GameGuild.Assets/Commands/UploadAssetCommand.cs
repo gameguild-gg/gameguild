@@ -1,11 +1,18 @@
 using GameGuild.CQRS;
 using FluentValidation;
+using GameGuild.Resources;
 
 namespace GameGuild.Assets.Commands;
 
 /// <summary>
 /// Command to upload a new asset.
 /// </summary>
+/// <remarks>
+/// Quota enforcement:
+/// - Assets: Counts against total asset files per tenant
+/// - AssetStorage: File size in bytes counted post-upload via SecureUploadService
+/// </remarks>
+[RequiresQuota(ResourceUsageType.Assets, 1)]
 public record UploadAssetCommand(
     Stream Content,
     string FileName,

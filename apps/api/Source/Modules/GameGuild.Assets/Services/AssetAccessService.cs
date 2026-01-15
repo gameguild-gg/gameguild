@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using GameGuild.Features;
 
 namespace GameGuild.Assets;
 
@@ -23,6 +24,7 @@ public class AssetAccessService : IAssetAccessService
     private readonly IAssetReferenceRepository _referenceRepository;
     private readonly IAssetStorageService _storageService;
     private readonly IAssetTokenService _tokenService;
+    private readonly IFeatureFlagEvaluationService _featureService;
     private readonly AssetAccessOptions _options;
     private readonly ILogger<AssetAccessService> _logger;
 
@@ -30,12 +32,14 @@ public class AssetAccessService : IAssetAccessService
         IAssetReferenceRepository referenceRepository,
         IAssetStorageService storageService,
         IAssetTokenService tokenService,
+        IFeatureFlagEvaluationService featureService,
         IOptions<AssetAccessOptions> options,
         ILogger<AssetAccessService> logger)
     {
         _referenceRepository = referenceRepository;
         _storageService = storageService;
         _tokenService = tokenService;
+        _featureService = featureService;
         _options = options.Value;
         _logger = logger;
     }
@@ -70,21 +74,89 @@ public class AssetAccessService : IAssetAccessService
             return null;
         }
 
+        // Feature flag check for transformations
+        if (transformation != null && !transformation.IsIdentity)
+        {
+            var featureContext = CreateFeatureContext(userId, tenantId);
+            var transformationsEnabled = await _featureService.IsEnabledAsync(
+                FeatureFlagConstants.AssetFeatureFlags.TransformationsEnabled,
+                featureContext,
+                ct);
+
+            if (!transformationsEnabled)
+            {
+                _logger.LogDebug(
+                    "Transformations disabled by feature flag for tenant {TenantId}",
+                    tenantId);
+                transformation = null; // Fall back to original
+            }
+            else
+            {
+                // Check max dimension limit
+                var maxDimension = await _featureService.GetValueAsync<int>(
+                    FeatureFlagConstants.AssetFeatureFlags.MaxTransformDimension,
+                    featureContext,
+                    4096, // Default max dimension
+                    ct);
+
+                if ((transformation.Width.HasValue && transformation.Width > maxDimension) ||
+                    (transformation.Height.HasValue && transformation.Height > maxDimension))
+                {
+                    _logger.LogWarning(
+                        "Transformation dimensions exceed limit {MaxDimension} for tenant {TenantId}",
+                        maxDimension, tenantId);
+                    return null;
+                }
+            }
+        }
+
+        // Get download window from feature flag
+        var downloadWindowHours = await GetDownloadWindowHoursAsync(userId, tenantId, ct);
+        var expiryMinutes = downloadWindowHours * 60;
+
         // Generate token
         var token = _tokenService.GenerateToken(
             assetReferenceId,
             tenantId ?? Guid.Empty,
             reference.AccessPolicy,
             transformation,
-            TimeSpan.FromMinutes(_options.DefaultExpiryMinutes));
+            TimeSpan.FromMinutes(expiryMinutes));
 
         var url = BuildAccessUrl(assetReferenceId, token, transformation);
-        var expiry = DateTimeOffset.UtcNow.AddMinutes(_options.DefaultExpiryMinutes);
+        var expiry = DateTimeOffset.UtcNow.AddMinutes(expiryMinutes);
 
         // Record access
         await _referenceRepository.RecordAccessAsync(assetReferenceId, ct);
 
         return new AssetAccessUrl(url, token, expiry, reference.Content.MimeType);
+    }
+
+    /// <summary>
+    /// Gets the download window hours from feature flags.
+    /// </summary>
+    private async Task<int> GetDownloadWindowHoursAsync(
+        Guid? userId,
+        Guid? tenantId,
+        CancellationToken ct)
+    {
+        var featureContext = CreateFeatureContext(userId, tenantId);
+        return await _featureService.GetValueAsync<int>(
+            FeatureFlagConstants.AssetFeatureFlags.DownloadWindowHours,
+            featureContext,
+            _options.DefaultExpiryMinutes / 60, // Fall back to config
+            ct);
+    }
+
+    /// <summary>
+    /// Creates a feature evaluation context.
+    /// </summary>
+    private static FeatureContext CreateFeatureContext(Guid? userId, Guid? tenantId)
+    {
+        return new FeatureContext
+        {
+            UserId = userId,
+            TenantId = tenantId
+        };
     }
 
     public async Task<AssetAccessUrl?> GenerateDirectStorageUrlAsync(
