@@ -2,9 +2,9 @@
  * Layout Detection System
  * 
  * Detecta automaticamente o tipo de layout baseado na estrutura dos dados do projeto.
- * - Single Panel: dados diretamente na raiz
- * - Dual Panel: dados com estrutura {left, right}
- * - Sequential: array de painéis (nova estrutura v1)
+ * - Single Panel: dados com estrutura {blocks: {b1}}
+ * - Multi Panel: dados com estrutura {blocks: {b1, b2, b3...}}
+ * - Sequential: array de painéis (estrutura v1 com panels[])
  */
 
 import { isSequentialStructure, parseSequentialStructure, type SequentialPanelStructure } from './panel-structure'
@@ -13,18 +13,16 @@ export type LayoutType = "single" | "dual" | "sequential"
 
 export interface LayoutDetectionResult {
   layoutType: LayoutType
-  hasLeft: boolean
-  hasRight: boolean
   isSinglePanel: boolean
-  isDualPanel: boolean
+  isMultiPanel: boolean
   isSequential: boolean
   sequentialData?: SequentialPanelStructure
+  blockCount?: number // Number of blocks (b1, b2, b3...)
+  blocks?: string[] // Block identifiers: ["b1", "b2", "b3"...]
 }
 
 export interface EditorStates {
-  single: any | null
-  left: any | null
-  right: any | null
+  blocks: Record<string, any> // {b1: state, b2: state, b3: state...} - single usa apenas b1
 }
 
 /**
@@ -39,10 +37,8 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
       const sequentialData = parseSequentialStructure(data)
       return {
         layoutType: "sequential",
-        hasLeft: false,
-        hasRight: false,
         isSinglePanel: false,
-        isDualPanel: false,
+        isMultiPanel: false,
         isSequential: true,
         sequentialData,
       }
@@ -50,28 +46,38 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
     
     const parsed = JSON.parse(data)
     
-    // Verifica se tem estrutura de dual panel (left e right)
-    const hasLeft = parsed.left !== undefined
-    const hasRight = parsed.right !== undefined
-    const isDualPanel = hasLeft && hasRight
+    // Check for block structure (b1, b2, b3...)
+    const blockKeys = Object.keys(parsed).filter(key => /^b\d+$/.test(key))
+    if (blockKeys.length >= 2) {
+      return {
+        layoutType: "dual",
+        isSinglePanel: false,
+        isMultiPanel: true,
+        isSequential: false,
+        blockCount: blockKeys.length,
+        blocks: blockKeys.sort((a, b) => {
+          const numA = parseInt(a.slice(1))
+          const numB = parseInt(b.slice(1))
+          return numA - numB
+        }),
+      }
+    }
     
+    // Single panel: anything else (uses b1)
     return {
-      layoutType: isDualPanel ? "dual" : "single",
-      hasLeft,
-      hasRight,
-      isSinglePanel: !isDualPanel,
-      isDualPanel,
+      layoutType: "single",
+      isSinglePanel: true,
+      isMultiPanel: false,
       isSequential: false,
+      blockCount: 1,
+      blocks: ["b1"],
     }
   } catch (error) {
     console.error("Failed to parse project data for layout detection:", error)
-    // Default to single panel se não conseguir parsear
     return {
       layoutType: "single",
-      hasLeft: false,
-      hasRight: false,
       isSinglePanel: true,
-      isDualPanel: false,
+      isMultiPanel: false,
       isSequential: false,
     }
   }
@@ -88,29 +94,36 @@ export function extractEditorStates(data: string, layoutType: LayoutType): Edito
     const parsed = JSON.parse(data)
     
     if (layoutType === "dual") {
-      // Dual panel: extrair left e right
-      const leftData = typeof parsed.left === 'string' ? JSON.parse(parsed.left) : parsed.left
-      const rightData = typeof parsed.right === 'string' ? JSON.parse(parsed.right) : parsed.right
+      // Extract block structure (b1, b2, b3...)
+      const blockKeys = Object.keys(parsed).filter(key => /^b\d+$/.test(key))
       
+      if (blockKeys.length >= 2) {
+        const blocks: Record<string, any> = {}
+        blockKeys.forEach(key => {
+          blocks[key] = typeof parsed[key] === 'string' ? JSON.parse(parsed[key]) : parsed[key]
+        })
+        
+        return {
+          blocks,
+        }
+      }
+      
+      // No valid blocks found
       return {
-        single: null,
-        left: leftData,
-        right: rightData,
+        blocks: {},
       }
     } else {
-      // Single panel: dados diretos
+      // Single panel: dados diretos em b1
       return {
-        single: parsed,
-        left: null,
-        right: null,
+        blocks: {
+          b1: parsed,
+        },
       }
     }
   } catch (error) {
     console.error("Failed to extract editor states:", error)
     return {
-      single: null,
-      left: null,
-      right: null,
+      blocks: {},
     }
   }
 }
@@ -121,21 +134,34 @@ export function extractEditorStates(data: string, layoutType: LayoutType): Edito
  * @param states - Estados dos editores (ou estrutura sequencial)
  * @returns String JSON formatada corretamente
  */
-export function createProjectData(layoutType: LayoutType, states: Partial<EditorStates> | SequentialPanelStructure): string {
+export function createProjectData(layoutType: LayoutType, states: Partial<EditorStates> | SequentialPanelStructure, blockCount?: number): string {
   // Se for estrutura sequencial completa, apenas serializar
   if ('version' in states && 'panels' in states) {
     return JSON.stringify(states)
   }
   
   if (layoutType === "dual") {
-    // Dual panel: criar estrutura {left, right}
-    return JSON.stringify({
-      left: (states as EditorStates).left || createEmptyEditorState(),
-      right: (states as EditorStates).right || createEmptyEditorState(),
-    })
+    const editorStates = states as EditorStates
+    
+    // If blocks are provided, use them
+    if (editorStates.blocks && Object.keys(editorStates.blocks).length > 0) {
+      return JSON.stringify(editorStates.blocks)
+    }
+    
+    // Create new block structure with specified count (default 2)
+    const count = blockCount || 2
+    const blocks: Record<string, any> = {}
+    
+    for (let i = 1; i <= count; i++) {
+      blocks[`b${i}`] = createEmptyEditorState()
+    }
+    
+    return JSON.stringify(blocks)
   } else {
-    // Single panel: dados diretos
-    return JSON.stringify((states as EditorStates).single || createEmptyEditorState())
+    // Single panel: usa b1
+    const editorStates = states as EditorStates
+    const b1State = editorStates.blocks?.b1 || createEmptyEditorState()
+    return JSON.stringify(b1State)
   }
 }
 

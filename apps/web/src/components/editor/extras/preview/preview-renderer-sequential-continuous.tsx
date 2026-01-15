@@ -44,32 +44,28 @@ export function PreviewRendererSequentialContinuous({
 
           {/* Panel Content */}
           <div className="p-6">
-            {panel.type === "single" && panel.state ? (
+            {panel.type === "single" && panel.blocks && Object.keys(panel.blocks).length > 0 ? (
               <div className="max-w-4xl mx-auto">
                 <div className="sm:p-2 md:p-6">
                   <PreviewRenderer
                     serializedState={
-                      typeof panel.state === "string"
-                        ? JSON.parse(panel.state)
-                        : panel.state
+                      typeof Object.values(panel.blocks)[0] === "string"
+                        ? JSON.parse(Object.values(panel.blocks)[0] as string)
+                        : Object.values(panel.blocks)[0]
                     }
                     projectId={projectId}
                     storageAdapter={storageAdapter}
                   />
                 </div>
               </div>
-            ) : panel.type === "dual" && panel.left && panel.right ? (
+            ) : panel.type === "dual" && panel.blocks && Object.keys(panel.blocks).length >= 2 ? (
               <PreviewRendererType2
-                leftState={
-                  typeof panel.left === "string"
-                    ? JSON.parse(panel.left)
-                    : panel.left
-                }
-                rightState={
-                  typeof panel.right === "string"
-                    ? JSON.parse(panel.right)
-                    : panel.right
-                }
+                blockStates={Object.entries(panel.blocks).reduce((acc, [blockId, blockState]) => {
+                  acc[blockId] = typeof blockState === "string"
+                    ? JSON.parse(blockState)
+                    : blockState;
+                  return acc;
+                }, {} as Record<string, any>)}
                 projectId={projectId}
                 storageAdapter={storageAdapter}
               />

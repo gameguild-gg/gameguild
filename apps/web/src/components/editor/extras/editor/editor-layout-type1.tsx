@@ -44,7 +44,7 @@ export function EditorLayoutType1({
           onLoadingChange={onLoadingChange}
           projectId={projectId}
           mode={mode}
-          panel={panel}
+          blockId="b1"
           currentProjectType={currentProjectType}
           storageAdapter={storageAdapter}
         />

@@ -153,7 +153,7 @@ export default function PreviewPage() {
 
   const getLayoutAndStates = (): { 
     layout: LayoutType; 
-    states: { single: any | null; left: any | null; right: any | null };
+    states: { blocks: Record<string, any> };
     isSequential: boolean;
     sequentialData?: any;
     projectType?: string;
@@ -162,7 +162,7 @@ export default function PreviewPage() {
     if (!currentProject) {
       return {
         layout: "single",
-        states: { single: null, left: null, right: null },
+        states: { blocks: {} },
         isSequential: false,
       }
     }
@@ -191,7 +191,7 @@ export default function PreviewPage() {
         <div className="container mx-auto py-10">
           <div
             className={`mx-auto space-y-4 px-4 sm:px-6 lg:px-8 ${
-              currentProject && (states.single || (states.left && states.right)) ? "max-w-full" : "max-w-4xl"
+              currentProject && Object.keys(states.blocks).length > 0 ? "max-w-full" : "max-w-4xl"
             }`}
           >
             {/* Professional Header */}
@@ -247,7 +247,7 @@ export default function PreviewPage() {
               {/* Action Bar */}
               <div className="flex items-center justify-between gap-4 p-4 bg-white dark:bg-gray-900">
                 <div className="flex items-center gap-3">
-                  {currentProject && (states.single || (states.left && states.right)) && currentLayout === "single" && (
+                  {currentProject && Object.keys(states.blocks).length > 0 && currentLayout === "single" && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -297,7 +297,7 @@ export default function PreviewPage() {
               </div>
             </div>
 
-            {currentProject && (states.single || (states.left && states.right) || isSequential) ? (
+            {currentProject && (Object.keys(states.blocks).length > 0 || isSequential) ? (
               <>
                 {isSequential && sequentialData ? (
                   previewMode === "slide" ? (
@@ -315,9 +315,9 @@ export default function PreviewPage() {
                       storageAdapter={storageAdapter}
                     />
                   )
-                ) : currentLayout === "single" && states.single ? (
+                ) : currentLayout === "single" && Object.keys(states.blocks).length > 0 ? (
                   <PreviewRendererType1
-                    serializedState={states.single as any}
+                    serializedState={Object.values(states.blocks)[0] as any}
                     currentProject={currentProject}
                     storageAdapter={storageAdapter}
                     availableTags={availableTags}
@@ -326,8 +326,8 @@ export default function PreviewPage() {
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
                   />
-                ) : currentLayout === "dual" && states.left && states.right ? (
-                  <PreviewRendererType2 leftState={states.left as any} rightState={states.right as any} projectId={currentProject.id} storageAdapter={storageAdapter} />
+                ) : currentLayout === "dual" && Object.keys(states.blocks).length >= 2 ? (
+                  <PreviewRendererType2 blockStates={states.blocks as Record<string, any>} projectId={currentProject.id} storageAdapter={storageAdapter} />
                 ) : (
                   <div className="border border-red-200 bg-red-50 shadow-sm dark:border-red-700 dark:bg-red-900/20">
                     <div className="p-6 px-12 py-12">
@@ -339,7 +339,7 @@ export default function PreviewPage() {
                         <p className="mb-6 text-red-600 dark:text-red-400">
                           This project's data structure is incompatible with the viewer.
                           <br />
-                          Layout: {currentLayout} | Has Single: {states.single ? "Yes" : "No"} | Has Left/Right: {states.left && states.right ? "Yes" : "No"}
+                          Layout: {currentLayout} | Blocks: {Object.keys(states.blocks).length} ({Object.keys(states.blocks).join(", ")})
                         </p>
                         <Button
                           onClick={() => setCurrentProject(null)}
