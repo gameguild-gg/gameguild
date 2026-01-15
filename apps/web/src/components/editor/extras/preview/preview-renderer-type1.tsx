@@ -85,7 +85,7 @@ export function PreviewRendererType1({
           <div className="xl:col-span-5">
             <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
               <div className="p-6 sm:p-8 md:p-12">
-                <PreviewRenderer serializedState={serializedState} projectId={currentProject.id} />
+                <PreviewRenderer serializedState={serializedState} projectId={currentProject.id} storageAdapter={storageAdapter} />
               </div>
             </div>
           </div>

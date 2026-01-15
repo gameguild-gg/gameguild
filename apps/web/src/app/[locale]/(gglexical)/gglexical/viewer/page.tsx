@@ -305,12 +305,14 @@ export default function PreviewPage() {
                       structure={sequentialData}
                       projectId={currentProject.id}
                       projectName={currentProject.name}
+                      storageAdapter={storageAdapter}
                     />
                   ) : (
                     <PreviewRendererSequentialContinuous
                       structure={sequentialData}
                       projectId={currentProject.id}
                       projectName={currentProject.name}
+                      storageAdapter={storageAdapter}
                     />
                   )
                 ) : currentLayout === "single" && states.single ? (
@@ -325,7 +327,7 @@ export default function PreviewPage() {
                     setSidebarOpen={setSidebarOpen}
                   />
                 ) : currentLayout === "dual" && states.left && states.right ? (
-                  <PreviewRendererType2 leftState={states.left as any} rightState={states.right as any} projectId={currentProject.id} />
+                  <PreviewRendererType2 leftState={states.left as any} rightState={states.right as any} projectId={currentProject.id} storageAdapter={storageAdapter} />
                 ) : (
                   <div className="border border-red-200 bg-red-50 shadow-sm dark:border-red-700 dark:bg-red-900/20">
                     <div className="p-6 px-12 py-12">

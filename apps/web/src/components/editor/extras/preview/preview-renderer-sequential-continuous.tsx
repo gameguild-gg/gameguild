@@ -8,12 +8,16 @@ interface PreviewRendererSequentialContinuousProps {
   structure: SequentialPanelStructure
   projectId: string
   projectName?: string
+  storageAdapter?: {
+    load: (id: string) => Promise<any>
+  }
 }
 
 export function PreviewRendererSequentialContinuous({
   structure,
   projectId,
   projectName,
+  storageAdapter,
 }: PreviewRendererSequentialContinuousProps) {
   const sortedPanels = [...structure.panels].sort((a, b) => a.order - b.order)
 
@@ -50,6 +54,7 @@ export function PreviewRendererSequentialContinuous({
                         : panel.state
                     }
                     projectId={projectId}
+                    storageAdapter={storageAdapter}
                   />
                 </div>
               </div>
@@ -66,6 +71,7 @@ export function PreviewRendererSequentialContinuous({
                     : panel.right
                 }
                 projectId={projectId}
+                storageAdapter={storageAdapter}
               />
             ) : (
               <div className="py-8 text-center text-gray-500 dark:text-gray-400">

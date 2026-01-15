@@ -28,17 +28,22 @@ import { PreviewHeading } from "@/components/editor/plugins/preview-components/p
 import { PreviewVegaLite } from "@/components/editor/plugins/preview-components/preview-vega-lite"
 import { PreviewTable } from "@/components/editor/plugins/preview-components/preview-table"
 import { PreviewCodeStudio } from "@/components/editor/plugins/preview-components/preview-code-studio"
+import { PreviewProject } from "@/components/editor/plugins/preview-components/preview-project"
 
 interface SerializedContentRendererProps {
   serializedState: SerializedEditorState
   className?: string
   projectId?: string
+  storageAdapter?: {
+    load: (id: string) => Promise<any>
+  }
 }
 
 export function SerializedContentRenderer({
   serializedState,
   className = "prose prose-stone dark:prose-invert max-w-none",
   projectId,
+  storageAdapter,
 }: SerializedContentRendererProps) {
   let headingCounter = 0
 
@@ -159,6 +164,11 @@ export function SerializedContentRenderer({
     // For CodeStudio nodes
     if (node.type === "code-studio") {
       return <PreviewCodeStudio key={uniqueKey} data={node.data} projectId={projectId} />
+    }
+
+    // For Project nodes
+    if (node.type === "project") {
+      return <PreviewProject key={uniqueKey} node={node} storageAdapter={storageAdapter} />
     }
 
     if (node.children) {
