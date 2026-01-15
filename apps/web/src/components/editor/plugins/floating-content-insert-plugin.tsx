@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
-import { $getSelection, $isRangeSelection, SELECTION_CHANGE_COMMAND, createCommand } from "lexical"
+import { $getSelection, $isRangeSelection, SELECTION_CHANGE_COMMAND, createCommand, type SerializedEditorState } from "lexical"
 import {
   AlertCircle,
   BoxIcon as ButtonIcon,
@@ -107,14 +107,14 @@ export const INSERT_PROJECT_COMMAND = createCommand<ImportedProjectData>("INSERT
 
 interface FloatingContentInsertPluginProps {
   mode?: ProjectMode
-  panel?: "left" | "right" | "single"
+  blockId?: string  // Block identifier (b1, b2, b3, etc.)
   currentProjectId?: string
   currentProjectType?: "type1" | "type2" | "type3"
   storageAdapter?: any
   currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
-export function FloatingContentInsertPlugin({ mode = "free-page", panel, currentProjectId, currentProjectType, storageAdapter, currentStorageType = "local" }: FloatingContentInsertPluginProps = {}) {
+export function FloatingContentInsertPlugin({ mode = "free-page", blockId, currentProjectId, currentProjectType, storageAdapter, currentStorageType = "local" }: FloatingContentInsertPluginProps = {}) {
   const [editor] = useLexicalComposerContext()
   const [show, setShow] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -614,13 +614,13 @@ export function FloatingContentInsertPlugin({ mode = "free-page", panel, current
   const primaryOptions = allPrimaryOptions.filter((option) => {
     const nodeType = nodeTypeMap[option.label]
     
-    // Se não há mapeamento ou não há panel (type1), permitir todos
-    if (!nodeType || !panel) {
+    // Se não há mapeamento ou não há blockId (single panel), permitir todos
+    if (!nodeType || !blockId) {
       return true
     }
     
-    // Verificar se o node é permitido neste panel para este modo
-    return isNodeAllowed(nodeType, panel, mode)
+    // Verificar se o node é permitido neste blockId para este modo
+    return isNodeAllowed(nodeType, blockId, mode)
   })
 
   if (
@@ -1109,8 +1109,7 @@ export function FloatingContentInsertPlugin({ mode = "free-page", panel, current
                 projectName: project.name,
                 projectType: project.type as "type1" | "type2",
                 editorState: null,
-                leftEditorState: null,
-                rightEditorState: null,
+                blockStates: undefined,
                 isLocalCopy: false,
                 isReference: true,
                 size: project.size,
@@ -1139,8 +1138,7 @@ export function FloatingContentInsertPlugin({ mode = "free-page", panel, current
 
             // Parse project data based on type
             let editorState = null
-            let leftEditorState = null
-            let rightEditorState = null
+            let blockStates: Record<string, SerializedEditorState | null> | undefined = undefined
 
             try {
               const data = JSON.parse(fullProject.data)
@@ -1148,8 +1146,10 @@ export function FloatingContentInsertPlugin({ mode = "free-page", panel, current
               if (fullProject.type === "type1") {
                 editorState = data
               } else if (fullProject.type === "type2") {
-                leftEditorState = data.left || null
-                rightEditorState = data.right || null
+                // Expect blocks format: {blocks: {b1, b2, b3...}}
+                if (data.blocks) {
+                  blockStates = data.blocks
+                }
               }
             } catch (error) {
               console.error("Failed to parse project data:", error)
@@ -1166,8 +1166,7 @@ export function FloatingContentInsertPlugin({ mode = "free-page", panel, current
               projectName: project.name,
               projectType: project.type as "type1" | "type2",
               editorState,
-              leftEditorState,
-              rightEditorState,
+              blockStates,
               isLocalCopy: false,
               isReference: false,
               size: project.size,

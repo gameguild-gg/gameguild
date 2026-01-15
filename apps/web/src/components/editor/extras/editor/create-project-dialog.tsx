@@ -184,9 +184,12 @@ export function CreateProjectDialog({
         projectData = JSON.stringify({ version: "sequential-v1", panels: [] })
       } else {
         projectData = createProjectData(layoutType, {
-          single: layoutType === "single" ? emptyState : null,
-          left: layoutType === "dual" ? emptyState : null,
-          right: layoutType === "dual" ? emptyState : null,
+          blocks: layoutType === "single" ? {
+            b1: emptyState,
+          } : {
+            b1: emptyState,
+            b2: emptyState,
+          },
         })
       }
       
@@ -356,12 +359,12 @@ export function CreateProjectDialog({
                   </div>
                 </div>
                 
-                <h3 className="font-semibold text-base mb-1">Dual Panel</h3>
+                <h3 className="font-semibold text-base mb-1">Multi Panel</h3>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
-                  Split screen with left and right panels for comparison or parallel content.
+                  Multiple panels side-by-side (2 or more) for comparison or parallel content.
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Dual Layout</span>
+                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Multi Layout</span>
                 </div>
               </button>
 

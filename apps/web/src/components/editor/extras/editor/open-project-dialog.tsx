@@ -50,8 +50,7 @@ interface OpenProjectDialogProps {
   storageAdapter: StorageAdapter
   availableTags: Array<{ name: string }>
   editorRef: React.RefObject<LexicalEditor | null>
-  leftEditorRef: React.RefObject<LexicalEditor | null>
-  rightEditorRef: React.RefObject<LexicalEditor | null>
+  blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
   setLoadingRef: React.RefObject<((loading: boolean) => void) | null>
   onProjectLoad: (projectData: ProjectData) => void
   onProjectsListUpdate: () => void
@@ -67,8 +66,7 @@ export function OpenProjectDialog({
   storageAdapter,
   availableTags,
   editorRef,
-  leftEditorRef,
-  rightEditorRef,
+  blockRefs,
   setLoadingRef,
   onProjectLoad,
   onProjectsListUpdate,

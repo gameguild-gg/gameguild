@@ -60,15 +60,14 @@ export interface ProjectDataType1 {
 }
 
 export interface ProjectDataType2 {
-  left: string // Left editor JSON state
-  right: string // Right editor JSON state
+  blocks: Record<string, string> // Dynamic blocks: b1, b2, b3...
 }
 
 interface ProjectData {
   id: string
   name: string
   type: ProjectType // Project type (not layout - layout is auto-detected)
-  data: string // If dual panel: {left, right}, if single panel: direct state
+  data: string // Serialized project data (format detected by layout-detector)
   tags: string[]
   size: number
   createdAt: string
@@ -106,15 +105,13 @@ export default function Page() {
   const [currentLayout, setCurrentLayout] = useState<LayoutType>("single")
   const [currentProjectType, setCurrentProjectType] = useState<ProjectType>("type1")
   
-  // Type1 states (single editor)
+  // Type1 states (single editor with b1)
   const [editorState, setEditorState] = useState<string>("")
   const editorRef = useRef<LexicalEditor | null>(null)
   
-  // Type2 states (dual editors)
-  const [leftEditorState, setLeftEditorState] = useState<string>("")
-  const [rightEditorState, setRightEditorState] = useState<string>("")
-  const leftEditorRef = useRef<LexicalEditor | null>(null)
-  const rightEditorRef = useRef<LexicalEditor | null>(null)
+  // Type2 states (multi-block editors: b1, b2, b3...)
+  const [blockStates, setBlockStates] = useState<Record<string, string>>({})
+  const blockRefs = useRef<Record<string, LexicalEditor | null>>({})
   
   const [currentProjectId, setCurrentProjectId] = useState<string>("")
   const [currentProjectName, setCurrentProjectName] = useState<string>("")
@@ -155,8 +152,7 @@ export default function Page() {
   const [editingProjectName, setEditingProjectName] = useState("")
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewState, setPreviewState] = useState<SerializedEditorState | null>(null)
-  const [previewLeftState, setPreviewLeftState] = useState<SerializedEditorState | null>(null)
-  const [previewRightState, setPreviewRightState] = useState<SerializedEditorState | null>(null)
+  const [previewBlockStates, setPreviewBlockStates] = useState<Record<string, SerializedEditorState>>({})
   const [previewLayout, setPreviewLayout] = useState<LayoutType>("single")
   const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
   const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>("free-page")
@@ -214,8 +210,7 @@ export default function Page() {
       await checkProject({
         storageAdapter,
         editorRef,
-        leftEditorRef,
-        rightEditorRef,
+        blockRefs,
         setCurrentProjectId,
         setCurrentProjectName,
         setCurrentProjectStorageType,
@@ -224,8 +219,7 @@ export default function Page() {
         setCurrentLayout,
         setCurrentProjectType: (type: string) => setCurrentProjectType(type as ProjectType),
         setEditorState,
-        setLeftEditorState,
-        setRightEditorState,
+        setBlockStates,
         setSequentialStructure,
         setCurrentPanelIndex,
         setPanelEditorRefs,
@@ -254,16 +248,21 @@ export default function Page() {
     if (currentLayout === "sequential" && sequentialStructure) {
       dataToCalculate = serializeSequentialStructure(sequentialStructure)
     } else {
-      dataToCalculate = createProjectData(currentLayout, {
-        single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
-        left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
-        right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
-      })
+      const blocks: Record<string, any> = {}
+      if (currentLayout === "single") {
+        blocks.b1 = editorState ? JSON.parse(editorState) : null
+      } else {
+        // Multi-block: parse all block states
+        Object.entries(blockStates).forEach(([blockId, state]) => {
+          blocks[blockId] = state ? JSON.parse(state) : null
+        })
+      }
+      dataToCalculate = createProjectData(currentLayout, { blocks })
     }
     
     const size = estimateSize(dataToCalculate)
     setCurrentProjectSize(size)
-  }, [editorState, leftEditorState, rightEditorState, currentLayout, sequentialStructure])
+  }, [editorState, blockStates, currentLayout, sequentialStructure])
 
   // Calculate assets size when project changes or editor content changes
   useEffect(() => {
@@ -272,7 +271,7 @@ export default function Page() {
     } else {
       setCurrentProjectAssetsSize(0)
     }
-  }, [currentProjectId, isDbInitialized, editorState, leftEditorState, rightEditorState, sequentialStructure])
+  }, [currentProjectId, isDbInitialized, editorState, blockStates, sequentialStructure])
 
   const storageAdapter = {
     save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: string = "type1") => {
@@ -446,15 +445,22 @@ export default function Page() {
       // Sequential layout: serialize the structure
       dataToSave = serializeSequentialStructure(sequentialStructure)
     } else {
-      // Single or Dual layout
-      dataToSave = createProjectData(currentLayout, {
-        single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
-        left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
-        right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
-      })
+      // Single or Multi-block layout
+      const blocks: Record<string, any> = {}
+      if (currentLayout === "single") {
+        blocks.b1 = editorState ? JSON.parse(editorState) : null
+      } else {
+        // Multi-block: parse all block states
+        Object.entries(blockStates).forEach(([blockId, state]) => {
+          blocks[blockId] = state ? JSON.parse(state) : null
+        })
+      }
+      dataToSave = createProjectData(currentLayout, { blocks })
     }
     
-    const refToUse = currentLayout === "single" ? editorRef : leftEditorRef
+    const refToUse = currentLayout === "single" ? editorRef : {
+      current: Object.values(blockRefs.current)[0] ?? null
+    } as React.RefObject<LexicalEditor | null>
     
     // Prepare preferences with previewMode for sequential layout
     const preferences = currentLayout === "sequential" ? {
@@ -488,15 +494,22 @@ export default function Page() {
       // Sequential layout: serialize the structure
       dataToSave = serializeSequentialStructure(sequentialStructure)
     } else {
-      // Single or Dual layout
-      dataToSave = createProjectData(currentLayout, {
-        single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
-        left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
-        right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
-      })
+      // Single or Multi-block layout
+      const blocks: Record<string, any> = {}
+      if (currentLayout === "single") {
+        blocks.b1 = editorState ? JSON.parse(editorState) : null
+      } else {
+        // Multi-block: parse all block states
+        Object.entries(blockStates).forEach(([blockId, state]) => {
+          blocks[blockId] = state ? JSON.parse(state) : null
+        })
+      }
+      dataToSave = createProjectData(currentLayout, { blocks })
     }
     
-    const refToUse = currentLayout === "single" ? editorRef : leftEditorRef
+    const refToUse = currentLayout === "single" ? editorRef : {
+      current: Object.values(blockRefs.current)[0] ?? null
+    } as React.RefObject<LexicalEditor | null>
     
     await saveAsProject({
       newProjectName,
@@ -554,7 +567,7 @@ export default function Page() {
     // Check if we have any content to save
     const hasContent = currentLayout === "single" 
       ? editorState 
-      : (leftEditorState || rightEditorState)
+      : Object.keys(blockStates).length > 0
     
     if (!hasContent) return
 
@@ -567,11 +580,16 @@ export default function Page() {
     const autoSaveTimer = setTimeout(async () => {
       try {
         // Prepare the correct state based on layout type
-        const dataToSave = createProjectData(currentLayout, {
-          single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
-          left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
-          right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
-        })
+        const blocks: Record<string, any> = {}
+        if (currentLayout === "single") {
+          blocks.b1 = editorState ? JSON.parse(editorState) : null
+        } else {
+          // Multi-block: parse all block states
+          Object.entries(blockStates).forEach(([blockId, state]) => {
+            blocks[blockId] = state ? JSON.parse(state) : null
+          })
+        }
+        const dataToSave = createProjectData(currentLayout, { blocks })
         
         await storageAdapter.save(
           currentProjectId, 
@@ -605,7 +623,7 @@ export default function Page() {
     }, 2000) // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(autoSaveTimer)
-  }, [editorState, leftEditorState, rightEditorState, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime])
+  }, [editorState, blockStates, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime])
 
 
 
@@ -636,13 +654,20 @@ export default function Page() {
 
   const handleTitleSave = async () => {
     // Prepare the correct state and ref based on layout type
-    const stateToUse = createProjectData(currentLayout, {
-      single: currentLayout === "single" ? (editorState ? JSON.parse(editorState) : null) : null,
-      left: currentLayout === "dual" ? (leftEditorState ? JSON.parse(leftEditorState) : null) : null,
-      right: currentLayout === "dual" ? (rightEditorState ? JSON.parse(rightEditorState) : null) : null,
-    })
+    const blocks: Record<string, any> = {}
+    if (currentLayout === "single") {
+      blocks.b1 = editorState ? JSON.parse(editorState) : null
+    } else {
+      // Multi-block: parse all block states
+      Object.entries(blockStates).forEach(([blockId, state]) => {
+        blocks[blockId] = state ? JSON.parse(state) : null
+      })
+    }
+    const stateToUse = createProjectData(currentLayout, { blocks })
     
-    const refToUse = currentLayout === "single" ? editorRef : leftEditorRef
+    const refToUse = currentLayout === "single" ? editorRef : {
+      current: Object.values(blockRefs.current)[0] ?? null
+    } as React.RefObject<LexicalEditor | null>
     
     await titleSave({
       editingProjectName,
@@ -702,29 +727,37 @@ export default function Page() {
         setPreviewLayout("single")
         setPreviewOpen(true)
       } else {
-        // Dual panel: Both editors
-        if (!leftEditorState && !rightEditorState) {
+        // Multi-block panel
+        if (Object.keys(blockStates).length < 2) {
           toast.error("No content", {
-            description: "Editors are empty",
+            description: "Need at least 2 blocks for preview",
             duration: 3000,
           })
           return
         }
         
-        // Parse both editor states for dual panel
-        const leftParsed = leftEditorState ? JSON.parse(leftEditorState) : null
-        const rightParsed = rightEditorState ? JSON.parse(rightEditorState) : null
+        // Parse all block states dynamically
+        const parsedStates: Record<string, SerializedEditorState> = {}
+        for (const [blockId, state] of Object.entries(blockStates)) {
+          if (state) {
+            try {
+              parsedStates[blockId] = JSON.parse(state)
+            } catch (error) {
+              console.error(`Failed to parse block ${blockId}:`, error)
+            }
+          }
+        }
         
-        if (!leftParsed || !rightParsed) {
+        if (Object.keys(parsedStates).length < 2) {
           toast.error("Invalid content", {
-            description: "Both editors must have content",
+            description: "At least 2 blocks must have valid content",
             duration: 3000,
           })
           return
         }
         
-        setPreviewLeftState(leftParsed)
-        setPreviewRightState(rightParsed)
+        // Set all parsed states dynamically
+        setPreviewBlockStates(parsedStates)
         setPreviewLayout("dual")
         setPreviewOpen(true)
       }
@@ -840,8 +873,7 @@ export default function Page() {
                     storageAdapter={storageAdapter}
                     availableTags={availableTags}
                     editorRef={editorRef}
-                    leftEditorRef={leftEditorRef}
-                    rightEditorRef={rightEditorRef}
+                    blockRefs={blockRefs}
                     setLoadingRef={setLoadingRef}
                     onProjectLoad={(projectData) => {
                       // Detectar layout automaticamente baseado na estrutura de data
@@ -890,26 +922,28 @@ export default function Page() {
                       // Load editor data based on detected layout
                       setTimeout(() => {
                         try {
-                          if (layoutInfo.isSinglePanel && editorRef.current && states.single) {
-                            // Single panel: carregar editor único
-                            if (!states.single.root) {
+                          if (layoutInfo.isSinglePanel && editorRef.current && states.blocks.b1) {
+                            // Single panel: load single editor from b1
+                            if (!states.blocks.b1.root) {
                               throw new Error("Invalid Lexical format")
                             }
-                            const editorState = editorRef.current.parseEditorState(JSON.stringify(states.single))
+                            const editorState = editorRef.current.parseEditorState(JSON.stringify(states.blocks.b1))
                             editorRef.current.setEditorState(editorState)
-                            setEditorState(JSON.stringify(states.single))
-                          } else if (layoutInfo.isDualPanel && leftEditorRef.current && rightEditorRef.current && states.left && states.right) {
-                            // Dual panel: carregar ambos editores
-                            if (!states.left.root) throw new Error("Invalid left editor format")
-                            if (!states.right.root) throw new Error("Invalid right editor format")
-                            
-                            const leftEditorState = leftEditorRef.current.parseEditorState(JSON.stringify(states.left))
-                            leftEditorRef.current.setEditorState(leftEditorState)
-                            setLeftEditorState(JSON.stringify(states.left))
-
-                            const rightEditorState = rightEditorRef.current.parseEditorState(JSON.stringify(states.right))
-                            rightEditorRef.current.setEditorState(rightEditorState)
-                            setRightEditorState(JSON.stringify(states.right))
+                            setEditorState(JSON.stringify(states.blocks.b1))
+                          } else if (layoutInfo.isMultiPanel && states.blocks) {
+                            // Multi-panel layout: load all blocks
+                            const newBlockStates: Record<string, string> = {}
+                            Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
+                              if (blockState && blockState.root) {
+                                // Initialize ref if needed
+                                if (!blockRefs.current[blockId]) {
+                                  blockRefs.current[blockId] = null
+                                }
+                                // Store state for component
+                                newBlockStates[blockId] = JSON.stringify(blockState)
+                              }
+                            })
+                            setBlockStates(newBlockStates)
                           }
                         } catch (error) {
                           console.error("Failed to load editor data:", error)
@@ -1036,11 +1070,11 @@ export default function Page() {
                   }, 200)
                 } else if (projectData.layout === "dual") {
                   // Dual panel
-                  dataString = createProjectData("dual", { left: emptyState, right: emptyState })
+                  dataString = createProjectData("dual", { blocks: { b1: emptyState, b2: emptyState } })
                   layoutType = "dual"
                 } else {
                   // Single panel (default)
-                  dataString = createProjectData("single", { single: emptyState })
+                  dataString = createProjectData("single", { blocks: { b1: emptyState } })
                   layoutType = "single"
                 }
                 
@@ -1061,15 +1095,12 @@ export default function Page() {
                     }
                     setEditorState(emptyStateString)
                   } else if (layoutType === "dual") {
-                    // dual panel - initialize both editors
-                    if (leftEditorRef.current) {
-                      leftEditorRef.current.setEditorState(leftEditorRef.current.parseEditorState(emptyStateString))
+                    // dual panel - initialize blocks (b1, b2 for now, extensible to b3+)
+                    const newBlockStates: Record<string, string> = {
+                      b1: emptyStateString,
+                      b2: emptyStateString,
                     }
-                    if (rightEditorRef.current) {
-                      rightEditorRef.current.setEditorState(rightEditorRef.current.parseEditorState(emptyStateString))
-                    }
-                    setLeftEditorState(emptyStateString)
-                    setRightEditorState(emptyStateString)
+                    setBlockStates(newBlockStates)
                   }
                   // Sequential panels will be initialized as they render
                 }, 100)
@@ -1119,12 +1150,11 @@ export default function Page() {
               />
             ) : (
               <EditorLayoutType2
-                leftEditorRef={leftEditorRef}
-                rightEditorRef={rightEditorRef}
-                leftEditorState={leftEditorState}
-                rightEditorState={rightEditorState}
-                onLeftEditorChange={setLeftEditorState}
-                onRightEditorChange={setRightEditorState}
+                blockRefs={blockRefs}
+                blockStates={blockStates}
+                onBlockChange={(blockId, newState) => {
+                  setBlockStates(prev => ({ ...prev, [blockId]: newState }))
+                }}
                 onLoadingChange={(setLoading) => {
                   setLoadingRef.current = setLoading
                 }}
@@ -1179,9 +1209,9 @@ export default function Page() {
           {previewLayout === "single" && previewState && (
             <PreviewRenderer serializedState={previewState} />
           )}
-          {previewLayout === "dual" && previewLeftState && previewRightState && (
+          {previewLayout === "dual" && Object.keys(previewBlockStates).length >= 2 && (
             <div className="w-full max-h-[80vh] overflow-y-auto">
-              <PreviewRendererType2 leftState={previewLeftState} rightState={previewRightState} />
+              <PreviewRendererType2 blockStates={previewBlockStates} />
             </div>
           )}
         </DialogContent>
