@@ -84,6 +84,8 @@ import { VegaLitePlugin } from "./plugins/vega-lite-plugin"
 import { CustomListNode } from "./nodes/custom-list-node"
 import { TableNode as CustomTableNode } from "./nodes/table-node"
 import { TablePlugin } from "./plugins/table-plugin"
+import { ProjectNode } from "./nodes/project-node"
+import { ProjectPlugin } from "./plugins/project-plugin"
 
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext"
 import {
@@ -107,6 +109,9 @@ export const EditorLoadingContext = createContext<boolean>(false)
 // Create and export the ProjectIdContext
 export const ProjectIdContext = createContext<string | null>(null)
 
+// Create and export the StorageAdapterContext
+export const StorageAdapterContext = createContext<any>(null)
+
 // Export the provider component for convenience
 export function EditorLoadingProvider({ children, value }: { children: React.ReactNode; value: boolean }) {
   return <EditorLoadingContext.Provider value={value}>{children}</EditorLoadingContext.Provider>
@@ -115,6 +120,11 @@ export function EditorLoadingProvider({ children, value }: { children: React.Rea
 // Export the ProjectId provider component
 export function ProjectIdProvider({ children, value }: { children: React.ReactNode; value: string | null }) {
   return <ProjectIdContext.Provider value={value}>{children}</ProjectIdContext.Provider>
+}
+
+// Export the StorageAdapter provider component
+export function StorageAdapterProvider({ children, value }: { children: React.ReactNode; value: any }) {
+  return <StorageAdapterContext.Provider value={value}>{children}</StorageAdapterContext.Provider>
 }
 
 function StructureDeleteConfirmPlugin() {
@@ -308,6 +318,7 @@ const initialConfig = {
     MermaidNode,
     VegaLiteNode,
     CustomTableNode,
+    ProjectNode,
   ],
   theme: {
     text: {
@@ -348,6 +359,9 @@ interface EditorProps {
   projectId?: string | null
   mode?: ProjectMode
   panel?: "left" | "right" | "single"
+  currentProjectType?: "type1" | "type2" | "type3"
+  storageAdapter?: any
+  currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
 // Criar um plugin para gerenciar a referência do editor:
@@ -405,7 +419,7 @@ const MATCHERS: LinkMatcher[] = [
 ]
 
 // Atualizar a função Editor para incluir o EditorRefPlugin:
-export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId, mode, panel }: EditorProps) {
+export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId, mode, panel, currentProjectType, storageAdapter, currentStorageType }: EditorProps) {
   const [isLoadingProject, setIsLoadingProject] = useState(false)
 
   useEffect(() => {
@@ -421,8 +435,9 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
         editorState: initialState || undefined,
       }}
     >
-      <ProjectIdProvider value={projectId || null}>
-        <EditorLoadingProvider value={isLoadingProject}>
+      <StorageAdapterProvider value={storageAdapter}>
+        <ProjectIdProvider value={projectId || null}>
+          <EditorLoadingProvider value={isLoadingProject}>
         <div className={cn("rounded-lg border-2 border-gray-300 dark:border-gray-700", className)}>
           <YouTubeAudioStyle />
           {/*<EditorToolbar />*/}
@@ -436,7 +451,14 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
               }
               ErrorBoundary={LexicalErrorBoundary}
             />
-            <FloatingContentInsertPlugin mode={mode} panel={panel} />
+            <FloatingContentInsertPlugin 
+              mode={mode} 
+              panel={panel} 
+              currentProjectId={projectId || undefined}
+              currentProjectType={currentProjectType}
+              storageAdapter={storageAdapter}
+              currentStorageType={currentStorageType}
+            />
             <FloatingTextFormatToolbarPlugin />
             <LinkPlugin />
             <AutoLinkPlugin matchers={MATCHERS} />
@@ -460,6 +482,7 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <MermaidPlugin />
             <VegaLitePlugin />
             <TablePlugin />
+            <ProjectPlugin />
             <OnChangePlugin
               onChange={(editorState) => {
                 if (onChange) {
@@ -473,8 +496,9 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
           </div>
         </div>
-      </EditorLoadingProvider>
-      </ProjectIdProvider>
+        </EditorLoadingProvider>
+        </ProjectIdProvider>
+      </StorageAdapterProvider>
     </LexicalComposer>
   )
 }
