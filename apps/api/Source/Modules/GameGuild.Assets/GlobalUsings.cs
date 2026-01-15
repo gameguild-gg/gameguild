@@ -4,4 +4,5 @@ global using GameGuild.Entities;
 global using GameGuild.CQRS;
 global using GameGuild.CQRS.Models;
 global using GameGuild.Models;
-global using GameGuild.Modules;
+global using GameGuild.Abstractions;
+global using GameGuild.Identity.Context.Actors;

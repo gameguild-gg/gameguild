@@ -13,6 +13,43 @@ namespace GameGuild.Assets;
 public class AssetContent : EntityBase
 {
     /// <summary>
+    /// Default constructor for EF Core.
+    /// </summary>
+    protected AssetContent() { }
+
+    /// <summary>
+    /// Creates a new asset content record.
+    /// </summary>
+    public AssetContent(
+        string bucketName,
+        string objectKey,
+        string contentHash,
+        string mimeType,
+        long sizeBytes,
+        int? width,
+        int? height)
+    {
+        BucketName = bucketName;
+        ObjectKey = objectKey;
+        ContentHash = contentHash;
+        MimeType = mimeType;
+        SizeBytes = sizeBytes;
+        Width = width;
+        Height = height;
+        Kind = DetermineKindFromMimeType(mimeType);
+    }
+
+    private static AssetKind DetermineKindFromMimeType(string mimeType)
+    {
+        if (mimeType.StartsWith("image/")) return AssetKind.Image;
+        if (mimeType.StartsWith("video/")) return AssetKind.Video;
+        if (mimeType.StartsWith("audio/")) return AssetKind.Audio;
+        if (mimeType.StartsWith("application/pdf") || mimeType.Contains("document")) return AssetKind.Document;
+        if (mimeType.Contains("zip") || mimeType.Contains("rar") || mimeType.Contains("7z")) return AssetKind.Archive;
+        return AssetKind.Other;
+    }
+
+    /// <summary>
     /// SHA-256 hash of the content (primary deduplication key).
     /// </summary>
     [Required]
@@ -161,4 +198,26 @@ public class AssetContent : EntityBase
         VirusScanStatus == VirusScanStatus.Scanning ||
         ModerationStatus == ModerationStatus.Pending ||
         ModerationStatus == ModerationStatus.Processing;
+
+    /// <summary>
+    /// Sets the moderation status.
+    /// </summary>
+    public void SetModerationStatus(ModerationStatus status, IEnumerable<string>? labels = null)
+    {
+        ModerationStatus = status;
+        ModerationCompletedAt = DateTime.UtcNow;
+        if (labels != null)
+        {
+            SetModerationLabels(labels);
+        }
+    }
+
+    /// <summary>
+    /// Sets the virus scan status.
+    /// </summary>
+    public void SetVirusScanStatus(VirusScanStatus status, string? scanResult = null)
+    {
+        VirusScanStatus = status;
+        VirusScanCompletedAt = DateTime.UtcNow;
+    }
 }

@@ -25,7 +25,7 @@ public class AssetReportConfiguration : IEntityTypeConfiguration<AssetReport>
             .HasMaxLength(50)
             .IsRequired();
 
-        builder.Property(e => e.Description)
+        builder.Property(e => e.Details)
             .HasMaxLength(2000);
 
         builder.Property(e => e.Status)

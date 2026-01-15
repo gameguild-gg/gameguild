@@ -42,7 +42,19 @@ public enum AssetAccessPolicy
     Public = 3,
     
     /// <summary>Requires purchase/entitlement to access</summary>
-    PaidContent = 4
+    PaidContent = 4,
+    
+    /// <summary>Only owner can access</summary>
+    OwnerOnly = 5,
+    
+    /// <summary>Accessible to any authenticated user</summary>
+    Authenticated = 6,
+    
+    /// <summary>Accessible via direct link without listing</summary>
+    Unlisted = 7,
+    
+    /// <summary>Inherits access policy from parent resource</summary>
+    Inherited = 8
 }
 
 /// <summary>
@@ -87,7 +99,10 @@ public enum ModerationStatus
     NeedsReview = 4,
     
     /// <summary>Approved but with a content warning</summary>
-    ApprovedWithWarning = 5
+    ApprovedWithWarning = 5,
+    
+    /// <summary>Content blocked due to policy violation</summary>
+    Blocked = 6
 }
 
 /// <summary>
@@ -153,7 +168,10 @@ public enum ReviewDecision
     UserWarned = 3,
     
     /// <summary>User was suspended</summary>
-    UserSuspended = 4
+    UserSuspended = 4,
+    
+    /// <summary>Content was blocked</summary>
+    BlockContent = 5
 }
 
 /// <summary>
@@ -182,6 +200,9 @@ public enum ImageFit
 /// </summary>
 public enum ImageFormat
 {
+    /// <summary>Keep original format</summary>
+    Original,
+    
     /// <summary>JPEG format (lossy compression)</summary>
     Jpeg,
     

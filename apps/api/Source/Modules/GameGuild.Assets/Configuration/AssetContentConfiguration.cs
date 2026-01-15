@@ -40,8 +40,7 @@ public class AssetContentConfiguration : IEntityTypeConfiguration<AssetContent>
             .HasConversion<string>()
             .HasMaxLength(50);
 
-        builder.Property(e => e.VirusScanResult)
-            .HasMaxLength(500);
+        builder.Property(e => e.VirusScanCompletedAt);
 
         builder.Property(e => e.ModerationStatus)
             .HasConversion<string>()

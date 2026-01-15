@@ -85,7 +85,7 @@ public class GetModerationQueueHandler : IRequestHandler<GetModerationQueueQuery
                 report.AssetReferenceId,
                 report.ReportedByUserId,
                 report.Reason,
-                report.Description,
+                report.Details,
                 report.Status,
                 report.Decision,
                 report.ReviewedByUserId,

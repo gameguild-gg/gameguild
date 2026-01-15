@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using GameGuild.CQRS;
 using GameGuild.Assets.Commands;
 using GameGuild.Assets.Queries;
-using GameGuild.Identity.Context;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Assets.Controllers;
 
@@ -13,18 +13,11 @@ namespace GameGuild.Assets.Controllers;
 [ApiController]
 [Route("api/admin/assets")]
 [Authorize(Policy = "RequireAdminRole")]
-public class AssetsAdminController : ControllerBase
+public class AssetsAdminController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor) : ControllerBase
 {
-    private readonly IRequestDispatcher _dispatcher;
-    private readonly IActorContext _actorContext;
-
-    public AssetsAdminController(
-        IRequestDispatcher dispatcher,
-        IActorContext actorContext)
-    {
-        _dispatcher = dispatcher;
-        _actorContext = actorContext;
-    }
+    private ActorContext Actor => actorContextAccessor.ActorContext;
 
     /// <summary>
     /// Get moderation queue.
@@ -35,14 +28,9 @@ public class AssetsAdminController : ControllerBase
         CancellationToken ct = default)
     {
         var query = new GetModerationQueueQuery(limit);
-        var result = await _dispatcher.DispatchAsync(query, ct);
+        var result = await sender.Send(query, ct);
 
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new ProblemDetails { Title = result.Error });
-        }
-
-        return Ok(result.Value);
+        return Ok(result);
     }
 
     /// <summary>
@@ -54,14 +42,9 @@ public class AssetsAdminController : ControllerBase
         CancellationToken ct = default)
     {
         var query = new GetAssetReportsQuery(id);
-        var result = await _dispatcher.DispatchAsync(query, ct);
+        var result = await sender.Send(query, ct);
 
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new ProblemDetails { Title = result.Error });
-        }
-
-        return Ok(result.Value);
+        return Ok(result);
     }
 
     /// <summary>
@@ -73,20 +56,25 @@ public class AssetsAdminController : ControllerBase
         [FromBody] ReviewReportRequest request,
         CancellationToken ct = default)
     {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var command = new ReviewReportCommand(
             reportId,
-            _actorContext.UserId,
+            Actor.SubjectIdAsGuid.Value,
             request.Decision,
             request.Notes);
 
-        var result = await _dispatcher.DispatchAsync(command, ct);
+        var result = await sender.Send(command, ct);
 
-        if (!result.IsSuccess)
+        if (result == null)
         {
-            return BadRequest(new ProblemDetails { Title = result.Error });
+            return BadRequest(new ProblemDetails { Title = "Unable to review report" });
         }
 
-        return Ok(result.Value);
+        return Ok(result);
     }
 
     /// <summary>
@@ -97,13 +85,18 @@ public class AssetsAdminController : ControllerBase
         Guid id,
         CancellationToken ct = default)
     {
-        var command = new DeleteAssetCommand(id, _actorContext.UserId, ForceDelete: true);
-
-        var result = await _dispatcher.DispatchAsync(command, ct);
-
-        if (!result.IsSuccess)
+        if (!Actor.SubjectIdAsGuid.HasValue)
         {
-            return BadRequest(new ProblemDetails { Title = result.Error });
+            return Unauthorized();
+        }
+
+        var command = new DeleteAssetCommand(id, Actor.SubjectIdAsGuid.Value, ForceDelete: true);
+
+        var result = await sender.Send(command, ct);
+
+        if (!result.Success)
+        {
+            return BadRequest(new ProblemDetails { Title = "Unable to delete asset" });
         }
 
         return NoContent();
@@ -114,8 +107,8 @@ public class AssetsAdminController : ControllerBase
     /// </summary>
     [HttpGet("pending-virus-scans")]
     public async Task<IActionResult> GetPendingVirusScans(
-        [FromQuery] int limit = 100,
         [FromServices] IAssetContentRepository contentRepository,
+        [FromQuery] int limit = 100,
         CancellationToken ct = default)
     {
         var items = await contentRepository.GetPendingVirusScanAsync(limit, ct);
@@ -137,8 +130,8 @@ public class AssetsAdminController : ControllerBase
     /// </summary>
     [HttpGet("pending-moderation")]
     public async Task<IActionResult> GetPendingModeration(
-        [FromQuery] int limit = 100,
         [FromServices] IAssetContentRepository contentRepository,
+        [FromQuery] int limit = 100,
         CancellationToken ct = default)
     {
         var items = await contentRepository.GetPendingModerationAsync(limit, ct);
@@ -161,9 +154,9 @@ public class AssetsAdminController : ControllerBase
     /// </summary>
     [HttpGet("gc-candidates")]
     public async Task<IActionResult> GetGarbageCollectionCandidates(
+        [FromServices] IAssetContentRepository contentRepository,
         [FromQuery] int gracePeriodHours = 24,
         [FromQuery] int limit = 100,
-        [FromServices] IAssetContentRepository contentRepository,
         CancellationToken ct = default)
     {
         var items = await contentRepository.GetGarbageCollectionCandidatesAsync(

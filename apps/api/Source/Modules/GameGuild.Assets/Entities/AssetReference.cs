@@ -15,6 +15,30 @@ namespace GameGuild.Assets;
 public class AssetReference : EntityBase, ILocalizable
 {
     /// <summary>
+    /// Default constructor for EF Core.
+    /// </summary>
+    protected AssetReference() { }
+
+    /// <summary>
+    /// Creates a new asset reference.
+    /// </summary>
+    public AssetReference(
+        Guid assetContentId,
+        Guid createdByUserId,
+        string? displayName,
+        AssetAccessPolicy accessPolicy,
+        string? parentResourceType,
+        Guid? parentResourceId)
+    {
+        AssetContentId = assetContentId;
+        CreatedByUserId = createdByUserId;
+        DisplayName = displayName;
+        AccessPolicy = accessPolicy;
+        ParentResourceType = parentResourceType;
+        ParentResourceId = parentResourceId;
+    }
+
+    /// <summary>
     /// Foreign key to the actual content.
     /// </summary>
     public Guid AssetContentId { get; set; }
@@ -163,4 +187,20 @@ public class AssetReference : EntityBase, ILocalizable
     [NotMapped]
     public bool IsDownloadWindowValid =>
         !DownloadWindowExpiresAt.HasValue || DownloadWindowExpiresAt.Value > DateTime.UtcNow;
+
+    /// <summary>
+    /// Updates the display name.
+    /// </summary>
+    public void UpdateDisplayName(string? displayName)
+    {
+        DisplayName = displayName;
+    }
+
+    /// <summary>
+    /// Updates the access policy.
+    /// </summary>
+    public void UpdateAccessPolicy(AssetAccessPolicy accessPolicy)
+    {
+        AccessPolicy = accessPolicy;
+    }
 }

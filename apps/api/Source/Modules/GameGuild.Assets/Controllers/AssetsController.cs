@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using GameGuild.CQRS;
 using GameGuild.Assets.Commands;
 using GameGuild.Assets.Queries;
-using GameGuild.Identity.Context;
+using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Assets.Controllers;
 
@@ -14,18 +14,11 @@ namespace GameGuild.Assets.Controllers;
 [ApiController]
 [Route("api/assets")]
 [Authorize]
-public class AssetsController : ControllerBase
+public class AssetsController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor) : ControllerBase
 {
-    private readonly IRequestDispatcher _dispatcher;
-    private readonly IActorContext _actorContext;
-
-    public AssetsController(
-        IRequestDispatcher dispatcher,
-        IActorContext actorContext)
-    {
-        _dispatcher = dispatcher;
-        _actorContext = actorContext;
-    }
+    private ActorContext Actor => actorContextAccessor.ActorContext;
 
     /// <summary>
     /// Upload a new asset.
@@ -45,30 +38,35 @@ public class AssetsController : ControllerBase
             return BadRequest(new ProblemDetails { Title = "No file provided" });
         }
 
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
         await using var stream = file.OpenReadStream();
 
         var command = new UploadAssetCommand(
             stream,
             file.FileName,
             file.ContentType,
-            _actorContext.UserId,
-            _actorContext.TenantId,
+            Actor.SubjectIdAsGuid.Value,
+            Actor.TenantId,
             displayName,
             accessPolicy,
             parentResourceType,
             parentResourceId);
 
-        var result = await _dispatcher.DispatchAsync(command, ct);
+        var result = await sender.Send(command, ct);
 
-        if (!result.IsSuccess)
+        if (result.Error != null)
         {
             return BadRequest(new ProblemDetails { Title = result.Error });
         }
 
         return CreatedAtAction(
             nameof(GetAsset),
-            new { id = result.Value!.AssetReferenceId },
-            result.Value);
+            new { id = result.AssetReferenceId },
+            result);
     }
 
     /// <summary>
@@ -83,23 +81,18 @@ public class AssetsController : ControllerBase
     {
         var query = new GetAssetQuery(
             id,
-            _actorContext.IsAuthenticated ? _actorContext.UserId : null,
-            _actorContext.TenantId,
+            Actor.SubjectIdAsGuid,
+            Actor.TenantId,
             includeContent);
 
-        var result = await _dispatcher.DispatchAsync(query, ct);
+        var result = await sender.Send(query, ct);
 
-        if (!result.IsSuccess)
-        {
-            return Forbid();
-        }
-
-        if (result.Value == null)
+        if (result == null)
         {
             return NotFound();
         }
 
-        return Ok(result.Value);
+        return Ok(result);
     }
 
     /// <summary>
@@ -120,29 +113,31 @@ public class AssetsController : ControllerBase
         TransformationSpec? transformation = null;
         if (width.HasValue || height.HasValue || fit.HasValue || format.HasValue || quality.HasValue)
         {
-            transformation = new TransformationSpec(
-                width,
-                height,
-                fit ?? ImageFit.Contain,
-                format ?? ImageFormat.Original,
-                quality ?? 85);
+            transformation = new TransformationSpec
+            {
+                Width = width,
+                Height = height,
+                Fit = fit ?? ImageFit.Contain,
+                Format = format ?? ImageFormat.Original,
+                Quality = quality ?? 85
+            };
         }
 
         var command = new GenerateAccessUrlCommand(
             id,
-            _actorContext.IsAuthenticated ? _actorContext.UserId : null,
-            _actorContext.TenantId,
+            Actor.SubjectIdAsGuid,
+            Actor.TenantId,
             transformation,
             direct);
 
-        var result = await _dispatcher.DispatchAsync(command, ct);
+        var result = await sender.Send(command, ct);
 
-        if (!result.IsSuccess)
+        if (result == null)
         {
-            return BadRequest(new ProblemDetails { Title = result.Error });
+            return BadRequest(new ProblemDetails { Title = "Unable to generate access URL" });
         }
 
-        return Ok(result.Value);
+        return Ok(result);
     }
 
     /// <summary>
@@ -153,14 +148,14 @@ public class AssetsController : ControllerBase
     public async Task<IActionResult> GetContent(
         Guid id,
         [FromQuery] string token,
-        [FromQuery] string? transform = null,
         [FromServices] IAssetAccessService accessService,
         [FromServices] IAssetStorageService storageService,
         [FromServices] IAssetReferenceRepository referenceRepository,
+        [FromQuery] string? transform = null,
         CancellationToken ct = default)
     {
         // Validate token
-        if (!accessService.ValidateToken(token, id, _actorContext.TenantId))
+        if (!accessService.ValidateToken(token, id, Actor.TenantId))
         {
             return Forbid();
         }
@@ -197,20 +192,25 @@ public class AssetsController : ControllerBase
         [FromBody] UpdateAssetRequest request,
         CancellationToken ct = default)
     {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var command = new UpdateAssetCommand(
             id,
-            _actorContext.UserId,
+            Actor.SubjectIdAsGuid.Value,
             request.DisplayName,
             request.AccessPolicy);
 
-        var result = await _dispatcher.DispatchAsync(command, ct);
+        var result = await sender.Send(command, ct);
 
-        if (!result.IsSuccess)
+        if (result == null)
         {
-            return BadRequest(new ProblemDetails { Title = result.Error });
+            return BadRequest(new ProblemDetails { Title = "Unable to update asset" });
         }
 
-        return Ok(result.Value);
+        return Ok(result);
     }
 
     /// <summary>
@@ -221,13 +221,18 @@ public class AssetsController : ControllerBase
         Guid id,
         CancellationToken ct = default)
     {
-        var command = new DeleteAssetCommand(id, _actorContext.UserId);
-
-        var result = await _dispatcher.DispatchAsync(command, ct);
-
-        if (!result.IsSuccess)
+        if (!Actor.SubjectIdAsGuid.HasValue)
         {
-            return BadRequest(new ProblemDetails { Title = result.Error });
+            return Unauthorized();
+        }
+
+        var command = new DeleteAssetCommand(id, Actor.SubjectIdAsGuid.Value);
+
+        var result = await sender.Send(command, ct);
+
+        if (!result.Success)
+        {
+            return BadRequest(new ProblemDetails { Title = "Unable to delete asset" });
         }
 
         return NoContent();
@@ -242,20 +247,25 @@ public class AssetsController : ControllerBase
         [FromBody] ReportAssetRequest request,
         CancellationToken ct = default)
     {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var command = new ReportAssetCommand(
             id,
-            _actorContext.UserId,
+            Actor.SubjectIdAsGuid.Value,
             request.Reason,
             request.Description);
 
-        var result = await _dispatcher.DispatchAsync(command, ct);
+        var result = await sender.Send(command, ct);
 
-        if (!result.IsSuccess)
+        if (result == null)
         {
-            return BadRequest(new ProblemDetails { Title = result.Error });
+            return BadRequest(new ProblemDetails { Title = "Unable to report asset" });
         }
 
-        return Ok(result.Value);
+        return Ok(result);
     }
 
     /// <summary>
@@ -267,20 +277,20 @@ public class AssetsController : ControllerBase
         [FromQuery] int take = 20,
         CancellationToken ct = default)
     {
+        if (!Actor.SubjectIdAsGuid.HasValue)
+        {
+            return Unauthorized();
+        }
+
         var query = new GetUserAssetsQuery(
-            _actorContext.UserId,
-            _actorContext.TenantId,
+            Actor.SubjectIdAsGuid.Value,
+            Actor.TenantId,
             skip,
             take);
 
-        var result = await _dispatcher.DispatchAsync(query, ct);
+        var result = await sender.Send(query, ct);
 
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new ProblemDetails { Title = result.Error });
-        }
-
-        return Ok(result.Value);
+        return Ok(result);
     }
 
     /// <summary>
@@ -296,17 +306,12 @@ public class AssetsController : ControllerBase
         var query = new GetAssetsByParentQuery(
             parentType,
             parentId,
-            _actorContext.IsAuthenticated ? _actorContext.UserId : null,
-            _actorContext.TenantId);
+            Actor.SubjectIdAsGuid,
+            Actor.TenantId);
 
-        var result = await _dispatcher.DispatchAsync(query, ct);
+        var result = await sender.Send(query, ct);
 
-        if (!result.IsSuccess)
-        {
-            return BadRequest(new ProblemDetails { Title = result.Error });
-        }
-
-        return Ok(result.Value);
+        return Ok(result);
     }
 }
 

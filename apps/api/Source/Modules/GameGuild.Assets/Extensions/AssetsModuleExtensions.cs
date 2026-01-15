@@ -2,7 +2,7 @@ using Amazon.S3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using GameGuild.Modules;
+using GameGuild.Abstractions;
 using GameGuild.Assets.Configuration;
 using GameGuild.Assets.Commands;
 using GameGuild.Assets.Queries;
@@ -28,8 +28,8 @@ public static class AssetsModuleExtensions
             configuration.GetSection(AssetTokenOptions.SectionName));
         services.Configure<AssetStorageOptions>(
             configuration.GetSection(AssetStorageOptions.SectionName));
-        services.Configure<AssetUploadOptions>(
-            configuration.GetSection(AssetUploadOptions.SectionName));
+        services.Configure<AssetUploadConfiguration>(
+            configuration.GetSection(AssetUploadConfiguration.SectionName));
         services.Configure<AssetAccessOptions>(
             configuration.GetSection(AssetAccessOptions.SectionName));
 
@@ -71,18 +71,18 @@ public static class AssetsModuleExtensions
         services.AddValidatorsFromAssemblyContaining<UploadAssetValidator>(ServiceLifetime.Scoped);
 
         // Command/Query Handlers
-        services.AddScoped<IRequestHandler<UploadAssetCommand, Result<UploadAssetResponse>>, UploadAssetHandler>();
-        services.AddScoped<IRequestHandler<GenerateAccessUrlCommand, Result<GenerateAccessUrlResponse>>, GenerateAccessUrlHandler>();
-        services.AddScoped<IRequestHandler<UpdateAssetCommand, Result<UpdateAssetResponse>>, UpdateAssetHandler>();
-        services.AddScoped<IRequestHandler<DeleteAssetCommand, Result<DeleteAssetResponse>>, DeleteAssetHandler>();
-        services.AddScoped<IRequestHandler<ReportAssetCommand, Result<ReportAssetResponse>>, ReportAssetHandler>();
-        services.AddScoped<IRequestHandler<ReviewReportCommand, Result<ReviewReportResponse>>, ReviewReportHandler>();
+        services.AddScoped<IRequestHandler<UploadAssetCommand, UploadAssetResponse>, UploadAssetHandler>();
+        services.AddScoped<IRequestHandler<GenerateAccessUrlCommand, GenerateAccessUrlResponse?>, GenerateAccessUrlHandler>();
+        services.AddScoped<IRequestHandler<UpdateAssetCommand, UpdateAssetResponse?>, UpdateAssetHandler>();
+        services.AddScoped<IRequestHandler<DeleteAssetCommand, DeleteAssetResponse>, DeleteAssetHandler>();
+        services.AddScoped<IRequestHandler<ReportAssetCommand, ReportAssetResponse?>, ReportAssetHandler>();
+        services.AddScoped<IRequestHandler<ReviewReportCommand, ReviewReportResponse?>, ReviewReportHandler>();
         
-        services.AddScoped<IRequestHandler<GetAssetQuery, Result<AssetDto?>>, GetAssetHandler>();
-        services.AddScoped<IRequestHandler<GetAssetsByParentQuery, Result<IReadOnlyList<AssetDto>>>, GetAssetsByParentHandler>();
-        services.AddScoped<IRequestHandler<GetUserAssetsQuery, Result<IReadOnlyList<AssetDto>>>, GetUserAssetsHandler>();
-        services.AddScoped<IRequestHandler<GetModerationQueueQuery, Result<IReadOnlyList<ReportDto>>>, GetModerationQueueHandler>();
-        services.AddScoped<IRequestHandler<GetAssetReportsQuery, Result<IReadOnlyList<ReportDto>>>, GetAssetReportsHandler>();
+        services.AddScoped<IRequestHandler<GetAssetQuery, AssetDto?>, GetAssetHandler>();
+        services.AddScoped<IRequestHandler<GetAssetsByParentQuery, IReadOnlyList<AssetDto>>, GetAssetsByParentHandler>();
+        services.AddScoped<IRequestHandler<GetUserAssetsQuery, IReadOnlyList<AssetDto>>, GetUserAssetsHandler>();
+        services.AddScoped<IRequestHandler<GetModerationQueueQuery, IReadOnlyList<ReportDto>>, GetModerationQueueHandler>();
+        services.AddScoped<IRequestHandler<GetAssetReportsQuery, IReadOnlyList<ReportDto>>, GetAssetReportsHandler>();
 
         return services;
     }
@@ -106,15 +106,13 @@ public static class AssetsModuleExtensions
 /// <summary>
 /// Module implementation for Assets.
 /// </summary>
-public class AssetsModule : IModule
+public class AssetsModule : ModuleBase
 {
-    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    public override string Name => "Assets";
+
+    public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddAssetsModule(configuration);
-    }
-
-    public void MapEndpoints(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder endpoints)
-    {
-        // Controllers handle routing via attributes
+        return services;
     }
 }
