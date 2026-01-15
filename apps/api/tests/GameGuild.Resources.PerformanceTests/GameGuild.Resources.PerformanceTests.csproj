@@ -24,12 +24,15 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
         <PackageReference Include="AutoFixture" />
         <PackageReference Include="AutoFixture.Xunit2" />
+        <PackageReference Include="BenchmarkDotNet" />
         <PackageReference Include="NBomber" />
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
+        <ProjectReference Include="..\GameGuild.Resources.IntegrationTests\GameGuild.Resources.IntegrationTests.csproj" />
     </ItemGroup>
 
 </Project>
