@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,8 +17,30 @@ namespace GameGuild.Resources;
 [ApiVersion("1.0")]
 [Tags("users/resources")]
 [Authorize]
-public sealed class UserResourcesController(ISender sender) : ControllerBase
+public sealed class UserResourcesController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor) : ControllerBase
 {
+    /// <summary>
+    ///     Validates that the current actor owns the user resource or is an admin.
+    ///     Fail-closed: Returns false if actor is not authenticated or not authorized.
+    /// </summary>
+    private bool ValidateUserOwnership(Guid userId)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        
+        // Fail-closed: No actor means no access
+        if (actor is null || !actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
+            return false;
+        
+        // System admins bypass ownership check
+        if (actor.IsSystemAdmin)
+            return true;
+        
+        // User can only access their own resources
+        return actor.SubjectIdAsGuid.Value == userId;
+    }
+
     #region Collection Operations - /v1/users/{userId}/resources
 
     /// <summary>
@@ -33,9 +56,13 @@ public sealed class UserResourcesController(ISender sender) : ControllerBase
     [EndpointSummary("Get usage records for a user")]
     [EndpointDescription("Retrieves resource usage records for a specific user with optional filtering by type and date range.")]
     [ProducesResponseType<IEnumerable<UsageRecord>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUsageRecords(Guid userId, [FromQuery] ResourceUsageType? usageType, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         return Ok(await sender.Send(new GetUserResourceUsageRecordsQuery(userId, usageType, startDate, endDate), ct).ConfigureAwait(false));
     }
 
@@ -49,9 +76,13 @@ public sealed class UserResourcesController(ISender sender) : ControllerBase
     [EndpointSummary("Get current usage summary for a user")]
     [EndpointDescription("Retrieves the current aggregated resource usage summary for a specific user.")]
     [ProducesResponseType<Dictionary<ResourceUsageType, long>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetCurrentUsageSummary(Guid userId, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         return Ok(await sender.Send(new GetCurrentUserResourceUsageSummaryQuery(userId), ct).ConfigureAwait(false));
     }
 
@@ -66,9 +97,13 @@ public sealed class UserResourcesController(ISender sender) : ControllerBase
     [EndpointSummary("Check resource limits for a user")]
     [EndpointDescription("Checks current resource usage against configured limits for a specific user.")]
     [ProducesResponseType<Dictionary<ResourceUsageType, bool>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckLimits(Guid userId, [FromQuery] ResourceUsageType? usageType, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         return Ok(await sender.Send(new CheckUserResourceUsageLimitsQuery(userId, usageType), ct).ConfigureAwait(false));
     }
 
@@ -88,8 +123,12 @@ public sealed class UserResourcesController(ISender sender) : ControllerBase
     [EndpointDescription("Records a new resource usage entry for the specified user.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Record(Guid userId, [FromBody] RecordUserResourceUsageRequest body, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var metadata = body.Metadata != null ? System.Text.Json.JsonSerializer.Serialize(body.Metadata) : null;
@@ -110,9 +149,13 @@ public sealed class UserResourcesController(ISender sender) : ControllerBase
     [EndpointDescription("Records a new resource usage entry after verifying it doesn't exceed configured quotas. Returns 429 if quota would be exceeded.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> RecordWithQuotaCheck(Guid userId, [FromBody] RecordUserResourceUsageRequest body, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         // Check quota before recording
@@ -139,9 +182,13 @@ public sealed class UserResourcesController(ISender sender) : ControllerBase
     [EndpointDescription("Resets the resource usage counters for a specific user and resource type to zero.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Reset(Guid userId, [FromQuery] ResourceUsageType usageType, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         await sender.Send(new ResetUserResourceUsageCommand(userId, usageType), ct).ConfigureAwait(false);
 
         return NoContent();

@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +17,38 @@ namespace GameGuild.Resources;
 [ApiVersion("1.0")]
 [Tags("tenants/resources/settings")]
 [Authorize]
-public sealed class TenantResourceSettingsController(IResourceSettingsRepository settingsRepository) : ControllerBase
+public sealed class TenantResourceSettingsController(
+    IResourceSettingsRepository settingsRepository,
+    IActorContextAccessor actorContextAccessor,
+    ITenantMembershipChecker tenantMembershipChecker) : ControllerBase
 {
+    /// <summary>
+    ///     Validates that the current actor is a member of the specified tenant.
+    ///     Fail-closed: Returns false if actor is not authenticated or not a member.
+    /// </summary>
+    private async Task<bool> ValidateTenantMembershipAsync(Guid tenantId, CancellationToken ct)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        
+        // Fail-closed: No actor means no access
+        if (actor is null || !actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
+            return false;
+        
+        // System admins bypass tenant membership check
+        if (actor.IsSystemAdmin)
+            return true;
+        
+        // If actor's current tenant matches, allow access
+        if (actor.TenantId.HasValue && actor.TenantId.Value == tenantId)
+            return true;
+        
+        // Check actual tenant membership in database
+        return await tenantMembershipChecker.IsUserMemberOfTenantAsync(
+            actor.SubjectIdAsGuid.Value, 
+            tenantId, 
+            ct);
+    }
+
     /// <summary>
     ///     Get all settings for a tenant
     /// </summary>
@@ -28,8 +60,12 @@ public sealed class TenantResourceSettingsController(IResourceSettingsRepository
     [EndpointSummary("Get all settings for a tenant")]
     [EndpointDescription("Retrieves all resource settings for a specific tenant, optionally filtered by category.")]
     [ProducesResponseType<IEnumerable<ResourceSettings>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetTenantSettings(Guid tenantId, [FromQuery] string? category, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         if (!string.IsNullOrEmpty(category)) { return Ok(await settingsRepository.GetByCategoryAsync(tenantId, category, ct).ConfigureAwait(false)); }
 
         return Ok(await settingsRepository.GetByTenantAsync(tenantId, ct).ConfigureAwait(false));
@@ -46,9 +82,13 @@ public sealed class TenantResourceSettingsController(IResourceSettingsRepository
     [EndpointSummary("Get a specific setting by key")]
     [EndpointDescription("Retrieves a specific resource setting by its key for a tenant.")]
     [ProducesResponseType<ResourceSettings>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetTenantSettingByKey(Guid tenantId, string key, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         var setting = await settingsRepository.GetByKeyAsync(tenantId, key, ct).ConfigureAwait(false);
 
         if (setting == null) return NotFound($"Setting not found for key: {key}");
@@ -68,9 +108,13 @@ public sealed class TenantResourceSettingsController(IResourceSettingsRepository
     [EndpointSummary("Get effective value for a setting")]
     [EndpointDescription("Retrieves the effective value for a setting, considering user-level overrides if a user ID is provided.")]
     [ProducesResponseType<EffectiveSettingResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetEffectiveValue(Guid tenantId, string key, [FromQuery] Guid? userId, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         var value = await settingsRepository.GetEffectiveValueAsync(tenantId, key, userId, ct).ConfigureAwait(false);
 
         if (value == null) return NotFound($"Setting not found for key: {key}");
@@ -91,8 +135,12 @@ public sealed class TenantResourceSettingsController(IResourceSettingsRepository
     [EndpointDescription("Creates a new setting or updates an existing one for a tenant.")]
     [ProducesResponseType<ResourceSettings>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> SetTenantSetting(Guid tenantId, string key, [FromBody] SetResourceSettingsRequest body, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var existing = await settingsRepository.GetByKeyAsync(tenantId, key, ct).ConfigureAwait(false);
@@ -148,9 +196,13 @@ public sealed class TenantResourceSettingsController(IResourceSettingsRepository
     [EndpointSummary("Delete a setting")]
     [EndpointDescription("Removes a resource setting for a tenant.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteTenantSetting(Guid tenantId, string key, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         var deleted = await settingsRepository.DeleteByKeyAsync(tenantId, key, ct).ConfigureAwait(false);
 
         if (!deleted) return NotFound($"Setting not found for key: {key}");

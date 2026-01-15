@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +16,30 @@ namespace GameGuild.Resources;
 [ApiVersion("1.0")]
 [Tags("users/resources/metadata")]
 [Authorize]
-public sealed class UserResourceMetadataController(IResourceMetadataRepository metadataRepository) : ControllerBase
+public sealed class UserResourceMetadataController(
+    IResourceMetadataRepository metadataRepository,
+    IActorContextAccessor actorContextAccessor) : ControllerBase
 {
+    /// <summary>
+    ///     Validates that the current actor owns the user resource or is an admin.
+    ///     Fail-closed: Returns false if actor is not authenticated or not authorized.
+    /// </summary>
+    private bool ValidateUserOwnership(Guid userId)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        
+        // Fail-closed: No actor means no access
+        if (actor is null || !actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
+            return false;
+        
+        // System admins bypass ownership check
+        if (actor.IsSystemAdmin)
+            return true;
+        
+        // User can only access their own resources
+        return actor.SubjectIdAsGuid.Value == userId;
+    }
+
     /// <summary>
     ///     Get all metadata entries for a user
     /// </summary>
@@ -27,8 +50,12 @@ public sealed class UserResourceMetadataController(IResourceMetadataRepository m
     [EndpointSummary("Get all metadata entries for a user")]
     [EndpointDescription("Retrieves all resource metadata entries for a specific user.")]
     [ProducesResponseType<IEnumerable<ResourceMetadata>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetUserMetadata(Guid userId, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         return Ok(await metadataRepository.GetByUserAsync(userId, ct).ConfigureAwait(false));
     }
 
@@ -43,9 +70,13 @@ public sealed class UserResourceMetadataController(IResourceMetadataRepository m
     [EndpointSummary("Get a specific metadata entry by key for a user")]
     [EndpointDescription("Retrieves a specific resource metadata entry by its key for a user.")]
     [ProducesResponseType<ResourceMetadata>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserMetadataByKey(Guid userId, string key, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         var metadata = await metadataRepository.GetByUserKeyAsync(userId, key, ct).ConfigureAwait(false);
 
         if (metadata == null) return NotFound($"Metadata not found for user {userId} and key: {key}");
@@ -66,8 +97,12 @@ public sealed class UserResourceMetadataController(IResourceMetadataRepository m
     [EndpointDescription("Creates a new metadata entry or updates an existing one for a user.")]
     [ProducesResponseType<ResourceMetadata>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> SetUserMetadata(Guid userId, string key, [FromBody] SetResourceMetadataRequest body, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var existing = await metadataRepository.GetByUserKeyAsync(userId, key, ct).ConfigureAwait(false);

@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,8 +17,29 @@ namespace GameGuild.Resources;
 [ApiVersion("1.0")]
 [Tags("users/quotas")]
 [Authorize]
-public sealed class UserQuotasController(ISender sender) : ControllerBase
+public sealed class UserQuotasController(
+    ISender sender,
+    IActorContextAccessor actorContextAccessor) : ControllerBase
 {
+    /// <summary>
+    ///     Validates that the current actor is the owner of the resource or a system admin.
+    ///     Fail-closed: Returns false if actor is not authenticated or not authorized.
+    /// </summary>
+    private bool ValidateUserOwnership(Guid userId)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        
+        // Fail-closed: No actor means no access
+        if (actor is null || !actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
+            return false;
+        
+        // System admins bypass ownership check
+        if (actor.IsSystemAdmin)
+            return true;
+        
+        // Check if actor owns this resource
+        return actor.SubjectIdAsGuid.Value == userId;
+    }
     #region Collection Operations - /v1/users/{userId}/quotas
 
     /// <summary>
@@ -30,9 +52,13 @@ public sealed class UserQuotasController(ISender sender) : ControllerBase
     [EndpointSummary("Get all quotas for a user")]
     [EndpointDescription("Retrieves all configured resource quotas for a specific user.")]
     [ProducesResponseType<IEnumerable<ResourceQuotaResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserQuotas(Guid userId, CancellationToken ct = default)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         var query = new GetUserResourceQuotasQuery(userId);
         var result = await sender.Send(query, ct).ConfigureAwait(false);
 
@@ -50,9 +76,13 @@ public sealed class UserQuotasController(ISender sender) : ControllerBase
     [EndpointSummary("Get specific quota for a resource type")]
     [EndpointDescription("Retrieves the quota configuration for a specific resource type for a user.")]
     [ProducesResponseType<ResourceQuotaResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetQuota(Guid userId, ResourceUsageType type, CancellationToken ct = default)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         var query = new GetUserResourceQuotaQuery(userId, type);
         var result = await sender.Send(query, ct).ConfigureAwait(false);
 
@@ -78,8 +108,12 @@ public sealed class UserQuotasController(ISender sender) : ControllerBase
     [EndpointDescription("Creates or updates the quota configuration for a specific resource type for a user.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> SetQuota(Guid userId, ResourceUsageType type, [FromBody] SetQuotaRequest body, CancellationToken ct = default)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new SetUserResourceQuotaCommand(userId, type, body.SoftLimit, body.HardLimit, body.Period, body.IsActive, body.ResetTime);
@@ -99,9 +133,13 @@ public sealed class UserQuotasController(ISender sender) : ControllerBase
     [EndpointSummary("Delete a quota for a resource type")]
     [EndpointDescription("Removes the quota configuration for a specific resource type for a user.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteQuota(Guid userId, ResourceUsageType type, CancellationToken ct = default)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         var command = new DeleteUserResourceQuotaCommand(userId, type);
         await sender.Send(command, ct).ConfigureAwait(false);
 
@@ -123,9 +161,13 @@ public sealed class UserQuotasController(ISender sender) : ControllerBase
     [EndpointSummary("Reset quota usage to zero")]
     [EndpointDescription("Resets the current usage counter for a specific resource quota to zero without changing the quota limits.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ResetQuota(Guid userId, ResourceUsageType type, CancellationToken ct = default)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         var command = new ResetUserResourceQuotaCommand(userId, type);
         await sender.Send(command, ct).ConfigureAwait(false);
 
@@ -145,9 +187,13 @@ public sealed class UserQuotasController(ISender sender) : ControllerBase
     [EndpointDescription("Activates or deactivates a resource quota. Inactive quotas are not enforced.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ToggleQuota(Guid userId, ResourceUsageType type, [FromBody] ToggleResourceQuotaRequest body, CancellationToken ct = default)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var command = new ToggleUserResourceQuotaCommand(userId, type, body.IsActive);
@@ -169,9 +215,13 @@ public sealed class UserQuotasController(ISender sender) : ControllerBase
     [EndpointDescription("Validates whether a proposed usage amount would exceed the configured quota limits without recording any usage.")]
     [ProducesResponseType<ResourceQuotaEnforcementResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CheckQuota(Guid userId, ResourceUsageType type, [FromBody] CheckResourceQuotaRequest body, CancellationToken ct = default)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var query = new CheckUserResourceQuotaQuery(userId, type, body.Amount);

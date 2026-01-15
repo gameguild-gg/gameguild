@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +17,38 @@ namespace GameGuild.Resources;
 [ApiVersion("1.0")]
 [Tags("tenants/resources/metadata")]
 [Authorize]
-public sealed class TenantResourceMetadataController(IResourceMetadataRepository metadataRepository) : ControllerBase
+public sealed class TenantResourceMetadataController(
+    IResourceMetadataRepository metadataRepository,
+    IActorContextAccessor actorContextAccessor,
+    ITenantMembershipChecker tenantMembershipChecker) : ControllerBase
 {
+    /// <summary>
+    ///     Validates that the current actor is a member of the specified tenant.
+    ///     Fail-closed: Returns false if actor is not authenticated or not a member.
+    /// </summary>
+    private async Task<bool> ValidateTenantMembershipAsync(Guid tenantId, CancellationToken ct)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        
+        // Fail-closed: No actor means no access
+        if (actor is null || !actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
+            return false;
+        
+        // System admins bypass tenant membership check
+        if (actor.IsSystemAdmin)
+            return true;
+        
+        // If actor's current tenant matches, allow access
+        if (actor.TenantId.HasValue && actor.TenantId.Value == tenantId)
+            return true;
+        
+        // Check actual tenant membership in database
+        return await tenantMembershipChecker.IsUserMemberOfTenantAsync(
+            actor.SubjectIdAsGuid.Value, 
+            tenantId, 
+            ct);
+    }
+
     /// <summary>
     ///     Get all metadata entries for a tenant
     /// </summary>
@@ -28,8 +60,12 @@ public sealed class TenantResourceMetadataController(IResourceMetadataRepository
     [EndpointSummary("Get all metadata entries for a tenant")]
     [EndpointDescription("Retrieves all resource metadata entries for a specific tenant, optionally filtered by category.")]
     [ProducesResponseType<IEnumerable<ResourceMetadata>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetTenantMetadata(Guid tenantId, [FromQuery] string? category, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         if (!string.IsNullOrEmpty(category)) { return Ok(await metadataRepository.GetByCategoryAsync(tenantId, category, ct).ConfigureAwait(false)); }
 
         return Ok(await metadataRepository.GetByTenantAsync(tenantId, ct).ConfigureAwait(false));
@@ -46,9 +82,13 @@ public sealed class TenantResourceMetadataController(IResourceMetadataRepository
     [EndpointSummary("Get a specific metadata entry by key")]
     [EndpointDescription("Retrieves a specific resource metadata entry by its key for a tenant.")]
     [ProducesResponseType<ResourceMetadata>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetTenantMetadataByKey(Guid tenantId, string key, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         var metadata = await metadataRepository.GetByKeyAsync(tenantId, key, ct).ConfigureAwait(false);
 
         if (metadata == null) return NotFound($"Metadata not found for key: {key}");
@@ -69,8 +109,12 @@ public sealed class TenantResourceMetadataController(IResourceMetadataRepository
     [EndpointDescription("Creates a new metadata entry or updates an existing one for a tenant.")]
     [ProducesResponseType<ResourceMetadata>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> SetTenantMetadata(Guid tenantId, string key, [FromBody] SetResourceMetadataRequest body, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var existing = await metadataRepository.GetByKeyAsync(tenantId, key, ct).ConfigureAwait(false);
@@ -120,9 +164,13 @@ public sealed class TenantResourceMetadataController(IResourceMetadataRepository
     [EndpointSummary("Delete a metadata entry")]
     [EndpointDescription("Removes a resource metadata entry for a tenant.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteTenantMetadata(Guid tenantId, string key, CancellationToken ct)
     {
+        if (!await ValidateTenantMembershipAsync(tenantId, ct))
+            return Forbid();
+        
         var deleted = await metadataRepository.DeleteByKeyAsync(tenantId, key, ct).ConfigureAwait(false);
 
         if (!deleted) return NotFound($"Metadata not found for key: {key}");

@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +16,30 @@ namespace GameGuild.Resources;
 [ApiVersion("1.0")]
 [Tags("users/resources/settings")]
 [Authorize]
-public sealed class UserResourceSettingsController(IResourceSettingsRepository settingsRepository) : ControllerBase
+public sealed class UserResourceSettingsController(
+    IResourceSettingsRepository settingsRepository,
+    IActorContextAccessor actorContextAccessor) : ControllerBase
 {
+    /// <summary>
+    ///     Validates that the current actor owns the user resource or is an admin.
+    ///     Fail-closed: Returns false if actor is not authenticated or not authorized.
+    /// </summary>
+    private bool ValidateUserOwnership(Guid userId)
+    {
+        var actor = actorContextAccessor.ActorContext;
+        
+        // Fail-closed: No actor means no access
+        if (actor is null || !actor.IsAuthenticated || !actor.SubjectIdAsGuid.HasValue)
+            return false;
+        
+        // System admins bypass ownership check
+        if (actor.IsSystemAdmin)
+            return true;
+        
+        // User can only access their own resources
+        return actor.SubjectIdAsGuid.Value == userId;
+    }
+
     /// <summary>
     ///     Get all setting overrides for a user
     /// </summary>
@@ -27,8 +50,12 @@ public sealed class UserResourceSettingsController(IResourceSettingsRepository s
     [EndpointSummary("Get all setting overrides for a user")]
     [EndpointDescription("Retrieves all resource setting overrides for a specific user.")]
     [ProducesResponseType<IEnumerable<ResourceSettings>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetUserSettings(Guid userId, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         return Ok(await settingsRepository.GetByUserAsync(userId, ct).ConfigureAwait(false));
     }
 
@@ -43,9 +70,13 @@ public sealed class UserResourceSettingsController(IResourceSettingsRepository s
     [EndpointSummary("Get a specific setting override by key for a user")]
     [EndpointDescription("Retrieves a specific resource setting override by its key for a user.")]
     [ProducesResponseType<ResourceSettings>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserSettingByKey(Guid userId, string key, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         var setting = await settingsRepository.GetByUserKeyAsync(userId, key, ct).ConfigureAwait(false);
 
         if (setting == null) return NotFound($"Setting override not found for user {userId} and key: {key}");
@@ -66,8 +97,12 @@ public sealed class UserResourceSettingsController(IResourceSettingsRepository s
     [EndpointDescription("Creates a new setting override or updates an existing one for a user.")]
     [ProducesResponseType<ResourceSettings>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> SetUserSetting(Guid userId, string key, [FromBody] SetUserResourceSettingsRequest body, CancellationToken ct)
     {
+        if (!ValidateUserOwnership(userId))
+            return Forbid();
+        
         ArgumentNullException.ThrowIfNull(body);
 
         var existing = await settingsRepository.GetByUserKeyAsync(userId, key, ct).ConfigureAwait(false);
