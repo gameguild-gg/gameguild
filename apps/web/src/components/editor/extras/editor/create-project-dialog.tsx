@@ -68,17 +68,12 @@ export function CreateProjectDialog({
   const [storageOption, setStorageOption] = useState<StorageOption>("local")
   const [projectMode, setProjectMode] = useState<ProjectMode>("free-page")
   const [projectType, setProjectType] = useState<string>("type1") // Project type (type1, type2, type3, etc.)
-  const [layoutType, setLayoutType] = useState<LayoutType>("single") // Layout detection: single or dual
-
-  // Sync layout with project type: Type 3 = Sequential
-  useEffect(() => {
-    if (projectType === "type3") {
-      setLayoutType("sequential")
-    } else if (layoutType === "sequential") {
-      // If switching away from type3 and layout is sequential, reset to single
-      setLayoutType("single")
-    }
-  }, [projectType])
+  
+  // Auto-determine layout based on project type
+  const layoutType: LayoutType = 
+    projectType === "type1" ? "single" : 
+    projectType === "type2" ? "dual" : 
+    "sequential"
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -224,7 +219,6 @@ export function CreateProjectDialog({
       setStorageOption("local")
       setProjectMode("free-page")
       setProjectType("type1")
-      setLayoutType("single")
       onOpenChange(false)
 
       // Update lists
@@ -254,107 +248,210 @@ export function CreateProjectDialog({
     setStorageOption("local")
     setProjectMode("free-page")
     setProjectType("type1")
-    setLayoutType("single")
     onOpenChange(false)
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
+          <DialogTitle className="text-2xl">Create New Project</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
+          {/* Project Name */}
           <div>
-            <Label htmlFor="create-project-name">Project Name</Label>
+            <Label htmlFor="create-project-name" className="text-sm font-semibold">Project Name *</Label>
             <Input
               id="create-project-name"
               value={newCreateProjectName}
               onChange={(e) => setNewCreateProjectName(e.target.value)}
               placeholder="Enter project name..."
               onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleCreate()}
-              className="mt-1"
+              className="mt-1.5 h-10"
             />
           </div>
 
-          {/* Project Configuration Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Project Mode Section */}
+          {/* Project Type Selection - Visual Cards */}
+          <div>
+            <Label className="text-sm font-semibold mb-2 block">Project Layout *</Label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Type 1 - Single Panel */}
+              <button
+                type="button"
+                onClick={() => setProjectType("type1")}
+                className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                  projectType === "type1"
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                }`}
+              >
+                {projectType === "type1" && (
+                  <div className="absolute top-2 right-2">
+                    <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Visual representation */}
+                <div className="mb-2 flex justify-center">
+                  <div className="w-full h-24 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800 rounded border-2 border-blue-300 dark:border-blue-600 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="w-12 h-12 mx-auto bg-white dark:bg-gray-800 rounded shadow-sm mb-1.5"></div>
+                      <div className="space-y-1">
+                        <div className="h-1.5 w-16 bg-white dark:bg-gray-700 rounded mx-auto"></div>
+                        <div className="h-1.5 w-12 bg-white dark:bg-gray-700 rounded mx-auto"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <h3 className="font-semibold text-base mb-1">Single Panel</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
+                  One vertical editor for simple documents, articles, or notes.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Single Layout</span>
+                </div>
+              </button>
+
+              {/* Type 2 - Dual Panel */}
+              <button
+                type="button"
+                onClick={() => setProjectType("type2")}
+                className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                  projectType === "type2"
+                    ? "border-green-500 bg-green-50 dark:bg-green-950"
+                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                }`}
+              >
+                {projectType === "type2" && (
+                  <div className="absolute top-2 right-2">
+                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Visual representation */}
+                <div className="mb-2 flex justify-center">
+                  <div className="w-full h-24 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 rounded border-2 border-green-300 dark:border-green-600 flex items-center justify-center gap-1 p-2">
+                    <div className="flex-1 h-full bg-white dark:bg-gray-800 rounded shadow-sm flex items-center justify-center">
+                      <div className="space-y-1 w-full px-1.5">
+                        <div className="h-1.5 w-3/4 bg-green-200 dark:bg-green-700 rounded mx-auto"></div>
+                        <div className="h-1.5 w-2/3 bg-green-200 dark:bg-green-700 rounded mx-auto"></div>
+                      </div>
+                    </div>
+                    <div className="w-1 h-full bg-green-400 dark:bg-green-600 rounded"></div>
+                    <div className="flex-1 h-full bg-white dark:bg-gray-800 rounded shadow-sm flex items-center justify-center">
+                      <div className="space-y-1 w-full px-1.5">
+                        <div className="h-1.5 w-3/4 bg-green-200 dark:bg-green-700 rounded mx-auto"></div>
+                        <div className="h-1.5 w-2/3 bg-green-200 dark:bg-green-700 rounded mx-auto"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <h3 className="font-semibold text-base mb-1">Dual Panel</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
+                  Split screen with left and right panels for comparison or parallel content.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Dual Layout</span>
+                </div>
+              </button>
+
+              {/* Type 3 - Sequential */}
+              <button
+                type="button"
+                onClick={() => setProjectType("type3")}
+                className={`relative p-3 rounded-lg border-2 transition-all text-left ${
+                  projectType === "type3"
+                    ? "border-purple-500 bg-purple-50 dark:bg-purple-950"
+                    : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                }`}
+              >
+                {projectType === "type3" && (
+                  <div className="absolute top-2 right-2">
+                    <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Visual representation */}
+                <div className="mb-2 flex justify-center">
+                  <div className="w-full h-24 bg-gradient-to-br from-purple-100 to-purple-200 dark:from-purple-900 dark:to-purple-800 rounded border-2 border-purple-300 dark:border-purple-600 flex flex-col items-center justify-center gap-0.5 p-1.5">
+                    <div className="w-full h-6 bg-white dark:bg-gray-800 rounded shadow-sm flex items-center px-1.5">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-purple-300 dark:bg-purple-600 rounded-full flex items-center justify-center text-[7px] font-bold text-purple-700 dark:text-purple-200">1</div>
+                        <div className="h-1 w-8 bg-purple-200 dark:bg-purple-700 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="w-full h-6 bg-white dark:bg-gray-800 rounded shadow-sm flex items-center px-1.5">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-purple-300 dark:bg-purple-600 rounded-full flex items-center justify-center text-[7px] font-bold text-purple-700 dark:text-purple-200">2</div>
+                        <div className="h-1 w-8 bg-purple-200 dark:bg-purple-700 rounded"></div>
+                      </div>
+                    </div>
+                    <div className="w-full h-6 bg-white dark:bg-gray-800 rounded shadow-sm flex items-center px-1.5">
+                      <div className="flex items-center gap-1">
+                        <div className="w-3 h-3 bg-purple-300 dark:bg-purple-600 rounded-full flex items-center justify-center text-[7px] font-bold text-purple-700 dark:text-purple-200">3</div>
+                        <div className="h-1 w-8 bg-purple-200 dark:bg-purple-700 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <h3 className="font-semibold text-base mb-1">Sequential Panel</h3>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
+                  Multiple panels in sequence, like slides for presentations or tutorials.
+                </p>
+                <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
+                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Sequential Layout</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Project Mode and Storage - Side by side */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Project Mode */}
             <div>
-              <Label htmlFor="project-mode">Project Mode</Label>
+              <Label htmlFor="project-mode" className="text-sm font-semibold">Content Mode *</Label>
               <select
                 id="project-mode"
                 value={projectMode}
                 onChange={(e) => setProjectMode(e.target.value as ProjectMode)}
-                className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                className="w-full px-3 py-2 mt-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               >
-                <option value="free-page">Free Page</option>
-                <option value="code-page">Code Page</option>
-                <option value="quiz-page">Quiz Page</option>
+                <option value="free-page">Free Page - No restrictions</option>
+                <option value="code-page">Code Page - Code studio focused</option>
+                <option value="quiz-page">Quiz Page - Quiz focused</option>
               </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {projectMode === "free-page" && "No restrictions, flexible content"}
-                {projectMode === "code-page" && "Code studio focused"}
-                {projectMode === "quiz-page" && "Quiz focused"}
-              </p>
-            </div>
-
-            {/* Layout Selection */}
-            <div>
-              <Label htmlFor="layout-type">Layout</Label>
-              <select
-                id="layout-type"
-                value={layoutType}
-                onChange={(e) => setLayoutType(e.target.value as LayoutType)}
-                disabled={projectType === "type3"}
-                className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="single">Single Panel</option>
-                <option value="dual">Dual Panel</option>
-                {projectType === "type3" && <option value="sequential">Sequential Panels</option>}
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {layoutType === "single" && "Vertical single editor"}
-                {layoutType === "dual" && "Horizontal split layout"}
-                {layoutType === "sequential" && "Multiple vertical panels (like PowerPoint slides)"}
-                {projectType === "type3" && " (Auto-set for Type 3)"}
-              </p>
-            </div>
-          </div>
-          
-          {/* Additional Configuration */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Project Type Selection */}
-            <div>
-              <Label htmlFor="project-type">Project Type</Label>
-              <select
-                id="project-type"
-                value={projectType}
-                onChange={(e) => setProjectType(e.target.value)}
-                className="w-full px-3 py-2 mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-              >
-                <option value="type1">Type 1</option>
-                <option value="type2">Type 2</option>
-                <option value="type3">Type 3 (Sequential)</option>
-              </select>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {projectType === "type3" ? "Sequential panel structure (like PowerPoint)" : "Project classification"}
-              </p>
             </div>
 
             {/* Storage Option */}
             <div>
-              <Label htmlFor="storage-option">Storage Location</Label>
-              <StorageOptionSelector 
-                selectedOption={storageOption} 
-                onSelectionChange={setStorageOption} 
-              />
+              <Label htmlFor="storage-option" className="text-sm font-semibold">Storage Location *</Label>
+              <div className="mt-1.5">
+                <StorageOptionSelector 
+                  selectedOption={storageOption} 
+                  onSelectionChange={setStorageOption} 
+                />
+              </div>
             </div>
           </div>
 
           {/* Tags Section */}
-          <div className="space-y-3">
-            <Label>Tags (required) *</Label>
+          <div className="space-y-2">
+            <Label className="text-sm font-semibold">Tags (required) *</Label>
 
             {/* Tag Input with Dropdown */}
             <div className="relative">
@@ -553,8 +650,8 @@ export function CreateProjectDialog({
             )}
           </div>
 
-          <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="p-2.5 bg-blue-50 dark:bg-blue-900 rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
               <svg
                 className="w-4 h-4 text-blue-600 dark:text-blue-400"
                 fill="none"
@@ -568,7 +665,7 @@ export function CreateProjectDialog({
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">New Project</span>
+              <span className="text-xs font-medium text-blue-800 dark:text-blue-200">New Project</span>
             </div>
             <p className="text-xs text-blue-700 dark:text-blue-300">
               This will create a new empty project and clear the current editor content. At least one tag is required.

@@ -62,7 +62,7 @@ import type { CodeStudioMode } from "../extras/code-studio/types"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
 import { isNodeAllowed } from "@/lib/storage/editor/project-modes"
 import type { ProjectData as ImportedProjectData } from "../nodes/project-node"
-import { SelectProjectDialog } from "../dialogs/select-project-dialog"
+import { SelectProjectDialog } from "../extras/project/select-project-dialog"
 
 // Image insertion mode: 0 = both upload and URL, 1 = only upload, 2 = only URL
 const IMAGE_INSERTION_MODE = 0
