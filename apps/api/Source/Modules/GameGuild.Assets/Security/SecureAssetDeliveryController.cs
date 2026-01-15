@@ -117,7 +117,17 @@ public class SecureAssetDeliveryController : ControllerBase
             return Forbid(tenantValidation.Error ?? "Tenant access denied");
         }
 
-        // Threat #7 & #8: Check virus scan and moderation status
+        // Threat #7: Block serving content pending or failed virus scan
+        if (reference.Content.VirusScanStatus == VirusScanStatus.Pending)
+        {
+            _logger.LogInformation("Attempted access to content pending virus scan: {AssetId}", assetId);
+            return StatusCode(StatusCodes.Status202Accepted, new ProblemDetails
+            {
+                Title = "Content Processing",
+                Detail = "This content is being scanned for security. Please try again shortly."
+            });
+        }
+
         if (reference.Content.VirusScanStatus == VirusScanStatus.Infected)
         {
             _logger.LogWarning("Attempted access to infected content: {AssetId}", assetId);
@@ -128,6 +138,7 @@ public class SecureAssetDeliveryController : ControllerBase
             });
         }
 
+        // Threat #8: Block serving content with moderation issues
         if (reference.Content.ModerationStatus == ModerationStatus.Blocked ||
             reference.Content.ModerationStatus == ModerationStatus.Rejected)
         {
@@ -138,9 +149,20 @@ public class SecureAssetDeliveryController : ControllerBase
             });
         }
 
-        // Threat #8: Block serving content pending review for high-risk types
-        if (reference.Content.ModerationStatus == ModerationStatus.NeedsReview &&
+        // Threat #8: Block serving content pending moderation for high-risk types
+        // Low-risk types (text, JSON) can be served while pending async moderation
+        if (reference.Content.ModerationStatus == ModerationStatus.Pending &&
             IsHighRiskMimeType(reference.Content.MimeType))
+        {
+            return StatusCode(StatusCodes.Status202Accepted, new ProblemDetails
+            {
+                Title = "Content Processing",
+                Detail = "This content is being reviewed. Please try again shortly."
+            });
+        }
+
+        // Threat #8: Always block content explicitly flagged for review
+        if (reference.Content.ModerationStatus == ModerationStatus.NeedsReview)
         {
             return StatusCode(StatusCodes.Status202Accepted, new ProblemDetails
             {

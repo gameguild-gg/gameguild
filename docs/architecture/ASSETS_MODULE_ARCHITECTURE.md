@@ -1994,18 +1994,31 @@ public class AssetGarbageCollectorWorker : BackgroundService
 
 | # | Threat | Severity | Attack Vector | Mitigation | Status |
 |---|--------|----------|---------------|------------|--------|
-| 1 | **Hotlinking / Bandwidth Abuse** | HIGH | Embed asset URL in high-traffic external site | Access counter with hourly rate limit per asset; Feature flag `asset:hotlink:limit:per:hour` | ✅ DESIGNED |
-| 2 | **Token Replay Attack** | HIGH | Capture token, use after intended session | Time-window rotation (8hr windows, 24hr validity); Token tied to tenant secret | ✅ DESIGNED |
-| 3 | **Path Token Brute Force** | MEDIUM | Guess tokens to access assets | HMAC-SHA256 with 128-bit truncation = 2^128 attempts; Rate limiting on 403s | ✅ DESIGNED |
-| 4 | **CDN Cache Poisoning** | MEDIUM | Trick CDN into caching malicious response | Canonical URL signing; No query params; Signature validation before cache | ✅ DESIGNED |
-| 5 | **Transformation Downgrade** | LOW | Request tiny/low-quality to waste resources | Whitelist allowed transformations per asset kind; Max dimension limits | ✅ DESIGNED |
-| 6 | **Tenant Confusion** | CRITICAL | Access asset from different tenant | Fail-closed TenantId validation; Token includes TenantId in signature | ✅ DESIGNED |
-| 7 | **Malware Upload** | CRITICAL | Upload infected file to distribute malware | ClamAV/commercial virus scan before storage; Quarantine infected files | ✅ DESIGNED |
-| 8 | **Moderation Bypass** | HIGH | Upload NSFW, quickly share before moderation | Sync scan for high-risk MIME types; Async for low-risk; NeedsReview blocks serving | ⚠️ PARTIAL |
-| 9 | **Storage Quota Exhaustion** | MEDIUM | Upload many large files to exhaust quota | `[RequiresQuota]` on upload command; Pre-check before streaming | ✅ DESIGNED |
-| 10 | **Reference Count Race** | LOW | Concurrent delete to corrupt ref count | Atomic decrement with RowVersion; Recount if inconsistent | ✅ DESIGNED |
-| 11 | **GC Deletes Active Asset** | MEDIUM | Race between new reference and GC | 30-day grace period; Double-check ref count before delete | ✅ DESIGNED |
-| 12 | **Download Window Bypass** | MEDIUM | Manipulate order to extend window | Order status checked server-side; FulfilledAt immutable | ✅ DESIGNED |
+| 1 | **Hotlinking / Bandwidth Abuse** | HIGH | Embed asset URL in high-traffic external site | `AssetRateLimitService`: Sliding window rate limit per asset/hour; IP blocking after excessive 403s | ✅ IMPLEMENTED |
+| 2 | **Token Replay Attack** | HIGH | Capture token, use after intended session | `AssetTokenService`: Time-window rotation (8hr windows, 24hr validity); HMAC-SHA256 with tenant secret in signature | ✅ IMPLEMENTED |
+| 3 | **Path Token Brute Force** | MEDIUM | Guess tokens to access assets | `AssetRateLimitService`: HMAC-SHA256 with 128-bit truncation = 2^128 attempts; Rate limiting + IP blocking on 403s | ✅ IMPLEMENTED |
+| 4 | **CDN Cache Poisoning** | MEDIUM | Trick CDN into caching malicious response | Canonical URL signing; No query params in token; Signature validation before cache | ✅ IMPLEMENTED |
+| 5 | **Transformation Downgrade** | LOW | Request tiny/low-quality to waste resources | `TransformationValidator`: Whitelist allowed ops per asset kind; Max dimension 4096px, min 16px, quality 10-100 | ✅ IMPLEMENTED |
+| 6 | **Tenant Confusion** | CRITICAL | Access asset from different tenant | `TenantAssetValidationService`: Fail-closed when tenant context missing; Token includes TenantId in signature | ✅ IMPLEMENTED |
+| 7 | **Malware Upload** | CRITICAL | Upload infected file to distribute malware | `VirusScanService` + `SecureUploadService`: Sync scan for high-risk MIME; Quarantine infected; Block serving until clean | ✅ IMPLEMENTED |
+| 8 | **Moderation Bypass** | HIGH | Upload NSFW, quickly share before moderation | `SecureAssetDeliveryController`: Pending virus scan → 202; Pending moderation (high-risk) → 202; NeedsReview → 202; Blocked/Rejected → 410 | ✅ IMPLEMENTED |
+| 9 | **Storage Quota Exhaustion** | MEDIUM | Upload many large files to exhaust quota | `[RequiresQuota]` attribute on upload command; Pre-check before streaming | ✅ IMPLEMENTED |
+| 10 | **Reference Count Race** | LOW | Concurrent delete to corrupt ref count | `AssetGarbageCollectionService`: Atomic decrement with EF Core RowVersion; Double-check ref count before delete; Handle `DbUpdateConcurrencyException` | ✅ IMPLEMENTED |
+| 11 | **GC Deletes Active Asset** | MEDIUM | Race between new reference and GC | `AssetGarbageCollectionService`: 30-day grace period (`GracePeriodDays`); Double-check ref count immediately before delete | ✅ IMPLEMENTED |
+| 12 | **Download Window Bypass** | MEDIUM | Manipulate order to extend window | `DownloadWindowService`: Order status checked server-side via `IOrderValidationService`; `FulfilledAt` immutable; 5-min grace period | ✅ IMPLEMENTED |
+
+### Security Services Implementation Summary
+
+| Service | File | Threats Mitigated |
+|---------|------|-------------------|
+| `AssetRateLimitService` | `Security/AssetRateLimitService.cs` | #1, #3 |
+| `TransformationValidator` | `Security/TransformationValidator.cs` | #5 |
+| `TenantAssetValidationService` | `Security/TenantAssetValidationService.cs` | #6 |
+| `VirusScanService` | `Security/VirusScanService.cs` | #7 |
+| `SecureUploadService` | `Services/SecureUploadService.cs` | #7, #8 |
+| `AssetGarbageCollectionService` | `Security/AssetGarbageCollectionService.cs` | #10, #11 |
+| `DownloadWindowService` | `Security/DownloadWindowService.cs` | #12 |
+| `SecureAssetDeliveryController` | `Security/SecureAssetDeliveryController.cs` | All - unified security pipeline |
 
 ---
 
@@ -2018,23 +2031,23 @@ GameGuild.Assets/
 ├── Abstractions/
 │   ├── IAssetContentRepository.cs
 │   ├── IAssetReferenceRepository.cs
+│   ├── ITransformedAssetRepository.cs
+│   ├── IAssetReportRepository.cs
+│   ├── IAssetStorageService.cs
 │   ├── IAssetUploadService.cs
 │   ├── IAssetAccessService.cs
-│   ├── IAssetTransformationService.cs
-│   ├── IAssetModerationService.cs
-│   ├── IAssetGarbageCollector.cs
-│   ├── IVirusScanService.cs
-│   ├── IS3StorageService.cs
-│   └── ITokenService.cs
+│   └── IAssetTokenService.cs
 │
 ├── Entities/
 │   ├── AssetContent.cs
-│   ├── AssetContentConfiguration.cs
 │   ├── AssetReference.cs
-│   ├── AssetReferenceConfiguration.cs
 │   ├── TransformedAsset.cs
+│   └── AssetReport.cs
+│
+├── Configuration/
+│   ├── AssetContentConfiguration.cs
+│   ├── AssetReferenceConfiguration.cs
 │   ├── TransformedAssetConfiguration.cs
-│   ├── AssetReport.cs
 │   └── AssetReportConfiguration.cs
 │
 ├── Models/
@@ -2043,69 +2056,57 @@ GameGuild.Assets/
 │   ├── VirusScanStatus.cs
 │   ├── ModerationStatus.cs
 │   ├── TransformationSpec.cs
-│   ├── UploadRequest.cs
-│   ├── UploadResult.cs
-│   ├── AccessUrlRequest.cs
-│   └── AccessUrlResult.cs
+│   └── DTOs/
+│       ├── AssetDto.cs
+│       └── ReportDto.cs
 │
 ├── Commands/
-│   ├── UploadAsset/
-│   │   ├── UploadAssetCommand.cs
-│   │   ├── UploadAssetCommandHandler.cs
-│   │   └── UploadAssetCommandValidator.cs
-│   ├── DeleteAssetReference/
-│   ├── UpdateAssetMetadata/
-│   ├── ReportAsset/
-│   └── ReviewModerationQueue/
+│   ├── UploadAssetCommand.cs
+│   ├── GenerateAccessUrlCommand.cs
+│   ├── UpdateAssetCommand.cs
+│   ├── DeleteAssetCommand.cs
+│   ├── ReportAssetCommand.cs
+│   └── ReviewReportCommand.cs
 │
 ├── Queries/
-│   ├── GetAssetReference/
-│   ├── GetAssetAccessUrl/
-│   ├── GetModerationQueue/
-│   └── GetAssetReports/
+│   ├── GetAssetQuery.cs
+│   ├── GetAssetsByParentQuery.cs
+│   ├── GetUserAssetsQuery.cs
+│   ├── GetModerationQueueQuery.cs
+│   └── GetAssetReportsQuery.cs
+│
+├── Repositories/
+│   ├── AssetContentRepository.cs
+│   ├── AssetReferenceRepository.cs
+│   ├── TransformedAssetRepository.cs
+│   └── AssetReportRepository.cs
 │
 ├── Services/
 │   ├── AssetUploadService.cs
 │   ├── AssetAccessService.cs
-│   ├── AssetTransformationService.cs
-│   ├── TokenService.cs
-│   ├── Moderation/
-│   │   ├── AutoModerationService.cs
-│   │   └── ModerationQueueService.cs
-│   ├── VirusScan/
-│   │   ├── ClamAvVirusScanService.cs
-│   │   └── MockVirusScanService.cs
-│   └── Deduplication/
-│       ├── ContentHashService.cs
-│       └── PerceptualHashService.cs
+│   ├── AssetStorageService.cs
+│   ├── AssetTokenService.cs
+│   ├── AssetModerationService.cs
+│   └── SecureUploadService.cs
 │
-├── Workers/
-│   ├── AssetGarbageCollectorWorker.cs
-│   ├── AssetProcessingWorker.cs
-│   └── TransformCacheCleanupWorker.cs
-│
-├── Middleware/
-│   └── AssetServeMiddleware.cs
+├── Security/                        ← NEW: Threat Mitigation Services
+│   ├── AssetRateLimitService.cs     (Threats #1, #3)
+│   ├── TransformationValidator.cs   (Threat #5)
+│   ├── TenantAssetValidationService.cs (Threat #6)
+│   ├── VirusScanService.cs          (Threat #7)
+│   ├── AssetGarbageCollectionService.cs (Threats #10, #11)
+│   ├── DownloadWindowService.cs     (Threat #12)
+│   └── SecureAssetDeliveryController.cs (All threats - unified pipeline)
 │
 ├── Controllers/
 │   ├── AssetsController.cs
 │   └── AssetAdminController.cs
 │
-├── Events/
-│   ├── AssetUploadedEvent.cs
-│   ├── AssetDeletedEvent.cs
-│   ├── AssetModerationCompletedEvent.cs
-│   └── AssetReportedEvent.cs
-│
-├── Configuration/
-│   ├── AssetsOptions.cs
-│   └── S3StorageOptions.cs
-│
 ├── Extensions/
 │   └── AssetsModuleExtensions.cs
 │
-└── Data/
-    └── Migrations/
+└── Migrations/
+    └── (EF Core migrations)
 ```
 
 ---

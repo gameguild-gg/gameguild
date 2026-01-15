@@ -75,5 +75,19 @@ public enum ResourceUsageType
     Orders = 22,
 
     /// <summary>Audit log entries (for compliance modules)</summary>
-    AuditEntries = 23
+    AuditEntries = 23,
+
+    // ========== ASSETS MODULE RESOURCE TYPES (Architecture Doc D.2) ==========
+
+    /// <summary>Total asset files per tenant</summary>
+    Assets = 24,
+
+    /// <summary>Total storage consumed by assets in bytes</summary>
+    AssetStorage = 25,
+
+    /// <summary>Asset download count per period</summary>
+    AssetDownloads = 26,
+
+    /// <summary>Asset transformation operations per period</summary>
+    AssetTransformations = 27
 }
