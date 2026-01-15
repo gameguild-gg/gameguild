@@ -734,10 +734,10 @@ public static class ServiceCollectionExtensions
                             new KebabCaseParameterTransformer()));
                 }
 
-                // TODO: Re-enable after core bootstrap is stable
                 // Add permission authorization filter globally to all controllers
-                // if (options.EnablePermissionAuthorizationFilter)
-                //     mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
+                // This provides defense-in-depth by requiring explicit [AllowAnonymous] to opt-out
+                if (options.EnablePermissionAuthorizationFilter)
+                    mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
             }
         )
         .ConfigureApplicationPartManager(manager =>
