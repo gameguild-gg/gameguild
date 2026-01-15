@@ -731,7 +731,7 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 
 ### ✅ Authorization Integration Tests Added (2026-01-15)
 
-Created `ResourcesAuthorizationIntegrationTests.cs` with 12 integration tests verifying:
+Created `ResourcesAuthorizationIntegrationTests.cs` in `Tests/GameGuild.Resources.IntegrationTests/Security/` with 12 integration tests verifying:
 
 | Test | Scenario | Expected Result |
 |------|----------|-----------------|
@@ -748,6 +748,10 @@ Created `ResourcesAuthorizationIntegrationTests.cs` with 12 integration tests ve
 | `ResourcesAdmin_SystemAdmin_Succeeds` | System admin accessing admin endpoint | 2xx Success |
 | `SystemAdmin_CanAccessAnyTenant` | System admin cross-tenant bypass | 2xx Success |
 | `SystemAdmin_CanAccessAnyUser` | System admin user bypass | 2xx Success |
+
+**Test Traits:** `[Category=Integration]`, `[Security=Authorization]`
+
+> **Note:** These tests require full TestHost infrastructure. Run with `dotnet test --filter "Category=Integration"` against a properly configured environment.
 
 ### ✅ Global Authorization Filter Re-enabled (2026-01-15)
 

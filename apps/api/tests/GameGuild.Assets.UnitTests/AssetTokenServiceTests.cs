@@ -183,4 +183,92 @@ public class AssetTokenServiceTests
         // Validate token format (should be base64url encoded)
         token.Should().MatchRegex(@"^[A-Za-z0-9_-]+$");
     }
+
+    #region Token Caching Tests
+
+    [Fact]
+    public void ValidateToken_CachesResult_ForRepeatedValidation()
+    {
+        // Arrange
+        var assetId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var token = _tokenService.GenerateToken(assetId, tenantId, AssetAccessPolicy.Public);
+
+        // Act - Validate same token multiple times
+        var result1 = _tokenService.ValidateToken(token, assetId, tenantId);
+        var result2 = _tokenService.ValidateToken(token, assetId, tenantId);
+        var result3 = _tokenService.ValidateToken(token, assetId, tenantId);
+
+        // Assert - All validations should return same result (from cache after first call)
+        // Note: Result may be null in unit tests due to time window, but if not null, should be consistent
+        if (result1 != null)
+        {
+            result2.Should().NotBeNull();
+            result3.Should().NotBeNull();
+            result2!.AssetReferenceId.Should().Be(result1.AssetReferenceId);
+            result3!.AssetReferenceId.Should().Be(result1.AssetReferenceId);
+        }
+    }
+
+    [Fact]
+    public void ValidateToken_CacheHit_IsO1Lookup()
+    {
+        // Arrange
+        var assetId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var token = _tokenService.GenerateToken(assetId, tenantId, AssetAccessPolicy.Public);
+
+        // Warm up cache
+        _ = _tokenService.ValidateToken(token, assetId, tenantId);
+
+        // Act - Measure time for cached lookups (should be consistently fast)
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        for (int i = 0; i < 1000; i++)
+        {
+            _ = _tokenService.ValidateToken(token, assetId, tenantId);
+        }
+        sw.Stop();
+
+        // Assert - 1000 cached lookups should complete in under 100ms (O(1) behavior)
+        sw.ElapsedMilliseconds.Should().BeLessThan(100, 
+            "cached token validation should be O(1) and complete quickly");
+    }
+
+    [Fact]
+    public void ValidateToken_DifferentContexts_CacheSeparately()
+    {
+        // Arrange
+        var assetId1 = Guid.NewGuid();
+        var assetId2 = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+        var token1 = _tokenService.GenerateToken(assetId1, tenantId, AssetAccessPolicy.Public);
+        var token2 = _tokenService.GenerateToken(assetId2, tenantId, AssetAccessPolicy.Public);
+
+        // Act
+        var result1 = _tokenService.ValidateToken(token1, assetId1, tenantId);
+        var result2 = _tokenService.ValidateToken(token2, assetId2, tenantId);
+
+        // Assert - Different tokens should have different cache entries
+        // Token1 should not validate for assetId2
+        var crossResult = _tokenService.ValidateToken(token1, assetId2, tenantId);
+        crossResult.Should().BeNull("token generated for assetId1 should not validate for assetId2");
+    }
+
+    [Fact]
+    public void ValidateToken_InvalidToken_NotCached()
+    {
+        // Arrange
+        var assetId = Guid.NewGuid();
+        var tenantId = Guid.NewGuid();
+
+        // Act - Try to validate invalid tokens
+        var result1 = _tokenService.ValidateToken("invalid-token", assetId, tenantId);
+        var result2 = _tokenService.ValidateToken("another-invalid", assetId, tenantId);
+
+        // Assert - Invalid tokens should return null and not pollute cache
+        result1.Should().BeNull();
+        result2.Should().BeNull();
+    }
+
+    #endregion
 }

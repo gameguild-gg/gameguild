@@ -140,4 +140,118 @@ public class ResourceQuotaServiceTests
         quota.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
         return quota;
     }
+
+    #region Batch Query Tests - N+1 Fix Verification
+
+    [Fact]
+    public async Task CheckMultipleLimitsAsync_UsesSingleBatchQuery()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var resourceTypes = new[] { ResourceUsageType.Users, ResourceUsageType.Projects, ResourceUsageType.Storage };
+        
+        var quotas = new Dictionary<ResourceUsageType, ResourceQuota>
+        {
+            [ResourceUsageType.Users] = CreateQuota(tenantId, ResourceUsageType.Users, hardLimit: 100, currentUsage: 50),
+            [ResourceUsageType.Projects] = CreateQuota(tenantId, ResourceUsageType.Projects, hardLimit: 10, currentUsage: 5),
+            [ResourceUsageType.Storage] = CreateQuota(tenantId, ResourceUsageType.Storage, hardLimit: 1000, currentUsage: 200)
+        };
+
+        _quotaRepositoryMock
+            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(quotas);
+
+        // Act
+        var results = await _service.CheckMultipleLimitsAsync(tenantId, resourceTypes);
+
+        // Assert - Should use batch query (single call), not N individual calls
+        _quotaRepositoryMock.Verify(
+            x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()),
+            Times.Once,
+            "Should use batch query instead of N individual queries");
+        
+        // Should NOT call individual GetByTenantAndTypeAsync
+        _quotaRepositoryMock.Verify(
+            x => x.GetByTenantAndTypeAsync(It.IsAny<Guid>(), It.IsAny<ResourceUsageType>(), It.IsAny<CancellationToken>()),
+            Times.Never,
+            "Batch query should avoid N+1 individual queries");
+
+        results.Should().HaveCount(3);
+    }
+
+    [Fact]
+    public async Task CheckMultipleLimitsAsync_ReturnsResultsForAllTypes()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var resourceTypes = new[] { ResourceUsageType.Users, ResourceUsageType.Projects };
+        
+        var quotas = new Dictionary<ResourceUsageType, ResourceQuota>
+        {
+            [ResourceUsageType.Users] = CreateQuota(tenantId, ResourceUsageType.Users, hardLimit: 100, currentUsage: 50),
+            [ResourceUsageType.Projects] = CreateQuota(tenantId, ResourceUsageType.Projects, hardLimit: 10, currentUsage: 5)
+        };
+
+        _quotaRepositoryMock
+            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(quotas);
+
+        // Act
+        var results = await _service.CheckMultipleLimitsAsync(tenantId, resourceTypes);
+
+        // Assert
+        results.Should().ContainKey(ResourceUsageType.Users);
+        results.Should().ContainKey(ResourceUsageType.Projects);
+        results[ResourceUsageType.Users].CanProceed.Should().BeTrue();
+        results[ResourceUsageType.Projects].CanProceed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CheckMultipleLimitsAsync_HandlesPartialQuotas()
+    {
+        // Arrange - Only some resource types have quotas defined
+        var tenantId = Guid.NewGuid();
+        var resourceTypes = new[] { ResourceUsageType.Users, ResourceUsageType.Projects, ResourceUsageType.ApiCalls };
+        
+        // Only Users and Projects have quotas, ApiCalls does not
+        var quotas = new Dictionary<ResourceUsageType, ResourceQuota>
+        {
+            [ResourceUsageType.Users] = CreateQuota(tenantId, ResourceUsageType.Users, hardLimit: 100, currentUsage: 50),
+            [ResourceUsageType.Projects] = CreateQuota(tenantId, ResourceUsageType.Projects, hardLimit: 10, currentUsage: 5)
+        };
+
+        _quotaRepositoryMock
+            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(quotas);
+
+        // Act
+        var results = await _service.CheckMultipleLimitsAsync(tenantId, resourceTypes);
+
+        // Assert - Should return results for all requested types
+        results.Should().HaveCount(3);
+        results[ResourceUsageType.Users].HardLimit.Should().Be(100);
+        results[ResourceUsageType.Projects].HardLimit.Should().Be(10);
+        results[ResourceUsageType.ApiCalls].HardLimit.Should().BeNull("no quota defined means unlimited");
+        results[ResourceUsageType.ApiCalls].CanProceed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task CheckMultipleLimitsAsync_EmptyTypes_ReturnsEmptyDictionary()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var resourceTypes = Array.Empty<ResourceUsageType>();
+
+        _quotaRepositoryMock
+            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<ResourceUsageType, ResourceQuota>());
+
+        // Act
+        var results = await _service.CheckMultipleLimitsAsync(tenantId, resourceTypes);
+
+        // Assert
+        results.Should().BeEmpty();
+    }
+
+    #endregion
 }
