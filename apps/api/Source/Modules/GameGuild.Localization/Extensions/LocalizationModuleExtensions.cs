@@ -15,8 +15,9 @@ public static class LocalizationModuleExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // Repository
+        // Repositories
         services.AddScoped<ILanguageRepository, LanguageRepository>();
+        services.AddScoped<ITranslationWorkflowRepository, TranslationWorkflowRepository>();
 
         // Localization context (request-scoped for HTTP header/user preference access)
         services.AddScoped<ILocalizationContext, LocalizationContext>();
@@ -28,7 +29,7 @@ public static class LocalizationModuleExtensions
         services.AddScoped<ILocalizedErrorService, LocalizedErrorService>();
 
         // Translation services
-        services.AddScoped<TranslationWorkflowService>();
+        services.AddScoped<ITranslationWorkflowService, TranslationWorkflowService>();
         services.AddScoped<TranslationMemoryService>();
 
         return services;

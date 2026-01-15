@@ -564,11 +564,16 @@ GameGuild.Localization/
 | `Language` entity | Inherited from `EntityBase` | ✅ CORRECT |
 | `ResourceLocalization` entity | Inherited from `EntityBase` | ✅ CORRECT |
 | `LocalizationContext` | ✅ Reads from request headers + user preferences | ✅ FIXED |
-| Translation workflow | Uses in-memory storage (temp) | ⚠️ NOT PERSISTED |
+| Translation workflow | ✅ Persisted via `TranslationWorkflowRepository` | ✅ FIXED |
 
 **Fix Applied:** `LocalizationContext` now reads from `Accept-Language` header, `X-Timezone` header, and user preferences via `IUserLocalizationPreferenceProvider`.
 
-**Verdict:** ✅ Entities and context are now properly tenant/request-scoped.
+**Persistence Fix Applied:** `TranslationWorkflowService` now uses `ITranslationWorkflowRepository` for database persistence instead of in-memory dictionaries. Created:
+- `TranslationWorkflowEntity` and `TranslationTaskEntity` - EF Core entities extending `EntityBase`
+- `ITranslationWorkflowRepository` - Repository interface
+- `TranslationWorkflowRepository` - Implementation using `IApplicationDbContext`
+
+**Verdict:** ✅ Entities and context are now properly tenant/request-scoped with full database persistence.
 
 ### A.3.5 Code Quality Review (KISS/DRY/SOLID)
 
