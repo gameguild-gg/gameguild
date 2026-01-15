@@ -8,7 +8,7 @@ namespace GameGuild.Assets.Queries;
 /// </summary>
 public record GetUserAssetsQuery(
     Guid UserId,
-    Guid TenantId,
+    Guid? TenantId,
     int? Skip = null,
     int? Take = null) : IRequest<IReadOnlyList<AssetDto>>;
 
@@ -17,7 +17,6 @@ public class GetUserAssetsValidator : AbstractValidator<GetUserAssetsQuery>
     public GetUserAssetsValidator()
     {
         RuleFor(x => x.UserId).NotEmpty();
-        RuleFor(x => x.TenantId).NotEmpty();
         RuleFor(x => x.Skip).GreaterThanOrEqualTo(0).When(x => x.Skip.HasValue);
         RuleFor(x => x.Take).InclusiveBetween(1, 100).When(x => x.Take.HasValue);
     }

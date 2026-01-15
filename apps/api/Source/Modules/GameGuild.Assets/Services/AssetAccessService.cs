@@ -43,7 +43,7 @@ public class AssetAccessService : IAssetAccessService
     public async Task<AssetAccessUrl?> GenerateAccessUrlAsync(
         Guid assetReferenceId,
         Guid? userId,
-        Guid tenantId,
+        Guid? tenantId,
         TransformationSpec? transformation = null,
         CancellationToken ct = default)
     {
@@ -73,7 +73,7 @@ public class AssetAccessService : IAssetAccessService
         // Generate token
         var token = _tokenService.GenerateToken(
             assetReferenceId,
-            tenantId,
+            tenantId ?? Guid.Empty,
             reference.AccessPolicy,
             transformation,
             TimeSpan.FromMinutes(_options.DefaultExpiryMinutes));
@@ -90,7 +90,7 @@ public class AssetAccessService : IAssetAccessService
     public async Task<AssetAccessUrl?> GenerateDirectStorageUrlAsync(
         Guid assetReferenceId,
         Guid? userId,
-        Guid tenantId,
+        Guid? tenantId,
         CancellationToken ct = default)
     {
         var reference = await _referenceRepository.GetByIdWithContentAsync(assetReferenceId, ct);
@@ -127,7 +127,7 @@ public class AssetAccessService : IAssetAccessService
     public async Task<AssetAccessValidation> ValidateAccessAsync(
         Guid assetReferenceId,
         Guid? userId,
-        Guid tenantId,
+        Guid? tenantId,
         CancellationToken ct = default)
     {
         var reference = await _referenceRepository.GetByIdAsync(assetReferenceId, ct);
@@ -187,9 +187,9 @@ public class AssetAccessService : IAssetAccessService
     public bool ValidateToken(
         string token,
         Guid assetReferenceId,
-        Guid tenantId)
+        Guid? tenantId)
     {
-        var payload = _tokenService.ValidateToken(token, assetReferenceId, tenantId);
+        var payload = _tokenService.ValidateToken(token, assetReferenceId, tenantId ?? Guid.Empty);
         return payload != null;
     }
 

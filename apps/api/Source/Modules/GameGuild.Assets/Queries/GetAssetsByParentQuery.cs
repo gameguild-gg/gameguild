@@ -10,7 +10,7 @@ public record GetAssetsByParentQuery(
     string ParentResourceType,
     Guid ParentResourceId,
     Guid? UserId,
-    Guid TenantId) : IRequest<IReadOnlyList<AssetDto>>;
+    Guid? TenantId) : IRequest<IReadOnlyList<AssetDto>>;
 
 public class GetAssetsByParentValidator : AbstractValidator<GetAssetsByParentQuery>
 {
@@ -18,7 +18,6 @@ public class GetAssetsByParentValidator : AbstractValidator<GetAssetsByParentQue
     {
         RuleFor(x => x.ParentResourceType).NotEmpty().MaximumLength(100);
         RuleFor(x => x.ParentResourceId).NotEmpty();
-        RuleFor(x => x.TenantId).NotEmpty();
     }
 }
 

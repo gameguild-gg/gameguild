@@ -11,7 +11,7 @@ public record UploadAssetCommand(
     string FileName,
     string MimeType,
     Guid UserId,
-    Guid TenantId,
+    Guid? TenantId,
     string? DisplayName = null,
     AssetAccessPolicy AccessPolicy = AssetAccessPolicy.Private,
     string? ParentResourceType = null,

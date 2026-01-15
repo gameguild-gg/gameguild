@@ -9,14 +9,14 @@ namespace GameGuild.Assets.Queries;
 public record GetAssetQuery(
     Guid AssetReferenceId,
     Guid? UserId,
-    Guid TenantId,
+    Guid? TenantId,
     bool IncludeContentDetails = false) : IRequest<AssetDto?>;
 
 public record AssetDto(
     Guid Id,
     Guid AssetContentId,
     Guid CreatedByUserId,
-    string DisplayName,
+    string? DisplayName,
     AssetAccessPolicy AccessPolicy,
     string? ParentResourceType,
     Guid? ParentResourceId,

@@ -14,7 +14,7 @@ public record UpdateAssetCommand(
 
 public record UpdateAssetResponse(
     Guid AssetReferenceId,
-    string DisplayName,
+    string? DisplayName,
     AssetAccessPolicy AccessPolicy);
 
 public class UpdateAssetValidator : AbstractValidator<UpdateAssetCommand>

@@ -13,21 +13,21 @@ public class AssetReportTests
         var report = new AssetReport(
             assetReferenceId,
             reportedByUserId,
-            ReportReason.InappropriateContent,
+            ReportReason.Inappropriate,
             "This content is offensive");
 
         // Assert
         report.AssetReferenceId.Should().Be(assetReferenceId);
         report.ReportedByUserId.Should().Be(reportedByUserId);
-        report.Reason.Should().Be(ReportReason.InappropriateContent);
-        report.Description.Should().Be("This content is offensive");
+        report.Reason.Should().Be(ReportReason.Inappropriate);
+        report.Details.Should().Be("This content is offensive");
         report.Status.Should().Be(ReportStatus.Pending);
         report.Decision.Should().BeNull();
         report.ReviewedByUserId.Should().BeNull();
     }
 
     [Fact]
-    public void Constructor_WithoutDescription_ShouldHaveNullDescription()
+    public void Constructor_WithoutDetails_ShouldHaveNullDetails()
     {
         // Arrange
         var assetReferenceId = Guid.NewGuid();
@@ -37,18 +37,19 @@ public class AssetReportTests
         var report = new AssetReport(
             assetReferenceId,
             reportedByUserId,
-            ReportReason.Copyright);
+            ReportReason.Copyright,
+            null);
 
         // Assert
-        report.Description.Should().BeNull();
+        report.Details.Should().BeNull();
     }
 
     [Theory]
-    [InlineData(ReportReason.InappropriateContent)]
+    [InlineData(ReportReason.Inappropriate)]
     [InlineData(ReportReason.Copyright)]
     [InlineData(ReportReason.Spam)]
     [InlineData(ReportReason.Harassment)]
-    [InlineData(ReportReason.Malware)]
+    [InlineData(ReportReason.Violence)]
     [InlineData(ReportReason.Other)]
     public void Constructor_AllReasons_ShouldWork(ReportReason reason)
     {
@@ -57,43 +58,43 @@ public class AssetReportTests
         var reportedByUserId = Guid.NewGuid();
 
         // Act
-        var report = new AssetReport(assetReferenceId, reportedByUserId, reason);
+        var report = new AssetReport(assetReferenceId, reportedByUserId, reason, null);
 
         // Assert
         report.Reason.Should().Be(reason);
     }
 
     [Fact]
-    public void SubmitReview_WithDismiss_ShouldResolveReport()
+    public void SubmitReview_WithNoAction_ShouldResolveReport()
     {
         // Arrange
         var report = CreateTestReport();
         var reviewerId = Guid.NewGuid();
 
         // Act
-        report.SubmitReview(reviewerId, ReviewDecision.Dismiss, "Content is acceptable");
+        report.SubmitReview(reviewerId, ReviewDecision.NoAction, "Content is acceptable");
 
         // Assert
         report.Status.Should().Be(ReportStatus.Resolved);
-        report.Decision.Should().Be(ReviewDecision.Dismiss);
+        report.Decision.Should().Be(ReviewDecision.NoAction);
         report.ReviewedByUserId.Should().Be(reviewerId);
         report.ReviewNotes.Should().Be("Content is acceptable");
         report.ReviewedAt.Should().NotBeNull();
     }
 
     [Fact]
-    public void SubmitReview_WithWarnUser_ShouldResolveReport()
+    public void SubmitReview_WithUserWarned_ShouldResolveReport()
     {
         // Arrange
         var report = CreateTestReport();
         var reviewerId = Guid.NewGuid();
 
         // Act
-        report.SubmitReview(reviewerId, ReviewDecision.WarnUser, "User warned about content policy");
+        report.SubmitReview(reviewerId, ReviewDecision.UserWarned, "User warned about content policy");
 
         // Assert
         report.Status.Should().Be(ReportStatus.Resolved);
-        report.Decision.Should().Be(ReviewDecision.WarnUser);
+        report.Decision.Should().Be(ReviewDecision.UserWarned);
     }
 
     [Fact]
@@ -112,33 +113,33 @@ public class AssetReportTests
     }
 
     [Fact]
-    public void SubmitReview_WithDeleteAsset_ShouldResolveReport()
+    public void SubmitReview_WithContentRemoved_ShouldResolveReport()
     {
         // Arrange
         var report = CreateTestReport();
         var reviewerId = Guid.NewGuid();
 
         // Act
-        report.SubmitReview(reviewerId, ReviewDecision.DeleteAsset, "Asset removed");
+        report.SubmitReview(reviewerId, ReviewDecision.ContentRemoved, "Asset removed");
 
         // Assert
         report.Status.Should().Be(ReportStatus.Resolved);
-        report.Decision.Should().Be(ReviewDecision.DeleteAsset);
+        report.Decision.Should().Be(ReviewDecision.ContentRemoved);
     }
 
     [Fact]
-    public void SubmitReview_WithSuspendUser_ShouldResolveReport()
+    public void SubmitReview_WithUserSuspended_ShouldResolveReport()
     {
         // Arrange
         var report = CreateTestReport();
         var reviewerId = Guid.NewGuid();
 
         // Act
-        report.SubmitReview(reviewerId, ReviewDecision.SuspendUser, "Repeated violations");
+        report.SubmitReview(reviewerId, ReviewDecision.UserSuspended, "Repeated violations");
 
         // Assert
         report.Status.Should().Be(ReportStatus.Resolved);
-        report.Decision.Should().Be(ReviewDecision.SuspendUser);
+        report.Decision.Should().Be(ReviewDecision.UserSuspended);
     }
 
     [Fact]
@@ -149,7 +150,7 @@ public class AssetReportTests
         var reviewerId = Guid.NewGuid();
 
         // Act
-        report.SubmitReview(reviewerId, ReviewDecision.Dismiss);
+        report.SubmitReview(reviewerId, ReviewDecision.NoAction);
 
         // Assert
         report.ReviewNotes.Should().BeNull();
@@ -160,7 +161,7 @@ public class AssetReportTests
         return new AssetReport(
             Guid.NewGuid(),
             Guid.NewGuid(),
-            ReportReason.InappropriateContent,
+            ReportReason.Inappropriate,
             "Test report");
     }
 }

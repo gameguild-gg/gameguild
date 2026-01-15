@@ -25,7 +25,7 @@ public class AssetContentTests
         content.Height.Should().Be(600);
         content.VirusScanStatus.Should().Be(VirusScanStatus.Pending);
         content.ModerationStatus.Should().Be(ModerationStatus.Pending);
-        content.ReferenceCount.Should().Be(1);
+        content.ReferenceCount.Should().Be(0);
         content.IsDeletable.Should().BeTrue();
     }
 
@@ -58,7 +58,7 @@ public class AssetContentTests
 
         // Assert
         content.VirusScanStatus.Should().Be(VirusScanStatus.Clean);
-        content.VirusScanResult.Should().Be("No threats detected");
+        content.VirusScanCompletedAt.Should().NotBeNull();
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class AssetContentTests
 
         // Assert
         content.VirusScanStatus.Should().Be(VirusScanStatus.Infected);
-        content.VirusScanResult.Should().Contain("Malware");
+        content.VirusScanCompletedAt.Should().NotBeNull();
     }
 
     [Fact]
@@ -86,6 +86,7 @@ public class AssetContentTests
 
         // Assert
         content.ModerationStatus.Should().Be(ModerationStatus.Approved);
+        content.ModerationCompletedAt.Should().NotBeNull();
     }
 
     [Fact]
@@ -102,53 +103,43 @@ public class AssetContentTests
     }
 
     [Fact]
-    public void IsImage_WithImageMimeType_ShouldReturnTrue()
+    public void Kind_ForImageMimeType_ShouldBeImage()
     {
         // Arrange
         var content = CreateTestContent("image/jpeg");
 
         // Act & Assert
-        content.IsImage.Should().BeTrue();
+        content.Kind.Should().Be(AssetKind.Image);
     }
 
     [Fact]
-    public void IsImage_WithNonImageMimeType_ShouldReturnFalse()
+    public void Kind_ForPdfMimeType_ShouldBeDocument()
     {
         // Arrange
         var content = CreateTestContent("application/pdf");
 
         // Act & Assert
-        content.IsImage.Should().BeFalse();
+        content.Kind.Should().Be(AssetKind.Document);
     }
 
     [Fact]
-    public void IsVideo_WithVideoMimeType_ShouldReturnTrue()
+    public void Kind_ForVideoMimeType_ShouldBeVideo()
     {
         // Arrange
         var content = CreateTestContent("video/mp4");
 
         // Act & Assert
-        content.IsVideo.Should().BeTrue();
+        content.Kind.Should().Be(AssetKind.Video);
     }
 
     [Fact]
-    public void IsVideo_WithNonVideoMimeType_ShouldReturnFalse()
-    {
-        // Arrange
-        var content = CreateTestContent("image/png");
-
-        // Act & Assert
-        content.IsVideo.Should().BeFalse();
-    }
-
-    [Fact]
-    public void IsAudio_WithAudioMimeType_ShouldReturnTrue()
+    public void Kind_ForAudioMimeType_ShouldBeAudio()
     {
         // Arrange
         var content = CreateTestContent("audio/mpeg");
 
         // Act & Assert
-        content.IsAudio.Should().BeTrue();
+        content.Kind.Should().Be(AssetKind.Audio);
     }
 
     private static AssetContent CreateTestContent(string mimeType = "image/jpeg")

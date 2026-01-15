@@ -11,7 +11,7 @@ public interface IAssetAccessService
     Task<AssetAccessUrl?> GenerateAccessUrlAsync(
         Guid assetReferenceId,
         Guid? userId,
-        Guid tenantId,
+        Guid? tenantId,
         TransformationSpec? transformation = null,
         CancellationToken ct = default);
 
@@ -21,7 +21,7 @@ public interface IAssetAccessService
     Task<AssetAccessUrl?> GenerateDirectStorageUrlAsync(
         Guid assetReferenceId,
         Guid? userId,
-        Guid tenantId,
+        Guid? tenantId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -30,7 +30,7 @@ public interface IAssetAccessService
     Task<AssetAccessValidation> ValidateAccessAsync(
         Guid assetReferenceId,
         Guid? userId,
-        Guid tenantId,
+        Guid? tenantId,
         CancellationToken ct = default);
 
     /// <summary>
@@ -39,7 +39,7 @@ public interface IAssetAccessService
     bool ValidateToken(
         string token,
         Guid assetReferenceId,
-        Guid tenantId);
+        Guid? tenantId);
 }
 
 /// <summary>

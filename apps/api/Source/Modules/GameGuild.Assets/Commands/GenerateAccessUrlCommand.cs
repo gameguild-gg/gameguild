@@ -9,7 +9,7 @@ namespace GameGuild.Assets.Commands;
 public record GenerateAccessUrlCommand(
     Guid AssetReferenceId,
     Guid? UserId,
-    Guid TenantId,
+    Guid? TenantId,
     TransformationSpec? Transformation = null,
     bool DirectStorageUrl = false) : IRequest<GenerateAccessUrlResponse?>;
 

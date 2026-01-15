@@ -12,6 +12,26 @@ namespace GameGuild.Assets;
 public class AssetReport : EntityBase
 {
     /// <summary>
+    /// Default constructor for EF Core.
+    /// </summary>
+    protected AssetReport() { }
+
+    /// <summary>
+    /// Creates a new asset report.
+    /// </summary>
+    public AssetReport(
+        Guid assetReferenceId,
+        Guid reportedByUserId,
+        ReportReason reason,
+        string? details)
+    {
+        AssetReferenceId = assetReferenceId;
+        ReportedByUserId = reportedByUserId;
+        Reason = reason;
+        Details = details;
+    }
+
+    /// <summary>
     /// Reported asset reference.
     /// </summary>
     public Guid AssetReferenceId { get; set; }
