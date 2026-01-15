@@ -40,6 +40,40 @@ public interface IAssetAccessService
         string token,
         Guid assetReferenceId,
         Guid? tenantId);
+
+    /// <summary>
+    /// Validates an access token asynchronously with additional checks.
+    /// </summary>
+    /// <param name="assetReferenceId">The asset reference ID.</param>
+    /// <param name="token">The access token to validate.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Token validation result.</returns>
+    Task<TokenValidationResult> ValidateAccessTokenAsync(
+        Guid assetReferenceId,
+        string token,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Validates an ephemeral token (contains embedded asset reference).
+    /// </summary>
+    /// <param name="token">The ephemeral token.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>Ephemeral token validation result.</returns>
+    Task<EphemeralTokenValidationResult> ValidateEphemeralTokenAsync(
+        string token,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Gets or creates a transformed version of an asset.
+    /// </summary>
+    /// <param name="contentId">The source content ID.</param>
+    /// <param name="spec">The transformation specification.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The transformed asset, or null if transformation failed.</returns>
+    Task<TransformedAssetInfo?> GetOrCreateTransformationAsync(
+        Guid contentId,
+        TransformationSpec spec,
+        CancellationToken ct = default);
 }
 
 /// <summary>
