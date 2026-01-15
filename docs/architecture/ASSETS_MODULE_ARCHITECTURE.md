@@ -453,7 +453,7 @@ GameGuild.Features/
 
 | # | Change | Effort | Priority | Status |
 |---|--------|--------|----------|--------|
-| 1 | Add asset-related feature flag keys | 30 min | P1 | Pending |
+| 1 | Add asset-related feature flag keys | 30 min | P1 | ✅ DONE — Added `FeatureFlagConstants.AssetFeatureFlags` class |
 | 2 | Implement fail-closed for missing TenantId | 1 hr | P2 | ✅ DONE |
 | 3 | Eager-load targeting rules with feature flag | 30 min | P3 | ✅ Already done |
 
@@ -2010,16 +2010,16 @@ public class AssetGarbageCollectorWorker : BackgroundService
 
 ### Security Services Implementation Summary
 
-| Service | File | Threats Mitigated |
-|---------|------|-------------------|
-| `AssetRateLimitService` | `Security/AssetRateLimitService.cs` | #1, #3 |
-| `TransformationValidator` | `Security/TransformationValidator.cs` | #5 |
-| `TenantAssetValidationService` | `Security/TenantAssetValidationService.cs` | #6 |
-| `VirusScanService` | `Security/VirusScanService.cs` | #7 |
-| `SecureUploadService` | `Services/SecureUploadService.cs` | #7, #8 |
-| `AssetGarbageCollectionService` | `Security/AssetGarbageCollectionService.cs` | #10, #11 |
-| `DownloadWindowService` | `Security/DownloadWindowService.cs` | #12 |
-| `SecureAssetDeliveryController` | `Security/SecureAssetDeliveryController.cs` | All - unified security pipeline |
+| Service | File | Threats Mitigated | Status |
+|---------|------|-------------------|--------|
+| `AssetRateLimitService` | `Security/AssetRateLimitService.cs` | #1, #3 | ✅ Implemented |
+| `TransformationValidator` | `Transformation/TransformationValidator.cs` | #5 | ✅ Implemented |
+| `TenantAssetValidationService` | `Security/TenantAssetValidationService.cs` | #6 | ✅ Implemented |
+| `VirusScanService` | `VirusScan/VirusScanService.cs` | #7 | ✅ Implemented |
+| `SecureUploadService` | `Services/SecureUploadService.cs` | #7, #8 | ✅ Implemented |
+| `AssetGarbageCollectionService` | `Security/AssetGarbageCollectionService.cs` | #10, #11 | ✅ Implemented |
+| `DownloadWindowService` | `Security/DownloadWindowService.cs` | #12 | ✅ Implemented |
+| `SecureAssetDeliveryController` | `Security/SecureAssetDeliveryController.cs` | All - unified security pipeline | ✅ Implemented |
 
 ---
 
@@ -2241,7 +2241,7 @@ In that case:
 1. ✅ **STRENGTH**: Atomic quota consumption with optimistic concurrency
 2. ✅ **STRENGTH**: Fail-closed on missing tenant context
 3. ✅ **FIXED**: Added `Assets`, `AssetStorage`, `AssetDownloads`, `AssetTransformations` resource types
-4. ⚠️ **SMELL**: `IResourceQuotaService` has 15+ methods (fat interface) — Already addressed via ISP segregation
+4. ✅ **VERIFIED**: `IResourceQuotaService` ISP segregation implemented — composes 5 focused interfaces
 
 ### Fixes Applied ✅
 
@@ -2254,13 +2254,32 @@ AssetDownloads = 26,   // Asset download count per period
 AssetTransformations = 27  // Asset transformation operations per period
 ```
 
-**ISP Segregation — Already Implemented**:
-`IResourceQuotaService` composes segregated interfaces:
-- `IResourceQuotaReader` — Read quota limits and usage
-- `IResourceQuotaWriter` — Consume and release quota
-- `IResourceQuotaEnforcer` — Check enforcement and policies
-- `IResourceQuotaAnalytics` — Usage analytics and reporting
-- `IResourceQuotaMaintenance` — Cleanup and maintenance operations
+**ISP Segregation — Verified Implementation**:
+
+The original `IResourceQuotaService` (15+ methods) has been properly segregated into 5 focused interfaces following the Interface Segregation Principle:
+
+| Interface | Methods | Purpose | Consumers |
+|-----------|---------|---------|-----------|
+| `IResourceQuotaReader` | 4 | Read-only quota/usage queries | UI dashboards, query handlers |
+| `IResourceQuotaWriter` | 2 | Admin quota configuration | Admin handlers, subscription services |
+| `IResourceQuotaEnforcer` | 4 | Consumption and limit enforcement | `ResourceQuotaBehavior`, command handlers |
+| `IResourceQuotaAnalytics` | 2 | Reporting and analytics | Admin dashboards, analytics services |
+| `IResourceQuotaMaintenance` | 3 | Background maintenance tasks | Background job services |
+
+The unified `IResourceQuotaService` interface remains for backward compatibility, composing all 5 segregated interfaces:
+
+```csharp
+public interface IResourceQuotaService : 
+    IResourceQuotaReader, 
+    IResourceQuotaWriter, 
+    IResourceQuotaEnforcer, 
+    IResourceQuotaAnalytics, 
+    IResourceQuotaMaintenance
+{
+    // All methods inherited from segregated interfaces
+    // Exists for backward compatibility and DI simplicity
+}
+```
 
 ---
 
@@ -2388,16 +2407,16 @@ See **PART B** for complete specification including:
 
 ## D.6 Security & Risk Register
 
-| ID | Risk | Module | Severity | Likelihood | Impact | Mitigation | Owner |
-|----|------|--------|----------|------------|--------|------------|-------|
-| R1 | Tenant data leakage via asset | Assets | CRITICAL | LOW | HIGH | Fail-closed tenant validation; Token includes TenantId | Assets Team |
-| R2 | Malware distribution | Assets | CRITICAL | MEDIUM | HIGH | ClamAV scan before storage; Quarantine infected | Assets Team |
-| R3 | NSFW content exposure | Assets | HIGH | MEDIUM | MEDIUM | Auto-moderation; Human review queue | Moderation Team |
-| R4 | Bandwidth theft (hotlinking) | Assets | HIGH | HIGH | MEDIUM | Access counter; Rate limiting; Token rotation | Assets Team |
-| R5 | Token replay attack | Assets | HIGH | LOW | MEDIUM | 8-hour window rotation; 24-hour validity | Assets Team |
-| R6 | Storage quota exhaustion | Assets | MEDIUM | MEDIUM | LOW | Pre-upload quota check; `[RequiresQuota]` | Resources Team |
-| R7 | Feature flag tenant leakage | Features | MEDIUM | LOW | MEDIUM | Add fail-closed option for production | Features Team |
-| ~~R8~~ | ~~Missing error localization~~ | ~~Localization~~ | ~~LOW~~ | ~~HIGH~~ | ~~LOW~~ | ✅ FIXED: `ILocalizedErrorService` implemented | Localization Team |
+| ID | Risk | Module | Severity | Likelihood | Impact | Mitigation | Status |
+|----|------|--------|----------|------------|--------|------------|--------|
+| ~~R1~~ | ~~Tenant data leakage via asset~~ | Assets | CRITICAL | LOW | HIGH | `TenantAssetValidationService`: Fail-closed tenant validation; Token includes TenantId | ✅ MITIGATED |
+| ~~R2~~ | ~~Malware distribution~~ | Assets | CRITICAL | MEDIUM | HIGH | `VirusScanService`: ClamAV sync/async scan; Quarantine infected; High-risk MIME sync scan | ✅ MITIGATED |
+| ~~R3~~ | ~~NSFW content exposure~~ | Assets | HIGH | MEDIUM | MEDIUM | `AssetModerationService`: Auto-moderation; Human review queue; Pending content blocked | ✅ MITIGATED |
+| ~~R4~~ | ~~Bandwidth theft (hotlinking)~~ | Assets | HIGH | HIGH | MEDIUM | `AssetRateLimitService`: Access counter; Rate limiting (1000/hr default); Token rotation | ✅ MITIGATED |
+| ~~R5~~ | ~~Token replay attack~~ | Assets | HIGH | LOW | MEDIUM | `AssetTokenService`: 8-hour window rotation; 24-hour validity; HMAC-SHA256 signatures | ✅ MITIGATED |
+| ~~R6~~ | ~~Storage quota exhaustion~~ | Assets | MEDIUM | MEDIUM | LOW | `SecureUploadService`: Pre-upload quota check; `ResourceUsageType.AssetStorage` | ✅ MITIGATED |
+| ~~R7~~ | ~~Feature flag tenant leakage~~ | Features | MEDIUM | LOW | MEDIUM | `TenantTargetingHandler`: Fail-closed when no TenantId; Returns `IsEnabled=false` | ✅ MITIGATED |
+| ~~R8~~ | ~~Missing error localization~~ | Localization | LOW | HIGH | LOW | `ILocalizedErrorService`: Error message localization implemented | ✅ MITIGATED |
 
 ---
 
