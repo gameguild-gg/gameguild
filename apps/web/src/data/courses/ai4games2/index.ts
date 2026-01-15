@@ -3,6 +3,7 @@ import {
   ProductProgram,
   Program,
   ProgramContent,
+  ProgramContentType,
 } from "@/lib/api/generated";
 
 import ai4games2Week01Lecture from "./01-fsm/01-lecture.md";
@@ -14,6 +15,9 @@ import ai4games2Week02Lecture from "./02-bt/01-lecture.md";
 import ai4games2Week02Readings from "./02-bt/02-readings.md";
 import ai4games2Week02Quiz from "./02-bt/03-quiz.md";
 import ai4games2Week02Assignment from "./02-bt/04-assignment.md";
+import ai4games2Week03Lecture from "./03-utility/01-lecture.md";
+import ai4games2Week03Readings from "./03-utility/02-readings.md";
+import ai4games2Week03Quiz from "./03-utility/03-quiz.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -397,6 +401,76 @@ export const ai4games2Week02AssignmentContent: ProgramContent = {
   visibility: 1,
   program: ai4games2Program,
   parent: ai4games2Week02LectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+// New Week 03 Content (Utility AI)
+export const ai4games2Week03LectureContent: ProgramContent = {
+  id: "ai4games2-week-03-lecture",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 3: Utility AI",
+  slug: "week-03",
+  description: "Utility-based decision making, considerations, response curves, and The Sims",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week03Lecture,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 90,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week03ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-03-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-03-lecture",
+  title: "Week 3: Readings",
+  slug: "readings",
+  description: "Required readings and videos for Utility AI",
+  type: 0,
+  body: ai4games2Week03Readings,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 120,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week03LectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week03QuizContent: ProgramContent = {
+  id: "ai4games2-week-03-quiz",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-03-lecture",
+  title: "Week 3: Quiz",
+  slug: "quiz",
+  description: "Test your understanding of Utility AI concepts, considerations, and response curves",
+  type: 0,
+  body: ai4games2Week03Quiz,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 10,
+  estimatedMinutes: 15,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week03LectureContent,
   children: [],
   contentInteractions: [],
   createdAt: "2023-01-01T00:00:00Z",
@@ -829,6 +903,10 @@ ai4games2Week02LectureContent.children = [
   ai4games2Week02QuizContent,
   ai4games2Week02AssignmentContent,
 ];
+ai4games2Week03LectureContent.children = [
+  ai4games2Week03ReadingsContent,
+  ai4games2Week03QuizContent,
+];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
 ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
@@ -859,6 +937,7 @@ ai4games2Program.programContents = [
   ai4games2SyllabusContent,
   ai4games2Week01LectureContent,
   ai4games2Week02LectureContent,
+  ai4games2Week03LectureContent,
   ai4games2OldContent,
 ];
 
