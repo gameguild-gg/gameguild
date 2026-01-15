@@ -106,3 +106,33 @@ public enum AssetAccessDeniedReason
     ContentRejected,
     ContentInfected
 }
+
+/// <summary>
+/// Result of token validation.
+/// </summary>
+public record TokenValidationResult(
+    bool IsValid,
+    string? Error = null,
+    Guid? UserId = null,
+    DateTimeOffset? ExpiresAt = null);
+
+/// <summary>
+/// Result of ephemeral token validation.
+/// </summary>
+public record EphemeralTokenValidationResult(
+    bool IsValid,
+    Guid AssetReferenceId,
+    bool IsExpired = false,
+    string? Error = null);
+
+/// <summary>
+/// Information about a transformed asset.
+/// </summary>
+public record TransformedAssetInfo(
+    Guid Id,
+    Guid SourceContentId,
+    string BucketName,
+    string ObjectKey,
+    string MimeType,
+    string ContentHash,
+    long SizeBytes);
