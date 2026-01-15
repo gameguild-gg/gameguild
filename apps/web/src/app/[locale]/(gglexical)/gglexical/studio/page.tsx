@@ -948,7 +948,7 @@ export default function Page() {
                     <Eye className="h-4 w-4" />
                     Preview
                   </Button>
-                  
+
                   {/* Preview Mode Selector (Sequential Layout Only) */}
                   {currentLayout === "sequential" && sequentialStructure && (
                     <PreviewModeSelector
@@ -1101,6 +1101,8 @@ export default function Page() {
                 }}
                 projectId={currentProjectId}
                 mode={currentProjectMode}
+                currentProjectType={currentProjectType}
+                storageAdapter={storageAdapter}
               />
             ) : currentLayout === "single" ? (
               <EditorLayoutType1
@@ -1112,6 +1114,8 @@ export default function Page() {
                 }}
                 projectId={currentProjectId}
                 mode={currentProjectMode}
+                currentProjectType={currentProjectType}
+                storageAdapter={storageAdapter}
               />
             ) : (
               <EditorLayoutType2
@@ -1126,6 +1130,8 @@ export default function Page() {
                 }}
                 projectId={currentProjectId}
                 mode={currentProjectMode}
+                currentProjectType={currentProjectType}
+                storageAdapter={storageAdapter}
               />
             )}
           </div>

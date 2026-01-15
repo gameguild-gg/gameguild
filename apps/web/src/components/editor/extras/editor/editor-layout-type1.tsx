@@ -12,6 +12,8 @@ interface EditorLayoutType1Props {
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId: string
   mode?: ProjectMode
+  currentProjectType?: "type1" | "type2" | "type3"
+  storageAdapter?: any
 }
 
 /**
@@ -25,6 +27,8 @@ export function EditorLayoutType1({
   onLoadingChange,
   projectId,
   mode = "free-page",
+  currentProjectType,
+  storageAdapter,
 }: EditorLayoutType1Props) {
   // For non-free modes in type1, use "single" panel to apply restrictions
   const panel = mode !== "free-page" ? "single" : undefined
@@ -41,6 +45,8 @@ export function EditorLayoutType1({
           projectId={projectId}
           mode={mode}
           panel={panel}
+          currentProjectType={currentProjectType}
+          storageAdapter={storageAdapter}
         />
       </div>
     </div>

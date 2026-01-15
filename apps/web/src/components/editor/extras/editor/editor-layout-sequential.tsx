@@ -31,6 +31,8 @@ interface EditorLayoutSequentialProps {
   onLoadingChange: (setLoading: (loading: boolean) => void) => void
   projectId: string
   mode: ProjectMode
+  currentProjectType?: "type1" | "type2" | "type3"
+  storageAdapter?: any
 }
 
 export function EditorLayoutSequential({
@@ -43,6 +45,8 @@ export function EditorLayoutSequential({
   onLoadingChange,
   projectId,
   mode,
+  currentProjectType,
+  storageAdapter,
 }: EditorLayoutSequentialProps) {
   const panelContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
@@ -197,6 +201,8 @@ export function EditorLayoutSequential({
                           }}
                           projectId={projectId}
                           mode={mode}
+                          currentProjectType={currentProjectType}
+                          storageAdapter={storageAdapter}
                         />
                       </div>
                     </div>
@@ -235,6 +241,8 @@ export function EditorLayoutSequential({
                       }}
                       projectId={projectId}
                       mode={mode}
+                      currentProjectType={currentProjectType}
+                      storageAdapter={storageAdapter}
                     />
                   </div>
                 )}

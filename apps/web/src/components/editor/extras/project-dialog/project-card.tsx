@@ -52,11 +52,11 @@ export function ProjectCard({
   const getProjectTypeLabel = (type: "type1" | "type2" | "type3"): string => {
     switch (type) {
       case "type1":
-        return "Unique Project"
+        return "Single Project"
       case "type2":
-        return "Dual Project"
-      case "type3":
         return "Multiple Project"
+      case "type3":
+        return "Sequential Project"
       default:
         return "Project"
     }

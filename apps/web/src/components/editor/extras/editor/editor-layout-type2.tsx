@@ -15,6 +15,8 @@ interface EditorLayoutType2Props {
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId: string
   mode?: ProjectMode
+  currentProjectType?: "type1" | "type2" | "type3"
+  storageAdapter?: any
 }
 
 /**
@@ -31,6 +33,8 @@ export function EditorLayoutType2({
   onLoadingChange,
   projectId,
   mode = "free-page",
+  currentProjectType,
+  storageAdapter,
 }: EditorLayoutType2Props) {
   return (
     <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
@@ -50,6 +54,8 @@ export function EditorLayoutType2({
               projectId={projectId}
               mode={mode}
               panel="left"
+              currentProjectType={currentProjectType}
+              storageAdapter={storageAdapter}
             />
           </div>
         </div>
@@ -67,6 +73,8 @@ export function EditorLayoutType2({
               projectId={projectId}
               mode={mode}
               panel="right"
+              currentProjectType={currentProjectType}
+              storageAdapter={storageAdapter}
             />
           </div>
         </div>
