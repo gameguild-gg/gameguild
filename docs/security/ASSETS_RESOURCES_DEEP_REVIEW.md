@@ -214,13 +214,14 @@ private bool ValidateUserOwnership(Guid userId)
 
 **Root Cause Analysis (Historical — Fixed 2026-01-15):**
 
-1. **Global filter disabled:** `PermissionAuthorizationFilter` is commented out in [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739):
+1. ~~**Global filter disabled:** `PermissionAuthorizationFilter` is commented out in [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739).~~
+   **Status:** ✅ **FIXED 2026-01-15** — Re-enabled with defense-in-depth comment:
    ```csharp
-   // TODO: Re-enable after core bootstrap is stable
-   // if (options.EnablePermissionAuthorizationFilter)
-   //     mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
+   // Add permission authorization filter globally to all controllers
+   // This provides defense-in-depth by requiring explicit [AllowAnonymous] to opt-out
+   if (options.EnablePermissionAuthorizationFilter)
+       mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
    ```
-   **Status:** ⚠️ Still disabled, but mitigated by explicit `[Authorize]` on all controllers.
 
 2. ~~**No explicit `[Authorize]`:** Unlike `AssetsController`, none of the Resources controllers have the `[Authorize]` attribute.~~
    **Status:** ✅ **FIXED** — All 9 controllers now have `[Authorize]` or `[Authorize(Policy = "RequireAdminRole")]`.
@@ -450,7 +451,7 @@ var quotas = await _dbContext.ResourceQuotas
 |---|---------|----------|----------|----------------|--------|
 | 1 | ~~All 9 Resources controllers lack `[Authorize]`~~ | ~~CRITICAL~~ | [All Controllers](apps/api/Source/Modules/GameGuild.Resources/Controllers/) | ~~Anonymous access to tenant data~~ | ✅ **FIXED 2026-01-15** |
 | 2 | ~~IDOR on tenant-scoped endpoints~~ | ~~HIGH~~ | [TenantResourcesController.cs:33](apps/api/Source/Modules/GameGuild.Resources/Controllers/TenantResourcesController.cs#L33) | ~~Cross-tenant data access via URL manipulation.~~ Tenant membership validation added. | ✅ **FIXED 2026-01-15** |
-| 3 | Global PermissionAuthorizationFilter disabled | **HIGH** | [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739) | Defense-in-depth gap. New controllers may be accidentally unprotected. | ⚠️ OPEN |
+| 3 | ~~Global PermissionAuthorizationFilter disabled~~ | ~~HIGH~~ | [ServiceCollectionExtensions.cs:739-740](apps/api/Source/GameGuild.API/Core/Extensions/ServiceCollectionExtensions.cs#L739) | ~~Defense-in-depth gap. New controllers may be accidentally unprotected.~~ Re-enabled. | ✅ **FIXED 2026-01-15** |
 | 4 | No rate limiting on Resources endpoints | **MEDIUM** | All 9 controllers lack `[EnableRateLimiting]` | Enumeration attacks, tenant ID guessing via timing | ⚠️ OPEN |
 | 5 | ValidateToken O(n) complexity | **HIGH** | `AssetTokenService.ValidateToken()` | DoS vulnerability via signature verification | ⚠️ OPEN |
 | 6 | N+1 query in CheckMultipleLimitsAsync | **MEDIUM** | [ResourceQuotaService.cs:158](apps/api/Source/Modules/GameGuild.Resources/Services/ResourceQuotaService.cs#L158) | Performance degradation under concurrent load | ⚠️ OPEN |
@@ -482,9 +483,8 @@ var quotas = await _dbContext.ResourceQuotas
    - All 4 user-scoped controllers implement `ValidateUserOwnership()`
    - System admins bypass check, users can only access their own resources
 
-4. **Re-enable global authorization filter or adopt attribute-based approach** ⚠️ PENDING
-   - Either uncomment the global filter
-   - Or establish a review process ensuring all controllers have `[Authorize]`
+3. ~~**Re-enable global authorization filter or adopt attribute-based approach**~~
+   **Status:** ✅ **FIXED** — Global `PermissionAuthorizationFilter` re-enabled in `ServiceCollectionExtensions.cs`
 
 ### P1: High Priority (Week 2)
 
@@ -679,7 +679,7 @@ The **GameGuild.Resources** module has sound internal architecture (ISP, caching
 | 1 | ~~Missing `[Authorize]` on all 9 Resources controllers~~ | ~~CRITICAL~~ | Resources | ✅ **FIXED** |
 | 2 | ~~IDOR on tenant-scoped endpoints (no membership validation)~~ | ~~HIGH~~ | Resources | ✅ **FIXED** |
 | 3 | ~~User ownership validation missing~~ | ~~HIGH~~ | Resources | ✅ **FIXED** |
-| 4 | Global `PermissionAuthorizationFilter` disabled | **HIGH** | API | ⚠️ OPEN |
+| 3 | ~~Global `PermissionAuthorizationFilter` disabled~~ | ~~HIGH~~ | API | ✅ **FIXED** |
 | 5 | No rate limiting on Resources endpoints | **MEDIUM** | Resources | ⚠️ OPEN |
 | 6 | Token validation O(n) complexity per request | **HIGH** | Assets | ⚠️ OPEN |
 | 7 | N+1 query in `CheckMultipleLimitsAsync` | **MEDIUM** | Resources | ⚠️ OPEN |

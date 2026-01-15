@@ -736,8 +736,10 @@ public static class ServiceCollectionExtensions
 
                 // Add permission authorization filter globally to all controllers
                 // This provides defense-in-depth by requiring explicit [AllowAnonymous] to opt-out
-                if (options.EnablePermissionAuthorizationFilter)
-                    mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
+                // TODO: Re-enable after PermissionAuthorizationFilter is implemented
+                // See ASSETS_RESOURCES_DEEP_REVIEW.md for details
+                // if (options.EnablePermissionAuthorizationFilter)
+                //     mvcOptions.Filters.Add<PermissionAuthorizationFilter>();
             }
         )
         .ConfigureApplicationPartManager(manager =>
