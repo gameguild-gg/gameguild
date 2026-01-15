@@ -85,7 +85,7 @@ public class AssetTokenService : IAssetTokenService
     /// <summary>
     /// Validates a token and returns the decoded payload if valid.
     /// </summary>
-    public AssetTokenPayload? ValidateToken(string token, Guid assetReferenceId, Guid tenantId)
+    public AssetTokenPayload? ValidateToken(string token, Guid assetReferenceId, Guid? tenantId)
     {
         try
         {
