@@ -1,10 +1,11 @@
+using System.Diagnostics;
 using GameGuild.CQRS;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Resources;
 
 /// <summary>
-///     Implementation of resource quota management service
+///     Implementation of resource quota management service with OpenTelemetry tracing
 /// </summary>
 public class ResourceQuotaService(
     IResourceQuotaRepository quotaRepository,
@@ -12,6 +13,22 @@ public class ResourceQuotaService(
     IPublisher publisher,
     ILogger<ResourceQuotaService> logger) : IResourceQuotaService
 {
+    /// <summary>
+    ///     ActivitySource for OpenTelemetry distributed tracing of quota operations.
+    ///     Name follows convention: {Assembly}.{Component}
+    /// </summary>
+    public static readonly ActivitySource ActivitySource = new("GameGuild.Resources.Quota", "1.0.0");
+
+    // Activity operation names for consistent tracing
+    private const string SetQuotaOperation = "quota.set";
+    private const string GetQuotaOperation = "quota.get";
+    private const string DeleteQuotaOperation = "quota.delete";
+    private const string CheckLimitsOperation = "quota.check_limits";
+    private const string ConsumeResourceOperation = "quota.consume";
+    private const string AtomicConsumeOperation = "quota.atomic_consume";
+    private const string DecrementUsageOperation = "quota.decrement";
+    private const string ResetQuotasOperation = "quota.reset_expired";
+    private const string RecalculateUsageOperation = "quota.recalculate";
     public async Task<ResourceQuota> SetQuotaAsync(
         Guid tenantId,
         ResourceUsageType type,
@@ -21,9 +38,18 @@ public class ResourceQuotaService(
         CancellationToken cancellationToken = default
     )
     {
+        using var activity = ActivitySource.StartActivity(SetQuotaOperation, ActivityKind.Internal);
+        activity?.SetTag("tenant.id", tenantId.ToString());
+        activity?.SetTag("resource.type", type.ToString());
+        activity?.SetTag("quota.soft_limit", softLimit?.ToString() ?? "unlimited");
+        activity?.SetTag("quota.hard_limit", hardLimit?.ToString() ?? "unlimited");
+        activity?.SetTag("quota.period", period.ToString());
+
         var existingQuota = await quotaRepository.GetByTenantAndTypeAsync(tenantId, type, cancellationToken);
         var isNew = existingQuota == null;
         var previousUsage = existingQuota?.CurrentUsage;
+
+        activity?.SetTag("quota.is_new", isNew);
 
         if (existingQuota != null)
         {
@@ -60,7 +86,19 @@ public class ResourceQuotaService(
 
     public async Task<ResourceQuota?> GetQuotaAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default)
     {
-        return await quotaRepository.GetByTenantAndTypeAsync(tenantId, type, cancellationToken);
+        using var activity = ActivitySource.StartActivity(GetQuotaOperation, ActivityKind.Internal);
+        activity?.SetTag("tenant.id", tenantId.ToString());
+        activity?.SetTag("resource.type", type.ToString());
+
+        var quota = await quotaRepository.GetByTenantAndTypeAsync(tenantId, type, cancellationToken);
+        activity?.SetTag("quota.found", quota != null);
+        if (quota != null)
+        {
+            activity?.SetTag("quota.current_usage", quota.CurrentUsage);
+            activity?.SetTag("quota.hard_limit", quota.HardLimit?.ToString() ?? "unlimited");
+        }
+
+        return quota;
     }
 
     public async Task<IEnumerable<ResourceQuota>> GetTenantQuotasAsync(Guid tenantId, CancellationToken cancellationToken = default) { return await quotaRepository.GetByTenantAsync(tenantId, cancellationToken); }
@@ -122,27 +160,42 @@ public class ResourceQuotaService(
     /// <inheritdoc/>
     public async Task<ResourceLimitCheckResponse> CheckLimitsAsync(Guid tenantId, ResourceUsageType type, long requestedAmount = 1, CancellationToken cancellationToken = default)
     {
+        using var activity = ActivitySource.StartActivity(CheckLimitsOperation, ActivityKind.Internal);
+        activity?.SetTag("tenant.id", tenantId.ToString());
+        activity?.SetTag("resource.type", type.ToString());
+        activity?.SetTag("quota.requested_amount", requestedAmount);
+
         var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
 
         if (quota == null)
         {
             // No quota means unlimited
+            activity?.SetTag("quota.exists", false);
+            activity?.SetTag("quota.can_proceed", true);
             return new ResourceLimitCheckResponse { Type = type, CanProceed = true, CurrentUsage = 0, SoftLimit = null, HardLimit = null };
         }
+
+        activity?.SetTag("quota.exists", true);
 
         // Calculate effective current usage considering if reset is due
         // NOTE: Do NOT mutate state during read operations - reset happens during actual usage recording
         var effectiveCurrentUsage = quota.ShouldReset() ? 0 : quota.CurrentUsage;
         var projectedUsage = effectiveCurrentUsage + requestedAmount;
 
+        activity?.SetTag("quota.effective_usage", effectiveCurrentUsage);
+        activity?.SetTag("quota.projected_usage", projectedUsage);
+
         // Check hard limit
         if (quota.HardLimit.HasValue && projectedUsage > quota.HardLimit.Value)
         {
+            activity?.SetTag("quota.can_proceed", false);
+            activity?.SetTag("quota.would_exceed", "hard_limit");
             return new ResourceLimitCheckResponse { Type = type, CanProceed = false, CurrentUsage = effectiveCurrentUsage, SoftLimit = quota.SoftLimit, HardLimit = quota.HardLimit };
         }
 
         // Note: Soft limit check is performed for future warning/notification purposes
         // but doesn't block the request
+        activity?.SetTag("quota.can_proceed", true);
 
         return new ResourceLimitCheckResponse { Type = type, CanProceed = true, CurrentUsage = effectiveCurrentUsage, SoftLimit = quota.SoftLimit, HardLimit = quota.HardLimit };
     }
@@ -260,16 +313,29 @@ public class ResourceQuotaService(
         long amount = 1,
         CancellationToken cancellationToken = default)
     {
+        using var activity = ActivitySource.StartActivity(AtomicConsumeOperation, ActivityKind.Internal);
+        activity?.SetTag("tenant.id", tenantId.ToString());
+        activity?.SetTag("resource.type", type.ToString());
+        activity?.SetTag("quota.requested_amount", amount);
+
         var (success, quota) = await quotaRepository.TryIncrementUsageAsync(tenantId, type, amount, cancellationToken);
 
         if (quota == null)
         {
             // No quota exists = unlimited
+            activity?.SetTag("quota.exists", false);
+            activity?.SetTag("quota.result", "unlimited");
             return (true, 0, null);
         }
 
+        activity?.SetTag("quota.exists", true);
+        activity?.SetTag("quota.success", success);
+        activity?.SetTag("quota.current_usage", quota.CurrentUsage);
+        activity?.SetTag("quota.hard_limit", quota.HardLimit?.ToString() ?? "unlimited");
+
         if (success)
         {
+            activity?.SetTag("quota.result", "consumed");
             // Publish audit event for successful consumption
             await publisher.Publish(new QuotaChangedEvent(
                 TenantId: tenantId,
@@ -285,6 +351,8 @@ public class ResourceQuotaService(
         }
         else
         {
+            activity?.SetTag("quota.result", "exceeded");
+            activity?.SetStatus(ActivityStatusCode.Error, "Quota exceeded");
             // Publish event for quota exceeded attempt
             await publisher.Publish(new QuotaExceededEvent(
                 TenantId: tenantId,
