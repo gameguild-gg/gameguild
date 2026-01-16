@@ -1,8 +1,6 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
-
-
-
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,20 +8,23 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Wallets management controller - RESTful API following Google API Design Guidelines
+///     Wallets management controller - RESTful API following Google API Design Guidelines.
+///     Note: Wallet operations are currently user-based. Wallet-ID-based operations 
+///     will be implemented in a future iteration.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
+[Route("v{version:apiVersion}")]
 [Tags("wallets")]
-[AllowAnonymous]
+[Authorize]
 public sealed class WalletsController(ISender sender) : ControllerBase
 {
-    #region Collection Operations - /v1/wallets
+    #region Wallet Creation
 
     /// <summary>
     ///     Create a new wallet for a user
     /// </summary>
-    [HttpPost("v{version:apiVersion}/wallets")]
+    [HttpPost("wallets")]
     [EndpointSummary("Create a new wallet")]
     [EndpointDescription("Creates a new wallet for the specified user.")]
     [ProducesResponseType(typeof(UserWallet), StatusCodes.Status201Created)]
@@ -40,178 +41,17 @@ public sealed class WalletsController(ISender sender) : ControllerBase
         var command = new CreateWalletCommand(request.UserId, request.Currency ?? "USD");
         var result = await sender.Send(command, ct).ConfigureAwait(false);
 
-        return CreatedAtAction(nameof(GetWalletById), new { walletId = result.Id }, result);
+        return CreatedAtAction(nameof(GetWalletByUserId), new { userId = request.UserId }, result);
     }
 
     #endregion
 
-    #region Individual Wallet Operations - /v1/wallets/{walletId}
+    #region User Wallet Operations - /v1/users/{userId}/wallet
 
     /// <summary>
-    ///     Get wallet by ID
+    ///     Get wallet by user ID
     /// </summary>
-    [HttpGet("v{version:apiVersion}/wallets/{walletId:guid}")]
-    [EndpointSummary("Get wallet by ID")]
-    [EndpointDescription("Retrieves wallet details by wallet ID.")]
-    [ProducesResponseType(typeof(UserWallet), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetWalletById(Guid walletId, CancellationToken ct)
-    {
-        var query = new GetWalletByIdQuery(walletId);
-        var result = await sender.Send(query, ct).ConfigureAwait(false);
-
-        if (result == null) return NotFound($"Wallet not found: {walletId}");
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    ///     Get wallet balance
-    /// </summary>
-    [HttpGet("v{version:apiVersion}/wallets/{walletId:guid}/balance")]
-    [EndpointSummary("Get wallet balance")]
-    [EndpointDescription("Retrieves the current balance of a wallet.")]
-    [ProducesResponseType(typeof(decimal), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetBalance(Guid walletId, CancellationToken ct)
-    {
-        var query = new GetWalletBalanceByIdQuery(walletId);
-        var result = await sender.Send(query, ct).ConfigureAwait(false);
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    ///     Get transaction history for a wallet
-    /// </summary>
-    [HttpGet("v{version:apiVersion}/wallets/{walletId:guid}/transactions")]
-    [EndpointSummary("Get wallet transactions")]
-    [EndpointDescription("Retrieves transaction history for a wallet.")]
-    [ProducesResponseType(typeof(List<WalletTransaction>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetTransactionHistory(
-        Guid walletId,
-        [FromQuery] int skip = 0,
-        [FromQuery] int take = 50,
-        [FromQuery] WalletTransactionType? typeFilter = null,
-        [FromQuery] TransactionStatus? statusFilter = null,
-        CancellationToken ct = default
-    )
-    {
-        var query = new GetWalletTransactionHistoryQuery(walletId, skip, take, typeFilter, statusFilter);
-
-        var result = await sender.Send(query, ct).ConfigureAwait(false);
-
-        return Ok(result);
-    }
-
-    #endregion
-
-    #region Wallet Actions - /v1/wallets/{walletId}:action
-
-    /// <summary>
-    ///     Add funds to a wallet
-    /// </summary>
-    [HttpPost("v{version:apiVersion}/wallets/{walletId:guid}:add-funds")]
-    [EndpointSummary("Add funds to wallet")]
-    [EndpointDescription("Adds funds to the specified wallet.")]
-    [ProducesResponseType(typeof(WalletTransaction), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> AddFunds(Guid walletId, [FromBody] AddFundsRequest request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var command = new AddFundsToWalletCommand(walletId, request.Amount, request.Description, request.ReferenceId);
-
-        var result = await sender.Send(command, ct).ConfigureAwait(false);
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    ///     Deduct funds from a wallet
-    /// </summary>
-    [HttpPost("v{version:apiVersion}/wallets/{walletId:guid}:deduct-funds")]
-    [EndpointSummary("Deduct funds from wallet")]
-    [EndpointDescription("Deducts funds from the specified wallet.")]
-    [ProducesResponseType(typeof(WalletTransaction), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeductFunds(Guid walletId, [FromBody] DeductFundsRequest request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var command = new DeductFundsFromWalletCommand(walletId, request.Amount, request.Description, request.ReferenceId);
-
-        var result = await sender.Send(command, ct).ConfigureAwait(false);
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    ///     Transfer funds to another wallet
-    /// </summary>
-    [HttpPost("v{version:apiVersion}/wallets/{walletId:guid}:transfer")]
-    [EndpointSummary("Transfer funds between wallets")]
-    [EndpointDescription("Transfers funds from this wallet to another wallet.")]
-    [ProducesResponseType(typeof(TransferFundsResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> TransferFunds(Guid walletId, [FromBody] TransferFundsRequest request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var command = new TransferFundsBetweenWalletsCommand(walletId, request.ToWalletId, request.Amount, request.Description, request.ReferenceId);
-
-        (var debitTransaction, var creditTransaction) = await sender.Send(command, ct).ConfigureAwait(false);
-
-        return Ok(new TransferFundsResponse { DebitTransaction = debitTransaction, CreditTransaction = creditTransaction });
-    }
-
-    /// <summary>
-    ///     Lock a wallet
-    /// </summary>
-    [HttpPost("v{version:apiVersion}/wallets/{walletId:guid}:lock")]
-    [EndpointSummary("Lock wallet")]
-    [EndpointDescription("Locks a wallet to prevent transactions.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> LockWallet(Guid walletId, [FromBody] LockWalletRequest request, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(request);
-
-        var command = new LockWalletByIdCommand(walletId, request.Reason);
-        await sender.Send(command, ct).ConfigureAwait(false);
-
-        return NoContent();
-    }
-
-    /// <summary>
-    ///     Unlock a wallet
-    /// </summary>
-    [HttpPost("v{version:apiVersion}/wallets/{walletId:guid}:unlock")]
-    [EndpointSummary("Unlock wallet")]
-    [EndpointDescription("Unlocks a wallet to allow transactions.")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UnlockWallet(Guid walletId, CancellationToken ct)
-    {
-        var command = new UnlockWalletByIdCommand(walletId);
-        await sender.Send(command, ct).ConfigureAwait(false);
-
-        return NoContent();
-    }
-
-    #endregion
-
-    #region User Wallet Convenience - /v1/users/{userId}/wallet
-
-    /// <summary>
-    ///     Get wallet by user ID (convenience endpoint)
-    /// </summary>
-    [HttpGet("v{version:apiVersion}/users/{userId:guid}/wallet")]
+    [HttpGet("users/{userId:guid}/wallet")]
     [EndpointSummary("Get user's wallet")]
     [EndpointDescription("Retrieves the wallet for a specific user.")]
     [ProducesResponseType(typeof(UserWallet), StatusCodes.Status200OK)]
@@ -227,9 +67,9 @@ public sealed class WalletsController(ISender sender) : ControllerBase
     }
 
     /// <summary>
-    ///     Get wallet balance by user ID (convenience endpoint)
+    ///     Get wallet balance by user ID
     /// </summary>
-    [HttpGet("v{version:apiVersion}/users/{userId:guid}/wallet/balance")]
+    [HttpGet("users/{userId:guid}/wallet/balance")]
     [EndpointSummary("Get user's wallet balance")]
     [EndpointDescription("Retrieves the wallet balance for a specific user.")]
     [ProducesResponseType(typeof(decimal), StatusCodes.Status200OK)]
@@ -240,6 +80,99 @@ public sealed class WalletsController(ISender sender) : ControllerBase
         var result = await sender.Send(query, ct).ConfigureAwait(false);
 
         return Ok(result);
+    }
+
+    /// <summary>
+    ///     Add funds to a user's wallet
+    /// </summary>
+    [HttpPost("users/{userId:guid}/wallet:add-funds")]
+    [EndpointSummary("Add funds to user's wallet")]
+    [EndpointDescription("Adds funds to the wallet for the specified user.")]
+    [ProducesResponseType(typeof(WalletTransaction), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> AddFunds(Guid userId, [FromBody] AddFundsRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var command = new AddFundsCommand(userId, request.Amount, request.Description, request.ReferenceId);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Deduct funds from a user's wallet
+    /// </summary>
+    [HttpPost("users/{userId:guid}/wallet:deduct-funds")]
+    [EndpointSummary("Deduct funds from user's wallet")]
+    [EndpointDescription("Deducts funds from the wallet for the specified user.")]
+    [ProducesResponseType(typeof(WalletTransaction), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeductFunds(Guid userId, [FromBody] DeductFundsRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var command = new DeductFundsCommand(userId, request.Amount, request.Description, request.ReferenceId);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Transfer funds between user wallets
+    /// </summary>
+    [HttpPost("users/{userId:guid}/wallet:transfer")]
+    [EndpointSummary("Transfer funds to another user's wallet")]
+    [EndpointDescription("Transfers funds from this user's wallet to another user's wallet.")]
+    [ProducesResponseType(typeof(TransferResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> TransferFunds(Guid userId, [FromBody] TransferFundsRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var command = new TransferFundsCommand(userId, request.ToUserId, request.Amount, request.Description, request.ReferenceId);
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Lock a user's wallet
+    /// </summary>
+    [HttpPost("users/{userId:guid}/wallet:lock")]
+    [EndpointSummary("Lock user's wallet")]
+    [EndpointDescription("Locks a user's wallet to prevent transactions.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> LockWallet(Guid userId, [FromBody] LockWalletRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var command = new LockWalletCommand(userId, request.Reason);
+        await sender.Send(command, ct).ConfigureAwait(false);
+
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Unlock a user's wallet
+    /// </summary>
+    [HttpPost("users/{userId:guid}/wallet:unlock")]
+    [EndpointSummary("Unlock user's wallet")]
+    [EndpointDescription("Unlocks a user's wallet to allow transactions.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UnlockWallet(Guid userId, CancellationToken ct)
+    {
+        var command = new UnlockWalletCommand(userId);
+        await sender.Send(command, ct).ConfigureAwait(false);
+
+        return NoContent();
     }
 
     #endregion

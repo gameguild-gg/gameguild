@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.CQRS;
 using GameGuild.Commerce.Payments;
+using GameGuild.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -48,7 +49,7 @@ public sealed class TenantsController(ISender sender) : ControllerBase
     [HttpGet("v{version:apiVersion}/tenants")]
     [EndpointSummary("Get tenants with pagination, search, and sorting")]
     [EndpointDescription("Retrieves a paginated list of all tenant organizations accessible to the requesting user.")]
-    [ProducesResponseType<Models.PagedResult<Tenant>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<PagedResult<Tenant>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetTenants([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? status = null, [FromQuery] string? searchTerm = null, CancellationToken ct = default)

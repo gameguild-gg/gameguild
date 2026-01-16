@@ -1,6 +1,7 @@
 using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Commerce.Products;
