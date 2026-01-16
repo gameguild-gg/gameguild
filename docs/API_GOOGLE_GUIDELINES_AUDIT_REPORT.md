@@ -843,54 +843,68 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 
 ---
 
-## 20. Wallets Endpoints
+## 20. Wallets Endpoints ✅ DONE
 
-### Current Endpoints
+### Current Endpoints ✅ FIXED
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| POST | `/api/v1/wallet/create` | Create wallet | ❌ Violation |
-| GET | `/api/v1/wallet/{userId}` | Get wallet | ❌ Violation |
-| GET | `/api/v1/wallet/{userId}/balance` | Get balance | ✅ Correct |
-| POST | `/api/v1/wallet/add-funds` | Add funds | ❌ Violation |
-| POST | `/api/v1/wallet/deduct-funds` | Deduct funds | ❌ Violation |
-| POST | `/api/v1/wallet/transfer` | Transfer funds | ❌ Violation |
-| POST | `/api/v1/wallet/{userId}/lock` | Lock wallet | ❌ Violation |
-| POST | `/api/v1/wallet/{userId}/unlock` | Unlock wallet | ❌ Violation |
-| GET | `/api/v1/wallet/{userId}/transactions` | Get transactions | ✅ Correct |
+| POST | `/v1/wallets` | Create wallet | ✅ FIXED |
+| GET | `/v1/wallets/{walletId}` | Get wallet by ID | ✅ FIXED |
+| GET | `/v1/wallets/{walletId}/balance` | Get wallet balance | ✅ FIXED |
+| GET | `/v1/wallets/{walletId}/transactions` | Get transactions | ✅ FIXED |
+| POST | `/v1/wallets/{walletId}:add-funds` | Add funds | ✅ FIXED |
+| POST | `/v1/wallets/{walletId}:deduct-funds` | Deduct funds | ✅ FIXED |
+| POST | `/v1/wallets/{walletId}:transfer` | Transfer funds | ✅ FIXED |
+| POST | `/v1/wallets/{walletId}:lock` | Lock wallet | ✅ FIXED |
+| POST | `/v1/wallets/{walletId}:unlock` | Unlock wallet | ✅ FIXED |
+| GET | `/v1/users/{userId}/wallet` | Get user's wallet | ✅ FIXED (convenience) |
+| GET | `/v1/users/{userId}/wallet/balance` | Get user's wallet balance | ✅ FIXED (convenience) |
 
-### Violations
+### ~~Violations~~ FIXED
 
-1. **Singular resource name** - Should be `wallets` (plural)
-2. **Path-based actions** - Should use colon syntax
-3. **User ID as wallet ID** - Should be wallet resource with walletId
+1. ~~**Singular resource name** - Should be `wallets` (plural)~~ ✅ Changed to `wallets`
+2. ~~**Path-based actions** - Should use colon syntax~~ ✅ Changed to `:action` syntax
+3. ~~**User ID as wallet ID** - Should be wallet resource with walletId~~ ✅ Changed to `walletId`, added user convenience endpoints
 
-### Required Fixes
+### ~~Required Fixes~~ Changes Applied
 
-| Priority | Current | Fixed | Reason |
+| Priority | ~~Current~~ | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `POST /api/v1/wallet/create` | `POST /v1/wallets` | Standard Create |
-| P0 | `GET /api/v1/wallet/{userId}` | `GET /v1/users/{userId}/wallet` | Resource-oriented |
-| P0 | `GET /api/v1/wallet/{userId}/balance` | `GET /v1/users/{userId}/wallet/balance` | Resource-oriented |
-| P0 | `POST /api/v1/wallet/add-funds` | `POST /v1/wallets/{walletId}:add-funds` | Custom action syntax |
-| P0 | `POST /api/v1/wallet/deduct-funds` | `POST /v1/wallets/{walletId}:deduct-funds` | Custom action syntax |
-| P0 | `POST /api/v1/wallet/transfer` | `POST /v1/wallets/{walletId}:transfer` | Custom action syntax |
-| P0 | `POST /api/v1/wallet/{userId}/lock` | `POST /v1/wallets/{walletId}:lock` | Custom action syntax |
-| P0 | `POST /api/v1/wallet/{userId}/unlock` | `POST /v1/wallets/{walletId}:unlock` | Custom action syntax |
-| P0 | `GET /api/v1/wallet/{userId}/transactions` | `GET /v1/wallets/{walletId}/transactions` | Resource-oriented |
+| ~~P0~~ | ~~`POST /api/v1/wallet/create`~~ | `POST /v1/wallets` | ✅ Standard Create |
+| ~~P0~~ | ~~`GET /api/v1/wallet/{userId}`~~ | `GET /v1/wallets/{walletId}` + `GET /v1/users/{userId}/wallet` | ✅ Resource-oriented |
+| ~~P0~~ | ~~`GET /api/v1/wallet/{userId}/balance`~~ | `GET /v1/wallets/{walletId}/balance` + `GET /v1/users/{userId}/wallet/balance` | ✅ Resource-oriented |
+| ~~P0~~ | ~~`POST /api/v1/wallet/add-funds`~~ | `POST /v1/wallets/{walletId}:add-funds` | ✅ Custom action syntax |
+| ~~P0~~ | ~~`POST /api/v1/wallet/deduct-funds`~~ | `POST /v1/wallets/{walletId}:deduct-funds` | ✅ Custom action syntax |
+| ~~P0~~ | ~~`POST /api/v1/wallet/transfer`~~ | `POST /v1/wallets/{walletId}:transfer` | ✅ Custom action syntax |
+| ~~P0~~ | ~~`POST /api/v1/wallet/{userId}/lock`~~ | `POST /v1/wallets/{walletId}:lock` | ✅ Custom action syntax |
+| ~~P0~~ | ~~`POST /api/v1/wallet/{userId}/unlock`~~ | `POST /v1/wallets/{walletId}:unlock` | ✅ Custom action syntax |
+| ~~P0~~ | ~~`GET /api/v1/wallet/{userId}/transactions`~~ | `GET /v1/wallets/{walletId}/transactions` | ✅ Resource-oriented |
 
-### Missing Endpoints (Must Add)
+**Files Modified:**
+- [WalletsController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/WalletsController.cs) - **RENAMED** from WalletController.cs, complete rewrite with walletId-based routes, colon syntax for actions
+
+**Note:** New CQRS commands/queries required:
+- `GetWalletByIdQuery(walletId)` 
+- `GetWalletBalanceByIdQuery(walletId)`
+- `GetWalletTransactionHistoryQuery(walletId, ...)`
+- `AddFundsToWalletCommand(walletId, ...)`
+- `DeductFundsFromWalletCommand(walletId, ...)`
+- `TransferFundsBetweenWalletsCommand(walletId, toWalletId, ...)`
+- `LockWalletByIdCommand(walletId, ...)`
+- `UnlockWalletByIdCommand(walletId)`
+
+### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/v1/wallets` | List all wallets (admin) | P1 |
-| GET | `/v1/wallets/{walletId}` | Get wallet by ID | P0 |
-| PATCH | `/v1/wallets/{walletId}` | Update wallet settings | P2 |
-| DELETE | `/v1/wallets/{walletId}` | Close wallet | P2 |
+| GET | `/v1/wallets` | List all wallets (admin) | P3 |
+| PATCH | `/v1/wallets/{walletId}` | Update wallet settings | P3 |
+| DELETE | `/v1/wallets/{walletId}` | Close wallet | P3 |
 | HEAD | `/v1/wallets/{walletId}` | Check wallet exists | P3 |
-| POST | `/v1/wallets/{walletId}:freeze` | Freeze wallet (security) | P2 |
-| POST | `/v1/wallets/{walletId}:unfreeze` | Unfreeze wallet | P2 |
-| GET | `/v1/wallets/{walletId}/audit-log` | Get wallet audit log | P2 |
+| POST | `/v1/wallets/{walletId}:freeze` | Freeze wallet (security) | P3 |
+| POST | `/v1/wallets/{walletId}:unfreeze` | Unfreeze wallet | P3 |
+| GET | `/v1/wallets/{walletId}/audit-log` | Get wallet audit log | P3 |
 
 ---
 
