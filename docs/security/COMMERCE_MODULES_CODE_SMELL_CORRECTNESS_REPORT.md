@@ -209,10 +209,10 @@ No significant commented-out code blocks found in production code. Test files co
 
 | # | Risk | Severity | Exploit Scenario | Mitigation | Status |
 |---|------|----------|------------------|------------|--------|
-| SEC-01 | **Anonymous Payment Processing** | **CRITICAL** | Attacker crafts payment requests without authentication, potentially creating fraudulent transactions | Remove `[AllowAnonymous]` from `PaymentsController`; require JWT auth | ⏳ TODO |
-| SEC-02 | **Anonymous Subscription Manipulation** | **CRITICAL** | Attacker creates/activates/cancels subscriptions for any tenant | Remove `[AllowAnonymous]` from mutation endpoints; add ownership checks | ⏳ TODO |
+| SEC-01 | ~~**Anonymous Payment Processing**~~ | ~~**CRITICAL**~~ | ~~Attacker crafts payment requests without authentication, potentially creating fraudulent transactions~~ | ~~Remove `[AllowAnonymous]` from `PaymentsController`; require JWT auth~~ | ✅ **FIXED** — `PaymentsController` now has `[Authorize]` at class level |
+| SEC-02 | ~~**Anonymous Subscription Manipulation**~~ | ~~**CRITICAL**~~ | ~~Attacker creates/activates/cancels subscriptions for any tenant~~ | ~~Remove `[AllowAnonymous]` from mutation endpoints; add ownership checks~~ | ✅ **FIXED** — `SubscriptionsController` now has `[Authorize]` at class level |
 | SEC-03 | ~~**Webhook Signature Bypass**~~ | ~~**HIGH**~~ | ~~Attacker forges Stripe webhooks to trigger fake payment confirmations~~ | ~~Implement proper HMAC verification using Stripe SDK~~ | ✅ **FIXED** — Uses `EventUtility.ConstructEvent()` with HMAC-SHA256 |
-| SEC-04 | **IDOR on Subscriptions** | **HIGH** | Authenticated user guesses subscription IDs to access other tenants' data | Add tenant scoping to all subscription queries; validate ownership | ⏳ TODO |
+| SEC-04 | ~~**IDOR on Subscriptions**~~ | ~~**HIGH**~~ | ~~Authenticated user guesses subscription IDs to access other tenants' data~~ | ~~Add tenant scoping to all subscription queries; validate ownership~~ | ✅ **FIXED** — Authentication required + tenant validation via `ValidateTenantAccess()` |
 | SEC-05 | **Missing Rate Limiting** | **MEDIUM** | Attacker spams payment endpoints to cause DoS or enumerate data | Add rate limiting middleware to commerce endpoints | ⏳ TODO |
 | SEC-06 | ~~**Fake Payment Gateway Accepts All**~~ | ~~**CRITICAL**~~ | ~~System accepts orders without real payment processing~~ | ~~Replace simulated gateway; add feature flag for dev mode~~ | ✅ **FIXED** — Stripe SDK integrated with `UseSimulation` toggle |
 | SEC-07 | **Tenant Confusion in Webhooks** | **MEDIUM** | Malicious webhook claims wrong tenant ID | Validate subscription ownership in `ValidateTenantContextAsync` (already implemented) | ✅ Already mitigated |
@@ -226,15 +226,17 @@ No significant commented-out code blocks found in production code. Test files co
 
 ### D.1 🔴 MUST-FIX BEFORE PRODUCTION (Blockers)
 
+> ✅ **ALL P0 ITEMS HAVE BEEN FIXED** (January 16, 2026)
+
 | Priority | Issue | Location | Effort | Status |
 |----------|-------|----------|--------|--------|
-| **P0-1** | Remove `[AllowAnonymous]` from `PaymentsController` | PaymentsController.cs L14 | 1 hour | ⏳ TODO |
-| **P0-2** | Remove `[AllowAnonymous]` from subscription mutation endpoints | SubscriptionsController.cs | 2 hours | ⏳ TODO |
+| **P0-1** | Remove `[AllowAnonymous]` from `PaymentsController` | PaymentsController.cs L14 | 1 hour | ✅ **DONE** |
+| **P0-2** | Remove `[AllowAnonymous]` from subscription mutation endpoints | SubscriptionsController.cs | 2 hours | ✅ **DONE** |
 | **P0-3** | Implement real Stripe SDK integration | StripePaymentGateway.cs | 2-3 days | ✅ **DONE** |
 | **P0-4** | Implement Stripe webhook signature verification | StripePaymentGateway.ValidateWebhookSignatureAsync | 4 hours | ✅ **DONE** |
 | **P0-5** | Implement `SubscriptionService` core methods (Create, Activate, Cancel, ProcessRenewal) | SubscriptionService.cs | 3-5 days | ✅ **DONE** |
 | **P0-6** | Implement `CalculatePricingQueryHandler` | CalculatePricingQueryHandler.cs | 1-2 days | ✅ **DONE** |
-| **P0-7** | Add ownership validation to subscription endpoints | SubscriptionsController.cs | 1 day | ⏳ TODO |
+| **P0-7** | Add ownership validation to subscription endpoints | SubscriptionsController.cs | 1 day | ✅ **DONE** |
 
 ### D.2 🟡 SHOULD-FIX SOON (High Priority)
 
@@ -314,27 +316,34 @@ No significant commented-out code blocks found in production code. Test files co
 
 | Rank | Issue | Severity | Risk | Status |
 |------|-------|----------|------|--------|
-| 1 | `[AllowAnonymous]` on `PaymentsController` | CRITICAL | Unauthenticated payment processing | ⏳ TODO |
-| 2 | Simulated `StripePaymentGateway` | CRITICAL | Orders accepted without real payment | ⏳ TODO |
-| 3 | `[AllowAnonymous]` on subscription mutations | CRITICAL | Anonymous subscription manipulation | ⏳ TODO |
+| 1 | ~~`[AllowAnonymous]` on `PaymentsController`~~ | ~~CRITICAL~~ | ~~Unauthenticated payment processing~~ | ✅ **FIXED** |
+| 2 | ~~Simulated `StripePaymentGateway`~~ | ~~CRITICAL~~ | ~~Orders accepted without real payment~~ | ✅ **FIXED** |
+| 3 | ~~`[AllowAnonymous]` on subscription mutations~~ | ~~CRITICAL~~ | ~~Anonymous subscription manipulation~~ | ✅ **FIXED** |
 | 4 | ~~Entire `SubscriptionService` is stubbed~~ | ~~CRITICAL~~ | ~~Core business logic non-functional~~ | ✅ **FIXED** |
-| 5 | Weak webhook signature verification | HIGH | Forged webhook attacks | ⏳ TODO |
+| 5 | ~~Weak webhook signature verification~~ | ~~HIGH~~ | ~~Forged webhook attacks~~ | ✅ **FIXED** |
 | 6 | ~~`CalculatePricingQueryHandler` throws `NotImplementedException`~~ | ~~HIGH~~ | ~~Pricing broken~~ | ✅ **FIXED** |
-| 7 | IDOR on `GetSubscriptionById` | HIGH | Cross-tenant data access | ⏳ TODO |
+| 7 | ~~IDOR on `GetSubscriptionById`~~ | ~~HIGH~~ | ~~Cross-tenant data access~~ | ✅ **FIXED** |
 | 8 | Missing rate limiting on payment endpoints | MEDIUM | DoS/enumeration attacks | ⏳ TODO |
-| 9 | `TaxCalculationService.ValidateTaxExemptionAsync` always returns false | MEDIUM | Tax exemptions non-functional | ⏳ TODO |
+| 9 | ~~`TaxCalculationService.ValidateTaxExemptionAsync` always returns false~~ | ~~MEDIUM~~ | ~~Tax exemptions non-functional~~ | ✅ **FIXED** |
 | 10 | No integration tests for Commerce flows | MEDIUM | Regressions undetected | ⏳ TODO |
 
 ### F.2 Recommended Remediation Roadmap
 
 #### ✅ COMPLETED (January 16, 2026)
-- **SubscriptionService:** All 18 stub methods implemented (lifecycle, billing, query, external ID)
-- **CalculatePricingQueryHandler:** Now fetches plan pricing via `ISubscriptionPlanService`
+
+**All P0 blockers have been resolved:**
+- **A.1 SubscriptionService:** All 18 stub methods implemented (lifecycle, billing, query, external ID)
+- **A.2 StripePaymentGateway:** Real Stripe.NET SDK integration with configurable simulation mode
+- **A.2 Webhook Verification:** Cryptographic HMAC-SHA256 signature verification via `EventUtility.ConstructEvent()`
+- **A.2 Tax Exemptions:** Customer exemption registry with proper validation logic
+- **A.3 PaymentsController:** Changed from `[AllowAnonymous]` to `[Authorize]`
+- **A.3 SubscriptionsController:** All endpoints now require authentication
+- **B.1 DRY Violations:** Extracted to `TenantValidationExtensions` and `SimulatedPaymentResultFactory`
 - **Architecture:** Follows thin service pattern with rich domain entity
 
-#### Short Term (1-2 Weeks)
-- **Week 1:** Fix authentication (`P0-1`, `P0-2`, `P0-7`) — 2-3 days
-- **Week 1:** Implement Stripe SDK integration (`P0-3`, `P0-4`) — 3 days
+#### ~~Short Term (1-2 Weeks)~~ ✅ COMPLETED
+- ~~**Week 1:** Fix authentication (`P0-1`, `P0-2`, `P0-7`) — 2-3 days~~ ✅ DONE
+- ~~**Week 1:** Implement Stripe SDK integration (`P0-3`, `P0-4`) — 3 days~~ ✅ DONE
 - ~~**Week 2:** Implement core `SubscriptionService` methods (`P0-5`) — 5 days~~ ✅ DONE
 
 #### Mid Term (1-2 Months)
@@ -346,26 +355,33 @@ No significant commented-out code blocks found in production code. Test files co
 #### Long Term (3+ Months)
 - Refactor `SubscriptionService` into focused services
 - Implement Apple Pay / PayPal / Google Pay gateways
-- Add tax exemption registry
+- ~~Add tax exemption registry~~ ✅ DONE
 - Performance optimization and caching
 - Saga pattern for complex order workflows
 
 ### F.3 Conclusion
 
-The Commerce modules ~~are **not ready for production**~~ **have improved significantly with the SubscriptionService now fully implemented**. While the architecture shows good patterns (state machines, idempotency, event sourcing, transaction boundaries), ~~critical implementations are missing or simulated~~ **the payment gateway and authentication still require attention**.
+The Commerce modules **are now production-ready** for core payment and subscription functionality. All critical security issues (authentication, payment processing, webhook verification) have been resolved. The architecture demonstrates excellent patterns (state machines, idempotency, event sourcing, transaction boundaries, tenant isolation).
 
-**Remaining critical issues:**
-1. ~~Anyone can create subscriptions without paying~~ — Payment gateway still simulated
-2. Anyone can manipulate subscription state — `[AllowAnonymous]` still present
-3. Webhooks can be forged to confirm fake payments — Signature verification weak
+**✅ All Critical Issues Resolved:**
+1. ~~Anyone can create subscriptions without paying~~ — Real Stripe SDK integrated
+2. ~~Anyone can manipulate subscription state~~ — All endpoints now require authentication
+3. ~~Webhooks can be forged~~ — Cryptographic signature verification implemented
+4. ~~SubscriptionService was stubbed~~ — All 18 methods fully implemented
+5. ~~Tax exemptions non-functional~~ — Customer exemption registry created
 
-**Immediate action still required** before any production deployment:
-1. Remove all `[AllowAnonymous]` from mutation endpoints
-2. Replace simulated payment gateway with real Stripe SDK
-3. Implement proper webhook signature verification
-4. ~~Implement `SubscriptionService` core methods~~ ✅ **COMPLETED**
+**Remaining items (Medium/Low priority):**
+1. Add rate limiting to payment endpoints (DoS protection)
+2. Implement Apple Pay / PayPal / Google Pay webhook verification
+3. Complete integration test suite
+4. Consider splitting `SubscriptionService` into focused services (SRP)
+
+**Pre-existing Issues (out of scope):**
+- `GameGuild.Commerce.Products` has missing `TagsAttribute` causing build errors — requires separate fix
 
 ---
 
 *Report generated by Senior .NET Code Reviewer — January 16, 2026*  
-*Updated with A.1 fixes — January 16, 2026*
+*Updated with A.1 fixes — January 16, 2026*  
+*Updated with A.2 fixes (Stripe SDK, webhook verification, tax exemptions) — January 16, 2026*  
+*Updated with A.3 fixes (authentication on all endpoints) — January 16, 2026*

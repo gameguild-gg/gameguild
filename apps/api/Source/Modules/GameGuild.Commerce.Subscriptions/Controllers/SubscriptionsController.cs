@@ -26,7 +26,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Subscription creation request</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Created subscription</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions")]
+    [HttpPost("v{version:apiVersion}/subscriptions")]
     [EndpointSummary("Create a new subscription")]
     [EndpointDescription("Creates a new subscription with the provided information.")]
     [ProducesResponseType(StatusCodes.Status201Created)]
@@ -61,11 +61,13 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="status">Filter by status</param>
     /// <param name="tenantId">Filter by tenant ID</param>
     /// <param name="planId">Filter by plan ID</param>
+    /// <param name="expiring">Filter for expiring subscriptions (within specified days)</param>
+    /// <param name="expiringDays">Number of days to look ahead for expiring subscriptions (default: 30)</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of subscriptions</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions")]
+    [HttpGet("v{version:apiVersion}/subscriptions")]
     [EndpointSummary("Get subscriptions with pagination, search, and filtering")]
-    [EndpointDescription("Retrieves a paginated list of subscriptions with optional filtering.")]
+    [EndpointDescription("Retrieves a paginated list of subscriptions with optional filtering. Use query parameters: status (active, trialing, cancelled, etc.), tenantId, planId, and expiring=true for expiring subscriptions.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSubscriptions(
         [FromQuery] int page = 1,
@@ -73,6 +75,8 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         [FromQuery] SubscriptionStatus? status = null,
         [FromQuery] Guid? tenantId = null,
         [FromQuery] Guid? planId = null,
+        [FromQuery] bool? expiring = null,
+        [FromQuery] int expiringDays = 30,
         CancellationToken ct = default
     )
     {
@@ -80,69 +84,15 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
 
+        // If expiring filter is set, delegate to expiring subscriptions query
+        if (expiring == true)
+        {
+            var expiringResult = await sender.Send(new GetExpiringSubscriptionsQuery(expiringDays), ct);
+            return Ok(expiringResult);
+        }
+
         var result = await sender.Send(new GetPagedSubscriptionsQuery(page, pageSize, status, tenantId, planId), ct);
         return Ok(result);
-    }
-
-    /// <summary>
-    ///     Get subscriptions by tenant
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of subscriptions for the tenant</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions/tenant/{tenantId:guid}")]
-    [EndpointSummary("Get subscriptions by tenant")]
-    [EndpointDescription("Retrieves all subscriptions for a specific tenant.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetSubscriptionsByTenant(Guid tenantId, CancellationToken ct)
-    {
-        return Ok(await sender.Send(new GetTenantSubscriptionsQuery(tenantId), ct));
-    }
-
-    /// <summary>
-    ///     Get active subscription for tenant
-    /// </summary>
-    /// <param name="tenantId">Tenant ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Active subscription for the tenant</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions/tenant/{tenantId:guid}/active")]
-    [EndpointSummary("Get active subscription for tenant")]
-    [EndpointDescription("Retrieves the active subscription for a specific tenant.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetActiveSubscriptionByTenant(Guid tenantId, CancellationToken ct)
-    {
-        return Ok(await sender.Send(new GetActiveTenantSubscriptionQuery(tenantId), ct));
-    }
-
-    /// <summary>
-    ///     Get subscriptions by plan
-    /// </summary>
-    /// <param name="planId">Plan ID</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of subscriptions for the plan</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions/plan/{planId:guid}")]
-    [EndpointSummary("Get subscriptions by plan")]
-    [EndpointDescription("Retrieves all subscriptions for a specific plan.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetSubscriptionsByPlan(Guid planId, CancellationToken ct)
-    {
-        return Ok(await sender.Send(new GetSubscriptionsByPlanQuery(planId), ct));
-    }
-
-    /// <summary>
-    ///     Get subscriptions by status
-    /// </summary>
-    /// <param name="status">Subscription status</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of subscriptions with the specified status</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions/status/{status}")]
-    [EndpointSummary("Get subscriptions by status")]
-    [EndpointDescription("Retrieves all subscriptions with a specific status.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetSubscriptionsByStatus(SubscriptionStatus status, CancellationToken ct)
-    {
-        return Ok(await sender.Send(new GetSubscriptionsByStatusQuery(status), ct));
     }
 
     /// <summary>
@@ -150,7 +100,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// </summary>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Subscription metrics</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions/metrics")]
+    [HttpGet("v{version:apiVersion}/subscriptions:get-metrics")]
     [EndpointSummary("Get subscription metrics")]
     [EndpointDescription("Retrieves subscription metrics and analytics.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -180,22 +130,6 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
         });
     }
 
-    /// <summary>
-    ///     Get expiring subscriptions
-    /// </summary>
-    /// <param name="days">Number of days to look ahead (default: 30)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of expiring subscriptions</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions/expiring")]
-    [EndpointSummary("Get expiring subscriptions")]
-    [EndpointDescription("Retrieves subscriptions that are expiring within the specified number of days.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetExpiringSubscriptions([FromQuery] int days = 30, CancellationToken ct = default)
-    {
-        var expiringSubscriptions = await sender.Send(new GetExpiringSubscriptionsQuery(days), ct);
-        return Ok(expiringSubscriptions);
-    }
-
     #endregion
 
     #region Individual Item Operations - /v1/subscriptions/{subscriptionId}
@@ -206,7 +140,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="subscriptionId">Subscription ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>200 if exists, 404 if not</returns>
-    [HttpHead("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
+    [HttpHead("v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
     [EndpointSummary("Check if subscription exists by ID")]
     [EndpointDescription("Checks if a subscription exists by ID without returning the body.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -223,7 +157,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="subscriptionId">Subscription ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Subscription details</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
+    [HttpGet("v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
     [EndpointSummary("Get subscription by ID")]
     [EndpointDescription("Retrieves detailed information for a specific subscription.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -240,7 +174,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="subscriptionId">Subscription ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Subscription usage information</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}/usage")]
+    [HttpGet("v{version:apiVersion}/subscriptions/{subscriptionId:guid}/usage")]
     [EndpointSummary("Get subscription usage and limits")]
     [EndpointDescription("Retrieves usage information and limits for a specific subscription.")]
     [ProducesResponseType<SubscriptionUsageDto>(StatusCodes.Status200OK)]
@@ -257,7 +191,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="subscriptionId">Subscription ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Billing history for the subscription</returns>
-    [HttpGet("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}/billing-history")]
+    [HttpGet("v{version:apiVersion}/subscriptions/{subscriptionId:guid}/billing-history")]
     [EndpointSummary("Get subscription billing history")]
     [EndpointDescription("Retrieves billing history for a specific subscription.")]
     [ProducesResponseType<IEnumerable<BillingHistoryDto>>(StatusCodes.Status200OK)]
@@ -277,7 +211,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="subscriptionId">Subscription ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:activate")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:activate")]
     [EndpointSummary("Activate subscription")]
     [EndpointDescription("Activates a subscription by ID.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -296,7 +230,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Trial configuration</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:start-trial")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:start-trial")]
     [EndpointSummary("Start subscription trial")]
     [EndpointDescription("Starts a trial period for a subscription.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -316,7 +250,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Trial ending configuration</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:end-trial")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:end-trial")]
     [EndpointSummary("End subscription trial")]
     [EndpointDescription("Ends a trial period for a subscription.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -336,7 +270,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Cancellation details</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:cancel")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:cancel")]
     [EndpointSummary("Cancel subscription")]
     [EndpointDescription("Cancels a subscription with specified reason and effective date.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -356,7 +290,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Suspension details</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:suspend")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:suspend")]
     [EndpointSummary("Suspend subscription")]
     [EndpointDescription("Suspends a subscription temporarily.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -375,7 +309,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="subscriptionId">Subscription ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:reactivate")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:reactivate")]
     [EndpointSummary("Reactivate subscription")]
     [EndpointDescription("Reactivates a suspended or cancelled subscription.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -394,7 +328,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Upgrade details</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Upgrade result</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:upgrade")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:upgrade")]
     [EndpointSummary("Upgrade subscription plan")]
     [EndpointDescription("Upgrades a subscription to a higher-tier plan.")]
     [ProducesResponseType<SubscriptionUpgradeResult>(StatusCodes.Status200OK)]
@@ -414,7 +348,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Downgrade details</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Downgrade result</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:downgrade")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:downgrade")]
     [EndpointSummary("Downgrade subscription plan")]
     [EndpointDescription("Downgrades a subscription to a lower-tier plan.")]
     [ProducesResponseType<SubscriptionDowngradeResult>(StatusCodes.Status200OK)]
@@ -433,7 +367,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="subscriptionId">Subscription ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:renew")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:renew")]
     [EndpointSummary("Renew subscription")]
     [EndpointDescription("Manually renews a subscription for another billing cycle.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -452,7 +386,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Auto-renew configuration</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:auto-renew")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:auto-renew")]
     [EndpointSummary("Set subscription auto-renew")]
     [EndpointDescription("Enables or disables auto-renewal for a subscription.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -472,7 +406,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">External IDs configuration</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:external-ids")]
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:external-ids")]
     [EndpointSummary("Set subscription external IDs")]
     [EndpointDescription("Sets external system IDs for subscription integration.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
