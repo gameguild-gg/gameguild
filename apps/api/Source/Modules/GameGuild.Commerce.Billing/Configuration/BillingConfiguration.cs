@@ -1,10 +1,13 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace GameGuild.Commerce.Billing;
 
 /// <summary>
 ///     Configuration settings for Billing module.
 ///     Contains all payment provider settings and shared configuration logic.
+///     Implements IValidatableObject for proper ASP.NET Core options validation.
 /// </summary>
-public class BillingConfiguration
+public class BillingConfiguration : IValidatableObject
 {
     /// <summary>
     ///     Configuration section name
@@ -74,9 +77,70 @@ public class BillingConfiguration
     }
 
     /// <summary>
-    ///     Validates that required configuration is present for the specified provider.
+    ///     Implements IValidatableObject for ASP.NET Core Options validation.
+    ///     Called automatically during options binding when using ValidateDataAnnotations().
     /// </summary>
-    public BillingConfigurationValidationResult Validate(string? provider = null)
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        // Stripe validation: PublishableKey required when SecretKey is set
+        if (!string.IsNullOrEmpty(Stripe.SecretKey) && string.IsNullOrEmpty(Stripe.PublishableKey))
+        {
+            yield return new ValidationResult(
+                "PublishableKey is required when SecretKey is set",
+                new[] { $"{nameof(Stripe)}.{nameof(Stripe.PublishableKey)}" });
+        }
+
+        // PayPal validation: ClientSecret required when ClientId is set
+        if (!string.IsNullOrEmpty(PayPal.ClientId) && string.IsNullOrEmpty(PayPal.ClientSecret))
+        {
+            yield return new ValidationResult(
+                "ClientSecret is required when ClientId is set",
+                new[] { $"{nameof(PayPal)}.{nameof(PayPal.ClientSecret)}" });
+        }
+
+        // ApplePay validation: SharedSecret required when BundleId is set
+        if (!string.IsNullOrEmpty(ApplePay.BundleId) && string.IsNullOrEmpty(ApplePay.SharedSecret))
+        {
+            yield return new ValidationResult(
+                "SharedSecret is required when BundleId is set",
+                new[] { $"{nameof(ApplePay)}.{nameof(ApplePay.SharedSecret)}" });
+        }
+
+        // Webhook settings validation
+        if (Webhook.MaxRetryAttempts < 0)
+        {
+            yield return new ValidationResult(
+                "MaxRetryAttempts cannot be negative",
+                new[] { $"{nameof(Webhook)}.{nameof(Webhook.MaxRetryAttempts)}" });
+        }
+
+        if (Webhook.ProcessingTimeoutSeconds < 1)
+        {
+            yield return new ValidationResult(
+                "ProcessingTimeoutSeconds must be at least 1 second",
+                new[] { $"{nameof(Webhook)}.{nameof(Webhook.ProcessingTimeoutSeconds)}" });
+        }
+
+        if (Webhook.RetryPolicy.InitialDelaySeconds < 1)
+        {
+            yield return new ValidationResult(
+                "RetryPolicy.InitialDelaySeconds must be at least 1 second",
+                new[] { $"{nameof(Webhook)}.{nameof(Webhook.RetryPolicy)}.{nameof(Webhook.RetryPolicy.InitialDelaySeconds)}" });
+        }
+
+        if (Webhook.RetryPolicy.BackoffMultiplier < 1.0)
+        {
+            yield return new ValidationResult(
+                "RetryPolicy.BackoffMultiplier must be at least 1.0",
+                new[] { $"{nameof(Webhook)}.{nameof(Webhook.RetryPolicy)}.{nameof(Webhook.RetryPolicy.BackoffMultiplier)}" });
+        }
+    }
+
+    /// <summary>
+    ///     Validates that required configuration is present for the specified provider.
+    ///     Use for runtime validation of provider-specific configuration.
+    /// </summary>
+    public BillingConfigurationValidationResult ValidateProvider(string? provider = null)
     {
         var errors = new List<string>();
 

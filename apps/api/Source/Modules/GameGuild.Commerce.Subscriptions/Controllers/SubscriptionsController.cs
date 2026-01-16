@@ -1,21 +1,27 @@
 using Asp.Versioning;
+using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
 ///     Subscriptions API Controller - RESTful API for subscription management.
 ///     All endpoints require authentication to protect sensitive subscription data.
+///     Rate limiting is applied to prevent DoS attacks and enumeration:
+///     - ExpensiveOperations policy for mutations (create, activate, cancel)
+///     - Api policy for query endpoints
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
 [Tags("subscriptions")]
 [Authorize]
+[EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
 public sealed class SubscriptionsController(ISender sender, IActorContextAccessor actorContextAccessor) : ControllerBase
 {
     #region Collection Operations - /v1/subscriptions
@@ -66,6 +72,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of subscriptions</returns>
     [HttpGet("v{version:apiVersion}/subscriptions")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
     [EndpointSummary("Get subscriptions with pagination, search, and filtering")]
     [EndpointDescription("Retrieves a paginated list of subscriptions with optional filtering. Use query parameters: status (active, trialing, cancelled, etc.), tenantId, planId, and expiring=true for expiring subscriptions.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -101,6 +108,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="ct">Cancellation token</param>
     /// <returns>Subscription metrics</returns>
     [HttpGet("v{version:apiVersion}/subscriptions:get-metrics")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
     [EndpointSummary("Get subscription metrics")]
     [EndpointDescription("Retrieves subscription metrics and analytics.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -158,6 +166,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="ct">Cancellation token</param>
     /// <returns>Subscription details</returns>
     [HttpGet("v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
     [EndpointSummary("Get subscription by ID")]
     [EndpointDescription("Retrieves detailed information for a specific subscription.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -175,6 +184,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="ct">Cancellation token</param>
     /// <returns>Subscription usage information</returns>
     [HttpGet("v{version:apiVersion}/subscriptions/{subscriptionId:guid}/usage")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
     [EndpointSummary("Get subscription usage and limits")]
     [EndpointDescription("Retrieves usage information and limits for a specific subscription.")]
     [ProducesResponseType<SubscriptionUsageDto>(StatusCodes.Status200OK)]
@@ -192,6 +202,7 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="ct">Cancellation token</param>
     /// <returns>Billing history for the subscription</returns>
     [HttpGet("v{version:apiVersion}/subscriptions/{subscriptionId:guid}/billing-history")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
     [EndpointSummary("Get subscription billing history")]
     [EndpointDescription("Retrieves billing history for a specific subscription.")]
     [ProducesResponseType<IEnumerable<BillingHistoryDto>>(StatusCodes.Status200OK)]

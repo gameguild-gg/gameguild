@@ -1,21 +1,27 @@
 using Asp.Versioning;
+using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     API controller for payment operations.
 ///     All endpoints require authentication; sensitive financial data must be protected.
+///     Rate limiting is applied to prevent DoS attacks and abuse:
+///     - ExpensiveOperations policy for mutations (payment processing, refunds)
+///     - Api policy for query endpoints
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Tags("payments")]
 [Authorize]
+[EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]
 public sealed class PaymentsController(ISender sender, IActorContextAccessor actorContextAccessor) : ControllerBase
 {
     /// <summary>
@@ -52,6 +58,7 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     ///     - Audit trail generation
     /// </remarks>
     [HttpGet]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
     [EndpointSummary("Retrieve all payment transactions with optional filtering")]
     [EndpointDescription("Retrieves a paginated list of all payment transactions with support for filtering by tenant, status, and date range. This is the primary endpoint for payment administration and reporting.")]
     [ProducesResponseType<IEnumerable<PaymentResult>>(StatusCodes.Status200OK)]
@@ -148,6 +155,7 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     ///     - Associated subscription and tenant information
     /// </remarks>
     [HttpGet("{paymentId:guid}", Name = "GetPaymentById")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
     [EndpointSummary("Retrieve a specific payment by its unique identifier")]
     [EndpointDescription(
         "Retrieves detailed information about a specific payment transaction, including its current status, amount, payment method, and processing details. Use this endpoint to track payment progress and verify transaction completion."
