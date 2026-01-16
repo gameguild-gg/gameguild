@@ -220,7 +220,7 @@ No significant commented-out code blocks found in production code. Test files co
 | SEC-02 | ~~**Anonymous Subscription Manipulation**~~ | ~~**CRITICAL**~~ | ~~Attacker creates/activates/cancels subscriptions for any tenant~~ | ~~Remove `[AllowAnonymous]` from mutation endpoints; add ownership checks~~ | ✅ **FIXED** — `SubscriptionsController` now has `[Authorize]` at class level |
 | SEC-03 | ~~**Webhook Signature Bypass**~~ | ~~**HIGH**~~ | ~~Attacker forges Stripe webhooks to trigger fake payment confirmations~~ | ~~Implement proper HMAC verification using Stripe SDK~~ | ✅ **FIXED** — Uses `EventUtility.ConstructEvent()` with HMAC-SHA256 |
 | SEC-04 | ~~**IDOR on Subscriptions**~~ | ~~**HIGH**~~ | ~~Authenticated user guesses subscription IDs to access other tenants' data~~ | ~~Add tenant scoping to all subscription queries; validate ownership~~ | ✅ **FIXED** — Authentication required + tenant validation via `ValidateTenantAccess()` |
-| SEC-05 | **Missing Rate Limiting** | **MEDIUM** | Attacker spams payment endpoints to cause DoS or enumerate data | Add rate limiting middleware to commerce endpoints | ⏳ TODO |
+| SEC-05 | ~~**Missing Rate Limiting**~~ | ~~**MEDIUM**~~ | ~~Attacker spams payment endpoints to cause DoS or enumerate data~~ | ~~Add rate limiting middleware to commerce endpoints~~ | ✅ **FIXED** — `PaymentsController` and `SubscriptionsController` now have `[EnableRateLimiting(RateLimitPolicies.ExpensiveOperations)]` at class level, with `[EnableRateLimiting(RateLimitPolicies.Api)]` on GET endpoints |
 | SEC-06 | ~~**Fake Payment Gateway Accepts All**~~ | ~~**CRITICAL**~~ | ~~System accepts orders without real payment processing~~ | ~~Replace simulated gateway; add feature flag for dev mode~~ | ✅ **FIXED** — Stripe SDK integrated with `UseSimulation` toggle |
 | SEC-07 | **Tenant Confusion in Webhooks** | **MEDIUM** | Malicious webhook claims wrong tenant ID | Validate subscription ownership in `ValidateTenantContextAsync` (already implemented) | ✅ Already mitigated |
 | SEC-08 | **Missing Transaction Boundaries** | **MEDIUM** | Partial failure leaves subscription in inconsistent state | `OrderService.CompleteOrderAsync` has transaction ✅; verify others | ✅ Already mitigated |
@@ -249,10 +249,10 @@ No significant commented-out code blocks found in production code. Test files co
 
 | Priority | Issue | Location | Effort | Status |
 |----------|-------|----------|--------|--------|
-| **P1-1** | Add rate limiting to payment endpoints | PaymentsController, SubscriptionsController | 4 hours | ⏳ TODO |
+| **P1-1** | Add rate limiting to payment endpoints | PaymentsController, SubscriptionsController | 4 hours | ✅ **DONE** — `[EnableRateLimiting]` with `ExpensiveOperations` and `Api` policies |
 | **P1-2** | Implement remaining `SubscriptionService` methods | SubscriptionService.cs | 2-3 days | ✅ **DONE** |
 | **P1-3** | Extract `ValidateTenantAccess` to shared middleware | Controllers | 4 hours | ✅ **DONE** |
-| **P1-4** | Implement Apple Pay and PayPal signature verification | BillingWebhookServices | 2-3 days | ⏳ TODO |
+| **P1-4** | Implement Apple Pay and PayPal signature verification | BillingWebhookServices | 2-3 days | ✅ **DONE** — Apple Pay uses X.509 certificate chain + ECDSA JWS verification; PayPal uses API `POST /v1/notifications/verify-webhook-signature` |
 | **P1-5** | Implement tax exemption validation | TaxCalculationService.cs | 1 day | ✅ **DONE** |
 | **P1-6** | Complete integration tests for Commerce modules | *IntegrationTests.cs | 5+ days | ✅ **DONE** — ProductCatalogIntegrationTests and OrderWorkflowIntegrationTests implemented |
 
@@ -330,7 +330,7 @@ No significant commented-out code blocks found in production code. Test files co
 | 5 | ~~Weak webhook signature verification~~ | ~~HIGH~~ | ~~Forged webhook attacks~~ | ✅ **FIXED** |
 | 6 | ~~`CalculatePricingQueryHandler` throws `NotImplementedException`~~ | ~~HIGH~~ | ~~Pricing broken~~ | ✅ **FIXED** |
 | 7 | ~~IDOR on `GetSubscriptionById`~~ | ~~HIGH~~ | ~~Cross-tenant data access~~ | ✅ **FIXED** |
-| 8 | Missing rate limiting on payment endpoints | MEDIUM | DoS/enumeration attacks | ⏳ TODO |
+| 8 | ~~Missing rate limiting on payment endpoints~~ | ~~MEDIUM~~ | ~~DoS/enumeration attacks~~ | ✅ **FIXED** — `[EnableRateLimiting]` policies applied |
 | 9 | ~~`TaxCalculationService.ValidateTaxExemptionAsync` always returns false~~ | ~~MEDIUM~~ | ~~Tax exemptions non-functional~~ | ✅ **FIXED** |
 | 10 | No integration tests for Commerce flows | MEDIUM | Regressions undetected | ⏳ TODO |
 
@@ -338,7 +338,7 @@ No significant commented-out code blocks found in production code. Test files co
 
 #### ✅ COMPLETED (January 16, 2026)
 
-**All P0 blockers have been resolved:**
+**All P0 and P1 blockers have been resolved:**
 - **A.1 SubscriptionService:** All 18 stub methods implemented (lifecycle, billing, query, external ID)
 - **A.2 StripePaymentGateway:** Real Stripe.NET SDK integration with configurable simulation mode
 - **A.2 Webhook Verification:** Cryptographic HMAC-SHA256 signature verification via `EventUtility.ConstructEvent()`
@@ -368,23 +368,24 @@ No significant commented-out code blocks found in production code. Test files co
 
 ### F.3 Conclusion
 
-The Commerce modules **are now production-ready** for core payment and subscription functionality. All critical security issues (authentication, payment processing, webhook verification) have been resolved. The architecture demonstrates excellent patterns (state machines, idempotency, event sourcing, transaction boundaries, tenant isolation).
+The Commerce modules **are now production-ready** for core payment and subscription functionality. All critical security issues (authentication, payment processing, webhook verification, rate limiting) have been resolved. The architecture demonstrates excellent patterns (state machines, idempotency, event sourcing, transaction boundaries, tenant isolation).
 
 **✅ All Critical Issues Resolved:**
 1. ~~Anyone can create subscriptions without paying~~ — Real Stripe SDK integrated
 2. ~~Anyone can manipulate subscription state~~ — All endpoints now require authentication
-3. ~~Webhooks can be forged~~ — Cryptographic signature verification implemented
+3. ~~Webhooks can be forged~~ — Cryptographic signature verification implemented (Stripe HMAC-SHA256, Apple JWS with X.509 certificate chain + ECDSA, PayPal API verification)
 4. ~~SubscriptionService was stubbed~~ — All 18 methods fully implemented
 5. ~~Tax exemptions non-functional~~ — Customer exemption registry created
 6. ~~WalletService DIP violation~~ — Now uses `IWalletRepository` abstraction (B.2)
 7. ~~BillingConfiguration validation~~ — Now implements `IValidatableObject` (B.3)
 8. ~~WebhookProcessorBase untested~~ — Comprehensive unit tests added (B.3)
+9. ~~Rate limiting missing~~ — `[EnableRateLimiting]` applied to `PaymentsController` and `SubscriptionsController` (SEC-05, P1-1)
+10. ~~Apple/PayPal webhook verification~~ — Full cryptographic verification implemented (P1-4)
 
-**Remaining items (Medium/Low priority):**
-1. Add rate limiting to payment endpoints (DoS protection)
-2. Implement Apple Pay / PayPal / Google Pay webhook verification
-3. Complete integration test suite
-4. Consider splitting `SubscriptionService` into focused services (SRP)
+**Remaining items (Low priority):**
+1. Complete integration test suite
+2. Consider splitting `SubscriptionService` into focused services (SRP)
+3. Implement Google Pay webhook verification
 
 **Pre-existing Issues (out of scope):**
 - `GameGuild.Commerce.Products` has missing `TagsAttribute` causing build errors — requires separate fix
@@ -396,4 +397,5 @@ The Commerce modules **are now production-ready** for core payment and subscript
 *Updated with A.2 fixes (Stripe SDK, webhook verification, tax exemptions) — January 16, 2026*  
 *Updated with A.3 fixes (authentication on all endpoints) — January 16, 2026*  
 *Updated with B.2 SOLID fixes (WalletRepository, documentation) — January 16, 2026*  
-*Updated with B.3 KISS fixes (IValidatableObject, WebhookProcessorBase tests, Subscription architecture acceptance) — January 16, 2026*
+*Updated with B.3 KISS fixes (IValidatableObject, WebhookProcessorBase tests, Subscription architecture acceptance) — January 16, 2026*  
+*Updated with SEC-05 and P1-4 fixes (Rate limiting, Apple Pay/PayPal signature verification) — January 16, 2026*
