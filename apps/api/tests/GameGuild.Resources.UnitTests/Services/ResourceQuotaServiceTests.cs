@@ -148,7 +148,12 @@ public class ResourceQuotaServiceTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
-        var resourceTypes = new[] { ResourceUsageType.Users, ResourceUsageType.Projects, ResourceUsageType.Storage };
+        var requestedAmounts = new Dictionary<ResourceUsageType, long>
+        {
+            [ResourceUsageType.Users] = 1L,
+            [ResourceUsageType.Projects] = 1L,
+            [ResourceUsageType.Storage] = 1L
+        };
         
         var quotas = new Dictionary<ResourceUsageType, ResourceQuota>
         {
@@ -158,15 +163,15 @@ public class ResourceQuotaServiceTests
         };
 
         _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(quotas);
 
         // Act
-        var results = await _service.CheckMultipleLimitsAsync(tenantId, resourceTypes);
+        var results = await _service.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
 
         // Assert - Should use batch query (single call), not N individual calls
         _quotaRepositoryMock.Verify(
-            x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()),
+            x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()),
             Times.Once,
             "Should use batch query instead of N individual queries");
         
@@ -184,7 +189,11 @@ public class ResourceQuotaServiceTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
-        var resourceTypes = new[] { ResourceUsageType.Users, ResourceUsageType.Projects };
+        var requestedAmounts = new Dictionary<ResourceUsageType, long>
+        {
+            [ResourceUsageType.Users] = 1L,
+            [ResourceUsageType.Projects] = 1L
+        };
         
         var quotas = new Dictionary<ResourceUsageType, ResourceQuota>
         {
@@ -193,11 +202,11 @@ public class ResourceQuotaServiceTests
         };
 
         _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(quotas);
 
         // Act
-        var results = await _service.CheckMultipleLimitsAsync(tenantId, resourceTypes);
+        var results = await _service.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
 
         // Assert
         results.Should().ContainKey(ResourceUsageType.Users);
@@ -211,7 +220,12 @@ public class ResourceQuotaServiceTests
     {
         // Arrange - Only some resource types have quotas defined
         var tenantId = Guid.NewGuid();
-        var resourceTypes = new[] { ResourceUsageType.Users, ResourceUsageType.Projects, ResourceUsageType.ApiCalls };
+        var requestedAmounts = new Dictionary<ResourceUsageType, long>
+        {
+            [ResourceUsageType.Users] = 1L,
+            [ResourceUsageType.Projects] = 1L,
+            [ResourceUsageType.ApiCalls] = 1L
+        };
         
         // Only Users and Projects have quotas, ApiCalls does not
         var quotas = new Dictionary<ResourceUsageType, ResourceQuota>
@@ -221,11 +235,11 @@ public class ResourceQuotaServiceTests
         };
 
         _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(quotas);
 
         // Act
-        var results = await _service.CheckMultipleLimitsAsync(tenantId, resourceTypes);
+        var results = await _service.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
 
         // Assert - Should return results for all requested types
         results.Should().HaveCount(3);
@@ -240,14 +254,14 @@ public class ResourceQuotaServiceTests
     {
         // Arrange
         var tenantId = Guid.NewGuid();
-        var resourceTypes = Array.Empty<ResourceUsageType>();
+        var requestedAmounts = new Dictionary<ResourceUsageType, long>();
 
         _quotaRepositoryMock
-            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, resourceTypes, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByTenantAndTypesAsync(tenantId, It.IsAny<IEnumerable<ResourceUsageType>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Dictionary<ResourceUsageType, ResourceQuota>());
 
         // Act
-        var results = await _service.CheckMultipleLimitsAsync(tenantId, resourceTypes);
+        var results = await _service.CheckMultipleLimitsAsync(tenantId, requestedAmounts);
 
         // Assert
         results.Should().BeEmpty();
