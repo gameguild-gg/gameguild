@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using FluentAssertions;
 using GameGuild.API.Database;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -76,6 +77,9 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
                     options.DefaultChallengeScheme = "TestScheme";
                 })
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("TestScheme", _ => { });
+
+                // Register IActorContextAccessor for AuthorizationBehavior
+                services.AddScoped<IActorContextAccessor, ActorContextAccessor>();
 
                 services.AddHttpLogging(_ => { });
             });

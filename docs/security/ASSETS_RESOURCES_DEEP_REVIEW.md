@@ -623,21 +623,25 @@ public class AssetTokenOptions
 
 ### Integration Tests to Add
 
-| Test Case | Scenario | Priority |
-|-----------|----------|----------|
-| `ResourcesController_Returns401_WhenAnonymous` | Auth verification | P0 |
-| `TenantResources_Returns403_ForWrongTenant` | IDOR prevention | P0 |
-| `AssetUpload_FailsOnQuotaExceeded` | Quota integration | P1 |
-| `RateLimiting_Blocks_AfterThreshold` | Rate limit verification | P1 |
+| Test Case | Scenario | Priority | Status |
+|-----------|----------|----------|--------|
+| `ResourcesController_Returns401_WhenAnonymous` | Auth verification | P0 | ⚠️ Requires full middleware |
+| `TenantResources_Returns403_ForWrongTenant` | IDOR prevention | P0 | ⚠️ Requires full middleware |
+| `AssetUpload_FailsOnQuotaExceeded` | Quota integration | P1 | ⚠️ Requires full middleware |
+| `RateLimiting_Blocks_AfterThreshold` | Rate limit verification | P1 | ⚠️ Requires full middleware |
+
+> **Note:** Integration tests require the full middleware pipeline (ActorContextMiddleware, TenantMiddleware, etc.) to be registered in the TestHost. The current WebApplicationFactory setup is missing these middleware registrations. Tests exist in `ResourcesSecurityTests.cs` and `ResourcesAuthorizationIntegrationTests.cs` but require infrastructure fixes to pass.
 
 ### Security Tests (Penetration Testing)
 
-| Test | Target | Priority |
-|------|--------|----------|
-| Unauthenticated endpoint access | All Resources controllers | P0 |
-| IDOR via tenant ID manipulation | Tenant-scoped endpoints | P0 |
-| Token brute force resistance | `SecureAssetDeliveryController` | P1 |
-| Enumeration timing attacks | Resources list endpoints | P2 |
+| Test | Target | Priority | Status |
+|------|--------|----------|--------|
+| Unauthenticated endpoint access | All Resources controllers | P0 | ⚠️ Requires full middleware |
+| IDOR via tenant ID manipulation | Tenant-scoped endpoints | P0 | ⚠️ Requires full middleware |
+| Token brute force resistance | `SecureAssetDeliveryController` | P1 | ⚠️ Requires full middleware |
+| Enumeration timing attacks | Resources list endpoints | P2 | ⚠️ Requires full middleware |
+
+> **Note:** Security/penetration tests are implemented in `ResourcesSecurityTests.cs` but require full TestHost infrastructure. The tests are marked with `[Trait("Infrastructure", "Required")]` to indicate they need the complete middleware pipeline.
 
 ---
 

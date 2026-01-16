@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using FluentAssertions;
 using GameGuild.API.Database;
+using GameGuild.Identity.Context.Actors;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -19,9 +20,15 @@ namespace GameGuild.Resources.IntegrationTests.Security;
 /// <summary>
 /// Security-focused integration tests for rate limiting, quota enforcement, and penetration testing scenarios.
 /// These tests validate security controls are functioning correctly under attack conditions.
+/// 
+/// NOTE: These tests require a fully configured API environment with all middleware registered.
+/// Some tests may fail in isolation if the full middleware pipeline (ActorContextMiddleware, 
+/// TenantMiddleware, etc.) is not properly configured. Run against a complete TestHost setup
+/// or mark tests as integration-only in CI pipeline.
 /// </summary>
 [Trait("Category", "Integration")]
 [Trait("Security", "PenetrationTest")]
+[Trait("Infrastructure", "Required")]
 public class ResourcesSecurityTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
 {
     private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
@@ -64,6 +71,9 @@ public class ResourcesSecurityTests : IClassFixture<WebApplicationFactory<GameGu
                     options.DefaultChallengeScheme = "TestScheme";
                 })
                 .AddScheme<AuthenticationSchemeOptions, SecurityTestAuthHandler>("TestScheme", _ => { });
+
+                // Register IActorContextAccessor for AuthorizationBehavior
+                services.AddScoped<IActorContextAccessor, ActorContextAccessor>();
             });
         });
 
