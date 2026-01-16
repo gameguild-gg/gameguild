@@ -366,10 +366,10 @@ internal class ResourcePermissionStoreAdapter(IResourcePermissionService service
         CancellationToken ct = default)
         => await service.GetUserResourcesAsync(new CQRS.Models.TenantId(tenantId), userId, null, ct);
 
-    public async Task<IReadOnlyList<ResourceUserPermission>> GetResourcePermissionsAsync(
+    public Task<IReadOnlyList<ResourceUserPermission>> GetResourcePermissionsAsync(
         Guid resourceId,
         CancellationToken ct = default)
         // Note: IResourcePermissionService doesn't have a direct "by resource id" method
         // This adapter returns empty - implementations should use GetResourceUsersAsync instead
-        => [];
+        => Task.FromResult<IReadOnlyList<ResourceUserPermission>>([]);
 }

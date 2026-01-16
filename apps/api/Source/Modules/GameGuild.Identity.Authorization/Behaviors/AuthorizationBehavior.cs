@@ -17,7 +17,7 @@ namespace GameGuild.Identity.Authorization;
 ///             <term>Tenant-level permissions</term>
 ///             <description>
 ///                 Checks if the user has a capability in the tenant (e.g., "courses:create").
-///                 Uses <see cref="ActorContext.HasPermission"/> (populated by ActorContextMiddleware).
+///                 Uses <see cref="ActorContext.HasPermission(string)"/> (populated by ActorContextMiddleware).
 ///             </description>
 ///         </item>
 ///         <item>
