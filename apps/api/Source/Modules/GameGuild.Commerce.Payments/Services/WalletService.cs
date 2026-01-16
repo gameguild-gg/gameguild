@@ -24,8 +24,8 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         var wallet = new UserWallet { UserId = userId, Currency = currency, Balance = 0, IsActive = true, IsLocked = false };
 
-        UserWallets.Add(wallet);
-        await context.SaveChangesAsync(cancellationToken);
+        walletRepository.Add(wallet);
+        await walletRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Wallet created for user {UserId} with ID {WalletId}", userId, wallet.Id);
 
@@ -34,12 +34,12 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
     public async Task<UserWallet?> GetWalletByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        return await UserWallets.Include(w => w.Transactions.OrderByDescending(t => t.CreatedAt).Take(10)).FirstOrDefaultAsync(w => w.UserId == userId, cancellationToken);
+        return await walletRepository.GetByUserIdAsync(userId, cancellationToken);
     }
 
     public async Task<UserWallet?> GetWalletByIdAsync(Guid walletId, CancellationToken cancellationToken = default)
     {
-        return await context.Set<UserWallet>().Include(w => w.Transactions.OrderByDescending(t => t.CreatedAt).Take(10)).FirstOrDefaultAsync(w => w.Id == walletId, cancellationToken);
+        return await walletRepository.GetByIdAsync(walletId, cancellationToken);
     }
 
     public async Task<decimal> GetBalanceAsync(Guid userId, CancellationToken cancellationToken = default)
@@ -62,7 +62,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         }
 
         wallet.AddFunds(amount, description, referenceId);
-        await context.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken);
 
         var transaction = wallet.Transactions.OrderByDescending(t => t.CreatedAt).First();
         logger.LogInformation("Funds added: Transaction {TransactionId}, Balance {Balance}", transaction.Id, wallet.Balance);
@@ -84,7 +84,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         }
 
         wallet.DeductFunds(amount, description, referenceId);
-        await context.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken);
 
         var transaction = wallet.Transactions.OrderByDescending(t => t.CreatedAt).First();
         logger.LogInformation("Funds deducted: Transaction {TransactionId}, Balance {Balance}", transaction.Id, wallet.Balance);
@@ -132,7 +132,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         debitTransaction.Type = WalletTransactionType.TransferOut;
         creditTransaction.Type = WalletTransactionType.TransferIn;
 
-        await context.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Transfer completed: Debit {DebitId}, Credit {CreditId}", debitTransaction.Id, creditTransaction.Id);
 
@@ -148,7 +148,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         if (wallet == null) throw new InvalidOperationException($"Wallet not found for user {userId}");
 
         wallet.Lock(reason);
-        await context.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Wallet locked for user {UserId}", userId);
     }
@@ -162,7 +162,7 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
         if (wallet == null) throw new InvalidOperationException($"Wallet not found for user {userId}");
 
         wallet.Unlock();
-        await context.SaveChangesAsync(cancellationToken);
+        await walletRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Wallet unlocked for user {UserId}", userId);
     }
@@ -180,12 +180,6 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         if (wallet == null) return new List<WalletTransaction>();
 
-        var query = WalletTransactions.Where(t => t.WalletId == wallet.Id).OrderByDescending(t => t.CreatedAt).AsQueryable();
-
-        if (typeFilter.HasValue) query = query.Where(t => t.Type == typeFilter.Value);
-
-        if (statusFilter.HasValue) query = query.Where(t => t.Status == statusFilter.Value);
-
-        return await query.Skip(skip).Take(take).ToListAsync(cancellationToken);
+        return await walletRepository.GetTransactionsAsync(wallet.Id, skip, take, typeFilter, statusFilter, cancellationToken);
     }
 }

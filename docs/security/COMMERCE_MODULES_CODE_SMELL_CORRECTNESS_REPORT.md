@@ -189,9 +189,9 @@ No significant commented-out code blocks found in production code. Test files co
 
 | Principle | Location | Issue | Severity |
 |-----------|----------|-------|----------|
-| **SRP** | `SubscriptionService` | Implements 4 interfaces (`ISubscriptionLifecycleService`, `ISubscriptionBillingService`, `ISubscriptionQueryService`, `ISubscriptionExternalIdService`) | **MEDIUM** — Consider splitting into focused services |
-| **SRP** | `OrderService.CompleteOrderAsync` | Method does payment marking + entitlement granting + fulfillment in one method (90+ lines) | **LOW** — Well-structured with transaction boundary, but consider saga pattern |
-| **DIP** | `WalletService` | Depends directly on `DbSet<T>` instead of repository abstraction | **LOW** — Minor, but inconsistent with repository pattern used elsewhere |
+| ~~**SRP**~~ | ~~`SubscriptionService`~~ | ~~Implements 4 interfaces (`ISubscriptionLifecycleService`, `ISubscriptionBillingService`, `ISubscriptionQueryService`, `ISubscriptionExternalIdService`)~~ | ✅ **ACCEPTED** — ISP-compliant design: single thin-service class with segregated interfaces for consumers. The service follows "load → mutate → save" pattern delegating to entity/repository. Splitting would create code duplication without benefit. |
+| ~~**SRP**~~ | ~~`OrderService.CompleteOrderAsync`~~ | ~~Method does payment marking + entitlement granting + fulfillment in one method (90+ lines)~~ | ✅ **ACCEPTED** — Well-structured with explicit transaction boundary, clear STEP comments (1: Mark paid, 2: Grant entitlements, 3: Mark fulfilled), and economic causality documentation. Splitting would break atomicity guarantees. |
+| ~~**DIP**~~ | ~~`WalletService`~~ | ~~Depends directly on `DbSet<T>` instead of repository abstraction~~ | ✅ **FIXED** — Created `IWalletRepository` interface and `WalletRepository` implementation following `CommerceRepositoryBase<T>` pattern. WalletService now injects `IWalletRepository`. |
 | ~~**OCP**~~ | ~~`StripePaymentGateway`~~ | ~~Hardcoded simulation logic; no extension point for switching to real implementation~~ | ✅ **FIXED** — Now uses `StripeGatewayOptions.UseSimulation` toggle; real SDK integration with configurable mode |
 
 ### B.3 KISS Violations (Complexity)
@@ -206,7 +206,7 @@ No significant commented-out code blocks found in production code. Test files co
 
 | Location | Issue | Severity |
 |----------|-------|----------|
-| `WalletService` | Directly accesses `IApplicationDbContext` and `DbSet<T>` | **LOW** — Bypasses repository pattern |
+| ~~`WalletService`~~ | ~~Directly accesses `IApplicationDbContext` and `DbSet<T>`~~ | ✅ **FIXED** — Now uses `IWalletRepository` abstraction |
 | `OrderService` | Good separation — uses `IOrderRepository`, `IProductRepository` | ✅ Correct |
 | `EntitlementService` | Uses repository abstractions correctly | ✅ Correct |
 

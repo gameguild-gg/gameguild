@@ -24,6 +24,7 @@ public static class PaymentsModule
         services.AddScoped<IFinancialLedgerRepository, FinancialLedgerRepository>();
         services.AddScoped<IPaymentRepository, PaymentRepository>();
         services.AddScoped<IRevenueEventRepository, RevenueEventRepository>();
+        services.AddScoped<IWalletRepository, WalletRepository>();
 
         // Register services
         services.AddScoped<IDisputeService, DisputeService>();
