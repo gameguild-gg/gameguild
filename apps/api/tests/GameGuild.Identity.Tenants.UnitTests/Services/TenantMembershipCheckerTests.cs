@@ -123,7 +123,7 @@ public class TenantMembershipCheckerTests
     }
 
     [Fact]
-    public async Task TenantMembershipChecker_ReturnsFalse_ForDeactivatedMember()
+    public async Task TenantMembershipChecker_Should_ReturnFalse_ForDeactivatedMember()
     {
         // Arrange
         var mockRepository = new Mock<ITenantMemberRepository>();
@@ -151,7 +151,7 @@ public class TenantMembershipCheckerTests
     }
 
     [Fact]
-    public async Task TenantMembershipChecker_HandlesEmptyGuid_ReturnsFalse()
+    public async Task TenantMembershipChecker_Should_HandleEmptyGuid_ReturnFalse()
     {
         // Arrange
         var mockRepository = new Mock<ITenantMemberRepository>();
@@ -168,7 +168,7 @@ public class TenantMembershipCheckerTests
     }
 
     [Fact]
-    public async Task TenantMembershipChecker_HandlesCancellation()
+    public async Task TenantMembershipChecker_Should_HandleCancellation()
     {
         // Arrange
         var mockRepository = new Mock<ITenantMemberRepository>();
@@ -190,7 +190,7 @@ public class TenantMembershipCheckerTests
     #region Cross-Tenant Isolation Tests
 
     [Fact]
-    public async Task TenantMembershipChecker_DifferentTenant_ReturnsFalse()
+    public async Task TenantMembershipChecker_Should_ReturnFalse_ForDifferentTenant()
     {
         // Arrange
         var mockRepository = new Mock<ITenantMemberRepository>();
