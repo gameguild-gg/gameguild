@@ -728,9 +728,9 @@ export default function Page() {
         setPreviewOpen(true)
       } else {
         // Multi-block panel
-        if (Object.keys(blockStates).length < 2) {
+        if (Object.keys(blockStates).length < 1) {
           toast.error("No content", {
-            description: "Need at least 2 blocks for preview",
+            description: "Need at least 1 block for preview",
             duration: 3000,
           })
           return
@@ -748,9 +748,9 @@ export default function Page() {
           }
         }
         
-        if (Object.keys(parsedStates).length < 2) {
+        if (Object.keys(parsedStates).length < 1) {
           toast.error("Invalid content", {
-            description: "At least 2 blocks must have valid content",
+            description: "At least 1 block must have valid content",
             duration: 3000,
           })
           return
@@ -758,7 +758,7 @@ export default function Page() {
         
         // Set all parsed states dynamically
         setPreviewBlockStates(parsedStates)
-        setPreviewLayout("dual")
+        setPreviewLayout("multiple")
         setPreviewOpen(true)
       }
     } catch (error) {
@@ -879,6 +879,15 @@ export default function Page() {
                       // Detectar layout automaticamente baseado na estrutura de data
                       const layoutInfo = detectProjectLayout(projectData.data)
                       
+                      // Force layout based on project type for type2/type3
+                      // Type2 must always be multi-panel even with 1 block
+                      let finalLayoutType: LayoutType = layoutInfo.layoutType
+                      if (projectData.type === "type2" && (layoutInfo.layoutType === "single" || layoutInfo.layoutType === "multiple")) {
+                        finalLayoutType = "multiple"
+                      } else if (projectData.type === "type3") {
+                        finalLayoutType = "sequential"
+                      }
+                      
                       // Extract mode from preferences or default to free-page
                       const projectMode = projectData.preferences?.global?.mode || "free-page"
                       
@@ -886,7 +895,7 @@ export default function Page() {
                       setCurrentProjectId(projectData.id)
                       setCurrentProjectName(projectData.name)
                       setCurrentProjectType(projectData.type)  // tipo do projeto
-                      setCurrentLayout(layoutInfo.layoutType)  // layout detectado
+                      setCurrentLayout(finalLayoutType)  // layout corrigido baseado no tipo
                       setCurrentProjectStorageType(projectData.storageType || "local")
                       setProjectTags(projectData.tags || [])
                       setCurrentProjectMode(projectMode)
@@ -917,12 +926,12 @@ export default function Page() {
                       }
                       
                       // Extract editor states baseado no layout detectado
-                      const states = extractEditorStates(projectData.data, layoutInfo.layoutType)
+                      const states = extractEditorStates(projectData.data, finalLayoutType)
                       
                       // Load editor data based on detected layout
                       setTimeout(() => {
                         try {
-                          if (layoutInfo.isSinglePanel && editorRef.current && states.blocks.b1) {
+                          if (finalLayoutType === "single" && editorRef.current && states.blocks.b1) {
                             // Single panel: load single editor from b1
                             if (!states.blocks.b1.root) {
                               throw new Error("Invalid Lexical format")
@@ -930,7 +939,7 @@ export default function Page() {
                             const editorState = editorRef.current.parseEditorState(JSON.stringify(states.blocks.b1))
                             editorRef.current.setEditorState(editorState)
                             setEditorState(JSON.stringify(states.blocks.b1))
-                          } else if (layoutInfo.isMultiPanel && states.blocks) {
+                          } else if (finalLayoutType === "multiple" && states.blocks) {
                             // Multi-panel layout: load all blocks
                             // Clear existing blockRefs when loading a new project
                             blockRefs.current = {}
@@ -1086,10 +1095,10 @@ export default function Page() {
                       console.error("Failed to save sequential structure:", error)
                     }
                   }, 200)
-                } else if (projectData.layout === "dual") {
-                  // Dual panel
-                  dataString = createProjectData("dual", { blocks: { b1: emptyState, b2: emptyState } })
-                  layoutType = "dual"
+                } else if (projectData.layout === "multiple") {
+                  // Multiple panel
+                  dataString = createProjectData("multiple", { blocks: { b1: emptyState } })
+                  layoutType = "multiple"
                 } else {
                   // Single panel (default)
                   dataString = createProjectData("single", { blocks: { b1: emptyState } })
@@ -1112,11 +1121,10 @@ export default function Page() {
                       editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyStateString))
                     }
                     setEditorState(emptyStateString)
-                  } else if (layoutType === "dual") {
-                    // dual panel - initialize blocks (b1, b2 for now, extensible to b3+)
+                  } else if (layoutType === "multiple") {
+                    // multiple panel - initialize blocks (starts with b1, extensible to b2, b3...)
                     const newBlockStates: Record<string, string> = {
                       b1: emptyStateString,
-                      b2: emptyStateString,
                     }
                     setBlockStates(newBlockStates)
                   }
@@ -1173,6 +1181,52 @@ export default function Page() {
                 onBlockChange={(blockId, newState) => {
                   setBlockStates(prev => ({ ...prev, [blockId]: newState }))
                 }}
+                onBlockAdd={() => {
+                  // Find next block number
+                  const blockNumbers = Object.keys(blockStates).map(key => parseInt(key.slice(1)))
+                  const nextNum = Math.max(...blockNumbers, 0) + 1
+                  const newBlockId = `b${nextNum}`
+                  
+                  // Create empty state
+                  const emptyState = JSON.stringify({
+                    root: {
+                      children: [{
+                        children: [],
+                        direction: null,
+                        format: "",
+                        indent: 0,
+                        type: "paragraph",
+                        version: 1
+                      }],
+                      direction: null,
+                      format: "",
+                      indent: 0,
+                      type: "root",
+                      version: 1
+                    }
+                  })
+                  
+                  // Add new block
+                  setBlockStates(prev => ({ ...prev, [newBlockId]: emptyState }))
+                  
+                  // Initialize ref
+                  blockRefs.current[newBlockId] = null
+                }}
+                onBlockRemove={(blockId) => {
+                  if (Object.keys(blockStates).length <= 1) {
+                    return // Prevent removing last block
+                  }
+                  
+                  // Remove block state
+                  setBlockStates(prev => {
+                    const newStates = { ...prev }
+                    delete newStates[blockId]
+                    return newStates
+                  })
+                  
+                  // Remove ref
+                  delete blockRefs.current[blockId]
+                }}
                 onLoadingChange={(setLoading) => {
                   setLoadingRef.current = setLoading
                 }}
@@ -1218,8 +1272,8 @@ export default function Page() {
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent 
-          className={previewLayout === "dual" ? "max-w-none! p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
-          style={previewLayout === "dual" ? { width: '95vw', maxWidth: '95vw' } : undefined}
+          className={previewLayout === "multiple" ? "max-w-none! p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
+          style={previewLayout === "multiple" ? { width: '95vw', maxWidth: '95vw' } : undefined}
         >
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
@@ -1227,7 +1281,7 @@ export default function Page() {
           {previewLayout === "single" && previewState && (
             <PreviewRenderer serializedState={previewState} />
           )}
-          {previewLayout === "dual" && Object.keys(previewBlockStates).length >= 2 && (
+          {previewLayout === "multiple" && Object.keys(previewBlockStates).length >= 1 && (
             <div className="w-full max-h-[80vh] overflow-y-auto">
               <PreviewRendererType2 blockStates={previewBlockStates} />
             </div>

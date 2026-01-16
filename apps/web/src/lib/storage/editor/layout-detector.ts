@@ -9,7 +9,7 @@
 
 import { isSequentialStructure, parseSequentialStructure, type SequentialPanelStructure } from './panel-structure'
 
-export type LayoutType = "single" | "dual" | "sequential"
+export type LayoutType = "single" | "multiple" | "sequential"
 
 export interface LayoutDetectionResult {
   layoutType: LayoutType
@@ -50,7 +50,7 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
     const blockKeys = Object.keys(parsed).filter(key => /^b\d+$/.test(key))
     if (blockKeys.length >= 2) {
       return {
-        layoutType: "dual",
+        layoutType: "multiple",
         isSinglePanel: false,
         isMultiPanel: true,
         isSequential: false,
@@ -86,18 +86,18 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
 /**
  * Extrai os estados dos editores baseado no layout detectado
  * @param data - String JSON com os dados do projeto
- * @param layoutType - Tipo de layout (single ou dual)
+ * @param layoutType - Tipo de layout (single ou multiple)
  * @returns Objetos com os estados dos editores
  */
 export function extractEditorStates(data: string, layoutType: LayoutType): EditorStates {
   try {
     const parsed = JSON.parse(data)
     
-    if (layoutType === "dual") {
+    if (layoutType === "multiple") {
       // Extract block structure (b1, b2, b3...)
       const blockKeys = Object.keys(parsed).filter(key => /^b\d+$/.test(key))
       
-      if (blockKeys.length >= 2) {
+      if (blockKeys.length >= 1) {
         const blocks: Record<string, any> = {}
         blockKeys.forEach(key => {
           blocks[key] = typeof parsed[key] === 'string' ? JSON.parse(parsed[key]) : parsed[key]
@@ -140,7 +140,7 @@ export function createProjectData(layoutType: LayoutType, states: Partial<Editor
     return JSON.stringify(states)
   }
   
-  if (layoutType === "dual") {
+  if (layoutType === "multiple") {
     const editorStates = states as EditorStates
     
     // If blocks are provided, use them

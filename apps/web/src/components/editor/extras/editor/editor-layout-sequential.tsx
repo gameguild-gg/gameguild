@@ -171,7 +171,7 @@ export function EditorLayoutSequential({
                       {panel.name || `Panel ${panel.order + 1}`}
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                      {panel.type === "single" ? "Single" : "Dual"}
+                      {panel.type === "single" ? "Single" : "Multiple"}
                     </span>
                   </div>
                 </div>
@@ -257,11 +257,11 @@ export function EditorLayoutSequential({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleAddPanelAtPosition("dual", index + 1)}
+                    onClick={() => handleAddPanelAtPosition("multiple", index + 1)}
                     className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
                   >
                     <Plus className="h-4 w-4" />
-                    Add Dual Panel
+                    Add Multiple Panel
                   </Button>
                 </div>
               </div>

@@ -2,12 +2,12 @@
  * Panel Structure System
  * 
  * Nova estrutura que suporta painéis sequenciais (verticais)
- * Cada painel pode ser single ou dual layout
+ * Cada painel pode ser single ou multiple layout
  */
 
 import type { SerializedEditorState } from "lexical"
 
-export type PanelLayoutType = "single" | "dual"
+export type PanelLayoutType = "single" | "multiple"
 
 export interface PanelData {
   id: string
@@ -15,7 +15,7 @@ export interface PanelData {
   name?: string // Nome opcional do painel (ex: "Introdução", "Capítulo 1")
   order: number // Ordem do painel na sequência
   
-  // Blocos do painel (b1 para single, b1+b2 para dual, etc)
+  // Blocos do painel (b1 para single, b1+b2+b3... para multiple, etc)
   blocks: Record<string, SerializedEditorState | string>
 }
 
@@ -59,7 +59,7 @@ export function migrateToSequentialStructure(data: string): SequentialPanelStruc
         panels: [
           {
             id: generatePanelId(),
-            type: Object.keys(blocks).length > 1 ? "dual" : "single",
+            type: Object.keys(blocks).length > 1 ? "multiple" : "single",
             order: 0,
             blocks: Object.entries(blocks).reduce((acc, [key, value]: [string, any]) => {
               acc[key] = typeof value === 'string' ? value : JSON.stringify(value)
