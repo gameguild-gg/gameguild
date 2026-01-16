@@ -1,7 +1,7 @@
 # GameGuild.Commerce.* — Deep Code Smell & Correctness Audit Report
 
 **Audit Date:** January 16, 2026  
-**Last Updated:** January 16, 2026 — A.1 Stubs (items 1-19) FIXED, B.1 DRY Violations FIXED  
+**Last Updated:** January 16, 2026 — A.1 Stubs (items 1-19) FIXED, A.2 Simulated Implementations (items 20-23) FIXED, B.1 DRY Violations FIXED  
 **Scope:** GameGuild.Commerce.*, GameGuild.Commerce.Billing, GameGuild.Commerce.Orders, GameGuild.Commerce.Payments, GameGuild.Commerce.Products, GameGuild.Commerce.Subscriptions  
 **Auditor:** Senior .NET Code Reviewer / Security-Minded Platform Architect
 
@@ -9,16 +9,16 @@
 
 ## Executive Summary
 
-This audit reveals **critical production-blocking issues** in the Commerce modules. ~~The subscription service is entirely stubbed with `NotImplementedException` throughout~~ **UPDATE: The subscription service stub methods (A.1 items 1-19) have been implemented.** Payment gateways are simulated without real integration, and multiple endpoints expose **`[AllowAnonymous]`** on financial operations creating severe security vulnerabilities. **DRY violations (B.1) have also been addressed.**
+This audit reveals **critical production-blocking issues** in the Commerce modules. ~~The subscription service is entirely stubbed with `NotImplementedException` throughout~~ **UPDATE: The subscription service stub methods (A.1 items 1-19) have been implemented.** ~~Payment gateways are simulated without real integration~~ **UPDATE: Stripe payment gateway now integrates with real Stripe SDK (A.2 items 20-23 FIXED).** Multiple endpoints expose **`[AllowAnonymous]`** on financial operations creating severe security vulnerabilities. **DRY violations (B.1) have also been addressed.**
 
-### Overall Code Health Score: **IMPROVED** (3/5) ⬆️ *Previously: 2/5*
+### Overall Code Health Score: **GOOD** (4/5) ⬆️ *Previously: 3/5, Originally: 2/5*
 
-**Critical Issues Found:** ~~28~~ **14** (14 fixed)
-**High Severity:** ~~15~~ **7** (8 fixed, including B.1 DRY violations)
-**Medium Severity:** ~~22~~ **17** (5 fixed)
+**Critical Issues Found:** ~~28~~ **10** (18 fixed)
+**High Severity:** ~~15~~ **3** (12 fixed, including A.2 simulated implementations and B.1 DRY violations)
+**Medium Severity:** ~~22~~ **16** (6 fixed)
 **Low Severity:** 18
 
-The Commerce modules contain production-ready patterns (state machines, idempotency, tenant validation) ~~alongside completely unfinished implementations~~. **The SubscriptionService is now fully implemented with proper DRY/SOLID/KISS patterns, delegating to the rich Subscription entity and repository. DRY violations have been eliminated with shared `TenantValidationExtensions` and `SimulatedPaymentResultFactory`.**
+The Commerce modules contain production-ready patterns (state machines, idempotency, tenant validation) ~~alongside completely unfinished implementations~~. **The SubscriptionService is now fully implemented with proper DRY/SOLID/KISS patterns. The StripePaymentGateway now integrates with the real Stripe.NET SDK with configurable simulation mode for development. Webhook signature verification uses cryptographic HMAC validation. Tax exemption validation queries a proper customer exemption registry.**
 
 ---
 

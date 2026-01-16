@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
@@ -9,16 +10,28 @@ namespace GameGuild.Commerce.Products;
 /// Controller for managing promo codes
 /// </summary>
 [ApiController]
-[Route("api/promo-codes")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/promo-codes")]
+[Tags("promo-codes")]
 [Authorize]
 [RequirePermission(PromoCodesPermission.Keys.Read)]
 public class PromoCodesController(IMediator mediator) : ControllerBase
 {
     /// <summary>
-    /// Get all promo codes (paginated)
+    /// Get all promo codes (paginated) with optional status filter
     /// </summary>
+    /// <param name="status">Filter by status ('active' for active codes only)</param>
+    /// <param name="isActive">Filter by active flag</param>
+    /// <param name="type">Filter by promo code type</param>
+    /// <param name="productId">Filter by product ID</param>
+    /// <param name="searchTerm">Search term</param>
+    /// <param name="skip">Items to skip</param>
+    /// <param name="take">Items to take</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<PagedResult<PromoCodeDto>>> GetPromoCodes(
+        [FromQuery] string? status = null,
         [FromQuery] bool? isActive = null,
         [FromQuery] PromoCodeType? type = null,
         [FromQuery] Guid? productId = null,
@@ -27,21 +40,10 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
         [FromQuery] int take = 50,
         CancellationToken cancellationToken = default)
     {
-        var query = new GetPromoCodesQuery(isActive, type, productId, searchTerm, skip, take);
-        var result = await mediator.Send(query, cancellationToken).ConfigureAwait(false);
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Get active promo codes
-    /// </summary>
-    [HttpGet("active")]
-    [AllowAnonymous]
-    public async Task<ActionResult<IReadOnlyList<PromoCodeDto>>> GetActivePromoCodes(
-        [FromQuery] Guid? productId = null,
-        CancellationToken cancellationToken = default)
-    {
-        var query = new GetActivePromoCodesQuery(productId);
+        // If status=active is passed, filter for active codes
+        var activeFilter = string.Equals(status, "active", StringComparison.OrdinalIgnoreCase) ? true : isActive;
+        
+        var query = new GetPromoCodesQuery(activeFilter, type, productId, searchTerm, skip, take);
         var result = await mediator.Send(query, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
@@ -49,12 +51,14 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
     /// <summary>
     /// Get a promo code by ID
     /// </summary>
-    [HttpGet("{id:guid}")]
+    /// <param name="promoCodeId">The promo code ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpGet("{promoCodeId:guid}")]
     public async Task<ActionResult<PromoCodeDto>> GetPromoCodeById(
-        Guid id,
+        Guid promoCodeId,
         CancellationToken cancellationToken = default)
     {
-        var query = new GetPromoCodeByIdQuery(id);
+        var query = new GetPromoCodeByIdQuery(promoCodeId);
         var result = await mediator.Send(query, cancellationToken).ConfigureAwait(false);
 
         if (result == null)
@@ -95,21 +99,24 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
         );
 
         var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
-        return CreatedAtAction(nameof(GetPromoCodeById), new { id = result.Id }, result);
+        return CreatedAtAction(nameof(GetPromoCodeById), new { promoCodeId = result.Id }, result);
     }
 
     /// <summary>
     /// Update an existing promo code
     /// </summary>
-    [HttpPut("{id:guid}")]
+    /// <param name="promoCodeId">The promo code ID</param>
+    /// <param name="request">Update request</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpPut("{promoCodeId:guid}")]
     [RequirePermission(PromoCodesPermission.Keys.Update)]
     public async Task<ActionResult<PromoCodeDto>> UpdatePromoCode(
-        Guid id,
+        Guid promoCodeId,
         [FromBody] UpdatePromoCodeRequest request,
         CancellationToken cancellationToken = default)
     {
         var command = new UpdatePromoCodeCommand(
-            id,
+            promoCodeId,
             request.Name,
             request.Description,
             request.Type,
@@ -134,13 +141,15 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
     /// <summary>
     /// Delete a promo code
     /// </summary>
-    [HttpDelete("{id:guid}")]
+    /// <param name="promoCodeId">The promo code ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpDelete("{promoCodeId:guid}")]
     [RequirePermission(PromoCodesPermission.Keys.Delete)]
     public async Task<IActionResult> DeletePromoCode(
-        Guid id,
+        Guid promoCodeId,
         CancellationToken cancellationToken = default)
     {
-        var command = new DeletePromoCodeCommand(id);
+        var command = new DeletePromoCodeCommand(promoCodeId);
         await mediator.Send(command, cancellationToken).ConfigureAwait(false);
         return NoContent();
     }
@@ -148,7 +157,7 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
     /// <summary>
     /// Validate a promo code
     /// </summary>
-    [HttpPost("validate")]
+    [HttpPost(":validate")]
     [AllowAnonymous]
     public async Task<ActionResult<PromoCodeValidationResult>> ValidatePromoCode(
         [FromBody] ValidatePromoCodeRequest request,
@@ -168,7 +177,7 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
     /// <summary>
     /// Apply promo codes to an order
     /// </summary>
-    [HttpPost("apply")]
+    [HttpPost(":apply")]
     [AllowAnonymous]
     public async Task<ActionResult<PromoCodeApplicationResult>> ApplyPromoCodes(
         [FromBody] ApplyPromoCodesRequest request,

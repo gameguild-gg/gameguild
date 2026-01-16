@@ -498,41 +498,44 @@ All violations in this section have been resolved:
 
 ---
 
-## 12. PromoCodes Endpoints
+## 12. PromoCodes Endpoints ✅ DONE
 
-### Current Endpoints
+### ~~Current Endpoints~~ FIXED
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/api/promo-codes` | List promo codes | ⚠️ Needs version |
-| POST | `/api/promo-codes` | Create promo code | ⚠️ Needs version |
-| GET | `/api/promo-codes/active` | List active codes | ❌ Violation |
-| GET | `/api/promo-codes/{id}` | Get promo code | ⚠️ Needs version |
-| PUT | `/api/promo-codes/{id}` | Update promo code | ⚠️ Needs version |
-| DELETE | `/api/promo-codes/{id}` | Delete promo code | ⚠️ Needs version |
-| POST | `/api/promo-codes/validate` | Validate code | ❌ Violation |
-| POST | `/api/promo-codes/apply` | Apply code | ❌ Violation |
+| ~~GET~~ | ~~`/api/promo-codes`~~ | ~~List promo codes~~ | ✅ `GET /v1/promo-codes` |
+| ~~POST~~ | ~~`/api/promo-codes`~~ | ~~Create promo code~~ | ✅ `POST /v1/promo-codes` |
+| ~~GET~~ | ~~`/api/promo-codes/active`~~ | ~~List active codes~~ | ✅ `GET /v1/promo-codes?status=active` |
+| ~~GET~~ | ~~`/api/promo-codes/{id}`~~ | ~~Get promo code~~ | ✅ `GET /v1/promo-codes/{promoCodeId}` |
+| ~~PUT~~ | ~~`/api/promo-codes/{id}`~~ | ~~Update promo code~~ | ✅ `PUT /v1/promo-codes/{promoCodeId}` |
+| ~~DELETE~~ | ~~`/api/promo-codes/{id}`~~ | ~~Delete promo code~~ | ✅ `DELETE /v1/promo-codes/{promoCodeId}` |
+| ~~POST~~ | ~~`/api/promo-codes/validate`~~ | ~~Validate code~~ | ✅ `POST /v1/promo-codes:validate` |
+| ~~POST~~ | ~~`/api/promo-codes/apply`~~ | ~~Apply code~~ | ✅ `POST /v1/promo-codes:apply` |
 
-### Violations
+### ~~Violations~~ FIXED
 
-1. **Missing version prefix** - All endpoints need `v1`
-2. **Path-based status filter** - `/active` should be query parameter
-3. **Path-based actions** - `validate`, `apply` should use colon syntax
+1. ~~**Missing version prefix** - All endpoints need `v1`~~ ✅ FIXED
+2. ~~**Path-based status filter** - `/active` should be query parameter~~ ✅ FIXED
+3. ~~**Path-based actions** - `validate`, `apply` should use colon syntax~~ ✅ FIXED
 
-### Required Fixes
+### ~~Required Fixes~~ FIXED
 
-| Priority | Current | Fixed | Reason |
-|----------|---------|-------|--------|
-| P1 | `GET /api/promo-codes` | `GET /v1/promo-codes` | Version prefix |
-| P1 | `POST /api/promo-codes` | `POST /v1/promo-codes` | Version prefix |
-| P0 | `GET /api/promo-codes/active` | `GET /v1/promo-codes?status=active` | Query parameter |
-| P1 | `GET /api/promo-codes/{id}` | `GET /v1/promo-codes/{promoCodeId}` | Version + consistent naming |
-| P1 | `PUT /api/promo-codes/{id}` | `PUT /v1/promo-codes/{promoCodeId}` | Version + consistent naming |
-| P1 | `DELETE /api/promo-codes/{id}` | `DELETE /v1/promo-codes/{promoCodeId}` | Version + consistent naming |
-| P0 | `POST /api/promo-codes/validate` | `POST /v1/promo-codes:validate` | Custom action syntax |
-| P0 | `POST /api/promo-codes/apply` | `POST /v1/promo-codes:apply` | Custom action syntax |
+| Priority | Current | Fixed | Reason | Status |
+|----------|---------|-------|--------|--------|
+| ~~P1~~ | ~~`GET /api/promo-codes`~~ | `GET /v1/promo-codes` | Version prefix | ✅ DONE |
+| ~~P1~~ | ~~`POST /api/promo-codes`~~ | `POST /v1/promo-codes` | Version prefix | ✅ DONE |
+| ~~P0~~ | ~~`GET /api/promo-codes/active`~~ | `GET /v1/promo-codes?status=active` | Query parameter | ✅ DONE |
+| ~~P1~~ | ~~`GET /api/promo-codes/{id}`~~ | `GET /v1/promo-codes/{promoCodeId}` | Version + consistent naming | ✅ DONE |
+| ~~P1~~ | ~~`PUT /api/promo-codes/{id}`~~ | `PUT /v1/promo-codes/{promoCodeId}` | Version + consistent naming | ✅ DONE |
+| ~~P1~~ | ~~`DELETE /api/promo-codes/{id}`~~ | `DELETE /v1/promo-codes/{promoCodeId}` | Version + consistent naming | ✅ DONE |
+| ~~P0~~ | ~~`POST /api/promo-codes/validate`~~ | `POST /v1/promo-codes:validate` | Custom action syntax | ✅ DONE |
+| ~~P0~~ | ~~`POST /api/promo-codes/apply`~~ | `POST /v1/promo-codes:apply` | Custom action syntax | ✅ DONE |
 
-### Missing Endpoints (Must Add)
+**Changes Applied:**
+- [PromoCodesController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Products/Controllers/PromoCodesController.cs): Added `ApiVersion("1.0")`, route updated to `v{version}/promo-codes`, merged `/active` into main GET with `?status=active`, changed `{id}` to `{promoCodeId}`, colon syntax for `:validate` and `:apply`
+
+### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|

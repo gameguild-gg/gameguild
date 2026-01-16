@@ -1,5 +1,4 @@
 using GameGuild.Commerce.Payments;
-using GameGuild.Commerce.Subscriptions.Services;
 using GameGuild.ValueObjects;
 
 namespace GameGuild.Commerce.Subscriptions;
