@@ -1,19 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Security.Claims;
-using System.Text;
-using System.Text.Encodings.Web;
 using FluentAssertions;
-using GameGuild.API.Database;
-using GameGuild.Identity.Context.Actors;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using GameGuild.Resources.IntegrationTests.Infrastructure;
 using Xunit;
 
 namespace GameGuild.Resources.IntegrationTests.Security;
@@ -25,21 +13,17 @@ namespace GameGuild.Resources.IntegrationTests.Security;
 /// - Cross-tenant access attempts receive 403 Forbidden
 /// - User ownership validation works correctly
 /// 
-/// NOTE: These tests require a fully configured API environment with a real database.
-/// The EF Core InMemory provider cannot handle the complex model navigation configurations.
-/// These tests should be run against a Testcontainers PostgreSQL instance or in CI with a real database.
-/// 
-/// To run these tests, set environment variable: USE_INMEMORY_DATABASE=false
-/// and ensure a PostgreSQL database is available.
+/// Uses Testcontainers to spin up a real PostgreSQL database for realistic integration testing.
 /// </summary>
 [Trait("Category", "Integration")]
 [Trait("Security", "Authorization")]
 [Trait("Infrastructure", "Database")]
-public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
+[Collection("PostgreSql")]
+public class ResourcesAuthorizationIntegrationTests : IAsyncLifetime, IDisposable
 {
-    private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
-    private readonly HttpClient _anonymousClient;
-    private readonly bool _skipDueToInfrastructure;
+    private readonly PostgreSqlTestFixture _fixture;
+    private PostgreSqlWebApplicationFactory? _factory;
+    private HttpClient? _anonymousClient;
 
     // Test tenant and user IDs
     private static readonly Guid TenantA = Guid.Parse("11111111-1111-1111-1111-111111111111");
@@ -47,58 +31,26 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     private static readonly Guid UserA = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static readonly Guid UserB = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
 
-    public ResourcesAuthorizationIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
+    public ResourcesAuthorizationIntegrationTests(PostgreSqlTestFixture fixture)
     {
-        // Check if a real database is available (not InMemory)
-        var useInMemory = Environment.GetEnvironmentVariable("USE_INMEMORY_DATABASE") != "false";
-        _skipDueToInfrastructure = useInMemory;
-        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
+        _fixture = fixture;
+    }
 
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-            builder.ConfigureTestServices(services =>
-            {
-                // Remove all existing DbContext registrations
-                var descriptorsToRemove = services
-                    .Where(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>) ||
-                                d.ServiceType == typeof(ApplicationDbContext) ||
-                                d.ServiceType.FullName?.Contains("EntityFramework") == true ||
-                                d.ImplementationType?.FullName?.Contains("Npgsql") == true)
-                    .ToList();
-
-                foreach (var descriptor in descriptorsToRemove)
-                {
-                    services.Remove(descriptor);
-                }
-
-                // Add in-memory database for testing
-                services.AddDbContext<ApplicationDbContext>(options =>
-                {
-                    options.UseInMemoryDatabase($"ResourcesAuthTestDb_{Guid.NewGuid()}");
-                });
-
-                // Add test authentication scheme
-                services.AddAuthentication(options =>
-                {
-                    options.DefaultAuthenticateScheme = "TestScheme";
-                    options.DefaultChallengeScheme = "TestScheme";
-                })
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("TestScheme", _ => { });
-
-                // Register IActorContextAccessor for AuthorizationBehavior (must be singleton)
-                services.AddSingleton<IActorContextAccessor, ActorContextAccessor>();
-
-                services.AddHttpLogging(_ => { });
-            });
-        });
-
+    public Task InitializeAsync()
+    {
+        _factory = new PostgreSqlWebApplicationFactory(_fixture.ConnectionString);
         _anonymousClient = _factory.CreateClient();
+        return Task.CompletedTask;
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 
     private HttpClient CreateAuthenticatedClient(Guid userId, Guid tenantId, bool isSystemAdmin = false)
     {
-        var client = _factory.CreateClient();
+        var client = _factory!.CreateClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
             "TestScheme", 
             $"{userId}|{tenantId}|{isSystemAdmin}");
@@ -110,11 +62,8 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task TenantQuotas_Anonymous_Returns401()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Act
-        var response = await _anonymousClient.GetAsync($"/v1/tenants/{TenantA}/quotas");
+        var response = await _anonymousClient!.GetAsync($"/v1/tenants/{TenantA}/quotas");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -123,9 +72,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task TenantQuotas_AuthenticatedWrongTenant_Returns403()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Arrange - User from TenantA trying to access TenantB
         using var client = CreateAuthenticatedClient(UserA, TenantA);
 
@@ -139,9 +85,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task TenantQuotas_AuthenticatedCorrectTenant_Succeeds()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Arrange
         using var client = CreateAuthenticatedClient(UserA, TenantA);
 
@@ -160,11 +103,8 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task TenantResources_Anonymous_Returns401()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Act
-        var response = await _anonymousClient.GetAsync($"/v1/tenants/{TenantA}/resources/usage-records");
+        var response = await _anonymousClient!.GetAsync($"/v1/tenants/{TenantA}/resources/usage-records");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -173,9 +113,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task TenantResources_CrossTenantAccess_Returns403()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Arrange
         using var client = CreateAuthenticatedClient(UserA, TenantA);
 
@@ -193,11 +130,8 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task UserQuotas_Anonymous_Returns401()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Act
-        var response = await _anonymousClient.GetAsync($"/v1/users/{UserA}/quotas");
+        var response = await _anonymousClient!.GetAsync($"/v1/users/{UserA}/quotas");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -206,9 +140,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task UserQuotas_OtherUserAccess_Returns403()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Arrange - UserA trying to access UserB's quotas
         using var client = CreateAuthenticatedClient(UserA, TenantA);
 
@@ -222,9 +153,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task UserQuotas_OwnAccess_Succeeds()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Arrange
         using var client = CreateAuthenticatedClient(UserA, TenantA);
 
@@ -243,11 +171,8 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task ResourcesAdmin_Anonymous_Returns401()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Act - Admin endpoints require authentication
-        var response = await _anonymousClient.GetAsync("/v1/resources/usage-by-type/0?startDate=2024-01-01&endDate=2024-12-31");
+        var response = await _anonymousClient!.GetAsync("/v1/resources/usage-by-type/0?startDate=2024-01-01&endDate=2024-12-31");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -256,9 +181,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task ResourcesAdmin_NonAdmin_Returns403()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Arrange - Regular user (not admin)
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: false);
 
@@ -272,9 +194,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task ResourcesAdmin_SystemAdmin_Succeeds()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Arrange
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: true);
 
@@ -293,9 +212,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task SystemAdmin_CanAccessAnyTenant()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Arrange - System admin from TenantA accessing TenantB
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: true);
 
@@ -309,9 +225,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task SystemAdmin_CanAccessAnyUser()
     {
-        if (_skipDueToInfrastructure)
-            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
-
         // Arrange
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: true);
 
@@ -327,71 +240,6 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     public void Dispose()
     {
         _anonymousClient?.Dispose();
-    }
-}
-
-/// <summary>
-/// Test authentication handler that creates claims from the Authorization header.
-/// Format: "TestScheme userId|tenantId|isSystemAdmin"
-/// </summary>
-public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions>
-{
-    public TestAuthHandler(
-        IOptionsMonitor<AuthenticationSchemeOptions> options,
-        ILoggerFactory logger,
-        UrlEncoder encoder)
-        : base(options, logger, encoder)
-    {
-    }
-
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
-    {
-        if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
-        {
-            return Task.FromResult(AuthenticateResult.NoResult());
-        }
-
-        var headerValue = authHeader.ToString();
-        if (!headerValue.StartsWith("TestScheme "))
-        {
-            return Task.FromResult(AuthenticateResult.NoResult());
-        }
-
-        try
-        {
-            var parts = headerValue["TestScheme ".Length..].Split('|');
-            if (parts.Length != 3)
-            {
-                return Task.FromResult(AuthenticateResult.Fail("Invalid test auth format"));
-            }
-
-            var userId = parts[0];
-            var tenantId = parts[1];
-            var isSystemAdmin = bool.Parse(parts[2]);
-
-            var claims = new List<Claim>
-            {
-                new(ClaimTypes.NameIdentifier, userId),
-                new("sub", userId),
-                new("tenant_id", tenantId),
-                new("tid", tenantId)
-            };
-
-            if (isSystemAdmin)
-            {
-                claims.Add(new Claim(ClaimTypes.Role, "SystemAdmin"));
-                claims.Add(new Claim("role", "SystemAdmin"));
-            }
-
-            var identity = new ClaimsIdentity(claims, Scheme.Name);
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, Scheme.Name);
-
-            return Task.FromResult(AuthenticateResult.Success(ticket));
-        }
-        catch (Exception ex)
-        {
-            return Task.FromResult(AuthenticateResult.Fail(ex));
-        }
+        _factory?.Dispose();
     }
 }

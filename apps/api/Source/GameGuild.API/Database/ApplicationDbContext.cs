@@ -50,10 +50,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GameGuild.Commerce.Subscriptions.Subscription).Assembly, 
             type => type.Namespace?.StartsWith("GameGuild.Commerce.Subscriptions.Data.Configurations") == true);
 
-        // Apply Payments module configurations
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(GameGuild.Commerce.Payments.TaxJurisdiction).Assembly, 
-            type => type.Namespace?.StartsWith("GameGuild.Commerce.Payments") == true && 
-                    type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEntityTypeConfiguration<>)));
+        // Apply Payments module configurations - only tax-related configurations
+        modelBuilder.ApplyConfiguration(new GameGuild.Commerce.Payments.TaxJurisdictionConfiguration());
+        modelBuilder.ApplyConfiguration(new GameGuild.Commerce.Payments.TaxRateConfiguration());
+        modelBuilder.ApplyConfiguration(new GameGuild.Commerce.Payments.TaxRuleConfiguration());
 
         // NOTE: The following modules are currently disabled. Uncomment when enabling them.
         // // Apply Resources module configurations (using automatic discovery)

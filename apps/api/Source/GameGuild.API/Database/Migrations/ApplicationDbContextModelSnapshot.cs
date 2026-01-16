@@ -143,7 +143,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("orders");
+                    b.ToTable("orders", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Orders.OrderAuditLog", b =>
@@ -211,7 +211,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("order_audit_logs");
+                    b.ToTable("order_audit_logs", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Orders.OrderLineItem", b =>
@@ -304,7 +304,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserProductId");
 
-                    b.ToTable("order_line_items");
+                    b.ToTable("order_line_items", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.PricingRule", b =>
@@ -404,7 +404,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("StartDate");
 
-                    b.ToTable("pricing_rules");
+                    b.ToTable("pricing_rules", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.PricingTier", b =>
@@ -471,7 +471,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("pricing_tiers");
+                    b.ToTable("pricing_tiers", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.Product", b =>
@@ -532,7 +532,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("Type");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.ProductBundleItem", b =>
@@ -586,7 +586,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("BundleProductId", "IncludedProductId")
                         .IsUnique();
 
-                    b.ToTable("product_bundle_items");
+                    b.ToTable("product_bundle_items", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.ProductCommissionConfig", b =>
@@ -647,7 +647,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("ProductId")
                         .IsUnique();
 
-                    b.ToTable("product_commission_configs");
+                    b.ToTable("product_commission_configs", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.ProductPricing", b =>
@@ -717,7 +717,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("SaleStartDate");
 
-                    b.ToTable("product_pricing");
+                    b.ToTable("product_pricing", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.ProductPricingVersion", b =>
@@ -787,7 +787,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("ProductPricingId", "PriceVersion")
                         .IsUnique();
 
-                    b.ToTable("product_pricing_versions");
+                    b.ToTable("product_pricing_versions", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.ProductSubscriptionPlan", b =>
@@ -863,7 +863,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("product_subscription_plans");
+                    b.ToTable("product_subscription_plans", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.PromoCode", b =>
@@ -965,7 +965,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("ValidUntil");
 
-                    b.ToTable("promo_codes");
+                    b.ToTable("promo_codes", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.PromoCodeUse", b =>
@@ -1007,7 +1007,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("promo_code_uses");
+                    b.ToTable("promo_code_uses", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.PromoStackingRule", b =>
@@ -1083,7 +1083,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("Priority");
 
-                    b.ToTable("promo_stacking_rules");
+                    b.ToTable("promo_stacking_rules", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Products.UserProduct", b =>
@@ -1184,7 +1184,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("UserId", "ProductId")
                         .IsUnique();
 
-                    b.ToTable("user_products");
+                    b.ToTable("user_products", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Subscriptions.Subscription", b =>
@@ -1312,7 +1312,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId", "Status");
 
-                    b.ToTable("Subscriptions");
+                    b.ToTable("Subscriptions", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Subscriptions.SubscriptionPlan", b =>
@@ -1414,7 +1414,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("SubscriptionPlans");
+                    b.ToTable("SubscriptionPlans", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authentication.AuthenticationAttempt", b =>
@@ -2456,7 +2456,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("AbacPolicies");
+                    b.ToTable("AbacPolicies", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.AccessControlListEntry", b =>
@@ -2536,7 +2536,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId", "ResourceType", "ResourceId", "PrincipalType", "PrincipalId")
                         .IsUnique();
 
-                    b.ToTable("AccessControlListEntries");
+                    b.ToTable("AccessControlListEntries", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.AccessReviewCampaign", b =>
@@ -2621,7 +2621,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("StartDate", "EndDate");
 
-                    b.ToTable("AccessReviewCampaigns");
+                    b.ToTable("AccessReviewCampaigns", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.AccessReviewItem", b =>
@@ -2689,7 +2689,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("SubjectUserId");
 
-                    b.ToTable("AccessReviewItems");
+                    b.ToTable("AccessReviewItems", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.ConditionalPolicy", b =>
@@ -2760,7 +2760,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("ConditionalPolicies");
+                    b.ToTable("ConditionalPolicies", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.DataMaskingRule", b =>
@@ -2838,7 +2838,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("DataMaskingRules");
+                    b.ToTable("DataMaskingRules", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.DelegatedAdminScope", b =>
@@ -2929,7 +2929,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("StartsAt", "ExpiresAt");
 
-                    b.ToTable("DelegatedAdminScopes");
+                    b.ToTable("DelegatedAdminScopes", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.DynamicRole", b =>
@@ -3014,7 +3014,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId", "Name")
                         .IsUnique();
 
-                    b.ToTable("DynamicRole");
+                    b.ToTable("DynamicRole", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.DynamicRoleAssignment", b =>
@@ -3078,7 +3078,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("UserId", "RoleId", "TenantId")
                         .IsUnique();
 
-                    b.ToTable("DynamicRoleAssignment");
+                    b.ToTable("DynamicRoleAssignment", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.JitElevationRequest", b =>
@@ -3161,7 +3161,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("JitElevationRequests");
+                    b.ToTable("JitElevationRequests", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.PermissionDelegation", b =>
@@ -3229,7 +3229,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("PermissionDelegations");
+                    b.ToTable("PermissionDelegations", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.PermissionTemplate", b =>
@@ -3294,7 +3294,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex(new[] { "Name" }, "IX_PermissionTemplates_Name")
                         .IsUnique();
 
-                    b.ToTable("PermissionTemplates");
+                    b.ToTable("PermissionTemplates", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.PolicyDefinitionEntity", b =>
@@ -3380,7 +3380,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("PolicyName", "TenantId")
                         .IsUnique();
 
-                    b.ToTable("PolicyDefinitions");
+                    b.ToTable("PolicyDefinitions", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.ResourceInvitation", b =>
@@ -3476,7 +3476,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId", "ResourceType", "ResourceId");
 
-                    b.ToTable("ResourceInvitation");
+                    b.ToTable("ResourceInvitation", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.ResourceUserPermission", b =>
@@ -3564,7 +3564,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId", "UserId", "ResourceType", "ResourceId");
 
-                    b.ToTable("ResourceUserPermission");
+                    b.ToTable("ResourceUserPermission", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.SoDRule", b =>
@@ -3638,7 +3638,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("SoDRules");
+                    b.ToTable("SoDRules", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.SoDViolation", b =>
@@ -3715,7 +3715,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SoDViolations");
+                    b.ToTable("SoDViolations", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.TenantPermission", b =>
@@ -3792,7 +3792,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex(new[] { "UserId", "TenantId" }, "IX_TenantPermissions_User_Tenant")
                         .IsUnique();
 
-                    b.ToTable("TenantPermissions");
+                    b.ToTable("TenantPermissions", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.TenantSecurityVersion", b =>
@@ -3834,7 +3834,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("TenantSecurityVersions");
+                    b.ToTable("TenantSecurityVersions", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Tenants.Tenant", b =>
@@ -3899,7 +3899,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenants", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Tenants.TenantDomain", b =>
@@ -3951,7 +3951,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TopLevelDomain", "Subdomain")
                         .IsUnique();
 
-                    b.ToTable("TenantDomains");
+                    b.ToTable("TenantDomains", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Tenants.TenantMember", b =>
@@ -4017,7 +4017,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("UserId", "TenantId")
                         .IsUnique();
 
-                    b.ToTable("TenantMembers");
+                    b.ToTable("TenantMembers", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Tenants.TenantMetadata", b =>
@@ -4089,7 +4089,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("TenantMetadata");
+                    b.ToTable("TenantMetadata", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Tenants.TenantSettings", b =>
@@ -4169,7 +4169,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("TenantSettings");
+                    b.ToTable("TenantSettings", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Tenants.TenantStatistics", b =>
@@ -4231,7 +4231,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("TenantStatistics");
+                    b.ToTable("TenantStatistics", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Tenants.UsageTracking", b =>
@@ -4287,7 +4287,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("TenantId", "Date");
 
-                    b.ToTable("UsageTracking");
+                    b.ToTable("UsageTracking", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Users.User", b =>
@@ -4362,7 +4362,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Users.UserMetadata", b =>
@@ -4416,7 +4416,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserMetadata");
+                    b.ToTable("UserMetadata", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Users.UserNotification", b =>
@@ -4510,7 +4510,7 @@ namespace GameGuild.API.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserNotifications");
+                    b.ToTable("UserNotifications", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Users.UserPreferences", b =>
@@ -4570,7 +4570,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserPreferences");
+                    b.ToTable("UserPreferences", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Users.UserProfile", b =>
@@ -4650,7 +4650,7 @@ namespace GameGuild.API.Database.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserProfiles");
+                    b.ToTable("UserProfiles", (string)null);
                 });
 
             modelBuilder.Entity("GameGuild.Commerce.Orders.Order", b =>
@@ -4878,7 +4878,7 @@ namespace GameGuild.API.Database.Migrations
 
                             b1.HasKey("SubscriptionId");
 
-                            b1.ToTable("Subscriptions");
+                            b1.ToTable("Subscriptions", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("SubscriptionId");
