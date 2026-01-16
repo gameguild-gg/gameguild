@@ -10,7 +10,7 @@ namespace GameGuild.Commerce.Payments;
 [Index(nameof(PricingRuleId))]
 [Index(nameof(MinQuantity))]
 [Index(nameof(MaxQuantity))]
-public abstract class PricingTier : EntityBase
+public class PricingTier : EntityBase
 {
     /// <summary>Default constructor</summary>
     public PricingTier() { }

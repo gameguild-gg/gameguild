@@ -27,7 +27,7 @@ public class SubscriptionPlanRepository(IApplicationDbContext context)
 
     public async Task<IEnumerable<SubscriptionPlan>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
-        return await Query.Where(p => !p.IsDeleted).OrderBy(p => p.SortOrder).ToListAsync(cancellationToken).ConfigureAwait(false);
+        return await Query.Where(p => p.DeletedAt == null).OrderBy(p => p.SortOrder).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public new async Task<IEnumerable<SubscriptionPlan>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -37,13 +37,13 @@ public class SubscriptionPlanRepository(IApplicationDbContext context)
 
     public async Task<IEnumerable<SubscriptionPlan>> GetFeaturedAsync(CancellationToken cancellationToken = default)
     {
-        return await Query.Where(p => p.IsFeatured && !p.IsDeleted).OrderBy(p => p.SortOrder).ToListAsync(cancellationToken).ConfigureAwait(false);
+        return await Query.Where(p => p.IsFeatured && p.DeletedAt == null).OrderBy(p => p.SortOrder).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<SubscriptionPlan>> SearchByNameAsync(string searchTerm, CancellationToken cancellationToken = default)
     {
         return await Query
-            .Where(p => !p.IsDeleted && (p.Name.Contains(searchTerm) || (p.Description != null && p.Description.Contains(searchTerm))))
+            .Where(p => p.DeletedAt == null && (p.Name.Contains(searchTerm) || (p.Description != null && p.Description.Contains(searchTerm))))
             .OrderBy(p => p.SortOrder)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -52,7 +52,7 @@ public class SubscriptionPlanRepository(IApplicationDbContext context)
     public async Task<IEnumerable<SubscriptionPlan>> GetByPriceRangeAsync(long minPriceInCents, long maxPriceInCents, CancellationToken cancellationToken = default)
     {
         return await Query
-            .Where(p => !p.IsDeleted && p.MonthlyPriceInCents >= minPriceInCents && p.MonthlyPriceInCents <= maxPriceInCents)
+            .Where(p => p.DeletedAt == null && p.MonthlyPriceInCents >= minPriceInCents && p.MonthlyPriceInCents <= maxPriceInCents)
             .OrderBy(p => p.MonthlyPriceInCents)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -107,7 +107,7 @@ public class SubscriptionPlanRepository(IApplicationDbContext context)
 
         if (!includeDeleted)
         {
-            query = query.Where(p => !p.IsDeleted);
+            query = query.Where(p => p.DeletedAt == null);
         }
 
         if (!string.IsNullOrWhiteSpace(searchTerm))

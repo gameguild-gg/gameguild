@@ -13,7 +13,7 @@ namespace GameGuild.Commerce.Payments;
 [Index(nameof(StartDate))]
 [Index(nameof(EndDate))]
 [Index(nameof(Priority))]
-public abstract class PricingRule : EntityBase
+public class PricingRule : EntityBase
 {
     /// <summary>Default constructor</summary>
     public PricingRule() { }

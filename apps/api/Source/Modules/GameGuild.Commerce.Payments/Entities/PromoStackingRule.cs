@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Payments;
 [Index(nameof(PromoCodeId))]
 [Index(nameof(StackBehavior))]
 [Index(nameof(Priority))]
-public abstract class PromoStackingRule : EntityBase
+public class PromoStackingRule : EntityBase
 {
     /// <summary>Default constructor</summary>
     public PromoStackingRule() { }

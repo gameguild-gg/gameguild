@@ -332,8 +332,45 @@ public static class ServiceCollectionExtensions
             authzOptions.AddPolicy("RequireUserRole", policy => policy.RequireRole("User", "Admin"));
             authzOptions.AddPolicy("RequireTenantAccess", policy => policy.RequireClaim("TenantId"));
             
-            // Additional admin/authentication policies
+            // Authentication policies
             authzOptions.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
+            authzOptions.AddPolicy("Anonymous", policy => policy.RequireAssertion(_ => true)); // Always allow
+            
+            // Tenant policies (require authenticated user and tenant context)
+            authzOptions.AddPolicy("TenantMember", policy => policy.RequireAuthenticatedUser().RequireClaim("TenantId"));
+            authzOptions.AddPolicy("TenantAdmin", policy => policy.RequireRole("Admin").RequireClaim("TenantId"));
+            
+            // Admin policies
+            authzOptions.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+            authzOptions.AddPolicy("SecureAdmin", policy => policy.RequireRole("Admin")); // TODO: Add MFA requirement
+            
+            // User management policies (require authenticated user)
+            authzOptions.AddPolicy("Users.Read", policy => policy.RequireAuthenticatedUser());
+            authzOptions.AddPolicy("Users.Create", policy => policy.RequireRole("Admin"));
+            authzOptions.AddPolicy("Users.Update", policy => policy.RequireRole("Admin"));
+            authzOptions.AddPolicy("Users.Delete", policy => policy.RequireRole("Admin"));
+            authzOptions.AddPolicy("Users.Admin", policy => policy.RequireRole("Admin"));
+            authzOptions.AddPolicy("Users.Purge", policy => policy.RequireRole("Admin"));
+            authzOptions.AddPolicy("Users.ReadSelf", policy => policy.RequireAuthenticatedUser());
+            authzOptions.AddPolicy("Users.EditSelf", policy => policy.RequireAuthenticatedUser());
+            authzOptions.AddPolicy("Users.DeleteSelf", policy => policy.RequireAuthenticatedUser());
+            
+            // Project policies (require authenticated user)
+            authzOptions.AddPolicy("Project.Read", policy => policy.RequireAuthenticatedUser());
+            authzOptions.AddPolicy("Project.Edit", policy => policy.RequireAuthenticatedUser());
+            authzOptions.AddPolicy("Project.Delete", policy => policy.RequireAuthenticatedUser());
+            authzOptions.AddPolicy("Project.Owner", policy => policy.RequireAuthenticatedUser());
+            
+            // Content policies
+            authzOptions.AddPolicy("Content.Read", policy => policy.RequireAuthenticatedUser());
+            authzOptions.AddPolicy("Content.Edit", policy => policy.RequireAuthenticatedUser());
+            
+            // Course policies
+            authzOptions.AddPolicy("Course.Read", policy => policy.RequireAuthenticatedUser());
+            authzOptions.AddPolicy("Course.Manage", policy => policy.RequireAuthenticatedUser());
+            
+            // Document policies
+            authzOptions.AddPolicy("Document.Edit", policy => policy.RequireAuthenticatedUser());
         });
 
         return services;

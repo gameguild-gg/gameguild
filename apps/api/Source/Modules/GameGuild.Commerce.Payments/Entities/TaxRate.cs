@@ -12,7 +12,7 @@ namespace GameGuild.Commerce.Payments;
 [Index(nameof(IsActive))]
 [Index(nameof(EffectiveFrom))]
 [Index(nameof(EffectiveTo))]
-public abstract class TaxRate : EntityBase
+public class TaxRate : EntityBase
 {
     /// <summary>Default constructor</summary>
     public TaxRate() { }
