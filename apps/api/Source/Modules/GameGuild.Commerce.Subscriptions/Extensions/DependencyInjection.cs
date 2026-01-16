@@ -1,3 +1,4 @@
+using GameGuild.Commerce.Payments;
 using GameGuild.CQRS;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,6 +22,9 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionBillingService>(sp => sp.GetRequiredService<SubscriptionService>());
         services.AddScoped<ISubscriptionQueryService>(sp => sp.GetRequiredService<SubscriptionService>());
         services.AddScoped<ISubscriptionExternalIdService>(sp => sp.GetRequiredService<SubscriptionService>());
+        
+        // Register Plan Pricing Resolver for cross-module pricing lookups (Payments module integration)
+        services.AddScoped<IPlanPricingResolver, SubscriptionPlanPricingResolver>();
         
         // Register Command Handlers (only existing ones)
         services.AddScoped<ICommandHandler<ActivateSubscriptionCommand>, ActivateSubscriptionCommandHandler>();

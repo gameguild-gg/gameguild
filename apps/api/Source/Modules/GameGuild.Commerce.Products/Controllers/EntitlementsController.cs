@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,17 +9,46 @@ namespace GameGuild.Commerce.Products;
 /// Controller for managing product entitlements
 /// </summary>
 [ApiController]
-[Route("api/entitlements")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/entitlements")]
+[Tags("entitlements")]
 [Authorize]
 public class EntitlementsController(IEntitlementService entitlementService) : ControllerBase
 {
     /// <summary>
+    /// List entitlements with optional status filter
+    /// </summary>
+    /// <param name="status">Filter by status (e.g., 'expiring', 'active', 'expired')</param>
+    /// <param name="days">Number of days for expiring filter (default: 7)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpGet]
+    [RequirePermission(EntitlementsPermission.Keys.ReadAll)]
+    public async Task<ActionResult<IEnumerable<EntitlementInfoDto>>> ListEntitlements(
+        [FromQuery] string? status = null,
+        [FromQuery] int days = 7,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.Equals(status, "expiring", StringComparison.OrdinalIgnoreCase))
+        {
+            var expiringEntitlements = await entitlementService.GetExpiringEntitlementsAsync(
+                days,
+                cancellationToken).ConfigureAwait(false);
+            return Ok(expiringEntitlements.Select(MapToDto));
+        }
+
+        // TODO: Implement full list with other status filters
+        return Ok(Enumerable.Empty<EntitlementInfoDto>());
+    }
+
+    /// <summary>
     /// Check if current user has access to a product
     /// </summary>
-    [HttpGet("check/{productId:guid}")]
+    /// <param name="productId">Product ID to check access for</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpGet(":check")]
     [RequirePermission(EntitlementsPermission.Keys.ReadSelf)]
     public async Task<ActionResult<EntitlementCheckResult>> CheckAccess(
-        Guid productId,
+        [FromQuery] Guid productId,
         CancellationToken cancellationToken = default)
     {
         var hasAccess = await entitlementService.HasAccessAsync(
@@ -32,7 +62,7 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     /// <summary>
     /// Check if current user has access to multiple products
     /// </summary>
-    [HttpPost("check-multiple")]
+    [HttpPost(":check-batch")]
     [RequirePermission(EntitlementsPermission.Keys.ReadSelf)]
     public async Task<ActionResult<IDictionary<Guid, bool>>> CheckMultipleAccess(
         [FromBody] CheckMultipleAccessRequest request,
@@ -47,40 +77,9 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     }
 
     /// <summary>
-    /// Get current user's entitlements
+    /// Grant entitlement to a user (create)
     /// </summary>
-    [HttpGet("my-entitlements")]
-    [RequirePermission(EntitlementsPermission.Keys.ReadSelf)]
-    public async Task<ActionResult<IEnumerable<EntitlementInfoDto>>> GetMyEntitlements(
-        CancellationToken cancellationToken = default)
-    {
-        var entitlements = await entitlementService.GetUserEntitlementsAsync(
-            GetUserId(),
-            cancellationToken).ConfigureAwait(false);
-
-        return Ok(entitlements.Select(MapToDto));
-    }
-
-    /// <summary>
-    /// Get entitlements for a specific user (admin only)
-    /// </summary>
-    [HttpGet("user/{userId:guid}")]
-    [RequirePermission(EntitlementsPermission.Keys.ReadAll)]
-    public async Task<ActionResult<IEnumerable<EntitlementInfoDto>>> GetUserEntitlements(
-        Guid userId,
-        CancellationToken cancellationToken = default)
-    {
-        var entitlements = await entitlementService.GetUserEntitlementsAsync(
-            userId,
-            cancellationToken).ConfigureAwait(false);
-
-        return Ok(entitlements.Select(MapToDto));
-    }
-
-    /// <summary>
-    /// Grant entitlement to a user (admin only)
-    /// </summary>
-    [HttpPost("grant")]
+    [HttpPost]
     [RequirePermission(EntitlementsPermission.Keys.Grant)]
     public async Task<ActionResult<EntitlementInfoDto>> GrantEntitlement(
         [FromBody] GrantEntitlementRequest request,
@@ -109,11 +108,15 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
     }
 
     /// <summary>
-    /// Revoke entitlement from a user (admin only)
+    /// Revoke an entitlement (admin only)
     /// </summary>
-    [HttpPost("revoke")]
+    /// <param name="entitlementId">The entitlement ID to revoke</param>
+    /// <param name="request">Revoke request with reason</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpPost("{entitlementId:guid}:revoke")]
     [RequirePermission(EntitlementsPermission.Keys.Revoke)]
     public async Task<IActionResult> RevokeEntitlement(
+        Guid entitlementId,
         [FromBody] RevokeEntitlementRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -129,22 +132,6 @@ public class EntitlementsController(IEntitlementService entitlementService) : Co
         }
 
         return NoContent();
-    }
-
-    /// <summary>
-    /// Get entitlements expiring soon (admin only)
-    /// </summary>
-    [HttpGet("expiring")]
-    [RequirePermission(EntitlementsPermission.Keys.ReadAll)]
-    public async Task<ActionResult<IEnumerable<EntitlementInfoDto>>> GetExpiringEntitlements(
-        [FromQuery] int days = 7,
-        CancellationToken cancellationToken = default)
-    {
-        var entitlements = await entitlementService.GetExpiringEntitlementsAsync(
-            days,
-            cancellationToken).ConfigureAwait(false);
-
-        return Ok(entitlements.Select(MapToDto));
     }
 
     private Guid GetUserId()
