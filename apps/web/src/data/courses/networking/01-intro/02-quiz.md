@@ -17,7 +17,7 @@
 !!! quiz
 {
 "title": "OSI Layer Analysis in Wireshark",
-"question": "You're debugging network issues in a multiplayer game. Using Wireshark, you capture a frame and see it contains: an Ethernet header, an IP header, a UDP header, and game state data. If you wanted to see ONLY the Ethernet and IP information (ignoring UDP and above), which OSI layers would you be examining?",
+"question": "You're debugging network issues in a game/app. Using Wireshark, you capture a frame and see it contains: an Ethernet header, an IP header, a UDP header, and game/app state data. If you wanted to see ONLY the Ethernet and IP information (ignoring UDP and above), which OSI layers would you be examining?",
 "options": [
 "Network and Transport (Layers 3 & 4)",
 "Physical, Data Link, and Network (Layers 1, 2 & 3)",
@@ -101,7 +101,7 @@
 !!! quiz
 {
 "title": "Packet Header Changes",
-"question": "When a packet travels from a game client to a game server across the internet, which of the following changes at each router hop?",
+"question": "When a packet travels from a game/app client to a server across the internet, which of the following changes at each router hop?",
 "options": [
 "Source and destination MAC addresses",
 "The payload data",
@@ -115,7 +115,7 @@
 !!! quiz
 {
 "title": "UDP vs TCP Header Overhead",
-"question": "You capture two packets in Wireshark. Packet A has headers: [Ethernet][IP][TCP][HTTP]. Packet B has headers: [Ethernet][IP][UDP][Custom Game Protocol]. Both packets are the same total size. Which packet likely has MORE space available for actual game data, and why?",
+"question": "You capture two packets in Wireshark. Packet A has headers: [Ethernet][IP][TCP][HTTP]. Packet B has headers: [Ethernet][IP][UDP][Custom Game/app Protocol]. Both packets are the same total size. Which packet likely has MORE space available for actual data, and why?",
 "options": [
 "Packet B, because UDP has a smaller header than TCP",
 "Packet A, because HTTP is more efficient than custom protocols",
@@ -128,8 +128,8 @@
 
 !!! quiz
 {
-"title": "OSI/TCP-IP Understanding for Game Programmers",
-"question": "In the context of game networking, why is understanding the OSI/TCP-IP layering important for a game programmer, even though they typically only write code at the Application layer?",
+"title": "OSI/TCP-IP Understanding for Programmers",
+"question": "In the context of networking, why is understanding the OSI/TCP-IP layering important for a programmer, even though they typically only write code at the Application layer?",
 "options": [
 "Certification exams require knowledge of all layers",
 "Game programmers must implement all layers from scratch",
