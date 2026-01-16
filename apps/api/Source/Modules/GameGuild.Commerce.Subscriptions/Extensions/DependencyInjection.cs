@@ -77,6 +77,7 @@ public static class DependencyInjection
 
         // Register Repositories
         services.AddScoped<ISubscriptionRepository, SubscriptionRepository>();
+        services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
 
         return services;
     }

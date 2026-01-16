@@ -324,8 +324,17 @@ public static class ServiceCollectionExtensions
         // ===== Rule-Based Authorization (DB-driven, tenant-configurable policies) =====
         services.AddRuleBasedAuthorization();
 
-        // ===== Core ASP.NET Authorization =====
-        services.AddAuthorization();
+        // ===== Core ASP.NET Authorization with Built-in Policies =====
+        services.AddAuthorization(authzOptions =>
+        {
+            // Core role-based policies (fallback for common use cases)
+            authzOptions.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+            authzOptions.AddPolicy("RequireUserRole", policy => policy.RequireRole("User", "Admin"));
+            authzOptions.AddPolicy("RequireTenantAccess", policy => policy.RequireClaim("TenantId"));
+            
+            // Additional admin/authentication policies
+            authzOptions.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
+        });
 
         return services;
     }
