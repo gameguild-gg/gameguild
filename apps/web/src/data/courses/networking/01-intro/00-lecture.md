@@ -88,17 +88,17 @@ graph LR
 
 ### Network Devices
 
-Sending data across networks involves different devices:
+Messages travel through different devices:
 
-- **Hub** - Broadcasts frames to all ports (dumb, repeats everything)
-- **Switch** - Uses MAC addresses to forward frames only to the correct port on the same network
-- **Router** - Uses IP addresses to forward packets between different networks
+- **Hub** - Receives the frame and broadcast it to all physical ports (dumb, repeats everything to everyone).
+- **Switch** - Uses MAC addresses to forward frames only to the correct port on the same network. On the event of a broadcast frame, it floods it to all ports.
+- **Router** - Uses IP addresses to forward packets between different networks. Does not forward broadcast messages.
 
-Broadcast messages are handled differently by each device:
+::: note
 
-- **Hubs** flood broadcasts to all ports;
-- **Switches** flood broadcasts to all ports on the same network;
-- **Routers** block broadcasts from passing between networks;
+Routers create broadcast domain boundaries. Broadcasts propagate through hubs and switches but cannot cross routers.
+
+:::
 
 ```mermaid
 graph LR
