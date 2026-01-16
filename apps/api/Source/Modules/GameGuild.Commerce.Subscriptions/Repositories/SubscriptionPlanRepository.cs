@@ -30,7 +30,7 @@ public class SubscriptionPlanRepository(IApplicationDbContext context)
         return await Query.Where(p => !p.IsDeleted).OrderBy(p => p.SortOrder).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IEnumerable<SubscriptionPlan>> GetAllAsync(CancellationToken cancellationToken = default)
+    public new async Task<IEnumerable<SubscriptionPlan>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await Query.OrderBy(p => p.SortOrder).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -56,6 +56,22 @@ public class SubscriptionPlanRepository(IApplicationDbContext context)
             .OrderBy(p => p.MonthlyPriceInCents)
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Adds a new subscription plan.
+    /// </summary>
+    public async Task<SubscriptionPlan> AddAsync(SubscriptionPlan plan, CancellationToken cancellationToken = default)
+    {
+        return await CreateAsync(plan, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Deletes a subscription plan (soft delete).
+    /// </summary>
+    public new async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await base.DeleteAsync(id, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> IsNameUniqueAsync(string name, Guid? excludeId = null, CancellationToken cancellationToken = default)
