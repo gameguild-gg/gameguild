@@ -1,6 +1,7 @@
 using GameGuild.CQRS;
 using GameGuild.Configuration;
 using GameGuild.Models;
+using GameGuild.Resources.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -111,6 +112,9 @@ public static class DependencyInjection
         services.AddScoped<ISlaNotificationSender, LoggingSlaNotificationSender>();
         services.AddScoped<ISlaIncidentEscalationService, SlaIncidentEscalationService>();
         services.AddScoped<IIncidentTicketProvider, DefaultIncidentTicketProvider>();
+
+        // Event Handlers for Alerts and Observability
+        services.AddScoped<INotificationHandler<QuotaExceededEvent>, QuotaExceededAlertHandler>();
     }
 
     /// <summary>

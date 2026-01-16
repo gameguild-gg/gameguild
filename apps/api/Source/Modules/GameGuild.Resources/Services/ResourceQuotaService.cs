@@ -411,6 +411,12 @@ public class ResourceQuotaService(
         string? source = null,
         CancellationToken cancellationToken = default)
     {
+        using var activity = ActivitySource.StartActivity(DecrementUsageOperation, ActivityKind.Internal);
+        activity?.SetTag("tenant.id", tenantId.ToString());
+        activity?.SetTag("resource.type", type.ToString());
+        activity?.SetTag("quota.decrement_amount", amount);
+        activity?.SetTag("quota.source", source ?? "unknown");
+
         try
         {
             // Get current quota for audit purposes
@@ -419,8 +425,12 @@ public class ResourceQuotaService(
 
             var decremented = await quotaRepository.DecrementUsageAsync(tenantId, type, amount, cancellationToken);
 
+            activity?.SetTag("quota.success", decremented);
+            activity?.SetTag("quota.previous_usage", previousUsage);
+
             if (decremented)
             {
+                activity?.SetTag("quota.new_usage", Math.Max(0, previousUsage - amount));
                 // Publish audit event for decrement
                 await publisher.Publish(new QuotaChangedEvent(
                     TenantId: tenantId,
@@ -443,6 +453,8 @@ public class ResourceQuotaService(
         }
         catch (Exception ex)
         {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetTag("error.type", ex.GetType().Name);
             logger.LogError(ex, "Error decrementing usage for tenant {TenantId}, type {Type}", tenantId, type);
             return false;
         }
@@ -450,7 +462,10 @@ public class ResourceQuotaService(
 
     public async Task<int> ResetExpiredQuotasAsync(CancellationToken cancellationToken = default)
     {
+        using var activity = ActivitySource.StartActivity(ResetQuotasOperation, ActivityKind.Internal);
+
         var quotasDueForReset = await quotaRepository.GetQuotasDueForResetAsync(cancellationToken);
+        activity?.SetTag("quota.candidates_count", quotasDueForReset.Count());
 
         var resetCount = 0;
 
@@ -478,6 +493,8 @@ public class ResourceQuotaService(
             resetCount++;
         }
 
+        activity?.SetTag("quota.reset_count", resetCount);
+
         if (resetCount > 0) { logger.LogInformation("Reset {Count} expired quotas", resetCount); }
 
         return resetCount;
@@ -494,21 +511,36 @@ public class ResourceQuotaService(
 
     public async Task<bool> RecalculateUsageAsync(Guid tenantId, ResourceUsageType type, CancellationToken cancellationToken = default)
     {
+        using var activity = ActivitySource.StartActivity(RecalculateUsageOperation, ActivityKind.Internal);
+        activity?.SetTag("tenant.id", tenantId.ToString());
+        activity?.SetTag("resource.type", type.ToString());
+
         try
         {
             var quota = await GetQuotaAsync(tenantId, type, cancellationToken);
 
-            if (quota == null) return false;
+            if (quota == null)
+            {
+                activity?.SetTag("quota.exists", false);
+                return false;
+            }
+
+            activity?.SetTag("quota.exists", true);
 
             // Get current period start based on quota period and last reset
             var periodStart = quota.LastReset ?? DateTime.UtcNow.Date;
 
             var usageRecords = await usageRepository.GetByDateRangeAsync(tenantId, type, periodStart, DateTime.UtcNow, cancellationToken);
 
+            var previousUsage = quota.CurrentUsage;
             quota.CurrentUsage = usageRecords.Sum(u => u.UsageAmount);
             quota.UpdatedAt = DateTime.UtcNow;
 
             await quotaRepository.UpdateAsync(quota, cancellationToken);
+
+            activity?.SetTag("quota.previous_usage", previousUsage);
+            activity?.SetTag("quota.recalculated_usage", quota.CurrentUsage);
+            activity?.SetTag("quota.records_processed", usageRecords.Count());
 
             logger.LogInformation("Recalculated usage for tenant {TenantId}, type {Type}: {Usage}", tenantId, type, quota.CurrentUsage);
 
@@ -516,6 +548,8 @@ public class ResourceQuotaService(
         }
         catch (Exception ex)
         {
+            activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+            activity?.SetTag("error.type", ex.GetType().Name);
             logger.LogError(ex, "Error recalculating usage for tenant {TenantId}, type {Type}", tenantId, type);
 
             return false;
