@@ -13,7 +13,7 @@ public class TaxRateConfiguration : IEntityTypeConfiguration<TaxRate>
         // Configure table name
         builder.ToTable("tax_rates", tb =>
         {
-            tb.HasCheckConstraint("CK_TaxRate_Rate_Valid", "rate >= 0 AND rate <= 1");
+            tb.HasCheckConstraint("CK_TaxRate_Rate_Valid", "\"Rate\" >= 0 AND \"Rate\" <= 1");
         });
 
         // Configure primary key

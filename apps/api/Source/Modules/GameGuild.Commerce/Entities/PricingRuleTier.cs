@@ -3,21 +3,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Commerce.Payments;
+namespace GameGuild.Commerce;
 
-/// <summary>Entity representing a pricing tier for volume-based pricing</summary>
-[Table("pricing_tiers")]
+/// <summary>Entity representing a pricing tier for pricing rule-based volume discounts</summary>
+[Table("pricing_rule_tiers")]
 [Index(nameof(PricingRuleId))]
 [Index(nameof(MinQuantity))]
 [Index(nameof(MaxQuantity))]
-public class PricingTier : EntityBase
+public class PricingRuleTier : EntityBase
 {
     /// <summary>Default constructor</summary>
-    public PricingTier() { }
+    public PricingRuleTier() { }
 
     /// <summary>Constructor for partial initialization</summary>
     /// <param name="partial">Partial tier data</param>
-    public PricingTier(object partial) : base(partial) { }
+    public PricingRuleTier(object partial) : base(partial) { }
 
     /// <summary>Foreign key to the PricingRule entity</summary>
     [Required]
