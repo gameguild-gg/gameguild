@@ -93,10 +93,10 @@ public static class OpenApiExtensions
                     );
                 }
 
-                // Configure schema ID generator to use module + type name for guaranteed uniqueness
-                // e.g., "GameGuild.Identity.Tenants.TenantSettingsDto" -> "Tenants_TenantSettingsDto"
-                // e.g., "GameGuild.Identity.Users.UserDto" -> "Users_UserDto"
-                // e.g., "GameGuild.Identity.Authentication.UserDto" -> "Authentication_UserDto"
+                // Configure schema ID generator to use full module path for guaranteed uniqueness
+                // e.g., "GameGuild.Identity.Tenants.TenantSettingsDto" -> "Identity_Tenants_TenantSettingsDto"
+                // e.g., "GameGuild.Identity.Users.UserDto" -> "Identity_Users_UserDto"
+                // e.g., "GameGuild.Identity.Authentication.UserDto" -> "Identity_Authentication_UserDto"
                 c.CustomSchemaIds(type =>
                 {
                     var fullName = type.FullName ?? type.Name;
@@ -104,26 +104,37 @@ public static class OpenApiExtensions
                     
                     if (type.IsGenericType)
                     {
-                        // For generic types, include module + generic type + args
+                        // For generic types, include module path + generic type + args
                         var genericTypeName = type.Name.Split('`')[0];
                         var genericArgs = string.Join("", type.GetGenericArguments().Select(t => t.Name));
                         
-                        // Find module name (the segment after "GameGuild")
-                        var moduleIndex = Array.IndexOf(parts, "GameGuild") + 1;
-                        var moduleName = moduleIndex < parts.Length ? parts[moduleIndex] : "";
+                        // Find module path (everything between "GameGuild" and the type name)
+                        var gameGuildIndex = Array.IndexOf(parts, "GameGuild");
+                        if (gameGuildIndex >= 0 && parts.Length > gameGuildIndex + 2)
+                        {
+                            // Join all parts between GameGuild and the type name with underscores
+                            var modulePath = string.Join("_", parts.Skip(gameGuildIndex + 1).Take(parts.Length - gameGuildIndex - 2));
+                            return $"{modulePath}_{genericTypeName}{genericArgs}";
+                        }
                         
-                        return !string.IsNullOrEmpty(moduleName) 
-                            ? $"{moduleName}_{genericTypeName}{genericArgs}" 
-                            : $"{genericTypeName}{genericArgs}";
+                        return $"{genericTypeName}{genericArgs}";
                     }
                     
-                    // For GameGuild types, use Module_TypeName pattern
-                    // e.g., GameGuild.Identity.Users.UserDto -> Users_UserDto
-                    if (parts.Length >= 3 && parts[0] == "GameGuild")
+                    // For GameGuild types, use full Module_Submodule_TypeName pattern
+                    // e.g., GameGuild.Identity.Users.UserDto -> Identity_Users_UserDto
+                    // e.g., GameGuild.Commerce.Products.ProductDto -> Commerce_Products_ProductDto
+                    if (parts.Length >= 4 && parts[0] == "GameGuild")
                     {
-                        var moduleName = parts[1]; // e.g., "Users", "Authentication", "Tenants"
+                        // Join all module segments (everything between GameGuild and the type name)
+                        var modulePath = string.Join("_", parts.Skip(1).Take(parts.Length - 2));
                         var typeName = parts[^1];  // Last part is the type name
-                        return $"{moduleName}_{typeName}";
+                        return $"{modulePath}_{typeName}";
+                    }
+                    
+                    // For shorter GameGuild types (e.g., GameGuild.SomeType)
+                    if (parts.Length >= 2 && parts[0] == "GameGuild")
+                    {
+                        return string.Join("_", parts.Skip(1));
                     }
                     
                     // For non-GameGuild types (external libraries, etc.)

@@ -33,10 +33,10 @@ public class GetProductsPagedQueryHandler(IProductRepository productRepository)
             product.Type,
             product.IsBundle,
             product.CreatorId,
-            product.GetBundleItemIds(),
-            product.ReferralCommissionPercentage,
-            product.MaxAffiliateDiscount,
-            product.AffiliateCommissionPercentage,
+            product.GetBundleProductIds().ToList(),
+            product.CommissionConfig?.ReferralCommissionPercentage ?? 0m,
+            product.CommissionConfig?.MaxAffiliateDiscount ?? 0m,
+            product.CommissionConfig?.AffiliateCommissionPercentage ?? 30m,
             product.CreatedAt,
             product.UpdatedAt
         )).ToList();
