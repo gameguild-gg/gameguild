@@ -15,6 +15,13 @@ public static class DependencyInjection
     /// <returns>The configured service collection</returns>
     public static IServiceCollection AddSubscriptionsModule(this IServiceCollection services)
     {
+        // Register Subscription Service (implements all 4 focused interfaces)
+        services.AddScoped<SubscriptionService>();
+        services.AddScoped<ISubscriptionLifecycleService>(sp => sp.GetRequiredService<SubscriptionService>());
+        services.AddScoped<ISubscriptionBillingService>(sp => sp.GetRequiredService<SubscriptionService>());
+        services.AddScoped<ISubscriptionQueryService>(sp => sp.GetRequiredService<SubscriptionService>());
+        services.AddScoped<ISubscriptionExternalIdService>(sp => sp.GetRequiredService<SubscriptionService>());
+        
         // Register Command Handlers (only existing ones)
         services.AddScoped<ICommandHandler<ActivateSubscriptionCommand>, ActivateSubscriptionCommandHandler>();
         services.AddScoped<IRequestHandler<ActivateSubscriptionCommand, Unit>>(sp => sp.GetRequiredService<ICommandHandler<ActivateSubscriptionCommand>>());

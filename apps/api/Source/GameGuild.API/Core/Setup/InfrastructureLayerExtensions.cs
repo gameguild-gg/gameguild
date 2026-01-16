@@ -2,11 +2,15 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using GameGuild.Abstractions;
 using GameGuild.API.Database;
+using GameGuild.Commerce.Billing;
+using GameGuild.Commerce.Payments;
+using GameGuild.Commerce.Subscriptions;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
+using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.API.Setup;
@@ -168,6 +172,26 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddUnifiedAuthorizationLayer();
         logger.LogInformation("Unified Authorization Layer registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10a. Resources Module (quota, usage tracking, SLA services)
+        stepStopwatch.Restart();
+        services.AddResourcesInfrastructure(configuration);
+        logger.LogInformation("Resources Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10b. Commerce Subscriptions Module (must be registered before Billing since Billing depends on it)
+        stepStopwatch.Restart();
+        services.AddSubscriptionsModule();
+        logger.LogInformation("Subscriptions Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10c. Commerce Billing Module (webhook services for Stripe, PayPal, ApplePay)
+        stepStopwatch.Restart();
+        services.AddBillingModule(configuration);
+        logger.LogInformation("Billing Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10d. Commerce Payments Module (payment gateway, payment services)
+        stepStopwatch.Restart();
+        services.AddPaymentsModule(configuration);
+        logger.LogInformation("Payments Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 11. Repositories
         services.AddRepositories(logger);
@@ -352,6 +376,11 @@ public static class InfrastructureLayerExtensions
             logger.LogInformation("Registered {Service} in {ElapsedMs}ms",
                 FormatInterfaceName(interfaceType.Name), stepStopwatch.ElapsedMilliseconds);
         }
+
+        // Register Lazy<T> wrappers for circular dependency resolution
+        // SlaIncidentEscalationService depends on ISlaImpactAnalysisService which depends on SlaIncidentEscalationService
+        services.AddScoped<Lazy<GameGuild.Resources.ISlaImpactAnalysisService>>(sp =>
+            new Lazy<GameGuild.Resources.ISlaImpactAnalysisService>(() => sp.GetRequiredService<GameGuild.Resources.ISlaImpactAnalysisService>()));
 
         totalStopwatch.Stop();
         logger.LogInformation("Completed service setup in {ElapsedMs}ms", serviceStopwatch.ElapsedMilliseconds);
