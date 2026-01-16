@@ -932,18 +932,36 @@ export default function Page() {
                             setEditorState(JSON.stringify(states.blocks.b1))
                           } else if (layoutInfo.isMultiPanel && states.blocks) {
                             // Multi-panel layout: load all blocks
+                            // Clear existing blockRefs when loading a new project
+                            blockRefs.current = {}
+                            
                             const newBlockStates: Record<string, string> = {}
                             Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
                               if (blockState && blockState.root) {
-                                // Initialize ref if needed
-                                if (!blockRefs.current[blockId]) {
-                                  blockRefs.current[blockId] = null
-                                }
+                                // Initialize ref for each block
+                                blockRefs.current[blockId] = null
                                 // Store state for component
                                 newBlockStates[blockId] = JSON.stringify(blockState)
                               }
                             })
+                            
+                            // Set the new block states - this will trigger re-render
                             setBlockStates(newBlockStates)
+                            
+                            // Wait for refs to be populated and load states into editors
+                            setTimeout(() => {
+                              Object.entries(newBlockStates).forEach(([blockId, stateString]) => {
+                                const ref = blockRefs.current[blockId]
+                                if (ref) {
+                                  try {
+                                    const editorState = ref.parseEditorState(stateString)
+                                    ref.setEditorState(editorState)
+                                  } catch (error) {
+                                    console.error(`Failed to load state for block ${blockId}:`, error)
+                                  }
+                                }
+                              })
+                            }, 150)
                           }
                         } catch (error) {
                           console.error("Failed to load editor data:", error)
