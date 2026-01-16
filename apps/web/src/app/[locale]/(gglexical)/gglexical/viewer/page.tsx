@@ -168,13 +168,23 @@ export default function PreviewPage() {
     }
     
     const layoutInfo = detectProjectLayout(currentProject.data)
-    const states = extractEditorStates(currentProject.data, layoutInfo.layoutType)
+    
+    // Force layout based on project type for type2/type3
+    // Type2 must always be multi-panel even with 1 block
+    let finalLayoutType: LayoutType = layoutInfo.layoutType
+    if (currentProject.type === "type2" && (layoutInfo.layoutType === "single" || layoutInfo.layoutType === "multiple")) {
+      finalLayoutType = "multiple"
+    } else if (currentProject.type === "type3") {
+      finalLayoutType = "sequential"
+    }
+    
+    const states = extractEditorStates(currentProject.data, finalLayoutType)
     
     // Get preview mode from preferences (default to continuous)
     const previewMode = currentProject.preferences?.global?.previewMode || "continuous"
     
     return {
-      layout: layoutInfo.layoutType,
+      layout: finalLayoutType,
       states,
       isSequential: layoutInfo.isSequential,
       sequentialData: layoutInfo.sequentialData,
@@ -326,7 +336,7 @@ export default function PreviewPage() {
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
                   />
-                ) : currentLayout === "dual" && Object.keys(states.blocks).length >= 2 ? (
+                ) : currentLayout === "multiple" && Object.keys(states.blocks).length >= 1 ? (
                   <PreviewRendererType2 blockStates={states.blocks as Record<string, any>} projectId={currentProject.id} storageAdapter={storageAdapter} />
                 ) : (
                   <div className="border border-red-200 bg-red-50 shadow-sm dark:border-red-700 dark:bg-red-900/20">

@@ -140,7 +140,7 @@ export function PreviewRendererSequentialSlide({
                   />
                 </div>
               </div>
-            ) : currentPanel.type === "dual" && currentPanel.blocks && Object.keys(currentPanel.blocks).length >= 2 ? (
+            ) : currentPanel.type === "multiple" && currentPanel.blocks && Object.keys(currentPanel.blocks).length >= 1 ? (
               <PreviewRendererType2
                 blockStates={Object.entries(currentPanel.blocks).reduce((acc, [blockId, blockState]) => {
                   acc[blockId] = typeof blockState === "string"

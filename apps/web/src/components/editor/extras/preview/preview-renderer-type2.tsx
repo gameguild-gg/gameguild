@@ -14,14 +14,41 @@ interface PreviewRendererType2Props {
 }
 
 export function PreviewRendererType2({ blockStates, projectId, storageAdapter }: PreviewRendererType2Props) {
-  // Get first two blocks (b1, b2) for dual-panel display
-  const blockEntries = Object.entries(blockStates)
-  const firstBlock = blockEntries[0]
-  const secondBlock = blockEntries[1]
+  // Get blocks for multi-panel display (1 or more)
+  const blockEntries = Object.entries(blockStates).sort((a, b) => {
+    const numA = parseInt(a[0].slice(1))
+    const numB = parseInt(b[0].slice(1))
+    return numA - numB
+  })
   
-  if (!firstBlock || !secondBlock) {
-    return <div className="p-8 text-center text-gray-500">Need at least 2 blocks for dual preview</div>
+  if (blockEntries.length === 0) {
+    return <div className="p-8 text-center text-gray-500">No blocks available for preview</div>
   }
+  
+  // If only 1 block, show it in full width with studio-like design
+  if (blockEntries.length === 1) {
+    const [blockId, state] = blockEntries[0]!
+    return (
+      <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+        <div className="p-2 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+            Panel 1
+          </span>
+        </div>
+        <div className="p-6 sm:p-8 md:p-12">
+          <PreviewRenderer 
+            serializedState={state}
+            projectId={projectId}
+            storageAdapter={storageAdapter}
+          />
+        </div>
+      </div>
+    )
+  }
+  
+  // Multiple blocks: show with resizable panels
+  const firstBlock = blockEntries[0]!
+  const secondBlock = blockEntries[1]!
   
   const [firstBlockId, firstState] = firstBlock
   const [secondBlockId, secondState] = secondBlock

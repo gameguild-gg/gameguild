@@ -83,14 +83,14 @@ export function PanelNavigationSidebar({
             Single
           </Button>
           <Button
-            onClick={() => onPanelAdd("dual")}
+            onClick={() => onPanelAdd("multiple")}
             variant="outline"
             size="sm"
             className="flex-1 text-xs"
-            title="Add Dual Panel"
+            title="Add Multiple Panel"
           >
             <LayoutGrid className="h-3 w-3 mr-1" />
-            Dual
+            Multiple
           </Button>
         </div>
       </div>
@@ -131,7 +131,7 @@ export function PanelNavigationSidebar({
                       <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                         #{index + 1}
                       </span>
-                      {panel.type === "dual" ? (
+                      {panel.type === "multiple" ? (
                         <LayoutGrid className="h-3 w-3 text-blue-500" />
                       ) : (
                         <Layout className="h-3 w-3 text-green-500" />
@@ -187,11 +187,11 @@ export function PanelNavigationSidebar({
                   <div className="mt-1">
                     <span className={cn(
                       "inline-block px-2 py-0.5 text-xs rounded",
-                      panel.type === "dual"
+                      panel.type === "multiple"
                         ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                         : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
                     )}>
-                      {panel.type === "dual" ? "Dual Panel" : "Single Panel"}
+                      {panel.type === "multiple" ? "Multiple Panel" : "Single Panel"}
                     </span>
                   </div>
                 </div>
@@ -204,7 +204,7 @@ export function PanelNavigationSidebar({
       {/* Footer with Add Button */}
       <div className="p-3 border-t border-gray-200 dark:border-gray-800">
         <Button
-          onClick={() => onPanelAdd("single")}
+          onClick={() => onPanelAdd("multiple")}
           variant="outline"
           size="sm"
           className="w-full"

@@ -2,11 +2,11 @@
  * Project Modes System
  * 
  * Defines the three project modes and their node restrictions:
- * - free-page: No restrictions, supports both single and dual layouts
+ * - free-page: No restrictions, supports both single and multiple layouts
  * - code-page: Optimized for code-studio nodes on right/single panel
  * - quiz-page: Optimized for quiz nodes on right/single panel
  * 
- * Note: Layout type (single/dual) is now automatically detected from project data structure.
+ * Note: Layout type (single/multiple) is now automatically detected from project data structure.
  *       "type" field in ProjectData refers to project type (type1, type2, etc.), not layout.
  */
 
@@ -25,7 +25,7 @@ export interface ProjectModeConfig {
   mode: ProjectMode
   restrictions: NodeRestrictions
   description: string
-  suggestedLayout?: "single" | "dual"  // sugestão de layout, mas não obrigatório
+  suggestedLayout?: "single" | "multiple"  // sugestão de layout, mas não obrigatório
 }
 
 /**
@@ -65,17 +65,17 @@ export const PROJECT_MODES: Record<ProjectMode, Omit<ProjectModeConfig, 'mode'>>
   "free-page": {
     suggestedLayout: "single",
     restrictions: NODE_RESTRICTIONS["free-page"],
-    description: "Free mode - no restrictions, choose single or dual layout"
+    description: "Free mode - no restrictions, choose single or multiple layout"
   },
   "code-page": {
-    suggestedLayout: "dual",
+    suggestedLayout: "multiple",
     restrictions: NODE_RESTRICTIONS["code-page"],
-    description: "Code mode - optimized for code studio, works best with dual layout"
+    description: "Code mode - optimized for code studio, works best with multiple layout"
   },
   "quiz-page": {
-    suggestedLayout: "dual",
+    suggestedLayout: "multiple",
     restrictions: NODE_RESTRICTIONS["quiz-page"],
-    description: "Quiz mode - optimized for quiz nodes, works best with dual layout"
+    description: "Quiz mode - optimized for quiz nodes, works best with multiple layout"
   }
 }
 
@@ -152,6 +152,6 @@ export function isNodeAllowed(
 /**
  * Get suggested layout type for a mode (optional, não obrigatório)
  */
-export function getSuggestedLayoutForMode(mode: ProjectMode): "single" | "dual" {
+export function getSuggestedLayoutForMode(mode: ProjectMode): "single" | "multiple" {
   return PROJECT_MODES[mode].suggestedLayout || "single"
 }
