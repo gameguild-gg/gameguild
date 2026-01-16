@@ -182,4 +182,103 @@ public class WalletService(IWalletRepository walletRepository, ILogger<WalletSer
 
         return await walletRepository.GetTransactionsAsync(wallet.Id, skip, take, typeFilter, statusFilter, cancellationToken);
     }
+
+    public async Task<(List<UserWallet> Wallets, int TotalCount)> ListWalletsAsync(
+        int page,
+        int pageSize,
+        string? currency = null,
+        bool? isFrozen = null,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Listing wallets - Page: {Page}, PageSize: {PageSize}, Currency: {Currency}, IsFrozen: {IsFrozen}",
+            page, pageSize, currency, isFrozen);
+
+        return await walletRepository.ListWalletsAsync(page, pageSize, currency, isFrozen, cancellationToken);
+    }
+
+    public async Task UpdateWalletSettingsAsync(
+        Guid walletId,
+        string? currency = null,
+        decimal? dailyLimit = null,
+        decimal? monthlyLimit = null,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Updating wallet settings for {WalletId}", walletId);
+
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+
+        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+
+        if (currency != null) wallet.Currency = currency;
+        if (dailyLimit.HasValue) wallet.DailyLimit = dailyLimit.Value;
+        if (monthlyLimit.HasValue) wallet.MonthlyLimit = monthlyLimit.Value;
+
+        await walletRepository.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Wallet settings updated for {WalletId}", walletId);
+    }
+
+    public async Task CloseWalletAsync(Guid walletId, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Closing wallet {WalletId}", walletId);
+
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+
+        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+
+        if (wallet.Balance != 0)
+            throw new InvalidOperationException($"Cannot close wallet with non-zero balance: {wallet.Balance}");
+
+        wallet.IsActive = false;
+        await walletRepository.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Wallet closed: {WalletId}", walletId);
+    }
+
+    public async Task FreezeWalletAsync(Guid walletId, string reason, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Freezing wallet {WalletId}: {Reason}", walletId, reason);
+
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+
+        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+
+        wallet.Lock(reason);
+        await walletRepository.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Wallet frozen: {WalletId}", walletId);
+    }
+
+    public async Task UnfreezeWalletAsync(Guid walletId, CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Unfreezing wallet {WalletId}", walletId);
+
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+
+        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+
+        wallet.Unlock();
+        await walletRepository.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Wallet unfrozen: {WalletId}", walletId);
+    }
+
+    public async Task<(List<WalletTransaction> Transactions, int TotalCount)> GetWalletAuditLogAsync(
+        Guid walletId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogInformation("Getting audit log for wallet {WalletId}", walletId);
+
+        var wallet = await GetWalletByIdAsync(walletId, cancellationToken);
+
+        if (wallet == null) throw new InvalidOperationException($"Wallet not found: {walletId}");
+
+        var skip = (page - 1) * pageSize;
+        var transactions = await walletRepository.GetTransactionsAsync(walletId, skip, pageSize, null, null, cancellationToken);
+        var totalCount = await walletRepository.GetTransactionCountAsync(walletId, cancellationToken);
+
+        return (transactions, totalCount);
+    }
 }

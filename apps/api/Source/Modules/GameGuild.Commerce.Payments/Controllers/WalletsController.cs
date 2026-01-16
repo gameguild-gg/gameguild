@@ -1,4 +1,11 @@
 using Asp.Versioning;
+using GameGuild.Commerce.Payments.Commands.CloseWallet;
+using GameGuild.Commerce.Payments.Commands.FreezeWallet;
+using GameGuild.Commerce.Payments.Commands.PatchWallet;
+using GameGuild.Commerce.Payments.Commands.UnfreezeWallet;
+using GameGuild.Commerce.Payments.Queries.GetWalletAuditLog;
+using GameGuild.Commerce.Payments.Queries.GetWalletById;
+using GameGuild.Commerce.Payments.Queries.ListWallets;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
@@ -9,8 +16,8 @@ namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Wallets management controller - RESTful API following Google API Design Guidelines.
-///     Note: Wallet operations are currently user-based. Wallet-ID-based operations 
-///     will be implemented in a future iteration.
+///     Supports both user-based operations (/users/{userId}/wallet) and 
+///     wallet-ID-based operations (/wallets/{walletId}).
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
@@ -176,6 +183,234 @@ public sealed class WalletsController(ISender sender) : ControllerBase
     }
 
     #endregion
+
+    #region Wallet-ID-based Operations - /v1/wallets/{walletId}
+
+    /// <summary>
+    ///     List all wallets (admin only)
+    /// </summary>
+    /// <param name="page">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 20, max: 100)</param>
+    /// <param name="currency">Filter by currency</param>
+    /// <param name="isFrozen">Filter by frozen status</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of wallets</returns>
+    [HttpGet("wallets")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("List all wallets")]
+    [EndpointDescription("Retrieves a paginated list of all wallets. Admin only.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> ListWallets(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? currency = null,
+        [FromQuery] bool? isFrozen = null,
+        CancellationToken ct = default)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 20;
+        if (pageSize > 100) pageSize = 100;
+
+        var result = await sender.Send(new ListWalletsQuery(page, pageSize, currency, isFrozen), ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Get wallet by ID
+    /// </summary>
+    /// <param name="walletId">Wallet ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Wallet details</returns>
+    [HttpGet("wallets/{walletId:guid}")]
+    [EndpointSummary("Get wallet by ID")]
+    [EndpointDescription("Retrieves detailed information for a specific wallet.")]
+    [ProducesResponseType(typeof(UserWallet), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetWalletById(Guid walletId, CancellationToken ct)
+    {
+        var result = await sender.Send(new GetWalletByIdQuery(walletId), ct).ConfigureAwait(false);
+        return result is null ? NotFound() : Ok(result);
+    }
+
+    /// <summary>
+    ///     Check if wallet exists by ID
+    /// </summary>
+    /// <param name="walletId">Wallet ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>200 if exists, 404 if not</returns>
+    [HttpHead("wallets/{walletId:guid}")]
+    [EndpointSummary("Check if wallet exists")]
+    [EndpointDescription("Checks if a wallet exists without returning the body.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CheckWalletExists(Guid walletId, CancellationToken ct)
+    {
+        var result = await sender.Send(new GetWalletByIdQuery(walletId), ct).ConfigureAwait(false);
+        return result is null ? NotFound() : Ok();
+    }
+
+    /// <summary>
+    ///     Partially update wallet settings
+    /// </summary>
+    /// <param name="walletId">Wallet ID</param>
+    /// <param name="body">Patch request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPatch("wallets/{walletId:guid}")]
+    [EndpointSummary("Update wallet settings")]
+    [EndpointDescription("Updates specific settings of a wallet.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PatchWallet(Guid walletId, [FromBody] PatchWalletRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        await sender.Send(new PatchWalletCommand(walletId, body.Currency, body.DailyLimit, body.MonthlyLimit), ct).ConfigureAwait(false);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Close/delete a wallet
+    /// </summary>
+    /// <param name="walletId">Wallet ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpDelete("wallets/{walletId:guid}")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Close wallet")]
+    [EndpointDescription("Closes a wallet. Requires zero balance and admin permissions.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DeleteWallet(Guid walletId, CancellationToken ct)
+    {
+        await sender.Send(new CloseWalletCommand(walletId), ct).ConfigureAwait(false);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Freeze a wallet
+    /// </summary>
+    /// <param name="walletId">Wallet ID</param>
+    /// <param name="body">Freeze request with reason</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPost("wallets/{walletId:guid}:freeze")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Freeze wallet")]
+    [EndpointDescription("Freezes a wallet to prevent all transactions.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> FreezeWallet(Guid walletId, [FromBody] FreezeWalletRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        await sender.Send(new FreezeWalletCommand(walletId, body.Reason), ct).ConfigureAwait(false);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Unfreeze a wallet
+    /// </summary>
+    /// <param name="walletId">Wallet ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPost("wallets/{walletId:guid}:unfreeze")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Unfreeze wallet")]
+    [EndpointDescription("Unfreezes a wallet to allow transactions.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UnfreezeWallet(Guid walletId, CancellationToken ct)
+    {
+        await sender.Send(new UnfreezeWalletCommand(walletId), ct).ConfigureAwait(false);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Get wallet audit log
+    /// </summary>
+    /// <param name="walletId">Wallet ID</param>
+    /// <param name="page">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 20, max: 100)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated audit log entries</returns>
+    [HttpGet("wallets/{walletId:guid}/audit-log")]
+    [EndpointSummary("Get wallet audit log")]
+    [EndpointDescription("Retrieves the audit log of all transactions and actions on a wallet.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetWalletAuditLog(
+        Guid walletId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 20;
+        if (pageSize > 100) pageSize = 100;
+
+        var result = await sender.Send(new GetWalletAuditLogQuery(walletId, page, pageSize), ct).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    #endregion
 }
 
 // DTOs
+/// <summary>
+///     Request to update wallet settings
+/// </summary>
+public record PatchWalletRequest(
+    string? Currency = null,
+    decimal? DailyLimit = null,
+    decimal? MonthlyLimit = null);
+
+/// <summary>
+///     Request to freeze a wallet
+/// </summary>
+public record FreezeWalletRequest(string Reason);
+
+/// <summary>
+///     Wallet audit log entry
+/// </summary>
+public record WalletAuditEntry(
+    Guid Id,
+    Guid WalletId,
+    string Action,
+    string? Details,
+    decimal? Amount,
+    decimal? BalanceAfter,
+    DateTime Timestamp,
+    string? PerformedBy);
+
+/// <summary>
+///     Paginated wallet audit log response
+/// </summary>
+public record WalletAuditLogResponse(
+    IReadOnlyList<WalletAuditEntry> Items,
+    int TotalCount,
+    int Page,
+    int PageSize,
+    int TotalPages);
+
+/// <summary>
+///     Paginated list of wallets response
+/// </summary>
+public record WalletListResponse(
+    IReadOnlyList<WalletSummary> Items,
+    int TotalCount,
+    int Page,
+    int PageSize,
+    int TotalPages);
+
+/// <summary>
+///     Summary view of a wallet for list responses
+/// </summary>
+public record WalletSummary(
+    Guid Id,
+    Guid UserId,
+    string Currency,
+    decimal Balance,
+    bool IsFrozen,
+    DateTime CreatedAt,
+    DateTime? LastTransactionAt);

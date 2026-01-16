@@ -9,7 +9,7 @@ namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Tax calculation controller.
-///     Provides endpoints for calculating taxes.
+///     Provides endpoints for calculating taxes and validating exemptions.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
@@ -43,4 +43,50 @@ public sealed class TaxesController(ISender sender) : ControllerBase
 
         return Ok(result);
     }
+
+    /// <summary>
+    ///     Validate a tax exemption
+    /// </summary>
+    /// <param name="request">Exemption validation request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Validation result</returns>
+    [HttpPost(":validate-exemption")]
+    [EndpointSummary("Validate tax exemption")]
+    [EndpointDescription("Validates whether a tax exemption certificate or status is valid for a given transaction.")]
+    [ProducesResponseType(typeof(TaxExemptionValidationResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidateExemption([FromBody] ValidateTaxExemptionRequest request, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var result = await sender.Send(new ValidateTaxExemptionCommand(
+            request.JurisdictionCode,
+            request.ExemptionType,
+            request.ExemptionCertificateNumber,
+            request.CustomerVatNumber,
+            request.CustomerId,
+            request.TransactionDate), ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
 }
+
+/// <summary>Request to validate tax exemption</summary>
+public record ValidateTaxExemptionRequest(
+    string JurisdictionCode,
+    string ExemptionType,
+    string? ExemptionCertificateNumber,
+    string? CustomerVatNumber,
+    Guid? CustomerId,
+    DateTime? TransactionDate);
+
+/// <summary>Result of tax exemption validation</summary>
+public record TaxExemptionValidationResult(
+    bool IsValid,
+    string? ExemptionType,
+    decimal ExemptionRate,
+    DateTime? ValidFrom,
+    DateTime? ValidTo,
+    string? ValidationMessage,
+    List<string>? Warnings);
+

@@ -50,4 +50,19 @@ public interface IWalletRepository
     ///     Saves changes to the database
     /// </summary>
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Lists wallets with pagination and optional filtering
+    /// </summary>
+    Task<(List<UserWallet> Wallets, int TotalCount)> ListWalletsAsync(
+        int page,
+        int pageSize,
+        string? currency = null,
+        bool? isFrozen = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Gets the total count of transactions for a wallet
+    /// </summary>
+    Task<int> GetTransactionCountAsync(Guid walletId, CancellationToken cancellationToken = default);
 }

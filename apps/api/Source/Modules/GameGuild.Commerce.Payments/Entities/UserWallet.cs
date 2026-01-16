@@ -45,6 +45,14 @@ public class UserWallet : EntityBase
     /// <summary>Last transaction timestamp</summary>
     public DateTime? LastTransactionAt { get; set; }
 
+    /// <summary>Daily spending limit (null = no limit)</summary>
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? DailyLimit { get; set; }
+
+    /// <summary>Monthly spending limit (null = no limit)</summary>
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? MonthlyLimit { get; set; }
+
     /// <summary>Navigation property to wallet transactions</summary>
     public virtual ICollection<WalletTransaction> Transactions { get; set; } = new List<WalletTransaction>();
 

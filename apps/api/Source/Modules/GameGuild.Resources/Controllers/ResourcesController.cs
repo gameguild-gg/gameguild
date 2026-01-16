@@ -41,8 +41,6 @@ public sealed class ResourcesController(ISender sender) : ControllerBase
         return Ok(await sender.Send(new GetResourceUsageByTypeQuery(type, startDate, endDate), ct).ConfigureAwait(false));
     }
 
-    #endregion
-
     /// <summary>
     ///     Get resource usage trends over time
     /// </summary>

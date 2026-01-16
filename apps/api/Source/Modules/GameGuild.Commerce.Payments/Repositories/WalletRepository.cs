@@ -98,4 +98,43 @@ public class WalletRepository(
     {
         await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
+
+    public async Task<(List<UserWallet> Wallets, int TotalCount)> ListWalletsAsync(
+        int page,
+        int pageSize,
+        string? currency = null,
+        bool? isFrozen = null,
+        CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Listing wallets - Page: {Page}, PageSize: {PageSize}", page, pageSize);
+
+        var query = Query.Where(w => w.IsActive);
+
+        if (!string.IsNullOrEmpty(currency))
+            query = query.Where(w => w.Currency == currency);
+
+        if (isFrozen.HasValue)
+            query = query.Where(w => w.IsLocked == isFrozen.Value);
+
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+
+        var wallets = await query
+            .OrderByDescending(w => w.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return (wallets, totalCount);
+    }
+
+    public async Task<int> GetTransactionCountAsync(Guid walletId, CancellationToken cancellationToken = default)
+    {
+        logger.LogDebug("Getting transaction count for wallet: {WalletId}", walletId);
+
+        return await WalletTransactions
+            .Where(t => t.WalletId == walletId && t.DeletedAt == null)
+            .CountAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
 }

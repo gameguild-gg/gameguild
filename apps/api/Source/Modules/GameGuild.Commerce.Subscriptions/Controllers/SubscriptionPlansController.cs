@@ -183,6 +183,40 @@ public sealed class SubscriptionPlansController(ISender sender) : ControllerBase
     }
 
     /// <summary>
+    ///     Full update of a subscription plan
+    /// </summary>
+    /// <param name="planId">Plan ID</param>
+    /// <param name="body">Full plan update request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPut("v{version:apiVersion}/subscription-plans/{planId:guid}")]
+    [EndpointSummary("Full update subscription plan")]
+    [EndpointDescription("Performs a full replacement of subscription plan data. All fields will be updated.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PutSubscriptionPlan(Guid planId, [FromBody] PutSubscriptionPlanRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        await sender.Send(new FullUpdateSubscriptionPlanCommand(
+            planId,
+            body.Name,
+            body.Slug,
+            body.Description,
+            body.MonthlyPriceInCents,
+            body.AnnualPriceInCents,
+            body.MaxUsers,
+            body.MaxStorageMb,
+            body.MaxApiCallsPerMonth,
+            body.HasPrioritySupport,
+            body.HasAdvancedAnalytics,
+            body.HasCustomBranding,
+            body.Features,
+            body.SortOrder), ct);
+        return NoContent();
+    }
+
+    /// <summary>
     ///     Get subscription plan usage statistics
     /// </summary>
     /// <param name="planId">Plan ID</param>
@@ -373,6 +407,44 @@ public sealed class SubscriptionPlansController(ISender sender) : ControllerBase
     }
 
     /// <summary>
+    ///     Archive subscription plan
+    /// </summary>
+    /// <param name="planId">Plan ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPost("v{version:apiVersion}/subscription-plans/{planId:guid}:archive")]
+    [EndpointSummary("Archive subscription plan")]
+    [EndpointDescription("Archives a subscription plan, making it unavailable for new subscriptions while preserving existing subscriptions.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ArchiveSubscriptionPlan(Guid planId, CancellationToken ct)
+    {
+        await sender.Send(new ArchiveSubscriptionPlanCommand(planId), ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Clone subscription plan
+    /// </summary>
+    /// <param name="planId">Plan ID to clone</param>
+    /// <param name="body">Clone request with new name</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Created plan ID</returns>
+    [HttpPost("v{version:apiVersion}/subscription-plans/{planId:guid}:clone")]
+    [EndpointSummary("Clone subscription plan")]
+    [EndpointDescription("Creates a copy of an existing subscription plan with a new name and slug.")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CloneSubscriptionPlan(Guid planId, [FromBody] CloneSubscriptionPlanRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var newPlanId = await sender.Send(new CloneSubscriptionPlanCommand(planId, body.NewName, body.NewSlug), ct);
+        return CreatedAtAction(nameof(GetSubscriptionPlanById), new { planId = newPlanId }, new { id = newPlanId });
+    }
+
+    /// <summary>
     ///     Set subscription plan featured status
     /// </summary>
     /// <param name="planId">Plan ID</param>
@@ -435,4 +507,23 @@ public sealed class SubscriptionPlansController(ISender sender) : ControllerBase
     public record SetFeaturedRequest(bool Featured = true);
 
     public record SetExternalIdRequest(string ExternalId);
+
+    // PUT /subscription-plans/{planId}
+    public record PutSubscriptionPlanRequest(
+        string Name,
+        string Slug,
+        string? Description,
+        long MonthlyPriceInCents,
+        long? AnnualPriceInCents,
+        int? MaxUsers,
+        long? MaxStorageMb,
+        long? MaxApiCallsPerMonth,
+        bool? HasPrioritySupport,
+        bool? HasAdvancedAnalytics,
+        bool? HasCustomBranding,
+        string? Features,
+        int? SortOrder);
+
+    // POST /subscription-plans/{planId}:clone
+    public record CloneSubscriptionPlanRequest(string NewName, string NewSlug);
 }

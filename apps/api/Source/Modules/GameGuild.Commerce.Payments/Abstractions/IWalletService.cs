@@ -48,4 +48,39 @@ public interface IWalletService
         TransactionStatus? statusFilter = null,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>List all wallets with pagination and filtering (admin)</summary>
+    Task<(List<UserWallet> Wallets, int TotalCount)> ListWalletsAsync(
+        int page,
+        int pageSize,
+        string? currency = null,
+        bool? isFrozen = null,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>Update wallet settings</summary>
+    Task UpdateWalletSettingsAsync(
+        Guid walletId,
+        string? currency = null,
+        decimal? dailyLimit = null,
+        decimal? monthlyLimit = null,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>Close/delete a wallet (requires zero balance)</summary>
+    Task CloseWalletAsync(Guid walletId, CancellationToken cancellationToken = default);
+
+    /// <summary>Freeze a wallet by ID</summary>
+    Task FreezeWalletAsync(Guid walletId, string reason, CancellationToken cancellationToken = default);
+
+    /// <summary>Unfreeze a wallet by ID</summary>
+    Task UnfreezeWalletAsync(Guid walletId, CancellationToken cancellationToken = default);
+
+    /// <summary>Get wallet audit log</summary>
+    Task<(List<WalletTransaction> Transactions, int TotalCount)> GetWalletAuditLogAsync(
+        Guid walletId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default
+    );
 }
