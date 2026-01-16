@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameGuild.TestingLab;
 
 [ApiController]
-[Route("[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/testing")]
 public class TestingController(ITestService testService) : ControllerBase {
   #region Testing Request Endpoints
 
@@ -88,7 +90,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   }
 
   // POST: testing/requests/{id}/restore
-  [HttpPost("requests/{id}/restore")]
+  [HttpPost("requests/{id}:restore")]
   [GameGuild.Identity.Authorization.RequireResourcePermission<TestingRequestPermission, TestingRequest>(PermissionType.Edit)]
   public async Task<ActionResult> RestoreTestingRequest(Guid id) {
     var result = await testService.RestoreTestingRequestAsync(id);
@@ -178,7 +180,7 @@ public class TestingController(ITestService testService) : ControllerBase {
   }
 
   // POST: testing/sessions/{id}/restore
-  [HttpPost("sessions/{id}/restore")]
+  [HttpPost("sessions/{id}:restore")]
   [GameGuild.Identity.Authorization.RequireResourcePermission<TestingSessionPermission, TestingSession>(PermissionType.Edit)]
   public async Task<ActionResult> RestoreTestingSession(Guid id) {
     var result = await testService.RestoreTestingSessionAsync(id);

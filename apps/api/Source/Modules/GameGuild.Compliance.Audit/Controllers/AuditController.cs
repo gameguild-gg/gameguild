@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,8 @@ namespace GameGuild.Compliance.Audit;
 /// Controller for audit log management (admin only)
 /// </summary>
 [ApiController]
-[Route("api/admin/audit")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/admin/audit-logs")]
 [Authorize(Roles = "Admin")] // Restrict to admin users only
 public class AuditController(IAuditService auditService, ILogger<AuditController> logger) : ControllerBase
 {
@@ -125,7 +127,7 @@ public class AuditController(IAuditService auditService, ILogger<AuditController
     /// <summary>
     /// Export audit logs (admin only)
     /// </summary>
-    [HttpPost("export")]
+    [HttpPost(":export")]
     public async Task<ActionResult> ExportAuditLogs([FromBody] AuditExportRequest request)
     {
         try

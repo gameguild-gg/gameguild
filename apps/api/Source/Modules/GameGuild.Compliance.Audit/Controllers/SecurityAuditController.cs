@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +14,8 @@ namespace GameGuild.Compliance.Audit;
 ///     - General audit logs (admin actions, security violations)
 /// </summary>
 [ApiController]
-[Route("api/admin/security-audit")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/admin/security-audit")]
 [Authorize(Roles = "Admin,SystemAdmin")]
 public class SecurityAuditController(
     ISecurityAuditAggregator auditAggregator,
@@ -160,7 +162,7 @@ public class SecurityAuditController(
     /// <summary>
     ///     Export unified security audit logs to CSV.
     /// </summary>
-    [HttpPost("export")]
+    [HttpPost(":export")]
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<ActionResult> ExportSecurityAuditLogs(
         [FromBody] UnifiedSecurityAuditRequest request,
