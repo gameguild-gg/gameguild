@@ -56,6 +56,12 @@ public class PostgreSqlWebApplicationFactory : WebApplicationFactory<GameGuild.A
                 });
             });
 
+            // Ensure database schema is created after configuration
+            var sp = services.BuildServiceProvider();
+            using var scope = sp.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            context.Database.EnsureCreated();
+
             // Add test authentication scheme
             services.AddAuthentication(options =>
             {

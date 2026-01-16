@@ -1,6 +1,7 @@
 using GameGuild.Abstractions;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
+using GameGuild.Commerce;
 using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Products;
 using GameGuild.Identity.Tenants;
@@ -225,9 +226,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<ProductSubscriptionPlan> ProductSubscriptionPlans { get => Set<ProductSubscriptionPlan>(); }
 
-    public DbSet<PricingRule> PricingRules { get => Set<PricingRule>(); }
+    public DbSet<GameGuild.Commerce.PricingRule> PricingRules { get => Set<GameGuild.Commerce.PricingRule>(); }
 
-    public DbSet<PricingTier> PricingTiers { get => Set<PricingTier>(); }
+    public DbSet<GameGuild.Commerce.Products.PricingTier> PricingTiers { get => Set<GameGuild.Commerce.Products.PricingTier>(); }
+
+    public DbSet<GameGuild.Commerce.PricingRuleTier> PricingRuleTiers { get => Set<GameGuild.Commerce.PricingRuleTier>(); }
 
     public DbSet<PromoCode> PromoCodes { get => Set<PromoCode>(); }
 

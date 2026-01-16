@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using GameGuild.Commerce;
 
 namespace GameGuild.Commerce.Products;
 
@@ -115,13 +116,23 @@ public static class ProductsModule
             entity.Property(e => e.Currency).HasMaxLength(3).HasDefaultValue("USD");
         });
 
-        modelBuilder.Entity<PricingRule>(entity =>
+        modelBuilder.Entity<GameGuild.Commerce.PricingRule>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.ProductId);
             entity.HasIndex(e => e.RuleType);
             entity.HasIndex(e => e.IsActive);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.HasMany(e => e.PricingTiers)
+                .WithOne(t => t.PricingRule)
+                .HasForeignKey(t => t.PricingRuleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<GameGuild.Commerce.PricingRuleTier>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.PricingRuleId);
         });
 
         modelBuilder.Entity<PricingTier>(entity =>
