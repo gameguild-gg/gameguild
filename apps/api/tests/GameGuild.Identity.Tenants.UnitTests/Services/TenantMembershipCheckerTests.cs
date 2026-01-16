@@ -16,7 +16,7 @@ public class TenantMembershipCheckerTests
     #region FailClosedTenantMembershipChecker Tests
 
     [Fact]
-    public async Task FailClosedChecker_AlwaysReturnsFalse()
+    public async Task FailClosedChecker_Should_AlwaysReturnFalse()
     {
         // Arrange
         var checker = new FailClosedTenantMembershipChecker();
@@ -31,7 +31,7 @@ public class TenantMembershipCheckerTests
     }
 
     [Fact]
-    public async Task FailClosedChecker_ReturnsFalse_ForAnyInput()
+    public async Task FailClosedChecker_Should_ReturnFalse_ForAnyInput()
     {
         // Arrange
         var checker = new FailClosedTenantMembershipChecker();
@@ -48,7 +48,7 @@ public class TenantMembershipCheckerTests
     #region TenantMembershipChecker Tests (requires mock repository)
 
     [Fact]
-    public async Task TenantMembershipChecker_ReturnsFalse_ForNonMember()
+    public async Task TenantMembershipChecker_Should_ReturnFalse_ForNonMember()
     {
         // Arrange
         var mockRepository = new Mock<ITenantMemberRepository>();
@@ -69,7 +69,7 @@ public class TenantMembershipCheckerTests
     }
 
     [Fact]
-    public async Task TenantMembershipChecker_ReturnsTrue_ForActiveMember()
+    public async Task TenantMembershipChecker_Should_ReturnTrue_ForActiveMember()
     {
         // Arrange
         var mockRepository = new Mock<ITenantMemberRepository>();
@@ -96,7 +96,7 @@ public class TenantMembershipCheckerTests
     }
 
     [Fact]
-    public async Task TenantMembershipChecker_ReturnsFalse_ForInactiveMember()
+    public async Task TenantMembershipChecker_Should_ReturnFalse_ForInactiveMember()
     {
         // Arrange
         var mockRepository = new Mock<ITenantMemberRepository>();
