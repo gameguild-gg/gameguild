@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Identity.Authorization.Queries;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,8 @@ namespace GameGuild.Identity.Authorization.Controllers;
 ///     API controller for Permission Analytics
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/permission-analytics")]
 [Authorize]
 [Produces("application/json")]
 public class PermissionAnalyticsController(ISender sender) : ControllerBase

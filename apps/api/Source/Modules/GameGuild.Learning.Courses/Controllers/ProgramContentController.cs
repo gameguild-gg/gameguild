@@ -1,31 +1,30 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
-
 
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Controller for managing program content with 3-layer DAC permissions Supports tenant-level, content-type-level, and resource-level permissions </summary>
 [ApiController]
-[Route("api/programs/{programId}/content")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/courses/{programId}/content")]
 [Authorize]
 public class ProgramContentController(IProgramContentService contentService) : ControllerBase {
-  /// <summary> Get all content for a program (resource-level Read permission required on parent Program) </summary>
+  /// <summary> Get all content for a course with optional filtering (resource-level Read permission required on parent Program) </summary>
+  /// <remarks>
+  /// Supports filtering via query parameters:
+  /// - level=top: Get only top-level content
+  /// </remarks>
   [HttpGet]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetProgramContent(Guid programId) {
+  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetProgramContent(Guid programId, [FromQuery] string? level = null) {
+    if (level == "top") {
+      var topLevelContent = await contentService.GetTopLevelContentAsync(programId);
+      return Ok(topLevelContent.ToDtos());
+    }
+
     var content = await contentService.GetContentByProgramAsync(programId);
     var contentDtos = content.ToDtos();
-
-    return Ok(contentDtos);
-  }
-
-  /// <summary> Get top-level content for a program (resource-level Read permission required on parent Program) </summary>
-  [HttpGet("top-level")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetTopLevelContent(Guid programId) {
-    var content = await contentService.GetTopLevelContentAsync(programId);
-    var contentDtos = content.ToDtos();
-
     return Ok(contentDtos);
   }
 

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -12,7 +13,8 @@ namespace GameGuild.Projects;
 
 /// <summary> REST API controller for managing projects using CQRS pattern </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/projects")]
 [Authorize]
 public class ProjectsController : ControllerBase {
   private readonly ILogger<ProjectsController> _logger;
@@ -155,7 +157,7 @@ public class ProjectsController : ControllerBase {
   }
 
   /// <summary> Publish a project </summary>
-  [HttpPost("{id:guid}/publish")]
+  [HttpPost("{id:guid}:publish")]
   public async Task<ActionResult<PublishProjectResult>> PublishProject(Guid id) {
     var command = new PublishProjectCommand { ProjectId = id, PublishedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
@@ -167,7 +169,7 @@ public class ProjectsController : ControllerBase {
   }
 
   /// <summary> Unpublish a project </summary>
-  [HttpPost("{id:guid}/unpublish")]
+  [HttpPost("{id:guid}:unpublish")]
   public async Task<ActionResult<UnpublishProjectResult>> UnpublishProject(Guid id) {
     var command = new UnpublishProjectCommand { ProjectId = id, UnpublishedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
@@ -179,7 +181,7 @@ public class ProjectsController : ControllerBase {
   }
 
   /// <summary> Archive a project </summary>
-  [HttpPost("{id:guid}/archive")]
+  [HttpPost("{id:guid}:archive")]
   public async Task<ActionResult<ArchiveProjectResult>> ArchiveProject(Guid id) {
     var command = new ArchiveProjectCommand { ProjectId = id, ArchivedBy = _actorContextAccessor.ActorContext.SubjectIdAsGuid ?? Guid.Empty };
 
@@ -324,7 +326,7 @@ public class ProjectsController : ControllerBase {
   }
 
   /// <summary> Accept a project invitation </summary>
-  [HttpPost("invitations/{invitationToken}/accept")]
+  [HttpPost("invitations/{invitationToken}:accept")]
   public ActionResult<object> AcceptProjectInvitation(string invitationToken) {
     // TODO: Implement actual invitation acceptance logic
     // For now, return success to make tests pass
@@ -332,7 +334,7 @@ public class ProjectsController : ControllerBase {
   }
 
   /// <summary> Decline a project invitation </summary>
-  [HttpPost("invitations/{invitationToken}/decline")]
+  [HttpPost("invitations/{invitationToken}:decline")]
   public ActionResult<object> DeclineProjectInvitation(string invitationToken) {
     // TODO: Implement actual invitation decline logic
     // For now, return success to make tests pass
@@ -374,7 +376,7 @@ public class ProjectsController : ControllerBase {
   }
 
   /// <summary> Share project with role </summary>
-  [HttpPost("{id:guid}/share")]
+  [HttpPost("{id:guid}:share")]
   public ActionResult<object> ShareProject(Guid id, [FromBody] object shareRequest) {
     // TODO: Implement actual project sharing logic
     // For now, return success to make tests pass

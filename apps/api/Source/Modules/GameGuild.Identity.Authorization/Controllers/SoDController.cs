@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Identity.Authorization.Commands;
 using GameGuild.Identity.Authorization.Queries;
 using GameGuild.CQRS;
@@ -11,7 +12,8 @@ namespace GameGuild.Identity.Authorization.Controllers;
 ///     API controller for Separation of Duties (SoD) operations
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/sod")]
 [Authorize]
 [Produces("application/json")]
 public class SoDController(ISender sender) : ControllerBase
@@ -174,7 +176,7 @@ public class SoDController(ISender sender) : ControllerBase
     /// <summary>
     ///     Resolve a SoD violation
     /// </summary>
-    [HttpPost("violations/{id:guid}/resolve")]
+    [HttpPost("violations/{id:guid}:resolve")]
     [ProducesResponseType(typeof(SoDViolation), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ResolveViolation(
@@ -191,7 +193,7 @@ public class SoDController(ISender sender) : ControllerBase
     /// <summary>
     ///     Grant an exception for a SoD violation
     /// </summary>
-    [HttpPost("violations/{id:guid}/exception")]
+    [HttpPost("violations/{id:guid}:exception")]
     [ProducesResponseType(typeof(SoDViolation), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GrantException(
@@ -208,7 +210,7 @@ public class SoDController(ISender sender) : ControllerBase
     /// <summary>
     ///     Scan for SoD violations (admin only)
     /// </summary>
-    [HttpPost("violations/scan")]
+    [HttpPost("violations:scan")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> ScanViolations(
         [FromQuery] Guid? tenantId,

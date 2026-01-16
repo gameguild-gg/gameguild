@@ -14,9 +14,9 @@ This report analyzes GameGuild API endpoints against Google API Design Guideline
 
 | Category | Issues Found | Priority |
 |----------|--------------|----------|
-| Controllers Missing Versioning | 23 controllers | P0 - Critical |
-| Custom Action Syntax Violations | 35+ endpoints | P0 - Critical |
-| Path-based Filters (should be query params) | 23+ endpoints | P1 - High |
+| Controllers Missing Versioning | 19 controllers | P0 - Critical |
+| Custom Action Syntax Violations | 15+ endpoints | P0 - Critical |
+| Path-based Filters (should be query params) | 10+ endpoints | P1 - High |
 | Missing Standard CRUD Methods | 40+ operations | P1 - High |
 | Pagination Pattern Inconsistencies | 4 different patterns | P1 - High |
 | Response Format Inconsistencies | 4+ patterns | P2 - Medium |
@@ -25,9 +25,9 @@ This report analyzes GameGuild API endpoints against Google API Design Guideline
 
 | Status | Count | Examples |
 |--------|-------|----------|
-| ✅ Fully Compliant | 36 | UsersController, AssetsController, OrdersController, FeaturesController |
-| ⚠️ Partially Compliant | 17 | PaymentsController, RolesController |
-| ❌ Needs Full Refactor | 23 | ProgramController, ProjectsController |
+| ✅ Fully Compliant | 44 | UsersController, AssetsController, OrdersController, FeaturesController, ProgramController |
+| ⚠️ Partially Compliant | 12 | PaymentsController, RolesController |
+| ❌ Needs Full Refactor | 19 | ProjectsController, AccessReviewsController |
 
 > **Note:** URL base path (`/api/v1/` vs `/v1/`) is **not a violation**. The `api/` prefix can be configured globally via reverse proxy, API gateway, or subdomain.
 
@@ -62,7 +62,7 @@ This report analyzes GameGuild API endpoints against Google API Design Guideline
 22. [Assets Module](#22-assets-module) ✅ DONE
 23. [Orders Module](#23-orders-module) ✅ DONE
 24. [Features Module](#24-features-module) ✅ DONE
-25. [Learning/Programs Module](#25-learningprograms-module) ❌ NEEDS WORK
+25. [Learning/Programs Module](#25-learningprograms-module) ✅ DONE
 26. [Projects Module](#26-projects-module) ❌ NEEDS WORK
 27. [Authorization Module](#27-authorization-module) ⚠️ MIXED
 28. [Compliance Audit Module](#28-compliance-audit-module) ❌ NEEDS WORK
@@ -1254,57 +1254,102 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 
 ---
 
-## 25. Learning/Programs Module ❌ NEEDS WORK
+## 25. Learning/Programs Module ✅ DONE
 
 ### Controllers
-- `ProgramController.cs` - Program CRUD and enrollment
-- `ProgramContentController.cs` - Content management
-- `ActivityGradeController.cs` - Grading and assessments
-- `ContentInteractionController.cs` - User interactions
+- `ProgramController.cs` - Program CRUD and enrollment ✅ FIXED
+- `ProgramContentController.cs` - Content management ✅ FIXED
+- `ActivityGradeController.cs` - Grading and assessments ✅ FIXED
+- `ContentInteractionController.cs` - User interactions ✅ FIXED
 
-### ProgramController Current Endpoints
+### ProgramController ~~Current~~ FIXED Endpoints
 
-| Method | Path | Violations | Suggested Fix |
-|--------|------|------------|---------------|
-| GET | `/programs` | ❌ Missing versioning | `/v1/programs` |
-| GET | `/programs/{id}` | ❌ Missing versioning | `/v1/programs/{programId}` |
-| POST | `/programs` | ❌ Missing versioning | `/v1/programs` |
-| PUT | `/programs/{id}` | ❌ Missing versioning | `/v1/programs/{programId}` |
-| DELETE | `/programs/{id}` | ❌ Missing versioning | `/v1/programs/{programId}` |
-| GET | `/programs/published` | ❌ Path-based filter | `/v1/programs?status=published` |
-| GET | `/programs/category/{categoryId}` | ❌ Path-based filter | `/v1/programs?categoryId={categoryId}` |
-| GET | `/programs/tag/{tag}` | ❌ Path-based filter | `/v1/programs?tag={tag}` |
-| GET | `/programs/search` | ❌ Missing versioning | `/v1/programs?q={searchTerm}` |
-| GET | `/programs/popular` | ❌ Path-based filter | `/v1/programs?sort=popular` |
-| GET | `/programs/recent` | ❌ Path-based filter | `/v1/programs?sort=recent` |
-| POST | `/programs/{id}/clone` | ❌ Action in path | `/v1/programs/{programId}:clone` |
-| POST | `/programs/{id}/enroll` | ❌ Action in path | `/v1/programs/{programId}:enroll` |
-| POST | `/programs/{id}/unenroll` | ❌ Action in path | `/v1/programs/{programId}:unenroll` |
-| POST | `/programs/{id}/approve` | ❌ Action in path | `/v1/programs/{programId}:approve` |
-| POST | `/programs/{id}/reject` | ❌ Action in path | `/v1/programs/{programId}:reject` |
-| POST | `/programs/{id}/users/{userId}/content/{contentId}/complete` | ❌ Action | `/v1/programs/{programId}/enrollments/{userId}/content/{contentId}:complete` |
+| Method | Path | ~~Violations~~ | Status |
+|--------|------|----------------|--------|
+| GET | `/v1/programs` | ✅ Added versioning, consolidated filters | ✅ DONE |
+| GET | `/v1/programs/{id}` | ✅ Added versioning | ✅ DONE |
+| POST | `/v1/programs` | ✅ Added versioning | ✅ DONE |
+| PUT | `/v1/programs/{id}` | ✅ Added versioning | ✅ DONE |
+| DELETE | `/v1/programs/{id}` | ✅ Added versioning | ✅ DONE |
+| GET | `/v1/programs?status=published` | ✅ Path→query param | ✅ DONE |
+| GET | `/v1/programs?category={category}` | ✅ Path→query param | ✅ DONE |
+| GET | `/v1/programs?difficulty={difficulty}` | ✅ Path→query param | ✅ DONE |
+| GET | `/v1/programs?q={searchTerm}` | ✅ Path→query param | ✅ DONE |
+| GET | `/v1/programs?sort=popular` | ✅ Path→query param | ✅ DONE |
+| GET | `/v1/programs?sort=recent` | ✅ Path→query param | ✅ DONE |
+| GET | `/v1/programs?creatorId={creatorId}` | ✅ Path→query param | ✅ DONE |
+| POST | `/v1/programs/{id}:clone` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:submit` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:approve` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:reject` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:withdraw` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:archive` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:restore` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:publish` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:unpublish` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:schedule` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:monetize` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:disable-monetization` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:create-product` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}:link-product/{productId}` | ✅ Colon syntax | ✅ DONE |
+| DELETE | `/v1/programs/{id}:unlink-product/{productId}` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}/content:reorder` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}/users/{userId}:reset` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{id}/users/{userId}/content/{contentId}:complete` | ✅ Colon syntax | ✅ DONE |
 
-### ProgramContentController Current Endpoints
+### ProgramContentController ~~Current~~ FIXED Endpoints
 
-| Method | Path | Violations | Suggested Fix |
-|--------|------|------------|---------------|
-| GET | `/programs/{programId}/content` | ❌ Missing versioning | `/v1/programs/{programId}/content` |
-| GET | `/programs/{programId}/content/top-level` | ❌ Path-based filter | `/v1/programs/{programId}/content?level=top` |
-| POST | `/programs/{programId}/content` | ❌ Missing versioning | `/v1/programs/{programId}/content` |
-| PUT | `/programs/{programId}/content/{id}` | ❌ Missing versioning | `/v1/programs/{programId}/content/{contentId}` |
-| DELETE | `/programs/{programId}/content/{id}` | ❌ Missing versioning | `/v1/programs/{programId}/content/{contentId}` |
-| POST | `/programs/{programId}/content/reorder` | ❌ Action in path | `/v1/programs/{programId}/content:reorder` |
-| POST | `/programs/{programId}/content/{id}/move` | ❌ Action in path | `/v1/programs/{programId}/content/{contentId}:move` |
-| GET | `/programs/{programId}/content/required` | ❌ Path-based filter | `/v1/programs/{programId}/content?required=true` |
+| Method | Path | ~~Violations~~ | Status |
+|--------|------|----------------|--------|
+| GET | `/v1/programs/{programId}/content` | ✅ Added versioning, consolidated filters | ✅ DONE |
+| GET | `/v1/programs/{programId}/content?level=top` | ✅ Path→query param | ✅ DONE |
+| GET | `/v1/programs/{programId}/content?required=true` | ✅ Path→query param | ✅ DONE |
+| GET | `/v1/programs/{programId}/content?type={type}` | ✅ Path→query param | ✅ DONE |
+| GET | `/v1/programs/{programId}/content?visibility={visibility}` | ✅ Path→query param | ✅ DONE |
+| POST | `/v1/programs/{programId}/content` | ✅ Added versioning | ✅ DONE |
+| PUT | `/v1/programs/{programId}/content/{id}` | ✅ Added versioning | ✅ DONE |
+| DELETE | `/v1/programs/{programId}/content/{id}` | ✅ Added versioning | ✅ DONE |
+| POST | `/v1/programs/{programId}/content:reorder` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{programId}/content/{id}:move` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/programs/{programId}/content:search` | ✅ Colon syntax | ✅ DONE |
 
-### ContentInteractionController Current Endpoints
+### ContentInteractionController ~~Current~~ FIXED Endpoints
 
-| Method | Path | Violations | Suggested Fix |
-|--------|------|------------|---------------|
-| POST | `/content-interactions/start` | ❌ Verb in URL | `/v1/content-interactions` (POST to create) |
-| PUT | `/content-interactions/{interactionId}` | ❌ Missing versioning | `/v1/content-interactions/{interactionId}` |
-| POST | `/content-interactions/{interactionId}/submit` | ❌ Action in path | `/v1/content-interactions/{interactionId}:submit` |
-| POST | `/content-interactions/{interactionId}/complete` | ❌ Action in path | `/v1/content-interactions/{interactionId}:complete` |
+| Method | Path | ~~Violations~~ | Status |
+|--------|------|----------------|--------|
+| POST | `/v1/content-interactions` | ✅ Verb removed, create via POST | ✅ DONE |
+| PUT | `/v1/content-interactions/{interactionId}/progress` | ✅ Added versioning | ✅ DONE |
+| POST | `/v1/content-interactions/{interactionId}:submit` | ✅ Colon syntax | ✅ DONE |
+| POST | `/v1/content-interactions/{interactionId}:complete` | ✅ Colon syntax | ✅ DONE |
+| PUT | `/v1/content-interactions/{interactionId}/time-spent` | ✅ Added versioning | ✅ DONE |
+
+### ActivityGradeController ~~Current~~ FIXED Endpoints
+
+| Method | Path | Status |
+|--------|------|--------|
+| POST | `/v1/programs/{programId}/activity-grades` | ✅ Added versioning |
+| GET | `/v1/programs/{programId}/activity-grades/interaction/{interactionId}` | ✅ Added versioning |
+| GET | `/v1/programs/{programId}/activity-grades/grader/{graderProgramUserId}` | ✅ Added versioning |
+| GET | `/v1/programs/{programId}/activity-grades/student/{programUserId}` | ✅ Added versioning |
+| PUT | `/v1/programs/{programId}/activity-grades/{gradeId}` | ✅ Added versioning |
+| DELETE | `/v1/programs/{programId}/activity-grades/{gradeId}` | ✅ Added versioning |
+| GET | `/v1/programs/{programId}/activity-grades/pending` | ✅ Added versioning |
+| GET | `/v1/programs/{programId}/activity-grades/statistics` | ✅ Added versioning |
+| GET | `/v1/programs/{programId}/activity-grades/content/{contentId}` | ✅ Added versioning |
+
+### Changes Applied
+
+**GameGuild.Programs Module:**
+- [ProgramController.cs](../apps/api/Source/Modules/GameGuild.Programs/Controllers/ProgramController.cs): Added `[ApiVersion("1.0")]`, route changed to `v{version:apiVersion}/programs`, consolidated 7 path-based filters into query params, changed 18 actions to colon syntax
+- [ProgramContentController.cs](../apps/api/Source/Modules/GameGuild.Programs/Controllers/ProgramContentController.cs): Added `[ApiVersion("1.0")]`, route changed to `v{version:apiVersion}/programs/{programId}/content`, consolidated 4 path filters, changed reorder/move/search to colon syntax
+- [ContentInteractionController.cs](../apps/api/Source/Modules/GameGuild.Programs/Controllers/ContentInteractionController.cs): Added `[ApiVersion("1.0")]`, route changed to `v{version:apiVersion}/content-interactions`, removed verb `/start`, changed submit/complete to colon syntax
+- [ActivityGradeController.cs](../apps/api/Source/Modules/GameGuild.Programs/Controllers/ActivityGradeController.cs): Added `[ApiVersion("1.0")]`, route changed to `v{version:apiVersion}/programs/{programId}/activity-grades`
+
+**GameGuild.Learning.Courses Module (duplicate controllers):**
+- [ProgramController.cs](../apps/api/Source/Modules/GameGuild.Learning.Courses/Controllers/ProgramController.cs): Same fixes, route `v{version:apiVersion}/courses`
+- [ProgramContentController.cs](../apps/api/Source/Modules/GameGuild.Learning.Courses/Controllers/ProgramContentController.cs): Same fixes, route `v{version:apiVersion}/courses/{programId}/content`
+- [ContentInteractionController.cs](../apps/api/Source/Modules/GameGuild.Learning.Courses/Controllers/ContentInteractionController.cs): Same fixes, route `v{version:apiVersion}/course-interactions`
+- [ActivityGradeController.cs](../apps/api/Source/Modules/GameGuild.Learning.Courses/Controllers/ActivityGradeController.cs): Same fixes, route `v{version:apiVersion}/courses/{programId}/activity-grades`
 
 ---
 

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Identity.Authorization.Commands;
 using GameGuild.Identity.Authorization.Queries;
 using GameGuild.CQRS;
@@ -11,7 +12,8 @@ namespace GameGuild.Identity.Authorization.Controllers;
 ///     API controller for Access Review operations
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/access-reviews")]
 [Authorize]
 [Produces("application/json")]
 public class AccessReviewsController(ISender sender) : ControllerBase
@@ -70,7 +72,7 @@ public class AccessReviewsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Start a campaign
     /// </summary>
-    [HttpPost("campaigns/{id:guid}/start")]
+    [HttpPost("campaigns/{id:guid}:start")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> StartCampaign(Guid id, CancellationToken cancellationToken)
@@ -87,7 +89,7 @@ public class AccessReviewsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Complete a campaign
     /// </summary>
-    [HttpPost("campaigns/{id:guid}/complete")]
+    [HttpPost("campaigns/{id:guid}:complete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CompleteCampaign(
@@ -108,7 +110,7 @@ public class AccessReviewsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Cancel a campaign
     /// </summary>
-    [HttpPost("campaigns/{id:guid}/cancel")]
+    [HttpPost("campaigns/{id:guid}:cancel")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CancelCampaign(Guid id, CancellationToken cancellationToken)
@@ -125,7 +127,7 @@ public class AccessReviewsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Send reminders for a campaign
     /// </summary>
-    [HttpPost("campaigns/{id:guid}/reminders")]
+    [HttpPost("campaigns/{id:guid}:send-reminders")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> SendReminders(Guid id, CancellationToken cancellationToken)
     {
@@ -157,7 +159,7 @@ public class AccessReviewsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Approve an access review item
     /// </summary>
-    [HttpPost("items/{id:guid}/approve")]
+    [HttpPost("items/{id:guid}:approve")]
     [ProducesResponseType(typeof(AccessReviewItem), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ApproveItem(
@@ -174,7 +176,7 @@ public class AccessReviewsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Revoke access for a review item
     /// </summary>
-    [HttpPost("items/{id:guid}/revoke")]
+    [HttpPost("items/{id:guid}:revoke")]
     [ProducesResponseType(typeof(AccessReviewItem), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RevokeItem(
@@ -191,7 +193,7 @@ public class AccessReviewsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Process expired campaigns (admin only)
     /// </summary>
-    [HttpPost("campaigns/process-expired")]
+    [HttpPost("campaigns:process-expired")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> ProcessExpiredCampaigns(CancellationToken cancellationToken)
     {

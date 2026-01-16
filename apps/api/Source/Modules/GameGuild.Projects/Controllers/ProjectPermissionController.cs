@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
@@ -9,7 +10,8 @@ namespace GameGuild.Projects;
 
 /// <summary> Controller specifically for managing project permissions and collaboration Extends the base resource permission functionality with project-specific features </summary>
 [ApiController]
-[Route("api/projects/{projectId}/permissions")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/projects/{projectId}/permissions")]
 [Authorize]
 public class ProjectPermissionController : ControllerBase {
   private readonly ILogger<ProjectPermissionController> _logger;
@@ -155,7 +157,7 @@ public class ProjectPermissionController : ControllerBase {
   }
 
   /// <summary> Share project with multiple users using a role template </summary>
-  [HttpPost("share-with-role")]
+  [HttpPost(":share-with-role")]
   [RequireProjectPermission(PermissionType.Share)]
   public async Task<ActionResult<ShareResult>> ShareProjectWithRole(Guid projectId, [FromBody] ShareProjectWithRoleRequest request) {
     var userId = GetCurrentUserId();

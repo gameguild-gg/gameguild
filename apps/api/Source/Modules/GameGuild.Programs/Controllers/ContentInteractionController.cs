@@ -1,8 +1,8 @@
 
 
+using Asp.Versioning;
 using GameGuild.Enums;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace GameGuild.Programs;
 
@@ -11,15 +11,16 @@ namespace GameGuild.Programs;
 /// Follows permission inheritance: ContentInteraction inherits permissions from Program
 /// </summary>
 [ApiController]
-[Route("[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/content-interactions")]
 public class ContentInteractionController(IContentInteractionService contentInteractionService, IProgramContentService programContentService) : ControllerBase {
   /// <summary>
-  /// Start or resume content interaction
+  /// Create or resume a content interaction
   /// Requires Read permission on the parent Program
   /// </summary>
-  [HttpPost("start")]
+  [HttpPost]
   // [GameGuild.Identity.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<ContentInteractionDto>> StartContent([FromQuery] Guid programId, [FromBody] StartContentRequest request) {
+  public async Task<ActionResult<ContentInteractionDto>> CreateInteraction([FromQuery] Guid programId, [FromBody] StartContentRequest request) {
     try {
       // Verify content belongs to the specified program
       var content = await programContentService.GetContentByIdAsync(request.ContentId);
@@ -58,7 +59,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   /// Submit content interaction (makes it immutable)
   /// Requires Edit permission on the parent Program
   /// </summary>
-  [HttpPost("{interactionId}/submit")]
+  [HttpPost("{interactionId}:submit")]
   // [GameGuild.Identity.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> SubmitContent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] SubmitContentRequest request) {
     try {
@@ -79,7 +80,7 @@ public class ContentInteractionController(IContentInteractionService contentInte
   /// Mark content as completed
   /// Requires Edit permission on the parent Program
   /// </summary>
-  [HttpPost("{interactionId}/complete")]
+  [HttpPost("{interactionId}:complete")]
   // [GameGuild.Identity.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ContentInteractionDto>> CompleteContent([FromRoute] Guid interactionId, [FromQuery] Guid programId, [FromBody] CompleteContentRequest request) {
     try {

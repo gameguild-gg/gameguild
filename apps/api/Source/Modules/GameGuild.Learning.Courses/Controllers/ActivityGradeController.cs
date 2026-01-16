@@ -1,12 +1,13 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
-
 
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Controller for managing activity grades with Program permission inheritance Follows permission chain: ActivityGrade → ContentInteraction → ProgramContent → Program All operations require Program-level permissions </summary>
 [ApiController]
-[Route("api/programs/{programId}/activity-grades")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/courses/{programId}/activity-grades")]
 [Authorize]
 public class ActivityGradeController(IActivityGradeService activityGradeService) : ControllerBase {
   /// <summary> Grade a content interaction (Program-level Edit permission required) </summary>

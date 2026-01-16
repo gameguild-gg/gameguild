@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Identity.Authorization.Commands;
 using GameGuild.Identity.Authorization.Queries;
 using GameGuild.CQRS;
@@ -11,7 +12,8 @@ namespace GameGuild.Identity.Authorization.Controllers;
 ///     API controller for Delegated Administration operations
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/delegated-admin")]
 [Authorize]
 [Produces("application/json")]
 public class DelegatedAdminController(ISender sender) : ControllerBase

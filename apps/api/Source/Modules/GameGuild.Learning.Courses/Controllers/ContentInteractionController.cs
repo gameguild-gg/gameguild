@@ -1,5 +1,5 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-
 
 namespace GameGuild.Learning.Courses;
 
@@ -8,15 +8,16 @@ namespace GameGuild.Learning.Courses;
 /// Follows permission inheritance: ContentInteraction inherits permissions from Program
 /// </summary>
 [ApiController]
-[Route("[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/course-interactions")]
 public class ContentInteractionController(IContentInteractionService contentInteractionService, IProgramContentService programContentService) : ControllerBase {
   /// <summary>
-  /// Start or resume content interaction
+  /// Create or resume a content interaction
   /// Requires Read permission on the parent Program
   /// </summary>
-  [HttpPost("start")]
+  [HttpPost]
   // [GameGuild.Identity.Authorization.RequireResourcePermissionAttribute<ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<ContentInteractionDto>> StartContent([FromQuery] Guid programId, [FromBody] StartContentRequest request) {
+  public async Task<ActionResult<ContentInteractionDto>> CreateInteraction([FromQuery] Guid programId, [FromBody] StartContentRequest request) {
     try {
       // Verify content belongs to the specified program
       var content = await programContentService.GetContentByIdAsync(request.ContentId);

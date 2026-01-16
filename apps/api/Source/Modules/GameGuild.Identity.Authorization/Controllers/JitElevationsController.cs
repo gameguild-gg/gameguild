@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Identity.Authorization.Commands;
 using GameGuild.Identity.Authorization.Queries;
 using GameGuild.CQRS;
@@ -11,7 +12,8 @@ namespace GameGuild.Identity.Authorization.Controllers;
 ///     API controller for JIT (Just-in-Time) elevation operations
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/jit-elevations")]
 [Authorize]
 [Produces("application/json")]
 public class JitElevationsController(ISender sender) : ControllerBase
@@ -34,7 +36,7 @@ public class JitElevationsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Approve a pending JIT elevation request
     /// </summary>
-    [HttpPost("{id:guid}/approve")]
+    [HttpPost("{id:guid}:approve")]
     [ProducesResponseType(typeof(JitElevationRequest), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Approve(
@@ -51,7 +53,7 @@ public class JitElevationsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Deny a pending JIT elevation request
     /// </summary>
-    [HttpPost("{id:guid}/deny")]
+    [HttpPost("{id:guid}:deny")]
     [ProducesResponseType(typeof(JitElevationRequest), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Deny(
@@ -68,7 +70,7 @@ public class JitElevationsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Revoke an active JIT elevation
     /// </summary>
-    [HttpPost("{id:guid}/revoke")]
+    [HttpPost("{id:guid}:revoke")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Revoke(
@@ -167,7 +169,7 @@ public class JitElevationsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Cleanup expired elevations (admin only)
     /// </summary>
-    [HttpPost("cleanup")]
+    [HttpPost(":cleanup")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> CleanupExpired(CancellationToken cancellationToken)
     {

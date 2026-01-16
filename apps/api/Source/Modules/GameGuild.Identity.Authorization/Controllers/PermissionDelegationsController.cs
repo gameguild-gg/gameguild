@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Identity.Authorization.Commands;
 using GameGuild.Identity.Authorization.Queries;
 using GameGuild.CQRS;
@@ -11,7 +12,8 @@ namespace GameGuild.Identity.Authorization.Controllers;
 ///     API controller for permission delegation operations
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/permission-delegations")]
 [Authorize]
 [Produces("application/json")]
 public class PermissionDelegationsController(ISender sender) : ControllerBase
@@ -118,7 +120,7 @@ public class PermissionDelegationsController(ISender sender) : ControllerBase
     /// <summary>
     ///     Cleanup expired delegations (admin only)
     /// </summary>
-    [HttpPost("cleanup")]
+    [HttpPost(":cleanup")]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> CleanupExpired(CancellationToken cancellationToken)
     {

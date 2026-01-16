@@ -1,35 +1,62 @@
 
 
 
+using Asp.Versioning;
 using GameGuild.Enums;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
-
 
 namespace GameGuild.Programs;
 
 /// <summary> Controller for managing program content with 3-layer DAC permissions Supports tenant-level, content-type-level, and resource-level permissions </summary>
 [ApiController]
-[Route("api/programs/{programId}/content")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/programs/{programId}/content")]
 [Authorize]
 public class ProgramContentController(IProgramContentService contentService) : ControllerBase {
-  /// <summary> Get all content for a program (resource-level Read permission required on parent Program) </summary>
+  /// <summary> Get all content for a program with optional filtering (resource-level Read permission required on parent Program) </summary>
+  /// <remarks>
+  /// Supports filtering via query parameters:
+  /// - level=top: Get only top-level content
+  /// - required=true: Get only required content
+  /// - type={type}: Filter by content type
+  /// - visibility={visibility}: Filter by visibility
+  /// </remarks>
   [HttpGet]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetProgramContent(Guid programId) {
+  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetProgramContent(
+      Guid programId,
+      [FromQuery] string? level = null,
+      [FromQuery] bool? required = null,
+      [FromQuery] ProgramContentType? type = null,
+      [FromQuery] Visibility? visibility = null) {
+    // Handle top-level filter
+    if (level == "top") {
+      var topLevelContent = await contentService.GetTopLevelContentAsync(programId);
+      return Ok(topLevelContent.ToDtos());
+    }
+
+    // Handle required filter
+    if (required == true) {
+      var requiredContent = await contentService.GetRequiredContentAsync(programId);
+      return Ok(requiredContent.ToDtos());
+    }
+
+    // Handle content type filter
+    if (type.HasValue) {
+      var typeContent = await contentService.GetContentByTypeAsync(programId, type.Value);
+      return Ok(typeContent.ToDtos());
+    }
+
+    // Handle visibility filter
+    if (visibility.HasValue) {
+      var visibilityContent = await contentService.GetContentByVisibilityAsync(programId, visibility.Value);
+      return Ok(visibilityContent.ToDtos());
+    }
+
+    // Default: return all content
     var content = await contentService.GetContentByProgramAsync(programId);
     var contentDtos = content.ToDtos();
-
-    return Ok(contentDtos);
-  }
-
-  /// <summary> Get top-level content for a program (resource-level Read permission required on parent Program) </summary>
-  [HttpGet("top-level")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetTopLevelContent(Guid programId) {
-    var content = await contentService.GetTopLevelContentAsync(programId);
-    var contentDtos = content.ToDtos();
-
     return Ok(contentDtos);
   }
 
@@ -109,7 +136,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   }
 
   /// <summary> Reorder content within a program (resource-level Edit permission required on parent Program) </summary>
-  [HttpPost("reorder")]
+  [HttpPost(":reorder")]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult> ReorderContent(Guid programId, [FromBody] ReorderContentDto reorderDto) {
     // Convert the simple list to (Id, SortOrder) tuples
@@ -122,7 +149,7 @@ public class ProgramContentController(IProgramContentService contentService) : C
   }
 
   /// <summary> Move content to a new parent/position (resource-level Edit permission required on parent Program) </summary>
-  [HttpPost("{id}/move")]
+  [HttpPost("{id}:move")]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult> MoveContent(Guid programId, Guid id, [FromBody] MoveContentDto moveDto) {
     if (moveDto.ContentId != id) return BadRequest("Content ID in URL must match Content ID in request body");
@@ -138,38 +165,8 @@ public class ProgramContentController(IProgramContentService contentService) : C
     return Ok();
   }
 
-  /// <summary> Get required content for a program (resource-level Read permission required on parent Program) </summary>
-  [HttpGet("required")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetRequiredContent(Guid programId) {
-    var requiredContent = await contentService.GetRequiredContentAsync(programId);
-    var contentDtos = requiredContent.ToDtos();
-
-    return Ok(contentDtos);
-  }
-
-  /// <summary> Get content by type (resource-level Read permission required on parent Program) </summary>
-  [HttpGet("by-type/{type}")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByType(Guid programId, ProgramContentType type) {
-    var content = await contentService.GetContentByTypeAsync(programId, type);
-    var contentDtos = content.ToDtos();
-
-    return Ok(contentDtos);
-  }
-
-  /// <summary> Get content by visibility (resource-level Read permission required on parent Program) </summary>
-  [HttpGet("by-visibility/{visibility}")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
-  public async Task<ActionResult<IEnumerable<ProgramContentDto>>> GetContentByVisibility(Guid programId, Visibility visibility) {
-    var content = await contentService.GetContentByVisibilityAsync(programId, visibility);
-    var contentDtos = content.ToDtos();
-
-    return Ok(contentDtos);
-  }
-
   /// <summary> Search content within a program (resource-level Read permission required on parent Program) </summary>
-  [HttpPost("search")]
+  [HttpPost(":search")]
   // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ProgramContentDto>>> SearchContent(Guid programId, [FromBody] SearchContentDto searchDto) {
     if (searchDto.ProgramId != programId) return BadRequest("Program ID in URL must match Program ID in request body");
