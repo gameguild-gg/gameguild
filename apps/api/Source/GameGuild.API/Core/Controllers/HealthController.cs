@@ -400,9 +400,9 @@ public class HealthController(HealthCheckService healthCheckService, ILogger<Hea
             
             // Fallback: use file last write time
             var location = assembly.Location;
-            if (!string.IsNullOrEmpty(location) && File.Exists(location))
+            if (!string.IsNullOrEmpty(location) && System.IO.File.Exists(location))
             {
-                return File.GetLastWriteTimeUtc(location);
+                return System.IO.File.GetLastWriteTimeUtc(location);
             }
         }
         catch
