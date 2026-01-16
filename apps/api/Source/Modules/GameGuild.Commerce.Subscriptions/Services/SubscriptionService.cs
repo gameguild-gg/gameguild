@@ -1,5 +1,6 @@
 using GameGuild.SharedKernel;
 using GameGuild.ValueObjects;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Subscriptions;
 
@@ -12,6 +13,7 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     - Entity contains all business logic (state machine, validation)
 ///     - Repository handles persistence
 ///     - Service orchestrates load → mutate → save workflow
+///     - Notification service handles user notifications
 /// </remarks>
 public class SubscriptionService : 
     ISubscriptionLifecycleService, 
@@ -21,11 +23,19 @@ public class SubscriptionService :
 {
     private readonly ISubscriptionRepository _repository;
     private readonly ISubscriptionPlanService _planService;
+    private readonly ISubscriptionNotificationService _notificationService;
+    private readonly ILogger<SubscriptionService> _logger;
 
-    public SubscriptionService(ISubscriptionRepository repository, ISubscriptionPlanService planService)
+    public SubscriptionService(
+        ISubscriptionRepository repository, 
+        ISubscriptionPlanService planService,
+        ISubscriptionNotificationService notificationService,
+        ILogger<SubscriptionService> logger)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _planService = planService ?? throw new ArgumentNullException(nameof(planService));
+        _notificationService = notificationService ?? throw new ArgumentNullException(nameof(notificationService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     #region Private Helpers (DRY principle)
@@ -334,25 +344,46 @@ public class SubscriptionService :
     public async Task SendRenewalRemindersAsync(int daysBeforeRenewal, CancellationToken cancellationToken = default)
     {
         var subscriptions = await _repository.GetDueForRenewalAsync(daysBeforeRenewal, cancellationToken).ConfigureAwait(false);
+        var subscriptionList = subscriptions.ToList();
         
-        // NOTE: Notifications will be implemented when GameGuild.Notifications module is available.
-        // This method currently retrieves subscriptions due for renewal but notification dispatch is pending.
-        foreach (var subscription in subscriptions)
+        _logger.LogInformation("Sending renewal reminders to {Count} subscriptions due for renewal in {Days} days", 
+            subscriptionList.Count, daysBeforeRenewal);
+        
+        foreach (var subscription in subscriptionList)
         {
-            // Future: await _notificationService.SendRenewalReminderAsync(subscription, cancellationToken);
-            _ = subscription; // Suppress unused variable warning until notification service is available
+            try
+            {
+                await _notificationService.SendRenewalReminderAsync(subscription, daysBeforeRenewal, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send renewal reminder for subscription {SubscriptionId}", subscription.Id);
+                // Continue processing other subscriptions
+            }
         }
     }
 
     public async Task SendTrialExpirationRemindersAsync(int daysBeforeExpiration, CancellationToken cancellationToken = default)
     {
         var subscriptions = await _repository.GetTrialsExpiringSoonAsync(daysBeforeExpiration, cancellationToken).ConfigureAwait(false);
+        var subscriptionList = subscriptions.ToList();
         
-        // NOTE: Notifications will be implemented when GameGuild.Notifications module is available.
-        foreach (var subscription in subscriptions)
+        _logger.LogInformation("Sending trial expiration reminders to {Count} subscriptions with trials expiring in {Days} days", 
+            subscriptionList.Count, daysBeforeExpiration);
+        
+        foreach (var subscription in subscriptionList)
         {
-            // Future: await _notificationService.SendTrialExpirationReminderAsync(subscription, cancellationToken);
-            _ = subscription;
+            try
+            {
+                await _notificationService.SendTrialExpirationReminderAsync(subscription, daysBeforeExpiration, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send trial expiration reminder for subscription {SubscriptionId}", subscription.Id);
+                // Continue processing other subscriptions
+            }
         }
     }
 

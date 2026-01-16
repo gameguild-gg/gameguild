@@ -23,6 +23,9 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionQueryService>(sp => sp.GetRequiredService<SubscriptionService>());
         services.AddScoped<ISubscriptionExternalIdService>(sp => sp.GetRequiredService<SubscriptionService>());
         
+        // Register Subscription Notification Service
+        services.AddScoped<ISubscriptionNotificationService, SubscriptionNotificationService>();
+        
         // Register Plan Pricing Resolver for cross-module pricing lookups (Payments module integration)
         services.AddScoped<IPlanPricingResolver, SubscriptionPlanPricingResolver>();
         

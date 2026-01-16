@@ -1,33 +1,70 @@
 using GameGuild.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Tax calculation service implementation
+///     Tax calculation service implementation with in-memory caching for tax rate lookups.
+///     Caching strategy: Tax rates and jurisdictions change infrequently, so we use a sliding
+///     expiration of 30 minutes with an absolute expiration of 2 hours to balance freshness
+///     with database load reduction.
 /// </summary>
-public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCalculationService> logger) : ITaxCalculationService
+public class TaxCalculationService : ITaxCalculationService
 {
-    private DbSet<TaxJurisdiction> TaxJurisdictions { get => context.Set<TaxJurisdiction>(); }
+    private readonly IApplicationDbContext _context;
+    private readonly ILogger<TaxCalculationService> _logger;
+    private readonly IMemoryCache _cache;
+
+    // Cache configuration constants
+    private static readonly TimeSpan CacheSlidingExpiration = TimeSpan.FromMinutes(30);
+    private static readonly TimeSpan CacheAbsoluteExpiration = TimeSpan.FromHours(2);
+    
+    // Cache key prefixes
+    private const string TaxRateCacheKeyPrefix = "TaxRate:";
+    private const string JurisdictionCacheKeyPrefix = "TaxJurisdiction:";
+    private const string ExemptionCacheKeyPrefix = "TaxExemption:";
+    private const string AllJurisdictionsCacheKey = "TaxJurisdictions:All";
+
+    public TaxCalculationService(
+        IApplicationDbContext context, 
+        ILogger<TaxCalculationService> logger,
+        IMemoryCache cache)
+    {
+        _context = context ?? throw new ArgumentNullException(nameof(context));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+    }
+
+    private DbSet<TaxJurisdiction> TaxJurisdictions => _context.Set<TaxJurisdiction>();
 
     // ReSharper disable once UnusedMember.Local - Reserved for direct TaxRule queries if needed
-    private DbSet<TaxRule> TaxRules { get => context.Set<TaxRule>(); }
+    private DbSet<TaxRule> TaxRules => _context.Set<TaxRule>();
 
-    private DbSet<TaxRate> TaxRates { get => context.Set<TaxRate>(); }
+    private DbSet<TaxRate> TaxRates => _context.Set<TaxRate>();
     
-    private DbSet<CustomerTaxExemption> CustomerTaxExemptions { get => context.Set<CustomerTaxExemption>(); }
+    private DbSet<CustomerTaxExemption> CustomerTaxExemptions => _context.Set<CustomerTaxExemption>();
+
+    /// <summary>
+    ///     Creates cache entry options with standard sliding and absolute expiration.
+    /// </summary>
+    private static MemoryCacheEntryOptions CreateCacheEntryOptions() => new()
+    {
+        SlidingExpiration = CacheSlidingExpiration,
+        AbsoluteExpirationRelativeToNow = CacheAbsoluteExpiration
+    };
 
     public async Task<TaxCalculationResult> CalculateTaxAsync(TaxCalculationRequest request, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Calculating tax for jurisdiction {Jurisdiction}, amount {Amount}, customer type {CustomerType}", request.JurisdictionCode, request.Amount, request.CustomerType);
+        _logger.LogInformation("Calculating tax for jurisdiction {Jurisdiction}, amount {Amount}, customer type {CustomerType}", request.JurisdictionCode, request.Amount, request.CustomerType);
 
-        // Get jurisdiction
-        var jurisdiction = await TaxJurisdictions.Include(j => j.TaxRules).ThenInclude(r => r.DefaultTaxRate).FirstOrDefaultAsync(j => j.Code == request.JurisdictionCode && j.IsActive, cancellationToken);
+        // Get jurisdiction with caching
+        var jurisdiction = await GetCachedJurisdictionAsync(request.JurisdictionCode, cancellationToken);
 
         if (jurisdiction == null)
         {
-            logger.LogWarning("Tax jurisdiction {Jurisdiction} not found", request.JurisdictionCode);
+            _logger.LogWarning("Tax jurisdiction {Jurisdiction} not found", request.JurisdictionCode);
 
             return CreateZeroTaxResult(request);
         }
@@ -43,17 +80,17 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
 
         if (applicableRules.Count == 0)
         {
-            logger.LogWarning("No applicable tax rules found for jurisdiction {Jurisdiction}", request.JurisdictionCode);
+            _logger.LogWarning("No applicable tax rules found for jurisdiction {Jurisdiction}", request.JurisdictionCode);
 
             return CreateZeroTaxResult(request);
         }
 
-        // Get tax rate
+        // Get tax rate with caching
         var taxRate = await GetTaxRateAsync(request.JurisdictionCode, TaxType.VAT, request.ProductCategory, request.TransactionDate, cancellationToken);
 
         if (taxRate == null)
         {
-            logger.LogWarning("No tax rate found for jurisdiction {Jurisdiction}", request.JurisdictionCode);
+            _logger.LogWarning("No tax rate found for jurisdiction {Jurisdiction}", request.JurisdictionCode);
 
             return CreateZeroTaxResult(request);
         }
@@ -62,32 +99,88 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
         return CalculateTax(request, jurisdiction, taxRate, applicableRules.First());
     }
 
+    /// <summary>
+    ///     Gets a tax jurisdiction from cache or database.
+    /// </summary>
+    private async Task<TaxJurisdiction?> GetCachedJurisdictionAsync(string jurisdictionCode, CancellationToken cancellationToken)
+    {
+        var cacheKey = $"{JurisdictionCacheKeyPrefix}{jurisdictionCode.ToUpperInvariant()}";
+
+        if (_cache.TryGetValue(cacheKey, out TaxJurisdiction? cached) && cached != null)
+        {
+            _logger.LogDebug("Cache hit for jurisdiction {JurisdictionCode}", jurisdictionCode);
+            return cached;
+        }
+
+        _logger.LogDebug("Cache miss for jurisdiction {JurisdictionCode}, loading from database", jurisdictionCode);
+        
+        var jurisdiction = await TaxJurisdictions
+            .Include(j => j.TaxRules)
+            .ThenInclude(r => r.DefaultTaxRate)
+            .FirstOrDefaultAsync(j => j.Code == jurisdictionCode && j.IsActive, cancellationToken);
+
+        if (jurisdiction != null)
+        {
+            _cache.Set(cacheKey, jurisdiction, CreateCacheEntryOptions());
+        }
+
+        return jurisdiction;
+    }
+
     public async Task<TaxRate?> GetTaxRateAsync(string jurisdictionCode, TaxType taxType, string? productCategory = null, DateTime? effectiveDate = null, CancellationToken cancellationToken = default)
     {
         var date = effectiveDate ?? DateTime.UtcNow;
+        
+        // Create a cache key that includes all relevant parameters
+        // Note: We cache based on date truncated to the day to allow reasonable caching while still
+        // respecting effective date ranges
+        var cacheKey = $"{TaxRateCacheKeyPrefix}{jurisdictionCode.ToUpperInvariant()}:{taxType}:{productCategory ?? "default"}:{date:yyyyMMdd}";
+
+        if (_cache.TryGetValue(cacheKey, out TaxRate? cached) && cached != null)
+        {
+            _logger.LogDebug("Cache hit for tax rate: {JurisdictionCode}, {TaxType}, {Category}", jurisdictionCode, taxType, productCategory);
+            return cached;
+        }
+
+        _logger.LogDebug("Cache miss for tax rate: {JurisdictionCode}, {TaxType}, {Category}, loading from database", jurisdictionCode, taxType, productCategory);
 
         var query = TaxRates.Include(r => r.TaxJurisdiction)
             .Where(r => r.TaxJurisdiction.Code == jurisdictionCode && r.TaxType == taxType && r.IsActive && r.EffectiveFrom <= date && (r.EffectiveTo == null || r.EffectiveTo >= date));
 
+        TaxRate? result = null;
+
         // Try exact product category match first
         if (!string.IsNullOrEmpty(productCategory))
         {
-            var categoryMatch = await query.FirstOrDefaultAsync(r => r.ProductCategory == productCategory, cancellationToken);
-
-            if (categoryMatch != null) return categoryMatch;
+            result = await query.FirstOrDefaultAsync(r => r.ProductCategory == productCategory, cancellationToken);
         }
 
-        // Fall back to default (null category)
-        return await query.FirstOrDefaultAsync(r => r.ProductCategory == null, cancellationToken);
+        // Fall back to default (null category) if no category match
+        result ??= await query.FirstOrDefaultAsync(r => r.ProductCategory == null, cancellationToken);
+
+        if (result != null)
+        {
+            _cache.Set(cacheKey, result, CreateCacheEntryOptions());
+        }
+
+        return result;
     }
 
     public async Task<bool> ValidateTaxExemptionAsync(Guid customerId, string jurisdictionCode, CancellationToken cancellationToken = default)
     {
-        logger.LogDebug("Validating tax exemption for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
+        _logger.LogDebug("Validating tax exemption for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
             customerId, jurisdictionCode);
 
         var now = DateTime.UtcNow;
         var normalizedJurisdiction = jurisdictionCode.ToUpperInvariant();
+        
+        // Check cache first for tax exemption status
+        var cacheKey = $"{ExemptionCacheKeyPrefix}{customerId}:{normalizedJurisdiction}";
+        if (_cache.TryGetValue(cacheKey, out bool cachedResult))
+        {
+            _logger.LogDebug("Cache hit for tax exemption: customer {CustomerId}, jurisdiction {JurisdictionCode}", customerId, jurisdictionCode);
+            return cachedResult;
+        }
 
         // Query the customer tax exemption registry for valid exemptions
         var exemption = await CustomerTaxExemptions
@@ -101,10 +194,11 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
 
         if (exemption != null)
         {
-            logger.LogInformation(
+            _logger.LogInformation(
                 "Valid tax exemption found for customer {CustomerId} in jurisdiction {JurisdictionCode}: " +
                 "Certificate {CertificateNumber}, Type {ExemptionType}",
                 customerId, jurisdictionCode, exemption.CertificateNumber, exemption.ExemptionType);
+            _cache.Set(cacheKey, true, CreateCacheEntryOptions());
             return true;
         }
 
@@ -123,22 +217,41 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
 
             if (parentExemption != null)
             {
-                logger.LogInformation(
+                _logger.LogInformation(
                     "Valid parent jurisdiction tax exemption found for customer {CustomerId}: " +
                     "Parent {ParentJurisdiction} covers {ChildJurisdiction}",
                     customerId, parentJurisdiction, jurisdictionCode);
+                _cache.Set(cacheKey, true, CreateCacheEntryOptions());
                 return true;
             }
         }
 
-        logger.LogDebug("No valid tax exemption found for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
+        _logger.LogDebug("No valid tax exemption found for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
             customerId, jurisdictionCode);
+        _cache.Set(cacheKey, false, CreateCacheEntryOptions());
         return false;
     }
 
     public async Task<IEnumerable<TaxJurisdiction>> GetTaxJurisdictionsAsync(CancellationToken cancellationToken = default)
     {
-        var jurisdictions = await TaxJurisdictions.Include(j => j.ParentJurisdiction).Include(j => j.ChildJurisdictions).Where(j => j.IsActive).OrderBy(j => j.Type).ThenBy(j => j.Name).ToListAsync(cancellationToken);
+        // Check cache for all jurisdictions
+        if (_cache.TryGetValue(AllJurisdictionsCacheKey, out List<TaxJurisdiction>? cached) && cached != null)
+        {
+            _logger.LogDebug("Cache hit for all tax jurisdictions");
+            return cached;
+        }
+
+        _logger.LogDebug("Cache miss for all tax jurisdictions, loading from database");
+        
+        var jurisdictions = await TaxJurisdictions
+            .Include(j => j.ParentJurisdiction)
+            .Include(j => j.ChildJurisdictions)
+            .Where(j => j.IsActive)
+            .OrderBy(j => j.Type)
+            .ThenBy(j => j.Name)
+            .ToListAsync(cancellationToken);
+
+        _cache.Set(AllJurisdictionsCacheKey, jurisdictions, CreateCacheEntryOptions());
 
         return jurisdictions;
     }
@@ -156,7 +269,7 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
         // This allows B2B transactions to proceed with format-valid VAT numbers.
         // Invalid formats are rejected, preventing obvious data entry errors.
         
-        logger.LogDebug("Validating VAT number {VatNumber} for country {CountryCode}", 
+        _logger.LogDebug("Validating VAT number {VatNumber} for country {CountryCode}", 
             vatNumber, countryCode);
             
         await Task.CompletedTask;
@@ -277,7 +390,7 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
     {
         var date = effectiveDate ?? DateTime.UtcNow;
 
-        return await context.Set<TaxRule>()
+        return await _context.Set<TaxRule>()
             .Include(tr => tr.TaxJurisdiction)
             .Where(tr => tr.TaxJurisdiction.Code == jurisdictionCode &&
                          (tr.CustomerTypeFilter == null || tr.CustomerTypeFilter == customerType) &&
