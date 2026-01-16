@@ -454,34 +454,37 @@ All violations in this section have been resolved:
 
 ---
 
-## 11. Products Endpoints
+## 11. Products Endpoints ✅ DONE
 
-### Current Endpoints
+### ~~Current Endpoints~~ FIXED
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/api/products/{productId}` | Get product | ⚠️ Needs version |
-| PUT | `/api/products/{productId}` | Update product | ⚠️ Needs version |
-| DELETE | `/api/products/{productId}` | Delete product | ⚠️ Needs version |
-| GET | `/api/products` | List products | ⚠️ Needs version |
-| POST | `/api/products` | Create product | ⚠️ Needs version |
+| ~~GET~~ | ~~`/api/products/{productId}`~~ | ~~Get product~~ | ✅ `GET /v1/products/{productId}` |
+| ~~PUT~~ | ~~`/api/products/{productId}`~~ | ~~Update product~~ | ✅ `PUT /v1/products/{productId}` |
+| ~~DELETE~~ | ~~`/api/products/{productId}`~~ | ~~Delete product~~ | ✅ `DELETE /v1/products/{productId}` |
+| ~~GET~~ | ~~`/api/products`~~ | ~~List products~~ | ✅ `GET /v1/products` |
+| ~~POST~~ | ~~`/api/products`~~ | ~~Create product~~ | ✅ `POST /v1/products` |
 
-### Violations
+### ~~Violations~~ FIXED
 
-1. **Missing version prefix** - All endpoints need `v1`
-2. **Missing PATCH** - Should support partial updates
+1. ~~**Missing version prefix** - All endpoints need `v1`~~ ✅ FIXED
+2. **Missing PATCH** - Should support partial updates (Optional, not implemented)
 
-### Required Fixes
+### ~~Required Fixes~~ FIXED
 
-| Priority | Current | Fixed | Reason |
-|----------|---------|-------|--------|
-| P1 | `GET /api/products/{productId}` | `GET /v1/products/{productId}` | Version prefix |
-| P1 | `PUT /api/products/{productId}` | `PUT /v1/products/{productId}` | Version prefix |
-| P1 | `DELETE /api/products/{productId}` | `DELETE /v1/products/{productId}` | Version prefix |
-| P1 | `GET /api/products` | `GET /v1/products` | Version prefix |
-| P1 | `POST /api/products` | `POST /v1/products` | Version prefix |
+| Priority | Current | Fixed | Reason | Status |
+|----------|---------|-------|--------|--------|
+| ~~P1~~ | ~~`GET /api/products/{productId}`~~ | `GET /v1/products/{productId}` | Version prefix | ✅ DONE |
+| ~~P1~~ | ~~`PUT /api/products/{productId}`~~ | `PUT /v1/products/{productId}` | Version prefix | ✅ DONE |
+| ~~P1~~ | ~~`DELETE /api/products/{productId}`~~ | `DELETE /v1/products/{productId}` | Version prefix | ✅ DONE |
+| ~~P1~~ | ~~`GET /api/products`~~ | `GET /v1/products` | Version prefix | ✅ DONE |
+| ~~P1~~ | ~~`POST /api/products`~~ | `POST /v1/products` | Version prefix | ✅ DONE |
 
-### Missing Endpoints (Must Add)
+**Changes Applied:**
+- [ProductsController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Products/Controllers/ProductsController.cs): Added `ApiVersion("1.0")`, route updated from `api/[controller]` to `v{version:apiVersion}/products`, added `[Tags("products")]`
+
+### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|

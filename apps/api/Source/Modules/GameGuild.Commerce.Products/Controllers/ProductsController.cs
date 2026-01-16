@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.CQRS;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +10,9 @@ namespace GameGuild.Commerce.Products;
 /// REST API controller for managing products
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/products")]
+[Tags("products")]
 [Authorize]
 public class ProductsController(IMediator mediator) : ControllerBase
 {

@@ -1,7 +1,8 @@
 using GameGuild.Commerce.Payments;
+using GameGuild.Commerce.Subscriptions.Services;
 using GameGuild.ValueObjects;
 
-namespace GameGuild.Commerce.Subscriptions.Services;
+namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
 ///     Adapter implementation of <see cref="IPlanPricingResolver"/> that wraps the Subscriptions module's
@@ -28,7 +29,7 @@ public sealed class SubscriptionPlanPricingResolver : IPlanPricingResolver
         if (plan is null)
             return null;
 
-        return Money.FromCents(plan.MonthlyPriceInCents, plan.Currency);
+        return CentsToMoney(plan.MonthlyPriceInCents, plan.Currency);
     }
 
     /// <inheritdoc />
@@ -41,12 +42,16 @@ public sealed class SubscriptionPlanPricingResolver : IPlanPricingResolver
 
         var priceInCents = billingCycle switch
         {
-            BillingCycle.Annual => plan.AnnualPriceInCents ?? plan.MonthlyPriceInCents * 12,
+            BillingCycle.Annually => plan.AnnualPriceInCents ?? plan.MonthlyPriceInCents * 12,
+            BillingCycle.SemiAnnually => plan.MonthlyPriceInCents * 6,
+            BillingCycle.Quarterly => plan.MonthlyPriceInCents * 3,
             BillingCycle.Monthly => plan.MonthlyPriceInCents,
+            BillingCycle.Weekly => plan.MonthlyPriceInCents / 4, // Approximate weekly from monthly
+            BillingCycle.Biannually => plan.MonthlyPriceInCents * 24,
             _ => plan.MonthlyPriceInCents
         };
 
-        return Money.FromCents(priceInCents, plan.Currency);
+        return CentsToMoney(priceInCents, plan.Currency);
     }
 
     /// <inheritdoc />
@@ -55,4 +60,10 @@ public sealed class SubscriptionPlanPricingResolver : IPlanPricingResolver
         var plan = await _planService.GetByIdAsync(planId, cancellationToken);
         return plan is not null;
     }
+    
+    /// <summary>
+    ///     Converts cents to Money value object.
+    /// </summary>
+    private static Money CentsToMoney(long cents, string currency)
+        => new(cents / 100m, currency);
 }
