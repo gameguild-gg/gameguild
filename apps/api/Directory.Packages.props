@@ -99,6 +99,9 @@
         <PackageVersion Include="Swashbuckle.AspNetCore" Version="9.0.3" />
         <PackageVersion Include="SonarAnalyzer.CSharp" Version="10.4.0.108396" />
 
+        <!-- Payment Processing -->
+        <PackageVersion Include="Stripe.net" Version="46.0.0" />
+
         <!-- AWS SDK -->
         <PackageVersion Include="AWSSDK.S3" Version="3.7.300" />
 

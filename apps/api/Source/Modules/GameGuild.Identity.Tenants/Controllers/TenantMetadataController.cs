@@ -9,14 +9,14 @@ namespace GameGuild.Identity.Tenants;
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/tenants/{id:guid}/metadata")]
+[Route("v{version:apiVersion}/tenants/{tenantId:guid}/metadata")]
 [Tags("tenants/metadata")]
 public sealed class TenantMetadataController : ControllerBase
 {
     /// <summary>
     ///     Get tenant metadata by tenant ID
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Complete tenant metadata information</returns>
     [HttpGet]
@@ -25,13 +25,13 @@ public sealed class TenantMetadataController : ControllerBase
     [ProducesResponseType<TenantMetadataDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetMetadata(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetMetadata(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
         await Task.CompletedTask;
 
         var placeholderMetadata = new TenantMetadataDto(
-            id,
+            tenantId,
             new Dictionary<string, object?>(),
             new List<string>(),
             new Dictionary<string, string>(),
@@ -48,7 +48,7 @@ public sealed class TenantMetadataController : ControllerBase
     /// <summary>
     ///     Partially update tenant metadata by tenant ID
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="body">Metadata update request containing specific fields to modify</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful update</returns>
@@ -59,7 +59,7 @@ public sealed class TenantMetadataController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateMetadata(Guid id, [FromBody] UpdateTenantMetadataRequest body, CancellationToken ct)
+    public async Task<IActionResult> UpdateMetadata(Guid tenantId, [FromBody] UpdateTenantMetadataRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
 
@@ -72,7 +72,7 @@ public sealed class TenantMetadataController : ControllerBase
     /// <summary>
     ///     Replace all tenant metadata by tenant ID
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="body">Complete metadata replacement request</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful replacement</returns>
@@ -83,7 +83,7 @@ public sealed class TenantMetadataController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> ReplaceMetadata(Guid id, [FromBody] ReplaceTenantMetadataRequest body, CancellationToken ct)
+    public async Task<IActionResult> ReplaceMetadata(Guid tenantId, [FromBody] ReplaceTenantMetadataRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
 
@@ -96,7 +96,7 @@ public sealed class TenantMetadataController : ControllerBase
     /// <summary>
     ///     Get tenant custom fields
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Dictionary of custom fields</returns>
     [HttpGet("custom-fields")]
@@ -105,7 +105,7 @@ public sealed class TenantMetadataController : ControllerBase
     [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetCustomFields(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetCustomFields(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
         await Task.CompletedTask;
@@ -117,7 +117,7 @@ public sealed class TenantMetadataController : ControllerBase
     /// <summary>
     ///     Update tenant custom fields
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="customFields">Dictionary of custom fields to update</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful update</returns>
@@ -128,7 +128,7 @@ public sealed class TenantMetadataController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateCustomFields(Guid id, [FromBody] Dictionary<string, object?> customFields, CancellationToken ct)
+    public async Task<IActionResult> UpdateCustomFields(Guid tenantId, [FromBody] Dictionary<string, object?> customFields, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(customFields);
 
@@ -150,7 +150,7 @@ public sealed class TenantMetadataController : ControllerBase
     [ProducesResponseType<List<string>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetTags(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetTags(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
         await Task.CompletedTask;
@@ -162,7 +162,7 @@ public sealed class TenantMetadataController : ControllerBase
     /// <summary>
     ///     Update tenant tags
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="body">Tags update request</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful update</returns>
@@ -173,7 +173,7 @@ public sealed class TenantMetadataController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateTags(Guid id, [FromBody] UpdateTenantTagsRequest body, CancellationToken ct)
+    public async Task<IActionResult> UpdateTags(Guid tenantId, [FromBody] UpdateTenantTagsRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
 
@@ -186,7 +186,7 @@ public sealed class TenantMetadataController : ControllerBase
     /// <summary>
     ///     Replace all tenant tags
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="tags">List of tags to replace existing tags</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful replacement</returns>
@@ -197,7 +197,7 @@ public sealed class TenantMetadataController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> ReplaceTags(Guid id, [FromBody] List<string> tags, CancellationToken ct)
+    public async Task<IActionResult> ReplaceTags(Guid tenantId, [FromBody] List<string> tags, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(tags);
 

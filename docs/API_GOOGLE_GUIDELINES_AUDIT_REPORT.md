@@ -772,22 +772,26 @@ All violations in this section have been resolved:
 
 ---
 
-## 18. Tenants Endpoints
+## 18. Tenants Endpoints ✅ DONE
 
 ### Current Endpoints
 
 All tenant endpoints follow **excellent Google API patterns** with proper colon syntax for custom actions.
 
-### Minor Issues
+### ~~Minor Issues~~ FIXED
 
-1. **Inconsistent ID naming** - Some use `{id}`, others use `{tenantId}` - should standardize to `{tenantId}`
+1. ~~**Inconsistent ID naming** - Some use `{id}`, others use `{tenantId}` - should standardize to `{tenantId}`~~ ✅ FIXED
 
-### Required Fixes
+### ~~Required Fixes~~ FIXED
 
-| Priority | Current | Fixed | Reason |
-|----------|---------|-------|--------|
-| P2 | `GET /api/v1/tenants/{id}/metadata` | `GET /v1/tenants/{tenantId}/metadata` | Consistent ID naming |
-| P2 | `GET /api/v1/tenants/{id}/settings` | `GET /v1/tenants/{tenantId}/settings` | Consistent ID naming |
+| Priority | Current | Fixed | Reason | Status |
+|----------|---------|-------|--------|--------|
+| ~~P2~~ | ~~`GET /api/v1/tenants/{id}/metadata`~~ | `GET /v1/tenants/{tenantId}/metadata` | Consistent ID naming | ✅ DONE |
+| ~~P2~~ | ~~`GET /api/v1/tenants/{id}/settings`~~ | `GET /v1/tenants/{tenantId}/settings` | Consistent ID naming | ✅ DONE |
+
+**Changes Applied:**
+- [TenantMetadataController.cs](../apps/api/Source/Modules/GameGuild.Identity.Tenants/Controllers/TenantMetadataController.cs): Route updated from `api/v{version}/tenants/{id}/metadata` to `v{version}/tenants/{tenantId}/metadata`, all method parameters changed from `id` to `tenantId` (8 methods)
+- [TenantSettingsController.cs](../apps/api/Source/Modules/GameGuild.Identity.Tenants/Controllers/TenantSettingsController.cs): Route updated from `api/v{version}/tenants/{id}/settings` to `v{version}/tenants/{tenantId}/settings`, all method parameters changed from `id` to `tenantId` (9 methods)
 
 ### Missing Endpoints (Optional)
 
@@ -870,41 +874,44 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 
 ---
 
-## 21. WebAuthn Endpoints
+## 21. WebAuthn Endpoints ✅ DONE
 
-### Current Endpoints
+### ~~Current Endpoints~~ FIXED
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| POST | `/api/auth/webauthn/register/begin` | Begin registration | ❌ Violation |
-| POST | `/api/auth/webauthn/register/complete` | Complete registration | ❌ Violation |
-| POST | `/api/auth/webauthn/authenticate/begin` | Begin auth | ❌ Violation |
-| POST | `/api/auth/webauthn/authenticate/complete` | Complete auth | ❌ Violation |
-| GET | `/api/auth/webauthn/credentials` | List credentials | ⚠️ Needs version |
-| DELETE | `/api/auth/webauthn/credentials/{credentialId}` | Delete credential | ⚠️ Needs version |
-| PATCH | `/api/auth/webauthn/credentials/{credentialId}` | Update credential | ⚠️ Needs version |
-| GET | `/api/auth/webauthn/status` | Get WebAuthn status | ⚠️ Needs version |
+| ~~POST~~ | ~~`/api/auth/webauthn/register/begin`~~ | ~~Begin registration~~ | ✅ `POST /v1/auth/webauthn/registration:begin` |
+| ~~POST~~ | ~~`/api/auth/webauthn/register/complete`~~ | ~~Complete registration~~ | ✅ `POST /v1/auth/webauthn/registration:complete` |
+| ~~POST~~ | ~~`/api/auth/webauthn/authenticate/begin`~~ | ~~Begin auth~~ | ✅ `POST /v1/auth/webauthn/authentication:begin` |
+| ~~POST~~ | ~~`/api/auth/webauthn/authenticate/complete`~~ | ~~Complete auth~~ | ✅ `POST /v1/auth/webauthn/authentication:complete` |
+| ~~GET~~ | ~~`/api/auth/webauthn/credentials`~~ | ~~List credentials~~ | ✅ `GET /v1/auth/webauthn/credentials` |
+| ~~DELETE~~ | ~~`/api/auth/webauthn/credentials/{credentialId}`~~ | ~~Delete credential~~ | ✅ `DELETE /v1/auth/webauthn/credentials/{credentialId}` |
+| ~~PATCH~~ | ~~`/api/auth/webauthn/credentials/{credentialId}`~~ | ~~Update credential~~ | ✅ `PATCH /v1/auth/webauthn/credentials/{credentialId}` |
+| ~~GET~~ | ~~`/api/auth/webauthn/status`~~ | ~~Get WebAuthn status~~ | ✅ `GET /v1/auth/webauthn` |
 
-### Violations
+### ~~Violations~~ FIXED
 
-1. **Missing version prefix** - All endpoints need `v1`
-2. **Path-based actions** - `begin`, `complete` should use colon syntax
-3. **Deeply nested paths** - `register/begin` should be `registration:begin`
+1. ~~**Missing version prefix** - All endpoints need `v1`~~ ✅ FIXED
+2. ~~**Path-based actions** - `begin`, `complete` should use colon syntax~~ ✅ FIXED
+3. ~~**Deeply nested paths** - `register/begin` should be `registration:begin`~~ ✅ FIXED
 
-### Required Fixes
+### ~~Required Fixes~~ FIXED
 
-| Priority | Current | Fixed | Reason |
-|----------|---------|-------|--------|
-| P0 | `POST /api/auth/webauthn/register/begin` | `POST /v1/auth/webauthn/registration:begin` | Custom action |
-| P0 | `POST /api/auth/webauthn/register/complete` | `POST /v1/auth/webauthn/registration:complete` | Custom action |
-| P0 | `POST /api/auth/webauthn/authenticate/begin` | `POST /v1/auth/webauthn/authentication:begin` | Custom action |
-| P0 | `POST /api/auth/webauthn/authenticate/complete` | `POST /v1/auth/webauthn/authentication:complete` | Custom action |
-| P1 | `GET /api/auth/webauthn/credentials` | `GET /v1/auth/webauthn/credentials` | Version prefix |
-| P1 | `DELETE /api/auth/webauthn/credentials/{credentialId}` | `DELETE /v1/auth/webauthn/credentials/{credentialId}` | Version prefix |
-| P1 | `PATCH /api/auth/webauthn/credentials/{credentialId}` | `PATCH /v1/auth/webauthn/credentials/{credentialId}` | Version prefix |
-| P1 | `GET /api/auth/webauthn/status` | `GET /v1/auth/webauthn` | Version + simplify |
+| Priority | Current | Fixed | Reason | Status |
+|----------|---------|-------|--------|--------|
+| ~~P0~~ | ~~`POST /api/auth/webauthn/register/begin`~~ | `POST /v1/auth/webauthn/registration:begin` | Custom action | ✅ DONE |
+| ~~P0~~ | ~~`POST /api/auth/webauthn/register/complete`~~ | `POST /v1/auth/webauthn/registration:complete` | Custom action | ✅ DONE |
+| ~~P0~~ | ~~`POST /api/auth/webauthn/authenticate/begin`~~ | `POST /v1/auth/webauthn/authentication:begin` | Custom action | ✅ DONE |
+| ~~P0~~ | ~~`POST /api/auth/webauthn/authenticate/complete`~~ | `POST /v1/auth/webauthn/authentication:complete` | Custom action | ✅ DONE |
+| ~~P1~~ | ~~`GET /api/auth/webauthn/credentials`~~ | `GET /v1/auth/webauthn/credentials` | Version prefix | ✅ DONE |
+| ~~P1~~ | ~~`DELETE /api/auth/webauthn/credentials/{credentialId}`~~ | `DELETE /v1/auth/webauthn/credentials/{credentialId}` | Version prefix | ✅ DONE |
+| ~~P1~~ | ~~`PATCH /api/auth/webauthn/credentials/{credentialId}`~~ | `PATCH /v1/auth/webauthn/credentials/{credentialId}` | Version prefix | ✅ DONE |
+| ~~P1~~ | ~~`GET /api/auth/webauthn/status`~~ | `GET /v1/auth/webauthn` | Version + simplify | ✅ DONE |
 
-### Missing Endpoints (Must Add)
+**Changes Applied:**
+- [WebAuthnController.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/WebAuthnController.cs): Added `ApiVersion("1.0")`, route updated from `api/auth/webauthn` to `v{version}/auth/webauthn`, colon syntax for registration and authentication actions, simplified status endpoint to root GET
+
+### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|

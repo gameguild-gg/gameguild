@@ -15,6 +15,8 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
     private DbSet<TaxRule> TaxRules { get => context.Set<TaxRule>(); }
 
     private DbSet<TaxRate> TaxRates { get => context.Set<TaxRate>(); }
+    
+    private DbSet<CustomerTaxExemption> CustomerTaxExemptions { get => context.Set<CustomerTaxExemption>(); }
 
     public async Task<TaxCalculationResult> CalculateTaxAsync(TaxCalculationRequest request, CancellationToken cancellationToken = default)
     {
@@ -81,21 +83,56 @@ public class TaxCalculationService(IApplicationDbContext context, ILogger<TaxCal
 
     public async Task<bool> ValidateTaxExemptionAsync(Guid customerId, string jurisdictionCode, CancellationToken cancellationToken = default)
     {
-        // Customer tax exemption validation
-        // This validates whether a customer has a registered tax exemption in the given jurisdiction.
-        // 
-        // Implementation notes:
-        // 1. Query a customer exemption registry/table for valid exemption certificates
-        // 2. Check if exemption is valid for the specific jurisdiction
-        // 3. Verify exemption hasn't expired
-        //
-        // For now, returns false (no exemptions) until customer exemption storage is implemented.
-        // This is a safe default - customers will be charged tax unless proven exempt.
-        
         logger.LogDebug("Validating tax exemption for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
             customerId, jurisdictionCode);
-            
-        await Task.CompletedTask;
+
+        var now = DateTime.UtcNow;
+        var normalizedJurisdiction = jurisdictionCode.ToUpperInvariant();
+
+        // Query the customer tax exemption registry for valid exemptions
+        var exemption = await CustomerTaxExemptions
+            .Where(e => e.CustomerId == customerId)
+            .Where(e => e.JurisdictionCode == normalizedJurisdiction)
+            .Where(e => e.Status == TaxExemptionStatus.Active)
+            .Where(e => e.VerificationStatus == ExemptionVerificationStatus.Verified)
+            .Where(e => e.ValidFrom <= now)
+            .Where(e => e.ValidUntil == null || e.ValidUntil >= now)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (exemption != null)
+        {
+            logger.LogInformation(
+                "Valid tax exemption found for customer {CustomerId} in jurisdiction {JurisdictionCode}: " +
+                "Certificate {CertificateNumber}, Type {ExemptionType}",
+                customerId, jurisdictionCode, exemption.CertificateNumber, exemption.ExemptionType);
+            return true;
+        }
+
+        // Check for parent jurisdiction exemptions (e.g., US exemption may cover US-CA)
+        if (normalizedJurisdiction.Contains('-'))
+        {
+            var parentJurisdiction = normalizedJurisdiction.Split('-')[0];
+            var parentExemption = await CustomerTaxExemptions
+                .Where(e => e.CustomerId == customerId)
+                .Where(e => e.JurisdictionCode == parentJurisdiction)
+                .Where(e => e.Status == TaxExemptionStatus.Active)
+                .Where(e => e.VerificationStatus == ExemptionVerificationStatus.Verified)
+                .Where(e => e.ValidFrom <= now)
+                .Where(e => e.ValidUntil == null || e.ValidUntil >= now)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (parentExemption != null)
+            {
+                logger.LogInformation(
+                    "Valid parent jurisdiction tax exemption found for customer {CustomerId}: " +
+                    "Parent {ParentJurisdiction} covers {ChildJurisdiction}",
+                    customerId, parentJurisdiction, jurisdictionCode);
+                return true;
+            }
+        }
+
+        logger.LogDebug("No valid tax exemption found for customer {CustomerId} in jurisdiction {JurisdictionCode}", 
+            customerId, jurisdictionCode);
         return false;
     }
 

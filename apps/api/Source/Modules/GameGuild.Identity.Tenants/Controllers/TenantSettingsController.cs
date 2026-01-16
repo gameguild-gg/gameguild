@@ -9,14 +9,14 @@ namespace GameGuild.Identity.Tenants;
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/tenants/{id:guid}/settings")]
+[Route("v{version:apiVersion}/tenants/{tenantId:guid}/settings")]
 [Tags("tenants/settings")]
 public sealed class TenantSettingsController : ControllerBase
 {
     /// <summary>
     ///     Get tenant settings by tenant ID
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Complete tenant settings information</returns>
     [HttpGet]
@@ -25,13 +25,13 @@ public sealed class TenantSettingsController : ControllerBase
     [ProducesResponseType<TenantSettingsDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetSettings(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetSettings(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
         await Task.CompletedTask;
 
         var placeholderSettings = new TenantSettingsDto(
-            id,
+            tenantId,
             new TenantSystemConfigurationDto("UTC", "en-US", "yyyy-MM-dd", "N2", new TenantCurrencySettingsDto("USD", "${0:N2}", 2), new Dictionary<string, object?>()),
             new Dictionary<string, bool>(),
             new TenantBusinessRulesDto(new Dictionary<string, object?>(), new Dictionary<string, object?>(), new Dictionary<string, object?>(), new Dictionary<string, object?>()),
@@ -55,7 +55,7 @@ public sealed class TenantSettingsController : ControllerBase
     /// <summary>
     ///     Partially update tenant settings by tenant ID
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="body">Settings update request containing specific fields to modify</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful update</returns>
@@ -66,7 +66,7 @@ public sealed class TenantSettingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateSettings(Guid id, [FromBody] UpdateTenantSettingsRequest body, CancellationToken ct)
+    public async Task<IActionResult> UpdateSettings(Guid tenantId, [FromBody] UpdateTenantSettingsRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
 
@@ -79,7 +79,7 @@ public sealed class TenantSettingsController : ControllerBase
     /// <summary>
     ///     Replace all tenant settings by tenant ID
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="body">Complete settings replacement request</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful replacement</returns>
@@ -90,7 +90,7 @@ public sealed class TenantSettingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> ReplaceSettings(Guid id, [FromBody] ReplaceTenantSettingsRequest body, CancellationToken ct)
+    public async Task<IActionResult> ReplaceSettings(Guid tenantId, [FromBody] ReplaceTenantSettingsRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
 
@@ -103,7 +103,7 @@ public sealed class TenantSettingsController : ControllerBase
     /// <summary>
     ///     Get tenant feature flags
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Dictionary of feature flags</returns>
     [HttpGet("feature-flags")]
@@ -112,7 +112,7 @@ public sealed class TenantSettingsController : ControllerBase
     [ProducesResponseType<Dictionary<string, bool>>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetFeatureFlags(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetFeatureFlags(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
         await Task.CompletedTask;
@@ -124,7 +124,7 @@ public sealed class TenantSettingsController : ControllerBase
     /// <summary>
     ///     Update tenant feature flags
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="featureFlags">Dictionary of feature flags to update</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful update</returns>
@@ -135,7 +135,7 @@ public sealed class TenantSettingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateFeatureFlags(Guid id, [FromBody] Dictionary<string, bool> featureFlags, CancellationToken ct)
+    public async Task<IActionResult> UpdateFeatureFlags(Guid tenantId, [FromBody] Dictionary<string, bool> featureFlags, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(featureFlags);
 
@@ -148,7 +148,7 @@ public sealed class TenantSettingsController : ControllerBase
     /// <summary>
     ///     Get tenant system limits
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>System limits configuration</returns>
     [HttpGet("system-limits")]
@@ -157,7 +157,7 @@ public sealed class TenantSettingsController : ControllerBase
     [ProducesResponseType<TenantSystemLimitsDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetSystemLimits(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetSystemLimits(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
         await Task.CompletedTask;
@@ -176,7 +176,7 @@ public sealed class TenantSettingsController : ControllerBase
     /// <summary>
     ///     Update tenant system limits
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="body">System limits update request</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful update</returns>
@@ -187,7 +187,7 @@ public sealed class TenantSettingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateSystemLimits(Guid id, [FromBody] UpdateTenantSystemLimitsRequest body, CancellationToken ct)
+    public async Task<IActionResult> UpdateSystemLimits(Guid tenantId, [FromBody] UpdateTenantSystemLimitsRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
 
@@ -200,7 +200,7 @@ public sealed class TenantSettingsController : ControllerBase
     /// <summary>
     ///     Get tenant integration settings
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Integration settings configuration</returns>
     [HttpGet("integration-settings")]
@@ -209,7 +209,7 @@ public sealed class TenantSettingsController : ControllerBase
     [ProducesResponseType<TenantIntegrationSettingsDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> GetIntegrationSettings(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetIntegrationSettings(Guid tenantId, CancellationToken ct)
     {
         // Placeholder implementation
         await Task.CompletedTask;
@@ -221,7 +221,7 @@ public sealed class TenantSettingsController : ControllerBase
     /// <summary>
     ///     Update tenant integration settings
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="body">Integration settings update request</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on successful update</returns>
@@ -232,7 +232,7 @@ public sealed class TenantSettingsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<IActionResult> UpdateIntegrationSettings(Guid id, [FromBody] UpdateTenantIntegrationSettingsRequest body, CancellationToken ct)
+    public async Task<IActionResult> UpdateIntegrationSettings(Guid tenantId, [FromBody] UpdateTenantIntegrationSettingsRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
 

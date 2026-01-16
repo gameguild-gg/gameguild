@@ -1,4 +1,4 @@
-using GameGuild.SharedKernel;
+using GameGuild.Entities;
 
 namespace GameGuild.Commerce.Payments;
 
@@ -47,11 +47,6 @@ public class CustomerTaxExemption : EntityBase
             CreatedAt = DateTime.UtcNow
         };
     }
-
-    /// <summary>
-    ///     The tenant this exemption belongs to.
-    /// </summary>
-    public Guid TenantId { get; private set; }
 
     /// <summary>
     ///     The customer who holds this exemption.

@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Configuration.PresentationLayer.RateLimiting;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +14,9 @@ namespace GameGuild.Identity.Authentication;
 ///     Rate limited to 10 requests per minute per client to prevent abuse of authentication endpoints.
 /// </remarks>
 [ApiController]
-[Route("api/auth/webauthn")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/auth/webauthn")]
+[Tags("auth/webauthn")]
 [EnableRateLimiting(RateLimitPolicies.Authentication)]
 public class WebAuthnController(
     IWebAuthnService webAuthnService) : ControllerBase
@@ -26,7 +29,7 @@ public class WebAuthnController(
     /// <param name="request">Registration request with optional authenticator preferences.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Options to pass to navigator.credentials.create().</returns>
-    [HttpPost("register/begin")]
+    [HttpPost("registration:begin")]
     [Authorize]
     [ProducesResponseType(typeof(WebAuthnRegistrationOptionsResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -57,7 +60,7 @@ public class WebAuthnController(
     /// <param name="request">The attestation response from the browser.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Result of the registration.</returns>
-    [HttpPost("register/complete")]
+    [HttpPost("registration:complete")]
     [Authorize]
     [ProducesResponseType(typeof(WebAuthnRegistrationResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -95,7 +98,7 @@ public class WebAuthnController(
     /// <param name="request">Optional email to filter credentials.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Options to pass to navigator.credentials.get().</returns>
-    [HttpPost("authenticate/begin")]
+    [HttpPost("authentication:begin")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(WebAuthnAuthenticationOptionsResult), StatusCodes.Status200OK)]
     public async Task<ActionResult<WebAuthnAuthenticationOptionsResult>> BeginAuthentication(
@@ -119,7 +122,7 @@ public class WebAuthnController(
     /// <param name="request">The assertion response from the browser.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Authentication result with user info.</returns>
-    [HttpPost("authenticate/complete")]
+    [HttpPost("authentication:complete")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(WebAuthnAuthenticationResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -221,7 +224,7 @@ public class WebAuthnController(
     /// <summary>
     ///     Check if current user has WebAuthn enabled.
     /// </summary>
-    [HttpGet("status")]
+    [HttpGet]
     [Authorize]
     [ProducesResponseType(typeof(WebAuthnStatusResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

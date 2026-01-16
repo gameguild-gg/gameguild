@@ -1,41 +1,43 @@
-﻿using GameGuild.Commerce.Subscriptions;
-using GameGuild.CQRS;
+﻿using GameGuild.CQRS;
 using GameGuild.ValueObjects;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
 ///     Handler for CalculatePricingQuery.
-///     Integrates with Subscriptions module to fetch plan pricing and calculate final price.
+///     Uses IPlanPricingResolver to fetch plan pricing without direct Subscriptions module dependency.
 /// </summary>
 /// <remarks>
 ///     Pricing calculation workflow:
-///     1. Fetch subscription plan from Subscriptions module
+///     1. Fetch subscription plan pricing via IPlanPricingResolver
 ///     2. Apply pricing rules based on billing cycle
 ///     3. Apply discount codes if provided
 ///     4. Return final calculated price
 /// </remarks>
 public sealed class CalculatePricingQueryHandler : IQueryHandler<CalculatePricingQuery, PricingCalculationResult>
 {
-    private readonly ISubscriptionPlanService _planService;
+    private readonly IPlanPricingResolver _pricingResolver;
 
-    public CalculatePricingQueryHandler(ISubscriptionPlanService planService)
+    public CalculatePricingQueryHandler(IPlanPricingResolver pricingResolver)
     {
-        _planService = planService ?? throw new ArgumentNullException(nameof(planService));
+        _pricingResolver = pricingResolver ?? throw new ArgumentNullException(nameof(pricingResolver));
     }
 
     public async Task<PricingCalculationResult> Handle(CalculatePricingQuery request, CancellationToken cancellationToken)
     {
-        // Fetch the subscription plan
-        var plan = await _planService.GetByIdAsync(request.PlanId, cancellationToken).ConfigureAwait(false);
-        
-        if (plan == null)
+        // Check if plan exists
+        var planExists = await _pricingResolver.PlanExistsAsync(request.PlanId, cancellationToken).ConfigureAwait(false);
+        if (!planExists)
         {
             throw new InvalidOperationException($"Subscription plan {request.PlanId} not found");
         }
 
         // Get base pricing from plan
-        var basePrice = plan.GetMonthlyPrice();
+        var basePrice = await _pricingResolver.GetPlanMonthlyPriceAsync(request.PlanId, cancellationToken).ConfigureAwait(false);
+        if (basePrice == null)
+        {
+            throw new InvalidOperationException($"Unable to retrieve pricing for plan {request.PlanId}");
+        }
         var discount = Money.Zero();
         var appliedDiscounts = new List<AppliedDiscount>();
 

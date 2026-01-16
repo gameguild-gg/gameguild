@@ -12,14 +12,13 @@
         <PackageReference Include="Microsoft.AspNetCore.OpenApi"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL"/>
-        <PackageReference Include="Stripe.net" Version="45.*"/>
+        <PackageReference Include="Stripe.net"/>
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
         <ProjectReference Include="..\GameGuild.Resources\GameGuild.Resources.csproj"/>
         <ProjectReference Include="..\GameGuild.Commerce\GameGuild.Commerce.csproj"/>
-        <ProjectReference Include="..\GameGuild.Commerce.Subscriptions\GameGuild.Commerce.Subscriptions.csproj"/>
     </ItemGroup>
 
 </Project>
