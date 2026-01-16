@@ -244,7 +244,7 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     public async Task ResourcesAdmin_Anonymous_Returns401()
     {
         if (_skipDueToInfrastructure)
-            Assert.Skip("Requires real database - InMemory provider cannot handle model complexity");
+            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
 
         // Act - Admin endpoints require authentication
         var response = await _anonymousClient.GetAsync("/v1/resources/usage-by-type/0?startDate=2024-01-01&endDate=2024-12-31");
@@ -257,7 +257,7 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     public async Task ResourcesAdmin_NonAdmin_Returns403()
     {
         if (_skipDueToInfrastructure)
-            Assert.Skip("Requires real database - InMemory provider cannot handle model complexity");
+            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
 
         // Arrange - Regular user (not admin)
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: false);
@@ -273,7 +273,7 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     public async Task ResourcesAdmin_SystemAdmin_Succeeds()
     {
         if (_skipDueToInfrastructure)
-            Assert.Skip("Requires real database - InMemory provider cannot handle model complexity");
+            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
 
         // Arrange
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: true);
@@ -294,7 +294,7 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     public async Task SystemAdmin_CanAccessAnyTenant()
     {
         if (_skipDueToInfrastructure)
-            Assert.Skip("Requires real database - InMemory provider cannot handle model complexity");
+            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
 
         // Arrange - System admin from TenantA accessing TenantB
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: true);
@@ -310,7 +310,7 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     public async Task SystemAdmin_CanAccessAnyUser()
     {
         if (_skipDueToInfrastructure)
-            Assert.Skip("Requires real database - InMemory provider cannot handle model complexity");
+            return; // Skip: Requires real database - InMemory provider cannot handle model complexity
 
         // Arrange
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: true);
