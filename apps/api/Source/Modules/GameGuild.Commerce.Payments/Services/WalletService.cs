@@ -1,17 +1,12 @@
-using GameGuild.Abstractions;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Payments;
 
 /// <summary>
-///     Wallet service implementation
+///     Wallet service implementation using repository abstraction
 /// </summary>
-public class WalletService(IApplicationDbContext context, ILogger<WalletService> logger) : IWalletService
+public class WalletService(IWalletRepository walletRepository, ILogger<WalletService> logger) : IWalletService
 {
-    private DbSet<UserWallet> UserWallets { get => context.Set<UserWallet>(); }
-
-    private DbSet<WalletTransaction> WalletTransactions { get => context.Set<WalletTransaction>(); }
 
     public async Task<UserWallet> CreateWalletAsync(Guid userId, string currency = "USD", CancellationToken cancellationToken = default)
     {
