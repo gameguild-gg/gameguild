@@ -1,6 +1,5 @@
 using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Commerce.Subscriptions;
@@ -9,9 +8,9 @@ namespace GameGuild.Commerce.Subscriptions;
 ///     Handler for GetSubscriptionInvoicesQuery
 /// </summary>
 public sealed class GetSubscriptionInvoicesHandler(IApplicationDbContext context)
-    : IQueryHandler<GetSubscriptionInvoicesQuery, PagedResult<SubscriptionInvoiceDto>>
+    : IQueryHandler<GetSubscriptionInvoicesQuery, GameGuild.CQRS.PagedResult<SubscriptionInvoiceDto>>
 {
-    public async Task<PagedResult<SubscriptionInvoiceDto>> Handle(
+    public async Task<GameGuild.CQRS.PagedResult<SubscriptionInvoiceDto>> Handle(
         GetSubscriptionInvoicesQuery request,
         CancellationToken cancellationToken)
     {
@@ -21,7 +20,7 @@ public sealed class GetSubscriptionInvoicesHandler(IApplicationDbContext context
 
         if (!subscriptionExists)
         {
-            return new PagedResult<SubscriptionInvoiceDto>([], 0, (request.Page - 1) * request.PageSize, request.PageSize);
+            return new GameGuild.CQRS.PagedResult<SubscriptionInvoiceDto>([], 0, (request.Page - 1) * request.PageSize, request.PageSize);
         }
 
         // Note: This assumes there's an Invoice entity related to subscriptions.
@@ -30,7 +29,7 @@ public sealed class GetSubscriptionInvoicesHandler(IApplicationDbContext context
         var items = new List<SubscriptionInvoiceDto>();
         var totalCount = 0;
 
-        return new PagedResult<SubscriptionInvoiceDto>(
+        return new GameGuild.CQRS.PagedResult<SubscriptionInvoiceDto>(
             items,
             totalCount,
             (request.Page - 1) * request.PageSize,

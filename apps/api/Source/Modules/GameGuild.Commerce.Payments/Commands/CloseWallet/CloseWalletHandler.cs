@@ -7,8 +7,9 @@ namespace GameGuild.Commerce.Payments.Commands.CloseWallet;
 /// </summary>
 public sealed class CloseWalletHandler(IWalletService walletService) : ICommandHandler<CloseWalletCommand>
 {
-    public async Task Handle(CloseWalletCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CloseWalletCommand request, CancellationToken cancellationToken)
     {
         await walletService.CloseWalletAsync(request.WalletId, cancellationToken);
+        return Unit.Value;
     }
 }

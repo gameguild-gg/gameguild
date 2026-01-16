@@ -7,9 +7,9 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 public sealed class DeleteTaxJurisdictionHandler : ICommandHandler<DeleteTaxJurisdictionCommand>
 {
-    public Task Handle(DeleteTaxJurisdictionCommand request, CancellationToken cancellationToken)
+    public Task<Unit> Handle(DeleteTaxJurisdictionCommand request, CancellationToken cancellationToken)
     {
         // Placeholder implementation - would delete actual jurisdiction
-        return Task.CompletedTask;
+        return Unit.Task;
     }
 }

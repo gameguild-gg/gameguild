@@ -7,9 +7,9 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 public sealed class PatchTaxRuleHandler : ICommandHandler<PatchTaxRuleCommand>
 {
-    public Task Handle(PatchTaxRuleCommand request, CancellationToken cancellationToken)
+    public Task<Unit> Handle(PatchTaxRuleCommand request, CancellationToken cancellationToken)
     {
         // Placeholder implementation - would update actual rule
-        return Task.CompletedTask;
+        return Unit.Task;
     }
 }

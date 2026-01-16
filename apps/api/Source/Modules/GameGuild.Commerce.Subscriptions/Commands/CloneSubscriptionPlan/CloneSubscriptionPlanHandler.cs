@@ -5,7 +5,8 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
-///     Handler for CloneSubscriptionPlanCommand
+///     Handler for CloneSubscriptionPlanCommand.
+///     Creates a new plan based on source plan's settings.
 /// </summary>
 public sealed class CloneSubscriptionPlanHandler(IApplicationDbContext context)
     : ICommandHandler<CloneSubscriptionPlanCommand, Guid>
@@ -17,28 +18,22 @@ public sealed class CloneSubscriptionPlanHandler(IApplicationDbContext context)
             .FirstOrDefaultAsync(p => p.Id == request.SourcePlanId, cancellationToken)
             ?? throw new InvalidOperationException($"Subscription plan {request.SourcePlanId} not found");
 
-        var newPlan = new SubscriptionPlan
-        {
-            Id = Guid.NewGuid(),
-            Name = request.NewName,
-            Slug = request.NewSlug,
-            Description = sourcePlan.Description,
-            MonthlyPriceInCents = sourcePlan.MonthlyPriceInCents,
-            AnnualPriceInCents = sourcePlan.AnnualPriceInCents,
-            Currency = sourcePlan.Currency,
-            MaxUsers = sourcePlan.MaxUsers,
-            MaxStorageMb = sourcePlan.MaxStorageMb,
-            MaxApiCallsPerMonth = sourcePlan.MaxApiCallsPerMonth,
-            HasPrioritySupport = sourcePlan.HasPrioritySupport,
-            HasAdvancedAnalytics = sourcePlan.HasAdvancedAnalytics,
-            HasCustomBranding = sourcePlan.HasCustomBranding,
-            Features = sourcePlan.Features,
-            SortOrder = sourcePlan.SortOrder,
-            IsActive = false, // Clone starts as inactive
-            IsFeatured = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        };
+        // Use constructor to create new plan with required parameters
+        var newPlan = new SubscriptionPlan(
+            request.NewName,
+            request.NewSlug,
+            sourcePlan.MonthlyPriceInCents,
+            sourcePlan.Currency,
+            sourcePlan.Description);
+
+        // Copy additional settings using available methods/setters
+        newPlan.AnnualPriceInCents = sourcePlan.AnnualPriceInCents;
+        newPlan.UpdateLimits(sourcePlan.MaxUsers, sourcePlan.MaxStorageMb, sourcePlan.MaxApiCallsPerMonth);
+        newPlan.UpdateFeatures(sourcePlan.HasPrioritySupport, sourcePlan.HasAdvancedAnalytics, sourcePlan.HasCustomBranding, sourcePlan.Features);
+        newPlan.SortOrder = sourcePlan.SortOrder;
+        newPlan.TrialPeriodDays = sourcePlan.TrialPeriodDays;
+        // Clone starts as inactive
+        newPlan.Deactivate();
 
         context.Set<SubscriptionPlan>().Add(newPlan);
         await context.SaveChangesAsync(cancellationToken);

@@ -7,7 +7,7 @@ namespace GameGuild.Commerce.Payments.Commands.PatchWallet;
 /// </summary>
 public sealed class PatchWalletHandler(IWalletService walletService) : ICommandHandler<PatchWalletCommand>
 {
-    public async Task Handle(PatchWalletCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(PatchWalletCommand request, CancellationToken cancellationToken)
     {
         await walletService.UpdateWalletSettingsAsync(
             request.WalletId,
@@ -15,5 +15,6 @@ public sealed class PatchWalletHandler(IWalletService walletService) : ICommandH
             request.DailyLimit,
             request.MonthlyLimit,
             cancellationToken);
+        return Unit.Value;
     }
 }

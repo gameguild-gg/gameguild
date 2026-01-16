@@ -1,4 +1,5 @@
 using GameGuild.CQRS;
+using GameGuild.ValueObjects;
 
 namespace GameGuild.Commerce.Subscriptions;
 

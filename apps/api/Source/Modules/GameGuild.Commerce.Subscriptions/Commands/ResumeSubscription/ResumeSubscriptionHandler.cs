@@ -5,23 +5,22 @@ using Microsoft.EntityFrameworkCore;
 namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
-///     Handler for ResumeSubscriptionCommand
+///     Handler for ResumeSubscriptionCommand.
+///     Note: Uses Reactivate() method since the entity doesn't have dedicated pause properties.
 /// </summary>
 public sealed class ResumeSubscriptionHandler(IApplicationDbContext context)
     : ICommandHandler<ResumeSubscriptionCommand>
 {
-    public async Task Handle(ResumeSubscriptionCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(ResumeSubscriptionCommand request, CancellationToken cancellationToken)
     {
         var subscription = await context.Set<Subscription>()
             .FirstOrDefaultAsync(s => s.Id == request.SubscriptionId, cancellationToken)
             ?? throw new InvalidOperationException($"Subscription {request.SubscriptionId} not found");
 
-        subscription.IsPaused = false;
-        subscription.PausedAt = null;
-        subscription.PauseReason = null;
-        subscription.PauseUntil = null;
-        subscription.UpdatedAt = DateTime.UtcNow;
+        // Use Reactivate() which sets status back to Active and clears metadata
+        subscription.Reactivate();
 
         await context.SaveChangesAsync(cancellationToken);
+        return Unit.Value;
     }
 }

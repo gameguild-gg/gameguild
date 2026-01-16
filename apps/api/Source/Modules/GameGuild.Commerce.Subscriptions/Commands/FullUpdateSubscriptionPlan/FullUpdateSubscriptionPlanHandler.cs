@@ -10,7 +10,7 @@ namespace GameGuild.Commerce.Subscriptions;
 public sealed class FullUpdateSubscriptionPlanHandler(IApplicationDbContext context)
     : ICommandHandler<FullUpdateSubscriptionPlanCommand>
 {
-    public async Task Handle(FullUpdateSubscriptionPlanCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(FullUpdateSubscriptionPlanCommand request, CancellationToken cancellationToken)
     {
         var plan = await context.Set<SubscriptionPlan>()
             .FirstOrDefaultAsync(p => p.Id == request.PlanId, cancellationToken)
@@ -33,5 +33,6 @@ public sealed class FullUpdateSubscriptionPlanHandler(IApplicationDbContext cont
         plan.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+        return Unit.Value;
     }
 }

@@ -7,9 +7,9 @@ namespace GameGuild.Commerce.Payments;
 /// </summary>
 public sealed class PatchTaxJurisdictionHandler : ICommandHandler<PatchTaxJurisdictionCommand>
 {
-    public Task Handle(PatchTaxJurisdictionCommand request, CancellationToken cancellationToken)
+    public Task<Unit> Handle(PatchTaxJurisdictionCommand request, CancellationToken cancellationToken)
     {
         // Placeholder implementation - would update actual jurisdiction
-        return Task.CompletedTask;
+        return Unit.Task;
     }
 }

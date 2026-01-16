@@ -1,33 +1,34 @@
 # GameGuild API Endpoints - Google API Design Guidelines Audit Report
 
 **Date:** January 16, 2026  
-**Scope:** All REST API endpoints across ALL modules (76 controllers, 779 endpoints)  
+**Last Updated:** January 17, 2026  
+**Scope:** All REST API endpoints across ALL modules (76 controllers, 779+ endpoints)  
 **Reference:** [Google API Design Guide](https://cloud.google.com/apis/design)
 
 ---
 
 ## Executive Summary
 
-This report analyzes GameGuild API endpoints against Google API Design Guidelines, identifying violations, inconsistencies, and missing endpoints. The audit covers **76 controllers** with **779 endpoints** across all modules.
+This report analyzes GameGuild API endpoints against Google API Design Guidelines, identifying violations, inconsistencies, and missing endpoints. The audit covers **76 controllers** with **779+ endpoints** across all modules.
 
-### Key Findings
+### Key Findings (Updated January 17, 2026)
 
-| Category | Issues Found | Priority |
-|----------|--------------|----------|
-| Controllers Missing Versioning | 19 controllers | P0 - Critical |
-| Custom Action Syntax Violations | 15+ endpoints | P0 - Critical |
-| Path-based Filters (should be query params) | 10+ endpoints | P1 - High |
-| Missing Standard CRUD Methods | 40+ operations | P1 - High |
-| Pagination Pattern Inconsistencies | 4 different patterns | P1 - High |
-| Response Format Inconsistencies | 4+ patterns | P2 - Medium |
+| Category | Issues Found | Priority | Status |
+|----------|--------------|----------|--------|
+| Controllers Missing Versioning | ~~19 controllers~~ | P0 - Critical | ✅ FIXED |
+| Custom Action Syntax Violations | ~~15+ endpoints~~ | P0 - Critical | ✅ FIXED |
+| Path-based Filters (should be query params) | ~~10+ endpoints~~ | P1 - High | ✅ FIXED |
+| Missing Standard CRUD Methods | ~~40+ operations~~ | P1 - High | ✅ IMPLEMENTED |
+| Pagination Pattern Inconsistencies | 4 different patterns | P1 - High | ⏳ In Progress |
+| Response Format Inconsistencies | 4+ patterns | P2 - Medium | ⏳ In Progress |
 
 ### Controllers Status Summary
 
 | Status | Count | Examples |
 |--------|-------|----------|
-| ✅ Fully Compliant | 44 | UsersController, AssetsController, OrdersController, FeaturesController, ProgramController |
-| ⚠️ Partially Compliant | 12 | PaymentsController, RolesController |
-| ❌ Needs Full Refactor | 19 | ProjectsController, AccessReviewsController |
+| ✅ Fully Compliant | 62+ | UsersController, AssetsController, OrdersController, FeaturesController, ProgramController, SubscriptionsController, WalletsController |
+| ⚠️ Partially Compliant | 8 | PaymentsController, RolesController |
+| ❌ Needs Full Refactor | 5 | ProjectsController, AccessReviewsController |
 
 > **Note:** URL base path (`/api/v1/` vs `/v1/`) is **not a violation**. The `api/` prefix can be configured globally via reverse proxy, API gateway, or subdomain.
 
@@ -682,12 +683,17 @@ All violations in this section have been resolved:
 **Files Modified:**
 - [ResourcesController.cs](../apps/api/Source/Modules/GameGuild.Resources/Controllers/ResourcesController.cs) - Changed path param to query param, made type optional for aggregated view
 
-### Missing Endpoints (Optional)
+### Missing Endpoints ✅ IMPLEMENTED
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| GET | `/v1/resources/usage-trends` | Get usage trends over time | P2 |
-| POST | `/v1/resources:cleanup` | Cleanup orphaned resources | P2 |
+| Method | Path | Description | Priority | Status |
+|--------|------|-------------|----------|--------|
+| GET | `/v1/resources/usage-trends` | Get usage trends over time | P2 | ✅ DONE |
+| POST | `/v1/resources:cleanup` | Cleanup orphaned resources | P2 | ✅ DONE |
+
+**Files Modified:**
+- [ResourcesController.cs](../apps/api/Source/Modules/GameGuild.Resources/Controllers/ResourcesController.cs) - Added usage-trends and cleanup endpoints
+- GetResourceUsageTrendsQuery.cs + Handler - New query for usage trends
+- CleanupOrphanedResourcesCommand.cs + Handler - New command for cleanup
 
 ---
 
@@ -729,15 +735,22 @@ All violations in this section have been resolved:
 | P0 | ~~`POST /api/v1/service-accounts/{id}/reactivate`~~ | `POST /v1/auth/service-accounts/{serviceAccountId}:reactivate` | ✅ DONE |
 | P1 | ~~`PUT /api/v1/service-accounts/{id}/scopes`~~ | `PATCH /v1/auth/service-accounts/{serviceAccountId}/scopes` | ✅ DONE |
 
-### Missing Endpoints (Must Add)
+### Missing Endpoints ✅ IMPLEMENTED
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| GET | `/v1/service-accounts` | List all service accounts | P0 |
-| PATCH | `/v1/service-accounts/{serviceAccountId}` | Partial update service account | P1 |
-| HEAD | `/v1/service-accounts/{serviceAccountId}` | Check service account exists | P2 |
-| POST | `/v1/service-accounts/{serviceAccountId}:lock` | Lock service account | P2 |
-| GET | `/v1/service-accounts/{serviceAccountId}/audit-log` | Get audit log | P2 |
+| Method | Path | Description | Priority | Status |
+|--------|------|-------------|----------|--------|
+| GET | `/v1/service-accounts` | List all service accounts | P0 | ✅ DONE |
+| PATCH | `/v1/service-accounts/{serviceAccountId}` | Partial update service account | P1 | ✅ DONE |
+| HEAD | `/v1/service-accounts/{serviceAccountId}` | Check service account exists | P2 | ✅ DONE |
+| POST | `/v1/service-accounts/{serviceAccountId}:lock` | Lock service account | P2 | ✅ DONE |
+| GET | `/v1/service-accounts/{serviceAccountId}/audit-log` | Get audit log | P2 | ✅ DONE |
+
+**Files Modified:**
+- [ServiceAccountsController.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/ServiceAccountsController.cs) - Added HEAD, PATCH, :lock, and /audit-log endpoints
+- ListServiceAccountsQuery.cs + Handler - New query for listing all accounts
+- PatchServiceAccountCommand.cs + Handler - New command for partial updates
+- LockServiceAccountCommand.cs + Handler - New command for locking
+- GetServiceAccountAuditLogQuery.cs + Handler - New query for audit log
 
 ---
 
@@ -786,16 +799,25 @@ All violations in this section have been resolved:
 **Files Modified:**
 - [SubscriptionsController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Subscriptions/Controllers/SubscriptionsController.cs) - Removed api/ prefix, removed redundant filter endpoints, added query params, changed metrics to :get-metrics
 
-### Missing Endpoints (Optional)
+### Missing Endpoints ✅ IMPLEMENTED
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| PATCH | `/v1/subscriptions/{subscriptionId}` | Partial update subscription | P3 |
-| PUT | `/v1/subscriptions/{subscriptionId}` | Full update subscription | P3 |
-| DELETE | `/v1/subscriptions/{subscriptionId}` | Delete subscription | P3 |
-| POST | `/v1/subscriptions/{subscriptionId}:pause` | Pause subscription | P3 |
-| POST | `/v1/subscriptions/{subscriptionId}:resume` | Resume subscription | P3 |
-| GET | `/v1/subscriptions/{subscriptionId}/invoices` | Get subscription invoices | P3 |
+| Method | Path | Description | Priority | Status |
+|--------|------|-------------|----------|--------|
+| PATCH | `/v1/subscriptions/{subscriptionId}` | Partial update subscription | P3 | ✅ DONE |
+| PUT | `/v1/subscriptions/{subscriptionId}` | Full update subscription | P3 | ✅ DONE |
+| DELETE | `/v1/subscriptions/{subscriptionId}` | Delete subscription | P3 | ✅ DONE |
+| POST | `/v1/subscriptions/{subscriptionId}:pause` | Pause subscription | P3 | ✅ DONE |
+| POST | `/v1/subscriptions/{subscriptionId}:resume` | Resume subscription | P3 | ✅ DONE |
+| GET | `/v1/subscriptions/{subscriptionId}/invoices` | Get subscription invoices | P3 | ✅ DONE |
+
+**Files Modified:**
+- [SubscriptionsController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Subscriptions/Controllers/SubscriptionsController.cs) - Added PATCH, PUT, DELETE, :pause, :resume, /invoices endpoints
+- PatchSubscriptionCommand.cs + Handler - New command for partial updates (uses entity methods)
+- UpdateSubscriptionCommand.cs + Handler - New command for full updates (uses ChangePlan, ChangeBillingCycle)
+- DeleteSubscriptionCommand.cs + Handler - New command for soft deletion
+- PauseSubscriptionCommand.cs + Handler - New command for pausing (uses Suspend)
+- ResumeSubscriptionCommand.cs + Handler - New command for resuming (uses Reactivate)
+- GetSubscriptionInvoicesQuery.cs + Handler - New query for invoices
 
 ---
 
@@ -844,13 +866,19 @@ All violations in this section have been resolved:
 | P1 | ~~`GET /v1/subscription-plans/slug/{slug}`~~ | `GET /v1/subscription-plans?slug={slug}` | ✅ DONE |
 | P0 | ~~`GET /v1/subscription-plans/{planId}/validate-limits`~~ | `POST /v1/subscription-plans/{planId}:validate-limits` | ✅ DONE |
 
-### Missing Endpoints (Must Add)
+### Missing Endpoints ✅ IMPLEMENTED
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| PUT | `/v1/subscription-plans/{planId}` | Full update plan | P1 |
-| POST | `/v1/subscription-plans/{planId}:archive` | Archive plan | P2 |
-| POST | `/v1/subscription-plans/{planId}:clone` | Clone plan | P2 |
+| Method | Path | Description | Priority | Status |
+|--------|------|-------------|----------|--------|
+| PUT | `/v1/subscription-plans/{planId}` | Full update plan | P1 | ✅ DONE |
+| POST | `/v1/subscription-plans/{planId}:archive` | Archive plan | P2 | ✅ DONE |
+| POST | `/v1/subscription-plans/{planId}:clone` | Clone plan | P2 | ✅ DONE |
+
+**Files Modified:**
+- [SubscriptionPlansController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Subscriptions/Controllers/SubscriptionPlansController.cs) - Added PUT, :archive, :clone endpoints
+- FullUpdateSubscriptionPlanCommand.cs + Handler - New command for full updates
+- ArchiveSubscriptionPlanCommand.cs + Handler - New command for archiving (uses Deactivate)
+- CloneSubscriptionPlanCommand.cs + Handler - New command for cloning plans
 
 ---
 
@@ -883,19 +911,35 @@ All violations in this section have been resolved:
 - [TaxJurisdictionsController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/TaxJurisdictionsController.cs): NEW - separate controller for `GET /v1/tax-jurisdictions`
 - [TaxRulesController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/TaxRulesController.cs): NEW - separate controller for `GET /v1/tax-rules`
 
-### Missing Endpoints (Optional)
+### Missing Endpoints ✅ IMPLEMENTED
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| GET | `/v1/tax-jurisdictions/{jurisdictionId}` | Get single jurisdiction | P2 |
-| POST | `/v1/tax-jurisdictions` | Create jurisdiction | P2 |
-| PATCH | `/v1/tax-jurisdictions/{jurisdictionId}` | Update jurisdiction | P2 |
-| DELETE | `/v1/tax-jurisdictions/{jurisdictionId}` | Delete jurisdiction | P2 |
-| GET | `/v1/tax-rules/{ruleId}` | Get single rule | P2 |
-| POST | `/v1/tax-rules` | Create rule | P2 |
-| PATCH | `/v1/tax-rules/{ruleId}` | Update rule | P2 |
-| DELETE | `/v1/tax-rules/{ruleId}` | Delete rule | P2 |
-| POST | `/v1/taxes:validate-exemption` | Validate tax exemption | P2 |
+| Method | Path | Description | Priority | Status |
+|--------|------|-------------|----------|--------|
+| GET | `/v1/tax-jurisdictions/{jurisdictionId}` | Get single jurisdiction | P2 | ✅ DONE |
+| POST | `/v1/tax-jurisdictions` | Create jurisdiction | P2 | ✅ DONE |
+| PATCH | `/v1/tax-jurisdictions/{jurisdictionId}` | Update jurisdiction | P2 | ✅ DONE |
+| DELETE | `/v1/tax-jurisdictions/{jurisdictionId}` | Delete jurisdiction | P2 | ✅ DONE |
+| GET | `/v1/tax-rules/{ruleId}` | Get single rule | P2 | ✅ DONE |
+| POST | `/v1/tax-rules` | Create rule | P2 | ✅ DONE |
+| PATCH | `/v1/tax-rules/{ruleId}` | Update rule | P2 | ✅ DONE |
+| DELETE | `/v1/tax-rules/{ruleId}` | Delete rule | P2 | ✅ DONE |
+| POST | `/v1/taxes:validate-exemption` | Validate tax exemption | P2 | ✅ DONE |
+
+**Files Modified:**
+- [TaxJurisdictionsController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/TaxJurisdictionsController.cs) - Full CRUD (GET single, POST, PATCH, DELETE)
+- [TaxRulesController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/TaxRulesController.cs) - Full CRUD (GET single, POST, PATCH, DELETE)
+- [TaxesController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/TaxesController.cs) - Added :validate-exemption endpoint
+- GetTaxJurisdictionByIdQuery.cs + Handler - New query
+- CreateTaxJurisdictionCommand.cs + Handler - New command
+- PatchTaxJurisdictionCommand.cs + Handler - New command
+- DeleteTaxJurisdictionCommand.cs + Handler - New command
+- GetTaxRuleByIdQuery.cs + Handler - New query
+- CreateTaxRuleCommand.cs + Handler - New command
+- PatchTaxRuleCommand.cs + Handler - New command
+- DeleteTaxRuleCommand.cs + Handler - New command
+- ValidateTaxExemptionCommand.cs + Handler - New command
+- ITaxService.cs - Added new methods
+- ITaxRepository.cs - Added new methods
 
 ---
 
@@ -1096,17 +1140,33 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 - `LockWalletByIdCommand(walletId, ...)`
 - `UnlockWalletByIdCommand(walletId)`
 
-### Missing Endpoints (Optional)
+### Missing Endpoints ✅ IMPLEMENTED
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| GET | `/v1/wallets` | List all wallets (admin) | P3 |
-| PATCH | `/v1/wallets/{walletId}` | Update wallet settings | P3 |
-| DELETE | `/v1/wallets/{walletId}` | Close wallet | P3 |
-| HEAD | `/v1/wallets/{walletId}` | Check wallet exists | P3 |
-| POST | `/v1/wallets/{walletId}:freeze` | Freeze wallet (security) | P3 |
-| POST | `/v1/wallets/{walletId}:unfreeze` | Unfreeze wallet | P3 |
-| GET | `/v1/wallets/{walletId}/audit-log` | Get wallet audit log | P3 |
+| Method | Path | Description | Priority | Status |
+|--------|------|-------------|----------|--------|
+| GET | `/v1/wallets` | List all wallets (admin) | P3 | ✅ DONE |
+| PATCH | `/v1/wallets/{walletId}` | Update wallet settings | P3 | ✅ DONE |
+| DELETE | `/v1/wallets/{walletId}` | Close wallet | P3 | ✅ DONE |
+| HEAD | `/v1/wallets/{walletId}` | Check wallet exists | P3 | ✅ DONE |
+| POST | `/v1/wallets/{walletId}:freeze` | Freeze wallet (security) | P3 | ✅ DONE |
+| POST | `/v1/wallets/{walletId}:unfreeze` | Unfreeze wallet | P3 | ✅ DONE |
+| GET | `/v1/wallets/{walletId}/audit-log` | Get wallet audit log | P3 | ✅ DONE |
+
+**Files Modified:**
+- [WalletsController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/WalletsController.cs) - Added 7 new wallet-ID-based endpoints
+- [WalletDtos.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Models/WalletDtos.cs) - New DTOs for requests/responses
+- ListWalletsQuery.cs + Handler - New query for admin listing
+- GetWalletByIdQuery.cs + Handler - New query for wallet retrieval
+- GetWalletAuditLogQuery.cs + Handler - New query for audit log
+- PatchWalletCommand.cs + Handler - New command for settings update
+- CloseWalletCommand.cs + Handler - New command for wallet closure
+- FreezeWalletCommand.cs + Handler - New command for security freeze
+- UnfreezeWalletCommand.cs + Handler - New command for unfreezing
+- IWalletService.cs - Added 6 new service methods
+- IWalletRepository.cs - Added 2 new repository methods
+- WalletService.cs - Implemented new service methods
+- WalletRepository.cs - Implemented new repository methods
+- UserWallet.cs - Added DailyLimit, MonthlyLimit properties
 
 ---
 

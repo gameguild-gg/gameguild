@@ -1,4 +1,4 @@
-using GameGuild.Commerce.Payments.Controllers;
+using GameGuild.Commerce.Payments.Models;
 using GameGuild.CQRS;
 
 namespace GameGuild.Commerce.Payments.Queries.ListWallets;

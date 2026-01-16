@@ -10,7 +10,7 @@ namespace GameGuild.Commerce.Subscriptions;
 public sealed class DeleteSubscriptionHandler(IApplicationDbContext context)
     : ICommandHandler<DeleteSubscriptionCommand>
 {
-    public async Task Handle(DeleteSubscriptionCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(DeleteSubscriptionCommand request, CancellationToken cancellationToken)
     {
         var subscription = await context.Set<Subscription>()
             .FirstOrDefaultAsync(s => s.Id == request.SubscriptionId, cancellationToken)
@@ -18,5 +18,6 @@ public sealed class DeleteSubscriptionHandler(IApplicationDbContext context)
 
         context.Set<Subscription>().Remove(subscription);
         await context.SaveChangesAsync(cancellationToken);
+        return Unit.Value;
     }
 }

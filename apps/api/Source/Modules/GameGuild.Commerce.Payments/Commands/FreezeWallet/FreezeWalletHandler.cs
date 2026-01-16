@@ -7,8 +7,9 @@ namespace GameGuild.Commerce.Payments.Commands.FreezeWallet;
 /// </summary>
 public sealed class FreezeWalletHandler(IWalletService walletService) : ICommandHandler<FreezeWalletCommand>
 {
-    public async Task Handle(FreezeWalletCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(FreezeWalletCommand request, CancellationToken cancellationToken)
     {
         await walletService.FreezeWalletAsync(request.WalletId, request.Reason, cancellationToken);
+        return Unit.Value;
     }
 }
