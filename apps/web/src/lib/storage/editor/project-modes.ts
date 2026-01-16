@@ -44,15 +44,15 @@ export const NODE_RESTRICTIONS: Record<ProjectMode, NodeRestrictions> = {
   },
   "code-page": {
     blocks: {
-      b1: ['code-studio', null],      // bloqueia code-studio no b1 (painel esquerdo/principal)
-      b2: ['*', 'code-studio'],        // bloqueia todos exceto code-studio no b2
+      b2: ['code-studio', null],      // bloqueia code-studio no b1 (painel esquerdo/principal)
+      b1: ['*', 'code-studio'],        // bloqueia todos exceto code-studio no b2
       // Outros blocos herdam regra do b2
     }
   },
   "quiz-page": {
     blocks: {
-      b1: ['quiz', null],        // bloqueia quiz no b1 (painel esquerdo/principal)
-      b2: ['*', 'quiz'],         // bloqueia todos exceto quiz no b2
+      b2: ['quiz', null],        // bloqueia quiz no b1 (painel esquerdo/principal)
+      b1: ['*', 'quiz'],         // bloqueia todos exceto quiz no b2
       // Outros blocos herdam regra do b2
     }
   }
@@ -124,28 +124,30 @@ export function isNodeAllowed(
     return list.includes(type)
   }
 
-  // Primeiro verifica se está explicitamente permitido
-  if (allowed !== null) {
-    if (isInList(allowed, nodeType)) {
-      return true  // explicitamente permitido
-    }
-    // Se há lista de permitidos mas node não está nela, verificar bloqueios
-    if (allowed === '*') {
-      return true  // todos permitidos
-    }
+  // Lógica de restrições:
+  // 1. Se allowed='*', todos permitidos (ignora blocked)
+  // 2. Se allowed é uma lista específica, APENAS esses são permitidos
+  // 3. Se allowed=null, aplicar regras de blocked
+  
+  // Caso 1: Se allowed='*', todos permitidos
+  if (allowed === '*') {
+    return true
   }
-
-  // Verifica se está bloqueado
+  
+  // Caso 2: Se há lista específica de allowed, APENAS esses são permitidos
+  if (allowed !== null && allowed !== '*') {
+    return isInList(allowed, nodeType)
+  }
+  
+  // Caso 3: Se não há allowed específico, aplicar regras de blocked
   if (blocked !== null) {
-    if (isInList(blocked, nodeType)) {
-      return false  // explicitamente bloqueado
+    if (blocked === '*') {
+      return false  // todos bloqueados quando não há allowed específico
     }
-    if (blocked === '*' && allowed !== '*') {
-      return false  // todos bloqueados e não está em allowed
-    }
+    return !isInList(blocked, nodeType)  // permitir se não está na lista de bloqueados
   }
 
-  // Se não há restrições ou não está bloqueado, permitir
+  // Se não há nenhuma restrição, permitir
   return true
 }
 
