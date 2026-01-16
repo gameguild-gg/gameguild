@@ -335,8 +335,8 @@ public class SubscriptionService :
     {
         var subscriptions = await _repository.GetDueForRenewalAsync(daysBeforeRenewal, cancellationToken).ConfigureAwait(false);
         
-        // TODO: Integrate with notification service when available
-        // For now, this is a placeholder that marks the subscriptions as "reminded"
+        // NOTE: Notifications will be implemented when GameGuild.Notifications module is available.
+        // This method currently retrieves subscriptions due for renewal but notification dispatch is pending.
         foreach (var subscription in subscriptions)
         {
             // Future: await _notificationService.SendRenewalReminderAsync(subscription, cancellationToken);
@@ -348,7 +348,7 @@ public class SubscriptionService :
     {
         var subscriptions = await _repository.GetTrialsExpiringSoonAsync(daysBeforeExpiration, cancellationToken).ConfigureAwait(false);
         
-        // TODO: Integrate with notification service when available
+        // NOTE: Notifications will be implemented when GameGuild.Notifications module is available.
         foreach (var subscription in subscriptions)
         {
             // Future: await _notificationService.SendTrialExpirationReminderAsync(subscription, cancellationToken);

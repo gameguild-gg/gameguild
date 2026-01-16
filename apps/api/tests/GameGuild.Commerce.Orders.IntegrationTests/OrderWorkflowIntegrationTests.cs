@@ -1,4 +1,11 @@
+using FluentAssertions;
+using GameGuild.API.Database;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net;
+using System.Net.Http.Json;
 
 namespace GameGuild.Commerce.Orders.IntegrationTests;
 
@@ -6,66 +13,147 @@ namespace GameGuild.Commerce.Orders.IntegrationTests;
 /// Integration tests for complete order workflows.
 /// Tests end-to-end order processing with real infrastructure.
 /// </summary>
-public class OrderWorkflowIntegrationTests : OrderIntegrationTestBase
+public class OrderWorkflowIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
 {
-    public OrderWorkflowIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory) 
-        : base(factory)
+    private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
+    private readonly HttpClient _client;
+    private static readonly string DatabaseName = $"OrdersTestDb_{Guid.NewGuid()}";
+
+    public OrderWorkflowIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
     {
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
+
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureServices(services =>
+            {
+                // Remove existing DbContext registrations
+                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+                if (dbContextDescriptor != null)
+                {
+                    services.Remove(dbContextDescriptor);
+                }
+
+                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
+                if (dbContextDescriptor2 != null)
+                {
+                    services.Remove(dbContextDescriptor2);
+                }
+
+                // Add in-memory database with shared name for all requests
+                services.AddDbContext<ApplicationDbContext>(options =>
+                {
+                    options.UseInMemoryDatabase(DatabaseName);
+                });
+            });
+        });
+
+        _client = _factory.CreateClient();
     }
 
-    [Fact(Skip = "Scaffold - implement when Orders module is complete")]
-    public async Task CreateOrder_WithValidItems_CreatesOrderSuccessfully()
+    public void Dispose()
     {
-        // Arrange
-        // TODO: Set up test order with valid items
-
-        // Act
-        // TODO: Create order through API
-
-        // Assert
-        // TODO: Verify order was created correctly
-        await Task.CompletedTask;
+        _client?.Dispose();
+        GC.SuppressFinalize(this);
     }
 
-    [Fact(Skip = "Scaffold - implement when Orders module is complete")]
-    public async Task ProcessOrder_WithPayment_CompletesOrderLifecycle()
+    [Fact]
+    public async Task CreateOrder_ShouldReturnUnauthorized_WithoutAuthentication()
     {
         // Arrange
-        // TODO: Create order and prepare payment
+        var request = new
+        {
+            UserId = Guid.NewGuid(),
+            IdempotencyKey = Guid.NewGuid().ToString(),
+            Currency = "USD"
+        };
 
         // Act
-        // TODO: Process payment and complete order
+        var response = await _client.PostAsJsonAsync("/api/orders", request);
 
         // Assert
-        // TODO: Verify order state transitions
-        await Task.CompletedTask;
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
-    [Fact(Skip = "Scaffold - implement when Orders module is complete")]
-    public async Task CancelOrder_WithinCancellationWindow_RefundsCorrectly()
+    [Fact]
+    public async Task GetOrder_ShouldReturnUnauthorized_WithoutAuthentication()
     {
         // Arrange
-        // TODO: Create and process order
+        var orderId = Guid.NewGuid();
 
         // Act
-        // TODO: Cancel order within window
+        var response = await _client.GetAsync($"/api/orders/{orderId}");
 
         // Assert
-        // TODO: Verify refund processing
-        await Task.CompletedTask;
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
-    [Fact(Skip = "Scaffold - implement when Orders module is complete")]
-    public async Task OrderIsolation_BetweenTenants_MaintainsDataSeparation()
+    [Fact]
+    public async Task CompleteOrder_ShouldReturnUnauthorized_WithoutAuthentication()
     {
         // Arrange
-        // TODO: Create orders for different tenants
+        var orderId = Guid.NewGuid();
+        var request = new
+        {
+            PaymentId = Guid.NewGuid().ToString(),
+            PaymentMethod = "card"
+        };
 
         // Act
-        // TODO: Query orders for each tenant
+        var response = await _client.PostAsJsonAsync($"/api/orders/{orderId}/complete", request);
 
         // Assert
-        // TODO: Verify tenant isolation
-        await Task.CompletedTask;
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task CancelOrder_ShouldReturnUnauthorized_WithoutAuthentication()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var request = new { Reason = "Test cancellation" };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/api/orders/{orderId}/cancel", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task RefundOrder_ShouldReturnUnauthorized_WithoutAuthentication()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var request = new
+        {
+            Amount = 100.00m,
+            Reason = "Test refund"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/api/orders/{orderId}/refund", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task AddItemToOrder_ShouldReturnUnauthorized_WithoutAuthentication()
+    {
+        // Arrange
+        var orderId = Guid.NewGuid();
+        var request = new
+        {
+            ProductId = Guid.NewGuid(),
+            Quantity = 1
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/api/orders/{orderId}/items", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

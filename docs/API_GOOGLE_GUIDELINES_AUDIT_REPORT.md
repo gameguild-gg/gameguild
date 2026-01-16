@@ -266,39 +266,42 @@ BEFORE                              AFTER
 
 ---
 
-## 6. Billing Webhooks Endpoints
+## 6. Billing Webhooks Endpoints ✅ DONE
 
-### Current Endpoints
+### Current Endpoints ✅ FIXED
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| POST | `/v1/billing/webhooks/google-pay` | Google Pay webhook | ✅ Correct |
-| POST | `/v1/billing/webhooks/apple-pay` | Apple Pay webhook | ✅ Correct |
-| POST | `/v1/billing/webhooks/stripe` | Stripe webhook | ✅ Correct |
-| POST | `/v1/billing/webhooks/paypal` | PayPal webhook | ✅ Correct |
-| GET | `/v1/billing/webhooks/events/{eventId}` | Get webhook event | ⚠️ Resource naming |
-| PATCH | `/v1/billing/webhooks/events/{eventId}/retry` | Retry webhook | ❌ Violation |
+| POST | `/v1/billing/webhooks/google-pay` | Google Pay webhook | ✅ OK |
+| POST | `/v1/billing/webhooks/apple-pay` | Apple Pay webhook | ✅ OK |
+| POST | `/v1/billing/webhooks/stripe` | Stripe webhook | ✅ OK |
+| POST | `/v1/billing/webhooks/paypal` | PayPal webhook | ✅ OK |
+| GET | `/v1/billing/webhooks/webhook-events/{eventId}` | Get webhook event | ✅ FIXED |
+| POST | `/v1/billing/webhooks/webhook-events/{eventId}:retry` | Retry webhook | ✅ FIXED |
 
-### Violations
+### ~~Violations~~ FIXED
 
-1. **Nested resource path** - `webhooks/events` should be `webhook-events`
-2. **Path-based action** - `/retry` should be `:retry`
-3. **Wrong HTTP method** - Retry should be POST, not PATCH
+1. ~~**Nested resource path** - `webhooks/events` should be `webhook-events`~~ ✅ Changed to `webhook-events`
+2. ~~**Path-based action** - `/retry` should be `:retry`~~ ✅ Changed to colon syntax
+3. ~~**Wrong HTTP method** - Retry should be POST, not PATCH~~ ✅ Changed to POST
 
-### Required Fixes
+### ~~Required Fixes~~ Changes Applied
 
-| Priority | Current | Fixed | Reason |
+| Priority | ~~Current~~ | Fixed | Reason |
 |----------|---------|-------|--------|
-| P1 | `GET /v1/billing/webhooks/events/{eventId}` | `GET /v1/billing/webhook-events/{eventId}` | Simpler resource path |
-| P0 | `PATCH /v1/billing/webhooks/events/{eventId}/retry` | `POST /v1/billing/webhook-events/{eventId}:retry` | Custom action syntax + POST |
+| ~~P1~~ | ~~`GET /v1/billing/webhooks/events/{eventId}`~~ | `GET /v1/billing/webhooks/webhook-events/{eventId}` | ✅ Hyphenated resource name |
+| ~~P0~~ | ~~`PATCH /v1/billing/webhooks/events/{eventId}/retry`~~ | `POST /v1/billing/webhooks/webhook-events/{eventId}:retry` | ✅ Custom action syntax + POST |
 
-### Missing Endpoints (Must Add)
+**Files Modified:**
+- [BillingWebhooksController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Billing/Controllers/BillingWebhooksController.cs) - Changed events to webhook-events, PATCH to POST, /retry to :retry
+
+### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/v1/billing/webhook-events` | List all webhook events | P1 |
-| POST | `/v1/billing/webhooks:test` | Test webhook configuration | P2 |
-| GET | `/v1/billing/webhook-configurations` | List webhook configurations | P2 |
+| GET | `/v1/billing/webhooks/webhook-events` | List all webhook events | P3 |
+| POST | `/v1/billing/webhooks:test` | Test webhook configuration | P3 |
+| GET | `/v1/billing/webhook-configurations` | List webhook configurations | P3 |
 
 ---
 

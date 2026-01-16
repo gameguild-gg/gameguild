@@ -288,7 +288,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
     ///     - Error messages (if any)
     ///     - Provider information
     /// </remarks>
-    [HttpGet("events/{eventId}")]
+    [HttpGet("webhook-events/{eventId}")]
     [EndpointSummary("Retrieve webhook event details by event ID")]
     [EndpointDescription(
         "Retrieves detailed information about a specific webhook event for debugging and monitoring purposes. Shows event payload, processing status, timestamps, and any error messages. Useful for troubleshooting webhook processing issues and verifying event delivery."
@@ -319,7 +319,7 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
     ///     - Rate limiting from external services
     ///     Note: Only failed events can be retried. Successfully processed events will return an error.
     /// </remarks>
-    [HttpPatch("events/{eventId}/retry")]
+    [HttpPost("webhook-events/{eventId}:retry")]
     [EndpointSummary("Retry failed webhook event processing")]
     [EndpointDescription(
         "Manually retries processing of a previously failed webhook event. Useful for handling temporary failures such as downstream service unavailability, network timeouts, or transient processing errors. The retry operation uses the original event payload and applies current business logic."

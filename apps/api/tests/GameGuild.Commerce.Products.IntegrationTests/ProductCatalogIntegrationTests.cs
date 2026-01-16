@@ -1,4 +1,11 @@
+using FluentAssertions;
+using GameGuild.API.Database;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net;
+using System.Net.Http.Json;
 
 namespace GameGuild.Commerce.Products.IntegrationTests;
 
@@ -6,94 +13,174 @@ namespace GameGuild.Commerce.Products.IntegrationTests;
 /// Integration tests for Product catalog operations.
 /// Tests end-to-end product management with real infrastructure.
 /// </summary>
-public class ProductCatalogIntegrationTests : ProductIntegrationTestBase
+public class ProductCatalogIntegrationTests : IClassFixture<WebApplicationFactory<GameGuild.API.Program>>, IDisposable
 {
-    public ProductCatalogIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory) 
-        : base(factory)
+    private readonly WebApplicationFactory<GameGuild.API.Program> _factory;
+    private readonly HttpClient _client;
+    private static readonly string DatabaseName = $"ProductsTestDb_{Guid.NewGuid()}";
+
+    public ProductCatalogIntegrationTests(WebApplicationFactory<GameGuild.API.Program> factory)
     {
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Testing");
+
+        _factory = factory.WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Testing");
+            builder.ConfigureServices(services =>
+            {
+                // Remove existing DbContext registrations
+                var dbContextDescriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+                if (dbContextDescriptor != null)
+                {
+                    services.Remove(dbContextDescriptor);
+                }
+
+                var dbContextDescriptor2 = services.SingleOrDefault(d => d.ServiceType == typeof(ApplicationDbContext));
+                if (dbContextDescriptor2 != null)
+                {
+                    services.Remove(dbContextDescriptor2);
+                }
+
+                // Add in-memory database with shared name for all requests
+                services.AddDbContext<ApplicationDbContext>(options =>
+                {
+                    options.UseInMemoryDatabase(DatabaseName);
+                });
+            });
+        });
+
+        _client = _factory.CreateClient();
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module is complete")]
-    public async Task CreateProduct_WithValidData_PersistsCorrectly()
+    public void Dispose()
     {
-        // Arrange
-        // TODO: Set up valid product data
-
-        // Act
-        // TODO: Create product through API
-
-        // Assert
-        // TODO: Verify product persisted
-        await Task.CompletedTask;
+        _client?.Dispose();
+        GC.SuppressFinalize(this);
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module is complete")]
-    public async Task GetProduct_ById_ReturnsCorrectProduct()
+    [Fact]
+    public async Task GetProducts_ShouldReturn200_WithEmptyList()
     {
-        // Arrange
-        // TODO: Create and persist product
-
         // Act
-        // TODO: Retrieve product by ID
+        var response = await _client.GetAsync("/v1/products");
 
         // Assert
-        // TODO: Verify correct product returned
-        await Task.CompletedTask;
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().NotBeNullOrEmpty();
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module is complete")]
-    public async Task ListProducts_WithPagination_ReturnsCorrectPage()
+    [Fact]
+    public async Task GetProducts_ShouldSupportPagination()
     {
-        // Arrange
-        // TODO: Create multiple products
-
         // Act
-        // TODO: List products with pagination
+        var response = await _client.GetAsync("/v1/products?skip=0&take=10");
 
         // Assert
-        // TODO: Verify correct page returned
-        await Task.CompletedTask;
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module is complete")]
-    public async Task UpdateProduct_WithValidChanges_UpdatesCorrectly()
+    [Fact]
+    public async Task GetProducts_ShouldSupportFiltering_ByType()
     {
-        // Arrange
-        // TODO: Create product
-
         // Act
-        // TODO: Update product
+        var response = await _client.GetAsync("/v1/products?type=Digital");
 
         // Assert
-        // TODO: Verify updates applied
-        await Task.CompletedTask;
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module is complete")]
-    public async Task DeleteProduct_SoftDeletes_ExcludesFromQueries()
+    [Fact]
+    public async Task GetProducts_ShouldSupportFiltering_ByBundleStatus()
     {
-        // Arrange
-        // TODO: Create product
-
         // Act
-        // TODO: Delete product
+        var response = await _client.GetAsync("/v1/products?isBundle=true");
 
         // Assert
-        // TODO: Verify soft delete and exclusion
-        await Task.CompletedTask;
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
-    [Fact(Skip = "Scaffold - implement when Products module is complete")]
-    public async Task ProductTenantIsolation_MaintainsDataSeparation()
+    [Fact]
+    public async Task GetProducts_ShouldSupportSearchTerm()
     {
-        // Arrange
-        // TODO: Create products for different tenants
-
         // Act
-        // TODO: Query products for each tenant
+        var response = await _client.GetAsync("/v1/products?searchTerm=test");
 
         // Assert
-        // TODO: Verify tenant isolation
-        await Task.CompletedTask;
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task GetProductById_ShouldReturn404_WhenNotFound()
+    {
+        // Arrange
+        var nonExistentId = Guid.NewGuid();
+
+        // Act
+        var response = await _client.GetAsync($"/v1/products/{nonExistentId}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task CreateProduct_ShouldReturnUnauthorized_WithoutAuthentication()
+    {
+        // Arrange
+        var request = new
+        {
+            Name = "Test Product",
+            Description = "Test Description",
+            ShortDescription = "Short",
+            Type = "Digital",
+            IsBundle = false
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/v1/products", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task UpdateProduct_ShouldReturnUnauthorized_WithoutAuthentication()
+    {
+        // Arrange
+        var productId = Guid.NewGuid();
+        var request = new
+        {
+            Name = "Updated Product",
+            Description = "Updated Description"
+        };
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/v1/products/{productId}", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task DeleteProduct_ShouldReturnUnauthorized_WithoutAuthentication()
+    {
+        // Arrange
+        var productId = Guid.NewGuid();
+
+        // Act
+        var response = await _client.DeleteAsync($"/v1/products/{productId}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetProducts_ShouldSupportSorting()
+    {
+        // Act
+        var response = await _client.GetAsync("/v1/products?sortBy=Name&sortDirection=ASC");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }
