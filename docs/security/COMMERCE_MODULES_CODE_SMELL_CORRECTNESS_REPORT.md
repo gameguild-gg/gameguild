@@ -142,11 +142,18 @@ The Commerce modules ~~contain production-ready patterns alongside completely un
 
 ### A.4 TODO/FIXME Comments in Source Code
 
-| # | File | Line | Comment | Risk | Severity |
-|---|------|------|---------|------|----------|
-| 32 | [SubscriptionService.cs](../apps/api/Source/Modules/GameGuild.Commerce.Subscriptions/Services/SubscriptionService.cs#L7) | L7 | `TODO: Implement actual business logic` | Documents stub status | **HIGH** |
-| 33-50 | ProductCatalogIntegrationTests.cs | L20-96 | Multiple `// TODO:` placeholders | Tests are not implemented | **MEDIUM** |
-| 51-68 | OrderWorkflowIntegrationTests.cs | L20-70 | Multiple `// TODO:` placeholders | Tests are not implemented | **MEDIUM** |
+> ✅ **ALL A.4 ITEMS HAVE BEEN FIXED** (January 16, 2026)
+
+| # | File | Line | Comment | Risk | Status |
+|---|------|------|---------|------|--------|
+| 32 | ~~SubscriptionService.cs L7~~ | ~~L7~~ | ~~`TODO: Implement actual business logic`~~ | ~~Documents stub status~~ | ✅ **FIXED** — Service fully implemented; only 2 future-work NOTEs remain for notification integration |
+| 33-50 | ~~ProductCatalogIntegrationTests.cs~~ | ~~L20-96~~ | ~~Multiple `// TODO:` placeholders~~ | ~~Tests not implemented~~ | ✅ **FIXED** — Replaced scaffold tests with 10 real integration tests |
+| 51-68 | ~~OrderWorkflowIntegrationTests.cs~~ | ~~L20-70~~ | ~~Multiple `// TODO:` placeholders~~ | ~~Tests not implemented~~ | ✅ **FIXED** — Replaced scaffold tests with 6 real integration tests |
+
+**Implementation Details:**
+- **ProductCatalogIntegrationTests.cs**: Implemented 10 tests covering GET/POST/PUT/DELETE operations, pagination, filtering, sorting, and authentication requirements
+- **OrderWorkflowIntegrationTests.cs**: Implemented 6 tests covering order CRUD operations and authentication requirements
+- **SubscriptionService.cs**: Only remaining comments are `NOTE:` markers for future notification service integration (L338, L351), which are acceptable future-work indicators
 
 ### A.5 Dead Code / Commented Code Blocks
 
@@ -247,7 +254,7 @@ No significant commented-out code blocks found in production code. Test files co
 | **P1-3** | Extract `ValidateTenantAccess` to shared middleware | Controllers | 4 hours | ✅ **DONE** |
 | **P1-4** | Implement Apple Pay and PayPal signature verification | BillingWebhookServices | 2-3 days | ⏳ TODO |
 | **P1-5** | Implement tax exemption validation | TaxCalculationService.cs | 1 day | ✅ **DONE** |
-| **P1-6** | Complete integration tests for Commerce modules | *IntegrationTests.cs | 5+ days | ⏳ TODO |
+| **P1-6** | Complete integration tests for Commerce modules | *IntegrationTests.cs | 5+ days | ✅ **DONE** — ProductCatalogIntegrationTests and OrderWorkflowIntegrationTests implemented |
 
 ### D.3 🟢 NICE-TO-HAVE REFACTORS
 
