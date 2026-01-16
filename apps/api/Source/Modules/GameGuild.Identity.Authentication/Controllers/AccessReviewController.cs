@@ -14,7 +14,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/access-reviews")]
+[Route("v{version:apiVersion}/access-reviews")]
 [Tags("access-reviews")]
 [ApiExplorerSettings(IgnoreApi = true)]
 public class AccessReviewController(IMediator mediator, ILogger<AccessReviewController> logger) : ControllerBase
@@ -48,19 +48,19 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Get an access review campaign by ID
     /// </summary>
-    [HttpGet("campaigns/{id}")]
-    public async Task<ActionResult<AccessReviewCampaign>> GetAccessReviewCampaign(Guid id)
+    [HttpGet("campaigns/{campaignId}")]
+    public async Task<ActionResult<AccessReviewCampaign>> GetAccessReviewCampaign(Guid campaignId)
     {
         try
         {
-            var query = new GetAccessReviewCampaignQuery { CampaignId = id };
+            var query = new GetAccessReviewCampaignQuery { CampaignId = campaignId };
             var result = await _mediator.Send(query);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get access review campaign {CampaignId}", id);
+            _logger.LogError(ex, "Failed to get access review campaign {CampaignId}", campaignId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -69,19 +69,19 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Update an existing access review campaign
     /// </summary>
-    [HttpPut("campaigns/{id}")]
-    public async Task<ActionResult<AccessReviewCampaign>> UpdateAccessReviewCampaign(Guid id, [FromBody] UpdateAccessReviewCampaignCommand command)
+    [HttpPut("campaigns/{campaignId}")]
+    public async Task<ActionResult<AccessReviewCampaign>> UpdateAccessReviewCampaign(Guid campaignId, [FromBody] UpdateAccessReviewCampaignCommand command)
     {
         try
         {
-            var updateCommand = command with { CampaignId = id };
+            var updateCommand = command with { CampaignId = campaignId };
             var result = await _mediator.Send(updateCommand);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to update access review campaign {CampaignId}", id);
+            _logger.LogError(ex, "Failed to update access review campaign {CampaignId}", campaignId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -90,19 +90,19 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Delete an access review campaign
     /// </summary>
-    [HttpDelete("campaigns/{id}")]
-    public async Task<ActionResult> DeleteAccessReviewCampaign(Guid id)
+    [HttpDelete("campaigns/{campaignId}")]
+    public async Task<ActionResult> DeleteAccessReviewCampaign(Guid campaignId)
     {
         try
         {
-            var command = new DeleteAccessReviewCampaignCommand { CampaignId = id };
+            var command = new DeleteAccessReviewCampaignCommand { CampaignId = campaignId };
             await _mediator.Send(command);
 
             return NoContent();
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to delete access review campaign {CampaignId}", id);
+            _logger.LogError(ex, "Failed to delete access review campaign {CampaignId}", campaignId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -138,19 +138,19 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Start an access review campaign
     /// </summary>
-    [HttpPost("campaigns/{id}/start")]
-    public async Task<ActionResult> StartAccessReviewCampaign(Guid id)
+    [HttpPost("campaigns/{campaignId}:start")]
+    public async Task<ActionResult> StartAccessReviewCampaign(Guid campaignId)
     {
         try
         {
-            var command = new StartAccessReviewCampaignCommand { CampaignId = id };
+            var command = new StartAccessReviewCampaignCommand { CampaignId = campaignId };
             await _mediator.Send(command);
 
             return Ok(new { message = "Access review campaign started successfully" });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to start access review campaign {CampaignId}", id);
+            _logger.LogError(ex, "Failed to start access review campaign {CampaignId}", campaignId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -159,19 +159,19 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Complete an access review campaign
     /// </summary>
-    [HttpPost("campaigns/{id}/complete")]
-    public async Task<ActionResult<AccessReviewCampaignResult>> CompleteAccessReviewCampaign(Guid id)
+    [HttpPost("campaigns/{campaignId}:complete")]
+    public async Task<ActionResult<AccessReviewCampaignResult>> CompleteAccessReviewCampaign(Guid campaignId)
     {
         try
         {
-            var command = new CompleteAccessReviewCampaignCommand { CampaignId = id };
+            var command = new CompleteAccessReviewCampaignCommand { CampaignId = campaignId };
             var result = await _mediator.Send(command);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to complete access review campaign {CampaignId}", id);
+            _logger.LogError(ex, "Failed to complete access review campaign {CampaignId}", campaignId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -211,7 +211,7 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Review an access review item
     /// </summary>
-    [HttpPost("items/{itemId}/review")]
+    [HttpPost("items/{itemId}:review")]
     public async Task<ActionResult> ReviewAccessItem(Guid itemId, [FromBody] ReviewAccessItemCommand command)
     {
         try
@@ -232,7 +232,7 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Bulk review access items
     /// </summary>
-    [HttpPost("items/bulk-review")]
+    [HttpPost("items:bulk-review")]
     public async Task<ActionResult<BulkAccessReviewResult>> BulkReviewAccessItems([FromBody] BulkReviewAccessItemsCommand command)
     {
         try
@@ -297,19 +297,19 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Get a periodic access review by ID
     /// </summary>
-    [HttpGet("periodic/{id}")]
-    public async Task<ActionResult<PeriodicAccessReview>> GetPeriodicAccessReview(Guid id)
+    [HttpGet("periodic/{scheduleId}")]
+    public async Task<ActionResult<PeriodicAccessReview>> GetPeriodicAccessReview(Guid scheduleId)
     {
         try
         {
-            var query = new GetPeriodicAccessReviewQuery { ReviewId = id };
+            var query = new GetPeriodicAccessReviewQuery { ReviewId = scheduleId };
             var result = await _mediator.Send(query);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get periodic access review {ReviewId}", id);
+            _logger.LogError(ex, "Failed to get periodic access review {ReviewId}", scheduleId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -344,19 +344,19 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Trigger a periodic access review execution
     /// </summary>
-    [HttpPost("periodic/{id}/trigger")]
-    public async Task<ActionResult<AccessReviewCampaign>> TriggerPeriodicAccessReview(Guid id)
+    [HttpPost("periodic/{scheduleId}:trigger")]
+    public async Task<ActionResult<AccessReviewCampaign>> TriggerPeriodicAccessReview(Guid scheduleId)
     {
         try
         {
-            var command = new TriggerPeriodicAccessReviewCommand { ReviewId = id };
+            var command = new TriggerPeriodicAccessReviewCommand { ReviewId = scheduleId };
             var result = await _mediator.Send(command);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to trigger periodic access review {ReviewId}", id);
+            _logger.LogError(ex, "Failed to trigger periodic access review {ReviewId}", scheduleId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -369,7 +369,7 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Revoke access based on review decisions
     /// </summary>
-    [HttpPost("revoke-access")]
+    [HttpPost(":revoke-access")]
     public async Task<ActionResult<AccessRevocationResult>> RevokeAccess([FromBody] RevokeAccessCommand command)
     {
         try
@@ -389,7 +389,7 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Bulk revoke access for multiple users
     /// </summary>
-    [HttpPost("bulk-revoke-access")]
+    [HttpPost(":bulk-revoke-access")]
     public async Task<ActionResult<BulkAccessRevocationResult>> BulkRevokeAccess([FromBody] BulkRevokeAccessCommand command)
     {
         try
@@ -483,7 +483,7 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Generate access review report
     /// </summary>
-    [HttpPost("generate-report")]
+    [HttpPost(":generate-report")]
     public async Task<ActionResult<AccessReviewReportDto>> GenerateAccessReviewReport([FromBody] GenerateAccessReviewReportCommand command)
     {
         try
@@ -507,7 +507,7 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Send review reminders to reviewers
     /// </summary>
-    [HttpPost("campaigns/{campaignId}/send-reminders")]
+    [HttpPost("campaigns/{campaignId}:send-reminders")]
     public async Task<ActionResult<ReminderResult>> SendReviewReminders(Guid campaignId)
     {
         try
@@ -573,7 +573,7 @@ public class AccessReviewController(IMediator mediator, ILogger<AccessReviewCont
     /// <summary>
     ///     Create access review campaign from template
     /// </summary>
-    [HttpPost("templates/{templateId}/create-campaign")]
+    [HttpPost("templates/{templateId}:create-campaign")]
     public async Task<ActionResult<AccessReviewCampaign>> CreateCampaignFromTemplate(Guid templateId, [FromBody] CreateCampaignFromTemplateCommand command)
     {
         try

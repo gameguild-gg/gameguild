@@ -13,7 +13,7 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("v{version:apiVersion}/roles")]
 [Tags("roles")]
 [Produces("application/json")]
 [ApiExplorerSettings(IgnoreApi = true)]
@@ -55,32 +55,32 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <summary>
     ///     Get a specific role by ID
     /// </summary>
-    /// <param name="id">Role ID</param>
+    /// <param name="roleId">Role ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    [HttpGet("{id:guid}")]
+    [HttpGet("{roleId:guid}")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetById(Guid roleId, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Getting role by ID: {RoleId}", id);
+        logger.LogInformation("Getting role by ID: {RoleId}", roleId);
 
         try
         {
-            var query = new GetRoleByIdQuery { RoleId = id };
+            var query = new GetRoleByIdQuery { RoleId = roleId };
             var role = await sender.Send(query, cancellationToken);
 
             if (role == null)
             {
-                return NotFound($"Role with ID '{id}' not found");
+                return NotFound($"Role with ID '{roleId}' not found");
             }
 
             return Ok(role);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error getting role by ID: {RoleId}", id);
+            logger.LogError(ex, "Error getting role by ID: {RoleId}", roleId);
             return StatusCode(500, "An error occurred while retrieving the role");
         }
     }
@@ -127,23 +127,23 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <summary>
     ///     Update an existing role
     /// </summary>
-    /// <param name="id">Role ID</param>
+    /// <param name="roleId">Role ID</param>
     /// <param name="request">Update role request</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    [HttpPut("{id:guid}")]
+    [HttpPut("{roleId:guid}")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateRoleRequest request, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Update(Guid roleId, [FromBody] UpdateRoleRequest request, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Updating role: {RoleId}", id);
+        logger.LogInformation("Updating role: {RoleId}", roleId);
 
         try
         {
             var command = new UpdateRoleCommand
             {
-                RoleId = id,
+                RoleId = roleId,
                 Name = request.Name,
                 Description = request.Description,
                 Permissions = request.Permissions,
@@ -160,7 +160,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating role: {RoleId}", id);
+            logger.LogError(ex, "Error updating role: {RoleId}", roleId);
             return StatusCode(500, "An error occurred while updating the role");
         }
     }
@@ -168,20 +168,20 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// <summary>
     ///     Delete a role
     /// </summary>
-    /// <param name="id">Role ID</param>
+    /// <param name="roleId">Role ID</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{roleId:guid}")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Delete(Guid roleId, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Deleting role: {RoleId}", id);
+        logger.LogInformation("Deleting role: {RoleId}", roleId);
 
         try
         {
-            var command = new DeleteRoleCommand { RoleId = id };
+            var command = new DeleteRoleCommand { RoleId = roleId };
             await sender.Send(command, cancellationToken);
             return NoContent();
         }
@@ -192,7 +192,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error deleting role: {RoleId}", id);
+            logger.LogError(ex, "Error deleting role: {RoleId}", roleId);
             return StatusCode(500, "An error occurred while deleting the role");
         }
     }
@@ -234,7 +234,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// </summary>
     /// <param name="request">Assign role request</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    [HttpPost("assign")]
+    [HttpPost(":assign")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -272,7 +272,7 @@ public class RolesController(ILogger<RolesController> logger, ISender sender) : 
     /// </summary>
     /// <param name="request">Remove role request</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    [HttpPost("remove")]
+    [HttpPost(":remove")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

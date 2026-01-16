@@ -241,6 +241,226 @@ public sealed class AuthController(ISender sender) : ControllerBase
         return Task.FromResult<IActionResult>(Ok(new EmailVerificationResponse { Message = "Verification email sent successfully" }));
     }
 
+    /// <summary>
+    ///     Verify email address with token
+    /// </summary>
+    /// <param name="body">Email verification request with token</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Verification result</returns>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/email:verify")]
+    [EndpointSummary("Verify email with token")]
+    [EndpointDescription("Verifies the user's email address using a token received via email.")]
+    [ProducesResponseType<EmailVerificationResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var command = new VerifyEmailCommand
+        {
+            Token = body.Token,
+            TenantId = body.TenantId
+        };
+
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    #endregion
+
+    #region Password Management - /v1/auth/password
+
+    /// <summary>
+    ///     Request password reset
+    /// </summary>
+    /// <param name="body">Password reset request with email</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Confirmation (always succeeds for security)</returns>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/password:reset-request")]
+    [EndpointSummary("Request password reset")]
+    [EndpointDescription("Sends a password reset link to the specified email address. Always returns success for security.")]
+    [ProducesResponseType<PasswordResetRequestResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RequestPasswordReset([FromBody] RequestPasswordResetRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var command = new RequestPasswordResetCommand
+        {
+            Email = body.Email,
+            TenantId = body.TenantId,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+        };
+
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Complete password reset with token
+    /// </summary>
+    /// <param name="body">Password reset with token and new password</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Reset result</returns>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/password:reset")]
+    [EndpointSummary("Complete password reset")]
+    [EndpointDescription("Resets the user's password using a token received via email.")]
+    [ProducesResponseType<PasswordResetResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResetPassword([FromBody] CompletePasswordResetRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var command = new ResetPasswordCommand
+        {
+            Token = body.Token,
+            NewPassword = body.NewPassword,
+            ConfirmPassword = body.ConfirmPassword,
+            TenantId = body.TenantId
+        };
+
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    ///     Change password for authenticated user
+    /// </summary>
+    /// <param name="body">Current and new password</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Change result</returns>
+    [Authorize]
+    [HttpPost("v{version:apiVersion}/auth/password:change")]
+    [EndpointSummary("Change password")]
+    [EndpointDescription("Changes the password for the currently authenticated user.")]
+    [ProducesResponseType<PasswordChangeResult>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword([FromBody] PasswordChangeRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        // Get user ID from claims
+        var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("user_id")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized("Invalid user context");
+        }
+
+        var command = new ChangePasswordCommand
+        {
+            UserId = userId,
+            CurrentPassword = body.CurrentPassword,
+            NewPassword = body.NewPassword,
+            ConfirmPassword = body.ConfirmPassword,
+            RevokeOtherSessions = body.RevokeOtherSessions
+        };
+
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    #endregion
+
+    #region GitHub OAuth - /v1/auth/github
+
+    /// <summary>
+    ///     Handle GitHub OAuth callback
+    /// </summary>
+    /// <param name="code">OAuth authorization code</param>
+    /// <param name="state">State parameter for CSRF protection</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Authentication tokens on success</returns>
+    [AllowAnonymous]
+    [HttpGet("v{version:apiVersion}/auth/github:callback")]
+    [EndpointSummary("GitHub OAuth callback")]
+    [EndpointDescription("Handles the GitHub OAuth callback, exchanging the authorization code for tokens.")]
+    [ProducesResponseType<SignInResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GitHubCallback([FromQuery] string code, [FromQuery] string state, CancellationToken ct)
+    {
+        if (string.IsNullOrEmpty(code))
+        {
+            return BadRequest("Authorization code is required");
+        }
+
+        var command = new GitHubCallbackCommand
+        {
+            Code = code,
+            State = state ?? string.Empty
+        };
+
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return Unauthorized(result);
+        }
+
+        return Ok(result);
+    }
+
+    #endregion
+
+    #region Web3 Verification - /v1/auth/web3
+
+    /// <summary>
+    ///     Verify Web3 wallet signature and authenticate
+    /// </summary>
+    /// <param name="body">Web3 verification request with signature</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Authentication tokens on success</returns>
+    [AllowAnonymous]
+    [HttpPost("v{version:apiVersion}/auth/web3:verify")]
+    [EndpointSummary("Verify Web3 signature")]
+    [EndpointDescription("Verifies a Web3 wallet signature against a previously issued challenge and returns authentication tokens.")]
+    [ProducesResponseType<SignInResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> VerifyWeb3Signature([FromBody] Web3VerifyRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        var command = new VerifyWeb3SignatureCommand
+        {
+            WalletAddress = body.WalletAddress,
+            Signature = body.Signature,
+            Nonce = body.Nonce,
+            ChainId = body.ChainId,
+            TenantId = body.TenantId,
+            DeviceFingerprint = body.DeviceFingerprint
+        };
+
+        var result = await sender.Send(command, ct).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return Unauthorized(result);
+        }
+
+        return Ok(result);
+    }
+
     #endregion
 }
 

@@ -19,7 +19,7 @@ namespace GameGuild.Identity.Authentication;
 /// </remarks>
 [ApiController]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/permissions")]
+[Route("v{version:apiVersion}/permissions")]
 [Tags("permissions")]
 [ApiExplorerSettings(IgnoreApi = true)]
 [EnableRateLimiting(RateLimitPolicies.Authorization)]
@@ -34,7 +34,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Grant tenant permissions to a user
     /// </summary>
-    [HttpPost("tenant/grant")]
+    [HttpPost("tenant:grant")]
     public async Task<ActionResult<TenantPermission>> GrantTenantPermission([FromBody] GrantTenantPermissionCommand command)
     {
         try
@@ -54,7 +54,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Revoke tenant permissions from a user
     /// </summary>
-    [HttpPost("tenant/revoke")]
+    [HttpPost("tenant:revoke")]
     public async Task<ActionResult> RevokeTenantPermission([FromBody] RevokeTenantPermissionCommand command)
     {
         try
@@ -74,7 +74,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Check if user has a specific tenant permission
     /// </summary>
-    [HttpPost("tenant/check")]
+    [HttpPost("tenant:check")]
     public async Task<ActionResult<bool>> HasTenantPermission([FromBody] HasTenantPermissionQuery query)
     {
         try
@@ -94,7 +94,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get all tenant permissions for a user
     /// </summary>
-    [HttpPost("tenant/list")]
+    [HttpPost("tenant:list")]
     public async Task<ActionResult<IEnumerable<PermissionType>>> GetTenantPermissions([FromBody] GetTenantPermissionsQuery query)
     {
         try
@@ -114,7 +114,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Bulk grant tenant permissions
     /// </summary>
-    [HttpPost("tenant/bulk-grant")]
+    [HttpPost("tenant:bulk-grant")]
     public async Task<ActionResult<BulkPermissionResult>> BulkGrantTenantPermissions([FromBody] BulkGrantTenantPermissionsCommand command)
     {
         try
@@ -134,7 +134,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Bulk revoke tenant permissions
     /// </summary>
-    [HttpPost("tenant/bulk-revoke")]
+    [HttpPost("tenant:bulk-revoke")]
     public async Task<ActionResult<BulkPermissionResult>> BulkRevokeTenantPermissions([FromBody] BulkRevokeTenantPermissionsCommand command)
     {
         try
@@ -158,7 +158,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Grant content type permissions to a user
     /// </summary>
-    [HttpPost("content-type/grant")]
+    [HttpPost("content-type:grant")]
     public async Task<ActionResult<ContentTypePermission>> GrantContentTypePermission([FromBody] GrantContentTypePermissionCommand command)
     {
         try
@@ -178,7 +178,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Revoke content type permissions from a user
     /// </summary>
-    [HttpPost("content-type/revoke")]
+    [HttpPost("content-type:revoke")]
     public async Task<ActionResult> RevokeContentTypePermission([FromBody] RevokeContentTypePermissionCommand command)
     {
         try
@@ -198,7 +198,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Check if user has a specific content type permission
     /// </summary>
-    [HttpPost("content-type/check")]
+    [HttpPost("content-type:check")]
     public async Task<ActionResult<bool>> HasContentTypePermission([FromBody] HasContentTypePermissionQuery query)
     {
         try
@@ -218,7 +218,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get all content type permissions for a user
     /// </summary>
-    [HttpPost("content-type/list")]
+    [HttpPost("content-type:list")]
     public async Task<ActionResult<IEnumerable<PermissionType>>> GetContentTypePermissions([FromBody] GetContentTypePermissionsQuery query)
     {
         try
@@ -242,7 +242,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Grant resource-level permissions to a user
     /// </summary>
-    [HttpPost("resource/grant")]
+    [HttpPost("resource:grant")]
     public async Task<ActionResult<bool>> GrantResourcePermission([FromBody] GrantResourcePermissionCommand command)
     {
         try
@@ -262,7 +262,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Revoke resource-level permissions from a user
     /// </summary>
-    [HttpPost("resource/revoke")]
+    [HttpPost("resource:revoke")]
     public async Task<ActionResult> RevokeResourcePermission([FromBody] RevokeResourcePermissionCommand command)
     {
         try
@@ -282,7 +282,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Check if user has a specific resource permission
     /// </summary>
-    [HttpPost("resource/check")]
+    [HttpPost("resource:check")]
     public async Task<ActionResult<bool>> HasResourcePermission([FromBody] HasResourcePermissionQuery query)
     {
         try
@@ -302,7 +302,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get all resource permissions for a user
     /// </summary>
-    [HttpPost("resource/list")]
+    [HttpPost("resource:list")]
     public async Task<ActionResult<IEnumerable<PermissionType>>> GetResourcePermissions([FromBody] GetResourcePermissionsQuery query)
     {
         try
@@ -322,7 +322,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Bulk grant resource permissions
     /// </summary>
-    [HttpPost("resource/bulk-grant")]
+    [HttpPost("resource:bulk-grant")]
     public async Task<ActionResult<BulkPermissionResult>> BulkGrantResourcePermissions([FromBody] BulkGrantResourcePermissionsCommand command)
     {
         try
@@ -346,7 +346,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get all permissions for a user across all layers (tenant + content-type + resource)
     /// </summary>
-    [HttpPost("user/all")]
+    [HttpPost("user:all")]
     public async Task<ActionResult<UserPermissionsDto>> GetUserPermissions([FromBody] GetUserPermissionsQuery query)
     {
         try
@@ -366,7 +366,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get effective permissions for a user (resolved through all layers with inheritance)
     /// </summary>
-    [HttpPost("user/effective")]
+    [HttpPost("user:effective")]
     public async Task<ActionResult<EffectivePermissionsDto>> GetEffectivePermissions([FromBody] GetEffectivePermissionsQuery query)
     {
         try
@@ -386,7 +386,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Resolve permission hierarchy for a specific permission check
     /// </summary>
-    [HttpPost("hierarchy/resolve")]
+    [HttpPost("hierarchy:resolve")]
     public async Task<ActionResult<PermissionHierarchyResult>> ResolvePermissionHierarchy([FromBody] ResolvePermissionHierarchyQuery query)
     {
         try
@@ -431,7 +431,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get permission audit trail for compliance reporting
     /// </summary>
-    [HttpPost("audit/trail")]
+    [HttpPost("audit:trail")]
     public async Task<ActionResult<PermissionAuditTrailDto>> GetPermissionAuditTrail([FromBody] GetPermissionAuditTrailQuery query)
     {
         try
@@ -472,7 +472,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Clear permission cache for a specific user or tenant
     /// </summary>
-    [HttpDelete("cache/clear")]
+    [HttpPost("cache:clear")]
     public async Task<ActionResult> ClearPermissionCache([FromQuery] Guid? userId = null, [FromQuery] Guid? tenantId = null)
     {
         try
@@ -518,7 +518,7 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Apply a permission template to a user
     /// </summary>
-    [HttpPost("templates/apply")]
+    [HttpPost("templates:apply")]
     public async Task<ActionResult<ApplyPermissionTemplateResult>> ApplyPermissionTemplate([FromBody] ApplyPermissionTemplateCommand command)
     {
         try
