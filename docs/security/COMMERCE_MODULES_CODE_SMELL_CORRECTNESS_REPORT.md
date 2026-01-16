@@ -59,12 +59,43 @@ The Commerce modules contain production-ready patterns (state machines, idempote
 
 ### A.2 In-Memory Placeholders / Simulated Implementations
 
-| # | File | Class.Method | Pattern | Risk | Severity | Suggested Fix |
-|---|------|--------------|---------|------|----------|---------------|
-| 20 | [StripePaymentGateway.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Services/StripePaymentGateway.cs#L55-70) | `StripePaymentGateway.ProcessPaymentAsync` | Returns simulated success with fake transaction IDs | **CRITICAL: No real payment processing** — will accept orders without charging | **HIGH** | Integrate Stripe.NET SDK; remove simulation |
-| 21 | [StripePaymentGateway.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Services/StripePaymentGateway.cs#L100-130) | `StripePaymentGateway.ProcessRefundAsync` | Returns simulated refund success | **CRITICAL: Refunds don't actually refund money** | **HIGH** | Integrate Stripe refund API |
-| 22 | [StripePaymentGateway.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Services/StripePaymentGateway.cs#L150-175) | `StripePaymentGateway.ValidateWebhookSignatureAsync` | Basic format check, not cryptographic verification | **CRITICAL: Webhook signature bypass** | **HIGH** | Use `EventUtility.ConstructEvent()` from Stripe SDK |
-| 23 | [TaxCalculationService.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Services/TaxCalculationService.cs#L85-95) | `TaxCalculationService.ValidateTaxExemptionAsync` | Returns `false` always | Tax exemptions not functional | **MEDIUM** | Implement customer exemption registry |
+> ✅ **ALL ITEMS IN THIS SECTION HAVE BEEN FIXED** (January 16, 2026)
+
+| # | File | Class.Method | Pattern | Risk | Status | Notes |
+|---|------|--------------|---------|------|--------|-------|
+| 20 | [StripePaymentGateway.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Services/StripePaymentGateway.cs) | `StripePaymentGateway.ProcessPaymentAsync` | ~~Returns simulated success with fake transaction IDs~~ | ~~**CRITICAL: No real payment processing**~~ | ✅ **FIXED** | Integrated Stripe.NET SDK v46.0.0; uses `PaymentIntentService.CreateAsync` with `StripeGatewayOptions.UseSimulation` toggle |
+| 21 | [StripePaymentGateway.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Services/StripePaymentGateway.cs) | `StripePaymentGateway.ProcessRefundAsync` | ~~Returns simulated refund success~~ | ~~**CRITICAL: Refunds don't actually refund money**~~ | ✅ **FIXED** | Uses `RefundService.CreateAsync` with proper Stripe SDK integration |
+| 22 | [StripePaymentGateway.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Services/StripePaymentGateway.cs) | `StripePaymentGateway.ValidateWebhookSignatureAsync` | ~~Basic format check, not cryptographic verification~~ | ~~**CRITICAL: Webhook signature bypass**~~ | ✅ **FIXED** | Uses `EventUtility.ConstructEvent()` from Stripe SDK with HMAC-SHA256 verification and timestamp tolerance |
+| 23 | [TaxCalculationService.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Services/TaxCalculationService.cs) | `TaxCalculationService.ValidateTaxExemptionAsync` | ~~Returns `false` always~~ | ~~Tax exemptions not functional~~ | ✅ **FIXED** | Queries `CustomerTaxExemption` entity with proper validation (status=Active, verified, date range, parent jurisdiction fallback) |
+
+**Implementation Details (A.2 Fixes):**
+
+**Stripe.NET SDK Integration (Items 20-22):**
+- Added `Stripe.net` v46.0.0 to `Directory.Packages.props` (central package management)
+- `StripeGatewayOptions` extended with `UseSimulation` toggle (defaults to `true` for development safety)
+- Real SDK services injected: `PaymentIntentService`, `RefundService`, `CustomerService`, `PaymentMethodService`, `SubscriptionService`
+- `ProcessPaymentAsync` creates PaymentIntents with idempotency keys, captures immediately or confirms later based on capture flag
+- `ProcessRefundAsync` creates refunds with reason codes mapped to Stripe's enum
+- Currency handling: `ConvertToStripeAmount()` / `ConvertFromStripeAmount()` methods handle zero-decimal currencies (JPY, KRW, etc.)
+- Status mapping: `MapStripeStatus()` and `MapRefundReason()` helper methods for consistent status translation
+
+**Cryptographic Webhook Verification (Item 22):**
+- Uses `EventUtility.ConstructEvent(payload, signatureHeader, webhookSecret, toleranceSeconds)`
+- Validates HMAC-SHA256 signature with configurable tolerance (`WebhookToleranceSeconds` option, default 300s)
+- Returns typed Stripe Event object for reliable event parsing
+
+**Tax Exemption Registry (Item 23):**
+- Created `CustomerTaxExemption` entity with lifecycle methods:
+  - Factory: `Create(tenantId, customerId, jurisdictionCode, exemptionType, validFrom, validUntil, certificateNumber, issuingAuthority)`
+  - State methods: `MarkVerified()`, `MarkRejected()`, `Revoke()`, `ExtendValidity()`
+  - Query helpers: `IsValidOn(date)`, `IsCurrentlyValid()`
+- Enum types: `TaxExemptionType` (NonProfit, Educational, Government, Reseller, etc.), `TaxExemptionStatus`, `ExemptionVerificationStatus`
+- `ValidateTaxExemptionAsync` queries active, verified exemptions for customer/jurisdiction with parent jurisdiction fallback (e.g., "US-CA" falls back to "US")
+
+**Dependency Inversion (Cross-Module Integration):**
+- Created `IPlanPricingResolver` interface in Payments module to avoid circular dependency with Subscriptions
+- `SubscriptionPlanPricingResolver` adapter in Subscriptions module implements the interface, wrapping `ISubscriptionPlanService`
+- Registered in `DependencyInjection.AddSubscriptionsModule()` for automatic DI resolution
 
 ### A.3 "Temporary" Bypasses and Fail-Open Logic
 
@@ -124,7 +155,7 @@ No significant commented-out code blocks found in production code. Test files co
 | **SRP** | `SubscriptionService` | Implements 4 interfaces (`ISubscriptionLifecycleService`, `ISubscriptionBillingService`, `ISubscriptionQueryService`, `ISubscriptionExternalIdService`) | **MEDIUM** — Consider splitting into focused services |
 | **SRP** | `OrderService.CompleteOrderAsync` | Method does payment marking + entitlement granting + fulfillment in one method (90+ lines) | **LOW** — Well-structured with transaction boundary, but consider saga pattern |
 | **DIP** | `WalletService` | Depends directly on `DbSet<T>` instead of repository abstraction | **LOW** — Minor, but inconsistent with repository pattern used elsewhere |
-| **OCP** | `StripePaymentGateway` | Hardcoded simulation logic; no extension point for switching to real implementation | **HIGH** — Should be configurable via feature flag or environment |
+| ~~**OCP**~~ | ~~`StripePaymentGateway`~~ | ~~Hardcoded simulation logic; no extension point for switching to real implementation~~ | ✅ **FIXED** — Now uses `StripeGatewayOptions.UseSimulation` toggle; real SDK integration with configurable mode |
 
 ### B.3 KISS Violations (Complexity)
 
@@ -146,18 +177,18 @@ No significant commented-out code blocks found in production code. Test files co
 
 ## C) SECURITY & RISK REGISTER
 
-| # | Risk | Severity | Exploit Scenario | Mitigation | Regression Tests |
-|---|------|----------|------------------|------------|------------------|
-| SEC-01 | **Anonymous Payment Processing** | **CRITICAL** | Attacker crafts payment requests without authentication, potentially creating fraudulent transactions | Remove `[AllowAnonymous]` from `PaymentsController`; require JWT auth | `PaymentEndpoints_RequireAuthentication_Test` |
-| SEC-02 | **Anonymous Subscription Manipulation** | **CRITICAL** | Attacker creates/activates/cancels subscriptions for any tenant | Remove `[AllowAnonymous]` from mutation endpoints; add ownership checks | `SubscriptionMutations_RequireOwnership_Test` |
-| SEC-03 | **Webhook Signature Bypass** | **HIGH** | Attacker forges Stripe webhooks to trigger fake payment confirmations | Implement proper HMAC verification using Stripe SDK | `WebhookSignature_RejectsInvalid_Test` |
-| SEC-04 | **IDOR on Subscriptions** | **HIGH** | Authenticated user guesses subscription IDs to access other tenants' data | Add tenant scoping to all subscription queries; validate ownership | `GetSubscription_ValidatesOwnership_Test` |
-| SEC-05 | **Missing Rate Limiting** | **MEDIUM** | Attacker spams payment endpoints to cause DoS or enumerate data | Add rate limiting middleware to commerce endpoints | `PaymentEndpoints_RateLimited_Test` |
-| SEC-06 | **Fake Payment Gateway Accepts All** | **CRITICAL** | System accepts orders without real payment processing | Replace simulated gateway; add feature flag for dev mode | `Integration_RealPaymentProcessing_Test` |
-| SEC-07 | **Tenant Confusion in Webhooks** | **MEDIUM** | Malicious webhook claims wrong tenant ID | Validate subscription ownership in `ValidateTenantContextAsync` (already implemented) | `Webhook_TenantValidation_Test` |
-| SEC-08 | **Missing Transaction Boundaries** | **MEDIUM** | Partial failure leaves subscription in inconsistent state | `OrderService.CompleteOrderAsync` has transaction ✅; verify others | `SubscriptionStateChange_Atomic_Test` |
-| SEC-09 | **Logging Sensitive Data** | **LOW** | API keys or payment tokens logged (currently safe) | Audit logging statements; use structured logging with redaction | Code review |
-| SEC-10 | **Predictable Idempotency Keys** | **LOW** | If client-generated, could allow replay attacks | Validate idempotency key format; consider server-side generation | `IdempotencyKey_Validation_Test` |
+| # | Risk | Severity | Exploit Scenario | Mitigation | Status |
+|---|------|----------|------------------|------------|--------|
+| SEC-01 | **Anonymous Payment Processing** | **CRITICAL** | Attacker crafts payment requests without authentication, potentially creating fraudulent transactions | Remove `[AllowAnonymous]` from `PaymentsController`; require JWT auth | ⏳ TODO |
+| SEC-02 | **Anonymous Subscription Manipulation** | **CRITICAL** | Attacker creates/activates/cancels subscriptions for any tenant | Remove `[AllowAnonymous]` from mutation endpoints; add ownership checks | ⏳ TODO |
+| SEC-03 | ~~**Webhook Signature Bypass**~~ | ~~**HIGH**~~ | ~~Attacker forges Stripe webhooks to trigger fake payment confirmations~~ | ~~Implement proper HMAC verification using Stripe SDK~~ | ✅ **FIXED** — Uses `EventUtility.ConstructEvent()` with HMAC-SHA256 |
+| SEC-04 | **IDOR on Subscriptions** | **HIGH** | Authenticated user guesses subscription IDs to access other tenants' data | Add tenant scoping to all subscription queries; validate ownership | ⏳ TODO |
+| SEC-05 | **Missing Rate Limiting** | **MEDIUM** | Attacker spams payment endpoints to cause DoS or enumerate data | Add rate limiting middleware to commerce endpoints | ⏳ TODO |
+| SEC-06 | ~~**Fake Payment Gateway Accepts All**~~ | ~~**CRITICAL**~~ | ~~System accepts orders without real payment processing~~ | ~~Replace simulated gateway; add feature flag for dev mode~~ | ✅ **FIXED** — Stripe SDK integrated with `UseSimulation` toggle |
+| SEC-07 | **Tenant Confusion in Webhooks** | **MEDIUM** | Malicious webhook claims wrong tenant ID | Validate subscription ownership in `ValidateTenantContextAsync` (already implemented) | ✅ Already mitigated |
+| SEC-08 | **Missing Transaction Boundaries** | **MEDIUM** | Partial failure leaves subscription in inconsistent state | `OrderService.CompleteOrderAsync` has transaction ✅; verify others | ✅ Already mitigated |
+| SEC-09 | **Logging Sensitive Data** | **LOW** | API keys or payment tokens logged (currently safe) | Audit logging statements; use structured logging with redaction | ✅ Currently safe |
+| SEC-10 | **Predictable Idempotency Keys** | **LOW** | If client-generated, could allow replay attacks | Validate idempotency key format; consider server-side generation | ✅ Server-side generation in place |
 
 ---
 
@@ -169,8 +200,8 @@ No significant commented-out code blocks found in production code. Test files co
 |----------|-------|----------|--------|--------|
 | **P0-1** | Remove `[AllowAnonymous]` from `PaymentsController` | PaymentsController.cs L14 | 1 hour | ⏳ TODO |
 | **P0-2** | Remove `[AllowAnonymous]` from subscription mutation endpoints | SubscriptionsController.cs | 2 hours | ⏳ TODO |
-| **P0-3** | Implement real Stripe SDK integration | StripePaymentGateway.cs | 2-3 days | ⏳ TODO |
-| **P0-4** | Implement Stripe webhook signature verification | StripePaymentGateway.ValidateWebhookSignatureAsync | 4 hours | ⏳ TODO |
+| **P0-3** | Implement real Stripe SDK integration | StripePaymentGateway.cs | 2-3 days | ✅ **DONE** |
+| **P0-4** | Implement Stripe webhook signature verification | StripePaymentGateway.ValidateWebhookSignatureAsync | 4 hours | ✅ **DONE** |
 | **P0-5** | Implement `SubscriptionService` core methods (Create, Activate, Cancel, ProcessRenewal) | SubscriptionService.cs | 3-5 days | ✅ **DONE** |
 | **P0-6** | Implement `CalculatePricingQueryHandler` | CalculatePricingQueryHandler.cs | 1-2 days | ✅ **DONE** |
 | **P0-7** | Add ownership validation to subscription endpoints | SubscriptionsController.cs | 1 day | ⏳ TODO |
@@ -183,7 +214,7 @@ No significant commented-out code blocks found in production code. Test files co
 | **P1-2** | Implement remaining `SubscriptionService` methods | SubscriptionService.cs | 2-3 days | ✅ **DONE** |
 | **P1-3** | Extract `ValidateTenantAccess` to shared middleware | Controllers | 4 hours | ✅ **DONE** |
 | **P1-4** | Implement Apple Pay and PayPal signature verification | BillingWebhookServices | 2-3 days | ⏳ TODO |
-| **P1-5** | Implement tax exemption validation | TaxCalculationService.cs | 1 day | ⏳ TODO |
+| **P1-5** | Implement tax exemption validation | TaxCalculationService.cs | 1 day | ✅ **DONE** |
 | **P1-6** | Complete integration tests for Commerce modules | *IntegrationTests.cs | 5+ days | ⏳ TODO |
 
 ### D.3 🟢 NICE-TO-HAVE REFACTORS

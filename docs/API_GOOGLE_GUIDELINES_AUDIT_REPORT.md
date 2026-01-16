@@ -178,36 +178,39 @@ BEFORE                              AFTER
 
 ---
 
-## 4. MFA Endpoints
+## 4. MFA Endpoints ✅ DONE
 
-### Current Endpoints
+### ~~Current Endpoints~~ FIXED
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/v1/auth/mfa/configuration` | Get MFA configuration | ⚠️ Resource naming |
-| POST | `/v1/auth/mfa/setup/totp` | Initiate TOTP setup | ❌ Violation |
-| POST | `/v1/auth/mfa/setup/totp/complete` | Complete TOTP setup | ❌ Violation |
-| POST | `/v1/auth/mfa/verify` | Verify MFA code | ✅ OK |
-| POST | `/v1/auth/mfa/backup-codes/regenerate` | Regenerate backup codes | ❌ Violation |
-| POST | `/v1/auth/mfa/disable` | Disable MFA | ❌ Violation |
+| ~~GET~~ | ~~`/v1/auth/mfa/configuration`~~ | ~~Get MFA configuration~~ | ✅ `GET /v1/auth/mfa` |
+| ~~POST~~ | ~~`/v1/auth/mfa/setup/totp`~~ | ~~Initiate TOTP setup~~ | ✅ `POST /v1/auth/mfa/totp:setup` |
+| ~~POST~~ | ~~`/v1/auth/mfa/setup/totp/complete`~~ | ~~Complete TOTP setup~~ | ✅ `POST /v1/auth/mfa/totp:complete` |
+| POST | `/v1/auth/mfa/verify` | Verify MFA code | ✅ OK (unchanged) |
+| ~~POST~~ | ~~`/v1/auth/mfa/backup-codes/regenerate`~~ | ~~Regenerate backup codes~~ | ✅ `POST /v1/auth/mfa/backup-codes:regenerate` |
+| ~~POST~~ | ~~`/v1/auth/mfa/disable`~~ | ~~Disable MFA~~ | ✅ `POST /v1/auth/mfa:disable` |
 
-### Violations
+### ~~Violations~~ FIXED
 
-1. **Path-based actions** - Should use colon syntax for custom actions
-2. **Nested resources** - `setup/totp/complete` is too deeply nested
-3. **Configuration naming** - Should be simpler resource path
+1. ~~**Path-based actions** - Should use colon syntax for custom actions~~ ✅ FIXED
+2. ~~**Nested resources** - `setup/totp/complete` is too deeply nested~~ ✅ FIXED
+3. ~~**Configuration naming** - Should be simpler resource path~~ ✅ FIXED
 
-### Required Fixes
+### ~~Required Fixes~~ FIXED
 
-| Priority | Current | Fixed | Reason |
-|----------|---------|-------|--------|
-| P1 | `GET /v1/auth/mfa/configuration` | `GET /v1/auth/mfa` | Simpler resource naming |
-| P0 | `POST /v1/auth/mfa/setup/totp` | `POST /v1/auth/mfa/totp:setup` | Custom action syntax |
-| P0 | `POST /v1/auth/mfa/setup/totp/complete` | `POST /v1/auth/mfa/totp:complete` | Custom action syntax |
-| P0 | `POST /v1/auth/mfa/backup-codes/regenerate` | `POST /v1/auth/mfa/backup-codes:regenerate` | Custom action syntax |
-| P0 | `POST /v1/auth/mfa/disable` | `POST /v1/auth/mfa:disable` | Custom action syntax |
+| Priority | Current | Fixed | Reason | Status |
+|----------|---------|-------|--------|--------|
+| ~~P1~~ | ~~`GET /v1/auth/mfa/configuration`~~ | `GET /v1/auth/mfa` | Simpler resource naming | ✅ DONE |
+| ~~P0~~ | ~~`POST /v1/auth/mfa/setup/totp`~~ | `POST /v1/auth/mfa/totp:setup` | Custom action syntax | ✅ DONE |
+| ~~P0~~ | ~~`POST /v1/auth/mfa/setup/totp/complete`~~ | `POST /v1/auth/mfa/totp:complete` | Custom action syntax | ✅ DONE |
+| ~~P0~~ | ~~`POST /v1/auth/mfa/backup-codes/regenerate`~~ | `POST /v1/auth/mfa/backup-codes:regenerate` | Custom action syntax | ✅ DONE |
+| ~~P0~~ | ~~`POST /v1/auth/mfa/disable`~~ | `POST /v1/auth/mfa:disable` | Custom action syntax | ✅ DONE |
 
-### Missing Endpoints (Must Add)
+**Changes Applied:**
+- [MfaController.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/MfaController.cs): Already implemented with correct colon syntax for all custom actions
+
+### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
@@ -741,31 +744,36 @@ All violations in this section have been resolved:
 
 ---
 
-## 17. Taxes Endpoints
+## 17. Taxes Endpoints ✅ DONE
 
-### Current Endpoints
+### ~~Current Endpoints~~ FIXED
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| POST | `/api/v1/tax/calculate` | Calculate tax | ❌ Violation |
-| GET | `/api/v1/tax/jurisdictions` | Get jurisdictions | ⚠️ Singular resource |
-| GET | `/api/v1/tax/rules` | Get rules | ⚠️ Singular resource |
+| ~~POST~~ | ~~`/api/v1/tax/calculate`~~ | ~~Calculate tax~~ | ✅ `POST /v1/taxes:calculate` |
+| ~~GET~~ | ~~`/api/v1/tax/jurisdictions`~~ | ~~Get jurisdictions~~ | ✅ `GET /v1/tax-jurisdictions` |
+| ~~GET~~ | ~~`/api/v1/tax/rules`~~ | ~~Get rules~~ | ✅ `GET /v1/tax-rules` |
 
-### Violations
+### ~~Violations~~ FIXED
 
-1. **Singular resource name** - Should be `taxes` (plural)
-2. **Path-based action** - `calculate` should use custom action syntax
-3. **Nested resources** - `jurisdictions` and `rules` should be separate resources
+1. ~~**Singular resource name** - Should be `taxes` (plural)~~ ✅ FIXED
+2. ~~**Path-based action** - `calculate` should use custom action syntax~~ ✅ FIXED
+3. ~~**Nested resources** - `jurisdictions` and `rules` should be separate resources~~ ✅ FIXED
 
-### Required Fixes
+### ~~Required Fixes~~ FIXED
 
-| Priority | Current | Fixed | Reason |
-|----------|---------|-------|--------|
-| P0 | `POST /api/v1/tax/calculate` | `POST /v1/taxes:calculate` | Plural + custom action |
-| P1 | `GET /api/v1/tax/jurisdictions` | `GET /v1/tax-jurisdictions` | Separate resource |
-| P1 | `GET /api/v1/tax/rules` | `GET /v1/tax-rules` | Separate resource |
+| Priority | Current | Fixed | Reason | Status |
+|----------|---------|-------|--------|--------|
+| ~~P0~~ | ~~`POST /api/v1/tax/calculate`~~ | `POST /v1/taxes:calculate` | Plural + custom action | ✅ DONE |
+| ~~P1~~ | ~~`GET /api/v1/tax/jurisdictions`~~ | `GET /v1/tax-jurisdictions` | Separate resource | ✅ DONE |
+| ~~P1~~ | ~~`GET /api/v1/tax/rules`~~ | `GET /v1/tax-rules` | Separate resource | ✅ DONE |
 
-### Missing Endpoints (Must Add)
+**Changes Applied:**
+- [TaxesController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/TaxesController.cs): Renamed from TaxController, route updated to `v{version}/taxes`, `:calculate` action syntax
+- [TaxJurisdictionsController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/TaxJurisdictionsController.cs): NEW - separate controller for `GET /v1/tax-jurisdictions`
+- [TaxRulesController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Payments/Controllers/TaxRulesController.cs): NEW - separate controller for `GET /v1/tax-rules`
+
+### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
