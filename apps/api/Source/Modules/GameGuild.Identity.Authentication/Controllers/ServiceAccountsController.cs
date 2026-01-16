@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,8 @@ namespace GameGuild.Identity.Authentication;
 ///     Provides OAuth2 client_credentials grant and service account CRUD operations.
 /// </summary>
 [ApiController]
-[Route("api/v1/service-accounts")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/auth/service-accounts")]
 [Produces("application/json")]
 public class ServiceAccountsController : AuthControllerBase
 {
@@ -36,7 +38,7 @@ public class ServiceAccountsController : AuthControllerBase
     /// <param name="request">The client credentials request.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>An OAuth2 token response with access token.</returns>
-    [HttpPost("/api/v1/oauth/token")]
+    [HttpPost("/v{version:apiVersion}/oauth/token")]
     [AllowAnonymous]
     [EnableRateLimiting(RateLimitPolicies.Authentication)]
     [ProducesResponseType(typeof(ClientCredentialsTokenResponse), StatusCodes.Status200OK)]
@@ -155,13 +157,13 @@ public class ServiceAccountsController : AuthControllerBase
     /// <summary>
     ///     Gets a service account by ID.
     /// </summary>
-    [HttpGet("{id:guid}")]
+    [HttpGet("{serviceAccountId:guid}")]
     [Authorize(Policy = "RequireAdminRole")]
     [ProducesResponseType(typeof(ServiceAccountResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetServiceAccount(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetServiceAccount(Guid serviceAccountId, CancellationToken cancellationToken)
     {
-        var account = await _serviceAccountService.GetByIdAsync(id, cancellationToken);
+        var account = await _serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
         if (account == null)
         {
             return NotFound();
@@ -171,15 +173,25 @@ public class ServiceAccountsController : AuthControllerBase
     }
 
     /// <summary>
-    ///     Gets all service accounts for a tenant.
+    ///     Gets all service accounts with optional tenant filtering.
     /// </summary>
-    [HttpGet("tenant/{tenantId:guid}")]
+    /// <param name="tenantId">Optional tenant ID to filter service accounts</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>List of service accounts</returns>
+    [HttpGet]
     [Authorize(Policy = "RequireAdminRole")]
     [ProducesResponseType(typeof(IEnumerable<ServiceAccountResponse>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetServiceAccountsByTenant(Guid tenantId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetServiceAccounts([FromQuery] Guid? tenantId, CancellationToken cancellationToken)
     {
-        var accounts = await _serviceAccountService.GetByTenantAsync(tenantId, cancellationToken);
-        return Ok(accounts.Select(MapToResponse));
+        if (tenantId.HasValue)
+        {
+            var accounts = await _serviceAccountService.GetByTenantAsync(tenantId.Value, cancellationToken);
+            return Ok(accounts.Select(MapToResponse));
+        }
+
+        // TODO: Implement GetAllAsync in service if needed for admin use case
+        var allAccounts = await _serviceAccountService.GetByTenantAsync(Guid.Empty, cancellationToken);
+        return Ok(allAccounts.Select(MapToResponse));
     }
 
     /// <summary>
@@ -189,15 +201,15 @@ public class ServiceAccountsController : AuthControllerBase
     ///     The new client secret is only returned once. Store it securely.
     ///     The old secret is immediately invalidated.
     /// </remarks>
-    [HttpPost("{id:guid}/rotate-secret")]
+    [HttpPost("{serviceAccountId:guid}:rotate-secret")]
     [Authorize(Policy = "RequireAdminRole")]
     [ProducesResponseType(typeof(SecretRotationResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> RotateSecret(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> RotateSecret(Guid serviceAccountId, CancellationToken cancellationToken)
     {
         try
         {
-            var newSecret = await _serviceAccountService.RotateSecretAsync(id, cancellationToken);
+            var newSecret = await _serviceAccountService.RotateSecretAsync(serviceAccountId, cancellationToken);
             return Ok(new SecretRotationResponse
             {
                 ClientSecret = newSecret,
@@ -213,15 +225,15 @@ public class ServiceAccountsController : AuthControllerBase
     /// <summary>
     ///     Unlocks a locked service account.
     /// </summary>
-    [HttpPost("{id:guid}/unlock")]
+    [HttpPost("{serviceAccountId:guid}:unlock")]
     [Authorize(Policy = "RequireAdminRole")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Unlock(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Unlock(Guid serviceAccountId, CancellationToken cancellationToken)
     {
         try
         {
-            await _serviceAccountService.UnlockAsync(id, cancellationToken);
+            await _serviceAccountService.UnlockAsync(serviceAccountId, cancellationToken);
             return NoContent();
         }
         catch (InvalidOperationException)
@@ -233,15 +245,15 @@ public class ServiceAccountsController : AuthControllerBase
     /// <summary>
     ///     Deactivates a service account.
     /// </summary>
-    [HttpPost("{id:guid}/deactivate")]
+    [HttpPost("{serviceAccountId:guid}:deactivate")]
     [Authorize(Policy = "RequireAdminRole")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Deactivate(Guid serviceAccountId, CancellationToken cancellationToken)
     {
         try
         {
-            await _serviceAccountService.DeactivateAsync(id, cancellationToken);
+            await _serviceAccountService.DeactivateAsync(serviceAccountId, cancellationToken);
             return NoContent();
         }
         catch (InvalidOperationException)
@@ -253,15 +265,15 @@ public class ServiceAccountsController : AuthControllerBase
     /// <summary>
     ///     Reactivates a deactivated service account.
     /// </summary>
-    [HttpPost("{id:guid}/reactivate")]
+    [HttpPost("{serviceAccountId:guid}:reactivate")]
     [Authorize(Policy = "RequireAdminRole")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Reactivate(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Reactivate(Guid serviceAccountId, CancellationToken cancellationToken)
     {
         try
         {
-            await _serviceAccountService.ReactivateAsync(id, cancellationToken);
+            await _serviceAccountService.ReactivateAsync(serviceAccountId, cancellationToken);
             return NoContent();
         }
         catch (InvalidOperationException)
@@ -273,15 +285,15 @@ public class ServiceAccountsController : AuthControllerBase
     /// <summary>
     ///     Updates the scopes for a service account.
     /// </summary>
-    [HttpPut("{id:guid}/scopes")]
+    [HttpPatch("{serviceAccountId:guid}/scopes")]
     [Authorize(Policy = "RequireAdminRole")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateScopes(Guid id, [FromBody] UpdateScopesRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateScopes(Guid serviceAccountId, [FromBody] UpdateScopesRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            await _serviceAccountService.UpdateScopesAsync(id, request.Scopes, cancellationToken);
+            await _serviceAccountService.UpdateScopesAsync(serviceAccountId, request.Scopes, cancellationToken);
             return NoContent();
         }
         catch (InvalidOperationException)
@@ -293,19 +305,19 @@ public class ServiceAccountsController : AuthControllerBase
     /// <summary>
     ///     Deletes a service account.
     /// </summary>
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{serviceAccountId:guid}")]
     [Authorize(Policy = "RequireAdminRole")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteServiceAccount(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteServiceAccount(Guid serviceAccountId, CancellationToken cancellationToken)
     {
-        var account = await _serviceAccountService.GetByIdAsync(id, cancellationToken);
+        var account = await _serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
         if (account == null)
         {
             return NotFound();
         }
 
-        await _serviceAccountService.DeactivateAsync(id, cancellationToken);
+        await _serviceAccountService.DeactivateAsync(serviceAccountId, cancellationToken);
         return NoContent();
     }
 

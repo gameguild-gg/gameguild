@@ -574,33 +574,37 @@ All violations in this section have been resolved:
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| POST | `/api/v1/oauth/token` | Get OAuth token | ✅ Correct |
-| POST | `/api/v1/service-accounts` | Create service account | ✅ Correct |
-| GET | `/api/v1/service-accounts/{id}` | Get service account | ✅ Correct |
-| DELETE | `/api/v1/service-accounts/{id}` | Delete service account | ✅ Correct |
-| GET | `/api/v1/service-accounts/tenant/{tenantId}` | Get by tenant | ❌ Violation |
-| POST | `/api/v1/service-accounts/{id}/rotate-secret` | Rotate secret | ❌ Violation |
-| POST | `/api/v1/service-accounts/{id}/unlock` | Unlock account | ❌ Violation |
-| POST | `/api/v1/service-accounts/{id}/deactivate` | Deactivate | ❌ Violation |
-| POST | `/api/v1/service-accounts/{id}/reactivate` | Reactivate | ❌ Violation |
-| PUT | `/api/v1/service-accounts/{id}/scopes` | Update scopes | ⚠️ Inconsistent |
+| POST | `/v1/oauth/token` | Get OAuth token | ✅ FIXED - Versioned |
+| POST | `/v1/auth/service-accounts` | Create service account | ✅ FIXED - Under auth |
+| GET | `/v1/auth/service-accounts` | List service accounts with optional tenantId filter | ✅ FIXED - Added with query param |
+| GET | `/v1/auth/service-accounts/{serviceAccountId}` | Get service account | ✅ FIXED - Consistent ID naming |
+| DELETE | `/v1/auth/service-accounts/{serviceAccountId}` | Delete service account | ✅ FIXED - Consistent ID naming |
+| POST | `/v1/auth/service-accounts/{serviceAccountId}:rotate-secret` | Rotate secret | ✅ FIXED - Colon syntax |
+| POST | `/v1/auth/service-accounts/{serviceAccountId}:unlock` | Unlock account | ✅ FIXED - Colon syntax |
+| POST | `/v1/auth/service-accounts/{serviceAccountId}:deactivate` | Deactivate | ✅ FIXED - Colon syntax |
+| POST | `/v1/auth/service-accounts/{serviceAccountId}:reactivate` | Reactivate | ✅ FIXED - Colon syntax |
+| PATCH | `/v1/auth/service-accounts/{serviceAccountId}/scopes` | Update scopes | ✅ FIXED - PATCH + consistent naming |
 
-### Violations
+### ~~Violations~~ FIXED (January 2026)
 
-1. **Path-based actions** - Should use colon syntax
-2. **Tenant filter in path** - Should be query parameter
-3. **Inconsistent ID naming** - Should be `serviceAccountId`
+All violations in this section have been resolved:
 
-### Required Fixes
+1. ~~**Path-based actions** - Should use colon syntax~~ ✅ FIXED
+2. ~~**Tenant filter in path** - Should be query parameter~~ ✅ FIXED - Consolidated to list endpoint
+3. ~~**Inconsistent ID naming** - Should be `serviceAccountId`~~ ✅ FIXED
+4. ~~**Missing list endpoint** - No way to list all service accounts~~ ✅ FIXED - Added GET with tenantId query param
+5. ~~**Route path** - Should be under `/v1/auth/`~~ ✅ FIXED
 
-| Priority | Current | Fixed | Reason |
+### ~~Required Fixes~~ COMPLETED
+
+| Priority | Current | Fixed | Status |
 |----------|---------|-------|--------|
-| P1 | `GET /api/v1/service-accounts/tenant/{tenantId}` | `GET /v1/service-accounts?tenantId={tenantId}` | Query parameter |
-| P0 | `POST /api/v1/service-accounts/{id}/rotate-secret` | `POST /v1/service-accounts/{serviceAccountId}:rotate-secret` | Custom action syntax |
-| P0 | `POST /api/v1/service-accounts/{id}/unlock` | `POST /v1/service-accounts/{serviceAccountId}:unlock` | Custom action syntax |
-| P0 | `POST /api/v1/service-accounts/{id}/deactivate` | `POST /v1/service-accounts/{serviceAccountId}:deactivate` | Custom action syntax |
-| P0 | `POST /api/v1/service-accounts/{id}/reactivate` | `POST /v1/service-accounts/{serviceAccountId}:reactivate` | Custom action syntax |
-| P1 | `PUT /api/v1/service-accounts/{id}/scopes` | `PATCH /v1/service-accounts/{serviceAccountId}/scopes` | Consistent naming + PATCH |
+| P1 | ~~`GET /api/v1/service-accounts/tenant/{tenantId}`~~ | `GET /v1/auth/service-accounts?tenantId={tenantId}` | ✅ DONE |
+| P0 | ~~`POST /api/v1/service-accounts/{id}/rotate-secret`~~ | `POST /v1/auth/service-accounts/{serviceAccountId}:rotate-secret` | ✅ DONE |
+| P0 | ~~`POST /api/v1/service-accounts/{id}/unlock`~~ | `POST /v1/auth/service-accounts/{serviceAccountId}:unlock` | ✅ DONE |
+| P0 | ~~`POST /api/v1/service-accounts/{id}/deactivate`~~ | `POST /v1/auth/service-accounts/{serviceAccountId}:deactivate` | ✅ DONE |
+| P0 | ~~`POST /api/v1/service-accounts/{id}/reactivate`~~ | `POST /v1/auth/service-accounts/{serviceAccountId}:reactivate` | ✅ DONE |
+| P1 | ~~`PUT /api/v1/service-accounts/{id}/scopes`~~ | `PATCH /v1/auth/service-accounts/{serviceAccountId}/scopes` | ✅ DONE |
 
 ### Missing Endpoints (Must Add)
 
