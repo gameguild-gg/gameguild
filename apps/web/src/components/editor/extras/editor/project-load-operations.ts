@@ -23,7 +23,7 @@ export interface CheckSelectedProjectParams {
   setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
   setProjectTags: (tags: string[]) => void
   setIsFirstTime: (value: boolean) => void
-  setCurrentLayout: (layout: LayoutType) => void // Layout auto-detected (single, dual, or sequential)
+  setCurrentLayout: (layout: LayoutType) => void // Layout auto-detected (single, multiple, or sequential)
   setCurrentProjectType: (type: string) => void // Project type
   setEditorState: (state: string) => void
   setBlockStates: (states: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void

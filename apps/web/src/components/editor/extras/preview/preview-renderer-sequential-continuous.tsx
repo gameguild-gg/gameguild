@@ -58,7 +58,7 @@ export function PreviewRendererSequentialContinuous({
                   />
                 </div>
               </div>
-            ) : panel.type === "dual" && panel.blocks && Object.keys(panel.blocks).length >= 2 ? (
+            ) : panel.type === "multiple" && panel.blocks && Object.keys(panel.blocks).length >= 1 ? (
               <PreviewRendererType2
                 blockStates={Object.entries(panel.blocks).reduce((acc, [blockId, blockState]) => {
                   acc[blockId] = typeof blockState === "string"

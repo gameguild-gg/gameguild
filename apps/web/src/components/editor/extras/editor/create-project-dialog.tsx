@@ -43,7 +43,7 @@ interface CreateProjectDialogProps {
     storageType: "local" | "gameguild-cloud" | "google-drive"
     type: string // Project type (type1, type2, etc.)
     mode: ProjectMode
-    layout: LayoutType // Layout: single or dual
+    layout: LayoutType // Layout: single or multiple
   }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
@@ -72,7 +72,7 @@ export function CreateProjectDialog({
   // Auto-determine layout based on project type
   const layoutType: LayoutType = 
     projectType === "type1" ? "single" : 
-    projectType === "type2" ? "dual" : 
+    projectType === "type2" ? "multiple" : 
     "sequential"
 
   // Close tag dropdown when clicking outside
@@ -184,11 +184,8 @@ export function CreateProjectDialog({
         projectData = JSON.stringify({ version: "sequential-v1", panels: [] })
       } else {
         projectData = createProjectData(layoutType, {
-          blocks: layoutType === "single" ? {
+          blocks: {
             b1: emptyState,
-          } : {
-            b1: emptyState,
-            b2: emptyState,
           },
         })
       }
@@ -320,7 +317,7 @@ export function CreateProjectDialog({
                 </div>
               </button>
 
-              {/* Type 2 - Dual Panel */}
+              {/* Type 2 - Multiple Panel */}
               <button
                 type="button"
                 onClick={() => setProjectType("type2")}
@@ -361,7 +358,7 @@ export function CreateProjectDialog({
                 
                 <h3 className="font-semibold text-base mb-1">Multi Panel</h3>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
-                  Multiple panels side-by-side (2 or more) for comparison or parallel content.
+                  Multiple panels side-by-side (starts with 1, add more as needed) for comparison or parallel content.
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
                   <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Multi Layout</span>
