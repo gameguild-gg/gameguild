@@ -4,6 +4,7 @@ using GameGuild.Abstractions;
 using GameGuild.API.Database;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
+using GameGuild.Identity.Context;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
 using Microsoft.EntityFrameworkCore;
@@ -123,6 +124,11 @@ public static class InfrastructureLayerExtensions
         services.AddHttpClient();
         logger.LogInformation("HttpClient registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
+        // 03x. Identity Context Module (IActorContextAccessor, ISecurityAuditLogger - required by many services)
+        stepStopwatch.Restart();
+        services.AddIdentityContextModule(configuration);
+        logger.LogInformation("Identity Context Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
         // 03a. Authentication Application (command handlers, validators, core auth services)
         stepStopwatch.Restart();
         services.AddAuthenticationApplication();
@@ -158,7 +164,12 @@ public static class InfrastructureLayerExtensions
         services.AddPermissionServices();
         logger.LogInformation("Permission Services registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
-        // 10. Repositories
+        // 10. Unified Authorization Layer (Policy Gates, Permission Resolution)
+        stepStopwatch.Restart();
+        services.AddUnifiedAuthorizationLayer();
+        logger.LogInformation("Unified Authorization Layer registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 11. Repositories
         services.AddRepositories(logger);
 
         stopwatch.Stop();

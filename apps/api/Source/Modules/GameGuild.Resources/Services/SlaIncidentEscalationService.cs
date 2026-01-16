@@ -64,14 +64,17 @@ public class LoggingSlaNotificationSender(ILogger<LoggingSlaNotificationSender> 
 /// <summary>
 ///     Implementation of SLA incident escalation service.
 ///     Wires SLA violations to the notification system and incident management.
+///     Uses Lazy&lt;ISlaImpactAnalysisService&gt; to break circular dependency.
 /// </summary>
 public class SlaIncidentEscalationService(
-    ISlaImpactAnalysisService slaService,
+    Lazy<ISlaImpactAnalysisService> slaServiceLazy,
     ISlaImpactAnalysisRepository slaRepository,
     ISlaNotificationSender notificationSender,
     ILogger<SlaIncidentEscalationService> logger
 ) : ISlaIncidentEscalationService
 {
+    private ISlaImpactAnalysisService SlaService => slaServiceLazy.Value;
+    
     // In-memory config cache - in production would use a repository
     private static readonly Dictionary<Guid, SlaEscalationConfig> ConfigCache = new();
     private static readonly object ConfigLock = new();
@@ -111,7 +114,7 @@ public class SlaIncidentEscalationService(
             // Create incident ticket if configured
             if (config.AutoCreateIncidents && !violation.IncidentCreated)
             {
-                incidentId = await slaService.CreateIncidentTicketAsync(violation.Id, cancellationToken);
+                incidentId = await SlaService.CreateIncidentTicketAsync(violation.Id, cancellationToken);
                 
                 logger.LogInformation(
                     "Created incident {IncidentId} for violation {ViolationId}",
@@ -125,7 +128,7 @@ public class SlaIncidentEscalationService(
             notifiedUsers.AddRange(config.EscalationUserIds);
 
             // Mark violation as escalated
-            await slaService.UpdateViolationAsync(
+            await SlaService.UpdateViolationAsync(
                 violation.Id,
                 requiresEscalation: true,
                 cancellationToken: cancellationToken);
@@ -155,7 +158,7 @@ public class SlaIncidentEscalationService(
 
         foreach (var tenantId in tenantIds)
         {
-            var violations = await slaService.GetUnresolvedViolationsAsync(
+            var violations = await SlaService.GetUnresolvedViolationsAsync(
                 tenantId,
                 SlaViolationSeverity.High,
                 cancellationToken);

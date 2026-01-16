@@ -108,6 +108,9 @@ public static class DependencyInjection
         services.AddScoped<ICostAllocationService, CostAllocationService>();
 
         // SLA Incident Escalation Services
+        // Use Lazy<T> to break circular dependency between SlaImpactAnalysisService and SlaIncidentEscalationService
+        services.AddScoped<Lazy<ISlaImpactAnalysisService>>(sp =>
+            new Lazy<ISlaImpactAnalysisService>(() => sp.GetRequiredService<ISlaImpactAnalysisService>()));
         services.AddScoped<ISlaNotificationSender, LoggingSlaNotificationSender>();
         services.AddScoped<ISlaIncidentEscalationService, SlaIncidentEscalationService>();
         services.AddScoped<IIncidentTicketProvider, DefaultIncidentTicketProvider>();

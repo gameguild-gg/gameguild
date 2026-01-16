@@ -78,8 +78,8 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
                 })
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("TestScheme", _ => { });
 
-                // Register IActorContextAccessor for AuthorizationBehavior
-                services.AddScoped<IActorContextAccessor, ActorContextAccessor>();
+                // Register IActorContextAccessor for AuthorizationBehavior (must be singleton)
+                services.AddSingleton<IActorContextAccessor, ActorContextAccessor>();
 
                 services.AddHttpLogging(_ => { });
             });
@@ -211,8 +211,8 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
     [Fact]
     public async Task ResourcesAdmin_Anonymous_Returns401()
     {
-        // Act
-        var response = await _anonymousClient.GetAsync("/v1/resources/usage/summary");
+        // Act - Admin endpoints require authentication
+        var response = await _anonymousClient.GetAsync("/v1/resources/usage-by-type/0?startDate=2024-01-01&endDate=2024-12-31");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -225,7 +225,7 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: false);
 
         // Act
-        var response = await client.GetAsync("/v1/resources/usage/summary");
+        var response = await client.GetAsync("/v1/resources/usage-by-type/0?startDate=2024-01-01&endDate=2024-12-31");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -238,7 +238,7 @@ public class ResourcesAuthorizationIntegrationTests : IClassFixture<WebApplicati
         using var client = CreateAuthenticatedClient(UserA, TenantA, isSystemAdmin: true);
 
         // Act
-        var response = await client.GetAsync("/v1/resources/usage/summary");
+        var response = await client.GetAsync("/v1/resources/usage-by-type/0?startDate=2024-01-01&endDate=2024-12-31");
 
         // Assert
         response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized);
