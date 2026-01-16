@@ -24,20 +24,21 @@ public sealed class ResourcesController(ISender sender) : ControllerBase
     #region Collection Operations - /v1/resources
 
     /// <summary>
-    ///     Get usage by resource type across all tenants
+    ///     Get resource usage filtered by type
     /// </summary>
-    /// <param name="usageType">Resource usage type to query</param>
+    /// <param name="type">Resource usage type to filter by (required)</param>
     /// <param name="startDate">Start date for the query range</param>
     /// <param name="endDate">End date for the query range</param>
     /// <param name="ct">Cancellation token</param>
-    /// <returns>Aggregated usage data by type</returns>
-    [HttpGet("v{version:apiVersion}/resources/usage-by-type/{usageType}")]
-    [EndpointSummary("Get usage by resource type across all tenants")]
-    [EndpointDescription("Retrieves aggregated resource usage for a specific type across all tenants within the specified date range.")]
+    /// <returns>Aggregated usage data for the specified type</returns>
+    [HttpGet("v{version:apiVersion}/resources/usage")]
+    [EndpointSummary("Get resource usage by type")]
+    [EndpointDescription("Retrieves aggregated resource usage across all tenants within the specified date range for the given resource type.")]
     [ProducesResponseType<Dictionary<Guid, int>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> UsageByType(ResourceUsageType usageType, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetUsage([FromQuery(Name = "type")] ResourceUsageType type, [FromQuery] DateTime startDate, [FromQuery] DateTime endDate, CancellationToken ct)
     {
-        return Ok(await sender.Send(new GetResourceUsageByTypeQuery(usageType, startDate, endDate), ct).ConfigureAwait(false));
+        return Ok(await sender.Send(new GetResourceUsageByTypeQuery(type, startDate, endDate), ct).ConfigureAwait(false));
     }
 
     #endregion

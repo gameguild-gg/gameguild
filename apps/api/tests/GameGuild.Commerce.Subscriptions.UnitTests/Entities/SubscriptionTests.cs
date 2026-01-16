@@ -280,6 +280,123 @@ public class SubscriptionTests
         subscription.Amount.Should().Be(newAmount);
     }
 
+    #region E.1 Critical Invariant Tests
+
+    /// <summary>
+    /// E.1 Test: Subscription.Activate_FromPendingActivation_Succeeds
+    /// Verifies that a subscription can be activated from PendingActivation state
+    /// </summary>
+    [Fact]
+    public void Activate_FromPendingActivation_Succeeds()
+    {
+        // Arrange - Start from PendingActivation (default state)
+        var subscription = CreateValidSubscription();
+        subscription.Status.Should().Be(SubscriptionStatus.PendingActivation);
+
+        // Act
+        subscription.Activate();
+
+        // Assert
+        subscription.Status.Should().Be(SubscriptionStatus.Active);
+        subscription.IsActive.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// E.1 Test: Subscription.Activate_FromCancelled_ThrowsInvalidStateException
+    /// Verifies that activating a cancelled subscription throws InvalidOperationException
+    /// State machine validation: Cancelled is a terminal state
+    /// </summary>
+    [Fact]
+    public void Activate_FromCancelled_ThrowsInvalidStateException()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.Cancel(CancellationReason.UserRequested, "Test cancellation");
+        subscription.Status.Should().Be(SubscriptionStatus.Cancelled);
+
+        // Act & Assert
+        var act = () => subscription.Activate();
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Invalid*transition*Cancelled*Active*");
+    }
+
+    /// <summary>
+    /// E.1 Test: Subscription.RecordPayment_WithDuplicateIdempotencyKey_IsIdempotent
+    /// Verifies that recording a payment with the same idempotency key returns success
+    /// without creating a duplicate charge (critical for payment security)
+    /// </summary>
+    [Fact]
+    public void RecordPayment_WithDuplicateIdempotencyKey_IsIdempotent()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var idempotencyKey = "payment_123";
+        var amount = 29.99m;
+        var paymentDate = DateTime.UtcNow;
+
+        // Act - First payment
+        var result1 = subscription.RecordPayment(amount, "USD", paymentDate, idempotencyKey);
+        var initialBillingCycle = subscription.BillingCycleCount;
+
+        // Act - Duplicate payment with same idempotency key
+        var result2 = subscription.RecordPayment(amount, "USD", paymentDate, idempotencyKey);
+
+        // Assert
+        result1.IsSuccess.Should().BeTrue();
+        result2.IsAlreadyProcessed.Should().BeTrue(); // Idempotent - returns success indicator for duplicate
+        // Billing cycle should NOT advance for duplicate
+        subscription.BillingCycleCount.Should().Be(initialBillingCycle);
+    }
+
+    /// <summary>
+    /// E.1 Test: Subscription.RecordPayment_AdvancesBillingCycle_Correctly
+    /// Verifies that recording a payment advances the billing cycle count
+    /// and updates the next billing date appropriately
+    /// </summary>
+    [Fact]
+    public void RecordPayment_AdvancesBillingCycle_Correctly()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var initialBillingCycle = subscription.BillingCycleCount;
+        var initialNextBillingDate = subscription.NextBillingDate;
+        var paymentDate = DateTime.UtcNow;
+
+        // Act
+        var result = subscription.RecordPayment(29.99m, "USD", paymentDate, "unique_payment_key_1");
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        subscription.BillingCycleCount.Should().Be(initialBillingCycle + 1);
+        subscription.NextBillingDate.Should().BeAfter(initialNextBillingDate);
+        subscription.LastPaymentAt.Should().Be(paymentDate);
+    }
+
+    /// <summary>
+    /// Additional E.1 Test: RecordPayment_OnCancelledSubscription_IsRejected
+    /// Economic invariant: Cannot charge cancelled subscriptions
+    /// </summary>
+    [Fact]
+    public void RecordPayment_OnCancelledSubscription_IsRejected()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.Cancel(CancellationReason.UserRequested);
+
+        // Act
+        var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "payment_on_cancelled");
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.IsRejectedCancelled.Should().BeTrue();
+    }
+
+    #endregion
+
     private static Subscription CreateValidSubscription()
     {
         return new Subscription(

@@ -2,6 +2,9 @@ using GameGuild.CQRS;
 
 namespace GameGuild.Identity.Tenants;
 
+// Tenant Validation Commands
+public record ValidateTenantCommand(string Name, string Slug, string AdminEmail) : IRequest<TenantValidationResponse>;
+
 // Tenant Metadata Commands
 public record UpdateTenantMetadataCommand(Guid TenantId, UpdateTenantMetadataRequest Request) : IRequest;
 

@@ -99,6 +99,34 @@ public sealed class TenantsController(ISender sender) : ControllerBase
         return Ok(await sender.Send(new GetPaymentHistoryQuery(null, tenantId, startDate, endDate), ct));
     }
 
+    /// <summary>
+    ///     Validate tenant data before creation
+    /// </summary>
+    /// <param name="body">Tenant data to validate</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Validation result with errors, warnings, and suggestions</returns>
+    /// <remarks>
+    ///     Validates tenant data without creating the tenant. Useful for:
+    ///     - Checking if a slug is available
+    ///     - Validating email format
+    ///     - Checking for naming conflicts
+    ///     - Getting alternative slug suggestions
+    /// </remarks>
+    [HttpPost("v{version:apiVersion}/tenants:validate")]
+    [EndpointSummary("Validate tenant data before creation")]
+    [EndpointDescription("Validates tenant data without creating. Returns errors, warnings, and suggestions.")]
+    [ProducesResponseType<TenantValidationResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidateTenant([FromBody] ValidateTenantRequest body, CancellationToken ct)
+    {
+        var validationResult = await sender.Send(
+            new ValidateTenantCommand(body.Name, body.Slug, body.AdminEmail),
+            ct
+        ).ConfigureAwait(false);
+        
+        return Ok(validationResult);
+    }
+
     #endregion
 
     #region Bulk Operations - /v1/tenants:action
@@ -490,5 +518,127 @@ public sealed class TenantsController(ISender sender) : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    ///     Get tenant audit log
+    /// </summary>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="startDate">Optional start date filter</param>
+    /// <param name="endDate">Optional end date filter</param>
+    /// <param name="action">Optional action type filter (e.g., 'create', 'update', 'delete', 'settings_change')</param>
+    /// <param name="actorId">Optional filter by actor (user who performed the action)</param>
+    /// <param name="page">Page number for pagination (default: 1)</param>
+    /// <param name="pageSize">Number of items per page (default: 50, max: 200)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of audit log entries</returns>
+    /// <remarks>
+    ///     Retrieves the audit log for a specific tenant, showing all changes and actions performed.
+    ///     Audit entries include:
+    ///     - Timestamp of the action
+    ///     - Action type (create, update, delete, settings change, etc.)
+    ///     - Actor who performed the action
+    ///     - Before and after values for changes
+    ///     - IP address and user agent (when available)
+    ///     - Correlation ID for request tracking
+    /// </remarks>
+    [HttpGet("v{version:apiVersion}/tenants/{tenantId:guid}/audit-log")]
+    [EndpointSummary("Get tenant audit log")]
+    [EndpointDescription("Retrieves the audit log for a tenant showing all changes, actions, and who performed them.")]
+    [ProducesResponseType<GameGuild.Models.PagedResult<TenantAuditLogEntry>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetTenantAuditLog(
+        Guid tenantId,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null,
+        [FromQuery] string? action = null,
+        [FromQuery] Guid? actorId = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken ct = default
+    )
+    {
+        // Validate pagination parameters
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 50;
+        if (pageSize > 200) pageSize = 200;
+
+        var auditLog = await sender.Send(
+            new GetTenantAuditLogQuery(tenantId, startDate, endDate, action, actorId, page, pageSize),
+            ct
+        ).ConfigureAwait(false);
+
+        return Ok(auditLog);
+    }
+
     #endregion
+}
+
+/// <summary>
+///     Validate tenant request
+/// </summary>
+public record ValidateTenantRequest(
+    string Name,
+    string Slug,
+    string AdminEmail
+);
+
+/// <summary>
+///     Tenant validation response
+/// </summary>
+public class TenantValidationResponse
+{
+    public bool IsValid { get; set; }
+    public List<TenantValidationError> Errors { get; set; } = new();
+    public List<TenantValidationWarning> Warnings { get; set; } = new();
+    public List<string> Suggestions { get; set; } = new();
+    public SlugValidation? SlugValidation { get; set; }
+}
+
+/// <summary>
+///     Validation error detail
+/// </summary>
+public class TenantValidationError
+{
+    public string Field { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+}
+
+/// <summary>
+///     Validation warning detail
+/// </summary>
+public class TenantValidationWarning
+{
+    public string Field { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+}
+
+/// <summary>
+///     Slug validation result
+/// </summary>
+public class SlugValidation
+{
+    public bool IsAvailable { get; set; }
+    public bool IsValid { get; set; }
+    public List<string> SuggestedAlternatives { get; set; } = new();
+}
+
+/// <summary>
+///     Tenant audit log entry
+/// </summary>
+public class TenantAuditLogEntry
+{
+    public Guid Id { get; set; }
+    public Guid TenantId { get; set; }
+    public DateTime Timestamp { get; set; }
+    public string Action { get; set; } = string.Empty;
+    public Guid? ActorId { get; set; }
+    public string? ActorName { get; set; }
+    public string? ActorEmail { get; set; }
+    public Dictionary<string, object?> BeforeValues { get; set; } = new();
+    public Dictionary<string, object?> AfterValues { get; set; } = new();
+    public string? IpAddress { get; set; }
+    public string? UserAgent { get; set; }
+    public string? CorrelationId { get; set; }
+    public Dictionary<string, string> Metadata { get; set; } = new();
 }

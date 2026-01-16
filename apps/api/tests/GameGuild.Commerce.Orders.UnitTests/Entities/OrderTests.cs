@@ -334,6 +334,90 @@ public class OrderTests
 
     #endregion
 
+    #region E.1 Critical Invariant Tests - Fulfillment
+
+    /// <summary>
+    /// E.1 Test: Order.MarkAsFulfilled_BeforePayment_Throws
+    /// Verifies that an order cannot be marked as fulfilled before payment
+    /// Economic invariant: No fulfillment without payment
+    /// </summary>
+    [Fact]
+    public void MarkAsFulfilled_BeforePayment_Throws()
+    {
+        // Arrange - Order is in Pending state (not paid)
+        var order = CreatePendingOrder();
+        order.Status.Should().Be(OrderStatus.Pending);
+
+        // Act & Assert
+        var act = () => order.MarkAsFulfilled();
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Invalid order state transition*");
+    }
+
+    [Fact]
+    public void MarkAsFulfilled_FromProcessing_Throws()
+    {
+        // Arrange - Order is in Processing state (not yet paid)
+        var order = CreatePendingOrder();
+        // Transition to Processing by using internal state
+        typeof(Order).GetProperty(nameof(Order.Status))!.SetValue(order, OrderStatus.Processing);
+        order.Status.Should().Be(OrderStatus.Processing);
+
+        // Act & Assert
+        var act = () => order.MarkAsFulfilled();
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*Invalid order state transition*");
+    }
+
+    [Fact]
+    public void MarkAsFulfilled_AfterPayment_Succeeds()
+    {
+        // Arrange - Order is Paid
+        var order = CreatePendingOrder();
+        order.MarkAsPaidPendingFulfillment(Guid.NewGuid(), "ext_123");
+        order.Status.Should().Be(OrderStatus.Paid);
+
+        // Act
+        order.MarkAsFulfilled();
+
+        // Assert
+        order.Status.Should().Be(OrderStatus.Fulfilled);
+        order.FulfilledAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void MarkAsFulfilled_OnCompletedOrder_IsIdempotent()
+    {
+        // Arrange - Legacy completed order
+        var order = CreateCompletedOrder();
+        order.Status.Should().Be(OrderStatus.Completed);
+
+        // Act - Should be idempotent
+        order.MarkAsFulfilled();
+
+        // Assert - Status stays Completed (legacy), but FulfilledAt is set
+        order.Status.Should().Be(OrderStatus.Completed);
+        order.FulfilledAt.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void MarkAsFulfilled_WhenAlreadyFulfilled_IsIdempotent()
+    {
+        // Arrange
+        var order = CreatePendingOrder();
+        order.MarkAsPaidPendingFulfillment(Guid.NewGuid());
+        order.MarkAsFulfilled();
+        var firstFulfilledAt = order.FulfilledAt;
+
+        // Act - Call again
+        order.MarkAsFulfilled();
+
+        // Assert - Should not change FulfilledAt
+        order.FulfilledAt.Should().Be(firstFulfilledAt);
+    }
+
+    #endregion
+
     #region Helper Methods
 
     private static Order CreatePendingOrder()

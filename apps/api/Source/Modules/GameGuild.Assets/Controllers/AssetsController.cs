@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,8 @@ namespace GameGuild.Assets.Controllers;
 /// Controller for asset operations.
 /// </summary>
 [ApiController]
-[Route("api/assets")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/assets")]
 [Authorize]
 public class AssetsController(
     ISender sender,
@@ -78,8 +80,8 @@ public class AssetsController(
     /// <param name="totalSize">Total size of the file in bytes</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Chunked upload session with upload ID and chunk count</returns>
-    [HttpPost("upload/chunked/init")]
-    [ProducesResponseType(typeof(ChunkedUploadSession), StatusCodes.Status200OK)]
+    [HttpPost("chunked-uploads")]
+    [ProducesResponseType(typeof(ChunkedUploadSession), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> InitiateChunkedUpload(
@@ -116,7 +118,7 @@ public class AssetsController(
     /// <param name="chunk">The chunk data</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Success status</returns>
-    [HttpPost("upload/chunked/{uploadId}/part")]
+    [HttpPost("chunked-uploads/{uploadId}/parts")]
     [RequestSizeLimit(10 * 1024 * 1024)] // 10 MB per chunk
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -159,7 +161,7 @@ public class AssetsController(
     /// <param name="parentResourceId">Optional parent resource ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>The created asset reference</returns>
-    [HttpPost("upload/chunked/{uploadId}/complete")]
+    [HttpPost("chunked-uploads/{uploadId}:complete")]
     [ProducesResponseType(typeof(AssetUploadResult), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -201,7 +203,7 @@ public class AssetsController(
     /// </summary>
     /// <param name="uploadId">The upload session ID</param>
     /// <param name="ct">Cancellation token</param>
-    [HttpDelete("upload/chunked/{uploadId}")]
+    [HttpDelete("chunked-uploads/{uploadId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> AbortChunkedUpload(
@@ -248,7 +250,7 @@ public class AssetsController(
     /// <summary>
     /// Generate an access URL for an asset.
     /// </summary>
-    [HttpPost("{id:guid}/access-url")]
+    [HttpPost("{id:guid}:generate-access-url")]
     [AllowAnonymous]
     public async Task<IActionResult> GenerateAccessUrl(
         Guid id,
@@ -391,7 +393,7 @@ public class AssetsController(
     /// <summary>
     /// Report an asset for moderation.
     /// </summary>
-    [HttpPost("{id:guid}/report")]
+    [HttpPost("{id:guid}:report")]
     public async Task<IActionResult> ReportAsset(
         Guid id,
         [FromBody] ReportAssetRequest request,
@@ -419,14 +421,51 @@ public class AssetsController(
     }
 
     /// <summary>
-    /// Get assets for the current user.
+    /// List assets with optional filtering.
+    /// Use owner=me to get current user's assets.
+    /// Use parentType and parentId to filter by parent resource.
     /// </summary>
-    [HttpGet("my")]
-    public async Task<IActionResult> GetMyAssets(
+    [HttpGet]
+    public async Task<IActionResult> ListAssets(
+        [FromQuery] string? owner = null,
+        [FromQuery] string? parentType = null,
+        [FromQuery] Guid? parentId = null,
         [FromQuery] int skip = 0,
         [FromQuery] int take = 20,
         CancellationToken ct = default)
     {
+        // Handle owner=me filter
+        if (owner == "me")
+        {
+            if (!Actor.SubjectIdAsGuid.HasValue)
+            {
+                return Unauthorized();
+            }
+
+            var myAssetsQuery = new GetUserAssetsQuery(
+                Actor.SubjectIdAsGuid.Value,
+                Actor.TenantId,
+                skip,
+                take);
+
+            var myResult = await sender.Send(myAssetsQuery, ct);
+            return Ok(myResult);
+        }
+
+        // Handle parentType + parentId filter
+        if (!string.IsNullOrEmpty(parentType) && parentId.HasValue)
+        {
+            var parentQuery = new GetAssetsByParentQuery(
+                parentType,
+                parentId.Value,
+                Actor.SubjectIdAsGuid,
+                Actor.TenantId);
+
+            var parentResult = await sender.Send(parentQuery, ct);
+            return Ok(parentResult);
+        }
+
+        // Default: list all accessible assets (requires auth)
         if (!Actor.SubjectIdAsGuid.HasValue)
         {
             return Unauthorized();
@@ -439,30 +478,9 @@ public class AssetsController(
             take);
 
         var result = await sender.Send(query, ct);
-
         return Ok(result);
     }
 
-    /// <summary>
-    /// Get assets by parent resource.
-    /// </summary>
-    [HttpGet("by-parent")]
-    [AllowAnonymous]
-    public async Task<IActionResult> GetByParent(
-        [FromQuery] string parentType,
-        [FromQuery] Guid parentId,
-        CancellationToken ct = default)
-    {
-        var query = new GetAssetsByParentQuery(
-            parentType,
-            parentId,
-            Actor.SubjectIdAsGuid,
-            Actor.TenantId);
-
-        var result = await sender.Send(query, ct);
-
-        return Ok(result);
-    }
 }
 
 public record UpdateAssetRequest(

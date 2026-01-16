@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +9,8 @@ namespace GameGuild.Commerce.Orders;
 /// Controller for managing orders and purchases
 /// </summary>
 [ApiController]
-[Route("api/orders")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/orders")]
 [Authorize]
 public class OrdersController(IOrderService orderService) : ControllerBase
 {
@@ -69,7 +71,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// <summary>
     /// Complete an order (process payment, grant entitlements)
     /// </summary>
-    [HttpPost("{orderId:guid}/complete")]
+    [HttpPost("{orderId:guid}:complete")]
     [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<ActionResult<OrderDto>> CompleteOrder(
         Guid orderId,
@@ -94,7 +96,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// <summary>
     /// Cancel a pending order
     /// </summary>
-    [HttpPost("{orderId:guid}/cancel")]
+    [HttpPost("{orderId:guid}:cancel")]
     [RequirePermission(OrdersPermission.Keys.Create)]
     public async Task<IActionResult> CancelOrder(
         Guid orderId,
@@ -117,7 +119,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// <summary>
     /// Process a refund for a completed order
     /// </summary>
-    [HttpPost("{orderId:guid}/refund")]
+    [HttpPost("{orderId:guid}:refund")]
     [RequirePermission(OrdersPermission.Keys.Refund)]
     public async Task<ActionResult<OrderDto>> RefundOrder(
         Guid orderId,
@@ -160,20 +162,49 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     }
 
     /// <summary>
-    /// Get orders for the current user
+    /// List orders with optional filtering.
+    /// Use owner=me to get current user's orders.
+    /// Admin users can list all orders without owner filter.
     /// </summary>
-    [HttpGet("my-orders")]
+    [HttpGet]
     [RequirePermission(OrdersPermission.Keys.Read)]
-    public async Task<ActionResult<IEnumerable<OrderDto>>> GetMyOrders(
+    public async Task<ActionResult<IEnumerable<OrderDto>>> ListOrders(
+        [FromQuery] string? owner = null,
         [FromQuery] OrderStatus? status = null,
         CancellationToken cancellationToken = default)
     {
-        var orders = await orderService.GetUserOrdersAsync(
+        // Handle owner=me filter
+        if (owner == "me")
+        {
+            var orders = await orderService.GetUserOrdersAsync(
+                GetUserId(),
+                status,
+                cancellationToken).ConfigureAwait(false);
+
+            return Ok(orders.Select(MapToDto));
+        }
+
+        // TODO: Admin can list all orders (requires admin permission check)
+        // For now, default to user's own orders if no owner specified
+        var userOrders = await orderService.GetUserOrdersAsync(
             GetUserId(),
             status,
             cancellationToken).ConfigureAwait(false);
 
-        return Ok(orders.Select(MapToDto));
+        return Ok(userOrders.Select(MapToDto));
+    }
+
+    /// <summary>
+    /// Check if an order exists
+    /// </summary>
+    [HttpHead("{orderId:guid}")]
+    [RequirePermission(OrdersPermission.Keys.Read)]
+    public async Task<IActionResult> OrderExists(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await orderService.GetOrderAsync(orderId, cancellationToken).ConfigureAwait(false);
+        return order != null ? Ok() : NotFound();
     }
 
     private Guid GetUserId()

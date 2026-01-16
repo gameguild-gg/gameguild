@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +10,8 @@ namespace GameGuild.Identity.Authentication;
 ///     Controller for API key management
 /// </summary>
 [ApiController]
-[Route("api/auth/api-keys")]
+[ApiVersion("1.0")]
+[Tags("api-keys")]
 [Authorize]
 public class ApiKeyController : ControllerBase
 {
@@ -23,8 +25,10 @@ public class ApiKeyController : ControllerBase
     /// <summary>
     ///     Create a new API key
     /// </summary>
-    [HttpPost]
-    [ProducesResponseType(typeof(CreateApiKeyResponse), StatusCodes.Status200OK)]
+    [HttpPost("v{version:apiVersion}/auth/api-keys")]
+    [EndpointSummary("Create a new API key")]
+    [ProducesResponseType(typeof(CreateApiKeyResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateApiKey(
         [FromBody] CreateApiKeyCommand command,
         CancellationToken cancellationToken)
@@ -38,7 +42,8 @@ public class ApiKeyController : ControllerBase
     /// <summary>
     ///     List all API keys for the current user
     /// </summary>
-    [HttpGet]
+    [HttpGet("v{version:apiVersion}/auth/api-keys")]
+    [EndpointSummary("List all API keys")]
     [ProducesResponseType(typeof(List<ApiKeyDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> ListApiKeys(CancellationToken cancellationToken)
     {
@@ -51,8 +56,10 @@ public class ApiKeyController : ControllerBase
     /// <summary>
     ///     Revoke an API key
     /// </summary>
-    [HttpPost("{keyId}/revoke")]
+    [HttpPost("v{version:apiVersion}/auth/api-keys/{keyId}:revoke")]
+    [EndpointSummary("Revoke an API key")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RevokeApiKey(
         Guid keyId,
         [FromBody] RevokeApiKeyRequest? request,

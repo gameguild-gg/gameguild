@@ -1,3 +1,4 @@
+using GameGuild.Models;
 
 namespace GameGuild.Identity.Tenants;
 
@@ -60,4 +61,26 @@ public interface ITenantRepository
     ///     Get queryable for advanced filtering and LINQ operations
     /// </summary>
     Task<IQueryable<Tenant>> GetQueryableAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Get audit log entries for a tenant with filtering and pagination
+    /// </summary>
+    /// <param name="tenantId">Tenant ID</param>
+    /// <param name="startDate">Optional start date filter</param>
+    /// <param name="endDate">Optional end date filter</param>
+    /// <param name="action">Optional action type filter</param>
+    /// <param name="actorId">Optional actor ID filter</param>
+    /// <param name="page">Page number (1-based)</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paginated audit log entries</returns>
+    Task<PagedResult<TenantAuditLogEntry>> GetAuditLogAsync(
+        Guid tenantId,
+        DateTime? startDate,
+        DateTime? endDate,
+        string? action,
+        Guid? actorId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default);
 }

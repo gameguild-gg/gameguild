@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,8 @@ namespace GameGuild.Assets.Controllers;
 /// Admin controller for asset moderation.
 /// </summary>
 [ApiController]
-[Route("api/admin/assets")]
+[ApiVersion("1.0")]
+[Route("v{version:apiVersion}/admin/assets")]
 [Authorize(Policy = "RequireAdminRole")]
 public class AssetsAdminController(
     ISender sender,
@@ -49,7 +51,7 @@ public class AssetsAdminController(
     /// <summary>
     /// Review a moderation report.
     /// </summary>
-    [HttpPost("reports/{reportId:guid}/review")]
+    [HttpPost("reports/{reportId:guid}:review")]
     public async Task<IActionResult> ReviewReport(
         Guid reportId,
         [FromBody] ReviewReportRequest request,
@@ -79,7 +81,7 @@ public class AssetsAdminController(
     /// <summary>
     /// Force delete an asset (admin override).
     /// </summary>
-    [HttpDelete("{id:guid}/force")]
+    [HttpPost("{id:guid}:force-delete")]
     public async Task<IActionResult> ForceDeleteAsset(
         Guid id,
         CancellationToken ct = default)
@@ -102,50 +104,49 @@ public class AssetsAdminController(
     }
 
     /// <summary>
-    /// Get pending virus scans (for background processing).
+    /// List admin assets with optional status filter.
+    /// Use status=pending-virus-scan or status=pending-moderation to filter.
     /// </summary>
-    [HttpGet("pending-virus-scans")]
-    public async Task<IActionResult> GetPendingVirusScans(
+    [HttpGet]
+    public async Task<IActionResult> ListAdminAssets(
         [FromServices] IAssetContentRepository contentRepository,
+        [FromQuery] string? status = null,
         [FromQuery] int limit = 100,
         CancellationToken ct = default)
     {
-        var items = await contentRepository.GetPendingVirusScanAsync(limit, ct);
-
-        return Ok(items.Select(x => new
+        if (status == "pending-virus-scan")
         {
-            x.Id,
-            x.ContentHash,
-            x.BucketName,
-            x.ObjectKey,
-            x.MimeType,
-            x.SizeBytes,
-            x.CreatedAt
-        }));
-    }
+            var virusScanItems = await contentRepository.GetPendingVirusScanAsync(limit, ct);
+            return Ok(virusScanItems.Select(x => new
+            {
+                x.Id,
+                x.ContentHash,
+                x.BucketName,
+                x.ObjectKey,
+                x.MimeType,
+                x.SizeBytes,
+                x.CreatedAt
+            }));
+        }
 
-    /// <summary>
-    /// Get pending moderation items (for background processing).
-    /// </summary>
-    [HttpGet("pending-moderation")]
-    public async Task<IActionResult> GetPendingModeration(
-        [FromServices] IAssetContentRepository contentRepository,
-        [FromQuery] int limit = 100,
-        CancellationToken ct = default)
-    {
-        var items = await contentRepository.GetPendingModerationAsync(limit, ct);
-
-        return Ok(items.Select(x => new
+        if (status == "pending-moderation")
         {
-            x.Id,
-            x.ContentHash,
-            x.BucketName,
-            x.ObjectKey,
-            x.MimeType,
-            x.SizeBytes,
-            x.ModerationStatus,
-            x.CreatedAt
-        }));
+            var moderationItems = await contentRepository.GetPendingModerationAsync(limit, ct);
+            return Ok(moderationItems.Select(x => new
+            {
+                x.Id,
+                x.ContentHash,
+                x.BucketName,
+                x.ObjectKey,
+                x.MimeType,
+                x.SizeBytes,
+                x.ModerationStatus,
+                x.CreatedAt
+            }));
+        }
+
+        // Default: return empty or all based on requirements
+        return Ok(new { message = "Use status=pending-virus-scan or status=pending-moderation to filter" });
     }
 
     /// <summary>
@@ -175,9 +176,9 @@ public class AssetsAdminController(
     }
 
     /// <summary>
-    /// Update virus scan status.
+    /// Run virus scan on an asset.
     /// </summary>
-    [HttpPost("{contentId:guid}/virus-scan")]
+    [HttpPost("{contentId:guid}:run-virus-scan")]
     public async Task<IActionResult> UpdateVirusScanStatus(
         Guid contentId,
         [FromBody] UpdateVirusScanRequest request,
@@ -205,7 +206,7 @@ public class AssetsAdminController(
     /// Runs the garbage collection process manually instead of waiting for the scheduled background job.
     /// Only deletes content that has been marked for deletion and past the grace period.
     /// </remarks>
-    [HttpPost("gc/run")]
+    [HttpPost(":run-gc")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> TriggerGarbageCollection(
         [FromServices] IAssetContentRepository contentRepository,
@@ -259,7 +260,7 @@ public class AssetsAdminController(
     /// Prevents the asset from being garbage collected, even if all references are deleted.
     /// Use for legal holds, compliance requirements, or audit preservation.
     /// </remarks>
-    [HttpPost("{contentId:guid}/undeletable")]
+    [HttpPost("{contentId:guid}:mark-undeletable")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> MarkAsNonDeletable(
@@ -288,7 +289,7 @@ public class AssetsAdminController(
     /// <summary>
     /// Remove the non-deletable flag from an asset.
     /// </summary>
-    [HttpDelete("{contentId:guid}/undeletable")]
+    [HttpPost("{contentId:guid}:unmark-undeletable")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RemoveNonDeletable(
@@ -319,7 +320,7 @@ public class AssetsAdminController(
     /// Unlike report review which handles user reports, this endpoint allows
     /// direct moderation of content by admins for proactive moderation workflows.
     /// </remarks>
-    [HttpPost("{contentId:guid}/moderation/review")]
+    [HttpPost("{contentId:guid}:review-moderation")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ReviewContentModeration(

@@ -1,6 +1,18 @@
 using GameGuild.CQRS;
+using GameGuild.Models;
 
 namespace GameGuild.Identity.Tenants;
+
+// Tenant Audit Log Queries
+public record GetTenantAuditLogQuery(
+    Guid TenantId,
+    DateTime? StartDate,
+    DateTime? EndDate,
+    string? Action,
+    Guid? ActorId,
+    int Page,
+    int PageSize
+) : IRequest<GameGuild.Models.PagedResult<TenantAuditLogEntry>>;
 
 // Tenant Metadata Queries - Using queries namespace for read operations
 public record GetTenantMetadataQuery(Guid TenantId) : IRequest<TenantMetadataDto?>;

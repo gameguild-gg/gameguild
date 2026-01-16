@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -6,10 +7,11 @@ using Microsoft.Extensions.Logging;
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     Controller for JWT key rotation management
+///     Controller for JWT signing key rotation management
 /// </summary>
 [ApiController]
-[Route("api/auth/keys")]
+[ApiVersion("1.0")]
+[Tags("signing-keys")]
 [Authorize(Roles = "SystemAdministrator")]
 public class KeyRotationController : ControllerBase
 {
@@ -25,26 +27,31 @@ public class KeyRotationController : ControllerBase
     }
 
     /// <summary>
-    ///     Get the current active signing key info
+    ///     Get signing keys with optional status filter
     /// </summary>
-    [HttpGet("active")]
-    [ProducesResponseType(typeof(JwtKeyInfoDto), StatusCodes.Status200OK)]
-    public async Task<ActionResult<JwtKeyInfoDto>> GetActiveKey(CancellationToken cancellationToken)
-    {
-        var key = await _keyRotationService.GetActiveSigningKeyAsync(cancellationToken);
-        if (key == null)
-            return NotFound(new { message = "No active signing key found" });
-
-        return Ok(JwtKeyInfoDto.FromEntity(key));
-    }
-
-    /// <summary>
-    ///     Get all valid keys for token validation
-    /// </summary>
-    [HttpGet("valid")]
+    /// <param name="status">Filter by status: 'active', 'valid', or null for all</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpGet("v{version:apiVersion}/auth/signing-keys")]
+    [EndpointSummary("Get signing keys")]
+    [EndpointDescription("Retrieves signing keys with optional status filtering. Use status=active for current signing key, status=valid for all keys usable for validation.")]
     [ProducesResponseType(typeof(List<JwtKeyInfoDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<List<JwtKeyInfoDto>>> GetValidKeys(CancellationToken cancellationToken)
+    public async Task<ActionResult<List<JwtKeyInfoDto>>> GetSigningKeys([FromQuery] string? status, CancellationToken cancellationToken)
     {
+        if (status?.ToLowerInvariant() == "active")
+        {
+            var activeKey = await _keyRotationService.GetActiveSigningKeyAsync(cancellationToken);
+            if (activeKey == null)
+                return Ok(new List<JwtKeyInfoDto>());
+            return Ok(new List<JwtKeyInfoDto> { JwtKeyInfoDto.FromEntity(activeKey) });
+        }
+
+        if (status?.ToLowerInvariant() == "valid")
+        {
+            var validKeys = await _keyRotationService.GetValidationKeysAsync(cancellationToken);
+            return Ok(validKeys.Select(JwtKeyInfoDto.FromEntity).ToList());
+        }
+
+        // Return all keys (active + valid)
         var keys = await _keyRotationService.GetValidationKeysAsync(cancellationToken);
         return Ok(keys.Select(JwtKeyInfoDto.FromEntity).ToList());
     }
@@ -52,7 +59,9 @@ public class KeyRotationController : ControllerBase
     /// <summary>
     ///     Manually rotate to a new signing key
     /// </summary>
-    [HttpPost("rotate")]
+    [HttpPost("v{version:apiVersion}/auth/signing-keys:rotate")]
+    [EndpointSummary("Rotate signing key")]
+    [EndpointDescription("Manually rotates to a new signing key. Previous keys remain valid for token validation during grace period.")]
     [ProducesResponseType(typeof(JwtKeyInfoDto), StatusCodes.Status200OK)]
     public async Task<ActionResult<JwtKeyInfoDto>> RotateKey(
         [FromBody] RotateKeyRequest request,
@@ -72,7 +81,9 @@ public class KeyRotationController : ControllerBase
     /// <summary>
     ///     Clean up expired keys
     /// </summary>
-    [HttpPost("cleanup")]
+    [HttpPost("v{version:apiVersion}/auth/signing-keys:cleanup")]
+    [EndpointSummary("Cleanup expired keys")]
+    [EndpointDescription("Removes signing keys that have been expired beyond the retention period.")]
     [ProducesResponseType(typeof(CleanupResult), StatusCodes.Status200OK)]
     public async Task<ActionResult<CleanupResult>> CleanupExpiredKeys(
         [FromBody] CleanupKeysRequest? request,

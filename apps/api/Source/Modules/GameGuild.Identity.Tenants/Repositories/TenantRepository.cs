@@ -1,4 +1,5 @@
 using GameGuild.Abstractions;
+using GameGuild.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Tenants;
@@ -88,5 +89,73 @@ public class TenantRepository(IApplicationDbContext context) : ITenantRepository
         var query = context.Set<Tenant>().Where(t => t.DeletedAt == null).AsQueryable();
 
         return Task.FromResult(query);
+    }
+
+    public async Task<PagedResult<TenantAuditLogEntry>> GetAuditLogAsync(
+        Guid tenantId,
+        DateTime? startDate,
+        DateTime? endDate,
+        string? action,
+        Guid? actorId,
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default)
+    {
+        // Build query for audit entries
+        // Note: This is a placeholder implementation. In production, you would query
+        // an actual audit log table (e.g., TenantAuditLogs or use a centralized audit service)
+        var query = context.Set<TenantAuditLog>()
+            .Where(a => a.TenantId.HasValue && a.TenantId.Value == tenantId);
+
+        // Apply filters
+        if (startDate.HasValue)
+        {
+            query = query.Where(a => a.Timestamp >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.Where(a => a.Timestamp <= endDate.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(action))
+        {
+            query = query.Where(a => a.Action == action);
+        }
+
+        if (actorId.HasValue)
+        {
+            query = query.Where(a => a.ActorId == actorId.Value);
+        }
+
+        // Get total count
+        var totalCount = await query.CountAsync(cancellationToken).ConfigureAwait(false);
+
+        // Get paginated items
+        var skip = (page - 1) * pageSize;
+        var items = await query
+            .OrderByDescending(a => a.Timestamp)
+            .Skip(skip)
+            .Take(pageSize)
+            .Select(a => new TenantAuditLogEntry
+            {
+                Id = a.Id,
+                TenantId = a.TenantId!.Value,
+                Timestamp = a.Timestamp,
+                Action = a.Action,
+                ActorId = a.ActorId,
+                ActorName = a.ActorName,
+                ActorEmail = a.ActorEmail,
+                BeforeValues = a.BeforeValues ?? new Dictionary<string, object?>(),
+                AfterValues = a.AfterValues ?? new Dictionary<string, object?>(),
+                IpAddress = a.IpAddress,
+                UserAgent = a.UserAgent,
+                CorrelationId = a.CorrelationId,
+                Metadata = a.Metadata ?? new Dictionary<string, string>()
+            })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return new PagedResult<TenantAuditLogEntry>(items, totalCount, skip, pageSize);
     }
 }

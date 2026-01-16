@@ -123,6 +123,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<TenantMetadata> TenantMetadata { get => Set<TenantMetadata>(); }
 
+    public DbSet<TenantAuditLog> TenantAuditLogs { get => Set<TenantAuditLog>(); }
+
     #endregion
 
     // NOTE: The following modules are currently disabled. Uncomment when enabling them.
