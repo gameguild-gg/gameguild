@@ -1,4 +1,3 @@
-using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Authorization.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Logging;

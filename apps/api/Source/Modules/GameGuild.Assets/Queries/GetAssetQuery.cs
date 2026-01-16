@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using FluentValidation;
 
 namespace GameGuild.Assets.Queries;

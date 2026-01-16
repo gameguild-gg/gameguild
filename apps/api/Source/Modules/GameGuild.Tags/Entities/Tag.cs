@@ -1,0 +1,38 @@
+using GameGuild.Entities;
+
+namespace GameGuild.Tags;
+
+[Table("tags")]
+[Index(nameof(Name))]
+[Index(nameof(Type))]
+[Index(nameof(IsActive))]
+[Index(nameof(TenantId))]
+[Index(nameof(Name), nameof(TenantId), IsUnique = true)]
+public class Tag : EntityBase {
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(500)]
+    public string? Description { get; set; }
+
+    public TagType Type { get; set; }
+
+    /// <summary> Hexadecimal color code for UI display </summary>
+    [MaxLength(7)]
+    public string? Color { get; set; }
+
+    /// <summary> Icon identifier for UI display </summary>
+    [MaxLength(100)]
+    public string? Icon { get; set; }
+
+    /// <summary> Whether this tag is available for use </summary>
+    public bool IsActive { get; set; } = true;
+
+    // TenantId inherited from EntityBase - no override needed
+
+    // Navigation properties
+    public virtual ICollection<TagRelationship> SourceRelationships { get; set; } = new List<TagRelationship>();
+
+    public virtual ICollection<TagRelationship> TargetRelationships { get; set; } = new List<TagRelationship>();
+}

@@ -3,13 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using GameGuild.CQRS;
-using GameGuild.Identity.Authentication;
-using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Enums;
 using PermissionType = GameGuild.Identity.Authorization.PermissionType;
 using AccessLevel = GameGuild.Enums.AccessLevel;
-using ProjectType = GameGuild.ProjectType;
 
 namespace GameGuild.Projects;
 

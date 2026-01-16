@@ -1,9 +1,6 @@
 using System.Security.Claims;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
-using HotChocolate;
-using HotChocolate.Types;
-
 using IPermissionService = GameGuild.Identity.Authentication.IPermissionService;
 
 namespace GameGuild.Projects;

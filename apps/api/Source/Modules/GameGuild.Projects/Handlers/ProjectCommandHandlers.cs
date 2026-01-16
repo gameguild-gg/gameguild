@@ -1,16 +1,11 @@
 using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Identity.Users;
-using GameGuild.Identity.Authorization;
-using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Enums;
-using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using PermissionType = GameGuild.Identity.Authorization.PermissionType;
-using ProjectType = GameGuild.ProjectType;
 
 namespace GameGuild.Projects;
 

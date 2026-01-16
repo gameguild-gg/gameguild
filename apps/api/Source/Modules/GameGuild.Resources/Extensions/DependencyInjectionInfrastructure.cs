@@ -1,6 +1,5 @@
 using GameGuild.CQRS;
 using GameGuild.Configuration;
-using GameGuild.Models;
 using GameGuild.Resources.Handlers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

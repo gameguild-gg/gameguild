@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using Microsoft.Extensions.Options;
 
 namespace GameGuild.Assets;

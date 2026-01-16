@@ -1,5 +1,3 @@
-using GameGuild.Localization;
-
 namespace GameGuild.Assets.Services;
 
 /// <summary>

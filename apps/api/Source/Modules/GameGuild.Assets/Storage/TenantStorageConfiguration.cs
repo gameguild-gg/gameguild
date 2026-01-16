@@ -1,5 +1,3 @@
-using GameGuild.Entities;
-
 namespace GameGuild.Assets.Storage;
 
 /// <summary>

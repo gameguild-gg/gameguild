@@ -1,4 +1,3 @@
-using GameGuild.Identity.Context;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Assets.Security;

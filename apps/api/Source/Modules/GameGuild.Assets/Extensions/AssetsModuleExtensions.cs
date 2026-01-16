@@ -2,12 +2,10 @@ using Amazon.S3;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using GameGuild.Abstractions;
 using GameGuild.Assets.Configuration;
 using GameGuild.Assets.Commands;
 using GameGuild.Assets.Queries;
 using GameGuild.Assets.Security;
-using GameGuild.CQRS;
 using FluentValidation;
 
 namespace GameGuild.Assets.Extensions;

@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using GameGuild.CQRS;
 using GameGuild.Assets.Commands;
 using GameGuild.Assets.Queries;
-using GameGuild.Identity.Context.Actors;
 
 namespace GameGuild.Assets.Controllers;
 

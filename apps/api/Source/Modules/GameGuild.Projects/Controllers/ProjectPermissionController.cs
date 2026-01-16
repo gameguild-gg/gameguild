@@ -1,6 +1,4 @@
 using System.Security.Claims;
-using GameGuild.Identity.Authentication;
-using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;

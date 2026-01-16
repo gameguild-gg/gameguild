@@ -1,4 +1,3 @@
-using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 
 namespace GameGuild.Projects;

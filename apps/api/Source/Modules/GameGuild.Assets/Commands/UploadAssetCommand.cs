@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using FluentValidation;
 using GameGuild.Resources;
 

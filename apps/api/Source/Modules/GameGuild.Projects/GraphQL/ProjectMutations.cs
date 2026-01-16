@@ -1,13 +1,6 @@
-using GameGuild.Identity.Users;
-using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context.Actors;
 using GameGuild.Enums;
-using GameGuild.CQRS;
-using HotChocolate;
-using HotChocolate.Types;
-
 using AccessLevel = GameGuild.Enums.AccessLevel;
-using ProjectType = GameGuild.ProjectType;
 
 namespace GameGuild.Projects;
 

@@ -1,4 +1,3 @@
-using GameGuild.CQRS;
 using GameGuild.Enums;
 using GameGuild.Resources;
 
