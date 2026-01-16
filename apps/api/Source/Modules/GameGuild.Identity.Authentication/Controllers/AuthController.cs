@@ -117,7 +117,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
     /// <param name="ct">Cancellation token</param>
     /// <returns>GitHub OAuth authorization URL</returns>
     [AllowAnonymous]
-    [HttpGet("v{version:apiVersion}/auth/github/sign-in")]
+    [HttpGet("v{version:apiVersion}/auth/github:authorize")]
     [EndpointSummary("Initiate GitHub OAuth sign-in")]
     [EndpointDescription("Initiates GitHub OAuth authentication flow and returns the authorization URL.")]
     [ProducesResponseType<GitHubSignInResponse>(StatusCodes.Status200OK)]
@@ -141,7 +141,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
     /// <param name="ct">Cancellation token</param>
     /// <returns>New authentication response with refreshed tokens</returns>
     [AllowAnonymous]
-    [HttpPost("v{version:apiVersion}/auth/refresh")]
+    [HttpPost("v{version:apiVersion}/auth/tokens:refresh")]
     [EndpointSummary("Refresh access token")]
     [EndpointDescription("Exchanges a valid refresh token for a new access token and refresh token pair.")]
     [ProducesResponseType<SignInResponse>(StatusCodes.Status200OK)]
@@ -168,7 +168,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
     [Authorize]
-    [HttpPost("v{version:apiVersion}/auth/revoke")]
+    [HttpPost("v{version:apiVersion}/auth/tokens:revoke")]
     [EndpointSummary("Revoke refresh token")]
     [EndpointDescription("Invalidates a refresh token, preventing it from being used to obtain new access tokens.")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -229,7 +229,7 @@ public sealed class AuthController(ISender sender) : ControllerBase
     /// <param name="ct">Cancellation token</param>
     /// <returns>Success confirmation</returns>
     [AllowAnonymous]
-    [HttpPost("v{version:apiVersion}/auth/send-email-verification")]
+    [HttpPost("v{version:apiVersion}/auth/email:send-verification")]
     [EndpointSummary("Send email verification")]
     [EndpointDescription("Sends a verification email to the specified email address to confirm ownership.")]
     [ProducesResponseType<EmailVerificationResponse>(StatusCodes.Status200OK)]

@@ -14,14 +14,14 @@ namespace GameGuild.Identity.Authentication;
 [Authorize]
 public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
 {
-    #region Configuration Operations - /v1/auth/mfa/configuration
+    #region Configuration Operations - /v1/auth/mfa
 
     /// <summary>
     ///     Get current user's MFA configuration
     /// </summary>
     /// <param name="ct">Cancellation token</param>
     /// <returns>MFA configuration details including enabled methods and status</returns>
-    [HttpGet("v{version:apiVersion}/auth/mfa/configuration")]
+    [HttpGet("v{version:apiVersion}/auth/mfa")]
     [EndpointSummary("Get MFA configuration")]
     [EndpointDescription("Retrieves the current user's multi-factor authentication configuration and enabled methods.")]
     [ProducesResponseType<MfaConfigurationResponse>(StatusCodes.Status200OK)]
@@ -36,14 +36,14 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
 
     #endregion
 
-    #region TOTP Setup Operations - /v1/auth/mfa/setup/totp
+    #region TOTP Setup Operations - /v1/auth/mfa/totp
 
     /// <summary>
     ///     Initiate TOTP MFA setup
     /// </summary>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Setup response with secret key and QR code URI</returns>
-    [HttpPost("v{version:apiVersion}/auth/mfa/setup/totp")]
+    [HttpPost("v{version:apiVersion}/auth/mfa/totp:setup")]
     [EndpointSummary("Initiate TOTP setup")]
     [EndpointDescription("Initiates Time-based One-Time Password (TOTP) setup, returning a secret key and QR code URI for authenticator apps.")]
     [ProducesResponseType<MfaSetupResponse>(StatusCodes.Status200OK)]
@@ -73,7 +73,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     /// <param name="body">Verification code from authenticator app</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Success confirmation</returns>
-    [HttpPost("v{version:apiVersion}/auth/mfa/setup/totp/complete")]
+    [HttpPost("v{version:apiVersion}/auth/mfa/totp:complete")]
     [EndpointSummary("Complete TOTP setup")]
     [EndpointDescription("Completes TOTP setup by verifying a code from the user's authenticator app.")]
     [ProducesResponseType<MfaSuccessResponse>(StatusCodes.Status200OK)]
@@ -131,7 +131,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     /// </summary>
     /// <param name="ct">Cancellation token</param>
     /// <returns>New backup codes</returns>
-    [HttpPost("v{version:apiVersion}/auth/mfa/backup-codes/regenerate")]
+    [HttpPost("v{version:apiVersion}/auth/mfa/backup-codes:regenerate")]
     [EndpointSummary("Regenerate backup codes")]
     [EndpointDescription("Generates a new set of backup codes, invalidating any previously generated codes.")]
     [ProducesResponseType<BackupCodesResponse>(StatusCodes.Status200OK)]
@@ -150,7 +150,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
 
     #endregion
 
-    #region Disable Operations - /v1/auth/mfa/disable
+    #region Disable Operations - /v1/auth/mfa:disable
 
     /// <summary>
     ///     Disable MFA for the current user
@@ -158,7 +158,7 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     /// <param name="body">Disable request with password confirmation</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Success confirmation</returns>
-    [HttpPost("v{version:apiVersion}/auth/mfa/disable")]
+    [HttpPost("v{version:apiVersion}/auth/mfa:disable")]
     [EndpointSummary("Disable MFA")]
     [EndpointDescription("Disables multi-factor authentication for the current user after password verification.")]
     [ProducesResponseType<MfaSuccessResponse>(StatusCodes.Status200OK)]

@@ -42,21 +42,27 @@ public sealed class SubscriptionPlansController(ISender sender) : ControllerBase
     /// <param name="pageSize">Number of plans per page (default: 20, max: 100)</param>
     /// <param name="activeOnly">Filter to only active plans</param>
     /// <param name="isActive">Filter by active status</param>
-    /// <param name="isFeatured">Filter by featured status</param>
-    /// <param name="searchTerm">Search term for filtering</param>
+    /// <param name="isFeatured">Filter by featured status (use featured=true to get featured plans)</param>
+    /// <param name="q">Search term for filtering by name, description, or features</param>
+    /// <param name="slug">Filter by exact slug match</param>
+    /// <param name="minPrice">Minimum price in cents for price range filtering</param>
+    /// <param name="maxPrice">Maximum price in cents for price range filtering</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of subscription plans</returns>
     [HttpGet("v{version:apiVersion}/subscription-plans")]
     [EndpointSummary("Get subscription plans with pagination and filtering")]
-    [EndpointDescription("Retrieves a paginated list of subscription plans with optional filtering.")]
+    [EndpointDescription("Retrieves a paginated list of subscription plans with optional filtering. Use query parameters: featured=true for featured plans, q=searchTerm for search, slug=value for slug lookup, minPrice/maxPrice for price range.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSubscriptionPlans(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         [FromQuery] bool activeOnly = false,
         [FromQuery] bool? isActive = null,
-        [FromQuery] bool? isFeatured = null,
-        [FromQuery] string? searchTerm = null,
+        [FromQuery(Name = "featured")] bool? isFeatured = null,
+        [FromQuery] string? q = null,
+        [FromQuery] string? slug = null,
+        [FromQuery] long? minPrice = null,
+        [FromQuery] long? maxPrice = null,
         CancellationToken ct = default
     )
     {
@@ -64,76 +70,60 @@ public sealed class SubscriptionPlansController(ISender sender) : ControllerBase
         if (pageSize < 1) pageSize = 20;
         if (pageSize > 100) pageSize = 100;
 
+        // If slug is specified, return single plan lookup
+        if (!string.IsNullOrEmpty(slug))
+        {
+            var plan = await sender.Send(new GetSubscriptionPlanBySlugQuery(slug), ct);
+            return plan is null ? NotFound() : Ok(plan);
+        }
+
+        // If price range is specified, filter by price
+        if (minPrice.HasValue || maxPrice.HasValue)
+        {
+            var priceResult = await sender.Send(new GetSubscriptionPlansByPriceRangeQuery(minPrice ?? 0, maxPrice ?? long.MaxValue), ct);
+            return Ok(priceResult);
+        }
+
         // If activeOnly is specified, use the simple query, otherwise use the paginated query
-        if (activeOnly && page == 1 && pageSize == 20 && !isActive.HasValue && !isFeatured.HasValue && string.IsNullOrEmpty(searchTerm))
+        if (activeOnly && page == 1 && pageSize == 20 && !isActive.HasValue && !isFeatured.HasValue && string.IsNullOrEmpty(q))
         {
             var result = await sender.Send(new GetActiveSubscriptionPlansQuery(), ct);
             return Ok(result);
         }
 
-        var pagedResult = await sender.Send(new GetPagedSubscriptionPlansQuery(page, pageSize, isActive, isFeatured, searchTerm), ct);
+        // If only featured filter is requested without other pagination
+        if (isFeatured == true && page == 1 && pageSize == 20 && !isActive.HasValue && string.IsNullOrEmpty(q))
+        {
+            var featuredResult = await sender.Send(new GetFeaturedSubscriptionPlansQuery(), ct);
+            return Ok(featuredResult);
+        }
+
+        // If search term is provided without pagination, use search query
+        if (!string.IsNullOrEmpty(q) && page == 1 && pageSize == 20 && !isActive.HasValue && !isFeatured.HasValue)
+        {
+            var searchResult = await sender.Send(new SearchSubscriptionPlansQuery(q), ct);
+            return Ok(searchResult);
+        }
+
+        var pagedResult = await sender.Send(new GetPagedSubscriptionPlansQuery(page, pageSize, isActive, isFeatured, q), ct);
         return Ok(pagedResult);
-    }
-
-    /// <summary>
-    ///     Get featured subscription plans
-    /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of featured subscription plans</returns>
-    [HttpGet("v{version:apiVersion}/subscription-plans/featured")]
-    [EndpointSummary("Get featured subscription plans")]
-    [EndpointDescription("Retrieves all featured subscription plans.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetFeaturedSubscriptionPlans(CancellationToken ct)
-    {
-        return Ok(await sender.Send(new GetFeaturedSubscriptionPlansQuery(), ct));
-    }
-
-    /// <summary>
-    ///     Search subscription plans
-    /// </summary>
-    /// <param name="term">Search term</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of matching subscription plans</returns>
-    [HttpGet("v{version:apiVersion}/subscription-plans/search")]
-    [EndpointSummary("Search subscription plans")]
-    [EndpointDescription("Searches subscription plans by name, description, or features.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> SearchSubscriptionPlans([FromQuery] string term, CancellationToken ct)
-    {
-        return Ok(await sender.Send(new SearchSubscriptionPlansQuery(term), ct));
-    }
-
-    /// <summary>
-    ///     Get subscription plans by price range
-    /// </summary>
-    /// <param name="min">Minimum price in cents</param>
-    /// <param name="max">Maximum price in cents</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of subscription plans within the price range</returns>
-    [HttpGet("v{version:apiVersion}/subscription-plans/price-range")]
-    [EndpointSummary("Get subscription plans by price range")]
-    [EndpointDescription("Retrieves subscription plans within a specified price range.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetSubscriptionPlansByPriceRange([FromQuery] long min, [FromQuery] long max, CancellationToken ct)
-    {
-        return Ok(await sender.Send(new GetSubscriptionPlansByPriceRangeQuery(min, max), ct));
     }
 
     /// <summary>
     ///     Compare subscription plans
     /// </summary>
-    /// <param name="basePlanId">Base plan ID for comparison</param>
-    /// <param name="comparePlanIds">List of plan IDs to compare against</param>
+    /// <param name="body">Plan comparison request with base plan and comparison plan IDs</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Plan comparison results</returns>
-    [HttpGet("v{version:apiVersion}/subscription-plans/compare")]
+    [HttpPost("v{version:apiVersion}/subscription-plans:compare")]
     [EndpointSummary("Compare subscription plans")]
-    [EndpointDescription("Compares multiple subscription plans side by side.")]
+    [EndpointDescription("Compares multiple subscription plans side by side. Custom action per Google API guidelines.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> CompareSubscriptionPlans([FromQuery] Guid basePlanId, [FromQuery] List<Guid> comparePlanIds, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CompareSubscriptionPlans([FromBody] ComparePlansRequest body, CancellationToken ct)
     {
-        var result = await sender.Send(new CompareSubscriptionPlansQuery(basePlanId, comparePlanIds), ct);
+        ArgumentNullException.ThrowIfNull(body);
+        var result = await sender.Send(new CompareSubscriptionPlansQuery(body.BasePlanId, body.ComparePlanIds), ct);
         return Ok(result);
     }
 
@@ -172,23 +162,6 @@ public sealed class SubscriptionPlansController(ISender sender) : ControllerBase
     public async Task<IActionResult> GetSubscriptionPlanById(Guid planId, CancellationToken ct)
     {
         var plan = await sender.Send(new GetSubscriptionPlanByIdQuery(planId), ct);
-        return plan is null ? NotFound() : Ok(plan);
-    }
-
-    /// <summary>
-    ///     Get subscription plan by slug
-    /// </summary>
-    /// <param name="slug">Plan slug</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Subscription plan details</returns>
-    [HttpGet("v{version:apiVersion}/subscription-plans/slug/{slug}")]
-    [EndpointSummary("Get subscription plan by slug")]
-    [EndpointDescription("Retrieves detailed information for a specific subscription plan by slug.")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetSubscriptionPlanBySlug(string slug, CancellationToken ct)
-    {
-        var plan = await sender.Send(new GetSubscriptionPlanBySlugQuery(slug), ct);
         return plan is null ? NotFound() : Ok(plan);
     }
 
@@ -264,18 +237,18 @@ public sealed class SubscriptionPlansController(ISender sender) : ControllerBase
     ///     Validate subscription plan limits
     /// </summary>
     /// <param name="planId">Plan ID</param>
-    /// <param name="users">Number of users</param>
-    /// <param name="storageMb">Storage in MB</param>
-    /// <param name="apiCalls">API calls per month</param>
+    /// <param name="body">Validation request with usage requirements</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Validation result</returns>
-    [HttpGet("v{version:apiVersion}/subscription-plans/{planId:guid}/validate-limits")]
+    [HttpPost("v{version:apiVersion}/subscription-plans/{planId:guid}:validate-limits")]
     [EndpointSummary("Validate subscription plan limits")]
-    [EndpointDescription("Validates whether the specified usage fits within the plan limits.")]
+    [EndpointDescription("Validates whether the specified usage fits within the plan limits. Custom action per Google API guidelines.")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> ValidateSubscriptionPlanLimits(Guid planId, [FromQuery] int users, [FromQuery] long storageMb, [FromQuery] long apiCalls, CancellationToken ct)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ValidateSubscriptionPlanLimits(Guid planId, [FromBody] ValidateLimitsRequest body, CancellationToken ct)
     {
-        var result = await sender.Send(new ValidateSubscriptionPlanLimitsQuery(planId, users, storageMb, apiCalls), ct);
+        ArgumentNullException.ThrowIfNull(body);
+        var result = await sender.Send(new ValidateSubscriptionPlanLimitsQuery(planId, body.Users, body.StorageMb, body.ApiCalls), ct);
         return Ok(result);
     }
 
@@ -443,6 +416,12 @@ public sealed class SubscriptionPlansController(ISender sender) : ControllerBase
 
     // POST /subscription-plans
     public record CreatePlanRequest(string Name, string Slug, long MonthlyPriceInCents, string Currency = "USD", string? Description = null);
+
+    // POST /subscription-plans:compare
+    public record ComparePlansRequest(Guid BasePlanId, List<Guid> ComparePlanIds);
+
+    // POST /subscription-plans/{planId}:validate-limits
+    public record ValidateLimitsRequest(int Users, long StorageMb, long ApiCalls);
 
     // PATCH style updates separated by concern
     public record UpdateDetailsRequest(Guid PlanId, string Name, string? Description, int? SortOrder);

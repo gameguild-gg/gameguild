@@ -534,39 +534,10 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
 
     /// <summary>
     ///     Validates that the authenticated user has access to the specified tenant.
-    ///     This prevents cross-tenant attacks where a malicious user crafts requests with another tenant's ID.
+    ///     Uses shared TenantValidationExtensions for DRY compliance.
     /// </summary>
-    /// <param name="requestedTenantId">The TenantId from the request body</param>
-    /// <param name="operation">Description of the operation for error messages</param>
-    /// <returns>An error response if validation fails, null if validation passes</returns>
     private IActionResult? ValidateTenantAccess(Guid requestedTenantId, string operation)
-    {
-        var actorContext = actorContextAccessor.ActorContext;
-
-        // Allow anonymous access only in development/testing (controlled by AllowAnonymous attribute)
-        // For authenticated requests, validate tenant access
-        if (actorContext.IsAuthenticated)
-        {
-            // User must have a tenant context
-            if (!actorContext.TenantId.HasValue)
-            {
-                return Forbid($"User is not associated with any tenant for {operation}");
-            }
-
-            // Request TenantId must match authenticated user's tenant
-            if (actorContext.TenantId.Value != requestedTenantId)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new
-                {
-                    error = "Cross-tenant access denied",
-                    message = $"User belongs to tenant {actorContext.TenantId.Value} but attempted to {operation} for tenant {requestedTenantId}",
-                    code = "TENANT_MISMATCH"
-                });
-            }
-        }
-
-        return null; // Validation passed
-    }
+        => actorContextAccessor.ValidateTenantAccessAsActionResult(requestedTenantId, operation);
 
     #endregion
 }

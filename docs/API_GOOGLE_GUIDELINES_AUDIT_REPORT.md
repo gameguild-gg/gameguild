@@ -14,12 +14,14 @@ This report analyzes GameGuild API endpoints against Google API Design Guideline
 
 | Category | Issues Found | Priority |
 |----------|--------------|----------|
-| URL Versioning Inconsistencies | 6 different patterns | P0 - Critical |
 | Custom Action Syntax Violations | 12+ endpoints | P0 - Critical |
 | Missing Standard CRUD Methods | 20+ operations | P1 - High |
+| Path-based Filters (should be query params) | 15+ endpoints | P1 - High |
 | Pagination Pattern Inconsistencies | 4 different patterns | P1 - High |
 | Response Format Inconsistencies | 4+ patterns | P2 - Medium |
 | Field Naming Convention (PascalCase vs snake_case) | All endpoints | P3 - Low |
+
+> **Note:** URL base path (`/api/v1/` vs `/v1/`) is **not a violation**. The `api/` prefix can be configured globally via reverse proxy, API gateway, or subdomain (e.g., `api.domain.com/v1/...`). This report focuses on resource naming and action patterns.
 
 ---
 
@@ -54,9 +56,9 @@ This report analyzes GameGuild API endpoints against Google API Design Guideline
 
 ## 1. URL Versioning Analysis
 
-### Current State (CRITICAL INCONSISTENCY)
+### Current State
 
-The API uses **6 different URL patterns**, violating Google's recommendation for consistent resource naming:
+The API uses different URL patterns for versioning:
 
 | Pattern | Example | Controllers |
 |---------|---------|-------------|
@@ -65,26 +67,33 @@ The API uses **6 different URL patterns**, violating Google's recommendation for
 | `api/auth/...` | `api/auth/api-keys` | ApiKeyController, WebAuthnController |
 | `api/...` | `api/products` | ProductsController, PromoCodesController, EntitlementsController |
 | Root level | `/health`, `/ready`, `/live` | HealthController |
-| Mixed | Various | KeyRotationController |
+
+### Configuration Strategy
+
+> **Decision:** The `api/` prefix is **NOT** required in route definitions. It can be configured at the infrastructure level:
+> - **Option A:** API Gateway/Reverse Proxy adds `/api` prefix
+> - **Option B:** Use subdomain `api.domain.com` (recommended for production)
+> - **Option C:** Global route prefix in ASP.NET Core
 
 ### Recommended Standard
 
-All endpoints should follow: `api/v{version}/{resource}`
+All endpoints should follow: `v{version}/{resource}` (e.g., `v1/users`)
 
-**Exception:** Health probes (`/health`, `/ready`, `/live`) may remain at root level per Kubernetes conventions.
+**Exception:** Health probes (`/health`, `/ready`, `/live`) remain at root level per Kubernetes conventions.
 
-### Migration Plan
+### Version Prefix Standardization
+
+Endpoints currently missing version prefix should be updated:
 
 ```
 BEFORE                              AFTER
 ──────                              ─────
-/api/auth/api-keys              →   /api/v1/auth/api-keys
-/api/products                   →   /api/v1/products
-/api/promo-codes                →   /api/v1/promo-codes
-/api/entitlements               →   /api/v1/entitlements
-/v1/auth/sign-up                →   /api/v1/auth/sign-up
-/api/auth/webauthn              →   /api/v1/auth/webauthn
-/api/auth/keys                  →   /api/v1/auth/keys
+/api/auth/api-keys              →   /v1/auth/api-keys
+/api/products                   →   /v1/products
+/api/promo-codes                →   /v1/promo-codes
+/api/entitlements               →   /v1/entitlements
+/api/auth/webauthn              →   /v1/auth/webauthn
+/api/auth/keys                  →   /v1/auth/keys
 ```
 
 ---
@@ -101,7 +110,7 @@ BEFORE                              AFTER
 
 ### Violations
 
-1. **Missing version prefix** - Should be `/api/v1/auth/api-keys`
+1. **Missing version prefix** - Should include `v1` (e.g., `/v1/auth/api-keys`)
 2. **Custom action syntax** - `POST .../revoke` should be `POST .../{keyId}:revoke`
 3. **Missing standard methods** - No Get, Update, Delete operations
 
@@ -109,19 +118,19 @@ BEFORE                              AFTER
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `POST /api/auth/api-keys/{keyId}/revoke` | `POST /api/v1/auth/api-keys/{keyId}:revoke` | Custom action syntax |
-| P0 | `POST /api/auth/api-keys` | `POST /api/v1/auth/api-keys` | Version prefix |
-| P0 | `GET /api/auth/api-keys` | `GET /api/v1/auth/api-keys` | Version prefix |
+| P0 | `POST /api/auth/api-keys/{keyId}/revoke` | `POST /v1/auth/api-keys/{keyId}:revoke` | Custom action syntax |
+| P1 | `POST /api/auth/api-keys` | `POST /v1/auth/api-keys` | Version prefix |
+| P1 | `GET /api/auth/api-keys` | `GET /v1/auth/api-keys` | Version prefix |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/auth/api-keys/{keyId}` | Get single API key by ID | P1 |
-| PATCH | `/api/v1/auth/api-keys/{keyId}` | Update API key (name, scopes, expiration) | P1 |
-| DELETE | `/api/v1/auth/api-keys/{keyId}` | Delete API key (hard delete) | P2 |
-| HEAD | `/api/v1/auth/api-keys/{keyId}` | Check if API key exists | P3 |
-| POST | `/api/v1/auth/api-keys/{keyId}:rotate` | Rotate API key secret | P2 |
+| GET | `/v1/auth/api-keys/{keyId}` | Get single API key by ID | P1 |
+| PATCH | `/v1/auth/api-keys/{keyId}` | Update API key (name, scopes, expiration) | P1 |
+| DELETE | `/v1/auth/api-keys/{keyId}` | Delete API key (hard delete) | P2 |
+| HEAD | `/v1/auth/api-keys/{keyId}` | Check if API key exists | P3 |
+| POST | `/v1/auth/api-keys/{keyId}:rotate` | Rotate API key secret | P2 |
 
 ---
 
@@ -131,44 +140,41 @@ BEFORE                              AFTER
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| POST | `/v1/auth/sign-up` | Register new user | ⚠️ Missing api prefix |
-| POST | `/v1/auth/sign-in` | Sign in with email/password | ⚠️ Missing api prefix |
-| POST | `/v1/auth/google` | Sign in with Google | ⚠️ Missing api prefix |
-| GET | `/v1/auth/github/sign-in` | Initiate GitHub OAuth | ⚠️ Missing api prefix |
-| POST | `/v1/auth/refresh` | Refresh access token | ⚠️ Missing api prefix |
-| POST | `/v1/auth/revoke` | Revoke refresh token | ⚠️ Missing api prefix |
-| POST | `/v1/auth/web3/challenge` | Web3 auth challenge | ⚠️ Missing api prefix |
+| POST | `/v1/auth/sign-up` | Register new user | ✅ OK |
+| POST | `/v1/auth/sign-in` | Sign in with email/password | ✅ OK |
+| POST | `/v1/auth/google` | Sign in with Google | ⚠️ Naming |
+| GET | `/v1/auth/github/sign-in` | Initiate GitHub OAuth | ⚠️ Naming |
+| POST | `/v1/auth/refresh` | Refresh access token | ⚠️ Resource-oriented |
+| POST | `/v1/auth/revoke` | Revoke refresh token | ⚠️ Resource-oriented |
+| POST | `/v1/auth/web3/challenge` | Web3 auth challenge | ✅ OK |
 | POST | `/v1/auth/send-email-verification` | Send verification email | ❌ Violation |
 
 ### Violations
 
-1. **Missing `api/` prefix** - All endpoints should be `/api/v1/auth/...`
-2. **Verb in URL** - `/send-email-verification` should be custom action
-3. **Inconsistent OAuth patterns** - Google uses POST, GitHub uses GET
+1. **Verb in URL** - `/send-email-verification` should be custom action with colon syntax
+2. **Inconsistent OAuth patterns** - Google uses POST, GitHub uses GET
+3. **Token operations** - Should be resource-oriented (`/tokens:refresh`)
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `POST /v1/auth/sign-up` | `POST /api/v1/auth:sign-up` | API prefix + custom action |
-| P0 | `POST /v1/auth/sign-in` | `POST /api/v1/auth:sign-in` | API prefix + custom action |
-| P0 | `POST /v1/auth/google` | `POST /api/v1/auth:sign-in-google` | API prefix + explicit action |
-| P0 | `GET /v1/auth/github/sign-in` | `GET /api/v1/auth/github:authorize` | Standard OAuth naming |
-| P0 | `POST /v1/auth/refresh` | `POST /api/v1/auth/tokens:refresh` | Resource-oriented |
-| P0 | `POST /v1/auth/revoke` | `POST /api/v1/auth/tokens:revoke` | Resource-oriented |
-| P0 | `POST /v1/auth/web3/challenge` | `POST /api/v1/auth/web3:challenge` | Custom action syntax |
-| P1 | `POST /v1/auth/send-email-verification` | `POST /api/v1/auth/email:send-verification` | Resource + action |
+| P1 | `POST /v1/auth/google` | `POST /v1/auth:sign-in-google` | Explicit action naming |
+| P1 | `GET /v1/auth/github/sign-in` | `GET /v1/auth/github:authorize` | Standard OAuth naming |
+| P1 | `POST /v1/auth/refresh` | `POST /v1/auth/tokens:refresh` | Resource-oriented |
+| P1 | `POST /v1/auth/revoke` | `POST /v1/auth/tokens:revoke` | Resource-oriented |
+| P0 | `POST /v1/auth/send-email-verification` | `POST /v1/auth/email:send-verification` | Custom action syntax |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| POST | `/api/v1/auth/email:verify` | Verify email with token | P0 |
-| POST | `/api/v1/auth/password:reset-request` | Request password reset | P1 |
-| POST | `/api/v1/auth/password:reset` | Complete password reset | P1 |
-| POST | `/api/v1/auth/password:change` | Change password (authenticated) | P1 |
-| GET | `/api/v1/auth/github:callback` | GitHub OAuth callback | P0 |
-| POST | `/api/v1/auth/web3:verify` | Verify Web3 signature | P0 |
+| POST | `/v1/auth/email:verify` | Verify email with token | P0 |
+| POST | `/v1/auth/password:reset-request` | Request password reset | P1 |
+| POST | `/v1/auth/password:reset` | Complete password reset | P1 |
+| POST | `/v1/auth/password:change` | Change password (authenticated) | P1 |
+| GET | `/v1/auth/github:callback` | GitHub OAuth callback | P0 |
+| POST | `/v1/auth/web3:verify` | Verify Web3 signature | P0 |
 
 ---
 
@@ -178,38 +184,37 @@ BEFORE                              AFTER
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/v1/auth/mfa/configuration` | Get MFA configuration | ⚠️ Missing api prefix |
+| GET | `/v1/auth/mfa/configuration` | Get MFA configuration | ⚠️ Resource naming |
 | POST | `/v1/auth/mfa/setup/totp` | Initiate TOTP setup | ❌ Violation |
 | POST | `/v1/auth/mfa/setup/totp/complete` | Complete TOTP setup | ❌ Violation |
-| POST | `/v1/auth/mfa/verify` | Verify MFA code | ⚠️ Missing api prefix |
+| POST | `/v1/auth/mfa/verify` | Verify MFA code | ✅ OK |
 | POST | `/v1/auth/mfa/backup-codes/regenerate` | Regenerate backup codes | ❌ Violation |
 | POST | `/v1/auth/mfa/disable` | Disable MFA | ❌ Violation |
 
 ### Violations
 
-1. **Missing `api/` prefix** - All endpoints need `/api/v1/`
-2. **Path-based actions** - Should use colon syntax for custom actions
-3. **Nested resources** - `setup/totp/complete` is too deeply nested
+1. **Path-based actions** - Should use colon syntax for custom actions
+2. **Nested resources** - `setup/totp/complete` is too deeply nested
+3. **Configuration naming** - Should be simpler resource path
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /v1/auth/mfa/configuration` | `GET /api/v1/auth/mfa` | API prefix + resource naming |
-| P0 | `POST /v1/auth/mfa/setup/totp` | `POST /api/v1/auth/mfa/totp:setup` | Custom action syntax |
-| P0 | `POST /v1/auth/mfa/setup/totp/complete` | `POST /api/v1/auth/mfa/totp:complete` | Custom action syntax |
-| P0 | `POST /v1/auth/mfa/verify` | `POST /api/v1/auth/mfa:verify` | API prefix |
-| P0 | `POST /v1/auth/mfa/backup-codes/regenerate` | `POST /api/v1/auth/mfa/backup-codes:regenerate` | Custom action syntax |
-| P0 | `POST /v1/auth/mfa/disable` | `POST /api/v1/auth/mfa:disable` | Custom action syntax |
+| P1 | `GET /v1/auth/mfa/configuration` | `GET /v1/auth/mfa` | Simpler resource naming |
+| P0 | `POST /v1/auth/mfa/setup/totp` | `POST /v1/auth/mfa/totp:setup` | Custom action syntax |
+| P0 | `POST /v1/auth/mfa/setup/totp/complete` | `POST /v1/auth/mfa/totp:complete` | Custom action syntax |
+| P0 | `POST /v1/auth/mfa/backup-codes/regenerate` | `POST /v1/auth/mfa/backup-codes:regenerate` | Custom action syntax |
+| P0 | `POST /v1/auth/mfa/disable` | `POST /v1/auth/mfa:disable` | Custom action syntax |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/auth/mfa/backup-codes` | Get backup codes (masked) | P1 |
-| POST | `/api/v1/auth/mfa/sms:setup` | Setup SMS-based MFA | P2 |
-| POST | `/api/v1/auth/mfa/sms:complete` | Complete SMS MFA setup | P2 |
-| GET | `/api/v1/auth/mfa/methods` | List available MFA methods | P2 |
+| GET | `/v1/auth/mfa/backup-codes` | Get backup codes (masked) | P1 |
+| POST | `/v1/auth/mfa/sms:setup` | Setup SMS-based MFA | P2 |
+| POST | `/v1/auth/mfa/sms:complete` | Complete SMS MFA setup | P2 |
+| GET | `/v1/auth/mfa/methods` | List available MFA methods | P2 |
 
 ---
 
@@ -219,43 +224,38 @@ BEFORE                              AFTER
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/v1/auth/sessions` | Get active sessions | ⚠️ Missing api prefix |
-| GET | `/v1/auth/sessions/security-analysis` | Get security analysis | ⚠️ Missing api prefix |
-| DELETE | `/v1/auth/sessions/{sessionId}` | Terminate session | ⚠️ Missing api prefix |
+| GET | `/v1/auth/sessions` | Get active sessions | ✅ OK |
+| GET | `/v1/auth/sessions/security-analysis` | Get security analysis | ⚠️ Should be action |
+| DELETE | `/v1/auth/sessions/{sessionId}` | Terminate session | ✅ OK |
 | POST | `/v1/auth/sessions:terminate-others` | Terminate other sessions | ✅ Correct syntax |
 | POST | `/v1/auth/sessions:terminate-all` | Terminate all sessions | ✅ Correct syntax |
 | POST | `/v1/auth/sessions:refresh` | Refresh session | ✅ Correct syntax |
-| GET | `/v1/auth/sessions/trusted-devices` | Get trusted devices | ⚠️ Missing api prefix |
-| POST | `/v1/auth/sessions/trusted-devices` | Trust device | ⚠️ Missing api prefix |
-| DELETE | `/v1/auth/sessions/trusted-devices/{deviceId}` | Revoke device trust | ⚠️ Missing api prefix |
+| GET | `/v1/auth/sessions/trusted-devices` | Get trusted devices | ⚠️ Nested resource |
+| POST | `/v1/auth/sessions/trusted-devices` | Trust device | ⚠️ Nested resource |
+| DELETE | `/v1/auth/sessions/trusted-devices/{deviceId}` | Revoke device trust | ⚠️ Nested resource |
 
 ### Violations
 
-1. **Missing `api/` prefix** - All endpoints need `/api/v1/`
-2. **Nested resource path** - `security-analysis` should be custom action
+1. **Nested resource path** - `security-analysis` should be custom action
+2. **Trusted devices** - Should be separate top-level resource under auth
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /v1/auth/sessions` | `GET /api/v1/auth/sessions` | API prefix |
-| P0 | `GET /v1/auth/sessions/security-analysis` | `GET /api/v1/auth/sessions:analyze-security` | Custom action |
-| P0 | `DELETE /v1/auth/sessions/{sessionId}` | `DELETE /api/v1/auth/sessions/{sessionId}` | API prefix |
-| P0 | `POST /v1/auth/sessions:terminate-others` | `POST /api/v1/auth/sessions:terminate-others` | API prefix |
-| P0 | `POST /v1/auth/sessions:terminate-all` | `POST /api/v1/auth/sessions:terminate-all` | API prefix |
-| P0 | `POST /v1/auth/sessions:refresh` | `POST /api/v1/auth/sessions:refresh` | API prefix |
-| P0 | `GET /v1/auth/sessions/trusted-devices` | `GET /api/v1/auth/trusted-devices` | Separate resource |
-| P0 | `POST /v1/auth/sessions/trusted-devices` | `POST /api/v1/auth/trusted-devices` | Separate resource |
-| P0 | `DELETE /v1/auth/sessions/trusted-devices/{deviceId}` | `DELETE /api/v1/auth/trusted-devices/{deviceId}` | Separate resource |
+| P1 | `GET /v1/auth/sessions/security-analysis` | `GET /v1/auth/sessions:analyze-security` | Custom action |
+| P2 | `GET /v1/auth/sessions/trusted-devices` | `GET /v1/auth/trusted-devices` | Separate resource |
+| P2 | `POST /v1/auth/sessions/trusted-devices` | `POST /v1/auth/trusted-devices` | Separate resource |
+| P2 | `DELETE /v1/auth/sessions/trusted-devices/{deviceId}` | `DELETE /v1/auth/trusted-devices/{deviceId}` | Separate resource |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/auth/sessions/{sessionId}` | Get single session details | P1 |
-| HEAD | `/api/v1/auth/sessions/{sessionId}` | Check if session exists | P2 |
-| GET | `/api/v1/auth/trusted-devices/{deviceId}` | Get single trusted device | P2 |
-| PATCH | `/api/v1/auth/trusted-devices/{deviceId}` | Update trusted device name | P3 |
+| GET | `/v1/auth/sessions/{sessionId}` | Get single session details | P1 |
+| HEAD | `/v1/auth/sessions/{sessionId}` | Check if session exists | P2 |
+| GET | `/v1/auth/trusted-devices/{deviceId}` | Get single trusted device | P2 |
+| PATCH | `/v1/auth/trusted-devices/{deviceId}` | Update trusted device name | P3 |
 
 ---
 
@@ -269,32 +269,29 @@ BEFORE                              AFTER
 | POST | `/v1/billing/webhooks/apple-pay` | Apple Pay webhook | ✅ Correct |
 | POST | `/v1/billing/webhooks/stripe` | Stripe webhook | ✅ Correct |
 | POST | `/v1/billing/webhooks/paypal` | PayPal webhook | ✅ Correct |
-| GET | `/v1/billing/webhooks/events/{eventId}` | Get webhook event | ⚠️ Missing api prefix |
+| GET | `/v1/billing/webhooks/events/{eventId}` | Get webhook event | ⚠️ Resource naming |
 | PATCH | `/v1/billing/webhooks/events/{eventId}/retry` | Retry webhook | ❌ Violation |
 
 ### Violations
 
-1. **Missing `api/` prefix** - All endpoints need `/api/v1/`
+1. **Nested resource path** - `webhooks/events` should be `webhook-events`
 2. **Path-based action** - `/retry` should be `:retry`
+3. **Wrong HTTP method** - Retry should be POST, not PATCH
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `POST /v1/billing/webhooks/google-pay` | `POST /api/v1/billing/webhooks/google-pay` | API prefix |
-| P0 | `POST /v1/billing/webhooks/apple-pay` | `POST /api/v1/billing/webhooks/apple-pay` | API prefix |
-| P0 | `POST /v1/billing/webhooks/stripe` | `POST /api/v1/billing/webhooks/stripe` | API prefix |
-| P0 | `POST /v1/billing/webhooks/paypal` | `POST /api/v1/billing/webhooks/paypal` | API prefix |
-| P0 | `GET /v1/billing/webhooks/events/{eventId}` | `GET /api/v1/billing/webhook-events/{eventId}` | API prefix + resource |
-| P0 | `PATCH /v1/billing/webhooks/events/{eventId}/retry` | `POST /api/v1/billing/webhook-events/{eventId}:retry` | Custom action syntax |
+| P1 | `GET /v1/billing/webhooks/events/{eventId}` | `GET /v1/billing/webhook-events/{eventId}` | Simpler resource path |
+| P0 | `PATCH /v1/billing/webhooks/events/{eventId}/retry` | `POST /v1/billing/webhook-events/{eventId}:retry` | Custom action syntax + POST |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/billing/webhook-events` | List all webhook events | P1 |
-| POST | `/api/v1/billing/webhooks:test` | Test webhook configuration | P2 |
-| GET | `/api/v1/billing/webhooks/configurations` | List webhook configurations | P2 |
+| GET | `/v1/billing/webhook-events` | List all webhook events | P1 |
+| POST | `/v1/billing/webhooks:test` | Test webhook configuration | P2 |
+| GET | `/v1/billing/webhook-configurations` | List webhook configurations | P2 |
 
 ---
 
@@ -307,14 +304,14 @@ BEFORE                              AFTER
 | GET | `/api/entitlements/check/{productId}` | Check entitlement | ❌ Violation |
 | POST | `/api/entitlements/check-multiple` | Check multiple | ❌ Violation |
 | GET | `/api/entitlements/my-entitlements` | Get user's entitlements | ❌ Violation |
-| GET | `/api/entitlements/user/{userId}` | Get user entitlements | ⚠️ Missing version |
+| GET | `/api/entitlements/user/{userId}` | Get user entitlements | ⚠️ Resource-oriented |
 | POST | `/api/entitlements/grant` | Grant entitlement | ❌ Violation |
 | POST | `/api/entitlements/revoke` | Revoke entitlement | ❌ Violation |
-| GET | `/api/entitlements/expiring` | Get expiring entitlements | ⚠️ Missing version |
+| GET | `/api/entitlements/expiring` | Get expiring entitlements | ⚠️ Path-based filter |
 
 ### Violations
 
-1. **Missing version prefix** - All endpoints need `/api/v1/`
+1. **Missing version prefix** - All endpoints need `v1`
 2. **Verb in URL** - `check`, `grant`, `revoke` should be custom actions
 3. **Non-resource paths** - `my-entitlements`, `check-multiple` are not resource-oriented
 4. **Missing standard CRUD** - No Get by ID, Update, Delete
@@ -323,25 +320,25 @@ BEFORE                              AFTER
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /api/entitlements/check/{productId}` | `GET /api/v1/entitlements:check?productId={productId}` | Custom action + query param |
-| P0 | `POST /api/entitlements/check-multiple` | `POST /api/v1/entitlements:check-batch` | Custom action syntax |
-| P0 | `GET /api/entitlements/my-entitlements` | `GET /api/v1/users/me/entitlements` | Resource-oriented |
-| P0 | `GET /api/entitlements/user/{userId}` | `GET /api/v1/users/{userId}/entitlements` | Resource-oriented |
-| P0 | `POST /api/entitlements/grant` | `POST /api/v1/entitlements` | Standard Create |
-| P0 | `POST /api/entitlements/revoke` | `POST /api/v1/entitlements/{entitlementId}:revoke` | Custom action syntax |
-| P1 | `GET /api/entitlements/expiring` | `GET /api/v1/entitlements?status=expiring` | Query parameter |
+| P0 | `GET /api/entitlements/check/{productId}` | `GET /v1/entitlements:check?productId={productId}` | Custom action + query param |
+| P0 | `POST /api/entitlements/check-multiple` | `POST /v1/entitlements:check-batch` | Custom action syntax |
+| P0 | `GET /api/entitlements/my-entitlements` | `GET /v1/users/me/entitlements` | Resource-oriented |
+| P0 | `GET /api/entitlements/user/{userId}` | `GET /v1/users/{userId}/entitlements` | Resource-oriented |
+| P0 | `POST /api/entitlements/grant` | `POST /v1/entitlements` | Standard Create |
+| P0 | `POST /api/entitlements/revoke` | `POST /v1/entitlements/{entitlementId}:revoke` | Custom action syntax |
+| P1 | `GET /api/entitlements/expiring` | `GET /v1/entitlements?status=expiring` | Query parameter |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/entitlements` | List all entitlements | P0 |
-| GET | `/api/v1/entitlements/{entitlementId}` | Get single entitlement | P0 |
-| PATCH | `/api/v1/entitlements/{entitlementId}` | Update entitlement | P1 |
-| DELETE | `/api/v1/entitlements/{entitlementId}` | Delete entitlement | P1 |
-| HEAD | `/api/v1/entitlements/{entitlementId}` | Check entitlement exists | P2 |
-| POST | `/api/v1/entitlements/{entitlementId}:extend` | Extend entitlement period | P2 |
-| POST | `/api/v1/entitlements/{entitlementId}:transfer` | Transfer to another user | P3 |
+| GET | `/v1/entitlements` | List all entitlements | P0 |
+| GET | `/v1/entitlements/{entitlementId}` | Get single entitlement | P0 |
+| PATCH | `/v1/entitlements/{entitlementId}` | Update entitlement | P1 |
+| DELETE | `/v1/entitlements/{entitlementId}` | Delete entitlement | P1 |
+| HEAD | `/v1/entitlements/{entitlementId}` | Check entitlement exists | P2 |
+| POST | `/v1/entitlements/{entitlementId}:extend` | Extend entitlement period | P2 |
+| POST | `/v1/entitlements/{entitlementId}:transfer` | Transfer to another user | P3 |
 
 ---
 
@@ -375,33 +372,34 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/api/auth/keys/active` | Get active keys | ⚠️ Missing version |
-| GET | `/api/auth/keys/valid` | Get valid keys | ⚠️ Missing version |
+| GET | `/api/auth/keys/active` | Get active keys | ⚠️ Needs version |
+| GET | `/api/auth/keys/valid` | Get valid keys | ⚠️ Needs version |
 | POST | `/api/auth/keys/rotate` | Rotate keys | ❌ Violation |
 | POST | `/api/auth/keys/cleanup` | Cleanup old keys | ❌ Violation |
 
 ### Violations
 
-1. **Missing version prefix** - All endpoints need `/api/v1/`
+1. **Missing version prefix** - All endpoints need `v1`
 2. **Path-based actions** - `rotate`, `cleanup` should use colon syntax
 3. **Ambiguous resource naming** - `keys` is too generic
+4. **Path-based status filter** - `/active`, `/valid` should be query params
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /api/auth/keys/active` | `GET /api/v1/auth/signing-keys?status=active` | Version + resource + query |
-| P0 | `GET /api/auth/keys/valid` | `GET /api/v1/auth/signing-keys?status=valid` | Version + resource + query |
-| P0 | `POST /api/auth/keys/rotate` | `POST /api/v1/auth/signing-keys:rotate` | Custom action syntax |
-| P0 | `POST /api/auth/keys/cleanup` | `POST /api/v1/auth/signing-keys:cleanup` | Custom action syntax |
+| P1 | `GET /api/auth/keys/active` | `GET /v1/auth/signing-keys?status=active` | Version + resource + query |
+| P1 | `GET /api/auth/keys/valid` | `GET /v1/auth/signing-keys?status=valid` | Version + resource + query |
+| P0 | `POST /api/auth/keys/rotate` | `POST /v1/auth/signing-keys:rotate` | Custom action syntax |
+| P0 | `POST /api/auth/keys/cleanup` | `POST /v1/auth/signing-keys:cleanup` | Custom action syntax |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/auth/signing-keys` | List all signing keys | P1 |
-| GET | `/api/v1/auth/signing-keys/{keyId}` | Get single signing key | P1 |
-| DELETE | `/api/v1/auth/signing-keys/{keyId}` | Revoke signing key | P2 |
+| GET | `/v1/auth/signing-keys` | List all signing keys | P1 |
+| GET | `/v1/auth/signing-keys/{keyId}` | Get single signing key | P1 |
+| DELETE | `/v1/auth/signing-keys/{keyId}` | Revoke signing key | P2 |
 
 ---
 
@@ -433,26 +431,26 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /api/v1/payments/canceled` | `GET /api/v1/payments?status=canceled` | Query parameter |
-| P0 | `GET /api/v1/payments/failed` | `GET /api/v1/payments?status=failed` | Query parameter |
-| P0 | `GET /api/v1/payments/overdue` | `GET /api/v1/payments?status=overdue` | Query parameter |
-| P0 | `GET /api/v1/payments/refunded` | `GET /api/v1/payments?status=refunded` | Query parameter |
-| P0 | `GET /api/v1/payments/scheduled` | `GET /api/v1/payments?status=scheduled` | Query parameter |
-| P0 | `PATCH /api/v1/payments/{paymentId}/cancel` | `POST /api/v1/payments/{paymentId}:cancel` | Custom action syntax |
-| P0 | `PATCH /api/v1/payments/{paymentId}/refund` | `POST /api/v1/payments/{paymentId}:refund` | Custom action syntax |
-| P0 | `PATCH /api/v1/payments/{paymentId}/retry` | `POST /api/v1/payments/{paymentId}:retry` | Custom action syntax |
+| P1 | `GET /api/v1/payments/canceled` | `GET /v1/payments?status=canceled` | Query parameter |
+| P1 | `GET /api/v1/payments/failed` | `GET /v1/payments?status=failed` | Query parameter |
+| P1 | `GET /api/v1/payments/overdue` | `GET /v1/payments?status=overdue` | Query parameter |
+| P1 | `GET /api/v1/payments/refunded` | `GET /v1/payments?status=refunded` | Query parameter |
+| P1 | `GET /api/v1/payments/scheduled` | `GET /v1/payments?status=scheduled` | Query parameter |
+| P0 | `PATCH /api/v1/payments/{paymentId}/cancel` | `POST /v1/payments/{paymentId}:cancel` | Custom action syntax |
+| P0 | `PATCH /api/v1/payments/{paymentId}/refund` | `POST /v1/payments/{paymentId}:refund` | Custom action syntax |
+| P0 | `PATCH /api/v1/payments/{paymentId}/retry` | `POST /v1/payments/{paymentId}:retry` | Custom action syntax |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| PATCH | `/api/v1/payments/{paymentId}` | Update payment metadata | P2 |
-| DELETE | `/api/v1/payments/{paymentId}` | Void payment | P2 |
-| HEAD | `/api/v1/payments/{paymentId}` | Check payment exists | P3 |
-| POST | `/api/v1/payments/{paymentId}:capture` | Capture authorized payment | P1 |
-| POST | `/api/v1/payments/{paymentId}:void` | Void authorized payment | P1 |
-| GET | `/api/v1/payments/{paymentId}/refunds` | Get payment refunds | P2 |
-| POST | `/api/v1/payments:batch-process` | Batch process payments | P3 |
+| PATCH | `/v1/payments/{paymentId}` | Update payment metadata | P2 |
+| DELETE | `/v1/payments/{paymentId}` | Void payment | P2 |
+| HEAD | `/v1/payments/{paymentId}` | Check payment exists | P3 |
+| POST | `/v1/payments/{paymentId}:capture` | Capture authorized payment | P1 |
+| POST | `/v1/payments/{paymentId}:void` | Void authorized payment | P1 |
+| GET | `/v1/payments/{paymentId}/refunds` | Get payment refunds | P2 |
+| POST | `/v1/payments:batch-process` | Batch process payments | P3 |
 
 ---
 
@@ -462,38 +460,38 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/api/products/{productId}` | Get product | ⚠️ Missing version |
-| PUT | `/api/products/{productId}` | Update product | ⚠️ Missing version |
-| DELETE | `/api/products/{productId}` | Delete product | ⚠️ Missing version |
-| GET | `/api/products` | List products | ⚠️ Missing version |
-| POST | `/api/products` | Create product | ⚠️ Missing version |
+| GET | `/api/products/{productId}` | Get product | ⚠️ Needs version |
+| PUT | `/api/products/{productId}` | Update product | ⚠️ Needs version |
+| DELETE | `/api/products/{productId}` | Delete product | ⚠️ Needs version |
+| GET | `/api/products` | List products | ⚠️ Needs version |
+| POST | `/api/products` | Create product | ⚠️ Needs version |
 
 ### Violations
 
-1. **Missing version prefix** - All endpoints need `/api/v1/`
+1. **Missing version prefix** - All endpoints need `v1`
 2. **Missing PATCH** - Should support partial updates
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /api/products/{productId}` | `GET /api/v1/products/{productId}` | Version prefix |
-| P0 | `PUT /api/products/{productId}` | `PUT /api/v1/products/{productId}` | Version prefix |
-| P0 | `DELETE /api/products/{productId}` | `DELETE /api/v1/products/{productId}` | Version prefix |
-| P0 | `GET /api/products` | `GET /api/v1/products` | Version prefix |
-| P0 | `POST /api/products` | `POST /api/v1/products` | Version prefix |
+| P1 | `GET /api/products/{productId}` | `GET /v1/products/{productId}` | Version prefix |
+| P1 | `PUT /api/products/{productId}` | `PUT /v1/products/{productId}` | Version prefix |
+| P1 | `DELETE /api/products/{productId}` | `DELETE /v1/products/{productId}` | Version prefix |
+| P1 | `GET /api/products` | `GET /v1/products` | Version prefix |
+| P1 | `POST /api/products` | `POST /v1/products` | Version prefix |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| PATCH | `/api/v1/products/{productId}` | Partial update product | P1 |
-| HEAD | `/api/v1/products/{productId}` | Check product exists | P2 |
-| POST | `/api/v1/products/{productId}:activate` | Activate product | P2 |
-| POST | `/api/v1/products/{productId}:deactivate` | Deactivate product | P2 |
-| POST | `/api/v1/products/{productId}:archive` | Archive product | P2 |
-| GET | `/api/v1/products/{productId}/pricing` | Get product pricing | P2 |
-| POST | `/api/v1/products:batch-create` | Batch create products | P3 |
+| PATCH | `/v1/products/{productId}` | Partial update product | P1 |
+| HEAD | `/v1/products/{productId}` | Check product exists | P2 |
+| POST | `/v1/products/{productId}:activate` | Activate product | P2 |
+| POST | `/v1/products/{productId}:deactivate` | Deactivate product | P2 |
+| POST | `/v1/products/{productId}:archive` | Archive product | P2 |
+| GET | `/v1/products/{productId}/pricing` | Get product pricing | P2 |
+| POST | `/v1/products:batch-create` | Batch create products | P3 |
 
 ---
 
@@ -503,18 +501,18 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/api/promo-codes` | List promo codes | ⚠️ Missing version |
-| POST | `/api/promo-codes` | Create promo code | ⚠️ Missing version |
+| GET | `/api/promo-codes` | List promo codes | ⚠️ Needs version |
+| POST | `/api/promo-codes` | Create promo code | ⚠️ Needs version |
 | GET | `/api/promo-codes/active` | List active codes | ❌ Violation |
-| GET | `/api/promo-codes/{id}` | Get promo code | ⚠️ Missing version |
-| PUT | `/api/promo-codes/{id}` | Update promo code | ⚠️ Missing version |
-| DELETE | `/api/promo-codes/{id}` | Delete promo code | ⚠️ Missing version |
+| GET | `/api/promo-codes/{id}` | Get promo code | ⚠️ Needs version |
+| PUT | `/api/promo-codes/{id}` | Update promo code | ⚠️ Needs version |
+| DELETE | `/api/promo-codes/{id}` | Delete promo code | ⚠️ Needs version |
 | POST | `/api/promo-codes/validate` | Validate code | ❌ Violation |
 | POST | `/api/promo-codes/apply` | Apply code | ❌ Violation |
 
 ### Violations
 
-1. **Missing version prefix** - All endpoints need `/api/v1/`
+1. **Missing version prefix** - All endpoints need `v1`
 2. **Path-based status filter** - `/active` should be query parameter
 3. **Path-based actions** - `validate`, `apply` should use colon syntax
 
@@ -522,25 +520,25 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /api/promo-codes` | `GET /api/v1/promo-codes` | Version prefix |
-| P0 | `POST /api/promo-codes` | `POST /api/v1/promo-codes` | Version prefix |
-| P0 | `GET /api/promo-codes/active` | `GET /api/v1/promo-codes?status=active` | Query parameter |
-| P0 | `GET /api/promo-codes/{id}` | `GET /api/v1/promo-codes/{promoCodeId}` | Version + consistent naming |
-| P0 | `PUT /api/promo-codes/{id}` | `PUT /api/v1/promo-codes/{promoCodeId}` | Version + consistent naming |
-| P0 | `DELETE /api/promo-codes/{id}` | `DELETE /api/v1/promo-codes/{promoCodeId}` | Version + consistent naming |
-| P0 | `POST /api/promo-codes/validate` | `POST /api/v1/promo-codes:validate` | Custom action syntax |
-| P0 | `POST /api/promo-codes/apply` | `POST /api/v1/promo-codes:apply` | Custom action syntax |
+| P1 | `GET /api/promo-codes` | `GET /v1/promo-codes` | Version prefix |
+| P1 | `POST /api/promo-codes` | `POST /v1/promo-codes` | Version prefix |
+| P0 | `GET /api/promo-codes/active` | `GET /v1/promo-codes?status=active` | Query parameter |
+| P1 | `GET /api/promo-codes/{id}` | `GET /v1/promo-codes/{promoCodeId}` | Version + consistent naming |
+| P1 | `PUT /api/promo-codes/{id}` | `PUT /v1/promo-codes/{promoCodeId}` | Version + consistent naming |
+| P1 | `DELETE /api/promo-codes/{id}` | `DELETE /v1/promo-codes/{promoCodeId}` | Version + consistent naming |
+| P0 | `POST /api/promo-codes/validate` | `POST /v1/promo-codes:validate` | Custom action syntax |
+| P0 | `POST /api/promo-codes/apply` | `POST /v1/promo-codes:apply` | Custom action syntax |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| PATCH | `/api/v1/promo-codes/{promoCodeId}` | Partial update promo code | P1 |
-| HEAD | `/api/v1/promo-codes/{promoCodeId}` | Check promo code exists | P2 |
-| POST | `/api/v1/promo-codes/{promoCodeId}:activate` | Activate promo code | P2 |
-| POST | `/api/v1/promo-codes/{promoCodeId}:deactivate` | Deactivate promo code | P2 |
-| GET | `/api/v1/promo-codes/{promoCodeId}/usage` | Get promo code usage stats | P2 |
-| GET | `/api/v1/promo-codes/by-code/{code}` | Get promo code by code string | P1 |
+| PATCH | `/v1/promo-codes/{promoCodeId}` | Partial update promo code | P1 |
+| HEAD | `/v1/promo-codes/{promoCodeId}` | Check promo code exists | P2 |
+| POST | `/v1/promo-codes/{promoCodeId}:activate` | Activate promo code | P2 |
+| POST | `/v1/promo-codes/{promoCodeId}:deactivate` | Deactivate promo code | P2 |
+| GET | `/v1/promo-codes/{promoCodeId}/usage` | Get promo code usage stats | P2 |
+| GET | `/v1/promo-codes/by-code/{code}` | Get promo code by code string | P1 |
 
 ---
 
@@ -550,28 +548,26 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/v1/resources/usage-by-type/{usageType}` | Get usage by type | ⚠️ Missing api prefix |
+| GET | `/v1/resources/usage-by-type/{usageType}` | Get usage by type | ⚠️ Path param |
 | POST | `/v1/resources:archive` | Archive old records | ✅ Correct syntax |
 
 ### Violations
 
-1. **Missing `api/` prefix** - Needs `/api/v1/`
-2. **Path parameter for type** - Could be query parameter
+1. **Path parameter for type** - Could be query parameter for flexibility
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /v1/resources/usage-by-type/{usageType}` | `GET /api/v1/resources/usage?type={usageType}` | API prefix + query param |
-| P0 | `POST /v1/resources:archive` | `POST /api/v1/resources:archive` | API prefix |
+| P2 | `GET /v1/resources/usage-by-type/{usageType}` | `GET /v1/resources/usage?type={usageType}` | Query param |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/resources/usage` | Get aggregated usage summary | P1 |
-| GET | `/api/v1/resources/usage-trends` | Get usage trends over time | P2 |
-| POST | `/api/v1/resources:cleanup` | Cleanup orphaned resources | P2 |
+| GET | `/v1/resources/usage` | Get aggregated usage summary | P1 |
+| GET | `/v1/resources/usage-trends` | Get usage trends over time | P2 |
+| POST | `/v1/resources:cleanup` | Cleanup orphaned resources | P2 |
 
 ---
 
@@ -602,22 +598,22 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /api/v1/service-accounts/tenant/{tenantId}` | `GET /api/v1/service-accounts?tenantId={tenantId}` | Query parameter |
-| P0 | `POST /api/v1/service-accounts/{id}/rotate-secret` | `POST /api/v1/service-accounts/{serviceAccountId}:rotate-secret` | Custom action syntax |
-| P0 | `POST /api/v1/service-accounts/{id}/unlock` | `POST /api/v1/service-accounts/{serviceAccountId}:unlock` | Custom action syntax |
-| P0 | `POST /api/v1/service-accounts/{id}/deactivate` | `POST /api/v1/service-accounts/{serviceAccountId}:deactivate` | Custom action syntax |
-| P0 | `POST /api/v1/service-accounts/{id}/reactivate` | `POST /api/v1/service-accounts/{serviceAccountId}:reactivate` | Custom action syntax |
-| P1 | `PUT /api/v1/service-accounts/{id}/scopes` | `PATCH /api/v1/service-accounts/{serviceAccountId}/scopes` | Consistent naming + PATCH |
+| P1 | `GET /api/v1/service-accounts/tenant/{tenantId}` | `GET /v1/service-accounts?tenantId={tenantId}` | Query parameter |
+| P0 | `POST /api/v1/service-accounts/{id}/rotate-secret` | `POST /v1/service-accounts/{serviceAccountId}:rotate-secret` | Custom action syntax |
+| P0 | `POST /api/v1/service-accounts/{id}/unlock` | `POST /v1/service-accounts/{serviceAccountId}:unlock` | Custom action syntax |
+| P0 | `POST /api/v1/service-accounts/{id}/deactivate` | `POST /v1/service-accounts/{serviceAccountId}:deactivate` | Custom action syntax |
+| P0 | `POST /api/v1/service-accounts/{id}/reactivate` | `POST /v1/service-accounts/{serviceAccountId}:reactivate` | Custom action syntax |
+| P1 | `PUT /api/v1/service-accounts/{id}/scopes` | `PATCH /v1/service-accounts/{serviceAccountId}/scopes` | Consistent naming + PATCH |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/service-accounts` | List all service accounts | P0 |
-| PATCH | `/api/v1/service-accounts/{serviceAccountId}` | Partial update service account | P1 |
-| HEAD | `/api/v1/service-accounts/{serviceAccountId}` | Check service account exists | P2 |
-| POST | `/api/v1/service-accounts/{serviceAccountId}:lock` | Lock service account | P2 |
-| GET | `/api/v1/service-accounts/{serviceAccountId}/audit-log` | Get audit log | P2 |
+| GET | `/v1/service-accounts` | List all service accounts | P0 |
+| PATCH | `/v1/service-accounts/{serviceAccountId}` | Partial update service account | P1 |
+| HEAD | `/v1/service-accounts/{serviceAccountId}` | Check service account exists | P2 |
+| POST | `/v1/service-accounts/{serviceAccountId}:lock` | Lock service account | P2 |
+| GET | `/v1/service-accounts/{serviceAccountId}/audit-log` | Get audit log | P2 |
 
 ---
 
@@ -660,23 +656,23 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `GET /api/v1/subscriptions/tenant/{tenantId}` | `GET /api/v1/subscriptions?tenantId={tenantId}` | Query parameter |
-| P0 | `GET /api/v1/subscriptions/tenant/{tenantId}/active` | `GET /api/v1/subscriptions?tenantId={tenantId}&status=active` | Query parameter |
-| P0 | `GET /api/v1/subscriptions/plan/{planId}` | `GET /api/v1/subscriptions?planId={planId}` | Query parameter |
-| P0 | `GET /api/v1/subscriptions/status/{status}` | `GET /api/v1/subscriptions?status={status}` | Query parameter |
-| P1 | `GET /api/v1/subscriptions/metrics` | `GET /api/v1/subscriptions:get-metrics` or keep | Custom action or resource |
-| P0 | `GET /api/v1/subscriptions/expiring` | `GET /api/v1/subscriptions?status=expiring` | Query parameter |
+| P1 | `GET /api/v1/subscriptions/tenant/{tenantId}` | `GET /v1/subscriptions?tenantId={tenantId}` | Query parameter |
+| P1 | `GET /api/v1/subscriptions/tenant/{tenantId}/active` | `GET /v1/subscriptions?tenantId={tenantId}&status=active` | Query parameter |
+| P1 | `GET /api/v1/subscriptions/plan/{planId}` | `GET /v1/subscriptions?planId={planId}` | Query parameter |
+| P1 | `GET /api/v1/subscriptions/status/{status}` | `GET /v1/subscriptions?status={status}` | Query parameter |
+| P2 | `GET /api/v1/subscriptions/metrics` | `GET /v1/subscriptions:get-metrics` or keep | Custom action or resource |
+| P1 | `GET /api/v1/subscriptions/expiring` | `GET /v1/subscriptions?status=expiring` | Query parameter |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| PATCH | `/api/v1/subscriptions/{subscriptionId}` | Partial update subscription | P1 |
-| PUT | `/api/v1/subscriptions/{subscriptionId}` | Full update subscription | P2 |
-| DELETE | `/api/v1/subscriptions/{subscriptionId}` | Delete subscription | P2 |
-| POST | `/api/v1/subscriptions/{subscriptionId}:pause` | Pause subscription | P2 |
-| POST | `/api/v1/subscriptions/{subscriptionId}:resume` | Resume subscription | P2 |
-| GET | `/api/v1/subscriptions/{subscriptionId}/invoices` | Get subscription invoices | P2 |
+| PATCH | `/v1/subscriptions/{subscriptionId}` | Partial update subscription | P1 |
+| PUT | `/v1/subscriptions/{subscriptionId}` | Full update subscription | P2 |
+| DELETE | `/v1/subscriptions/{subscriptionId}` | Delete subscription | P2 |
+| POST | `/v1/subscriptions/{subscriptionId}:pause` | Pause subscription | P2 |
+| POST | `/v1/subscriptions/{subscriptionId}:resume` | Resume subscription | P2 |
+| GET | `/v1/subscriptions/{subscriptionId}/invoices` | Get subscription invoices | P2 |
 
 ---
 
@@ -686,15 +682,15 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| POST | `/v1/subscription-plans` | Create plan | ⚠️ Missing api prefix |
-| GET | `/v1/subscription-plans` | List plans | ⚠️ Missing api prefix |
+| POST | `/v1/subscription-plans` | Create plan | ✅ OK |
+| GET | `/v1/subscription-plans` | List plans | ✅ OK |
 | GET | `/v1/subscription-plans/featured` | Get featured | ❌ Violation |
 | GET | `/v1/subscription-plans/search` | Search plans | ❌ Violation |
 | GET | `/v1/subscription-plans/price-range` | Get by price range | ❌ Violation |
 | GET | `/v1/subscription-plans/compare` | Compare plans | ❌ Violation |
-| HEAD | `/v1/subscription-plans/{planId}` | Check exists | ⚠️ Missing api prefix |
-| GET | `/v1/subscription-plans/{planId}` | Get plan | ⚠️ Missing api prefix |
-| DELETE | `/v1/subscription-plans/{planId}` | Delete plan | ⚠️ Missing api prefix |
+| HEAD | `/v1/subscription-plans/{planId}` | Check exists | ✅ OK |
+| GET | `/v1/subscription-plans/{planId}` | Get plan | ✅ OK |
+| DELETE | `/v1/subscription-plans/{planId}` | Delete plan | ✅ OK |
 | GET | `/v1/subscription-plans/slug/{slug}` | Get by slug | ❌ Violation |
 | GET | `/v1/subscription-plans/{planId}/usage` | Get usage stats | ✅ Correct |
 | GET | `/v1/subscription-plans/{planId}/suggest-upgrades` | Suggest upgrades | ✅ Correct |
@@ -711,31 +707,29 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 ### Violations
 
-1. **Missing `api/` prefix** - All endpoints need `/api/v1/`
-2. **Path-based filters** - `featured`, `price-range` should be query parameters
-3. **Search as path** - Should be query on collection
-4. **Compare as path** - Should be custom action
+1. **Path-based filters** - `featured`, `price-range` should be query parameters
+2. **Search as path** - Should be query on collection
+3. **Compare as path** - Should be custom action
+4. **Validate as GET** - Should be POST custom action
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `POST /v1/subscription-plans` | `POST /api/v1/subscription-plans` | API prefix |
-| P0 | `GET /v1/subscription-plans` | `GET /api/v1/subscription-plans` | API prefix |
-| P0 | `GET /v1/subscription-plans/featured` | `GET /api/v1/subscription-plans?featured=true` | Query parameter |
-| P0 | `GET /v1/subscription-plans/search` | `GET /api/v1/subscription-plans?q={searchTerm}` | Query parameter |
-| P0 | `GET /v1/subscription-plans/price-range` | `GET /api/v1/subscription-plans?minPrice={min}&maxPrice={max}` | Query parameters |
-| P0 | `GET /v1/subscription-plans/compare` | `POST /api/v1/subscription-plans:compare` | Custom action |
-| P0 | `GET /v1/subscription-plans/slug/{slug}` | `GET /api/v1/subscription-plans?slug={slug}` | Query parameter |
-| P1 | `GET /v1/subscription-plans/{planId}/validate-limits` | `POST /api/v1/subscription-plans/{planId}:validate-limits` | Custom action syntax |
+| P1 | `GET /v1/subscription-plans/featured` | `GET /v1/subscription-plans?featured=true` | Query parameter |
+| P1 | `GET /v1/subscription-plans/search` | `GET /v1/subscription-plans?q={searchTerm}` | Query parameter |
+| P1 | `GET /v1/subscription-plans/price-range` | `GET /v1/subscription-plans?minPrice={min}&maxPrice={max}` | Query parameters |
+| P0 | `GET /v1/subscription-plans/compare` | `POST /v1/subscription-plans:compare` | Custom action |
+| P1 | `GET /v1/subscription-plans/slug/{slug}` | `GET /v1/subscription-plans?slug={slug}` | Query parameter |
+| P0 | `GET /v1/subscription-plans/{planId}/validate-limits` | `POST /v1/subscription-plans/{planId}:validate-limits` | Custom action syntax |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| PUT | `/api/v1/subscription-plans/{planId}` | Full update plan | P1 |
-| POST | `/api/v1/subscription-plans/{planId}:archive` | Archive plan | P2 |
-| POST | `/api/v1/subscription-plans/{planId}:clone` | Clone plan | P2 |
+| PUT | `/v1/subscription-plans/{planId}` | Full update plan | P1 |
+| POST | `/v1/subscription-plans/{planId}:archive` | Archive plan | P2 |
+| POST | `/v1/subscription-plans/{planId}:clone` | Clone plan | P2 |
 
 ---
 
@@ -753,28 +747,29 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 1. **Singular resource name** - Should be `taxes` (plural)
 2. **Path-based action** - `calculate` should use custom action syntax
+3. **Nested resources** - `jurisdictions` and `rules` should be separate resources
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `POST /api/v1/tax/calculate` | `POST /api/v1/taxes:calculate` | Plural + custom action |
-| P1 | `GET /api/v1/tax/jurisdictions` | `GET /api/v1/tax-jurisdictions` | Separate resource |
-| P1 | `GET /api/v1/tax/rules` | `GET /api/v1/tax-rules` | Separate resource |
+| P0 | `POST /api/v1/tax/calculate` | `POST /v1/taxes:calculate` | Plural + custom action |
+| P1 | `GET /api/v1/tax/jurisdictions` | `GET /v1/tax-jurisdictions` | Separate resource |
+| P1 | `GET /api/v1/tax/rules` | `GET /v1/tax-rules` | Separate resource |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/tax-jurisdictions/{jurisdictionId}` | Get single jurisdiction | P2 |
-| POST | `/api/v1/tax-jurisdictions` | Create jurisdiction | P2 |
-| PATCH | `/api/v1/tax-jurisdictions/{jurisdictionId}` | Update jurisdiction | P2 |
-| DELETE | `/api/v1/tax-jurisdictions/{jurisdictionId}` | Delete jurisdiction | P2 |
-| GET | `/api/v1/tax-rules/{ruleId}` | Get single rule | P2 |
-| POST | `/api/v1/tax-rules` | Create rule | P2 |
-| PATCH | `/api/v1/tax-rules/{ruleId}` | Update rule | P2 |
-| DELETE | `/api/v1/tax-rules/{ruleId}` | Delete rule | P2 |
-| POST | `/api/v1/taxes:validate-exemption` | Validate tax exemption | P2 |
+| GET | `/v1/tax-jurisdictions/{jurisdictionId}` | Get single jurisdiction | P2 |
+| POST | `/v1/tax-jurisdictions` | Create jurisdiction | P2 |
+| PATCH | `/v1/tax-jurisdictions/{jurisdictionId}` | Update jurisdiction | P2 |
+| DELETE | `/v1/tax-jurisdictions/{jurisdictionId}` | Delete jurisdiction | P2 |
+| GET | `/v1/tax-rules/{ruleId}` | Get single rule | P2 |
+| POST | `/v1/tax-rules` | Create rule | P2 |
+| PATCH | `/v1/tax-rules/{ruleId}` | Update rule | P2 |
+| DELETE | `/v1/tax-rules/{ruleId}` | Delete rule | P2 |
+| POST | `/v1/taxes:validate-exemption` | Validate tax exemption | P2 |
 
 ---
 
@@ -782,27 +777,25 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 ### Current Endpoints
 
-All tenant endpoints follow **excellent Google API patterns** with proper colon syntax for custom actions. Main issues are:
+All tenant endpoints follow **excellent Google API patterns** with proper colon syntax for custom actions.
 
-1. **Missing `api/` prefix** - All `/v1/tenants/...` should be `/api/v1/tenants/...`
-2. **Metadata/Settings/Quotas endpoints** have mixed versioning
+### Minor Issues
+
+1. **Inconsistent ID naming** - Some use `{id}`, others use `{tenantId}` - should standardize to `{tenantId}`
 
 ### Required Fixes
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `POST /v1/tenants` | `POST /api/v1/tenants` | API prefix |
-| P0 | `GET /v1/tenants` | `GET /api/v1/tenants` | API prefix |
-| P0 | All `/v1/tenants/*` | `All /api/v1/tenants/*` | API prefix |
-| P0 | `GET /api/v1/tenants/{id}/metadata` | `GET /api/v1/tenants/{tenantId}/metadata` | Consistent ID naming |
-| P0 | `GET /api/v1/tenants/{id}/settings` | `GET /api/v1/tenants/{tenantId}/settings` | Consistent ID naming |
+| P2 | `GET /api/v1/tenants/{id}/metadata` | `GET /v1/tenants/{tenantId}/metadata` | Consistent ID naming |
+| P2 | `GET /api/v1/tenants/{id}/settings` | `GET /v1/tenants/{tenantId}/settings` | Consistent ID naming |
 
 ### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| POST | `/api/v1/tenants:validate` | Validate tenant data before creation | P3 |
-| GET | `/api/v1/tenants/{tenantId}/audit-log` | Get tenant audit log | P2 |
+| POST | `/v1/tenants:validate` | Validate tenant data before creation | P3 |
+| GET | `/v1/tenants/{tenantId}/audit-log` | Get tenant audit log | P2 |
 
 ---
 
@@ -810,26 +803,20 @@ All tenant endpoints follow **excellent Google API patterns** with proper colon 
 
 ### Current Endpoints
 
-All user endpoints follow **excellent Google API patterns** with proper colon syntax for custom actions. Main issues are:
+All user endpoints follow **excellent Google API patterns** with proper colon syntax for custom actions. No major violations.
 
-1. **Missing `api/` prefix** - All `/v1/users/...` should be `/api/v1/users/...`
+### Assessment
 
-### Required Fixes
-
-| Priority | Current | Fixed | Reason |
-|----------|---------|-------|--------|
-| P0 | `POST /v1/users` | `POST /api/v1/users` | API prefix |
-| P0 | `GET /v1/users` | `GET /api/v1/users` | API prefix |
-| P0 | All `/v1/users/*` | All `/api/v1/users/*` | API prefix |
+✅ **Well-designed** - Users module is compliant with Google API guidelines.
 
 ### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/users/me` | Get current user | P1 |
-| PATCH | `/api/v1/users/me` | Update current user | P1 |
-| GET | `/api/v1/users/me/permissions` | Get current user permissions | P2 |
-| POST | `/api/v1/users/{userId}:impersonate` | Impersonate user (admin) | P3 |
+| GET | `/v1/users/me` | Get current user | P1 |
+| PATCH | `/v1/users/me` | Update current user | P1 |
+| GET | `/v1/users/me/permissions` | Get current user permissions | P2 |
+| POST | `/v1/users/{userId}:impersonate` | Impersonate user (admin) | P3 |
 
 ---
 
@@ -859,28 +846,28 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `POST /api/v1/wallet/create` | `POST /api/v1/wallets` | Standard Create |
-| P0 | `GET /api/v1/wallet/{userId}` | `GET /api/v1/users/{userId}/wallet` | Resource-oriented |
-| P0 | `GET /api/v1/wallet/{userId}/balance` | `GET /api/v1/users/{userId}/wallet/balance` | Resource-oriented |
-| P0 | `POST /api/v1/wallet/add-funds` | `POST /api/v1/wallets/{walletId}:add-funds` | Custom action syntax |
-| P0 | `POST /api/v1/wallet/deduct-funds` | `POST /api/v1/wallets/{walletId}:deduct-funds` | Custom action syntax |
-| P0 | `POST /api/v1/wallet/transfer` | `POST /api/v1/wallets/{walletId}:transfer` | Custom action syntax |
-| P0 | `POST /api/v1/wallet/{userId}/lock` | `POST /api/v1/wallets/{walletId}:lock` | Custom action syntax |
-| P0 | `POST /api/v1/wallet/{userId}/unlock` | `POST /api/v1/wallets/{walletId}:unlock` | Custom action syntax |
-| P0 | `GET /api/v1/wallet/{userId}/transactions` | `GET /api/v1/wallets/{walletId}/transactions` | Resource-oriented |
+| P0 | `POST /api/v1/wallet/create` | `POST /v1/wallets` | Standard Create |
+| P0 | `GET /api/v1/wallet/{userId}` | `GET /v1/users/{userId}/wallet` | Resource-oriented |
+| P0 | `GET /api/v1/wallet/{userId}/balance` | `GET /v1/users/{userId}/wallet/balance` | Resource-oriented |
+| P0 | `POST /api/v1/wallet/add-funds` | `POST /v1/wallets/{walletId}:add-funds` | Custom action syntax |
+| P0 | `POST /api/v1/wallet/deduct-funds` | `POST /v1/wallets/{walletId}:deduct-funds` | Custom action syntax |
+| P0 | `POST /api/v1/wallet/transfer` | `POST /v1/wallets/{walletId}:transfer` | Custom action syntax |
+| P0 | `POST /api/v1/wallet/{userId}/lock` | `POST /v1/wallets/{walletId}:lock` | Custom action syntax |
+| P0 | `POST /api/v1/wallet/{userId}/unlock` | `POST /v1/wallets/{walletId}:unlock` | Custom action syntax |
+| P0 | `GET /api/v1/wallet/{userId}/transactions` | `GET /v1/wallets/{walletId}/transactions` | Resource-oriented |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/wallets` | List all wallets (admin) | P1 |
-| GET | `/api/v1/wallets/{walletId}` | Get wallet by ID | P0 |
-| PATCH | `/api/v1/wallets/{walletId}` | Update wallet settings | P2 |
-| DELETE | `/api/v1/wallets/{walletId}` | Close wallet | P2 |
-| HEAD | `/api/v1/wallets/{walletId}` | Check wallet exists | P3 |
-| POST | `/api/v1/wallets/{walletId}:freeze` | Freeze wallet (security) | P2 |
-| POST | `/api/v1/wallets/{walletId}:unfreeze` | Unfreeze wallet | P2 |
-| GET | `/api/v1/wallets/{walletId}/audit-log` | Get wallet audit log | P2 |
+| GET | `/v1/wallets` | List all wallets (admin) | P1 |
+| GET | `/v1/wallets/{walletId}` | Get wallet by ID | P0 |
+| PATCH | `/v1/wallets/{walletId}` | Update wallet settings | P2 |
+| DELETE | `/v1/wallets/{walletId}` | Close wallet | P2 |
+| HEAD | `/v1/wallets/{walletId}` | Check wallet exists | P3 |
+| POST | `/v1/wallets/{walletId}:freeze` | Freeze wallet (security) | P2 |
+| POST | `/v1/wallets/{walletId}:unfreeze` | Unfreeze wallet | P2 |
+| GET | `/v1/wallets/{walletId}/audit-log` | Get wallet audit log | P2 |
 
 ---
 
@@ -894,14 +881,14 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 | POST | `/api/auth/webauthn/register/complete` | Complete registration | ❌ Violation |
 | POST | `/api/auth/webauthn/authenticate/begin` | Begin auth | ❌ Violation |
 | POST | `/api/auth/webauthn/authenticate/complete` | Complete auth | ❌ Violation |
-| GET | `/api/auth/webauthn/credentials` | List credentials | ⚠️ Missing version |
-| DELETE | `/api/auth/webauthn/credentials/{credentialId}` | Delete credential | ⚠️ Missing version |
-| PATCH | `/api/auth/webauthn/credentials/{credentialId}` | Update credential | ⚠️ Missing version |
-| GET | `/api/auth/webauthn/status` | Get WebAuthn status | ⚠️ Missing version |
+| GET | `/api/auth/webauthn/credentials` | List credentials | ⚠️ Needs version |
+| DELETE | `/api/auth/webauthn/credentials/{credentialId}` | Delete credential | ⚠️ Needs version |
+| PATCH | `/api/auth/webauthn/credentials/{credentialId}` | Update credential | ⚠️ Needs version |
+| GET | `/api/auth/webauthn/status` | Get WebAuthn status | ⚠️ Needs version |
 
 ### Violations
 
-1. **Missing version prefix** - All endpoints need `/api/v1/`
+1. **Missing version prefix** - All endpoints need `v1`
 2. **Path-based actions** - `begin`, `complete` should use colon syntax
 3. **Deeply nested paths** - `register/begin` should be `registration:begin`
 
@@ -909,22 +896,22 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 
 | Priority | Current | Fixed | Reason |
 |----------|---------|-------|--------|
-| P0 | `POST /api/auth/webauthn/register/begin` | `POST /api/v1/auth/webauthn/registration:begin` | Version + custom action |
-| P0 | `POST /api/auth/webauthn/register/complete` | `POST /api/v1/auth/webauthn/registration:complete` | Version + custom action |
-| P0 | `POST /api/auth/webauthn/authenticate/begin` | `POST /api/v1/auth/webauthn/authentication:begin` | Version + custom action |
-| P0 | `POST /api/auth/webauthn/authenticate/complete` | `POST /api/v1/auth/webauthn/authentication:complete` | Version + custom action |
-| P0 | `GET /api/auth/webauthn/credentials` | `GET /api/v1/auth/webauthn/credentials` | Version prefix |
-| P0 | `DELETE /api/auth/webauthn/credentials/{credentialId}` | `DELETE /api/v1/auth/webauthn/credentials/{credentialId}` | Version prefix |
-| P0 | `PATCH /api/auth/webauthn/credentials/{credentialId}` | `PATCH /api/v1/auth/webauthn/credentials/{credentialId}` | Version prefix |
-| P0 | `GET /api/auth/webauthn/status` | `GET /api/v1/auth/webauthn` | Version + simplify |
+| P0 | `POST /api/auth/webauthn/register/begin` | `POST /v1/auth/webauthn/registration:begin` | Custom action |
+| P0 | `POST /api/auth/webauthn/register/complete` | `POST /v1/auth/webauthn/registration:complete` | Custom action |
+| P0 | `POST /api/auth/webauthn/authenticate/begin` | `POST /v1/auth/webauthn/authentication:begin` | Custom action |
+| P0 | `POST /api/auth/webauthn/authenticate/complete` | `POST /v1/auth/webauthn/authentication:complete` | Custom action |
+| P1 | `GET /api/auth/webauthn/credentials` | `GET /v1/auth/webauthn/credentials` | Version prefix |
+| P1 | `DELETE /api/auth/webauthn/credentials/{credentialId}` | `DELETE /v1/auth/webauthn/credentials/{credentialId}` | Version prefix |
+| P1 | `PATCH /api/auth/webauthn/credentials/{credentialId}` | `PATCH /v1/auth/webauthn/credentials/{credentialId}` | Version prefix |
+| P1 | `GET /api/auth/webauthn/status` | `GET /v1/auth/webauthn` | Version + simplify |
 
 ### Missing Endpoints (Must Add)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/api/v1/auth/webauthn/credentials/{credentialId}` | Get single credential | P1 |
-| HEAD | `/api/v1/auth/webauthn/credentials/{credentialId}` | Check credential exists | P2 |
-| POST | `/api/v1/auth/webauthn/credentials/{credentialId}:verify` | Verify credential | P2 |
+| GET | `/v1/auth/webauthn/credentials/{credentialId}` | Get single credential | P1 |
+| HEAD | `/v1/auth/webauthn/credentials/{credentialId}` | Check credential exists | P2 |
+| POST | `/v1/auth/webauthn/credentials/{credentialId}:verify` | Verify credential | P2 |
 
 ---
 
@@ -1021,21 +1008,23 @@ Create a standard `ApiErrorResponse` class and global exception filter.
 
 ### Phase 1: Critical Fixes (P0) - Week 1-2
 
-1. **Standardize URL versioning** - Add `api/` prefix to all endpoints
-2. **Fix custom action syntax** - Convert `/verb` to `:verb`
-3. **Add missing Get-by-ID endpoints** - ApiKeys, Sessions, Entitlements
+1. **Fix custom action syntax** - Convert `/verb` to `:verb` (30+ endpoints)
+2. **Add missing Get-by-ID endpoints** - ApiKeys, Sessions, Entitlements
+3. **Fix wallet resource structure** - Plural naming, proper resource orientation
 
 ### Phase 2: High Priority (P1) - Week 3-4
 
 1. **Standardize pagination** - Implement cursor-based pagination
-2. **Add missing CRUD operations** - Update, Delete where applicable
-3. **Standardize error responses** - Implement RFC 7807
+2. **Add version prefix** - Add `v1` to unversioned endpoints
+3. **Convert path filters to query parameters** - Status filters, tenant filters
+4. **Add missing CRUD operations** - PATCH, DELETE where applicable
 
 ### Phase 3: Medium Priority (P2) - Week 5-6
 
-1. **Convert path filters to query parameters**
+1. **Standardize error responses** - Implement RFC 7807
 2. **Add HEAD methods for existence checks**
 3. **Implement batch operations**
+4. **Standardize ID naming** - Use `{resourceId}` consistently
 
 ### Phase 4: Low Priority (P3) - Week 7-8
 
@@ -1043,19 +1032,22 @@ Create a standard `ApiErrorResponse` class and global exception filter.
 2. **Add optional enhancement endpoints**
 3. **Documentation updates**
 
+> **Note:** The `api/` prefix can be configured globally at the infrastructure level (API gateway, reverse proxy, or subdomain) and is not tracked as a code change.
+
 ---
 
 ## Appendix A: Complete Endpoint Migration Table
 
 | Current Path | New Path | Priority | Notes |
 |--------------|----------|----------|-------|
-| `POST /api/auth/api-keys/{keyId}/revoke` | `POST /api/v1/auth/api-keys/{keyId}:revoke` | P0 | Custom action |
-| `POST /v1/auth/sign-up` | `POST /api/v1/auth:sign-up` | P0 | API prefix |
-| `POST /v1/auth/mfa/setup/totp` | `POST /api/v1/auth/mfa/totp:setup` | P0 | Custom action |
-| `GET /api/entitlements/check/{productId}` | `GET /api/v1/entitlements:check?productId=X` | P0 | Query param |
-| `PATCH /api/v1/payments/{id}/cancel` | `POST /api/v1/payments/{id}:cancel` | P0 | Custom action |
-| `POST /api/v1/wallet/create` | `POST /api/v1/wallets` | P0 | Standard create |
-| `POST /api/auth/webauthn/register/begin` | `POST /api/v1/auth/webauthn/registration:begin` | P0 | Custom action |
+| `POST /api/auth/api-keys/{keyId}/revoke` | `POST /v1/auth/api-keys/{keyId}:revoke` | P0 | Custom action |
+| `POST /v1/auth/mfa/setup/totp` | `POST /v1/auth/mfa/totp:setup` | P0 | Custom action |
+| `GET /api/entitlements/check/{productId}` | `GET /v1/entitlements:check?productId=X` | P0 | Query param |
+| `PATCH /api/v1/payments/{id}/cancel` | `POST /v1/payments/{id}:cancel` | P0 | Custom action |
+| `POST /api/v1/wallet/create` | `POST /v1/wallets` | P0 | Standard create |
+| `POST /api/auth/webauthn/register/begin` | `POST /v1/auth/webauthn/registration:begin` | P0 | Custom action |
+| `GET /api/promo-codes/active` | `GET /v1/promo-codes?status=active` | P1 | Query param |
+| `GET /api/v1/payments/canceled` | `GET /v1/payments?status=canceled` | P1 | Query param |
 
 *See individual sections for complete migration details.*
 
@@ -1066,11 +1058,13 @@ Create a standard `ApiErrorResponse` class and global exception filter.
 | Metric | Count |
 |--------|-------|
 | Total Endpoints Analyzed | 200+ |
-| Versioning Violations | 50+ endpoints |
 | Custom Action Syntax Violations | 30+ endpoints |
+| Path-based Filter Violations | 15+ endpoints |
 | Missing Standard Methods | 50+ operations |
-| Path Filter Violations | 15+ endpoints |
 | Missing Endpoints to Add | 60+ operations |
+| Version Prefix Missing | 20+ endpoints |
+
+> **Note:** URL base path (`api/` prefix) violations are **not counted** as they can be configured at infrastructure level.
 
 ---
 
