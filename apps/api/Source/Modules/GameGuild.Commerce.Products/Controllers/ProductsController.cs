@@ -37,6 +37,34 @@ public class ProductsController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>
+    /// Check if a product exists
+    /// </summary>
+    /// <param name="productId">Product ID</param>
+    /// <returns>200 if exists, 404 if not</returns>
+    [HttpHead("{productId:guid}")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ProductExists(Guid productId)
+    {
+        var query = new ProductExistsQuery(productId);
+        var exists = await mediator.Send(query);
+        return exists ? Ok() : NotFound();
+    }
+
+    /// <summary>
+    /// Get pricing options for a product
+    /// </summary>
+    /// <param name="productId">Product ID</param>
+    /// <returns>List of pricing options</returns>
+    [HttpGet("{productId:guid}/pricing")]
+    [AllowAnonymous]
+    public async Task<ActionResult<IReadOnlyList<ProductPricingDto>>> GetProductPricing(Guid productId)
+    {
+        var query = new GetProductPricingQuery(productId);
+        var pricing = await mediator.Send(query);
+        return Ok(pricing);
+    }
+
+    /// <summary>
     /// Get paginated list of products
     /// </summary>
     /// <param name="type">Filter by product type</param>
@@ -94,7 +122,21 @@ public class ProductsController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing product
+    /// Batch create multiple products
+    /// </summary>
+    /// <param name="request">Batch create request</param>
+    /// <returns>Created products</returns>
+    [HttpPost(":batch-create")]
+    [RequirePermission(ProductsPermission.Keys.Create)]
+    public async Task<ActionResult<List<ProductDto>>> BatchCreateProducts([FromBody] BatchCreateProductsRequest request)
+    {
+        var command = new BatchCreateProductsCommand(request.Products, request.TenantId);
+        var products = await mediator.Send(command);
+        return StatusCode(StatusCodes.Status201Created, products);
+    }
+
+    /// <summary>
+    /// Update an existing product (full update)
     /// </summary>
     /// <param name="productId">Product ID</param>
     /// <param name="request">Product update request</param>
@@ -118,6 +160,77 @@ public class ProductsController(IMediator mediator) : ControllerBase
             request.ExpectedVersion
         );
 
+        var product = await mediator.Send(command);
+        return Ok(product);
+    }
+
+    /// <summary>
+    /// Partially update a product (PATCH)
+    /// </summary>
+    /// <param name="productId">Product ID</param>
+    /// <param name="request">Partial update request</param>
+    /// <returns>Updated product</returns>
+    [HttpPatch("{productId:guid}")]
+    [RequirePermission(ProductsPermission.Keys.Update)]
+    public async Task<ActionResult<ProductDto>> PatchProduct(Guid productId, [FromBody] PatchProductRequest request)
+    {
+        var command = new PatchProductCommand(
+            productId,
+            request.Name,
+            request.Description,
+            request.ShortDescription,
+            request.ImageUrl,
+            request.Type,
+            request.IsBundle,
+            request.BundleItems,
+            request.ReferralCommissionPercentage,
+            request.MaxAffiliateDiscount,
+            request.AffiliateCommissionPercentage,
+            request.ExpectedVersion
+        );
+
+        var product = await mediator.Send(command);
+        return Ok(product);
+    }
+
+    /// <summary>
+    /// Activate a product
+    /// </summary>
+    /// <param name="productId">Product ID</param>
+    /// <returns>Activated product</returns>
+    [HttpPost("{productId:guid}:activate")]
+    [RequirePermission(ProductsPermission.Keys.Update)]
+    public async Task<ActionResult<ProductDto>> ActivateProduct(Guid productId)
+    {
+        var command = new ActivateProductCommand(productId);
+        var product = await mediator.Send(command);
+        return Ok(product);
+    }
+
+    /// <summary>
+    /// Deactivate a product
+    /// </summary>
+    /// <param name="productId">Product ID</param>
+    /// <returns>Deactivated product</returns>
+    [HttpPost("{productId:guid}:deactivate")]
+    [RequirePermission(ProductsPermission.Keys.Update)]
+    public async Task<ActionResult<ProductDto>> DeactivateProduct(Guid productId)
+    {
+        var command = new DeactivateProductCommand(productId);
+        var product = await mediator.Send(command);
+        return Ok(product);
+    }
+
+    /// <summary>
+    /// Archive a product (soft delete)
+    /// </summary>
+    /// <param name="productId">Product ID</param>
+    /// <returns>Archived product</returns>
+    [HttpPost("{productId:guid}:archive")]
+    [RequirePermission(ProductsPermission.Keys.Delete)]
+    public async Task<ActionResult<ProductDto>> ArchiveProduct(Guid productId)
+    {
+        var command = new ArchiveProductCommand(productId);
         var product = await mediator.Send(command);
         return Ok(product);
     }
@@ -178,3 +291,31 @@ public record UpdateProductRequest
     public decimal? AffiliateCommissionPercentage { get; init; }
     public long? ExpectedVersion { get; init; }
 }
+
+/// <summary>
+/// Request model for partial product update (PATCH)
+/// </summary>
+public record PatchProductRequest
+{
+    public string? Name { get; init; }
+    public string? Description { get; init; }
+    public string? ShortDescription { get; init; }
+    public string? ImageUrl { get; init; }
+    public ProductType? Type { get; init; }
+    public bool? IsBundle { get; init; }
+    public List<Guid>? BundleItems { get; init; }
+    public decimal? ReferralCommissionPercentage { get; init; }
+    public decimal? MaxAffiliateDiscount { get; init; }
+    public decimal? AffiliateCommissionPercentage { get; init; }
+    public long? ExpectedVersion { get; init; }
+}
+
+/// <summary>
+/// Request model for batch creating products
+/// </summary>
+public record BatchCreateProductsRequest
+{
+    public List<BatchProductCreateItem> Products { get; init; } = new();
+    public Guid? TenantId { get; init; }
+}
+

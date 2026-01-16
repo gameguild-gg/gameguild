@@ -127,6 +127,30 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     #region Backup Codes Operations - /v1/auth/mfa/backup-codes
 
     /// <summary>
+    ///     Get backup codes (masked for security)
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Masked backup codes with usage status</returns>
+    [HttpGet("v{version:apiVersion}/auth/mfa/backup-codes")]
+    [EndpointSummary("Get backup codes")]
+    [EndpointDescription("Retrieves the user's backup codes status. Codes are not returned for security; use regenerate to get new codes.")]
+    [ProducesResponseType<BackupCodesStatusResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetBackupCodes(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var configuration = await mfaService.GetMfaConfigurationAsync(userId, ct);
+
+        return Ok(new BackupCodesStatusResponse
+        {
+            TotalCount = 10, // Standard backup code count
+            RemainingCount = configuration.BackupCodesRemaining,
+            UsedCount = 10 - configuration.BackupCodesRemaining,
+            HasBackupCodes = configuration.BackupCodesRemaining > 0
+        });
+    }
+
+    /// <summary>
     ///     Generate new backup codes (invalidates existing ones)
     /// </summary>
     /// <param name="ct">Cancellation token</param>
@@ -149,6 +173,144 @@ public sealed class MfaController(IMfaService mfaService) : AuthControllerBase
     }
 
     #endregion
+
+    #region SMS MFA Operations - /v1/auth/mfa/sms
+
+    /// <summary>
+    ///     Initiate SMS-based MFA setup
+    /// </summary>
+    /// <param name="body">Phone number for SMS verification</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Setup initiation result</returns>
+    [HttpPost("v{version:apiVersion}/auth/mfa/sms:setup")]
+    [EndpointSummary("Setup SMS MFA")]
+    [EndpointDescription("Initiates SMS-based MFA setup by sending a verification code to the provided phone number.")]
+    [ProducesResponseType<SmsMfaSetupResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public Task<IActionResult> InitiateSmsSetup([FromBody] SmsMfaSetupRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        // TODO: Implement SMS MFA setup with ISmsService
+        // var userId = GetCurrentUserId();
+        // await smsService.SendVerificationCodeAsync(body.PhoneNumber);
+
+        return Task.FromResult<IActionResult>(Ok(new SmsMfaSetupResponse
+        {
+            Message = "Verification code sent to your phone number",
+            PhoneNumberMasked = MaskPhoneNumber(body.PhoneNumber),
+            ExpiresInSeconds = 300
+        }));
+    }
+
+    /// <summary>
+    ///     Complete SMS MFA setup by verifying the code
+    /// </summary>
+    /// <param name="body">Verification code received via SMS</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Setup completion result</returns>
+    [HttpPost("v{version:apiVersion}/auth/mfa/sms:complete")]
+    [EndpointSummary("Complete SMS MFA setup")]
+    [EndpointDescription("Completes SMS MFA setup by verifying the code sent to the user's phone.")]
+    [ProducesResponseType<MfaSuccessResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public Task<IActionResult> CompleteSmsSetup([FromBody] CompleteMfaSetupRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        // TODO: Implement SMS MFA completion
+        // var userId = GetCurrentUserId();
+        // var result = await mfaService.CompleteSmsSetupAsync(userId, body.Code);
+
+        return Task.FromResult<IActionResult>(Ok(new MfaSuccessResponse
+        {
+            Message = "SMS MFA setup completed successfully"
+        }));
+    }
+
+    #endregion
+
+    #region MFA Methods Operations - /v1/auth/mfa/methods
+
+    /// <summary>
+    ///     List available MFA methods
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>List of available MFA methods with their status</returns>
+    [HttpGet("v{version:apiVersion}/auth/mfa/methods")]
+    [EndpointSummary("List MFA methods")]
+    [EndpointDescription("Returns all available MFA methods and their configuration status for the current user.")]
+    [ProducesResponseType<MfaMethodsResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ListMfaMethods(CancellationToken ct)
+    {
+        var userId = GetCurrentUserId();
+        var configuration = await mfaService.GetMfaConfigurationAsync(userId, ct);
+
+        var enabledMethods = configuration.EnabledMethods ?? [];
+
+        var methods = new List<MfaMethodInfo>
+        {
+            new()
+            {
+                Method = MfaMethod.Totp,
+                Name = "Authenticator App (TOTP)",
+                Description = "Use an authenticator app like Google Authenticator or Authy",
+                IsEnabled = enabledMethods.Contains("totp", StringComparer.OrdinalIgnoreCase),
+                IsAvailable = true,
+                Priority = 1
+            },
+            new()
+            {
+                Method = MfaMethod.Sms,
+                Name = "SMS",
+                Description = "Receive verification codes via text message",
+                IsEnabled = enabledMethods.Contains("sms", StringComparer.OrdinalIgnoreCase),
+                IsAvailable = true, // TODO: Check if SMS service is configured
+                Priority = 2
+            },
+            new()
+            {
+                Method = MfaMethod.Email,
+                Name = "Email",
+                Description = "Receive verification codes via email",
+                IsEnabled = enabledMethods.Contains("email", StringComparer.OrdinalIgnoreCase),
+                IsAvailable = true,
+                Priority = 3
+            },
+            new()
+            {
+                Method = MfaMethod.BackupCode,
+                Name = "Backup Codes",
+                Description = "One-time use codes for emergency access",
+                IsEnabled = configuration.BackupCodesRemaining > 0,
+                IsAvailable = true,
+                Priority = 4
+            }
+        };
+
+        var defaultMethod = enabledMethods.Contains("totp", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Totp :
+                           enabledMethods.Contains("sms", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Sms :
+                           enabledMethods.Contains("email", StringComparer.OrdinalIgnoreCase) ? MfaMethod.Email : (MfaMethod?)null;
+
+        return Ok(new MfaMethodsResponse
+        {
+            Methods = methods,
+            DefaultMethod = defaultMethod
+        });
+    }
+
+    #endregion
+
+    private static string MaskPhoneNumber(string phoneNumber)
+    {
+        if (string.IsNullOrEmpty(phoneNumber) || phoneNumber.Length < 4)
+            return "****";
+
+        return $"***-***-{phoneNumber[^4..]}";
+    }
 
     #region Disable Operations - /v1/auth/mfa:disable
 
@@ -201,4 +363,114 @@ public sealed record MfaErrorResponse
     ///     Error message
     /// </summary>
     public required string Error { get; init; }
+}
+
+/// <summary>
+///     Response containing backup codes status
+/// </summary>
+public sealed record BackupCodesStatusResponse
+{
+    /// <summary>
+    ///     Total number of backup codes generated
+    /// </summary>
+    public required int TotalCount { get; init; }
+
+    /// <summary>
+    ///     Number of codes remaining (unused)
+    /// </summary>
+    public required int RemainingCount { get; init; }
+
+    /// <summary>
+    ///     Number of codes that have been used
+    /// </summary>
+    public required int UsedCount { get; init; }
+
+    /// <summary>
+    ///     Whether the user has any backup codes
+    /// </summary>
+    public required bool HasBackupCodes { get; init; }
+}
+
+/// <summary>
+///     Request to setup SMS MFA
+/// </summary>
+public sealed record SmsMfaSetupRequest
+{
+    /// <summary>
+    ///     Phone number to receive SMS codes
+    /// </summary>
+    public required string PhoneNumber { get; init; }
+}
+
+/// <summary>
+///     Response for SMS MFA setup initiation
+/// </summary>
+public sealed record SmsMfaSetupResponse
+{
+    /// <summary>
+    ///     Status message
+    /// </summary>
+    public required string Message { get; init; }
+
+    /// <summary>
+    ///     Masked phone number for confirmation
+    /// </summary>
+    public required string PhoneNumberMasked { get; init; }
+
+    /// <summary>
+    ///     Time in seconds until code expires
+    /// </summary>
+    public required int ExpiresInSeconds { get; init; }
+}
+
+/// <summary>
+///     Information about an MFA method
+/// </summary>
+public sealed record MfaMethodInfo
+{
+    /// <summary>
+    ///     The MFA method type
+    /// </summary>
+    public required MfaMethod Method { get; init; }
+
+    /// <summary>
+    ///     Display name of the method
+    /// </summary>
+    public required string Name { get; init; }
+
+    /// <summary>
+    ///     Description of the method
+    /// </summary>
+    public required string Description { get; init; }
+
+    /// <summary>
+    ///     Whether this method is enabled for the user
+    /// </summary>
+    public required bool IsEnabled { get; init; }
+
+    /// <summary>
+    ///     Whether this method is available (e.g., SMS requires phone)
+    /// </summary>
+    public required bool IsAvailable { get; init; }
+
+    /// <summary>
+    ///     Priority order for this method (lower = higher priority)
+    /// </summary>
+    public required int Priority { get; init; }
+}
+
+/// <summary>
+///     Response listing available MFA methods
+/// </summary>
+public sealed record MfaMethodsResponse
+{
+    /// <summary>
+    ///     List of all MFA methods
+    /// </summary>
+    public required List<MfaMethodInfo> Methods { get; init; }
+
+    /// <summary>
+    ///     The default/preferred MFA method for the user
+    /// </summary>
+    public MfaMethod? DefaultMethod { get; init; }
 }

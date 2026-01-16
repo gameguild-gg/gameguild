@@ -53,6 +53,28 @@ public interface IServiceAccountService
     Task UnlockAsync(Guid serviceAccountId, CancellationToken cancellationToken = default);
 
     /// <summary>
+    ///     Locks a service account with a reason.
+    /// </summary>
+    /// <param name="serviceAccountId">Service account ID</param>
+    /// <param name="reason">Reason for locking</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    Task LockAsync(Guid serviceAccountId, string reason, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Gets the audit log for a service account.
+    /// </summary>
+    /// <param name="serviceAccountId">Service account ID</param>
+    /// <param name="skip">Number of entries to skip</param>
+    /// <param name="take">Number of entries to take</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paginated list of audit entries</returns>
+    Task<PagedAuditResult> GetAuditLogAsync(
+        Guid serviceAccountId,
+        int skip = 0,
+        int take = 20,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     ///     Deactivates a service account.
     /// </summary>
     Task DeactivateAsync(Guid serviceAccountId, CancellationToken cancellationToken = default);

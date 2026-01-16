@@ -78,6 +78,11 @@ public interface IPromoCodeRepository
     Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Get usage statistics for a promo code
+    /// </summary>
+    Task<PromoCodeUsageDto> GetUsageStatsAsync(Guid promoCodeId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Save changes to the database
     /// </summary>
     Task SaveChangesAsync(CancellationToken cancellationToken = default);

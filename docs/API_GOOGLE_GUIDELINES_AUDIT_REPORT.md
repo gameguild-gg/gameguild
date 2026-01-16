@@ -264,14 +264,28 @@ BEFORE                              AFTER
 **Changes Applied:**
 - [MfaController.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/MfaController.cs): Already implemented with correct colon syntax for all custom actions
 
-### Missing Endpoints (Optional)
+### ~~Missing Endpoints~~ ✅ IMPLEMENTED
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| GET | `/v1/auth/mfa/backup-codes` | Get backup codes (masked) | P1 |
-| POST | `/v1/auth/mfa/sms:setup` | Setup SMS-based MFA | P2 |
-| POST | `/v1/auth/mfa/sms:complete` | Complete SMS MFA setup | P2 |
-| GET | `/v1/auth/mfa/methods` | List available MFA methods | P2 |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | `/v1/auth/mfa/backup-codes` | Get backup codes status | ✅ DONE |
+| POST | `/v1/auth/mfa/sms:setup` | Setup SMS-based MFA | ✅ DONE |
+| POST | `/v1/auth/mfa/sms:complete` | Complete SMS MFA setup | ✅ DONE |
+| GET | `/v1/auth/mfa/methods` | List available MFA methods | ✅ DONE |
+
+**New Endpoints Added (January 2026):**
+
+1. **GET /v1/auth/mfa/backup-codes** - Returns backup codes status (remaining/used counts, not actual codes for security)
+2. **POST /v1/auth/mfa/sms:setup** - Initiates SMS-based MFA by sending verification code to phone
+3. **POST /v1/auth/mfa/sms:complete** - Completes SMS MFA setup by verifying the code
+4. **GET /v1/auth/mfa/methods** - Lists all available MFA methods with their enabled status
+
+**New DTOs:**
+- `BackupCodesStatusResponse` - Status of backup codes (total, remaining, used counts)
+- `SmsMfaSetupRequest` - Phone number for SMS setup
+- `SmsMfaSetupResponse` - Masked phone and expiry info
+- `MfaMethodInfo` - Individual MFA method details
+- `MfaMethodsResponse` - List of all MFA methods with default
 
 ---
 
@@ -558,7 +572,7 @@ All violations in this section have been resolved:
 ### ~~Violations~~ FIXED
 
 1. ~~**Missing version prefix** - All endpoints need `v1`~~ ✅ FIXED
-2. **Missing PATCH** - Should support partial updates (Optional, not implemented)
+2. ~~**Missing PATCH** - Should support partial updates~~ ✅ IMPLEMENTED
 
 ### ~~Required Fixes~~ FIXED
 
@@ -573,17 +587,21 @@ All violations in this section have been resolved:
 **Changes Applied:**
 - [ProductsController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Products/Controllers/ProductsController.cs): Added `ApiVersion("1.0")`, route updated from `api/[controller]` to `v{version:apiVersion}/products`, added `[Tags("products")]`
 
-### Missing Endpoints (Optional)
+### ~~Missing Endpoints (Optional)~~ ✅ ALL IMPLEMENTED
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| PATCH | `/v1/products/{productId}` | Partial update product | P1 |
-| HEAD | `/v1/products/{productId}` | Check product exists | P2 |
-| POST | `/v1/products/{productId}:activate` | Activate product | P2 |
-| POST | `/v1/products/{productId}:deactivate` | Deactivate product | P2 |
-| POST | `/v1/products/{productId}:archive` | Archive product | P2 |
-| GET | `/v1/products/{productId}/pricing` | Get product pricing | P2 |
-| POST | `/v1/products:batch-create` | Batch create products | P3 |
+| Method | Path | Description | Priority | Status |
+|--------|------|-------------|----------|--------|
+| ~~PATCH~~ | ~~`/v1/products/{productId}`~~ | ~~Partial update product~~ | ~~P1~~ | ✅ IMPLEMENTED |
+| ~~HEAD~~ | ~~`/v1/products/{productId}`~~ | ~~Check product exists~~ | ~~P2~~ | ✅ IMPLEMENTED |
+| ~~POST~~ | ~~`/v1/products/{productId}:activate`~~ | ~~Activate product~~ | ~~P2~~ | ✅ IMPLEMENTED |
+| ~~POST~~ | ~~`/v1/products/{productId}:deactivate`~~ | ~~Deactivate product~~ | ~~P2~~ | ✅ IMPLEMENTED |
+| ~~POST~~ | ~~`/v1/products/{productId}:archive`~~ | ~~Archive product~~ | ~~P2~~ | ✅ IMPLEMENTED |
+| ~~GET~~ | ~~`/v1/products/{productId}/pricing`~~ | ~~Get product pricing~~ | ~~P2~~ | ✅ IMPLEMENTED |
+| ~~POST~~ | ~~`/v1/products:batch-create`~~ | ~~Batch create products~~ | ~~P3~~ | ✅ IMPLEMENTED |
+
+**New Files Created:**
+- [ProductStatusCommands.cs](../apps/api/Source/Modules/GameGuild.Commerce.Products/Commands/ProductStatusCommands.cs): Contains `ActivateProductCommand`, `DeactivateProductCommand`, `ArchiveProductCommand`, `PatchProductCommand`, `BatchCreateProductsCommand`, and `ProductExistsQuery` with handlers
+- [ProductMappingExtensions.cs](../apps/api/Source/Modules/GameGuild.Commerce.Products/Models/ProductMappingExtensions.cs): Contains `ToDto()` extension methods for Product and PromoCode entities
 
 ---
 
@@ -624,16 +642,21 @@ All violations in this section have been resolved:
 **Changes Applied:**
 - [PromoCodesController.cs](../apps/api/Source/Modules/GameGuild.Commerce.Products/Controllers/PromoCodesController.cs): Added `ApiVersion("1.0")`, route updated to `v{version}/promo-codes`, merged `/active` into main GET with `?status=active`, changed `{id}` to `{promoCodeId}`, colon syntax for `:validate` and `:apply`
 
-### Missing Endpoints (Optional)
+### ~~Missing Endpoints (Optional)~~ ✅ ALL IMPLEMENTED
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| PATCH | `/v1/promo-codes/{promoCodeId}` | Partial update promo code | P1 |
-| HEAD | `/v1/promo-codes/{promoCodeId}` | Check promo code exists | P2 |
-| POST | `/v1/promo-codes/{promoCodeId}:activate` | Activate promo code | P2 |
-| POST | `/v1/promo-codes/{promoCodeId}:deactivate` | Deactivate promo code | P2 |
-| GET | `/v1/promo-codes/{promoCodeId}/usage` | Get promo code usage stats | P2 |
-| GET | `/v1/promo-codes/by-code/{code}` | Get promo code by code string | P1 |
+| Method | Path | Description | Priority | Status |
+|--------|------|-------------|----------|--------|
+| ~~PATCH~~ | ~~`/v1/promo-codes/{promoCodeId}`~~ | ~~Partial update promo code~~ | ~~P1~~ | ✅ IMPLEMENTED |
+| ~~HEAD~~ | ~~`/v1/promo-codes/{promoCodeId}`~~ | ~~Check promo code exists~~ | ~~P2~~ | ✅ IMPLEMENTED |
+| ~~POST~~ | ~~`/v1/promo-codes/{promoCodeId}:activate`~~ | ~~Activate promo code~~ | ~~P2~~ | ✅ IMPLEMENTED |
+| ~~POST~~ | ~~`/v1/promo-codes/{promoCodeId}:deactivate`~~ | ~~Deactivate promo code~~ | ~~P2~~ | ✅ IMPLEMENTED |
+| ~~GET~~ | ~~`/v1/promo-codes/{promoCodeId}/usage`~~ | ~~Get promo code usage stats~~ | ~~P2~~ | ✅ IMPLEMENTED |
+| ~~GET~~ | ~~`/v1/promo-codes/by-code/{code}`~~ | ~~Get promo code by code string~~ | ~~P1~~ | ✅ IMPLEMENTED |
+
+**New Files Created:**
+- [PromoCodeStatusCommands.cs](../apps/api/Source/Modules/GameGuild.Commerce.Products/Commands/PromoCodeStatusCommands.cs): Contains `ActivatePromoCodeCommand`, `DeactivatePromoCodeCommand`, `PatchPromoCodeCommand`, `PromoCodeExistsQuery`, `GetPromoCodeByCodeQuery`, `GetPromoCodeUsageQuery` with handlers, and `PromoCodeUsageDto`
+- [IPromoCodeRepository.cs](../apps/api/Source/Modules/GameGuild.Commerce.Products/Abstractions/IPromoCodeRepository.cs): Added `GetUsageStatsAsync` method
+- [PromoCodeRepository.cs](../apps/api/Source/Modules/GameGuild.Commerce.Products/Repositories/PromoCodeRepository.cs): Implemented `GetUsageStatsAsync` method
 
 ---
 

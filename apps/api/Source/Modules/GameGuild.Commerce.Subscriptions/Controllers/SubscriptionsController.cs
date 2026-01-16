@@ -178,6 +178,104 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     }
 
     /// <summary>
+    ///     Partially update a subscription
+    /// </summary>
+    /// <param name="subscriptionId">Subscription ID</param>
+    /// <param name="body">Partial update request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPatch("v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
+    [EndpointSummary("Partially update subscription")]
+    [EndpointDescription("Updates specific fields of a subscription. Only provided fields are updated.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PatchSubscription(Guid subscriptionId, [FromBody] PatchSubscriptionRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        await sender.Send(new PatchSubscriptionCommand(
+            subscriptionId,
+            body.BillingCycle,
+            body.AutoRenew,
+            body.ExternalSubscriptionId,
+            body.ExternalCustomerId,
+            body.Metadata), ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Full update of a subscription
+    /// </summary>
+    /// <param name="subscriptionId">Subscription ID</param>
+    /// <param name="body">Full update request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPut("v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
+    [EndpointSummary("Full update subscription")]
+    [EndpointDescription("Performs a full replacement of subscription data. All fields will be updated.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PutSubscription(Guid subscriptionId, [FromBody] PutSubscriptionRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        await sender.Send(new UpdateSubscriptionCommand(
+            subscriptionId,
+            body.PlanId,
+            body.BillingCycle,
+            body.Amount,
+            body.AutoRenew,
+            body.ExternalSubscriptionId,
+            body.ExternalCustomerId), ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Delete a subscription
+    /// </summary>
+    /// <param name="subscriptionId">Subscription ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpDelete("v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
+    [EndpointSummary("Delete subscription")]
+    [EndpointDescription("Permanently deletes a subscription. Use cancel action for soft removal.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteSubscription(Guid subscriptionId, CancellationToken ct)
+    {
+        await sender.Send(new DeleteSubscriptionCommand(subscriptionId), ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Get subscription invoices
+    /// </summary>
+    /// <param name="subscriptionId">Subscription ID</param>
+    /// <param name="page">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 20, max: 100)</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Paginated list of invoices</returns>
+    [HttpGet("v{version:apiVersion}/subscriptions/{subscriptionId:guid}/invoices")]
+    [EnableRateLimiting(RateLimitPolicies.Api)]
+    [EndpointSummary("Get subscription invoices")]
+    [EndpointDescription("Retrieves the invoice history for a specific subscription.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSubscriptionInvoices(
+        Guid subscriptionId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
+    {
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 20;
+        if (pageSize > 100) pageSize = 100;
+
+        var invoices = await sender.Send(new GetSubscriptionInvoicesQuery(subscriptionId, page, pageSize), ct);
+        return Ok(invoices);
+    }
+
+    /// <summary>
     ///     Get subscription usage and limits
     /// </summary>
     /// <param name="subscriptionId">Subscription ID</param>
@@ -311,6 +409,44 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     {
         ArgumentNullException.ThrowIfNull(body);
         await sender.Send(new SuspendSubscriptionCommand(subscriptionId, body.Reason), ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Pause subscription billing
+    /// </summary>
+    /// <param name="subscriptionId">Subscription ID</param>
+    /// <param name="body">Pause configuration</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:pause")]
+    [EndpointSummary("Pause subscription billing")]
+    [EndpointDescription("Pauses billing for a subscription while keeping the subscription active. Useful for temporary payment holds.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PauseSubscription(Guid subscriptionId, [FromBody] PauseSubscriptionRequest body, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        await sender.Send(new PauseSubscriptionCommand(subscriptionId, body.PauseUntil, body.Reason), ct);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Resume paused subscription billing
+    /// </summary>
+    /// <param name="subscriptionId">Subscription ID</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPost("v{version:apiVersion}/subscriptions/{subscriptionId:guid}:resume")]
+    [EndpointSummary("Resume subscription billing")]
+    [EndpointDescription("Resumes billing for a paused subscription.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ResumeSubscription(Guid subscriptionId, CancellationToken ct)
+    {
+        await sender.Send(new ResumeSubscriptionCommand(subscriptionId), ct);
         return NoContent();
     }
 
@@ -471,6 +607,26 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     public record AutoRenewRequest(bool AutoRenew);
 
     public record ExternalIdsRequest(string? ExternalSubscriptionId, string? ExternalCustomerId);
+
+    /// <summary>Request to partially update a subscription</summary>
+    public record PatchSubscriptionRequest(
+        BillingCycle? BillingCycle = null,
+        bool? AutoRenew = null,
+        string? ExternalSubscriptionId = null,
+        string? ExternalCustomerId = null,
+        string? Metadata = null);
+
+    /// <summary>Request to fully update a subscription</summary>
+    public record PutSubscriptionRequest(
+        Guid PlanId,
+        BillingCycle BillingCycle,
+        decimal Amount,
+        bool AutoRenew,
+        string? ExternalSubscriptionId = null,
+        string? ExternalCustomerId = null);
+
+    /// <summary>Request to pause subscription billing</summary>
+    public record PauseSubscriptionRequest(DateTime? PauseUntil = null, string? Reason = null);
 
     #region Private Methods
 

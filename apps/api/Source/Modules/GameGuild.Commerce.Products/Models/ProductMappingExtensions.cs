@@ -1,0 +1,87 @@
+namespace GameGuild.Commerce.Products;
+
+/// <summary>
+/// Extension methods for mapping entities to DTOs
+/// </summary>
+public static class ProductMappingExtensions
+{
+    /// <summary>
+    /// Maps a Product entity to ProductDto
+    /// </summary>
+    public static ProductDto ToDto(this Product product, List<ProductPricingDto>? pricing = null)
+    {
+        return new ProductDto(
+            product.Id,
+            product.Name,
+            product.Description,
+            product.ShortDescription,
+            product.ImageUrl,
+            product.Type,
+            product.IsBundle,
+            product.CreatorId,
+#pragma warning disable CS0618 // Suppress obsolete warning for backwards compatibility
+            product.GetBundleItemIds(),
+#pragma warning restore CS0618
+            product.CommissionConfig?.ReferralCommissionPercentage ?? 30m,
+            product.CommissionConfig?.MaxAffiliateDiscount ?? 0m,
+            product.CommissionConfig?.AffiliateCommissionPercentage ?? 30m,
+            product.CreatedAt,
+            product.UpdatedAt,
+            pricing
+        );
+    }
+
+    /// <summary>
+    /// Maps a PromoCode entity to PromoCodeDto
+    /// </summary>
+    public static PromoCodeDto ToDto(this PromoCode promoCode, int? usageCount = null)
+    {
+        return new PromoCodeDto(
+            promoCode.Id,
+            promoCode.Code,
+            promoCode.Name,
+            promoCode.Description,
+            promoCode.Type,
+            promoCode.DiscountPercentage,
+            promoCode.DiscountAmount,
+            promoCode.Currency,
+            promoCode.MinimumOrderAmount,
+            promoCode.MaxUses,
+            promoCode.MaxUsesPerUser,
+            promoCode.ValidFrom,
+            promoCode.ValidUntil,
+            promoCode.IsActive,
+            promoCode.IsExclusive,
+            promoCode.StackingPriority,
+            promoCode.ProductId,
+            usageCount ?? promoCode.PromoCodeUses?.Count ?? 0,
+            promoCode.CreatedAt,
+            promoCode.UpdatedAt
+        );
+    }
+
+    /// <summary>
+    /// Maps a ProductPricing entity to ProductPricingDto
+    /// </summary>
+    public static ProductPricingDto ToDto(this ProductPricing pricing)
+    {
+        var now = DateTime.UtcNow;
+        var isSaleActive = pricing.SalePrice.HasValue 
+            && (!pricing.SaleStartDate.HasValue || pricing.SaleStartDate <= now)
+            && (!pricing.SaleEndDate.HasValue || pricing.SaleEndDate > now);
+
+        return new ProductPricingDto(
+            pricing.Id,
+            pricing.ProductId,
+            pricing.Name,
+            pricing.BasePrice,
+            pricing.SalePrice,
+            pricing.Currency,
+            pricing.SaleStartDate,
+            pricing.SaleEndDate,
+            pricing.IsDefault,
+            isSaleActive && pricing.SalePrice.HasValue ? pricing.SalePrice.Value : pricing.BasePrice,
+            isSaleActive
+        );
+    }
+}

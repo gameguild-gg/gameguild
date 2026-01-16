@@ -156,6 +156,42 @@ public class PromoCodeRepository(IApplicationDbContext context)
     }
 
     /// <inheritdoc />
+    public async Task<PromoCodeUsageDto> GetUsageStatsAsync(Guid promoCodeId, CancellationToken cancellationToken = default)
+    {
+        var promoCode = await GetByIdAsync(promoCodeId, cancellationToken).ConfigureAwait(false);
+        if (promoCode == null)
+        {
+            throw new PromoCodeNotFoundException(promoCodeId);
+        }
+
+        var usages = await PromoCodeUses
+            .Where(u => u.PromoCodeId == promoCodeId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        var totalUses = usages.Count;
+        var uniqueUsers = usages.Select(u => u.UserId).Distinct().Count();
+        var totalDiscount = usages.Sum(u => u.DiscountApplied);
+        var avgDiscount = totalUses > 0 ? totalDiscount / totalUses : 0;
+        var firstUsed = usages.Min(u => (DateTime?)u.CreatedAt);
+        var lastUsed = usages.Max(u => (DateTime?)u.CreatedAt);
+        var remaining = promoCode.MaxUses.HasValue ? promoCode.MaxUses.Value - totalUses : (int?)null;
+
+        return new PromoCodeUsageDto(
+            promoCodeId,
+            promoCode.Code,
+            totalUses,
+            uniqueUsers,
+            totalDiscount,
+            avgDiscount,
+            promoCode.MaxUses,
+            remaining,
+            firstUsed,
+            lastUsed
+        );
+    }
+
+    /// <inheritdoc />
     public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

@@ -173,6 +173,70 @@ public class ServiceAccountsController : AuthControllerBase
     }
 
     /// <summary>
+    ///     Checks if a service account exists by ID.
+    /// </summary>
+    /// <param name="serviceAccountId">Service account ID to check</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>200 OK if exists, 404 Not Found if not</returns>
+    [HttpHead("{serviceAccountId:guid}")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Check if service account exists")]
+    [EndpointDescription("Checks if a service account exists without returning the body.")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> CheckServiceAccountExists(Guid serviceAccountId, CancellationToken cancellationToken)
+    {
+        var account = await _serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        return account == null ? NotFound() : Ok();
+    }
+
+    /// <summary>
+    ///     Partially updates a service account.
+    /// </summary>
+    /// <param name="serviceAccountId">Service account ID</param>
+    /// <param name="request">Update request with optional fields</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPatch("{serviceAccountId:guid}")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Partially update service account")]
+    [EndpointDescription("Updates specific fields of a service account. Only provided fields are updated.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> PatchServiceAccount(
+        Guid serviceAccountId,
+        [FromBody] PatchServiceAccountRequest request,
+        CancellationToken cancellationToken)
+    {
+        var account = await _serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        if (account == null)
+        {
+            return NotFound();
+        }
+
+        // Update only provided fields
+        if (!string.IsNullOrEmpty(request.Name))
+        {
+            account.Name = request.Name;
+        }
+        if (request.Description != null)
+        {
+            account.Description = request.Description;
+        }
+        if (!string.IsNullOrEmpty(request.Scopes))
+        {
+            await _serviceAccountService.UpdateScopesAsync(serviceAccountId, request.Scopes, cancellationToken);
+        }
+        if (request.ExpiresAt.HasValue)
+        {
+            account.ExpiresAt = request.ExpiresAt.Value;
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
     ///     Gets all service accounts with optional tenant filtering.
     /// </summary>
     /// <param name="tenantId">Optional tenant ID to filter service accounts</param>
@@ -240,6 +304,77 @@ public class ServiceAccountsController : AuthControllerBase
         {
             return NotFound();
         }
+    }
+
+    /// <summary>
+    ///     Locks a service account to prevent authentication.
+    /// </summary>
+    /// <param name="serviceAccountId">Service account ID</param>
+    /// <param name="request">Lock request with reason</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>No content on success</returns>
+    [HttpPost("{serviceAccountId:guid}:lock")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Lock service account")]
+    [EndpointDescription("Locks a service account to prevent it from authenticating.")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Lock(Guid serviceAccountId, [FromBody] LockServiceAccountRequest request, CancellationToken cancellationToken)
+    {
+        var account = await _serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        if (account == null)
+        {
+            return NotFound();
+        }
+
+        await _serviceAccountService.LockAsync(serviceAccountId, request.Reason, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
+    ///     Gets the audit log for a service account.
+    /// </summary>
+    /// <param name="serviceAccountId">Service account ID</param>
+    /// <param name="page">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 20, max: 100)</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paginated audit log entries</returns>
+    [HttpGet("{serviceAccountId:guid}/audit-log")]
+    [Authorize(Policy = "RequireAdminRole")]
+    [EndpointSummary("Get service account audit log")]
+    [EndpointDescription("Retrieves the audit log of actions performed on or by a service account.")]
+    [ProducesResponseType(typeof(ServiceAccountAuditLogResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAuditLog(
+        Guid serviceAccountId,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var account = await _serviceAccountService.GetByIdAsync(serviceAccountId, cancellationToken);
+        if (account == null)
+        {
+            return NotFound();
+        }
+
+        if (page < 1) page = 1;
+        if (pageSize < 1) pageSize = 20;
+        if (pageSize > 100) pageSize = 100;
+
+        var auditLog = await _serviceAccountService.GetAuditLogAsync(
+            serviceAccountId,
+            (page - 1) * pageSize,
+            pageSize,
+            cancellationToken);
+
+        return Ok(new ServiceAccountAuditLogResponse
+        {
+            ServiceAccountId = serviceAccountId,
+            Entries = auditLog.Items,
+            TotalCount = auditLog.TotalCount,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     /// <summary>
@@ -446,6 +581,50 @@ public class SecretRotationResponse
 public class UpdateScopesRequest
 {
     public string Scopes { get; set; } = string.Empty;
+}
+
+/// <summary>
+///     Request to partially update a service account.
+/// </summary>
+public class PatchServiceAccountRequest
+{
+    public string? Name { get; set; }
+    public string? Description { get; set; }
+    public string? Scopes { get; set; }
+    public DateTime? ExpiresAt { get; set; }
+}
+
+/// <summary>
+///     Request to lock a service account.
+/// </summary>
+public class LockServiceAccountRequest
+{
+    public string Reason { get; set; } = string.Empty;
+}
+
+/// <summary>
+///     Response for service account audit log.
+/// </summary>
+public class ServiceAccountAuditLogResponse
+{
+    public Guid ServiceAccountId { get; set; }
+    public IEnumerable<ServiceAccountAuditEntry> Entries { get; set; } = [];
+    public int TotalCount { get; set; }
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+}
+
+/// <summary>
+///     Single entry in service account audit log.
+/// </summary>
+public class ServiceAccountAuditEntry
+{
+    public Guid Id { get; set; }
+    public DateTime Timestamp { get; set; }
+    public string Action { get; set; } = string.Empty;
+    public string? PerformedBy { get; set; }
+    public string? IpAddress { get; set; }
+    public string? Details { get; set; }
 }
 
 #endregion

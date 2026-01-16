@@ -71,6 +71,58 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>
+    /// Check if a promo code exists
+    /// </summary>
+    /// <param name="promoCodeId">The promo code ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpHead("{promoCodeId:guid}")]
+    public async Task<IActionResult> PromoCodeExists(
+        Guid promoCodeId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new PromoCodeExistsQuery(promoCodeId);
+        var exists = await mediator.Send(query, cancellationToken).ConfigureAwait(false);
+        return exists ? Ok() : NotFound();
+    }
+
+    /// <summary>
+    /// Get a promo code by its code string
+    /// </summary>
+    /// <param name="code">The promo code string</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpGet("by-code/{code}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<PromoCodeDto>> GetPromoCodeByCode(
+        string code,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetPromoCodeByCodeQuery(code);
+        var result = await mediator.Send(query, cancellationToken).ConfigureAwait(false);
+
+        if (result == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Get usage statistics for a promo code
+    /// </summary>
+    /// <param name="promoCodeId">The promo code ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpGet("{promoCodeId:guid}/usage")]
+    public async Task<ActionResult<PromoCodeUsageDto>> GetPromoCodeUsage(
+        Guid promoCodeId,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new GetPromoCodeUsageQuery(promoCodeId);
+        var result = await mediator.Send(query, cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Create a new promo code
     /// </summary>
     [HttpPost]
@@ -104,7 +156,7 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
     }
 
     /// <summary>
-    /// Update an existing promo code
+    /// Update an existing promo code (full update)
     /// </summary>
     /// <param name="promoCodeId">The promo code ID</param>
     /// <param name="request">Update request</param>
@@ -135,6 +187,74 @@ public class PromoCodesController(IMediator mediator) : ControllerBase
             request.ProductId
         );
 
+        var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Partially update a promo code (PATCH)
+    /// </summary>
+    /// <param name="promoCodeId">The promo code ID</param>
+    /// <param name="request">Partial update request</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpPatch("{promoCodeId:guid}")]
+    [RequirePermission(PromoCodesPermission.Keys.Update)]
+    public async Task<ActionResult<PromoCodeDto>> PatchPromoCode(
+        Guid promoCodeId,
+        [FromBody] PatchPromoCodeRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new PatchPromoCodeCommand(
+            promoCodeId,
+            request.Name,
+            request.Description,
+            request.Type,
+            request.DiscountPercentage,
+            request.DiscountAmount,
+            request.Currency,
+            request.MinimumOrderAmount,
+            request.MaxUses,
+            request.MaxUsesPerUser,
+            request.ValidFrom,
+            request.ValidUntil,
+            request.IsActive,
+            request.IsExclusive,
+            request.StackingPriority,
+            request.ProductId
+        );
+
+        var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Activate a promo code
+    /// </summary>
+    /// <param name="promoCodeId">The promo code ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpPost("{promoCodeId:guid}:activate")]
+    [RequirePermission(PromoCodesPermission.Keys.Update)]
+    public async Task<ActionResult<PromoCodeDto>> ActivatePromoCode(
+        Guid promoCodeId,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new ActivatePromoCodeCommand(promoCodeId);
+        var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Deactivate a promo code
+    /// </summary>
+    /// <param name="promoCodeId">The promo code ID</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    [HttpPost("{promoCodeId:guid}:deactivate")]
+    [RequirePermission(PromoCodesPermission.Keys.Update)]
+    public async Task<ActionResult<PromoCodeDto>> DeactivatePromoCode(
+        Guid promoCodeId,
+        CancellationToken cancellationToken = default)
+    {
+        var command = new DeactivatePromoCodeCommand(promoCodeId);
         var result = await mediator.Send(command, cancellationToken).ConfigureAwait(false);
         return Ok(result);
     }
@@ -228,6 +348,27 @@ public record CreatePromoCodeRequest(
 /// Request to update a promo code
 /// </summary>
 public record UpdatePromoCodeRequest(
+    string? Name = null,
+    string? Description = null,
+    PromoCodeType? Type = null,
+    decimal? DiscountPercentage = null,
+    decimal? DiscountAmount = null,
+    string? Currency = null,
+    decimal? MinimumOrderAmount = null,
+    int? MaxUses = null,
+    int? MaxUsesPerUser = null,
+    DateTime? ValidFrom = null,
+    DateTime? ValidUntil = null,
+    bool? IsActive = null,
+    bool? IsExclusive = null,
+    int? StackingPriority = null,
+    Guid? ProductId = null
+);
+
+/// <summary>
+/// Request to partially update a promo code (PATCH)
+/// </summary>
+public record PatchPromoCodeRequest(
     string? Name = null,
     string? Description = null,
     PromoCodeType? Type = null,

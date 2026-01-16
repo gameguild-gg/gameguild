@@ -166,6 +166,32 @@ public sealed class ServiceAccountService : IServiceAccountService
     }
 
     /// <inheritdoc />
+    public async Task LockAsync(Guid serviceAccountId, string reason, CancellationToken cancellationToken = default)
+    {
+        var serviceAccount = await _repository.GetByIdAsync(serviceAccountId, cancellationToken)
+                             ?? throw new InvalidOperationException($"Service account {serviceAccountId} not found");
+
+        serviceAccount.Lock(reason);
+        await _repository.UpdateAsync(serviceAccount, cancellationToken);
+
+        _logger.LogInformation("Locked service account {ServiceAccountId} with reason: {Reason}", serviceAccountId, reason);
+    }
+
+    /// <inheritdoc />
+    public Task<PagedAuditResult> GetAuditLogAsync(
+        Guid serviceAccountId,
+        int skip = 0,
+        int take = 20,
+        CancellationToken cancellationToken = default)
+    {
+        // Note: This is a placeholder implementation. 
+        // A full implementation would query an audit log table.
+        // For now, we return an empty result.
+        var entries = new List<ServiceAccountAuditEntry>();
+        return Task.FromResult(new PagedAuditResult(entries, 0));
+    }
+
+    /// <inheritdoc />
     public async Task DeactivateAsync(Guid serviceAccountId, CancellationToken cancellationToken = default)
     {
         var serviceAccount = await _repository.GetByIdAsync(serviceAccountId, cancellationToken)

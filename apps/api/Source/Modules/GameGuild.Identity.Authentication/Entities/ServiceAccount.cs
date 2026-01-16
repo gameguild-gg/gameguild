@@ -182,6 +182,17 @@ public class ServiceAccount
     }
 
     /// <summary>
+    ///     Locks the service account with a reason.
+    /// </summary>
+    /// <param name="reason">The reason for locking (logged for audit purposes)</param>
+    public void Lock(string reason)
+    {
+        IsLocked = true;
+        LockedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
     ///     Rotates the client secret.
     /// </summary>
     public void RotateSecret(string newSecretHash)

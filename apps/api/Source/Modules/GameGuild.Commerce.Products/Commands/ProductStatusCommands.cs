@@ -1,0 +1,225 @@
+using GameGuild.CQRS;
+
+namespace GameGuild.Commerce.Products;
+
+/// <summary>
+/// Command to activate a product
+/// </summary>
+/// <param name="ProductId">Product ID</param>
+public record ActivateProductCommand(Guid ProductId) : ICommand<ProductDto>;
+
+/// <summary>
+/// Handler for ActivateProductCommand
+/// </summary>
+public class ActivateProductHandler(IProductRepository repository) : ICommandHandler<ActivateProductCommand, ProductDto>
+{
+    public async Task<ProductDto> Handle(ActivateProductCommand request, CancellationToken cancellationToken)
+    {
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        if (product == null)
+        {
+            throw new ProductNotFoundException(request.ProductId);
+        }
+
+        // Product activation logic - if the entity had an IsActive flag, we'd set it here
+        // For now, this is a placeholder for future status management
+        product.UpdatedAt = DateTime.UtcNow;
+        
+        await repository.UpdateAsync(product, cancellationToken);
+        return product.ToDto();
+    }
+}
+
+/// <summary>
+/// Command to deactivate a product
+/// </summary>
+/// <param name="ProductId">Product ID</param>
+public record DeactivateProductCommand(Guid ProductId) : ICommand<ProductDto>;
+
+/// <summary>
+/// Handler for DeactivateProductCommand
+/// </summary>
+public class DeactivateProductHandler(IProductRepository repository) : ICommandHandler<DeactivateProductCommand, ProductDto>
+{
+    public async Task<ProductDto> Handle(DeactivateProductCommand request, CancellationToken cancellationToken)
+    {
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        if (product == null)
+        {
+            throw new ProductNotFoundException(request.ProductId);
+        }
+
+        // Product deactivation logic - if the entity had an IsActive flag, we'd set it here
+        // For now, this is a placeholder for future status management
+        product.UpdatedAt = DateTime.UtcNow;
+        
+        await repository.UpdateAsync(product, cancellationToken);
+        return product.ToDto();
+    }
+}
+
+/// <summary>
+/// Command to archive a product
+/// </summary>
+/// <param name="ProductId">Product ID</param>
+public record ArchiveProductCommand(Guid ProductId) : ICommand<ProductDto>;
+
+/// <summary>
+/// Handler for ArchiveProductCommand
+/// </summary>
+public class ArchiveProductHandler(IProductRepository repository) : ICommandHandler<ArchiveProductCommand, ProductDto>
+{
+    public async Task<ProductDto> Handle(ArchiveProductCommand request, CancellationToken cancellationToken)
+    {
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        if (product == null)
+        {
+            throw new ProductNotFoundException(request.ProductId);
+        }
+
+        // Archive the product using soft delete
+        product.SoftDelete();
+        
+        await repository.UpdateAsync(product, cancellationToken);
+        return product.ToDto();
+    }
+}
+
+/// <summary>
+/// Command to patch (partial update) a product
+/// </summary>
+/// <param name="ProductId">Product ID</param>
+/// <param name="Name">Optional new name</param>
+/// <param name="Description">Optional new description</param>
+/// <param name="ShortDescription">Optional new short description</param>
+/// <param name="ImageUrl">Optional new image URL</param>
+/// <param name="Type">Optional new type</param>
+/// <param name="IsBundle">Optional bundle flag</param>
+/// <param name="BundleItems">Optional bundle items</param>
+/// <param name="ReferralCommissionPercentage">Optional referral commission</param>
+/// <param name="MaxAffiliateDiscount">Optional max affiliate discount</param>
+/// <param name="AffiliateCommissionPercentage">Optional affiliate commission</param>
+/// <param name="ExpectedVersion">Expected version for optimistic concurrency</param>
+public record PatchProductCommand(
+    Guid ProductId,
+    string? Name = null,
+    string? Description = null,
+    string? ShortDescription = null,
+    string? ImageUrl = null,
+    ProductType? Type = null,
+    bool? IsBundle = null,
+    List<Guid>? BundleItems = null,
+    decimal? ReferralCommissionPercentage = null,
+    decimal? MaxAffiliateDiscount = null,
+    decimal? AffiliateCommissionPercentage = null,
+    long? ExpectedVersion = null
+) : ICommand<ProductDto>;
+
+/// <summary>
+/// Handler for PatchProductCommand
+/// </summary>
+public class PatchProductHandler(IProductRepository repository) : ICommandHandler<PatchProductCommand, ProductDto>
+{
+    public async Task<ProductDto> Handle(PatchProductCommand request, CancellationToken cancellationToken)
+    {
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        if (product == null)
+        {
+            throw new ProductNotFoundException(request.ProductId);
+        }
+
+        // Check optimistic concurrency
+        if (request.ExpectedVersion.HasValue && product.Version != request.ExpectedVersion.Value)
+        {
+            throw new InvalidOperationException($"Product version mismatch. Expected {request.ExpectedVersion}, actual {product.Version}");
+        }
+
+        // Apply only non-null values (partial update)
+        if (request.Name != null) product.Name = request.Name;
+        if (request.Description != null) product.Description = request.Description;
+        if (request.ShortDescription != null) product.ShortDescription = request.ShortDescription;
+        if (request.ImageUrl != null) product.ImageUrl = request.ImageUrl;
+        if (request.Type.HasValue) product.Type = request.Type.Value;
+        if (request.IsBundle.HasValue) product.IsBundle = request.IsBundle.Value;
+        
+        product.UpdatedAt = DateTime.UtcNow;
+        
+        await repository.UpdateAsync(product, cancellationToken);
+        return product.ToDto();
+    }
+}
+
+/// <summary>
+/// Command to batch create products
+/// </summary>
+/// <param name="Products">List of products to create</param>
+/// <param name="TenantId">Optional tenant ID</param>
+public record BatchCreateProductsCommand(
+    List<BatchProductCreateItem> Products,
+    Guid? TenantId = null
+) : ICommand<List<ProductDto>>;
+
+/// <summary>
+/// Item for batch product creation
+/// </summary>
+public record BatchProductCreateItem(
+    string Name,
+    string? Description = null,
+    string? ShortDescription = null,
+    string? ImageUrl = null,
+    ProductType Type = ProductType.Program,
+    bool IsBundle = false,
+    Guid? CreatorId = null,
+    List<Guid>? BundleItems = null,
+    decimal ReferralCommissionPercentage = 30m,
+    decimal MaxAffiliateDiscount = 0m,
+    decimal AffiliateCommissionPercentage = 30m
+);
+
+/// <summary>
+/// Handler for BatchCreateProductsCommand
+/// </summary>
+public class BatchCreateProductsHandler(IProductRepository repository) : ICommandHandler<BatchCreateProductsCommand, List<ProductDto>>
+{
+    public async Task<List<ProductDto>> Handle(BatchCreateProductsCommand request, CancellationToken cancellationToken)
+    {
+        var createdProducts = new List<ProductDto>();
+
+        foreach (var item in request.Products)
+        {
+            var product = Product.Create(
+                item.Name,
+                item.Type,
+                item.Description,
+                item.ShortDescription,
+                item.ImageUrl,
+                item.CreatorId,
+                item.IsBundle,
+                request.TenantId
+            );
+
+            await repository.AddAsync(product, cancellationToken);
+            createdProducts.Add(product.ToDto());
+        }
+
+        return createdProducts;
+    }
+}
+
+/// <summary>
+/// Query to check if a product exists
+/// </summary>
+/// <param name="ProductId">Product ID</param>
+public record ProductExistsQuery(Guid ProductId) : IQuery<bool>;
+
+/// <summary>
+/// Handler for ProductExistsQuery
+/// </summary>
+public class ProductExistsHandler(IProductRepository repository) : IQueryHandler<ProductExistsQuery, bool>
+{
+    public async Task<bool> Handle(ProductExistsQuery request, CancellationToken cancellationToken)
+    {
+        var product = await repository.GetByIdAsync(request.ProductId, cancellationToken);
+        return product != null;
+    }
+}
