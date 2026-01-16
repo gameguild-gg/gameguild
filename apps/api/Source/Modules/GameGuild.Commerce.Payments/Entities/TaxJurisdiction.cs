@@ -11,7 +11,7 @@ namespace GameGuild.Commerce.Payments;
 [Index(nameof(Type))]
 [Index(nameof(ParentJurisdictionId))]
 [Index(nameof(IsActive))]
-public abstract class TaxJurisdiction : EntityBase
+public class TaxJurisdiction : EntityBase
 {
     /// <summary>Default constructor</summary>
     public TaxJurisdiction() { }

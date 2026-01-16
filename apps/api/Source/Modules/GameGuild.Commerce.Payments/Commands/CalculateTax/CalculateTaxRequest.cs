@@ -3,7 +3,7 @@
 /// <summary>
 ///     Tax calculation request DTO
 /// </summary>
-public abstract class CalculateTaxRequest
+public class CalculateTaxRequest
 {
     public required string JurisdictionCode { get; init; }
 
