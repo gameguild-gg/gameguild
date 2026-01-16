@@ -114,7 +114,7 @@ On the **same network**, switches use MAC addresses. To reach a **different netw
 | ----------- | ------------------------- | ---------------------------------- |
 | Reliability | Guaranteed delivery       | No guarantee                       |
 | Connection  | Connection-oriented       | Connectionless                     |
-| Header Size | 20+ bytes                 | 8 bytes                            |
+| Header Size | 20+ bytes                 | 8 bytes (have more useful space)   |
 | Use Cases   | Email, web, file transfer | Video streaming, online games, DNS |
 
 ### Why Learn the OSI Model?
