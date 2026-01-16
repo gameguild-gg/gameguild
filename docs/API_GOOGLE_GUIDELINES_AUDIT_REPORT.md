@@ -223,41 +223,45 @@ BEFORE                              AFTER
 
 ## 5. Session Endpoints
 
-### Current Endpoints
+### Current Endpoints ✅ DONE
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
 | GET | `/v1/auth/sessions` | Get active sessions | ✅ OK |
-| GET | `/v1/auth/sessions/security-analysis` | Get security analysis | ⚠️ Should be action |
+| GET | `/v1/auth/sessions:analyze-security` | Get security analysis | ✅ FIXED |
 | DELETE | `/v1/auth/sessions/{sessionId}` | Terminate session | ✅ OK |
 | POST | `/v1/auth/sessions:terminate-others` | Terminate other sessions | ✅ Correct syntax |
 | POST | `/v1/auth/sessions:terminate-all` | Terminate all sessions | ✅ Correct syntax |
 | POST | `/v1/auth/sessions:refresh` | Refresh session | ✅ Correct syntax |
-| GET | `/v1/auth/sessions/trusted-devices` | Get trusted devices | ⚠️ Nested resource |
-| POST | `/v1/auth/sessions/trusted-devices` | Trust device | ⚠️ Nested resource |
-| DELETE | `/v1/auth/sessions/trusted-devices/{deviceId}` | Revoke device trust | ⚠️ Nested resource |
+| GET | `/v1/auth/trusted-devices` | Get trusted devices | ✅ FIXED |
+| POST | `/v1/auth/trusted-devices` | Trust device | ✅ FIXED |
+| DELETE | `/v1/auth/trusted-devices/{deviceId}` | Revoke device trust | ✅ FIXED |
 
-### Violations
+### ~~Violations~~ FIXED
 
-1. **Nested resource path** - `security-analysis` should be custom action
-2. **Trusted devices** - Should be separate top-level resource under auth
+1. ~~**Nested resource path** - `security-analysis` should be custom action~~ ✅ Changed to `:analyze-security`
+2. ~~**Trusted devices** - Should be separate top-level resource under auth~~ ✅ Created separate TrustedDevicesController
 
-### Required Fixes
+### ~~Required Fixes~~ Changes Applied
 
-| Priority | Current | Fixed | Reason |
+| Priority | ~~Current~~ | Fixed | Reason |
 |----------|---------|-------|--------|
-| P1 | `GET /v1/auth/sessions/security-analysis` | `GET /v1/auth/sessions:analyze-security` | Custom action |
-| P2 | `GET /v1/auth/sessions/trusted-devices` | `GET /v1/auth/trusted-devices` | Separate resource |
-| P2 | `POST /v1/auth/sessions/trusted-devices` | `POST /v1/auth/trusted-devices` | Separate resource |
-| P2 | `DELETE /v1/auth/sessions/trusted-devices/{deviceId}` | `DELETE /v1/auth/trusted-devices/{deviceId}` | Separate resource |
+| ~~P1~~ | ~~`GET /v1/auth/sessions/security-analysis`~~ | `GET /v1/auth/sessions:analyze-security` | ✅ Custom action |
+| ~~P2~~ | ~~`GET /v1/auth/sessions/trusted-devices`~~ | `GET /v1/auth/trusted-devices` | ✅ Separate resource |
+| ~~P2~~ | ~~`POST /v1/auth/sessions/trusted-devices`~~ | `POST /v1/auth/trusted-devices` | ✅ Separate resource |
+| ~~P2~~ | ~~`DELETE /v1/auth/sessions/trusted-devices/{deviceId}`~~ | `DELETE /v1/auth/trusted-devices/{deviceId}` | ✅ Separate resource |
 
-### Missing Endpoints (Must Add)
+**Files Modified:**
+- [SessionController.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/SessionController.cs) - Changed security-analysis to :analyze-security
+- [TrustedDevicesController.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/TrustedDevicesController.cs) - **NEW** - Created for /v1/auth/trusted-devices
+
+### Missing Endpoints (Optional)
 
 | Method | Path | Description | Priority |
 |--------|------|-------------|----------|
-| GET | `/v1/auth/sessions/{sessionId}` | Get single session details | P1 |
-| HEAD | `/v1/auth/sessions/{sessionId}` | Check if session exists | P2 |
-| GET | `/v1/auth/trusted-devices/{deviceId}` | Get single trusted device | P2 |
+| GET | `/v1/auth/sessions/{sessionId}` | Get single session details | P3 |
+| HEAD | `/v1/auth/sessions/{sessionId}` | Check if session exists | P3 |
+| GET | `/v1/auth/trusted-devices/{deviceId}` | Get single trusted device | P3 |
 | PATCH | `/v1/auth/trusted-devices/{deviceId}` | Update trusted device name | P3 |
 
 ---

@@ -53,19 +53,19 @@ public sealed class SessionController(ISessionManagementService sessionService) 
 
     #endregion
 
-    #region Security Analysis - /v1/auth/sessions/security-analysis
+    #region Security Analysis - /v1/auth/sessions:analyze-security
 
     /// <summary>
-    ///     Get session security analysis
+    ///     Analyze session security
     /// </summary>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Security analysis with risk assessment and recommendations</returns>
-    [HttpGet("v{version:apiVersion}/auth/sessions/security-analysis")]
-    [EndpointSummary("Get session security analysis")]
+    [HttpGet("v{version:apiVersion}/auth/sessions:analyze-security")]
+    [EndpointSummary("Analyze session security")]
     [EndpointDescription("Analyzes the current session for security risks and provides recommendations.")]
     [ProducesResponseType<SessionSecurityAnalysis>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetSecurityAnalysis(CancellationToken ct)
+    public async Task<IActionResult> AnalyzeSessionSecurity(CancellationToken ct)
     {
         var userId = GetCurrentUserId();
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -191,94 +191,6 @@ public sealed class SessionController(ISessionManagementService sessionService) 
         }
 
         return Ok(new SessionSuccessResponse { Message = "Session refreshed successfully" });
-    }
-
-    #endregion
-
-    #region Trusted Devices - /v1/auth/sessions/trusted-devices
-
-    /// <summary>
-    ///     Get trusted devices for the current user
-    /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of trusted devices</returns>
-    [HttpGet("v{version:apiVersion}/auth/sessions/trusted-devices")]
-    [EndpointSummary("Get trusted devices")]
-    [EndpointDescription("Retrieves a list of devices that have been marked as trusted for the current user.")]
-    [ProducesResponseType<List<TrustedDeviceResponse>>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetTrustedDevices(CancellationToken ct)
-    {
-        var userId = GetCurrentUserId();
-        var devices = await sessionService.GetTrustedDevicesAsync(userId);
-
-        var response = devices.Select(d => new TrustedDeviceResponse
-            {
-                Id = d.Id,
-                DeviceName = d.DeviceName,
-                DeviceInfo = ParseDeviceInfo(d.DeviceInfo),
-                TrustedAt = d.TrustedAt,
-                LastUsedAt = d.LastUsedAt,
-                ExpiresAt = d.ExpiresAt
-            })
-            .ToList();
-
-        return Ok(response);
-    }
-
-    /// <summary>
-    ///     Trust the current device
-    /// </summary>
-    /// <param name="body">Device trust request with optional device name</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success confirmation</returns>
-    [HttpPost("v{version:apiVersion}/auth/sessions/trusted-devices")]
-    [EndpointSummary("Trust current device")]
-    [EndpointDescription("Marks the current device as trusted, allowing faster authentication in the future.")]
-    [ProducesResponseType<SessionSuccessResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> TrustCurrentDevice([FromBody] TrustDeviceRequest body, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(body);
-        var userId = GetCurrentUserId();
-        var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-        var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
-
-        var deviceFingerprint = GenerateDeviceFingerprint(ipAddress, userAgent);
-        var success = await sessionService.TrustDeviceAsync(userId, deviceFingerprint, body.DeviceName);
-
-        if (!success)
-        {
-            return BadRequest(new SessionErrorResponse { Error = "Failed to trust device" });
-        }
-
-        return Ok(new SessionSuccessResponse { Message = "Device trusted successfully" });
-    }
-
-    /// <summary>
-    ///     Revoke trust for a specific device
-    /// </summary>
-    /// <param name="deviceId">Device identifier to revoke trust for</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Success confirmation</returns>
-    [HttpDelete("v{version:apiVersion}/auth/sessions/trusted-devices/{deviceId:guid}")]
-    [EndpointSummary("Revoke device trust")]
-    [EndpointDescription("Removes a device from the trusted devices list.")]
-    [ProducesResponseType<SessionSuccessResponse>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> RevokeTrustedDevice(Guid deviceId, CancellationToken ct)
-    {
-        var userId = GetCurrentUserId();
-        var success = await sessionService.RevokeTrustedDeviceAsync(userId, deviceId);
-
-        if (!success)
-        {
-            return NotFound(new SessionErrorResponse { Error = "Trusted device not found" });
-        }
-
-        return Ok(new SessionSuccessResponse { Message = "Device trust revoked successfully" });
     }
 
     #endregion

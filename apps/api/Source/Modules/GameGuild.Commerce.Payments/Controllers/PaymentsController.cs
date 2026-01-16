@@ -7,11 +7,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Commerce.Payments;
 
+/// <summary>
+///     API controller for payment operations.
+///     All endpoints require authentication; sensitive financial data must be protected.
+/// </summary>
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/[controller]")]
 [Tags("payments")]
-[AllowAnonymous]
+[Authorize]
 public sealed class PaymentsController(ISender sender, IActorContextAccessor actorContextAccessor) : ControllerBase
 {
     /// <summary>

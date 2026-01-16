@@ -9,11 +9,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
-///     Subscriptions API Controller - RESTful API for subscription management
+///     Subscriptions API Controller - RESTful API for subscription management.
+///     All endpoints require authentication to protect sensitive subscription data.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]
 [Tags("subscriptions")]
+[Authorize]
 public sealed class SubscriptionsController(ISender sender, IActorContextAccessor actorContextAccessor) : ControllerBase
 {
     #region Collection Operations - /v1/subscriptions
@@ -24,7 +26,6 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Subscription creation request</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Created subscription</returns>
-    [AllowAnonymous]
     [HttpPost("api/v{version:apiVersion}/subscriptions")]
     [EndpointSummary("Create a new subscription")]
     [EndpointDescription("Creates a new subscription with the provided information.")]
@@ -62,7 +63,6 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="planId">Filter by plan ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Paginated list of subscriptions</returns>
-    [AllowAnonymous]
     [HttpGet("api/v{version:apiVersion}/subscriptions")]
     [EndpointSummary("Get subscriptions with pagination, search, and filtering")]
     [EndpointDescription("Retrieves a paginated list of subscriptions with optional filtering.")]
@@ -223,7 +223,6 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="subscriptionId">Subscription ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Subscription details</returns>
-    [AllowAnonymous]
     [HttpGet("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}")]
     [EndpointSummary("Get subscription by ID")]
     [EndpointDescription("Retrieves detailed information for a specific subscription.")]
@@ -278,7 +277,6 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="subscriptionId">Subscription ID</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [AllowAnonymous]
     [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:activate")]
     [EndpointSummary("Activate subscription")]
     [EndpointDescription("Activates a subscription by ID.")]
@@ -338,7 +336,6 @@ public sealed class SubscriptionsController(ISender sender, IActorContextAccesso
     /// <param name="body">Cancellation details</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>No content on success</returns>
-    [AllowAnonymous]
     [HttpPost("api/v{version:apiVersion}/subscriptions/{subscriptionId:guid}:cancel")]
     [EndpointSummary("Cancel subscription")]
     [EndpointDescription("Cancels a subscription with specified reason and effective date.")]
