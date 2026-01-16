@@ -409,36 +409,33 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
-| GET | `/api/v1/payments` | List payments | ✅ Correct |
+| GET | `/api/v1/payments` | List payments with filtering | ✅ FIXED - Supports `status` query param (pending, completed, failed, cancelled, refunded, scheduled, overdue) |
 | POST | `/api/v1/payments` | Create payment | ✅ Correct |
-| GET | `/api/v1/payments/canceled` | List canceled payments | ❌ Violation |
-| GET | `/api/v1/payments/failed` | List failed payments | ❌ Violation |
-| GET | `/api/v1/payments/overdue` | List overdue payments | ❌ Violation |
-| GET | `/api/v1/payments/refunded` | List refunded payments | ❌ Violation |
-| GET | `/api/v1/payments/scheduled` | List scheduled payments | ❌ Violation |
 | GET | `/api/v1/payments/{paymentId}` | Get payment | ✅ Correct |
-| PATCH | `/api/v1/payments/{paymentId}/cancel` | Cancel payment | ❌ Violation |
-| PATCH | `/api/v1/payments/{paymentId}/refund` | Refund payment | ❌ Violation |
-| PATCH | `/api/v1/payments/{paymentId}/retry` | Retry payment | ❌ Violation |
+| POST | `/api/v1/payments/{paymentId}:cancel` | Cancel payment | ✅ FIXED - Custom action syntax |
+| POST | `/api/v1/payments/{paymentId}:refund` | Refund payment | ✅ FIXED - Custom action syntax |
+| POST | `/api/v1/payments/{paymentId}:retry` | Retry payment | ✅ FIXED - Custom action syntax |
 
-### Violations
+### ~~Violations~~ FIXED (January 2026)
 
-1. **Path-based status filters** - Should be query parameters
-2. **Path-based actions** - Should use colon syntax
-3. **Wrong HTTP method** - Actions should be POST, not PATCH
+All violations in this section have been resolved:
 
-### Required Fixes
+1. ~~**Path-based status filters** - Should be query parameters~~ ✅ FIXED - Removed `/canceled`, `/failed`, `/overdue`, `/refunded`, `/scheduled` endpoints
+2. ~~**Path-based actions** - Should use colon syntax~~ ✅ FIXED
+3. ~~**Wrong HTTP method** - Actions should be POST, not PATCH~~ ✅ FIXED
 
-| Priority | Current | Fixed | Reason |
+### ~~Required Fixes~~ COMPLETED
+
+| Priority | Current | Fixed | Status |
 |----------|---------|-------|--------|
-| P1 | `GET /api/v1/payments/canceled` | `GET /v1/payments?status=canceled` | Query parameter |
-| P1 | `GET /api/v1/payments/failed` | `GET /v1/payments?status=failed` | Query parameter |
-| P1 | `GET /api/v1/payments/overdue` | `GET /v1/payments?status=overdue` | Query parameter |
-| P1 | `GET /api/v1/payments/refunded` | `GET /v1/payments?status=refunded` | Query parameter |
-| P1 | `GET /api/v1/payments/scheduled` | `GET /v1/payments?status=scheduled` | Query parameter |
-| P0 | `PATCH /api/v1/payments/{paymentId}/cancel` | `POST /v1/payments/{paymentId}:cancel` | Custom action syntax |
-| P0 | `PATCH /api/v1/payments/{paymentId}/refund` | `POST /v1/payments/{paymentId}:refund` | Custom action syntax |
-| P0 | `PATCH /api/v1/payments/{paymentId}/retry` | `POST /v1/payments/{paymentId}:retry` | Custom action syntax |
+| P1 | ~~`GET /api/v1/payments/canceled`~~ | `GET /v1/payments?status=canceled` | ✅ DONE |
+| P1 | ~~`GET /api/v1/payments/failed`~~ | `GET /v1/payments?status=failed` | ✅ DONE |
+| P1 | ~~`GET /api/v1/payments/overdue`~~ | `GET /v1/payments?status=overdue` | ✅ DONE |
+| P1 | ~~`GET /api/v1/payments/refunded`~~ | `GET /v1/payments?status=refunded` | ✅ DONE |
+| P1 | ~~`GET /api/v1/payments/scheduled`~~ | `GET /v1/payments?status=scheduled` | ✅ DONE |
+| P0 | ~~`PATCH /api/v1/payments/{paymentId}/cancel`~~ | `POST /v1/payments/{paymentId}:cancel` | ✅ DONE |
+| P0 | ~~`PATCH /api/v1/payments/{paymentId}/refund`~~ | `POST /v1/payments/{paymentId}:refund` | ✅ DONE |
+| P0 | ~~`PATCH /api/v1/payments/{paymentId}/retry`~~ | `POST /v1/payments/{paymentId}:retry` | ✅ DONE |
 
 ### Missing Endpoints (Must Add)
 
@@ -683,20 +680,16 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 | Method | Path | Description | Status |
 |--------|------|-------------|--------|
 | POST | `/v1/subscription-plans` | Create plan | ✅ OK |
-| GET | `/v1/subscription-plans` | List plans | ✅ OK |
-| GET | `/v1/subscription-plans/featured` | Get featured | ❌ Violation |
-| GET | `/v1/subscription-plans/search` | Search plans | ❌ Violation |
-| GET | `/v1/subscription-plans/price-range` | Get by price range | ❌ Violation |
-| GET | `/v1/subscription-plans/compare` | Compare plans | ❌ Violation |
+| GET | `/v1/subscription-plans` | List plans with filtering | ✅ FIXED - Now supports `featured`, `q`, `slug`, `minPrice`, `maxPrice` query params |
+| POST | `/v1/subscription-plans:compare` | Compare plans | ✅ FIXED - Custom action syntax |
 | HEAD | `/v1/subscription-plans/{planId}` | Check exists | ✅ OK |
 | GET | `/v1/subscription-plans/{planId}` | Get plan | ✅ OK |
 | DELETE | `/v1/subscription-plans/{planId}` | Delete plan | ✅ OK |
-| GET | `/v1/subscription-plans/slug/{slug}` | Get by slug | ❌ Violation |
 | GET | `/v1/subscription-plans/{planId}/usage` | Get usage stats | ✅ Correct |
 | GET | `/v1/subscription-plans/{planId}/suggest-upgrades` | Suggest upgrades | ✅ Correct |
 | GET | `/v1/subscription-plans/{planId}/pricing` | Get pricing | ✅ Correct |
 | PATCH | `/v1/subscription-plans/{planId}/pricing` | Update pricing | ✅ Correct |
-| GET | `/v1/subscription-plans/{planId}/validate-limits` | Validate limits | ❌ Violation |
+| POST | `/v1/subscription-plans/{planId}:validate-limits` | Validate limits | ✅ FIXED - Custom action syntax |
 | PATCH | `/v1/subscription-plans/{planId}/details` | Update details | ✅ Correct |
 | PATCH | `/v1/subscription-plans/{planId}/limits` | Update limits | ✅ Correct |
 | PATCH | `/v1/subscription-plans/{planId}/features` | Update features | ✅ Correct |
@@ -705,23 +698,25 @@ Health endpoints at root level are **acceptable per Kubernetes conventions**. No
 | POST | `/v1/subscription-plans/{planId}:featured` | Set featured | ✅ Correct |
 | POST | `/v1/subscription-plans/{planId}:external-id` | Set external ID | ✅ Correct |
 
-### Violations
+### ~~Violations~~ FIXED (January 2026)
 
-1. **Path-based filters** - `featured`, `price-range` should be query parameters
-2. **Search as path** - Should be query on collection
-3. **Compare as path** - Should be custom action
-4. **Validate as GET** - Should be POST custom action
+All violations in this section have been resolved:
 
-### Required Fixes
+1. ~~**Path-based filters** - `featured`, `price-range` should be query parameters~~ ✅ FIXED
+2. ~~**Search as path** - Should be query on collection~~ ✅ FIXED
+3. ~~**Compare as path** - Should be custom action~~ ✅ FIXED
+4. ~~**Validate as GET** - Should be POST custom action~~ ✅ FIXED
 
-| Priority | Current | Fixed | Reason |
+### ~~Required Fixes~~ COMPLETED
+
+| Priority | Current | Fixed | Status |
 |----------|---------|-------|--------|
-| P1 | `GET /v1/subscription-plans/featured` | `GET /v1/subscription-plans?featured=true` | Query parameter |
-| P1 | `GET /v1/subscription-plans/search` | `GET /v1/subscription-plans?q={searchTerm}` | Query parameter |
-| P1 | `GET /v1/subscription-plans/price-range` | `GET /v1/subscription-plans?minPrice={min}&maxPrice={max}` | Query parameters |
-| P0 | `GET /v1/subscription-plans/compare` | `POST /v1/subscription-plans:compare` | Custom action |
-| P1 | `GET /v1/subscription-plans/slug/{slug}` | `GET /v1/subscription-plans?slug={slug}` | Query parameter |
-| P0 | `GET /v1/subscription-plans/{planId}/validate-limits` | `POST /v1/subscription-plans/{planId}:validate-limits` | Custom action syntax |
+| P1 | ~~`GET /v1/subscription-plans/featured`~~ | `GET /v1/subscription-plans?featured=true` | ✅ DONE |
+| P1 | ~~`GET /v1/subscription-plans/search`~~ | `GET /v1/subscription-plans?q={searchTerm}` | ✅ DONE |
+| P1 | ~~`GET /v1/subscription-plans/price-range`~~ | `GET /v1/subscription-plans?minPrice={min}&maxPrice={max}` | ✅ DONE |
+| P0 | ~~`GET /v1/subscription-plans/compare`~~ | `POST /v1/subscription-plans:compare` | ✅ DONE |
+| P1 | ~~`GET /v1/subscription-plans/slug/{slug}`~~ | `GET /v1/subscription-plans?slug={slug}` | ✅ DONE |
+| P0 | ~~`GET /v1/subscription-plans/{planId}/validate-limits`~~ | `POST /v1/subscription-plans/{planId}:validate-limits` | ✅ DONE |
 
 ### Missing Endpoints (Must Add)
 

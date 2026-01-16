@@ -126,219 +126,6 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     }
 
     /// <summary>
-    ///     Retrieve all canceled payment transactions
-    /// </summary>
-    /// <param name="tenantId">Optional tenant ID filter to get canceled payments for a specific tenant</param>
-    /// <param name="cancellationReason">Optional filter by cancellation reason</param>
-    /// <param name="startDate">Optional start date filter for cancellation date (inclusive)</param>
-    /// <param name="endDate">Optional end date filter for cancellation date (inclusive)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of canceled payments with cancellation details and reasons</returns>
-    /// <remarks>
-    ///     Retrieves all payment transactions that have been canceled before completion. This includes payments
-    ///     canceled by users, automatic cancellations due to expired sessions, or administrative cancellations.
-    ///     Provides comprehensive cancellation information for audit and analysis purposes.
-    ///     Common cancellation reasons:
-    ///     - User canceled during checkout
-    ///     - Session timeout or expiration
-    ///     - Administrative cancellation
-    ///     - Duplicate transaction prevention
-    ///     - Fraud prevention triggers
-    ///     - Payment method issues
-    ///     Cancellation information includes:
-    ///     - Original payment attempt details
-    ///     - Cancellation timestamp and reason
-    ///     - User or system initiated indicator
-    ///     - Associated session or transaction context
-    ///     - Recovery or retry recommendations
-    ///     Query Parameters:
-    ///     - tenantId: Filter cancellations for specific tenant
-    ///     - cancellationReason: Filter by cancellation category
-    ///     - startDate: Include cancellations from this date onwards
-    ///     - endDate: Include cancellations up to this date
-    ///     Use cases:
-    ///     - Checkout abandonment analysis
-    ///     - User experience optimization
-    ///     - Fraud prevention review
-    ///     - Payment flow troubleshooting
-    ///     - Conversion rate analysis
-    /// </remarks>
-    [HttpGet("canceled")]
-    [EndpointSummary("Retrieve all canceled payment transactions")]
-    [EndpointDescription(
-        "Retrieves all payment transactions that have been canceled before completion. This includes payments canceled by users, automatic cancellations due to expired sessions, or administrative cancellations. Provides comprehensive cancellation information for audit and analysis purposes."
-    )]
-    [ProducesResponseType<IEnumerable<PaymentResult>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Canceled([FromQuery] Guid? tenantId, [FromQuery] string? cancellationReason, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, CancellationToken ct = default)
-    {
-        return Ok(await sender.Send(new GetCanceledPaymentsQuery(tenantId, cancellationReason, startDate, endDate), ct));
-    }
-
-    /// <summary>
-    ///     Retrieve all failed payment transactions
-    /// </summary>
-    /// <param name="tenantId">Optional tenant ID filter to get failed payments for a specific tenant</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of failed payments with error details and failure reasons</returns>
-    /// <remarks>
-    ///     Retrieves all payment transactions that have failed processing. This includes payments that were
-    ///     declined, had insufficient funds, or encountered technical errors. Optionally filter by tenant
-    ///     to focus on specific organization's failed transactions for troubleshooting and retry operations.
-    ///     Common failure reasons:
-    ///     - Insufficient funds
-    ///     - Declined by bank/card issuer
-    ///     - Expired payment method
-    ///     - Network connectivity issues
-    ///     - Invalid payment details
-    ///     - Fraud detection triggers
-    ///     Use this endpoint for:
-    ///     - Identifying payment issues requiring attention
-    ///     - Generating retry lists for failed payments
-    ///     - Monitoring payment success rates
-    ///     - Customer support investigations
-    /// </remarks>
-    [HttpGet("failed")]
-    [EndpointSummary("Retrieve all failed payment transactions")]
-    [EndpointDescription(
-        "Retrieves all payment transactions that have failed processing. Includes payments declined by banks, insufficient funds, technical errors, and fraud detection triggers. Optionally filter by tenant for focused troubleshooting."
-    )]
-    [ProducesResponseType<IEnumerable<PaymentResult>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Failed([FromQuery] Guid? tenantId, CancellationToken ct) { return Ok(await sender.Send(new GetFailedPaymentsQuery(tenantId), ct)); }
-
-    /// <summary>
-    ///     Retrieve all overdue payment transactions
-    /// </summary>
-    /// <param name="tenantId">Optional tenant ID filter to get overdue payments for a specific tenant</param>
-    /// <param name="overdueThreshold">Optional threshold in days to define overdue payments (default: 30 days)</param>
-    /// <param name="startDate">Optional start date filter for original payment due date (inclusive)</param>
-    /// <param name="endDate">Optional end date filter for original payment due date (inclusive)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of overdue payments with payment details and overdue information</returns>
-    /// <remarks>
-    ///     Retrieves all payment transactions that are overdue, meaning they have passed their expected
-    ///     completion date without successful payment. This includes subscription renewals, scheduled payments,
-    ///     and invoice payments that have exceeded their grace periods or due dates.
-    ///     Overdue payment identification criteria:
-    ///     - Scheduled payments past their execution date
-    ///     - Subscription renewals beyond grace period
-    ///     - Invoice payments past due date
-    ///     - Failed automatic payments requiring manual intervention
-    ///     - Payments with retry attempts that have been exhausted
-    ///     Overdue information includes:
-    ///     - Original payment due date and current overdue period
-    ///     - Number of failed retry attempts and next retry schedule
-    ///     - Associated subscription or invoice details
-    ///     - Grace period and escalation information
-    ///     - Customer notification history and contact attempts
-    ///     - Recommended actions for resolution
-    ///     Query Parameters:
-    ///     - tenantId: Filter overdue payments for specific tenant
-    ///     - overdueThreshold: Days past due date to consider overdue (default: 30)
-    ///     - startDate: Include payments originally due from this date onwards
-    ///     - endDate: Include payments originally due up to this date
-    ///     Use cases:
-    ///     - Collections and dunning process management
-    ///     - Customer account review and intervention
-    ///     - Revenue recovery and follow-up campaigns
-    ///     - Subscription churn prevention and retention
-    ///     - Financial reporting and aging analysis
-    ///     - Automated payment retry scheduling
-    /// </remarks>
-    [HttpGet("overdue")]
-    [EndpointSummary("Retrieve all overdue payment transactions")]
-    [EndpointDescription(
-        "Retrieves all payment transactions that are overdue, meaning they have passed their expected completion date without successful payment. This includes subscription renewals, scheduled payments, and invoice payments that have exceeded their grace periods or due dates."
-    )]
-    [ProducesResponseType<IEnumerable<PaymentResult>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Overdue([FromQuery] Guid? tenantId, [FromQuery] int? overdueThreshold, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, CancellationToken ct = default)
-    {
-        return Ok(await sender.Send(new GetOverduePaymentsQuery(tenantId, overdueThreshold ?? 30, startDate, endDate), ct));
-    }
-
-    /// <summary>
-    ///     Retrieve all refunded payment transactions
-    /// </summary>
-    /// <param name="tenantId">Optional tenant ID filter to get refunded payments for a specific tenant</param>
-    /// <param name="refundReason">Optional filter by refund reason</param>
-    /// <param name="startDate">Optional start date filter for refund processing date (inclusive)</param>
-    /// <param name="endDate">Optional end date filter for refund processing date (inclusive)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of refunded payments with refund details and processing information</returns>
-    /// <remarks>
-    ///     Retrieves all payment transactions that have been refunded, either partially or in full.
-    ///     Provides comprehensive refund information including original payment details, refund amounts,
-    ///     processing dates, and refund reasons for audit and reconciliation purposes.
-    ///     Refund information includes:
-    ///     - Original payment transaction details
-    ///     - Refund amount (partial or full)
-    ///     - Refund processing date
-    ///     - Refund reason and notes
-    ///     - Refund method (original payment method, store credit, etc.)
-    ///     - Processing status and timeline
-    ///     Query Parameters:
-    ///     - tenantId: Filter refunds for specific tenant
-    ///     - refundReason: Filter by refund category (chargeback, return, cancellation, etc.)
-    ///     - startDate: Include refunds processed from this date onwards
-    ///     - endDate: Include refunds processed up to this date
-    ///     Use cases:
-    ///     - Financial reconciliation and reporting
-    ///     - Refund analytics and trend analysis
-    ///     - Customer service and dispute resolution
-    ///     - Accounting and tax reporting
-    ///     - Chargeback management
-    /// </remarks>
-    [HttpGet("refunded")]
-    [EndpointSummary("Retrieve all refunded payment transactions")]
-    [EndpointDescription(
-        "Retrieves all payment transactions that have been refunded, either partially or in full. Provides comprehensive refund information including original payment details, refund amounts, processing dates, and refund reasons for audit and reconciliation purposes."
-    )]
-    [ProducesResponseType<IEnumerable<PaymentResult>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Refunded([FromQuery] Guid? tenantId, [FromQuery] string? refundReason, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, CancellationToken ct = default)
-    {
-        return Ok(await sender.Send(new GetRefundedPaymentsQuery(tenantId, refundReason, startDate, endDate), ct));
-    }
-
-    /// <summary>
-    ///     Retrieve all scheduled payment transactions
-    /// </summary>
-    /// <param name="tenantId">Optional tenant ID filter to get scheduled payments for a specific tenant</param>
-    /// <param name="scheduledDate">Optional date filter to get payments scheduled for a specific date</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>List of scheduled payments with their execution dates and details</returns>
-    /// <remarks>
-    ///     Retrieves all payment transactions that are scheduled for future execution. This includes recurring
-    ///     subscription payments, delayed payments, and retry attempts scheduled for later processing.
-    ///     Optionally filter by tenant or specific scheduled date.
-    ///     Scheduled payment types:
-    ///     - Recurring subscription charges
-    ///     - Delayed payment processing
-    ///     - Retry attempts for failed payments
-    ///     - Installment payments
-    ///     - Future-dated transactions
-    ///     Response includes:
-    ///     - Scheduled execution date and time
-    ///     - Payment amount and details
-    ///     - Associated subscription information
-    ///     - Retry attempt count (if applicable)
-    ///     - Next execution schedule
-    ///     Use this endpoint for:
-    ///     - Monitoring upcoming payment executions
-    ///     - Financial planning and cash flow projections
-    ///     - Managing scheduled payment workflows
-    ///     - Troubleshooting recurring payment issues
-    /// </remarks>
-    [HttpGet("scheduled")]
-    [EndpointSummary("Retrieve all scheduled payment transactions")]
-    [EndpointDescription(
-        "Retrieves all payment transactions that are scheduled for future execution. This includes recurring subscription payments, delayed payments, and retry attempts scheduled for later processing. Optionally filter by tenant or specific scheduled date."
-    )]
-    [ProducesResponseType<IEnumerable<PaymentResult>>(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Scheduled([FromQuery] Guid? tenantId, [FromQuery] DateTime? scheduledDate, CancellationToken ct)
-    {
-        return Ok(await sender.Send(new GetScheduledPaymentsQuery(tenantId, scheduledDate), ct));
-    }
-
-    /// <summary>
     ///     Retrieve a specific payment by its unique identifier
     /// </summary>
     /// <param name="paymentId">The unique identifier of the payment to retrieve</param>
@@ -406,10 +193,10 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     ///     - Cancellation is immediate and irreversible
     ///     - Some payment methods may have specific cancellation rules
     /// </remarks>
-    [HttpPatch("{paymentId:guid}/cancel")]
+    [HttpPost("{paymentId:guid}:cancel")]
     [EndpointSummary("Cancel a payment transaction")]
     [EndpointDescription(
-        "Cancels a payment transaction that is in progress or pending. This endpoint can be used to cancel payments before they are processed, or to handle user-initiated cancellations during checkout. Once canceled, a payment cannot be processed and may require a new payment attempt."
+        "Cancels a payment transaction that is in progress or pending. Custom action per Google API guidelines. Once canceled, a payment cannot be processed and may require a new payment attempt."
     )]
     [ProducesResponseType<PaymentCancellationResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -447,10 +234,10 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     ///     - Multiple partial refunds allowed up to original amount
     ///     Response includes refund ID for tracking and customer communication.
     /// </remarks>
-    [HttpPatch("{paymentId:guid}/refund")]
+    [HttpPost("{paymentId:guid}:refund")]
     [EndpointSummary("Process a refund for a completed payment")]
     [EndpointDescription(
-        "Processes a full or partial refund for a previously completed payment transaction. If no amount is specified, a full refund will be processed. The refund reason is optional but recommended for record keeping and customer service purposes. Refunds are processed back to the original payment method and may take several business days to appear."
+        "Processes a full or partial refund for a completed payment. Custom action per Google API guidelines. Refunds are processed back to the original payment method."
     )]
     [ProducesResponseType<ProcessRefundResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -486,10 +273,10 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
     ///     - New transaction ID is generated for the retry attempt
     ///     - Original payment record maintains audit trail
     /// </remarks>
-    [HttpPatch("{paymentId:guid}/retry")]
+    [HttpPost("{paymentId:guid}:retry")]
     [EndpointSummary("Retry a failed payment transaction")]
     [EndpointDescription(
-        "Attempts to reprocess a previously failed payment transaction using the same payment method and amount. This is useful when payments fail due to temporary issues like network problems or insufficient funds that have since been resolved. The retry operation creates a new transaction attempt while maintaining the link to the original payment record."
+        "Retries a failed payment using the original payment method. Custom action per Google API guidelines. Creates a new transaction attempt while maintaining the link to the original payment record."
     )]
     [ProducesResponseType<PaymentRetryResult>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -511,39 +298,10 @@ public sealed class PaymentsController(ISender sender, IActorContextAccessor act
 
     /// <summary>
     ///     Validates that the authenticated user has access to the specified tenant.
-    ///     This prevents cross-tenant attacks where a malicious user crafts requests with another tenant's ID.
+    ///     Uses shared TenantValidationExtensions for DRY compliance.
     /// </summary>
-    /// <param name="requestedTenantId">The TenantId from the request body</param>
-    /// <param name="operation">Description of the operation for error messages</param>
-    /// <returns>An error response if validation fails, null if validation passes</returns>
     private IActionResult? ValidateTenantAccess(Guid requestedTenantId, string operation)
-    {
-        var actorContext = actorContextAccessor.ActorContext;
-
-        // Allow anonymous access only in development/testing (controlled by AllowAnonymous attribute)
-        // For authenticated requests, validate tenant access
-        if (actorContext.IsAuthenticated)
-        {
-            // User must have a tenant context
-            if (!actorContext.TenantId.HasValue)
-            {
-                return Forbid($"User is not associated with any tenant for {operation}");
-            }
-
-            // Request TenantId must match authenticated user's tenant
-            if (actorContext.TenantId.Value != requestedTenantId)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new
-                {
-                    error = "Cross-tenant access denied",
-                    message = $"User belongs to tenant {actorContext.TenantId.Value} but attempted to {operation} for tenant {requestedTenantId}",
-                    code = "TENANT_MISMATCH"
-                });
-            }
-        }
-
-        return null; // Validation passed
-    }
+        => actorContextAccessor.ValidateTenantAccessAsActionResult(requestedTenantId, operation);
 
     #endregion
 }

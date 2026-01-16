@@ -1,7 +1,7 @@
 # GameGuild.Commerce.* — Deep Code Smell & Correctness Audit Report
 
 **Audit Date:** January 16, 2026  
-**Last Updated:** January 16, 2026 — A.1 Stubs (items 1-19) FIXED  
+**Last Updated:** January 16, 2026 — A.1 Stubs (items 1-19) FIXED, B.1 DRY Violations FIXED  
 **Scope:** GameGuild.Commerce.*, GameGuild.Commerce.Billing, GameGuild.Commerce.Orders, GameGuild.Commerce.Payments, GameGuild.Commerce.Products, GameGuild.Commerce.Subscriptions  
 **Auditor:** Senior .NET Code Reviewer / Security-Minded Platform Architect
 
@@ -9,16 +9,16 @@
 
 ## Executive Summary
 
-This audit reveals **critical production-blocking issues** in the Commerce modules. ~~The subscription service is entirely stubbed with `NotImplementedException` throughout~~ **UPDATE: The subscription service stub methods (A.1 items 1-19) have been implemented.** Payment gateways are simulated without real integration, and multiple endpoints expose **`[AllowAnonymous]`** on financial operations creating severe security vulnerabilities.
+This audit reveals **critical production-blocking issues** in the Commerce modules. ~~The subscription service is entirely stubbed with `NotImplementedException` throughout~~ **UPDATE: The subscription service stub methods (A.1 items 1-19) have been implemented.** Payment gateways are simulated without real integration, and multiple endpoints expose **`[AllowAnonymous]`** on financial operations creating severe security vulnerabilities. **DRY violations (B.1) have also been addressed.**
 
 ### Overall Code Health Score: **IMPROVED** (3/5) ⬆️ *Previously: 2/5*
 
 **Critical Issues Found:** ~~28~~ **14** (14 fixed)
-**High Severity:** ~~15~~ **8** (7 fixed)
+**High Severity:** ~~15~~ **7** (8 fixed, including B.1 DRY violations)
 **Medium Severity:** ~~22~~ **17** (5 fixed)
 **Low Severity:** 18
 
-The Commerce modules contain production-ready patterns (state machines, idempotency, tenant validation) ~~alongside completely unfinished implementations~~. **The SubscriptionService is now fully implemented with proper DRY/SOLID/KISS patterns, delegating to the rich Subscription entity and repository.**
+The Commerce modules contain production-ready patterns (state machines, idempotency, tenant validation) ~~alongside completely unfinished implementations~~. **The SubscriptionService is now fully implemented with proper DRY/SOLID/KISS patterns, delegating to the rich Subscription entity and repository. DRY violations have been eliminated with shared `TenantValidationExtensions` and `SimulatedPaymentResultFactory`.**
 
 ---
 
@@ -97,11 +97,25 @@ No significant commented-out code blocks found in production code. Test files co
 
 ### B.1 DRY Violations (Duplication Hotspots)
 
-| Location | Duplication | Impact | Recommendation |
-|----------|-------------|--------|----------------|
-| `SubscriptionsController.ValidateTenantAccess()` & `PaymentsController.ValidateTenantAccess()` | Identical 20-line methods | Code bloat, inconsistent fixes | Extract to shared base controller or middleware |
-| `StripePaymentGateway` simulated responses | Copy-paste pattern for success/failure | Maintenance burden | Create `SimulatedPaymentResult` factory if needed for dev |
-| Entity state machine transitions | Each entity has inline validation | Potential inconsistency | Consider shared `StatefulEntity<TStatus>` base class (already exists, good!) |
+| Location | Duplication | Impact | Status |
+|----------|-------------|--------|--------|
+| ~~`SubscriptionsController.ValidateTenantAccess()` & `PaymentsController.ValidateTenantAccess()`~~ | ~~Identical 20-line methods~~ | ~~Code bloat, inconsistent fixes~~ | ✅ **FIXED** — Extracted to `TenantValidationExtensions` in `GameGuild.Identity.Context` |
+| ~~`StripePaymentGateway` simulated responses~~ | ~~Copy-paste pattern for success/failure~~ | ~~Maintenance burden~~ | ✅ **FIXED** — Created `SimulatedPaymentResultFactory` with centralized factory methods |
+| Entity state machine transitions | Uses `StatefulEntity<TStatus>` base class | Good pattern already | ✅ **Already good** |
+
+#### B.1 Fix Implementation Details
+
+**TenantValidationExtensions** (`GameGuild.Identity.Context/Actors/TenantValidationExtensions.cs`):
+- Extension method `ValidateTenantAccess(this IActorContextAccessor, Guid, string)` returns `TenantValidationResult`
+- Convenience method `ValidateTenantAccessAsActionResult()` for controller usage
+- `TenantValidationResult` class encapsulates validation state with factory methods (`Success()`, `Forbidden()`, `CrossTenantDenied()`)
+- Controllers now use single-line delegation: `=> actorContextAccessor.ValidateTenantAccessAsActionResult(tenantId, operation);`
+
+**SimulatedPaymentResultFactory** (`GameGuild.Commerce.Payments/Services/SimulatedPaymentResultFactory.cs`):
+- Static factory class with methods: `PaymentSuccess()`, `PaymentFailure()`, `RefundSuccess()`, `RefundFailure()`, `CustomerSuccess()`, `CustomerFailure()`, `PaymentMethodSuccess()`, `PaymentMethodFailure()`, `CancellationSuccess()`, `CancellationFailure()`
+- Centralized Stripe-style ID generation with prefixes (`pi_`, `ch_`, `re_`, `cus_`, `pm_`)
+- `SimulatedTestCard` class for configurable test card data (Visa4242, Mastercard5555, Amex8431)
+- Reduces StripePaymentGateway from 363 lines to ~280 lines
 
 ### B.2 SOLID Violations
 
@@ -167,7 +181,7 @@ No significant commented-out code blocks found in production code. Test files co
 |----------|-------|----------|--------|--------|
 | **P1-1** | Add rate limiting to payment endpoints | PaymentsController, SubscriptionsController | 4 hours | ⏳ TODO |
 | **P1-2** | Implement remaining `SubscriptionService` methods | SubscriptionService.cs | 2-3 days | ✅ **DONE** |
-| **P1-3** | Extract `ValidateTenantAccess` to shared middleware | Controllers | 4 hours | ⏳ TODO |
+| **P1-3** | Extract `ValidateTenantAccess` to shared middleware | Controllers | 4 hours | ✅ **DONE** |
 | **P1-4** | Implement Apple Pay and PayPal signature verification | BillingWebhookServices | 2-3 days | ⏳ TODO |
 | **P1-5** | Implement tax exemption validation | TaxCalculationService.cs | 1 day | ⏳ TODO |
 | **P1-6** | Complete integration tests for Commerce modules | *IntegrationTests.cs | 5+ days | ⏳ TODO |

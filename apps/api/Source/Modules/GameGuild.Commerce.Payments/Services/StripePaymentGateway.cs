@@ -58,31 +58,12 @@ public class StripePaymentGateway(
 
             // Simulated response for development/testing (Stripe SDK not yet integrated)
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
-            
-            var transactionId = $"pi_{Guid.NewGuid():N}";
-            logger.LogDebug("Generated simulated Stripe transaction: {TransactionId}", transactionId);
-            
-            return new GatewayPaymentResult(
-                Success: true,
-                TransactionId: transactionId,
-                ExternalPaymentId: $"ch_{Guid.NewGuid():N}",
-                ErrorCode: null,
-                ErrorMessage: null,
-                Status: PaymentStatus.Succeeded,
-                ProcessedAt: DateTime.UtcNow);
+            return SimulatedPaymentResultFactory.PaymentSuccess(logger);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Stripe payment processing failed for idempotency key {IdempotencyKey}", request.IdempotencyKey);
-            
-            return new GatewayPaymentResult(
-                Success: false,
-                TransactionId: null,
-                ExternalPaymentId: null,
-                ErrorCode: "stripe_error",
-                ErrorMessage: ex.Message,
-                Status: PaymentStatus.Failed,
-                ProcessedAt: DateTime.UtcNow);
+            return SimulatedPaymentResultFactory.PaymentFailure(ex.Message);
         }
     }
 
@@ -113,29 +94,12 @@ public class StripePaymentGateway(
 
             // Simulated response for development/testing
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
-            
-            var refundId = $"re_{Guid.NewGuid():N}";
-            logger.LogDebug("Generated simulated Stripe refund: {RefundId}", refundId);
-            
-            return new GatewayRefundResult(
-                Success: true,
-                RefundId: refundId,
-                AmountRefunded: request.Amount ?? 0,
-                ErrorCode: null,
-                ErrorMessage: null,
-                ProcessedAt: DateTime.UtcNow);
+            return SimulatedPaymentResultFactory.RefundSuccess(request.Amount ?? 0, logger);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Stripe refund processing failed for transaction {TransactionId}", request.OriginalTransactionId);
-            
-            return new GatewayRefundResult(
-                Success: false,
-                RefundId: null,
-                AmountRefunded: 0,
-                ErrorCode: "stripe_error",
-                ErrorMessage: ex.Message,
-                ProcessedAt: DateTime.UtcNow);
+            return SimulatedPaymentResultFactory.RefundFailure(ex.Message);
         }
     }
 
@@ -209,25 +173,12 @@ public class StripePaymentGateway(
 
             // Simulated response for development/testing
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
-            
-            var customerId = $"cus_{Guid.NewGuid():N}";
-            logger.LogDebug("Generated simulated Stripe customer: {CustomerId}", customerId);
-            
-            return new GatewayCustomerResult(
-                Success: true,
-                ExternalCustomerId: customerId,
-                ErrorCode: null,
-                ErrorMessage: null);
+            return SimulatedPaymentResultFactory.CustomerSuccess(logger);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Stripe customer creation failed for email {Email}", request.Email);
-            
-            return new GatewayCustomerResult(
-                Success: false,
-                ExternalCustomerId: null,
-                ErrorCode: "stripe_error",
-                ErrorMessage: ex.Message);
+            return SimulatedPaymentResultFactory.CustomerFailure(ex.Message);
         }
     }
 
@@ -256,33 +207,12 @@ public class StripePaymentGateway(
 
             // Simulated response for development/testing
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
-            
-            var paymentMethodId = $"pm_{Guid.NewGuid():N}";
-            logger.LogDebug("Generated simulated Stripe payment method: {PaymentMethodId}", paymentMethodId);
-            
-            return new GatewayPaymentMethodResult(
-                Success: true,
-                ExternalPaymentMethodId: paymentMethodId,
-                CardLast4: "4242",
-                CardBrand: "visa",
-                ExpiryMonth: 12,
-                ExpiryYear: DateTime.UtcNow.Year + 3,
-                ErrorCode: null,
-                ErrorMessage: null);
+            return SimulatedPaymentResultFactory.PaymentMethodSuccess(logger: logger);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Stripe payment method creation failed for customer {CustomerId}", request.CustomerId);
-            
-            return new GatewayPaymentMethodResult(
-                Success: false,
-                ExternalPaymentMethodId: null,
-                CardLast4: null,
-                CardBrand: null,
-                ExpiryMonth: null,
-                ExpiryYear: null,
-                ErrorCode: "stripe_error",
-                ErrorMessage: ex.Message);
+            return SimulatedPaymentResultFactory.PaymentMethodFailure(ex.Message);
         }
     }
 
@@ -308,24 +238,12 @@ public class StripePaymentGateway(
 
             // Simulated response for development/testing
             await Task.Delay(1, cancellationToken).ConfigureAwait(false);
-            
-            logger.LogDebug("Simulated Stripe subscription cancellation: {SubscriptionId}", externalSubscriptionId);
-            
-            return new GatewayCancellationResult(
-                Success: true,
-                ErrorCode: null,
-                ErrorMessage: null,
-                EffectiveDate: DateTime.UtcNow);
+            return SimulatedPaymentResultFactory.CancellationSuccess(logger: logger);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Stripe subscription cancellation failed for {SubscriptionId}", externalSubscriptionId);
-            
-            return new GatewayCancellationResult(
-                Success: false,
-                ErrorCode: "stripe_error",
-                ErrorMessage: ex.Message,
-                EffectiveDate: null);
+            return SimulatedPaymentResultFactory.CancellationFailure(ex.Message);
         }
     }
 }

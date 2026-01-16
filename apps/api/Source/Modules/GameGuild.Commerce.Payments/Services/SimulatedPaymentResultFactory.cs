@@ -1,0 +1,225 @@
+using Microsoft.Extensions.Logging;
+
+namespace GameGuild.Commerce.Payments;
+
+/// <summary>
+///     Factory for creating simulated payment gateway responses.
+///     Used during development/testing when real payment gateway SDKs are not integrated.
+///     Centralizes all simulated response patterns for DRY compliance.
+/// </summary>
+/// <remarks>
+///     This factory should be removed or disabled in production environments.
+///     All methods generate realistic-looking but fake transaction IDs following the
+///     Stripe ID format conventions (prefix + random GUID).
+/// </remarks>
+public static class SimulatedPaymentResultFactory
+{
+    /// <summary>
+    ///     Stripe-style prefixes for different transaction types
+    /// </summary>
+    private static class Prefixes
+    {
+        public const string PaymentIntent = "pi_";
+        public const string Charge = "ch_";
+        public const string Refund = "re_";
+        public const string Customer = "cus_";
+        public const string PaymentMethod = "pm_";
+    }
+
+    /// <summary>
+    ///     Generates a Stripe-style transaction ID with the given prefix.
+    /// </summary>
+    private static string GenerateId(string prefix) => $"{prefix}{Guid.NewGuid():N}";
+
+    /// <summary>
+    ///     Creates a successful simulated payment result.
+    /// </summary>
+    public static GatewayPaymentResult PaymentSuccess(ILogger? logger = null)
+    {
+        var transactionId = GenerateId(Prefixes.PaymentIntent);
+        logger?.LogDebug("Generated simulated Stripe payment: {TransactionId}", transactionId);
+
+        return new GatewayPaymentResult(
+            Success: true,
+            TransactionId: transactionId,
+            ExternalPaymentId: GenerateId(Prefixes.Charge),
+            ErrorCode: null,
+            ErrorMessage: null,
+            Status: PaymentStatus.Succeeded,
+            ProcessedAt: DateTime.UtcNow);
+    }
+
+    /// <summary>
+    ///     Creates a failed simulated payment result.
+    /// </summary>
+    public static GatewayPaymentResult PaymentFailure(string errorMessage, string errorCode = "stripe_error")
+    {
+        return new GatewayPaymentResult(
+            Success: false,
+            TransactionId: null,
+            ExternalPaymentId: null,
+            ErrorCode: errorCode,
+            ErrorMessage: errorMessage,
+            Status: PaymentStatus.Failed,
+            ProcessedAt: DateTime.UtcNow);
+    }
+
+    /// <summary>
+    ///     Creates a successful simulated refund result.
+    /// </summary>
+    public static GatewayRefundResult RefundSuccess(decimal amount, ILogger? logger = null)
+    {
+        var refundId = GenerateId(Prefixes.Refund);
+        logger?.LogDebug("Generated simulated Stripe refund: {RefundId}", refundId);
+
+        return new GatewayRefundResult(
+            Success: true,
+            RefundId: refundId,
+            AmountRefunded: amount,
+            ErrorCode: null,
+            ErrorMessage: null,
+            ProcessedAt: DateTime.UtcNow);
+    }
+
+    /// <summary>
+    ///     Creates a failed simulated refund result.
+    /// </summary>
+    public static GatewayRefundResult RefundFailure(string errorMessage, string errorCode = "stripe_error")
+    {
+        return new GatewayRefundResult(
+            Success: false,
+            RefundId: null,
+            AmountRefunded: 0,
+            ErrorCode: errorCode,
+            ErrorMessage: errorMessage,
+            ProcessedAt: DateTime.UtcNow);
+    }
+
+    /// <summary>
+    ///     Creates a successful simulated customer result.
+    /// </summary>
+    public static GatewayCustomerResult CustomerSuccess(ILogger? logger = null)
+    {
+        var customerId = GenerateId(Prefixes.Customer);
+        logger?.LogDebug("Generated simulated Stripe customer: {CustomerId}", customerId);
+
+        return new GatewayCustomerResult(
+            Success: true,
+            ExternalCustomerId: customerId,
+            ErrorCode: null,
+            ErrorMessage: null);
+    }
+
+    /// <summary>
+    ///     Creates a failed simulated customer result.
+    /// </summary>
+    public static GatewayCustomerResult CustomerFailure(string errorMessage, string errorCode = "stripe_error")
+    {
+        return new GatewayCustomerResult(
+            Success: false,
+            ExternalCustomerId: null,
+            ErrorCode: errorCode,
+            ErrorMessage: errorMessage);
+    }
+
+    /// <summary>
+    ///     Creates a successful simulated payment method result.
+    /// </summary>
+    /// <param name="testCard">Optional test card configuration (defaults to Visa 4242)</param>
+    /// <param name="logger">Optional logger for debug output</param>
+    public static GatewayPaymentMethodResult PaymentMethodSuccess(
+        SimulatedTestCard? testCard = null,
+        ILogger? logger = null)
+    {
+        testCard ??= SimulatedTestCard.Visa4242;
+        var paymentMethodId = GenerateId(Prefixes.PaymentMethod);
+        logger?.LogDebug("Generated simulated Stripe payment method: {PaymentMethodId}", paymentMethodId);
+
+        return new GatewayPaymentMethodResult(
+            Success: true,
+            ExternalPaymentMethodId: paymentMethodId,
+            CardLast4: testCard.Last4,
+            CardBrand: testCard.Brand,
+            ExpiryMonth: testCard.ExpiryMonth,
+            ExpiryYear: testCard.ExpiryYear,
+            ErrorCode: null,
+            ErrorMessage: null);
+    }
+
+    /// <summary>
+    ///     Creates a failed simulated payment method result.
+    /// </summary>
+    public static GatewayPaymentMethodResult PaymentMethodFailure(string errorMessage, string errorCode = "stripe_error")
+    {
+        return new GatewayPaymentMethodResult(
+            Success: false,
+            ExternalPaymentMethodId: null,
+            CardLast4: null,
+            CardBrand: null,
+            ExpiryMonth: null,
+            ExpiryYear: null,
+            ErrorCode: errorCode,
+            ErrorMessage: errorMessage);
+    }
+
+    /// <summary>
+    ///     Creates a successful simulated cancellation result.
+    /// </summary>
+    public static GatewayCancellationResult CancellationSuccess(DateTime? effectiveDate = null, ILogger? logger = null)
+    {
+        effectiveDate ??= DateTime.UtcNow;
+        logger?.LogDebug("Generated simulated Stripe subscription cancellation");
+
+        return new GatewayCancellationResult(
+            Success: true,
+            ErrorCode: null,
+            ErrorMessage: null,
+            EffectiveDate: effectiveDate.Value);
+    }
+
+    /// <summary>
+    ///     Creates a failed simulated cancellation result.
+    /// </summary>
+    public static GatewayCancellationResult CancellationFailure(string errorMessage, string errorCode = "stripe_error")
+    {
+        return new GatewayCancellationResult(
+            Success: false,
+            ErrorCode: errorCode,
+            ErrorMessage: errorMessage,
+            EffectiveDate: null);
+    }
+}
+
+/// <summary>
+///     Simulated test card configuration for payment method simulation.
+/// </summary>
+public sealed class SimulatedTestCard
+{
+    /// <summary>
+    ///     Standard Stripe test card (Visa ending in 4242).
+    /// </summary>
+    public static readonly SimulatedTestCard Visa4242 = new("4242", "visa", 12, DateTime.UtcNow.Year + 3);
+
+    /// <summary>
+    ///     Mastercard test card ending in 5555.
+    /// </summary>
+    public static readonly SimulatedTestCard Mastercard5555 = new("5555", "mastercard", 10, DateTime.UtcNow.Year + 2);
+
+    /// <summary>
+    ///     Amex test card ending in 8431.
+    /// </summary>
+    public static readonly SimulatedTestCard Amex8431 = new("8431", "amex", 6, DateTime.UtcNow.Year + 4);
+
+    public SimulatedTestCard(string last4, string brand, int expiryMonth, int expiryYear)
+    {
+        Last4 = last4;
+        Brand = brand;
+        ExpiryMonth = expiryMonth;
+        ExpiryYear = expiryYear;
+    }
+
+    public string Last4 { get; }
+    public string Brand { get; }
+    public int ExpiryMonth { get; }
+    public int ExpiryYear { get; }
+}
