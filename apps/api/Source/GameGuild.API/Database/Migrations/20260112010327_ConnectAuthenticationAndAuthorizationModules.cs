@@ -363,16 +363,11 @@ namespace GameGuild.API.Database.Migrations
                 oldClrType: typeof(int),
                 oldType: "integer");
 
-            migrationBuilder.AlterColumn<string>(
-                name: "permissions",
-                schema: "gameguild.authentication",
-                table: "role",
-                type: "jsonb",
-                maxLength: 4000,
-                nullable: false,
-                oldClrType: typeof(string),
-                oldType: "character varying(4000)",
-                oldMaxLength: 4000);
+            // Use raw SQL with USING clause for jsonb cast
+            migrationBuilder.Sql(@"
+                ALTER TABLE ""gameguild.authentication"".role 
+                ALTER COLUMN permissions TYPE jsonb USING permissions::jsonb;
+            ");
 
             migrationBuilder.AlterColumn<string>(
                 name: "name",
