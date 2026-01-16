@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace GameGuild.API.Database.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260114103721_AddEconomicModelAlignmentProperties")]
-    partial class AddEconomicModelAlignmentProperties
+    [Migration("20260116031855_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -483,13 +483,6 @@ namespace GameGuild.API.Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<decimal>("AffiliateCommissionPercentage")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<string>("BundleItemsJson")
-                        .HasMaxLength(4000)
-                        .HasColumnType("jsonb");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone");
@@ -511,16 +504,10 @@ namespace GameGuild.API.Database.Migrations
                     b.Property<bool>("IsBundle")
                         .HasColumnType("boolean");
 
-                    b.Property<decimal>("MaxAffiliateDiscount")
-                        .HasColumnType("decimal(5,2)");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
-
-                    b.Property<decimal>("ReferralCommissionPercentage")
-                        .HasColumnType("decimal(5,2)");
 
                     b.Property<string>("ShortDescription")
                         .HasMaxLength(500)
@@ -1201,6 +1188,236 @@ namespace GameGuild.API.Database.Migrations
                         .IsUnique();
 
                     b.ToTable("user_products");
+                });
+
+            modelBuilder.Entity("GameGuild.Commerce.Subscriptions.Subscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AutoRenew")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("BillingCycle")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BillingCycleCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("CancellationNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int?>("CancellationReason")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CurrentPeriodEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("CurrentPeriodStart")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExternalCustomerId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("FulfilledOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("LastModifyingOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("LastPaymentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastPaymentIdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("LastProcessedBillingCycle")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LastRenewalIdempotencyKey")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("LockedPriceVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Metadata")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime>("NextBillingDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<byte[]>("RowVersion")
+                        .HasColumnType("bytea");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("TrialEndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CancelledAt");
+
+                    b.HasIndex("ExternalCustomerId");
+
+                    b.HasIndex("ExternalId");
+
+                    b.HasIndex("LastPaymentAt");
+
+                    b.HasIndex("NextBillingDate");
+
+                    b.HasIndex("PlanId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TrialEndDate");
+
+                    b.HasIndex("TenantId", "Status");
+
+                    b.ToTable("Subscriptions");
+                });
+
+            modelBuilder.Entity("GameGuild.Commerce.Subscriptions.SubscriptionPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long?>("AnnualPriceInCents")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Features")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("HasAdvancedAnalytics")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("HasCustomBranding")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("HasPrioritySupport")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("boolean");
+
+                    b.Property<long?>("MaxApiCallsPerMonth")
+                        .HasColumnType("bigint");
+
+                    b.Property<long?>("MaxStorageMb")
+                        .HasColumnType("bigint");
+
+                    b.Property<int?>("MaxUsers")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Metadata")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<long>("MonthlyPriceInCents")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TrialPeriodDays")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExternalId")
+                        .IsUnique();
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("SubscriptionPlans");
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authentication.AuthenticationAttempt", b =>
@@ -4642,6 +4859,40 @@ namespace GameGuild.API.Database.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("GameGuild.Commerce.Subscriptions.Subscription", b =>
+                {
+                    b.HasOne("GameGuild.Commerce.Subscriptions.SubscriptionPlan", "Plan")
+                        .WithMany("Subscriptions")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("GameGuild.ValueObjects.Money", "Amount", b1 =>
+                        {
+                            b1.Property<Guid>("SubscriptionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("numeric");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.HasKey("SubscriptionId");
+
+                            b1.ToTable("Subscriptions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("SubscriptionId");
+                        });
+
+                    b.Navigation("Amount")
+                        .IsRequired();
+
+                    b.Navigation("Plan");
+                });
+
             modelBuilder.Entity("GameGuild.Identity.Authentication.UserRole", b =>
                 {
                     b.HasOne("GameGuild.Identity.Authentication.Role", "Role")
@@ -4848,6 +5099,11 @@ namespace GameGuild.API.Database.Migrations
             modelBuilder.Entity("GameGuild.Commerce.Products.PromoCode", b =>
                 {
                     b.Navigation("PromoCodeUses");
+                });
+
+            modelBuilder.Entity("GameGuild.Commerce.Subscriptions.SubscriptionPlan", b =>
+                {
+                    b.Navigation("Subscriptions");
                 });
 
             modelBuilder.Entity("GameGuild.Identity.Authorization.AccessReviewCampaign", b =>
