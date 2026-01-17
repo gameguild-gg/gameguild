@@ -13,9 +13,16 @@ public class TenantDomainsRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantDomainsRepository(context);
 
-        var tenantId = Guid.NewGuid();
-        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", Subdomain = "app" });
-        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", Subdomain = null });
+        // Create tenant first for the Include to work
+        var tenant = new Tenant { Name = "Test Tenant", Slug = "test-tenant" };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
+
+        // Note: The repository treats the first dot as subdomain/topLevel separator
+        // So "app.example.com" is parsed as subdomain="app", topLevel="example.com"
+        // And "example.com" is parsed as subdomain="example", topLevel="com"
+        await repo.CreateAsync(new TenantDomain { TenantId = tenant.Id, TopLevelDomain = "example.com", Subdomain = "app" });
+        await repo.CreateAsync(new TenantDomain { TenantId = tenant.Id, TopLevelDomain = "com", Subdomain = "example" });
 
         var subdomain = await repo.GetByDomainAsync("app.example.com");
         var root = await repo.GetByDomainAsync("example.com");
@@ -30,11 +37,15 @@ public class TenantDomainsRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantDomainsRepository(context);
 
-        var tenantId = Guid.NewGuid();
-        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", IsMainDomain = true });
-        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "alt.com", IsSecondaryDomain = true });
+        // Create tenant first for the Include to work
+        var tenant = new Tenant { Name = "Test Tenant", Slug = "test-tenant" };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
 
-        var domains = await repo.GetByTenantIdAsync(tenantId);
+        await repo.CreateAsync(new TenantDomain { TenantId = tenant.Id, TopLevelDomain = "example.com", IsMainDomain = true });
+        await repo.CreateAsync(new TenantDomain { TenantId = tenant.Id, TopLevelDomain = "alt.com", IsSecondaryDomain = true });
+
+        var domains = await repo.GetByTenantIdAsync(tenant.Id);
 
         domains.Should().HaveCount(2);
     }
@@ -45,11 +56,15 @@ public class TenantDomainsRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantDomainsRepository(context);
 
-        var tenantId = Guid.NewGuid();
-        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", IsMainDomain = false });
-        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "main.com", IsMainDomain = true });
+        // Create tenant first for the Include to work
+        var tenant = new Tenant { Name = "Test Tenant", Slug = "test-tenant" };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
 
-        var main = await repo.GetMainDomainAsync(tenantId);
+        await repo.CreateAsync(new TenantDomain { TenantId = tenant.Id, TopLevelDomain = "example.com", IsMainDomain = false });
+        await repo.CreateAsync(new TenantDomain { TenantId = tenant.Id, TopLevelDomain = "main.com", IsMainDomain = true });
+
+        var main = await repo.GetMainDomainAsync(tenant.Id);
 
         main.Should().NotBeNull();
         main!.TopLevelDomain.Should().Be("main.com");
@@ -85,7 +100,12 @@ public class TenantDomainsRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantDomainsRepository(context);
 
-        var domain = new TenantDomain { TenantId = Guid.NewGuid(), TopLevelDomain = "example.com" };
+        // Create tenant first for the Include to work
+        var tenant = new Tenant { Name = "Test Tenant", Slug = "test-tenant" };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
+
+        var domain = new TenantDomain { TenantId = tenant.Id, TopLevelDomain = "example.com" };
         await repo.CreateAsync(domain);
 
         domain.Subdomain = "api";

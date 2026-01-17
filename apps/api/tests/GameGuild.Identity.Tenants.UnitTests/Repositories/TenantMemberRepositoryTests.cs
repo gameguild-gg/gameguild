@@ -13,11 +13,15 @@ public class TenantMemberRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantMemberRepository(context);
 
-        var tenantId = Guid.NewGuid();
-        var member = new TenantMember { TenantId = tenantId, UserId = Guid.NewGuid(), Role = "Member", IsActive = true };
+        // Create tenant first for the Include to work
+        var tenant = new Tenant { Name = "Test Tenant", Slug = "test-tenant" };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
+
+        var member = new TenantMember { TenantId = tenant.Id, UserId = Guid.NewGuid(), Role = "Member", IsActive = true };
 
         await repo.CreateAsync(member);
-        var fetched = await repo.GetByUserAndTenantAsync(member.UserId, tenantId);
+        var fetched = await repo.GetByUserAndTenantAsync(member.UserId, tenant.Id);
 
         fetched.Should().NotBeNull();
         fetched!.Role.Should().Be("Member");
@@ -29,7 +33,12 @@ public class TenantMemberRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantMemberRepository(context);
 
-        var member = new TenantMember { TenantId = Guid.NewGuid(), UserId = Guid.NewGuid(), Role = "Member", IsActive = true };
+        // Create tenant first for the Include to work
+        var tenant = new Tenant { Name = "Test Tenant", Slug = "test-tenant" };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
+
+        var member = new TenantMember { TenantId = tenant.Id, UserId = Guid.NewGuid(), Role = "Member", IsActive = true };
         await repo.CreateAsync(member);
 
         var fetched = await repo.GetByIdAsync(member.Id);
@@ -44,12 +53,16 @@ public class TenantMemberRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantMemberRepository(context);
 
-        var tenantId = Guid.NewGuid();
-        await repo.CreateAsync(new TenantMember { TenantId = tenantId, UserId = Guid.NewGuid(), Role = "Member", IsActive = true });
-        await repo.CreateAsync(new TenantMember { TenantId = tenantId, UserId = Guid.NewGuid(), Role = "Member", IsActive = false });
+        // Create tenant first for the Include to work
+        var tenant = new Tenant { Name = "Test Tenant", Slug = "test-tenant" };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
 
-        var activeOnly = await repo.GetByTenantIdAsync(tenantId, includeInactive: false);
-        var all = await repo.GetByTenantIdAsync(tenantId, includeInactive: true);
+        await repo.CreateAsync(new TenantMember { TenantId = tenant.Id, UserId = Guid.NewGuid(), Role = "Member", IsActive = true });
+        await repo.CreateAsync(new TenantMember { TenantId = tenant.Id, UserId = Guid.NewGuid(), Role = "Member", IsActive = false });
+
+        var activeOnly = await repo.GetByTenantIdAsync(tenant.Id, includeInactive: false);
+        var all = await repo.GetByTenantIdAsync(tenant.Id, includeInactive: true);
 
         activeOnly.Should().HaveCount(1);
         all.Should().HaveCount(2);
@@ -74,9 +87,16 @@ public class TenantMemberRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantMemberRepository(context);
 
+        // Create tenants first for the Include to work
+        var tenant1 = new Tenant { Name = "Test Tenant 1", Slug = "test-tenant-1" };
+        var tenant2 = new Tenant { Name = "Test Tenant 2", Slug = "test-tenant-2" };
+        context.Tenants.Add(tenant1);
+        context.Tenants.Add(tenant2);
+        await context.SaveChangesAsync();
+
         var userId = Guid.NewGuid();
-        await repo.CreateAsync(new TenantMember { TenantId = Guid.NewGuid(), UserId = userId, Role = "Member", IsActive = true });
-        await repo.CreateAsync(new TenantMember { TenantId = Guid.NewGuid(), UserId = userId, Role = "Member", IsActive = false });
+        await repo.CreateAsync(new TenantMember { TenantId = tenant1.Id, UserId = userId, Role = "Member", IsActive = true });
+        await repo.CreateAsync(new TenantMember { TenantId = tenant2.Id, UserId = userId, Role = "Member", IsActive = false });
 
         var activeOnly = await repo.GetByUserIdAsync(userId, includeInactive: false);
         var all = await repo.GetByUserIdAsync(userId, includeInactive: true);
@@ -91,12 +111,16 @@ public class TenantMemberRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantMemberRepository(context);
 
-        var tenantId = Guid.NewGuid();
-        await repo.CreateAsync(new TenantMember { TenantId = tenantId, UserId = Guid.NewGuid(), Role = "Member", IsActive = true });
-        await repo.CreateAsync(new TenantMember { TenantId = tenantId, UserId = Guid.NewGuid(), Role = "Member", IsActive = true });
-        await repo.CreateAsync(new TenantMember { TenantId = tenantId, UserId = Guid.NewGuid(), Role = "Member", IsActive = true });
+        // Create tenant first for the Include to work
+        var tenant = new Tenant { Name = "Test Tenant", Slug = "test-tenant" };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
 
-        var (members, total) = await repo.GetPagedAsync(tenantId, page: 2, pageSize: 2, includeInactive: true);
+        await repo.CreateAsync(new TenantMember { TenantId = tenant.Id, UserId = Guid.NewGuid(), Role = "Member", IsActive = true });
+        await repo.CreateAsync(new TenantMember { TenantId = tenant.Id, UserId = Guid.NewGuid(), Role = "Member", IsActive = true });
+        await repo.CreateAsync(new TenantMember { TenantId = tenant.Id, UserId = Guid.NewGuid(), Role = "Member", IsActive = true });
+
+        var (members, total) = await repo.GetPagedAsync(tenant.Id, page: 2, pageSize: 2, includeInactive: true);
 
         total.Should().Be(3);
         members.Should().HaveCount(1);
@@ -108,7 +132,12 @@ public class TenantMemberRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantMemberRepository(context);
 
-        var member = new TenantMember { TenantId = Guid.NewGuid(), UserId = Guid.NewGuid(), Role = "Member", IsActive = true };
+        // Create tenant first for the Include to work
+        var tenant = new Tenant { Name = "Test Tenant", Slug = "test-tenant" };
+        context.Tenants.Add(tenant);
+        await context.SaveChangesAsync();
+
+        var member = new TenantMember { TenantId = tenant.Id, UserId = Guid.NewGuid(), Role = "Member", IsActive = true };
         await repo.CreateAsync(member);
 
         await repo.DeleteAsync(member.Id);
