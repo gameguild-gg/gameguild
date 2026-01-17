@@ -485,26 +485,18 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
         if (!AutoRenew)
             return SubscriptionRenewalResult.Failed(Id, "Auto-renewal is disabled");
 
-        try
-        {
-            Amount = newAmount;
-            BillingCycleCount++;
-            LastRenewalIdempotencyKey = idempotencyKey;
+        Amount = newAmount;
+        BillingCycleCount++;
+        LastRenewalIdempotencyKey = idempotencyKey;
 
-            (var periodStart, var periodEnd, var nextBilling) = CalculateBillingDates(NextBillingDate, BillingCycle);
-            CurrentPeriodStart = periodStart;
-            CurrentPeriodEnd = periodEnd;
-            NextBillingDate = nextBilling;
+        (var periodStart, var periodEnd, var nextBilling) = CalculateBillingDates(NextBillingDate, BillingCycle);
+        CurrentPeriodStart = periodStart;
+        CurrentPeriodEnd = periodEnd;
+        NextBillingDate = nextBilling;
 
-            Raise(new SubscriptionRenewedEvent(Id, TenantId ?? Guid.Empty, BillingCycleCount, newAmount));
+        Raise(new SubscriptionRenewedEvent(Id, TenantId ?? Guid.Empty, BillingCycleCount, newAmount));
 
-            return SubscriptionRenewalResult.CreateSuccess(Id, BillingCycleCount, newAmount);
-        }
-        catch (Exception ex)
-        {
-            // [ExcludeFromCodeCoverage] - Defensive catch for unexpected errors in CalculateBillingDates
-            return SubscriptionRenewalResult.Failed(Id, ex.Message);
-        }
+        return SubscriptionRenewalResult.CreateSuccess(Id, BillingCycleCount, newAmount);
     }
 
     /// <summary>
