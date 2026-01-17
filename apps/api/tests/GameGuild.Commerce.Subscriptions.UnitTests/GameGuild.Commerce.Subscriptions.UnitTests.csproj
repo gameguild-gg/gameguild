@@ -12,17 +12,17 @@
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
     <!-- COVERAGE THRESHOLDS - Build will FAIL if coverage drops below these values      -->
     <!-- Run with: dotnet test /p:CollectCoverage=true                                   -->
-    <!-- Current: Line=26.83%, Branch=35.84%, Method=25.17%                              -->
+    <!-- Target: 100% coverage - All untested code must be addressed                     -->
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
     <PropertyGroup>
         <!-- Enable coverage collection when /p:CollectCoverage=true is passed -->
         <CollectCoverage>false</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-        <CoverletOutput>./TestResults/coverage.cobertura.xml</CoverletOutput>
+        <CoverletOutput>./TestResults/GameGuild.Commerce.Subscriptions.UnitTests.Coverage.xml</CoverletOutput>
         
         <!-- Minimum coverage thresholds (build fails if not met) -->
-        <!-- Starting at current level, incrementally increase as tests are added -->
-        <Threshold>25</Threshold>
+        <!-- ENFORCED AT 100% - All code must be tested -->
+        <Threshold>100</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
         
