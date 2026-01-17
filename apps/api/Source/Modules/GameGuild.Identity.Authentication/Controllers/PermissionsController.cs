@@ -13,6 +13,14 @@ namespace GameGuild.Identity.Authentication;
 /// <summary>
 ///     API controller for comprehensive permission management operations
 ///     Enhanced with CQRS pattern, 3-layer permission hierarchy, and advanced analytics
+///     
+///     Resource hierarchy:
+///     - /v1/permissions/tenant-grants - Tenant-level permission grants
+///     - /v1/permissions/content-type-grants - Content type permission grants  
+///     - /v1/permissions/resource-grants - Resource-level permission grants
+///     - /v1/permissions/templates - Permission templates
+///     - /v1/permissions/cache - Cache management
+///     - /v1/permissions/audit-trail - Audit trail
 /// </summary>
 /// <remarks>
 ///     Rate limited to 100 requests per minute per client to prevent DoS attacks on permission evaluation.
@@ -29,19 +37,21 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
 
     private readonly IMediator _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
 
-    #region Tenant GameGuild.Permissions
+    #region Tenant Permission Grants
 
     /// <summary>
-    ///     Grant tenant permissions to a user
+    ///     Create a tenant permission grant for a user
     /// </summary>
-    [HttpPost("tenant:grant")]
-    public async Task<ActionResult<TenantPermission>> GrantTenantPermission([FromBody] GrantTenantPermissionCommand command)
+    [HttpPost("tenant-grants")]
+    [ProducesResponseType(typeof(TenantPermission), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<TenantPermission>> CreateTenantGrant([FromBody] GrantTenantPermissionCommand command)
     {
         try
         {
             var result = await _mediator.Send(command);
 
-            return Ok(result);
+            return CreatedAtAction(nameof(GetTenantPermissions), new { userId = command.UserId, tenantId = command.TenantId }, result);
         }
         catch (Exception ex)
         {
@@ -52,16 +62,42 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     }
 
     /// <summary>
-    ///     Revoke tenant permissions from a user
+    ///     Delete a tenant permission grant
     /// </summary>
-    [HttpPost("tenant:revoke")]
+    [HttpDelete("tenant-grants/{grantId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DeleteTenantGrant(Guid grantId)
+    {
+        try
+        {
+            var command = new RevokeTenantPermissionByIdCommand { GrantId = grantId };
+            await _mediator.Send(command);
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to revoke tenant permission grant {GrantId}", grantId);
+
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    ///     Revoke tenant permissions from a user (legacy - use DELETE /tenant-grants/{grantId} instead)
+    /// </summary>
+    [HttpPost("tenant-grants:revoke")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> RevokeTenantPermission([FromBody] RevokeTenantPermissionCommand command)
     {
         try
         {
             await _mediator.Send(command);
 
-            return Ok();
+            return NoContent();
         }
         catch (Exception ex)
         {
@@ -75,7 +111,9 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     ///     Check if user has a specific tenant permission
     /// </summary>
     [HttpPost("tenant:check")]
-    public async Task<ActionResult<bool>> HasTenantPermission([FromBody] HasTenantPermissionQuery query)
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<bool>> CheckTenantPermission([FromBody] HasTenantPermissionQuery query)
     {
         try
         {
@@ -94,28 +132,35 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get all tenant permissions for a user
     /// </summary>
-    [HttpPost("tenant:list")]
-    public async Task<ActionResult<IEnumerable<PermissionType>>> GetTenantPermissions([FromBody] GetTenantPermissionsQuery query)
+    [HttpGet("tenant")]
+    [ProducesResponseType(typeof(IEnumerable<PermissionType>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<PermissionType>>> GetTenantPermissions(
+        [FromQuery] Guid userId,
+        [FromQuery] Guid tenantId)
     {
         try
         {
+            var query = new GetTenantPermissionsQuery { UserId = userId, TenantId = tenantId };
             var result = await _mediator.Send(query);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get tenant permissions for user {UserId} in tenant {TenantId}", query.UserId, query.TenantId);
+            _logger.LogError(ex, "Failed to get tenant permissions for user {UserId} in tenant {TenantId}", userId, tenantId);
 
             return BadRequest(new { error = ex.Message });
         }
     }
 
     /// <summary>
-    ///     Bulk grant tenant permissions
+    ///     Batch create tenant permission grants
     /// </summary>
-    [HttpPost("tenant:bulk-grant")]
-    public async Task<ActionResult<BulkPermissionResult>> BulkGrantTenantPermissions([FromBody] BulkGrantTenantPermissionsCommand command)
+    [HttpPost("tenant-grants:batch-create")]
+    [ProducesResponseType(typeof(BulkPermissionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BulkPermissionResult>> BatchCreateTenantGrants([FromBody] BulkGrantTenantPermissionsCommand command)
     {
         try
         {
@@ -132,10 +177,12 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     }
 
     /// <summary>
-    ///     Bulk revoke tenant permissions
+    ///     Batch delete tenant permission grants
     /// </summary>
-    [HttpPost("tenant:bulk-revoke")]
-    public async Task<ActionResult<BulkPermissionResult>> BulkRevokeTenantPermissions([FromBody] BulkRevokeTenantPermissionsCommand command)
+    [HttpPost("tenant-grants:batch-delete")]
+    [ProducesResponseType(typeof(BulkPermissionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BulkPermissionResult>> BatchDeleteTenantGrants([FromBody] BulkRevokeTenantPermissionsCommand command)
     {
         try
         {
@@ -153,19 +200,21 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
 
     #endregion
 
-    #region Content Type GameGuild.Permissions
+    #region Content Type Permission Grants
 
     /// <summary>
-    ///     Grant content type permissions to a user
+    ///     Create a content type permission grant for a user
     /// </summary>
-    [HttpPost("content-type:grant")]
-    public async Task<ActionResult<ContentTypePermission>> GrantContentTypePermission([FromBody] GrantContentTypePermissionCommand command)
+    [HttpPost("content-type-grants")]
+    [ProducesResponseType(typeof(ContentTypePermission), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ContentTypePermission>> CreateContentTypeGrant([FromBody] GrantContentTypePermissionCommand command)
     {
         try
         {
             var result = await _mediator.Send(command);
 
-            return Ok(result);
+            return CreatedAtAction(nameof(GetContentTypePermissions), new { userId = command.UserId }, result);
         }
         catch (Exception ex)
         {
@@ -176,16 +225,42 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     }
 
     /// <summary>
-    ///     Revoke content type permissions from a user
+    ///     Delete a content type permission grant
     /// </summary>
-    [HttpPost("content-type:revoke")]
+    [HttpDelete("content-type-grants/{grantId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DeleteContentTypeGrant(Guid grantId)
+    {
+        try
+        {
+            var command = new RevokeContentTypePermissionByIdCommand { GrantId = grantId };
+            await _mediator.Send(command);
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to revoke content type permission grant {GrantId}", grantId);
+
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    ///     Revoke content type permissions (legacy - use DELETE /content-type-grants/{grantId} instead)
+    /// </summary>
+    [HttpPost("content-type-grants:revoke")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> RevokeContentTypePermission([FromBody] RevokeContentTypePermissionCommand command)
     {
         try
         {
             await _mediator.Send(command);
 
-            return Ok();
+            return NoContent();
         }
         catch (Exception ex)
         {
@@ -199,7 +274,9 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     ///     Check if user has a specific content type permission
     /// </summary>
     [HttpPost("content-type:check")]
-    public async Task<ActionResult<bool>> HasContentTypePermission([FromBody] HasContentTypePermissionQuery query)
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<bool>> CheckContentTypePermission([FromBody] HasContentTypePermissionQuery query)
     {
         try
         {
@@ -218,18 +295,24 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get all content type permissions for a user
     /// </summary>
-    [HttpPost("content-type:list")]
-    public async Task<ActionResult<IEnumerable<PermissionType>>> GetContentTypePermissions([FromBody] GetContentTypePermissionsQuery query)
+    [HttpGet("content-type")]
+    [ProducesResponseType(typeof(IEnumerable<PermissionType>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<PermissionType>>> GetContentTypePermissions(
+        [FromQuery] Guid userId,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] string? contentType = null)
     {
         try
         {
+            var query = new GetContentTypePermissionsQuery { UserId = userId, TenantId = tenantId, ContentType = contentType };
             var result = await _mediator.Send(query);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get content type permissions for user {UserId}", query.UserId);
+            _logger.LogError(ex, "Failed to get content type permissions for user {UserId}", userId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -237,19 +320,21 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
 
     #endregion
 
-    #region Resource GameGuild.Permissions
+    #region Resource Permission Grants
 
     /// <summary>
-    ///     Grant resource-level permissions to a user
+    ///     Create a resource permission grant for a user
     /// </summary>
-    [HttpPost("resource:grant")]
-    public async Task<ActionResult<bool>> GrantResourcePermission([FromBody] GrantResourcePermissionCommand command)
+    [HttpPost("resource-grants")]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<bool>> CreateResourceGrant([FromBody] GrantResourcePermissionCommand command)
     {
         try
         {
             var result = await _mediator.Send(command);
 
-            return Ok(result);
+            return CreatedAtAction(nameof(GetResourcePermissions), new { userId = command.UserId, resourceId = command.ResourceId }, result);
         }
         catch (Exception ex)
         {
@@ -260,16 +345,42 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     }
 
     /// <summary>
-    ///     Revoke resource-level permissions from a user
+    ///     Delete a resource permission grant
     /// </summary>
-    [HttpPost("resource:revoke")]
+    [HttpDelete("resource-grants/{grantId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DeleteResourceGrant(Guid grantId)
+    {
+        try
+        {
+            var command = new RevokeResourcePermissionByIdCommand { GrantId = grantId };
+            await _mediator.Send(command);
+
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to revoke resource permission grant {GrantId}", grantId);
+
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    ///     Revoke resource permissions (legacy - use DELETE /resource-grants/{grantId} instead)
+    /// </summary>
+    [HttpPost("resource-grants:revoke")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> RevokeResourcePermission([FromBody] RevokeResourcePermissionCommand command)
     {
         try
         {
             await _mediator.Send(command);
 
-            return Ok();
+            return NoContent();
         }
         catch (Exception ex)
         {
@@ -283,7 +394,9 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     ///     Check if user has a specific resource permission
     /// </summary>
     [HttpPost("resource:check")]
-    public async Task<ActionResult<bool>> HasResourcePermission([FromBody] HasResourcePermissionQuery query)
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<bool>> CheckResourcePermission([FromBody] HasResourcePermissionQuery query)
     {
         try
         {
@@ -302,28 +415,35 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get all resource permissions for a user
     /// </summary>
-    [HttpPost("resource:list")]
-    public async Task<ActionResult<IEnumerable<PermissionType>>> GetResourcePermissions([FromBody] GetResourcePermissionsQuery query)
+    [HttpGet("resource")]
+    [ProducesResponseType(typeof(IEnumerable<PermissionType>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<IEnumerable<PermissionType>>> GetResourcePermissions(
+        [FromQuery] Guid userId,
+        [FromQuery] Guid resourceId)
     {
         try
         {
+            var query = new GetResourcePermissionsQuery { UserId = userId, ResourceId = resourceId };
             var result = await _mediator.Send(query);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get resource permissions for user {UserId} and resource {ResourceId}", query.UserId, query.ResourceId);
+            _logger.LogError(ex, "Failed to get resource permissions for user {UserId} and resource {ResourceId}", userId, resourceId);
 
             return BadRequest(new { error = ex.Message });
         }
     }
 
     /// <summary>
-    ///     Bulk grant resource permissions
+    ///     Batch create resource permission grants
     /// </summary>
-    [HttpPost("resource:bulk-grant")]
-    public async Task<ActionResult<BulkPermissionResult>> BulkGrantResourcePermissions([FromBody] BulkGrantResourcePermissionsCommand command)
+    [HttpPost("resource-grants:batch-create")]
+    [ProducesResponseType(typeof(BulkPermissionResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BulkPermissionResult>> BatchCreateResourceGrants([FromBody] BulkGrantResourcePermissionsCommand command)
     {
         try
         {
@@ -341,23 +461,26 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
 
     #endregion
 
-    #region Unified Permission Operations
+    #region User Permissions (Aggregated Views)
 
     /// <summary>
     ///     Get all permissions for a user across all layers (tenant + content-type + resource)
     /// </summary>
-    [HttpPost("user:all")]
-    public async Task<ActionResult<UserPermissionsDto>> GetUserPermissions([FromBody] GetUserPermissionsQuery query)
+    [HttpGet("~/v{version:apiVersion}/users/{userId:guid}/permissions")]
+    [ProducesResponseType(typeof(UserPermissionsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<UserPermissionsDto>> GetUserPermissions(Guid userId, [FromQuery] Guid? tenantId = null)
     {
         try
         {
+            var query = new GetUserPermissionsQuery { UserId = userId, TenantId = tenantId };
             var result = await _mediator.Send(query);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get all user permissions for user {UserId}", query.UserId);
+            _logger.LogError(ex, "Failed to get all user permissions for user {UserId}", userId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -366,18 +489,24 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get effective permissions for a user (resolved through all layers with inheritance)
     /// </summary>
-    [HttpPost("user:effective")]
-    public async Task<ActionResult<EffectivePermissionsDto>> GetEffectivePermissions([FromBody] GetEffectivePermissionsQuery query)
+    [HttpGet("~/v{version:apiVersion}/users/{userId:guid}/permissions/effective")]
+    [ProducesResponseType(typeof(EffectivePermissionsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<EffectivePermissionsDto>> GetEffectivePermissions(
+        Guid userId,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] Guid? resourceId = null)
     {
         try
         {
+            var query = new GetEffectivePermissionsQuery { UserId = userId, TenantId = tenantId, ResourceId = resourceId };
             var result = await _mediator.Send(query);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get effective permissions for user {UserId}", query.UserId);
+            _logger.LogError(ex, "Failed to get effective permissions for user {UserId}", userId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -386,7 +515,9 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Resolve permission hierarchy for a specific permission check
     /// </summary>
-    [HttpPost("hierarchy:resolve")]
+    [HttpPost(":resolve-hierarchy")]
+    [ProducesResponseType(typeof(PermissionHierarchyResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PermissionHierarchyResult>> ResolvePermissionHierarchy([FromBody] ResolvePermissionHierarchyQuery query)
     {
         try
@@ -410,8 +541,13 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get permission usage analytics for a tenant
     /// </summary>
-    [HttpGet("analytics/{tenantId}")]
-    public async Task<ActionResult<PermissionAnalyticsDto>> GetPermissionAnalytics(Guid tenantId, [FromQuery] DateTime? fromDate = null, [FromQuery] DateTime? toDate = null)
+    [HttpGet("~/v{version:apiVersion}/tenants/{tenantId:guid}/permissions/analytics")]
+    [ProducesResponseType(typeof(PermissionAnalyticsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PermissionAnalyticsDto>> GetPermissionAnalytics(
+        Guid tenantId, 
+        [FromQuery] DateTime? fromDate = null, 
+        [FromQuery] DateTime? toDate = null)
     {
         try
         {
@@ -431,18 +567,35 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Get permission audit trail for compliance reporting
     /// </summary>
-    [HttpPost("audit:trail")]
-    public async Task<ActionResult<PermissionAuditTrailDto>> GetPermissionAuditTrail([FromBody] GetPermissionAuditTrailQuery query)
+    [HttpGet("audit-trail")]
+    [ProducesResponseType(typeof(PermissionAuditTrailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<PermissionAuditTrailDto>> GetPermissionAuditTrail(
+        [FromQuery] Guid? userId = null,
+        [FromQuery] Guid? tenantId = null,
+        [FromQuery] DateTime? fromDate = null,
+        [FromQuery] DateTime? toDate = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
     {
         try
         {
+            var query = new GetPermissionAuditTrailQuery 
+            { 
+                UserId = userId, 
+                TenantId = tenantId,
+                FromDate = fromDate,
+                ToDate = toDate,
+                Page = page,
+                PageSize = pageSize
+            };
             var result = await _mediator.Send(query);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get permission audit trail for user {UserId}", query.UserId);
+            _logger.LogError(ex, "Failed to get permission audit trail for user {UserId}", userId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -452,6 +605,8 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     ///     Get cache statistics for permission system performance monitoring
     /// </summary>
     [HttpGet("cache/stats")]
+    [ProducesResponseType(typeof(PermissionCacheStatsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PermissionCacheStatsDto>> GetCacheStatistics()
     {
         try
@@ -473,6 +628,8 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     ///     Clear permission cache for a specific user or tenant
     /// </summary>
     [HttpPost("cache:clear")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> ClearPermissionCache([FromQuery] Guid? userId = null, [FromQuery] Guid? tenantId = null)
     {
         try
@@ -498,6 +655,8 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     ///     Get available permission templates for common roles
     /// </summary>
     [HttpGet("templates")]
+    [ProducesResponseType(typeof(IEnumerable<PermissionTemplateDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<PermissionTemplateDto>>> GetPermissionTemplates()
     {
         try
@@ -518,18 +677,28 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
     /// <summary>
     ///     Apply a permission template to a user
     /// </summary>
-    [HttpPost("templates:apply")]
-    public async Task<ActionResult<ApplyPermissionTemplateResult>> ApplyPermissionTemplate([FromBody] ApplyPermissionTemplateCommand command)
+    [HttpPost("templates/{templateId:guid}:apply")]
+    [ProducesResponseType(typeof(ApplyPermissionTemplateResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApplyPermissionTemplateResult>> ApplyPermissionTemplate(
+        Guid templateId,
+        [FromBody] ApplyPermissionTemplateRequest request)
     {
         try
         {
+            var command = new ApplyPermissionTemplateCommand 
+            { 
+                TemplateId = templateId, 
+                UserId = request.UserId,
+                TenantId = request.TenantId
+            };
             var result = await _mediator.Send(command);
 
             return Ok(result);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to apply permission template {TemplateId} to user {UserId}", command.TemplateId, command.UserId);
+            _logger.LogError(ex, "Failed to apply permission template {TemplateId} to user {UserId}", templateId, request.UserId);
 
             return BadRequest(new { error = ex.Message });
         }
@@ -537,3 +706,8 @@ public class PermissionsController(IMediator mediator, ILogger<PermissionsContro
 
     #endregion
 }
+
+/// <summary>
+///     Request body for applying a permission template
+/// </summary>
+public record ApplyPermissionTemplateRequest(Guid UserId, Guid? TenantId = null);
