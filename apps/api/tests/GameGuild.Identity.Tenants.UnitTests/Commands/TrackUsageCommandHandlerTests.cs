@@ -56,6 +56,28 @@ public class TrackUsageCommandHandlerTests
         captured.Cost.Should().Be(2.5m);
     }
 
+    [Fact]
+    public async Task Handle_Should_Track_Usage_With_Null_Metadata()
+    {
+        var tenantId = Guid.NewGuid();
+        var tenant = new Tenant { Id = tenantId, Name = "Tenant", Slug = "tenant" };
+        var trackingId = Guid.NewGuid();
+        UsageTracking? captured = null;
+
+        _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(tenant);
+        _usageTrackingServiceMock
+            .Setup(s => s.TrackUsageAsync(It.IsAny<UsageTracking>(), It.IsAny<CancellationToken>()))
+            .Callback<UsageTracking, CancellationToken>((usage, _) => captured = usage)
+            .ReturnsAsync(trackingId);
+
+        var result = await _handler.Handle(new TestTrackUsageCommand(tenantId, "api", "call", 1, 0m, null), CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        captured.Should().NotBeNull();
+        captured!.Metadata.Should().BeNull();
+    }
+
     private sealed record TestTrackUsageCommand(
         Guid TenantId,
         string ResourceType,

@@ -49,6 +49,24 @@ public class RemoveTenantMemberCommandHandlerTests
         tenant.DomainEvents.Should().Contain(e => e is TenantMemberRemovedEvent);
     }
 
+    [Fact]
+    public async Task Handle_Should_Delete_Member_Without_Event_When_Tenant_Not_Found()
+    {
+        var tenantId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var member = new TenantMember { TenantId = tenantId, UserId = userId, Role = "Member" };
+
+        _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(member);
+        _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var result = await _handler.Handle(new TestRemoveTenantMemberCommand(tenantId, userId), CancellationToken.None);
+
+        result.Success.Should().BeTrue();
+        _memberRepositoryMock.Verify(r => r.DeleteAsync(member.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private sealed record TestRemoveTenantMemberCommand(Guid TenantId, Guid UserId)
         : RemoveTenantMemberCommand(TenantId, UserId);
 }
