@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.API.Database;
+using GameGuild.Commerce.Billing;
 using GameGuild.ValueObjects;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -462,18 +463,65 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
         return plan.Id;
     }
 
-    private Task<Guid> SeedFailedInvoiceAsync(Guid subscriptionId)
+    private async Task<Guid> SeedFailedInvoiceAsync(Guid subscriptionId)
     {
-        // Create a failed invoice - implementation depends on Invoice entity
-        // This is a placeholder that would need to match actual domain model
-        return Task.FromResult(Guid.NewGuid());
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        // Get the subscription to retrieve its TenantId
+        var subscription = await dbContext.Set<Subscription>()
+            .FirstOrDefaultAsync(s => s.Id == subscriptionId);
+        
+        if (subscription == null)
+            throw new InvalidOperationException($"Subscription {subscriptionId} not found");
+
+        // Create an invoice in PastDue status (represents a failed payment)
+        var invoice = new Invoice(
+            tenantId: subscription.TenantId.Value,
+            subscriptionId: subscriptionId,
+            amount: 29.99m,
+            currency: "USD"
+        );
+
+        // Issue the invoice and mark it as past due (failed)
+        invoice.Issue();
+        invoice.MarkPastDue();
+
+        dbContext.Set<Invoice>().Add(invoice);
+        await dbContext.SaveChangesAsync();
+
+        return invoice.Id;
     }
 
-    private Task<Guid> SeedInvoiceWithMaxFailuresAsync(Guid subscriptionId)
+    private async Task<Guid> SeedInvoiceWithMaxFailuresAsync(Guid subscriptionId)
     {
-        // Create an invoice that has exceeded max retry attempts
-        // This is a placeholder that would need to match actual domain model
-        return Task.FromResult(Guid.NewGuid());
+        using var scope = _factory.Services.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        // Get the subscription to retrieve its TenantId
+        var subscription = await dbContext.Set<Subscription>()
+            .FirstOrDefaultAsync(s => s.Id == subscriptionId);
+        
+        if (subscription == null)
+            throw new InvalidOperationException($"Subscription {subscriptionId} not found");
+
+        // Create an invoice marked as uncollectible (exceeded max retry attempts)
+        var invoice = new Invoice(
+            tenantId: subscription.TenantId.Value,
+            subscriptionId: subscriptionId,
+            amount: 29.99m,
+            currency: "USD"
+        );
+
+        // Issue the invoice, mark past due, then mark uncollectible (max failures)
+        invoice.Issue();
+        invoice.MarkPastDue();
+        invoice.MarkUncollectible();
+
+        dbContext.Set<Invoice>().Add(invoice);
+        await dbContext.SaveChangesAsync();
+
+        return invoice.Id;
     }
 
     public void Dispose()

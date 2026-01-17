@@ -1,6 +1,6 @@
-#pragma warning disable CS0618 // Type or member is obsolete - Testing legacy TenantMiddleware keys intentionally
 using FluentAssertions;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
@@ -105,8 +105,8 @@ public class TenantMiddlewareTests
 
         // Assert
         nextCalled.Should().BeTrue();
-        context.Items[TenantMiddleware.TenantItemKey].Should().Be(tenant);
-        context.Items[TenantMiddleware.TenantIdItemKey].Should().Be(tenantId);
+        context.Items[HttpContextKeys.CurrentTenant].Should().Be(tenant);
+        context.Items[HttpContextKeys.AuthorizationTenantId].Should().Be(tenantId);
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public class TenantMiddlewareTests
         await middleware.InvokeAsync(context, _mediator, _tenantDomainsRepositoryMock.Object, _tenantMemberRepositoryMock.Object);
 
         // Assert
-        context.Items.Should().NotContainKey(TenantMiddleware.TenantItemKey);
+        context.Items.Should().NotContainKey(HttpContextKeys.CurrentTenant);
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public class TenantMiddlewareTests
         // Assert
         nextCalled.Should().BeTrue();
         // No tenant should be set since health endpoint bypasses resolution
-        context.Items.Should().NotContainKey(TenantMiddleware.TenantItemKey);
+        context.Items.Should().NotContainKey(HttpContextKeys.CurrentTenant);
     }
 
     [Fact]
@@ -170,7 +170,7 @@ public class TenantMiddlewareTests
 
         // Assert
         // No tenant should be set since swagger endpoint bypasses resolution
-        context.Items.Should().NotContainKey(TenantMiddleware.TenantItemKey);
+        context.Items.Should().NotContainKey(HttpContextKeys.CurrentTenant);
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public class TenantMiddlewareTests
         await middleware.InvokeAsync(context, _mediator, _tenantDomainsRepositoryMock.Object, _tenantMemberRepositoryMock.Object);
 
         // Assert
-        context.Items[TenantMiddleware.TenantItemKey].Should().Be(tenant);
+        context.Items[HttpContextKeys.CurrentTenant].Should().Be(tenant);
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public class TenantMiddlewareTests
         await middleware.InvokeAsync(context, _mediator, _tenantDomainsRepositoryMock.Object, _tenantMemberRepositoryMock.Object);
 
         // Assert
-        context.Items[TenantMiddleware.TenantItemKey].Should().Be(defaultTenant);
+        context.Items[HttpContextKeys.CurrentTenant].Should().Be(defaultTenant);
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public class TenantMiddlewareTests
         await middleware.InvokeAsync(context, _mediator, _tenantDomainsRepositoryMock.Object, _tenantMemberRepositoryMock.Object);
 
         // Assert
-        context.Items[TenantMiddleware.TenantItemKey].Should().Be(tenant);
+        context.Items[HttpContextKeys.CurrentTenant].Should().Be(tenant);
     }
 
     private static DefaultHttpContext CreateHttpContext()

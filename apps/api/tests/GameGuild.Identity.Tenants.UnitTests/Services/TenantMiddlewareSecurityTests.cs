@@ -1,6 +1,6 @@
-#pragma warning disable CS0618 // Type or member is obsolete - Testing legacy TenantMiddleware keys intentionally
 using FluentAssertions;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -62,8 +62,8 @@ public class TenantMiddlewareSecurityTests
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items[TenantMiddleware.TenantItemKey].Should().Be(tenant);
-        context.Items[TenantMiddleware.TenantIdItemKey].Should().Be(tenantId);
+        context.Items[HttpContextKeys.CurrentTenant].Should().Be(tenant);
+        context.Items[HttpContextKeys.AuthorizationTenantId].Should().Be(tenantId);
         _nextMock.Verify(n => n(context), Times.Once);
     }
 
@@ -97,7 +97,7 @@ public class TenantMiddlewareSecurityTests
 
         // Assert
         context.Response.StatusCode.Should().Be(403);
-        context.Items.Should().NotContainKey(TenantMiddleware.TenantItemKey);
+        context.Items.Should().NotContainKey(HttpContextKeys.CurrentTenant);
         _nextMock.Verify(n => n(context), Times.Never);
 
         // Verify security log
@@ -175,7 +175,7 @@ public class TenantMiddlewareSecurityTests
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items[TenantMiddleware.TenantItemKey].Should().Be(tenant);
+        context.Items[HttpContextKeys.CurrentTenant].Should().Be(tenant);
         _nextMock.Verify(n => n(context), Times.Once);
         
         // Membership check should NOT be called for anonymous users
@@ -279,7 +279,7 @@ public class TenantMiddlewareSecurityTests
 
         // Assert
         context.Response.StatusCode.Should().Be(200);
-        context.Items.Should().NotContainKey(TenantMiddleware.TenantItemKey);
+        context.Items.Should().NotContainKey(HttpContextKeys.CurrentTenant);
         _nextMock.Verify(n => n(context), Times.Once);
         
         // No membership check when no tenant resolved
