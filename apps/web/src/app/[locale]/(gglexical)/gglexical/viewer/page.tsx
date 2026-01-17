@@ -14,7 +14,8 @@ import { PreviewRendererSequentialContinuous } from "@/components/editor/extras/
 import { PreviewRendererSequentialSlide } from "@/components/editor/extras/preview/preview-renderer-sequential-slide"
 import { useRouter } from "next/navigation"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
-import { detectProjectLayout, extractEditorStates, type LayoutType } from "@/lib/storage/editor/layout-detector"
+import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/layout-detector"
+import { getLayoutFromType, type ProjectType, type InternalLayout } from "@/lib/storage/editor/project-types"
 import { checkSelectedProject as checkProjectPreview } from "@/components/editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/editor/extras/preview/preview-load-operations"
 
@@ -152,11 +153,11 @@ export default function PreviewPage() {
   }
 
   const getLayoutAndStates = (): { 
-    layout: LayoutType; 
+    layout: InternalLayout; 
     states: { blocks: Record<string, any> };
     isSequential: boolean;
     sequentialData?: any;
-    projectType?: string;
+    projectType?: ProjectType;
     previewMode?: "continuous" | "slide";
   } => {
     if (!currentProject) {
@@ -169,22 +170,16 @@ export default function PreviewPage() {
     
     const layoutInfo = detectProjectLayout(currentProject.data)
     
-    // Force layout based on project type for type2/type3
-    // Type2 must always be multi-panel even with 1 block
-    let finalLayoutType: LayoutType = layoutInfo.layoutType
-    if (currentProject.type === "type2" && (layoutInfo.layoutType === "single" || layoutInfo.layoutType === "multiple")) {
-      finalLayoutType = "multiple"
-    } else if (currentProject.type === "type3") {
-      finalLayoutType = "sequential"
-    }
+    // Layout é derivado diretamente do tipo de projeto
+    const finalLayout = getLayoutFromType(currentProject.type)
     
-    const states = extractEditorStates(currentProject.data, finalLayoutType)
+    const states = extractEditorStates(currentProject.data, currentProject.type)
     
     // Get preview mode from preferences (default to continuous)
     const previewMode = currentProject.preferences?.global?.previewMode || "continuous"
     
     return {
-      layout: finalLayoutType,
+      layout: finalLayout,
       states,
       isSequential: layoutInfo.isSequential,
       sequentialData: layoutInfo.sequentialData,

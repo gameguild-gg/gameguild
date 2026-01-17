@@ -8,11 +8,10 @@
  */
 
 import { isSequentialStructure, parseSequentialStructure, type SequentialPanelStructure } from './panel-structure'
-
-export type LayoutType = "single" | "multiple" | "sequential"
+import { getLayoutFromType, type ProjectType, type InternalLayout } from './project-types'
 
 export interface LayoutDetectionResult {
-  layoutType: LayoutType
+  layoutType: InternalLayout
   isSinglePanel: boolean
   isMultiPanel: boolean
   isSequential: boolean
@@ -84,12 +83,13 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
 }
 
 /**
- * Extrai os estados dos editores baseado no layout detectado
+ * Extrai os estados dos editores baseado no tipo de projeto
  * @param data - String JSON com os dados do projeto
- * @param layoutType - Tipo de layout (single ou multiple)
+ * @param projectType - Tipo de projeto (type1, type2, type3)
  * @returns Objetos com os estados dos editores
  */
-export function extractEditorStates(data: string, layoutType: LayoutType): EditorStates {
+export function extractEditorStates(data: string, projectType: ProjectType): EditorStates {
+  const layoutType = getLayoutFromType(projectType)
   try {
     const parsed = JSON.parse(data)
     
@@ -129,12 +129,13 @@ export function extractEditorStates(data: string, layoutType: LayoutType): Edito
 }
 
 /**
- * Cria a estrutura de dados correta baseado no layout type
- * @param layoutType - Tipo de layout
+ * Cria a estrutura de dados correta baseado no tipo de projeto
+ * @param projectType - Tipo de projeto
  * @param states - Estados dos editores (ou estrutura sequencial)
  * @returns String JSON formatada corretamente
  */
-export function createProjectData(layoutType: LayoutType, states: Partial<EditorStates> | SequentialPanelStructure, blockCount?: number): string {
+export function createProjectData(projectType: ProjectType, states: Partial<EditorStates> | SequentialPanelStructure, blockCount?: number): string {
+  const layoutType = getLayoutFromType(projectType)
   // Se for estrutura sequencial completa, apenas serializar
   if ('version' in states && 'panels' in states) {
     return JSON.stringify(states)

@@ -7,11 +7,12 @@
 import JSZip from "jszip"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import type { AssetData, AssetUsage } from "@/lib/storage/assets/types"
+import type { ProjectType } from "@/lib/storage/editor/project-types"
 
 export interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3" // Project type (not layout)
+  type: ProjectType // Project type (not layout)
   data: string
   tags: string[]
   size: number
