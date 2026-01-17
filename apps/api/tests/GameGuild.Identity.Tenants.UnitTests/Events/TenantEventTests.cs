@@ -29,8 +29,8 @@ public class TenantEventTests
         restored.Name.Should().Be("Tenant");
         deleted.Name.Should().Be("Tenant");
         created.Name.Should().Be("Tenant");
-        memberAdded.TenantId.Should().Be(tenantId);
-        memberRemoved.TenantId.Should().Be(tenantId);
+        memberAdded.TenantId.Value.Should().Be(tenantId);
+        memberRemoved.TenantId.Value.Should().Be(tenantId);
         planChanged.IsUpgrade.Should().BeTrue();
     }
 }

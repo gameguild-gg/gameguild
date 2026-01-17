@@ -11,6 +11,14 @@ namespace GameGuild.Identity.Tenants.UnitTests.Infrastructure;
 public class TestTenantDbContext(DbContextOptions<TestTenantDbContext> options)
     : DbContext(options), IApplicationDbContext
 {
+    public DbSet<Tenant> Tenants { get; set; } = null!;
+    public DbSet<TenantMember> TenantMembers { get; set; } = null!;
+    public DbSet<TenantDomain> TenantDomains { get; set; } = null!;
+    public DbSet<TenantSettings> TenantSettings { get; set; } = null!;
+    public DbSet<TenantMetadata> TenantMetadata { get; set; } = null!;
+    public DbSet<UsageTracking> UsageTracking { get; set; } = null!;
+    public DbSet<TenantAuditLog> TenantAuditLogs { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -37,6 +45,7 @@ public class TestTenantDbContext(DbContextOptions<TestTenantDbContext> options)
             value => value == null ? 0 : value.Aggregate(0, (acc, pair) => HashCode.Combine(acc, pair.Key, pair.Value)),
             value => value == null ? null : new Dictionary<string, string>(value));
 
+        // TenantAuditLog configuration
         modelBuilder.Entity<TenantAuditLog>(builder =>
         {
             builder.Property(x => x.BeforeValues)
@@ -50,6 +59,56 @@ public class TestTenantDbContext(DbContextOptions<TestTenantDbContext> options)
             builder.Property(x => x.Metadata)
                 .HasConversion(stringDictionaryConverter)
                 .Metadata.SetValueComparer(stringDictionaryComparer);
+        });
+
+        // Tenant configuration - minimal for testing
+        modelBuilder.Entity<Tenant>(builder =>
+        {
+            builder.HasKey(t => t.Id);
+            builder.Property(t => t.Name).IsRequired();
+            builder.Property(t => t.Slug).IsRequired();
+        });
+
+        // TenantMember configuration
+        modelBuilder.Entity<TenantMember>(builder =>
+        {
+            builder.HasKey(tm => tm.Id);
+            builder.Property(tm => tm.UserId).IsRequired();
+            builder.Property(tm => tm.TenantId).IsRequired();
+            builder.Property(tm => tm.Role).IsRequired();
+            builder.HasIndex(tm => new { tm.UserId, tm.TenantId }).IsUnique();
+        });
+
+        // TenantDomain configuration
+        modelBuilder.Entity<TenantDomain>(builder =>
+        {
+            builder.HasKey(td => td.Id);
+            builder.Property(td => td.TenantId).IsRequired();
+            builder.Property(td => td.TopLevelDomain).IsRequired();
+        });
+
+        // TenantSettings configuration
+        modelBuilder.Entity<TenantSettings>(builder =>
+        {
+            builder.HasKey(ts => ts.Id);
+            builder.Property(ts => ts.TenantId).IsRequired();
+            builder.HasIndex(ts => ts.TenantId).IsUnique();
+        });
+
+        // TenantMetadata configuration
+        modelBuilder.Entity<TenantMetadata>(builder =>
+        {
+            builder.HasKey(tm => tm.Id);
+            builder.Property(tm => tm.TenantId).IsRequired();
+            builder.HasIndex(tm => tm.TenantId).IsUnique();
+        });
+
+        // UsageTracking configuration
+        modelBuilder.Entity<UsageTracking>(builder =>
+        {
+            builder.HasKey(ut => ut.Id);
+            builder.Property(ut => ut.TenantId).IsRequired();
+            builder.Property(ut => ut.ResourceType).IsRequired();
         });
     }
 

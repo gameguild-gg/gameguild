@@ -38,7 +38,7 @@ public class TenantsControllerTests
     public async Task GetPaymentHistory_Should_Return_Ok()
     {
         var sender = new StubSender();
-        sender.Setup<GetPaymentHistoryQuery, IEnumerable<PaymentResult>>(_ => Array.Empty<PaymentResult>());
+        sender.Setup<GetPaymentHistoryQuery, List<PaymentHistoryResult>>(_ => new List<PaymentHistoryResult>());
 
         var controller = new TenantsController(sender);
         var result = await controller.GetPaymentHistory(Guid.NewGuid(), null, null, CancellationToken.None);

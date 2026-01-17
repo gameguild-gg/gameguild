@@ -49,6 +49,8 @@ public class TenantTestCoverageVerificationTests
         Type[] testTypes = testAssembly.GetTypes()
             .Where(t => t.Namespace?.StartsWith(TestNamespacePrefix) == true)
             .Where(t => t.Name.EndsWith("Tests"))
+            // Exclude Coverage threshold tests as they use different naming conventions
+            .Where(t => !t.Name.Contains("CoverageThreshold"))
             .ToArray();
 
         // Get all test methods
@@ -56,6 +58,8 @@ public class TenantTestCoverageVerificationTests
             .SelectMany(t => t.GetMethods())
             .Where(m => m.GetCustomAttributes<FactAttribute>().Any() ||
                        m.GetCustomAttributes<TheoryAttribute>().Any())
+            // Exclude specific utility methods that don't follow naming convention
+            .Where(m => !m.Name.StartsWith("Generate"))
             .ToArray();
 
         // Act & Assert

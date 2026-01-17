@@ -26,7 +26,7 @@ public class UsageTrackingServiceTests
         var id = await service.TrackUsageAsync(usage);
 
         id.Should().NotBeEmpty();
-        (await context.Set<UsageTracking>().CountAsync()).Should().Be(1);
+        (await context.UsageTracking.CountAsync()).Should().Be(1);
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public class UsageTrackingServiceTests
         await using var context = CreateContext();
         var tenantId = Guid.NewGuid();
 
-        context.Set<UsageTracking>().AddRange(
+        context.UsageTracking.AddRange(
             new UsageTracking { TenantId = tenantId, Date = DateTime.UtcNow.AddDays(-1), ResourceType = "api", UsageAmount = 1 },
             new UsageTracking { TenantId = tenantId, Date = DateTime.UtcNow.AddDays(-2), ResourceType = "storage", UsageAmount = 2 },
             new UsageTracking { TenantId = Guid.NewGuid(), Date = DateTime.UtcNow.AddDays(-1), ResourceType = "api", UsageAmount = 3 }
@@ -59,7 +59,7 @@ public class UsageTrackingServiceTests
     {
         await using var context = CreateContext();
         var tenantId = Guid.NewGuid();
-        context.Set<UsageTracking>().AddRange(
+        context.UsageTracking.AddRange(
             new UsageTracking { TenantId = tenantId, Date = DateTime.UtcNow.AddDays(-1), ResourceType = "api", UsageAmount = 3, Cost = 2.5m },
             new UsageTracking { TenantId = tenantId, Date = DateTime.UtcNow.AddDays(-1), ResourceType = "storage", UsageAmount = 10, Cost = 5m },
             new UsageTracking { TenantId = tenantId, Date = DateTime.UtcNow.AddDays(-1), ResourceType = "api", UsageAmount = 2, Cost = 1m }
@@ -85,7 +85,7 @@ public class UsageTrackingServiceTests
         var oldRecord = new UsageTracking { TenantId = tenantId, Date = DateTime.UtcNow.AddDays(-30), ResourceType = "api" };
         var recentRecord = new UsageTracking { TenantId = tenantId, Date = DateTime.UtcNow.AddDays(-1), ResourceType = "api" };
 
-        context.Set<UsageTracking>().AddRange(oldRecord, recentRecord);
+        context.UsageTracking.AddRange(oldRecord, recentRecord);
         await context.SaveChangesAsync();
 
         var service = new UsageTrackingService(context);
@@ -97,18 +97,31 @@ public class UsageTrackingServiceTests
         recentRecord.DeletedAt.Should().BeNull();
     }
 
-    private static TestUsageTrackingDbContext CreateContext()
+    private static TestUsageDbContext CreateContext()
     {
-        var options = new DbContextOptionsBuilder<TestUsageTrackingDbContext>()
+        var options = new DbContextOptionsBuilder<TestUsageDbContext>()
             .UseInMemoryDatabase($"UsageTracking_{Guid.NewGuid()}")
             .Options;
 
-        return new TestUsageTrackingDbContext(options);
+        return new TestUsageDbContext(options);
     }
 
-    private sealed class TestUsageTrackingDbContext(DbContextOptions<TestUsageTrackingDbContext> options)
+    private sealed class TestUsageDbContext(DbContextOptions<TestUsageDbContext> options)
         : DbContext(options), IApplicationDbContext
     {
+        public DbSet<UsageTracking> UsageTracking { get; set; } = null!;
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<UsageTracking>(builder =>
+            {
+                builder.HasKey(ut => ut.Id);
+                builder.Property(ut => ut.TenantId).IsRequired();
+                builder.Property(ut => ut.ResourceType).IsRequired();
+            });
+        }
+
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
         {
             return Task.FromResult(Mock.Of<IDbContextTransaction>());

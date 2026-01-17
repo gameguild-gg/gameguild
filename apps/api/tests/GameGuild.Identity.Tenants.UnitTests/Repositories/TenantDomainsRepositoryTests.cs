@@ -14,11 +14,8 @@ public class TenantDomainsRepositoryTests
         var repo = new TenantDomainsRepository(context);
 
         var tenantId = Guid.NewGuid();
-        context.Set<TenantDomain>().AddRange(
-            new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", Subdomain = "app" },
-            new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", Subdomain = null }
-        );
-        await context.SaveChangesAsync();
+        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", Subdomain = "app" });
+        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", Subdomain = null });
 
         var subdomain = await repo.GetByDomainAsync("app.example.com");
         var root = await repo.GetByDomainAsync("example.com");
@@ -34,11 +31,8 @@ public class TenantDomainsRepositoryTests
         var repo = new TenantDomainsRepository(context);
 
         var tenantId = Guid.NewGuid();
-        context.Set<TenantDomain>().AddRange(
-            new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", IsMainDomain = true },
-            new TenantDomain { TenantId = tenantId, TopLevelDomain = "alt.com", IsSecondaryDomain = true }
-        );
-        await context.SaveChangesAsync();
+        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", IsMainDomain = true });
+        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "alt.com", IsSecondaryDomain = true });
 
         var domains = await repo.GetByTenantIdAsync(tenantId);
 
@@ -52,11 +46,8 @@ public class TenantDomainsRepositoryTests
         var repo = new TenantDomainsRepository(context);
 
         var tenantId = Guid.NewGuid();
-        context.Set<TenantDomain>().AddRange(
-            new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", IsMainDomain = false },
-            new TenantDomain { TenantId = tenantId, TopLevelDomain = "main.com", IsMainDomain = true }
-        );
-        await context.SaveChangesAsync();
+        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "example.com", IsMainDomain = false });
+        await repo.CreateAsync(new TenantDomain { TenantId = tenantId, TopLevelDomain = "main.com", IsMainDomain = true });
 
         var main = await repo.GetMainDomainAsync(tenantId);
 
@@ -71,8 +62,7 @@ public class TenantDomainsRepositoryTests
         var repo = new TenantDomainsRepository(context);
 
         var domain = new TenantDomain { TenantId = Guid.NewGuid(), TopLevelDomain = "example.com", Subdomain = "app" };
-        context.Set<TenantDomain>().Add(domain);
-        await context.SaveChangesAsync();
+        await repo.CreateAsync(domain);
 
         (await repo.DomainExistsAsync("example.com", "app")).Should().BeTrue();
         (await repo.DomainExistsAsync("example.com", "app", domain.Id)).Should().BeFalse();
@@ -84,8 +74,7 @@ public class TenantDomainsRepositoryTests
         await using var context = CreateContext();
         var repo = new TenantDomainsRepository(context);
 
-        context.Set<TenantDomain>().Add(new TenantDomain { TenantId = Guid.NewGuid(), TopLevelDomain = "example.com", Subdomain = "app" });
-        await context.SaveChangesAsync();
+        await repo.CreateAsync(new TenantDomain { TenantId = Guid.NewGuid(), TopLevelDomain = "example.com", Subdomain = "app" });
 
         (await repo.IsDomainUniqueAsync("app.example.com")).Should().BeFalse();
     }
@@ -104,7 +93,9 @@ public class TenantDomainsRepositoryTests
 
         await repo.DeleteAsync(domain.Id);
 
-        domain.DeletedAt.Should().NotBeNull();
+        // Reload from DB to check soft delete
+        var reloaded = await context.TenantDomains.IgnoreQueryFilters().FirstOrDefaultAsync(d => d.Id == domain.Id);
+        reloaded!.DeletedAt.Should().NotBeNull();
     }
 
     private static TestTenantDbContext CreateContext()

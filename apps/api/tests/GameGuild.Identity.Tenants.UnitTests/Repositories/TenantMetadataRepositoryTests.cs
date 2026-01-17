@@ -17,8 +17,8 @@ public class TenantMetadataRepositoryTests
         var metadata = new TenantMetadata { TenantId = tenantId, Industry = "Gaming", Type = "Studio", Size = TenantSize.Small };
         metadata.SetTags(["pro"]);
 
-        await repo.AddAsync(metadata);
-        await repo.SaveChangesAsync();
+        context.TenantMetadata.Add(metadata);
+        await context.SaveChangesAsync();
 
         var fetched = await repo.GetByTenantIdAsync(tenantId);
         fetched.Should().NotBeNull();
@@ -44,8 +44,8 @@ public class TenantMetadataRepositoryTests
 
         var meta = new TenantMetadata { TenantId = Guid.NewGuid(), Industry = "Gaming", Type = "Studio", Size = TenantSize.Medium };
         meta.SetTags(["alpha", "beta"]);
-        await repo.AddAsync(meta);
-        await repo.SaveChangesAsync();
+        context.TenantMetadata.Add(meta);
+        await context.SaveChangesAsync();
 
         (await repo.GetByIndustryAsync("Gaming")).Should().ContainSingle();
         (await repo.GetBySizeAsync(TenantSize.Medium)).Should().ContainSingle();

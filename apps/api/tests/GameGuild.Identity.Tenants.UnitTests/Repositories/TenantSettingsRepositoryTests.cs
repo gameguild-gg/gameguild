@@ -26,7 +26,9 @@ public class TenantSettingsRepositoryTests
 
         await repo.DeleteAsync(tenantId);
 
-        fetched.DeletedAt.Should().NotBeNull();
+        // Reload to check soft delete
+        var reloaded = await context.TenantSettings.IgnoreQueryFilters().FirstOrDefaultAsync(s => s.TenantId == tenantId);
+        reloaded!.DeletedAt.Should().NotBeNull();
     }
 
     private static TestTenantDbContext CreateContext()
