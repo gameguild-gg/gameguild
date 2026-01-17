@@ -43,4 +43,93 @@ public class TenantDomainTests
         // Assert
         domain.IsMainDomain.Should().BeTrue();
     }
+
+    [Fact]
+    public void TenantDomain_Should_Normalize_Domain_To_Lowercase()
+    {
+        // Arrange
+        var domain = new TenantDomain
+        {
+            TenantId = Guid.NewGuid(),
+            TopLevelDomain = "Example.COM",
+            Subdomain = "Admin"
+        };
+
+        // Assert
+        domain.TopLevelDomain.Should().Be("example.com");
+        domain.Subdomain.Should().Be("admin");
+        domain.FullDomain.Should().Be("admin.example.com");
+    }
+
+    [Fact]
+    public void FullDomain_Should_Return_TopLevel_When_No_Subdomain()
+    {
+        // Arrange
+        var domain = new TenantDomain
+        {
+            TenantId = Guid.NewGuid(),
+            TopLevelDomain = "example.com",
+            Subdomain = null
+        };
+
+        // Assert
+        domain.FullDomain.Should().Be("example.com");
+    }
+
+    [Fact]
+    public void MatchesEmail_Should_Return_True_For_Matching_Domain()
+    {
+        // Arrange
+        var domain = new TenantDomain
+        {
+            TenantId = Guid.NewGuid(),
+            TopLevelDomain = "example.com",
+            Subdomain = "team"
+        };
+
+        // Act
+        var result = domain.MatchesEmail("user@team.example.com");
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("invalid-email")]
+    [InlineData("user@other.com")]
+    public void MatchesEmail_Should_Return_False_For_Invalid_Or_NonMatching_Email(string email)
+    {
+        // Arrange
+        var domain = new TenantDomain
+        {
+            TenantId = Guid.NewGuid(),
+            TopLevelDomain = "example.com",
+            Subdomain = "team"
+        };
+
+        // Act
+        var result = domain.MatchesEmail(email);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public void SetAsSecondaryDomain_Should_Set_Flags()
+    {
+        // Arrange
+        var domain = new TenantDomain
+        {
+            TenantId = Guid.NewGuid(),
+            TopLevelDomain = "example.com"
+        };
+
+        // Act
+        domain.SetAsSecondaryDomain();
+
+        // Assert
+        domain.IsMainDomain.Should().BeFalse();
+        domain.IsSecondaryDomain.Should().BeTrue();
+    }
 }

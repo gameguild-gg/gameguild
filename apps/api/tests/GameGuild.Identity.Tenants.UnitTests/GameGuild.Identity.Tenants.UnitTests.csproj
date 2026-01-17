@@ -8,6 +8,30 @@
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <!-- COVERAGE THRESHOLDS - Build will FAIL if coverage drops below these values      -->
+    <!-- Run with: dotnet test /p:CollectCoverage=true                                   -->
+    <!-- Target: 100% coverage - All untested code must be addressed                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <PropertyGroup>
+        <!-- Enable coverage collection when /p:CollectCoverage=true is passed -->
+        <CollectCoverage>false</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <CoverletOutput>./TestResults/GameGuild.Identity.Tenants.UnitTests.Coverage.xml</CoverletOutput>
+
+        <!-- Minimum coverage thresholds (build fails if not met) -->
+        <!-- ENFORCED AT 100% - All code must be tested -->
+        <Threshold>100</Threshold>
+        <ThresholdType>line,branch,method</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+
+        <!-- Exclude test files and auto-generated code from coverage -->
+        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
+
+        <!-- Include only the Identity.Tenants module in coverage -->
+        <Include>[GameGuild.Identity.Tenants]*</Include>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="xunit" />
