@@ -399,6 +399,568 @@ public class SubscriptionTests
 
     #endregion
 
+    #region Order Linkage Tests
+
+    [Fact]
+    public void SetFulfilledOrderId_ShouldSetOrderId_WhenNotPreviouslySet()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        var orderId = Guid.NewGuid();
+
+        // Act
+        subscription.SetFulfilledOrderId(orderId);
+
+        // Assert
+        subscription.FulfilledOrderId.Should().Be(orderId);
+        subscription.LastModifyingOrderId.Should().Be(orderId);
+    }
+
+    [Fact]
+    public void SetFulfilledOrderId_ShouldThrow_WhenAlreadySetToDifferentOrder()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        var orderId1 = Guid.NewGuid();
+        var orderId2 = Guid.NewGuid();
+        subscription.SetFulfilledOrderId(orderId1);
+
+        // Act
+        var act = () => subscription.SetFulfilledOrderId(orderId2);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage($"*already linked to order*");
+    }
+
+    [Fact]
+    public void SetFulfilledOrderId_ShouldBeIdempotent_WhenSetToSameOrder()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        var orderId = Guid.NewGuid();
+        subscription.SetFulfilledOrderId(orderId);
+
+        // Act - should not throw
+        var act = () => subscription.SetFulfilledOrderId(orderId);
+
+        // Assert
+        act.Should().NotThrow();
+        subscription.FulfilledOrderId.Should().Be(orderId);
+    }
+
+    [Fact]
+    public void RecordModifyingOrder_ShouldUpdateLastModifyingOrderId()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        var orderId = Guid.NewGuid();
+
+        // Act
+        subscription.RecordModifyingOrder(orderId);
+
+        // Assert
+        subscription.LastModifyingOrderId.Should().Be(orderId);
+    }
+
+    #endregion
+
+    #region Price Version Locking Tests
+
+    [Fact]
+    public void LockToPriceVersion_ShouldSetLockedPriceVersionId()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var priceVersionId = Guid.NewGuid();
+
+        // Act
+        subscription.LockToPriceVersion(priceVersionId);
+
+        // Assert
+        subscription.LockedPriceVersionId.Should().Be(priceVersionId);
+    }
+
+    [Fact]
+    public void LockToPriceVersion_ShouldThrow_WhenSubscriptionCancelled()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.Cancel(CancellationReason.UserRequested);
+
+        // Act
+        var act = () => subscription.LockToPriceVersion(Guid.NewGuid());
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*cancelled*");
+    }
+
+    [Fact]
+    public void LockToPriceVersion_ShouldRaiseDomainEvent()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.ClearDomainEvents();
+        var priceVersionId = Guid.NewGuid();
+
+        // Act
+        subscription.LockToPriceVersion(priceVersionId);
+
+        // Assert
+        subscription.DomainEvents.Should().Contain(e => e.GetType() == typeof(SubscriptionPriceVersionLockedEvent));
+    }
+
+    [Fact]
+    public void UnlockPriceVersion_ShouldClearLockedPriceVersionId()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.LockToPriceVersion(Guid.NewGuid());
+
+        // Act
+        subscription.UnlockPriceVersion();
+
+        // Assert
+        subscription.LockedPriceVersionId.Should().BeNull();
+    }
+
+    [Fact]
+    public void UnlockPriceVersion_ShouldBeIdempotent_WhenAlreadyUnlocked()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+
+        // Act - should not throw
+        var act = () => subscription.UnlockPriceVersion();
+
+        // Assert
+        act.Should().NotThrow();
+    }
+
+    #endregion
+
+    #region Renewal Processing Tests
+
+    [Fact]
+    public void ProcessRenewal_ShouldSucceed_WhenSubscriptionIsActive()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var newAmount = new Money(2999);
+        var idempotencyKey = "renewal_123";
+
+        // Act
+        var result = subscription.ProcessRenewal(newAmount, idempotencyKey);
+
+        // Assert
+        result.Success.Should().BeTrue();
+        subscription.BillingCycleCount.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public void ProcessRenewal_ShouldFail_WhenSubscriptionIsNotActive()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        // Still in PendingActivation state
+
+        // Act
+        var result = subscription.ProcessRenewal(new Money(2999), "renewal_123");
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.FailureReason.Should().Contain("not active");
+    }
+
+    [Fact]
+    public void ProcessRenewal_ShouldFail_WhenAutoRenewIsDisabled()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.SetAutoRenew(false);
+
+        // Act
+        var result = subscription.ProcessRenewal(new Money(2999), "renewal_123");
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.FailureReason.Should().Contain("disabled");
+    }
+
+    [Fact]
+    public void ProcessRenewal_ShouldBeIdempotent_WithSameKey()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var idempotencyKey = "renewal_123";
+        var newAmount = new Money(2999);
+
+        // Act
+        var result1 = subscription.ProcessRenewal(newAmount, idempotencyKey);
+        var cycleAfterFirst = subscription.BillingCycleCount;
+        var result2 = subscription.ProcessRenewal(newAmount, idempotencyKey);
+
+        // Assert
+        result1.Success.Should().BeTrue();
+        result2.Success.Should().BeTrue(); // Idempotent
+        subscription.BillingCycleCount.Should().Be(cycleAfterFirst); // Not incremented again
+    }
+
+    [Fact]
+    public void ProcessRenewal_ShouldFail_WhenIdempotencyKeyIsEmpty()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+
+        // Act
+        var result = subscription.ProcessRenewal(new Money(2999), "");
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.FailureReason.Should().Contain("Idempotency key");
+    }
+
+    #endregion
+
+    #region Billing Cycle Change Tests
+
+    [Fact]
+    public void ChangeBillingCycle_ShouldUpdateCycleAndAmount()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var newAmount = new Money(25000); // Annual price
+
+        // Act
+        subscription.ChangeBillingCycle(BillingCycle.Annually, newAmount);
+
+        // Assert
+        subscription.BillingCycle.Should().Be(BillingCycle.Annually);
+        subscription.Amount.Should().Be(newAmount);
+    }
+
+    [Fact]
+    public void ChangeBillingCycle_ShouldThrow_WhenNotActive()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        // Still in PendingActivation
+
+        // Act
+        var act = () => subscription.ChangeBillingCycle(BillingCycle.Annually, new Money(25000));
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*active*");
+    }
+
+    [Fact]
+    public void ChangeBillingCycle_ShouldRaiseDomainEvent()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.ClearDomainEvents();
+
+        // Act
+        subscription.ChangeBillingCycle(BillingCycle.Annually, new Money(25000));
+
+        // Assert
+        subscription.DomainEvents.Should().Contain(e => e.GetType() == typeof(SubscriptionBillingCycleChangedEvent));
+    }
+
+    #endregion
+
+    #region Plan Change Tests
+
+    [Fact]
+    public void ChangePlan_ShouldCalculateProration()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var newPlanId = Guid.NewGuid();
+        var newAmount = new Money(4999);
+
+        // Act
+        var proration = subscription.ChangePlan(newPlanId, newAmount);
+
+        // Assert
+        proration.Should().NotBeNull();
+        proration.EffectiveDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public void ChangePlan_ShouldThrow_WhenNotActive()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        // Still in PendingActivation
+
+        // Act
+        var act = () => subscription.ChangePlan(Guid.NewGuid(), new Money(4999));
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*active*");
+    }
+
+    [Fact]
+    public void ChangePlan_ShouldRaiseDomainEvent()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.ClearDomainEvents();
+
+        // Act
+        subscription.ChangePlan(Guid.NewGuid(), new Money(4999));
+
+        // Assert
+        subscription.DomainEvents.Should().Contain(e => e.GetType() == typeof(SubscriptionPlanChangedEvent));
+    }
+
+    #endregion
+
+    #region Trial Management Tests
+
+    [Fact]
+    public void EndTrial_WithoutConversion_ShouldCancelSubscription()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.StartTrial(DateTime.UtcNow.AddDays(14));
+
+        // Act
+        subscription.EndTrial(convertToPaid: false);
+
+        // Assert
+        subscription.Status.Should().Be(SubscriptionStatus.Cancelled);
+        subscription.CancellationReason.Should().Be(CancellationReason.TrialEnded);
+    }
+
+    [Fact]
+    public void EndTrial_ShouldThrow_WhenNotTrialing()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+
+        // Act
+        var act = () => subscription.EndTrial(convertToPaid: true);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*trial*");
+    }
+
+    [Fact]
+    public void EndTrial_ShouldRaiseTrialEndedEvent()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.StartTrial(DateTime.UtcNow.AddDays(14));
+        subscription.ClearDomainEvents();
+
+        // Act
+        subscription.EndTrial(convertToPaid: true);
+
+        // Assert
+        subscription.DomainEvents.Should().Contain(e => e.GetType() == typeof(TrialEndedEvent));
+    }
+
+    [Fact]
+    public void GetRemainingTrialDays_ShouldReturnNull_WhenNotTrialing()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+
+        // Act
+        var result = subscription.GetRemainingTrialDays();
+
+        // Assert
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public void GetRemainingTrialDays_ShouldReturnPositive_WhenTrialing()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.StartTrial(DateTime.UtcNow.AddDays(14));
+
+        // Act
+        var result = subscription.GetRemainingTrialDays();
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Value.Should().BeGreaterOrEqualTo(13);
+    }
+
+    #endregion
+
+    #region Helper Properties Tests
+
+    [Fact]
+    public void IsActive_ShouldReturnTrue_WhenStatusIsActive()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+
+        // Assert
+        subscription.IsActive.Should().BeTrue();
+        subscription.IsTrialing.Should().BeFalse();
+        subscription.IsCancelled.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsTrialing_ShouldReturnTrue_WhenStatusIsTrialing()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.StartTrial(DateTime.UtcNow.AddDays(14));
+
+        // Assert
+        subscription.IsTrialing.Should().BeTrue();
+        subscription.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public void IsCancelled_ShouldReturnTrue_WhenStatusIsCancelled()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.Cancel(CancellationReason.UserRequested);
+
+        // Assert
+        subscription.IsCancelled.Should().BeTrue();
+        subscription.IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public void GetDaysUntilNextBilling_ShouldReturnNegative_WhenNotActive()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        // PendingActivation state
+
+        // Act
+        var result = subscription.GetDaysUntilNextBilling();
+
+        // Assert
+        result.Should().Be(-1);
+    }
+
+    #endregion
+
+    #region Payment Recording Edge Cases
+
+    [Fact]
+    public void RecordPayment_ShouldThrow_WhenIdempotencyKeyIsNull()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+
+        // Act
+        var act = () => subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, null!);
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*Idempotency key*");
+    }
+
+    [Fact]
+    public void RecordPayment_OnCancelledSubscription_ShouldBeRejected()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        // Cancel the subscription
+        subscription.Cancel(CancellationReason.UserCancelled);
+
+        // Act - Try to record payment on cancelled subscription
+        var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "payment_cancelled");
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+    }
+
+    [Fact]
+    public void RecordPayment_ShouldUpdateNextBillingDate_BasedOnCycle()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var paymentDate = DateTime.UtcNow;
+
+        // Act
+        subscription.RecordPayment(29.99m, "USD", paymentDate, "payment_123");
+
+        // Assert - Monthly cycle should advance by 1 month
+        subscription.NextBillingDate.Should().BeCloseTo(paymentDate.AddMonths(1), TimeSpan.FromHours(1));
+    }
+
+    #endregion
+
+    #region Constructor Validation Tests
+
+    [Fact]
+    public void Constructor_ShouldThrow_WhenTenantIdIsEmpty()
+    {
+        // Arrange & Act
+        var act = () => new Subscription(
+            tenantId: Guid.Empty,
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: BillingCycle.Monthly,
+            amount: new Money(2999),
+            startDate: DateTime.UtcNow
+        );
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*TenantId*");
+    }
+
+    [Fact]
+    public void Constructor_ShouldSetLockedPriceVersionId_WhenProvided()
+    {
+        // Arrange
+        var priceVersionId = Guid.NewGuid();
+
+        // Act
+        var subscription = new Subscription(
+            tenantId: Guid.NewGuid(),
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: BillingCycle.Monthly,
+            amount: new Money(2999),
+            startDate: DateTime.UtcNow,
+            trialEndDate: null,
+            lockedPriceVersionId: priceVersionId
+        );
+
+        // Assert
+        subscription.LockedPriceVersionId.Should().Be(priceVersionId);
+    }
+
+    #endregion
+
     private static Subscription CreateValidSubscription()
     {
         return new Subscription(
