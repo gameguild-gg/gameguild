@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <RootNamespace>GameGuild.Identity.Tenants.UnitTests</RootNamespace>
     </PropertyGroup>
 
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
@@ -33,6 +34,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="coverlet.msbuild" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="xunit" />
         <PackageReference Include="xunit.runner.visualstudio">

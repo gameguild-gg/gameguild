@@ -8,9 +8,9 @@ public class TenantAuditLogTests
     [Fact]
     public void TenantAuditLog_Should_Store_Values()
     {
+        var tenantId = Guid.NewGuid();
         var entry = new TenantAuditLog
         {
-            TenantId = Guid.NewGuid(),
             Timestamp = DateTime.UtcNow,
             Action = "update",
             ActorId = Guid.NewGuid(),
@@ -23,6 +23,8 @@ public class TenantAuditLogTests
             AfterValues = new Dictionary<string, object?> { ["name"] = "New" },
             Metadata = new Dictionary<string, string> { ["source"] = "test" }
         };
+
+        entry.SetProperties(new Dictionary<string, object?> { ["TenantId"] = tenantId });
 
         entry.Action.Should().Be("update");
         entry.BeforeValues.Should().ContainKey("name");

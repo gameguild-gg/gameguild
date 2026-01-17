@@ -26,6 +26,6 @@ public class GetTenantMembersQueryHandlerTests
 
         result.TotalCount.Should().Be(2);
         result.Members.Should().HaveCount(1);
-        result.Members[0].Role.Should().Be("Admin");
+        result.Members.First().Role.Should().Be("Admin");
     }
 }

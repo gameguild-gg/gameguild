@@ -165,5 +165,4 @@ public class TenantServiceTests
 
         repo.Verify(r => r.GetPagedAsync(expectedPage, expectedPageSize, true, It.IsAny<CancellationToken>()), Times.Once);
     }
-    }
 }
