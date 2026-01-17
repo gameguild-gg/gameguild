@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
@@ -12,14 +13,14 @@ namespace GameGuild.Commerce.Billing.UnitTests.Services;
 public class WebhookProcessorBaseTests
 {
     private readonly Mock<IBillingWebhookRepository> _repositoryMock;
-    private readonly Mock<ILogger<TestWebhookProcessor>> _loggerMock;
+    private readonly ILogger<TestWebhookProcessor> _logger;
     private readonly BillingConfiguration _billingConfiguration;
     private readonly TestWebhookProcessor _processor;
 
     public WebhookProcessorBaseTests()
     {
         _repositoryMock = new Mock<IBillingWebhookRepository>();
-        _loggerMock = new Mock<ILogger<TestWebhookProcessor>>();
+        _logger = NullLogger<TestWebhookProcessor>.Instance;
         _billingConfiguration = new BillingConfiguration
         {
             Webhook = new WebhookSettings
@@ -38,7 +39,7 @@ public class WebhookProcessorBaseTests
         };
 
         var options = Options.Create(_billingConfiguration);
-        _processor = new TestWebhookProcessor(_repositoryMock.Object, options, _loggerMock.Object);
+        _processor = new TestWebhookProcessor(_repositoryMock.Object, options, _logger);
     }
 
     #region Tenant Validation Tests

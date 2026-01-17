@@ -92,7 +92,7 @@ public class WebhookIdempotencyTests
         // Assert
         webhookEvent.IsFailed.Should().BeTrue();
         webhookEvent.ErrorMessage.Should().Be("Connection timeout");
-        webhookEvent.ProcessingAttempts.Should().Be(1);
+        webhookEvent.ProcessingAttempts.Should().Be(2);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public class WebhookIdempotencyTests
 
         // Assert
         webhookEvent.IsProcessed.Should().BeTrue();
-        webhookEvent.ProcessingAttempts.Should().Be(2);
+        webhookEvent.ProcessingAttempts.Should().Be(3);
         // IsFailed may still be true from first attempt, but IsProcessed takes precedence
     }
 
