@@ -16,6 +16,9 @@ public static class DependencyInjection
     /// <returns>The configured service collection</returns>
     public static IServiceCollection AddSubscriptionsModule(this IServiceCollection services)
     {
+        // Register Subscription Plan Service (required by SubscriptionService, SubscriptionNotificationService, etc.)
+        services.AddScoped<ISubscriptionPlanService, SubscriptionPlanService>();
+        
         // Register Subscription Service (implements all 4 focused interfaces)
         services.AddScoped<SubscriptionService>();
         services.AddScoped<ISubscriptionLifecycleService>(sp => sp.GetRequiredService<SubscriptionService>());
