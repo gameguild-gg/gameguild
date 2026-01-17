@@ -475,6 +475,9 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
         if (subscription == null)
             throw new InvalidOperationException($"Subscription {subscriptionId} not found");
 
+        if (subscription.TenantId == null)
+            throw new InvalidOperationException($"Subscription {subscriptionId} has no TenantId (data integrity issue)");
+
         // Create an invoice in PastDue status (represents a failed payment)
         var invoice = new Invoice(
             tenantId: subscription.TenantId.Value,
@@ -504,6 +507,9 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
         
         if (subscription == null)
             throw new InvalidOperationException($"Subscription {subscriptionId} not found");
+
+        if (subscription.TenantId == null)
+            throw new InvalidOperationException($"Subscription {subscriptionId} has no TenantId (data integrity issue)");
 
         // Create an invoice marked as uncollectible (exceeded max retry attempts)
         var invoice = new Invoice(
