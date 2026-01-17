@@ -615,6 +615,7 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
         }
 
         // Calculate next billing date based on billing cycle
+        #pragma warning disable CS8524 // Switch expression handles all named enum values
         NextBillingDate = BillingCycle switch
         {
             BillingCycle.Weekly => paymentDate.AddDays(7),
@@ -622,9 +623,9 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
             BillingCycle.Quarterly => paymentDate.AddMonths(3),
             BillingCycle.SemiAnnually => paymentDate.AddMonths(6),
             BillingCycle.Annually => paymentDate.AddYears(1),
-            BillingCycle.Biannually => paymentDate.AddYears(2),
-            _ => paymentDate.AddMonths(1) // Fallback for any undefined enum values
+            BillingCycle.Biannually => paymentDate.AddYears(2)
         };
+        #pragma warning restore CS8524
 
         BillingCycleCount++;
 
