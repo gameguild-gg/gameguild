@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
@@ -6,7 +6,6 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <RootNamespace>GameGuild.Commerce.Payments.UnitTests</RootNamespace>
     </PropertyGroup>
 
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
@@ -23,7 +22,7 @@
         <ThresholdStat>total</ThresholdStat>
         <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
         <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
-        <Include>[GameGuild.Commerce.Payments]*</Include>
+        <Include>[GameGuild.SharedKernel]*</Include>
     </PropertyGroup>
 
     <ItemGroup>
@@ -37,8 +36,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj"/>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit"/>
     </ItemGroup>
 
 </Project>

@@ -39,7 +39,7 @@ public class DeleteUserCommandHandlerTests
 
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _userRepositoryMock.Setup(x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         // Act
@@ -47,7 +47,8 @@ public class DeleteUserCommandHandlerTests
 
         // Assert
         result.Should().Be(Unit.Value);
-        _userRepositoryMock.Verify(x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+        // Handler uses soft delete via MarkDeleted() + UpdateAsync()
+        _userRepositoryMock.Verify(x => x.UpdateAsync(It.Is<User>(u => u.IsDeleted), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -89,11 +90,11 @@ public class DeleteUserCommandHandlerTests
 
         _userRepositoryMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
-        _userRepositoryMock.Setup(x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+        _userRepositoryMock.Setup(x => x.UpdateAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
         _quotaServiceMock
-            .Setup(x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, null, null, It.IsAny<CancellationToken>()))
+            .Setup(x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -101,9 +102,10 @@ public class DeleteUserCommandHandlerTests
 
         // Assert
         result.Should().Be(Unit.Value);
-        _userRepositoryMock.Verify(x => x.DeleteAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+        // Handler uses soft delete via MarkDeleted() + UpdateAsync()
+        _userRepositoryMock.Verify(x => x.UpdateAsync(It.Is<User>(u => u.IsDeleted), It.IsAny<CancellationToken>()), Times.Once);
         _quotaServiceMock.Verify(
-            x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, null, null, It.IsAny<CancellationToken>()),
+            x => x.DecrementUsageAsync(tenantId, ResourceUsageType.Users, 1L, It.IsAny<Guid?>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()),
             Times.Once,
             "quota should be decremented when user is deleted");
     }

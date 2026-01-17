@@ -8,6 +8,23 @@
         <IsTestProject>true</IsTestProject>
     </PropertyGroup>
 
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <!-- COVERAGE THRESHOLDS - Build will FAIL if coverage drops below these values      -->
+    <!-- Run with: dotnet test /p:CollectCoverage=true                                   -->
+    <!-- Target: 80% coverage - Standard minimum for production code                     -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <PropertyGroup>
+        <CollectCoverage>false</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
+        <Threshold>80</Threshold>
+        <ThresholdType>line,branch,method</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
+        <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
+        <Include>[GameGuild.Contents]*</Include>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
         <PackageReference Include="xunit" />
@@ -19,6 +36,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="coverlet.msbuild" />
         <PackageReference Include="Moq" />
         <PackageReference Include="FluentAssertions" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />

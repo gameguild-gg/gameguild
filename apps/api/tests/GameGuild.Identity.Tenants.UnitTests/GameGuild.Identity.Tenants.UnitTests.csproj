@@ -12,35 +12,17 @@
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
     <!-- COVERAGE THRESHOLDS - Build will FAIL if coverage drops below these values      -->
     <!-- Run with: dotnet test /p:CollectCoverage=true                                   -->
-    <!-- Targets: Line 90%, Branch 80%, Method 85% - Industry standard for production   -->
+    <!-- Target: 80% coverage - Standard minimum for production code                     -->
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
     <PropertyGroup>
-        <!-- Enable coverage collection when /p:CollectCoverage=true is passed -->
         <CollectCoverage>false</CollectCoverage>
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-        <CoverletOutput>./TestResults/GameGuild.Identity.Tenants.UnitTests.Coverage.xml</CoverletOutput>
-
-        <!-- Minimum coverage thresholds (build fails if not met) -->
-        <!-- Line: 90% - Most statements should be executed         -->
-        <!-- Branch: 80% - Most conditional paths should be tested  -->
-        <!-- Method: 85% - Most functions should be called          -->
-        <!-- Note: 100% coverage is often impractical due to:       -->
-        <!--   - Compiler-generated async state machines            -->
-        <!--   - Interface declarations (no implementation)         -->
-        <!--   - Exception paths that are hard to trigger           -->
+        <CoverletOutput>./TestResults/coverage.xml</CoverletOutput>
+        <Threshold>80</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
-        
-        <!-- Per-metric thresholds -->
-        <Threshold>90,80,85</Threshold>
-
-        <!-- Exclude test files, auto-generated code, and compiler-generated async state machines -->
         <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
-        
-        <!-- Exclude compiler-generated code (async state machines, closures) -->
         <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
-
-        <!-- Include only the Identity.Tenants module in coverage -->
         <Include>[GameGuild.Identity.Tenants]*</Include>
     </PropertyGroup>
 

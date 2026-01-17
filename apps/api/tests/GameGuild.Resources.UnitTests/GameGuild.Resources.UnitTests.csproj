@@ -6,7 +6,6 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
-        <RootNamespace>GameGuild.Commerce.Payments.UnitTests</RootNamespace>
     </PropertyGroup>
 
     <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
@@ -23,22 +22,32 @@
         <ThresholdStat>total</ThresholdStat>
         <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
         <ExcludeByAttribute>CompilerGenerated,GeneratedCodeAttribute</ExcludeByAttribute>
-        <Include>[GameGuild.Commerce.Payments]*</Include>
+        <Include>[GameGuild.Resources]*</Include>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector"/>
-        <PackageReference Include="coverlet.msbuild"/>
-        <PackageReference Include="FluentAssertions"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk"/>
-        <PackageReference Include="Moq"/>
-        <PackageReference Include="xunit"/>
-        <PackageReference Include="xunit.runner.visualstudio"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.collector">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="coverlet.msbuild" />
+        <PackageReference Include="Moq" />
+        <PackageReference Include="FluentAssertions" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+        <PackageReference Include="AutoFixture" />
+        <PackageReference Include="AutoFixture.Xunit2" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.Commerce.Payments\GameGuild.Commerce.Payments.csproj"/>
-        <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj"/>
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Resources\GameGuild.Resources.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
     </ItemGroup>
 
 </Project>
