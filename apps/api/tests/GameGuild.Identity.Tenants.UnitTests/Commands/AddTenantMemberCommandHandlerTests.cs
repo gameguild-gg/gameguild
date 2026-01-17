@@ -24,7 +24,7 @@ public class AddTenantMemberCommandHandlerTests
         _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Tenant?)null);
 
-        var result = await _handler.Handle(new AddTenantMemberCommand(tenantId, Guid.NewGuid(), "Member"), CancellationToken.None);
+        var result = await _handler.Handle(new TestAddTenantMemberCommand(tenantId, Guid.NewGuid(), "Member"), CancellationToken.None);
 
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("not found");
@@ -42,7 +42,7 @@ public class AddTenantMemberCommandHandlerTests
         _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(userId, tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new TenantMember { TenantId = tenantId, UserId = userId, Role = "Member" });
 
-        var result = await _handler.Handle(new AddTenantMemberCommand(tenantId, userId, "Member"), CancellationToken.None);
+        var result = await _handler.Handle(new TestAddTenantMemberCommand(tenantId, userId, "Member"), CancellationToken.None);
 
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("already a member");
@@ -62,9 +62,12 @@ public class AddTenantMemberCommandHandlerTests
         _memberRepositoryMock.Setup(r => r.CreateAsync(It.IsAny<TenantMember>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TenantMember m, CancellationToken _) => m);
 
-        var result = await _handler.Handle(new AddTenantMemberCommand(tenantId, userId, "Member", "inviter@example.com"), CancellationToken.None);
+        var result = await _handler.Handle(new TestAddTenantMemberCommand(tenantId, userId, "Member", "inviter@example.com"), CancellationToken.None);
 
         result.Success.Should().BeTrue();
         tenant.DomainEvents.Should().Contain(e => e is TenantMemberAddedEvent);
     }
+
+    private sealed record TestAddTenantMemberCommand(Guid TenantId, Guid UserId, string Role, string? InvitedByEmail = null)
+        : AddTenantMemberCommand(TenantId, UserId, Role, InvitedByEmail);
 }

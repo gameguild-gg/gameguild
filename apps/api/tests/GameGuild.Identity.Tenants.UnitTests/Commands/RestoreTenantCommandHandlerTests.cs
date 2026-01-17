@@ -22,7 +22,7 @@ public class RestoreTenantCommandHandlerTests
         _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((Tenant?)null);
 
-        var result = await _handler.Handle(new RestoreTenantCommand(tenantId), CancellationToken.None);
+        var result = await _handler.Handle(new TestRestoreTenantCommand(tenantId), CancellationToken.None);
 
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("not found");
@@ -37,7 +37,7 @@ public class RestoreTenantCommandHandlerTests
         _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);
 
-        var result = await _handler.Handle(new RestoreTenantCommand(tenantId), CancellationToken.None);
+        var result = await _handler.Handle(new TestRestoreTenantCommand(tenantId), CancellationToken.None);
 
         result.Success.Should().BeTrue();
         result.Message.Should().Contain("not archived");
@@ -55,11 +55,13 @@ public class RestoreTenantCommandHandlerTests
         _tenantRepositoryMock.Setup(r => r.UpdateAsync(tenant, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);
 
-        var result = await _handler.Handle(new RestoreTenantCommand(tenantId), CancellationToken.None);
+        var result = await _handler.Handle(new TestRestoreTenantCommand(tenantId), CancellationToken.None);
 
         result.Success.Should().BeTrue();
         tenant.IsArchived.Should().BeFalse();
         tenant.IsActive.Should().BeTrue();
         _tenantRepositoryMock.Verify(r => r.UpdateAsync(tenant, It.IsAny<CancellationToken>()), Times.Once);
     }
+
+    private sealed record TestRestoreTenantCommand(Guid TenantId) : RestoreTenantCommand(TenantId);
 }

@@ -23,7 +23,7 @@ public class RemoveTenantMemberCommandHandlerTests
         _memberRepositoryMock.Setup(r => r.GetByUserAndTenantAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TenantMember?)null);
 
-        var result = await _handler.Handle(new RemoveTenantMemberCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
+        var result = await _handler.Handle(new TestRemoveTenantMemberCommand(Guid.NewGuid(), Guid.NewGuid()), CancellationToken.None);
 
         result.Success.Should().BeFalse();
         result.Message.Should().Contain("not found");
@@ -42,10 +42,13 @@ public class RemoveTenantMemberCommandHandlerTests
         _tenantRepositoryMock.Setup(r => r.GetByIdAsync(tenantId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tenant);
 
-        var result = await _handler.Handle(new RemoveTenantMemberCommand(tenantId, userId), CancellationToken.None);
+        var result = await _handler.Handle(new TestRemoveTenantMemberCommand(tenantId, userId), CancellationToken.None);
 
         result.Success.Should().BeTrue();
         _memberRepositoryMock.Verify(r => r.DeleteAsync(member.Id, It.IsAny<CancellationToken>()), Times.Once);
         tenant.DomainEvents.Should().Contain(e => e is TenantMemberRemovedEvent);
     }
+
+    private sealed record TestRemoveTenantMemberCommand(Guid TenantId, Guid UserId)
+        : RemoveTenantMemberCommand(TenantId, UserId);
 }
