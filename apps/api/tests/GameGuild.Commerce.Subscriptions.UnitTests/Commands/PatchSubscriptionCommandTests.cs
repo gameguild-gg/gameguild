@@ -90,7 +90,7 @@ public class PatchSubscriptionCommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         var command1 = new PatchSubscriptionCommand(subscriptionId, BillingCycle: BillingCycle.Monthly);
-        var command2 = new PatchSubscriptionCommand(subscriptionId, BillingCycle: BillingCycle.Annual);
+        var command2 = new PatchSubscriptionCommand(subscriptionId, BillingCycle: BillingCycle.Annually);
 
         // Act & Assert
         command1.Should().NotBe(command2);
