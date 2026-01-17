@@ -11,11 +11,11 @@ public class ChangeSubscriptionBillingCycleCommandTests
     {
         // Arrange & Act
         var subscriptionId = Guid.NewGuid();
-        var command = new ChangeSubscriptionBillingCycleCommand(subscriptionId, BillingCycle.Annual);
+        var command = new ChangeSubscriptionBillingCycleCommand(subscriptionId, BillingCycle.Annually);
 
         // Assert
         command.SubscriptionId.Should().Be(subscriptionId);
-        command.NewBillingCycle.Should().Be(BillingCycle.Annual);
+        command.NewBillingCycle.Should().Be(BillingCycle.Annually);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class ChangeSubscriptionBillingCycleCommandTests
         // Arrange
         var subscriptionId = Guid.NewGuid();
         var command1 = new ChangeSubscriptionBillingCycleCommand(subscriptionId, BillingCycle.Monthly);
-        var command2 = new ChangeSubscriptionBillingCycleCommand(subscriptionId, BillingCycle.Annual);
+        var command2 = new ChangeSubscriptionBillingCycleCommand(subscriptionId, BillingCycle.Annually);
 
         // Act & Assert
         command1.Should().NotBe(command2);

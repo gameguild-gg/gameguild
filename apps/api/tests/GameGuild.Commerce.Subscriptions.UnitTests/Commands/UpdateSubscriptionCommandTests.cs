@@ -39,7 +39,7 @@ public class UpdateSubscriptionCommandTests
         var command = new UpdateSubscriptionCommand(
             Guid.NewGuid(),
             Guid.NewGuid(),
-            BillingCycle.Annual,
+            BillingCycle.Annually,
             Amount: 99.99m,
             AutoRenew: false
         );

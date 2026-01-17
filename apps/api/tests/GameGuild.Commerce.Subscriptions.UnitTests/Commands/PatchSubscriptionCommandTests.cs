@@ -13,7 +13,7 @@ public class PatchSubscriptionCommandTests
         var subscriptionId = Guid.NewGuid();
         var command = new PatchSubscriptionCommand(
             subscriptionId,
-            BillingCycle: BillingCycle.Annual,
+            BillingCycle: BillingCycle.Annually,
             AutoRenew: true,
             ExternalSubscriptionId: "sub_123",
             ExternalCustomerId: "cus_456",
@@ -22,7 +22,7 @@ public class PatchSubscriptionCommandTests
 
         // Assert
         command.SubscriptionId.Should().Be(subscriptionId);
-        command.BillingCycle.Should().Be(BillingCycle.Annual);
+        command.BillingCycle.Should().Be(BillingCycle.Annually);
         command.AutoRenew.Should().BeTrue();
         command.ExternalSubscriptionId.Should().Be("sub_123");
         command.ExternalCustomerId.Should().Be("cus_456");
