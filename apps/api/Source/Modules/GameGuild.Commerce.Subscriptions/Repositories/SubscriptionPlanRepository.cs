@@ -30,7 +30,7 @@ public class SubscriptionPlanRepository(IApplicationDbContext context)
         return await Query.Where(p => p.DeletedAt == null).OrderBy(p => p.SortOrder).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public new async Task<IEnumerable<SubscriptionPlan>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<SubscriptionPlan>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await Query.OrderBy(p => p.SortOrder).ToListAsync(cancellationToken).ConfigureAwait(false);
     }

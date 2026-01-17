@@ -5,10 +5,10 @@ namespace GameGuild.Resources;
 /// <summary>
 ///     Handler for GetResourceUsageTrendsQuery
 /// </summary>
-public sealed class GetResourceUsageTrendsHandler(IUsageRecordRepository repository)
+public sealed class GetResourceUsageTrendsHandler
     : IQueryHandler<GetResourceUsageTrendsQuery, UsageTrendsResult>
 {
-    public async Task<UsageTrendsResult> Handle(GetResourceUsageTrendsQuery request, CancellationToken cancellationToken)
+    public Task<UsageTrendsResult> Handle(GetResourceUsageTrendsQuery request, CancellationToken cancellationToken)
     {
         // Get all records for all tenants within the date range
         // Note: This aggregates across all tenants for admin overview
@@ -34,11 +34,11 @@ public sealed class GetResourceUsageTrendsHandler(IUsageRecordRepository reposit
             currentDate = nextDate;
         }
 
-        return new UsageTrendsResult(
+        return Task.FromResult(new UsageTrendsResult(
             request.ResourceUsageType,
             request.StartDate,
             request.EndDate,
             request.Granularity,
-            dataPoints);
+            dataPoints));
     }
 }

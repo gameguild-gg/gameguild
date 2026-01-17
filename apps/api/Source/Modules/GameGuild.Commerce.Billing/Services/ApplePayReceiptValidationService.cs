@@ -356,7 +356,7 @@ public class ApplePayReceiptValidationService : IApplePayReceiptValidationServic
 
             // Extract the leaf certificate's public key for signature verification
             var leafCertBytes = Convert.FromBase64String(header.X5c[0]);
-            using var leafCert = new X509Certificate2(leafCertBytes);
+            using var leafCert = X509CertificateLoader.LoadCertificate(leafCertBytes);
 
             // Verify the JWS signature
             if (!VerifyJwsSignature(parts, leafCert, header.Alg))
@@ -392,7 +392,7 @@ public class ApplePayReceiptValidationService : IApplePayReceiptValidationServic
         {
             // Build certificate chain
             var certificates = x5cChain
-                .Select(certBase64 => new X509Certificate2(
+                .Select(certBase64 => X509CertificateLoader.LoadCertificate(
                     Convert.FromBase64String(certBase64)))
                 .ToArray();
 

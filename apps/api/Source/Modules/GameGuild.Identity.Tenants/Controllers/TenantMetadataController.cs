@@ -141,7 +141,7 @@ public sealed class TenantMetadataController : ControllerBase
     /// <summary>
     ///     Get tenant tags
     /// </summary>
-    /// <param name="id">The unique identifier of the tenant</param>
+    /// <param name="tenantId">The unique identifier of the tenant</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>List of tags</returns>
     [HttpGet("tags")]

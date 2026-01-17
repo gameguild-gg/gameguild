@@ -366,7 +366,7 @@ public class Order : StatefulEntity<OrderStatus>
     }
 
     /// <summary>Soft delete the order</summary>
-    public void SoftDelete()
+    public new void SoftDelete()
     {
         DeletedAt = DateTime.UtcNow;
         Touch();
