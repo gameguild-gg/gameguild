@@ -277,4 +277,139 @@ public class OrderService(
     {
         return await orderRepository.GetByUserIdAsync(userId, status, cancellationToken).ConfigureAwait(false);
     }
+
+    /// <inheritdoc />
+    public async Task<OrderResult> UpdateOrderAsync(
+        Guid orderId,
+        UpdateOrderRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await orderRepository.GetByIdAsync(orderId, cancellationToken).ConfigureAwait(false);
+        if (order == null)
+        {
+            return OrderResult.Failed($"Order {orderId} not found");
+        }
+
+        if (order.Status != OrderStatus.Pending)
+        {
+            return OrderResult.Failed($"Cannot update order in {order.Status} status");
+        }
+
+        if (request.Currency != null)
+        {
+            order.Currency = request.Currency;
+        }
+
+        order.Touch();
+
+        await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
+        await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return OrderResult.Succeeded(order);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> DeleteOrderAsync(
+        Guid orderId,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await orderRepository.GetByIdAsync(orderId, cancellationToken).ConfigureAwait(false);
+        if (order == null)
+        {
+            return false;
+        }
+
+        // Only allow deletion of pending or cancelled orders
+        if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Cancelled)
+        {
+            return false;
+        }
+
+        // Soft delete using proper method
+        order.SoftDelete();
+
+        await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
+        await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    public async Task<OrderResult> CaptureOrderAsync(
+        Guid orderId,
+        decimal? amount = null,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await orderRepository.GetWithLineItemsAsync(orderId, cancellationToken).ConfigureAwait(false);
+        if (order == null)
+        {
+            return OrderResult.Failed($"Order {orderId} not found");
+        }
+
+        // Order must be in authorized/pending state
+        if (order.Status != OrderStatus.Pending)
+        {
+            return OrderResult.Failed($"Cannot capture order in {order.Status} status");
+        }
+
+        // Mark as completed (captured) using proper state machine method
+        order.MarkAsPaid(null, null, null);
+
+        await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
+        await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return OrderResult.Succeeded(order);
+    }
+
+    /// <inheritdoc />
+    public async Task<OrderResult> HoldOrderAsync(
+        Guid orderId,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await orderRepository.GetByIdAsync(orderId, cancellationToken).ConfigureAwait(false);
+        if (order == null)
+        {
+            return OrderResult.Failed($"Order {orderId} not found");
+        }
+
+        if (order.Status != OrderStatus.Pending && order.Status != OrderStatus.Processing)
+        {
+            return OrderResult.Failed($"Cannot hold order in {order.Status} status");
+        }
+
+        // Use proper state machine method
+        order.PlaceOnHold(reason);
+
+        await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
+        await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return OrderResult.Succeeded(order);
+    }
+
+    /// <inheritdoc />
+    public async Task<OrderResult> ReleaseOrderAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        var order = await orderRepository.GetByIdAsync(orderId, cancellationToken).ConfigureAwait(false);
+        if (order == null)
+        {
+            return OrderResult.Failed($"Order {orderId} not found");
+        }
+
+        if (order.Status != OrderStatus.OnHold)
+        {
+            return OrderResult.Failed($"Cannot release order in {order.Status} status");
+        }
+
+        // Use proper state machine method
+        order.Release();
+
+        await orderRepository.UpdateAsync(order, cancellationToken).ConfigureAwait(false);
+        await orderRepository.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+        return OrderResult.Succeeded(order);
+    }
 }

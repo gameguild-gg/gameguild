@@ -168,6 +168,78 @@ public class WebAuthnController(
     }
 
     /// <summary>
+    ///     Get a single WebAuthn credential by ID.
+    /// </summary>
+    /// <param name="credentialId">The credential ID to retrieve.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("credentials/{credentialId:guid}")]
+    [Authorize]
+    [ProducesResponseType(typeof(WebAuthnCredentialInfo), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<WebAuthnCredentialInfo>> GetCredential(
+        Guid credentialId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var credential = await webAuthnService.GetCredentialByIdAsync(userId.Value, credentialId, cancellationToken);
+        if (credential == null)
+            return NotFound();
+
+        return Ok(credential);
+    }
+
+    /// <summary>
+    ///     Check if a WebAuthn credential exists.
+    /// </summary>
+    /// <param name="credentialId">The credential ID to check.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpHead("credentials/{credentialId:guid}")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> CredentialExists(
+        Guid credentialId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var exists = await webAuthnService.CredentialExistsAsync(userId.Value, credentialId, cancellationToken);
+        return exists ? Ok() : NotFound();
+    }
+
+    /// <summary>
+    ///     Verify a WebAuthn credential is valid and can be used for authentication.
+    /// </summary>
+    /// <param name="credentialId">The credential ID to verify.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpPost("credentials/{credentialId:guid}:verify")]
+    [Authorize]
+    [ProducesResponseType(typeof(WebAuthnCredentialVerifyResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<WebAuthnCredentialVerifyResult>> VerifyCredential(
+        Guid credentialId,
+        CancellationToken cancellationToken = default)
+    {
+        var userId = GetCurrentUserId();
+        if (!userId.HasValue)
+            return Unauthorized();
+
+        var result = await webAuthnService.VerifyCredentialAsync(userId.Value, credentialId, cancellationToken);
+        if (!result.Success && result.Error == "Credential not found")
+            return NotFound();
+
+        return Ok(result);
+    }
+
+    /// <summary>
     ///     Delete a WebAuthn credential.
     /// </summary>
     /// <param name="credentialId">The credential ID to delete.</param>

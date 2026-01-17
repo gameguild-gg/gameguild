@@ -1,5 +1,6 @@
 using GameGuild.Abstractions;
 using GameGuild.CQRS;
+using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;

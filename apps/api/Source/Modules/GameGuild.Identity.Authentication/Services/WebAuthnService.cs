@@ -420,6 +420,91 @@ public class WebAuthnService : IWebAuthnService
         return await _credentialRepository.HasActiveCredentialsAsync(userId, cancellationToken);
     }
 
+    public async Task<WebAuthnCredentialInfo?> GetCredentialByIdAsync(
+        Guid userId,
+        Guid credentialId,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _credentialRepository.GetByIdAsync(credentialId, cancellationToken);
+        if (credential == null || credential.UserId != userId)
+            return null;
+
+        return new WebAuthnCredentialInfo
+        {
+            Id = credential.Id,
+            FriendlyName = credential.FriendlyName,
+            AuthenticatorType = credential.AuthenticatorType,
+            CreatedAt = credential.CreatedAt,
+            LastUsedAt = credential.LastUsedAt,
+            IsPasswordless = credential.IsPasswordless,
+            IsDefault = credential.IsDefault,
+            BackedUp = credential.BackedUp
+        };
+    }
+
+    public async Task<bool> CredentialExistsAsync(
+        Guid userId,
+        Guid credentialId,
+        CancellationToken cancellationToken = default)
+    {
+        var credential = await _credentialRepository.GetByIdAsync(credentialId, cancellationToken);
+        return credential != null && credential.UserId == userId;
+    }
+
+    public async Task<WebAuthnCredentialVerifyResult> VerifyCredentialAsync(
+        Guid userId,
+        Guid credentialId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var credential = await _credentialRepository.GetByIdAsync(credentialId, cancellationToken);
+            if (credential == null || credential.UserId != userId)
+            {
+                return new WebAuthnCredentialVerifyResult
+                {
+                    Success = false,
+                    Error = "Credential not found",
+                    IsValid = false
+                };
+            }
+
+            // Check if revoked (using RevokedAt property)
+            var isRevoked = credential.RevokedAt.HasValue;
+            if (isRevoked)
+            {
+                return new WebAuthnCredentialVerifyResult
+                {
+                    Success = true,
+                    IsValid = false,
+                    IsRevoked = true,
+                    LastUsedAt = credential.LastUsedAt,
+                    SignatureCount = credential.SignatureCounter
+                };
+            }
+
+            return new WebAuthnCredentialVerifyResult
+            {
+                Success = true,
+                IsValid = credential.IsActive,
+                IsRevoked = false,
+                IsExpired = false,
+                LastUsedAt = credential.LastUsedAt,
+                SignatureCount = credential.SignatureCounter
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error verifying credential {CredentialId}", credentialId);
+            return new WebAuthnCredentialVerifyResult
+            {
+                Success = false,
+                Error = "Verification failed",
+                IsValid = false
+            };
+        }
+    }
+
     #region Private Helpers
 
     private static string GetDefaultFriendlyName(WebAuthnAuthenticatorType type, string? userAgent)

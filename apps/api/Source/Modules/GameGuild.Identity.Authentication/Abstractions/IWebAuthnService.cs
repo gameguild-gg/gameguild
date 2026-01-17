@@ -76,6 +76,30 @@ public interface IWebAuthnService
     ///     Check if a user has WebAuthn enabled.
     /// </summary>
     Task<bool> IsWebAuthnEnabledAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Get a single credential by ID.
+    /// </summary>
+    Task<WebAuthnCredentialInfo?> GetCredentialByIdAsync(
+        Guid userId,
+        Guid credentialId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Check if a credential exists for a user.
+    /// </summary>
+    Task<bool> CredentialExistsAsync(
+        Guid userId,
+        Guid credentialId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Verify a credential is valid and can be used for authentication.
+    /// </summary>
+    Task<WebAuthnCredentialVerifyResult> VerifyCredentialAsync(
+        Guid userId,
+        Guid credentialId,
+        CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -182,4 +206,21 @@ public class WebAuthnCredentialInfo
     public bool IsPasswordless { get; set; }
     public bool IsDefault { get; set; }
     public bool BackedUp { get; set; }
+}
+
+/// <summary>
+///     Result of verifying a WebAuthn credential.
+/// </summary>
+public class WebAuthnCredentialVerifyResult
+{
+    public bool Success { get; set; }
+    public string? Error { get; set; }
+    public bool IsValid { get; set; }
+    public bool IsExpired { get; set; }
+    public bool IsRevoked { get; set; }
+    public DateTime? LastUsedAt { get; set; }
+    /// <summary>
+    ///     Signature counter for replay attack protection (increases with each use).
+    /// </summary>
+    public uint SignatureCount { get; set; }
 }

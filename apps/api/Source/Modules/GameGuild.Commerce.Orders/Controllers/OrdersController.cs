@@ -207,6 +207,114 @@ public class OrdersController(IOrderService orderService) : ControllerBase
         return order != null ? Ok() : NotFound();
     }
 
+    /// <summary>
+    /// Update an order (partial update)
+    /// </summary>
+    [HttpPatch("{orderId:guid}")]
+    [RequirePermission(OrdersPermission.Keys.Create)]
+    public async Task<ActionResult<OrderDto>> UpdateOrder(
+        Guid orderId,
+        [FromBody] PatchOrderRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await orderService.UpdateOrderAsync(
+            orderId,
+            new UpdateOrderRequest(request.Currency, request.Notes, request.Metadata),
+            cancellationToken).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { error = result.ErrorMessage });
+        }
+
+        return Ok(MapToDto(result.Order!));
+    }
+
+    /// <summary>
+    /// Delete an order (soft delete)
+    /// </summary>
+    [HttpDelete("{orderId:guid}")]
+    [RequirePermission(OrdersPermission.Keys.Delete)]
+    public async Task<IActionResult> DeleteOrder(
+        Guid orderId,
+        [FromQuery] string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        var success = await orderService.DeleteOrderAsync(orderId, reason, cancellationToken).ConfigureAwait(false);
+
+        if (!success)
+        {
+            return BadRequest(new { error = "Cannot delete order in current state" });
+        }
+
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Capture payment for an authorized order
+    /// </summary>
+    [HttpPost("{orderId:guid}:capture")]
+    [RequirePermission(OrdersPermission.Keys.Create)]
+    public async Task<ActionResult<OrderDto>> CaptureOrder(
+        Guid orderId,
+        [FromBody] CaptureOrderRequest? request = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await orderService.CaptureOrderAsync(
+            orderId,
+            request?.Amount,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { error = result.ErrorMessage });
+        }
+
+        return Ok(MapToDto(result.Order!));
+    }
+
+    /// <summary>
+    /// Place an order on hold
+    /// </summary>
+    [HttpPost("{orderId:guid}:hold")]
+    [RequirePermission(OrdersPermission.Keys.Create)]
+    public async Task<ActionResult<OrderDto>> HoldOrder(
+        Guid orderId,
+        [FromBody] HoldOrderRequest? request = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await orderService.HoldOrderAsync(
+            orderId,
+            request?.Reason,
+            cancellationToken).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { error = result.ErrorMessage });
+        }
+
+        return Ok(MapToDto(result.Order!));
+    }
+
+    /// <summary>
+    /// Release a held order
+    /// </summary>
+    [HttpPost("{orderId:guid}:release")]
+    [RequirePermission(OrdersPermission.Keys.Create)]
+    public async Task<ActionResult<OrderDto>> ReleaseOrder(
+        Guid orderId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await orderService.ReleaseOrderAsync(orderId, cancellationToken).ConfigureAwait(false);
+
+        if (!result.Success)
+        {
+            return BadRequest(new { error = result.ErrorMessage });
+        }
+
+        return Ok(MapToDto(result.Order!));
+    }
+
     private Guid GetUserId()
     {
         var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
@@ -313,3 +421,15 @@ public record OrderLineItemDto(
     string? PromoCodesApplied,
     decimal LineTotal,
     bool IsSubscription);
+
+/// <summary>Request to partially update an order</summary>
+public record PatchOrderRequest(
+    string? Currency = null,
+    string? Notes = null,
+    Dictionary<string, string>? Metadata = null);
+
+/// <summary>Request to capture payment for an order</summary>
+public record CaptureOrderRequest(decimal? Amount = null);
+
+/// <summary>Request to hold an order</summary>
+public record HoldOrderRequest(string? Reason = null);

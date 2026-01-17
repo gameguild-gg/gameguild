@@ -46,7 +46,11 @@ public enum OrderStatus
 
     /// <summary>All entitlements granted, order complete</summary>
     [Description("Order fulfilled - all entitlements granted")]
-    Fulfilled = 9
+    Fulfilled = 9,
+
+    /// <summary>Order placed on hold for review</summary>
+    [Description("Order on hold")]
+    OnHold = 10
 }
 
 /// <summary>

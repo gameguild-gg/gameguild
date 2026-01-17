@@ -43,8 +43,9 @@ public class Order : StatefulEntity<OrderStatus>
     protected override IReadOnlyDictionary<OrderStatus, IReadOnlySet<OrderStatus>> ValidTransitions { get; } =
         new Dictionary<OrderStatus, IReadOnlySet<OrderStatus>>
         {
-            { OrderStatus.Pending, new HashSet<OrderStatus> { OrderStatus.Processing, OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
-            { OrderStatus.Processing, new HashSet<OrderStatus> { OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled } },
+            { OrderStatus.Pending, new HashSet<OrderStatus> { OrderStatus.Processing, OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled, OrderStatus.OnHold } },
+            { OrderStatus.Processing, new HashSet<OrderStatus> { OrderStatus.Paid, OrderStatus.Completed, OrderStatus.Failed, OrderStatus.Cancelled, OrderStatus.OnHold } },
+            { OrderStatus.OnHold, new HashSet<OrderStatus> { OrderStatus.Pending, OrderStatus.Processing, OrderStatus.Cancelled } }, // Can be released back to processing or cancelled
             { OrderStatus.Paid, new HashSet<OrderStatus> { OrderStatus.Fulfilled, OrderStatus.Failed } }, // Paid but not yet fulfilled
             { OrderStatus.Fulfilled, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } }, // Terminal success state
             { OrderStatus.Completed, new HashSet<OrderStatus> { OrderStatus.Refunded, OrderStatus.PartiallyRefunded, OrderStatus.Disputed } }, // Legacy: treated as Fulfilled
@@ -345,6 +346,29 @@ public class Order : StatefulEntity<OrderStatus>
     {
         TransitionToWithReason(OrderStatus.Cancelled, reason: reason);
         Metadata = reason;
+        Touch();
+    }
+
+    /// <summary>Place order on hold for review (with state machine validation and audit trail)</summary>
+    /// <param name="reason">Reason for holding the order</param>
+    public void PlaceOnHold(string? reason = null)
+    {
+        TransitionToWithReason(OrderStatus.OnHold, reason: reason);
+        Metadata = reason;
+        Touch();
+    }
+
+    /// <summary>Release held order back to processing (with state machine validation and audit trail)</summary>
+    public void Release()
+    {
+        TransitionToWithReason(OrderStatus.Pending, reason: "Released from hold");
+        Touch();
+    }
+
+    /// <summary>Soft delete the order</summary>
+    public void SoftDelete()
+    {
+        DeletedAt = DateTime.UtcNow;
         Touch();
     }
 

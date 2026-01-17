@@ -1,6 +1,5 @@
 using GameGuild.Abstractions;
 using GameGuild.CQRS;
-using GameGuild.Identity.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Identity.Authentication;
@@ -13,11 +12,11 @@ public sealed class RevokeResourcePermissionByIdHandler(IApplicationDbContext co
 {
     public async Task<Unit> Handle(RevokeResourcePermissionByIdCommand request, CancellationToken cancellationToken)
     {
-        var grant = await context.Set<ResourcePermission>()
+        var grant = await context.Set<GenericResourcePermission>()
             .FirstOrDefaultAsync(g => g.Id == request.GrantId, cancellationToken)
             ?? throw new InvalidOperationException($"Resource permission grant {request.GrantId} not found");
 
-        context.Set<ResourcePermission>().Remove(grant);
+        context.Set<GenericResourcePermission>().Remove(grant);
         await context.SaveChangesAsync(cancellationToken);
 
         return Unit.Value;

@@ -70,7 +70,54 @@ public interface IOrderService
         Guid userId,
         OrderStatus? status = null,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Update order details (partial update)
+    /// </summary>
+    Task<OrderResult> UpdateOrderAsync(
+        Guid orderId,
+        UpdateOrderRequest request,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Soft delete an order
+    /// </summary>
+    Task<bool> DeleteOrderAsync(
+        Guid orderId,
+        string? reason = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Capture payment for an authorized order
+    /// </summary>
+    Task<OrderResult> CaptureOrderAsync(
+        Guid orderId,
+        decimal? amount = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Place an order on hold
+    /// </summary>
+    Task<OrderResult> HoldOrderAsync(
+        Guid orderId,
+        string? reason = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Release a held order
+    /// </summary>
+    Task<OrderResult> ReleaseOrderAsync(
+        Guid orderId,
+        CancellationToken cancellationToken = default);
 }
+
+/// <summary>
+/// Request to update an order
+/// </summary>
+public record UpdateOrderRequest(
+    string? Currency = null,
+    string? Notes = null,
+    Dictionary<string, string>? Metadata = null);
 
 /// <summary>
 /// Request to create a new order

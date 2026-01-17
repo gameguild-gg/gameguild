@@ -4,7 +4,7 @@ public class ApplyPermissionTemplateResult
 {
     public Guid UserId { get; set; }
 
-    public Guid TenantId { get; set; }
+    public Guid? TenantId { get; set; }
 
     public Guid TemplateId { get; set; }
 
@@ -24,7 +24,7 @@ public class ApplyPermissionTemplateResult
 
     public static ApplyPermissionTemplateResult SuccessResult(
         Guid userId,
-        Guid tenantId,
+        Guid? tenantId,
         Guid templateId,
         string templateName,
         List<string> permissions,

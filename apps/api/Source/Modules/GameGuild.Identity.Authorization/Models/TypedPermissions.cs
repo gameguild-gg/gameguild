@@ -403,6 +403,21 @@ public sealed class OrdersPermission : Permission
         /// <summary>Create orders</summary>
         public const string Create = "orders:create";
 
+        /// <summary>Update orders</summary>
+        public const string Update = "orders:update";
+
+        /// <summary>Delete/cancel orders</summary>
+        public const string Delete = "orders:delete";
+
+        /// <summary>Capture payment for orders</summary>
+        public const string Capture = "orders:capture";
+
+        /// <summary>Place orders on hold</summary>
+        public const string Hold = "orders:hold";
+
+        /// <summary>Release held orders</summary>
+        public const string Release = "orders:release";
+
         /// <summary>Process refunds</summary>
         public const string Refund = "orders:refund";
 
@@ -418,6 +433,21 @@ public sealed class OrdersPermission : Permission
 
     /// <summary>Create orders</summary>
     public static readonly OrdersPermission Create = new(Keys.Create, "Create orders");
+
+    /// <summary>Update orders</summary>
+    public static readonly OrdersPermission Update = new(Keys.Update, "Update orders");
+
+    /// <summary>Delete/cancel orders</summary>
+    public static readonly OrdersPermission Delete = new(Keys.Delete, "Delete/cancel orders");
+
+    /// <summary>Capture payment for orders</summary>
+    public static readonly OrdersPermission Capture = new(Keys.Capture, "Capture payment for orders");
+
+    /// <summary>Place orders on hold</summary>
+    public static readonly OrdersPermission Hold = new(Keys.Hold, "Place orders on hold");
+
+    /// <summary>Release held orders</summary>
+    public static readonly OrdersPermission Release = new(Keys.Release, "Release held orders");
 
     /// <summary>Process refunds</summary>
     public static readonly OrdersPermission Refund = new(Keys.Refund, "Process refunds");

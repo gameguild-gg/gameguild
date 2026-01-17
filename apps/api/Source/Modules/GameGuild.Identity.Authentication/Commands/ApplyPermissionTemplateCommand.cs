@@ -6,7 +6,7 @@ public record ApplyPermissionTemplateCommand : ICommand<ApplyPermissionTemplateR
 {
     public Guid UserId { get; init; }
 
-    public Guid TenantId { get; init; }
+    public Guid? TenantId { get; init; }
 
     public Guid TemplateId { get; init; }
 

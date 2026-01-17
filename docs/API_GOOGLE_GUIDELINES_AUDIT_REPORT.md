@@ -1,17 +1,17 @@
 # GameGuild API Endpoints - Google API Design Guidelines Audit Report
 
 **Date:** January 16, 2026  
-**Last Updated:** January 17, 2026  
-**Scope:** All REST API endpoints across ALL modules (76 controllers, 779+ endpoints)  
+**Last Updated:** January 17, 2026 (Late Session)  
+**Scope:** All REST API endpoints across ALL modules (76 controllers, 790+ endpoints)  
 **Reference:** [Google API Design Guide](https://cloud.google.com/apis/design)
 
 ---
 
 ## Executive Summary
 
-This report analyzes GameGuild API endpoints against Google API Design Guidelines, identifying violations, inconsistencies, and missing endpoints. The audit covers **76 controllers** with **779+ endpoints** across all modules.
+This report analyzes GameGuild API endpoints against Google API Design Guidelines, identifying violations, inconsistencies, and missing endpoints. The audit covers **76 controllers** with **790+ endpoints** across all modules.
 
-### Key Findings (Updated January 17, 2026)
+### Key Findings (Updated January 17, 2026 - Late Session)
 
 | Category | Issues Found | Priority | Status |
 |----------|--------------|----------|--------|
@@ -19,6 +19,9 @@ This report analyzes GameGuild API endpoints against Google API Design Guideline
 | Custom Action Syntax Violations | ~~15+ endpoints~~ | P0 - Critical | ✅ FIXED |
 | Path-based Filters (should be query params) | ~~10+ endpoints~~ | P1 - High | ✅ FIXED |
 | Missing Standard CRUD Methods | ~~40+ operations~~ | P1 - High | ✅ IMPLEMENTED |
+| WebAuthn Credential Endpoints | ~~3 missing~~ | P1/P2 | ✅ IMPLEMENTED |
+| Orders PATCH/DELETE/Actions | ~~5 missing~~ | P1/P2 | ✅ IMPLEMENTED |
+| Projects Filter Consolidation | ~~3 path-based~~ | P1 | ✅ FIXED |
 | Pagination Pattern Inconsistencies | 4 different patterns | P1 - High | ⏳ In Progress |
 | Response Format Inconsistencies | 4+ patterns | P2 - Medium | ⏳ In Progress |
 
@@ -26,9 +29,28 @@ This report analyzes GameGuild API endpoints against Google API Design Guideline
 
 | Status | Count | Examples |
 |--------|-------|----------|
-| ✅ Fully Compliant | 62+ | UsersController, AssetsController, OrdersController, FeaturesController, ProgramController, SubscriptionsController, WalletsController |
-| ⚠️ Partially Compliant | 8 | PaymentsController, RolesController |
-| ❌ Needs Full Refactor | 5 | ProjectsController, AccessReviewsController |
+| ✅ Fully Compliant | 68+ | UsersController, AssetsController, OrdersController, FeaturesController, ProgramController, SubscriptionsController, WalletsController, WebAuthnController, ProjectsController |
+| ⚠️ Partially Compliant | 5 | PaymentsController, RolesController, AccessReviewsController |
+| ❌ Needs Full Refactor | 3 | JitElevationsController, SoDController |
+
+### Latest Changes (January 17, 2026 - Late Session)
+
+**WebAuthn Module:**
+- ✅ Added `GET /v1/auth/webauthn/credentials/{credentialId}` - Get single credential
+- ✅ Added `HEAD /v1/auth/webauthn/credentials/{credentialId}` - Check existence
+- ✅ Added `POST /v1/auth/webauthn/credentials/{credentialId}:verify` - Verify credential
+
+**Orders Module:**
+- ✅ Added `PATCH /v1/orders/{orderId}` - Update order
+- ✅ Added `DELETE /v1/orders/{orderId}` - Soft delete order
+- ✅ Added `POST /v1/orders/{orderId}:capture` - Capture payment
+- ✅ Added `POST /v1/orders/{orderId}:hold` - Hold order for review
+- ✅ Added `POST /v1/orders/{orderId}:release` - Release held order
+- ✅ Added `OnHold` status to Order state machine
+
+**Projects Module:**
+- ✅ Consolidated `/popular`, `/recent`, `/featured` into query params on `GET /v1/projects`
+- ✅ Added `featured`, `popular`, `recent` parameters to `GetAllProjectsQuery`
 
 > **Note:** URL base path (`/api/v1/` vs `/v1/`) is **not a violation**. The `api/` prefix can be configured globally via reverse proxy, API gateway, or subdomain.
 
@@ -1207,13 +1229,19 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 **Changes Applied:**
 - [WebAuthnController.cs](../apps/api/Source/Modules/GameGuild.Identity.Authentication/Controllers/WebAuthnController.cs): Added `ApiVersion("1.0")`, route updated from `api/auth/webauthn` to `v{version}/auth/webauthn`, colon syntax for registration and authentication actions, simplified status endpoint to root GET
 
-### Missing Endpoints (Optional)
+### ~~Missing Endpoints (Optional)~~ IMPLEMENTED (January 17, 2026)
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| GET | `/v1/auth/webauthn/credentials/{credentialId}` | Get single credential | P1 |
-| HEAD | `/v1/auth/webauthn/credentials/{credentialId}` | Check credential exists | P2 |
-| POST | `/v1/auth/webauthn/credentials/{credentialId}:verify` | Verify credential | P2 |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| GET | `/v1/auth/webauthn/credentials/{credentialId}` | Get single credential | ✅ DONE |
+| HEAD | `/v1/auth/webauthn/credentials/{credentialId}` | Check credential exists | ✅ DONE |
+| POST | `/v1/auth/webauthn/credentials/{credentialId}:verify` | Verify credential | ✅ DONE |
+
+**New Changes Applied (January 17, 2026):**
+- Added `GetCredentialByIdAsync`, `CredentialExistsAsync`, `VerifyCredentialAsync` to `IWebAuthnService`
+- Implemented all 3 methods in `WebAuthnService.cs`
+- Added GET, HEAD, and POST:verify endpoints to `WebAuthnController.cs`
+- Added `WebAuthnCredentialVerifyResult` DTO with `IsValid`, `IsRevoked`, `IsExpired`, `SignatureCount`
 
 ---
 
@@ -1299,23 +1327,60 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 | GET | `/v1/orders` | List all orders with optional filtering | ✅ Added |
 | HEAD | `/v1/orders/{orderId}` | Check order exists | ✅ Added |
 
-### Endpoints to Implement (Future)
+### ~~Endpoints to Implement (Future)~~ IMPLEMENTED (January 17, 2026)
 
-| Method | Path | Description | Priority |
-|--------|------|-------------|----------|
-| PATCH | `/v1/orders/{orderId}` | Update order | P2 |
-| DELETE | `/v1/orders/{orderId}` | Delete order (soft delete) | P2 |
-| POST | `/v1/orders/{orderId}:capture` | Capture payment | P1 |
-| POST | `/v1/orders/{orderId}:hold` | Hold order | P2 |
-| POST | `/v1/orders/{orderId}:release` | Release held order | P2 |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| PATCH | `/v1/orders/{orderId}` | Update order | ✅ DONE |
+| DELETE | `/v1/orders/{orderId}` | Delete order (soft delete) | ✅ DONE |
+| POST | `/v1/orders/{orderId}:capture` | Capture payment | ✅ DONE |
+| POST | `/v1/orders/{orderId}:hold` | Hold order | ✅ DONE |
+| POST | `/v1/orders/{orderId}:release` | Release held order | ✅ DONE |
 
 ### Key Changes Made
 
 1. **Added versioning** - Controller now uses `[ApiVersion("1.0")]` and `v{version:apiVersion}/orders` route prefix
-2. **Colon syntax for actions** - All custom actions now use `:action` format (`:complete`, `:cancel`, `:refund`)
+2. **Colon syntax for actions** - All custom actions now use `:action` format (`:complete`, `:cancel`, `:refund`, `:capture`, `:hold`, `:release`)
 3. **Consolidated path-based filter** - `/my-orders` consolidated into `GET /v1/orders?owner=me`
 4. **Added HEAD endpoint** - Check order existence without fetching full data
 5. **Added list endpoint** - `GET /v1/orders` for listing with optional filters
+
+### Additional Changes Made (January 17, 2026)
+
+**IOrderService.cs:**
+- Added `UpdateOrderAsync(orderId, UpdateOrderRequest)` - Partial update
+- Added `DeleteOrderAsync(orderId, reason)` - Soft delete
+- Added `CaptureOrderAsync(orderId, amount)` - Capture payment
+- Added `HoldOrderAsync(orderId, reason)` - Place on hold
+- Added `ReleaseOrderAsync(orderId)` - Release held order
+- Added `UpdateOrderRequest` record
+
+**OrderService.cs:**
+- Implemented all 5 new methods
+- Uses proper state machine transitions via `Order.PlaceOnHold()`, `Order.Release()`, `Order.SoftDelete()`
+
+**Order.cs:**
+- Added `OnHold` to `ValidTransitions` dictionary
+- Added `PlaceOnHold(reason)` method
+- Added `Release()` method
+- Added `SoftDelete()` method
+
+**OrderEnums.cs:**
+- Added `OnHold = 10` status
+
+**OrdersController.cs:**
+- Added PATCH endpoint with `PatchOrderRequest` DTO
+- Added DELETE endpoint
+- Added `:capture` endpoint with `CaptureOrderRequest` DTO
+- Added `:hold` endpoint with `HoldOrderRequest` DTO
+- Added `:release` endpoint
+
+**TypedPermissions.cs:**
+- Added `OrdersPermission.Keys.Update`
+- Added `OrdersPermission.Keys.Delete`
+- Added `OrdersPermission.Keys.Capture`
+- Added `OrdersPermission.Keys.Hold`
+- Added `OrdersPermission.Keys.Release`
 
 ---
 
@@ -1474,9 +1539,31 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 | POST | `/v1/projects/invitations/{token}:accept` | ✅ Fixed | Colon syntax |
 | POST | `/v1/projects/invitations/{token}:decline` | ✅ Fixed | Colon syntax |
 | GET | `/v1/projects/search` | ✅ Fixed | Added versioning |
-| GET | `/v1/projects/popular` | ⚠️ Partial | Could use query params |
-| GET | `/v1/projects/recent` | ⚠️ Partial | Could use query params |
-| GET | `/v1/projects/featured` | ⚠️ Partial | Could use query params |
+| GET | `/v1/projects?featured=true` | ✅ Fixed | Query param (was `/v1/projects/featured`) |
+| GET | `/v1/projects?popular=true` | ✅ Fixed | Query param (was `/v1/projects/popular`) |
+| GET | `/v1/projects?recent=true` | ✅ Fixed | Query param (was `/v1/projects/recent`) |
+
+### Filter Consolidation (January 17, 2026)
+
+**Changes Made:**
+- `GetAllProjectsQuery` - Added `Featured`, `Popular`, `Recent` boolean properties
+- `ProjectsController.GetProjects()` - Added `featured`, `popular`, `recent` query parameters
+- Legacy path-based filters (`/popular`, `/recent`, `/featured`) consolidated into main GET endpoint
+
+**Usage Examples:**
+```http
+# Featured projects
+GET /v1/projects?featured=true
+
+# Popular projects 
+GET /v1/projects?popular=true
+
+# Recent projects
+GET /v1/projects?recent=true
+
+# Combined filters
+GET /v1/projects?featured=true&status=Published&take=10
+```
 
 ### ProjectPermissionController Fixed Endpoints
 
@@ -1730,54 +1817,101 @@ All user endpoints follow **excellent Google API patterns** with proper colon sy
 
 ### Changes Applied
 
-- ✅ Added API versioning: `v{version:apiVersion}/permissions`
-- ✅ Converted all nested actions to colon syntax:
-  - `tenant/grant` → `tenant:grant`
-  - `tenant/revoke` → `tenant:revoke`
-  - `tenant/check` → `tenant:check`
-  - `tenant/list` → `tenant:list`
-  - `tenant/bulk-grant` → `tenant:bulk-grant`
-  - `tenant/bulk-revoke` → `tenant:bulk-revoke`
-  - `content-type/grant` → `content-type:grant`
-  - `content-type/revoke` → `content-type:revoke`
-  - `content-type/check` → `content-type:check`
-  - `content-type/list` → `content-type:list`
-  - `resource/grant` → `resource:grant`
-  - `resource/revoke` → `resource:revoke`
-  - `resource/check` → `resource:check`
-  - `resource/list` → `resource:list`
-  - `resource/bulk-grant` → `resource:bulk-grant`
-  - `user/all` → `user:all`
-  - `user/effective` → `user:effective`
-  - `hierarchy/resolve` → `hierarchy:resolve`
-  - `audit/trail` → `audit:trail`
-  - `DELETE cache/clear` → `POST cache:clear`
-  - `templates/apply` → `templates:apply`
+All Permission endpoints have been refactored to follow Google API Design Guidelines with proper resource-based URLs, versioning, and HTTP method semantics.
 
-### Current Endpoints (No Versioning, Non-RESTful)
+#### Tenant Permission Grants
+| Old Endpoint | New Endpoint | Status |
+|-------------|--------------|--------|
+| `POST /api/permissions/tenant/grant` | `POST /v1/permissions/tenant-grants` | ✅ DONE |
+| `POST /api/permissions/tenant/revoke` | `DELETE /v1/permissions/tenant-grants/{grantId}` | ✅ DONE |
+| `POST /api/permissions/tenant/revoke` (legacy) | `POST /v1/permissions/tenant-grants:revoke` | ✅ DONE |
+| `POST /api/permissions/tenant/check` | `POST /v1/permissions/tenant:check` | ✅ DONE |
+| `POST /api/permissions/tenant/list` | `GET /v1/permissions/tenant` | ✅ DONE |
+| `POST /api/permissions/tenant/bulk-grant` | `POST /v1/permissions/tenant-grants:batch-create` | ✅ DONE |
+| `POST /api/permissions/tenant/bulk-revoke` | `POST /v1/permissions/tenant-grants:batch-delete` | ✅ DONE |
 
-| Method | Path | Violations | Suggested Fix |
-|--------|------|------------|---------------|
-| POST | `/api/permissions/tenant/grant` | ❌ Verb in URL | `/v1/permissions/tenant-grants` |
-| POST | `/api/permissions/tenant/revoke` | ❌ Verb in URL | `DELETE /v1/permissions/tenant-grants/{grantId}` |
-| POST | `/api/permissions/tenant/check` | ❌ Action | `/v1/permissions/tenant:check` |
-| POST | `/api/permissions/tenant/list` | ❌ Should be GET | `GET /v1/permissions/tenant` |
-| POST | `/api/permissions/tenant/bulk-grant` | ❌ Action | `/v1/permissions/tenant-grants:batch-create` |
-| POST | `/api/permissions/tenant/bulk-revoke` | ❌ Action | `/v1/permissions/tenant-grants:batch-delete` |
-| POST | `/api/permissions/content-type/grant` | ❌ Verb in URL | `/v1/permissions/content-type-grants` |
-| POST | `/api/permissions/content-type/revoke` | ❌ Verb in URL | `DELETE /v1/permissions/content-type-grants/{grantId}` |
-| POST | `/api/permissions/resource/grant` | ❌ Verb in URL | `/v1/permissions/resource-grants` |
-| POST | `/api/permissions/resource/revoke` | ❌ Verb in URL | `DELETE /v1/permissions/resource-grants/{grantId}` |
-| POST | `/api/permissions/resource/bulk-grant` | ❌ Action | `/v1/permissions/resource-grants:batch-create` |
-| POST | `/api/permissions/user/all` | ❌ Should be GET | `GET /v1/users/{userId}/permissions` |
-| POST | `/api/permissions/user/effective` | ❌ Should be GET | `GET /v1/users/{userId}/permissions/effective` |
-| POST | `/api/permissions/hierarchy/resolve` | ❌ Action | `/v1/permissions:resolve-hierarchy` |
-| GET | `/api/permissions/analytics/{tenantId}` | ❌ Missing versioning | `/v1/tenants/{tenantId}/permissions/analytics` |
-| POST | `/api/permissions/audit/trail` | ❌ Should be GET | `GET /v1/permissions/audit-trail` |
-| GET | `/api/permissions/cache/stats` | ❌ Missing versioning | `/v1/permissions/cache/stats` |
-| DELETE | `/api/permissions/cache/clear` | ❌ Action | `POST /v1/permissions/cache:clear` |
-| GET | `/api/permissions/templates` | ❌ Missing versioning | `/v1/permissions/templates` |
-| POST | `/api/permissions/templates/apply` | ❌ Action | `/v1/permissions/templates/{templateId}:apply` |
+#### Content Type Permission Grants
+| Old Endpoint | New Endpoint | Status |
+|-------------|--------------|--------|
+| `POST /api/permissions/content-type/grant` | `POST /v1/permissions/content-type-grants` | ✅ DONE |
+| `POST /api/permissions/content-type/revoke` | `DELETE /v1/permissions/content-type-grants/{grantId}` | ✅ DONE |
+| `POST /api/permissions/content-type/revoke` (legacy) | `POST /v1/permissions/content-type-grants:revoke` | ✅ DONE |
+| `POST /api/permissions/content-type/check` | `POST /v1/permissions/content-type:check` | ✅ DONE |
+| `POST /api/permissions/content-type/list` | `GET /v1/permissions/content-type` | ✅ DONE |
+
+#### Resource Permission Grants
+| Old Endpoint | New Endpoint | Status |
+|-------------|--------------|--------|
+| `POST /api/permissions/resource/grant` | `POST /v1/permissions/resource-grants` | ✅ DONE |
+| `POST /api/permissions/resource/revoke` | `DELETE /v1/permissions/resource-grants/{grantId}` | ✅ DONE |
+| `POST /api/permissions/resource/revoke` (legacy) | `POST /v1/permissions/resource-grants:revoke` | ✅ DONE |
+| `POST /api/permissions/resource/check` | `POST /v1/permissions/resource:check` | ✅ DONE |
+| `POST /api/permissions/resource/list` | `GET /v1/permissions/resource` | ✅ DONE |
+| `POST /api/permissions/resource/bulk-grant` | `POST /v1/permissions/resource-grants:batch-create` | ✅ DONE |
+
+#### User Permissions (Aggregated Views)
+| Old Endpoint | New Endpoint | Status |
+|-------------|--------------|--------|
+| `POST /api/permissions/user/all` | `GET /v1/users/{userId}/permissions` | ✅ DONE |
+| `POST /api/permissions/user/effective` | `GET /v1/users/{userId}/permissions/effective` | ✅ DONE |
+| `POST /api/permissions/hierarchy/resolve` | `POST /v1/permissions:resolve-hierarchy` | ✅ DONE |
+
+#### Analytics & Audit
+| Old Endpoint | New Endpoint | Status |
+|-------------|--------------|--------|
+| `GET /api/permissions/analytics/{tenantId}` | `GET /v1/tenants/{tenantId}/permissions/analytics` | ✅ DONE |
+| `POST /api/permissions/audit/trail` | `GET /v1/permissions/audit-trail` | ✅ DONE |
+
+#### Cache Management
+| Old Endpoint | New Endpoint | Status |
+|-------------|--------------|--------|
+| `GET /api/permissions/cache/stats` | `GET /v1/permissions/cache/stats` | ✅ DONE |
+| `DELETE /api/permissions/cache/clear` | `POST /v1/permissions/cache:clear` | ✅ DONE |
+
+#### Templates
+| Old Endpoint | New Endpoint | Status |
+|-------------|--------------|--------|
+| `GET /api/permissions/templates` | `GET /v1/permissions/templates` | ✅ DONE |
+| `POST /api/permissions/templates/apply` | `POST /v1/permissions/templates/{templateId}:apply` | ✅ DONE |
+
+### Implementation Details
+
+**New Files Created:**
+- `RevokeTenantPermissionByIdCommand.cs` - Command to revoke tenant permission by grant ID
+- `RevokeContentTypePermissionByIdCommand.cs` - Command to revoke content type permission by grant ID
+- `RevokeResourcePermissionByIdCommand.cs` - Command to revoke resource permission by grant ID
+- `RevokeTenantPermissionByIdHandler.cs` - Handler for tenant permission revocation by ID
+- `RevokeContentTypePermissionByIdHandler.cs` - Handler for content type permission revocation by ID
+- `RevokeResourcePermissionByIdHandler.cs` - Handler for resource permission revocation by ID
+
+**Modified Files:**
+- `PermissionsController.cs` - Complete refactor to follow Google API Guidelines
+- `GetContentTypePermissionsQuery.cs` - Made TenantId nullable
+- `GetUserPermissionsQuery.cs` - Made TenantId nullable
+- `GetEffectivePermissionsQuery.cs` - Made TenantId nullable
+- `ApplyPermissionTemplateCommand.cs` - Made TenantId nullable
+- `ApplyPermissionTemplateResult.cs` - Made TenantId nullable for consistency
+
+### Key Patterns Applied
+
+1. **Resource-based URLs**: Verbs removed from URLs, replaced with proper resources
+   - `tenant/grant` → `tenant-grants` (noun)
+   - DELETE method for revocation with `{grantId}` path parameter
+
+2. **Colon syntax for custom actions**: Non-CRUD operations use `:action` suffix
+   - `:check` for permission checking
+   - `:batch-create` and `:batch-delete` for bulk operations
+   - `:apply` for template application
+   - `:resolve-hierarchy` for hierarchy resolution
+   - `:clear` for cache clearing
+
+3. **Cross-controller routing**: User and tenant resources follow their natural hierarchy
+   - `GET /v1/users/{userId}/permissions` instead of `/v1/permissions/user:all`
+   - `GET /v1/tenants/{tenantId}/permissions/analytics` instead of `/v1/permissions/analytics/{tenantId}`
+
+4. **Query parameters for filtering**: GET endpoints use query params
+   - `GET /v1/permissions/tenant?userId=xxx&tenantId=yyy`
+   - `GET /v1/permissions/audit-trail?userId=xxx&fromDate=yyy&page=1&pageSize=50`
 
 ---
 

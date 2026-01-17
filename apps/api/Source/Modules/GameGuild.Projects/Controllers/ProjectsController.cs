@@ -30,6 +30,13 @@ public class ProjectsController : ControllerBase {
   }
 
   /// <summary> Get all projects with filtering and pagination </summary>
+  /// <remarks>
+  /// Use query parameters to filter results:
+  /// - `featured=true` to get featured projects
+  /// - `popular=true` to get popular projects (sorted by popularity score)
+  /// - `recent=true` to get recently created/updated projects
+  /// - `sortBy=CreatedAt` with `sortDirection=DESC` for manual sorting
+  /// </remarks>
   [HttpGet]
   [AllowAnonymous]
   public async Task<ActionResult<IEnumerable<Project>>> GetProjects(
@@ -39,6 +46,9 @@ public class ProjectsController : ControllerBase {
     [FromQuery] Guid? creatorId = null,
     [FromQuery] Guid? categoryId = null,
     [FromQuery] string? searchTerm = null,
+    [FromQuery] bool? featured = null,
+    [FromQuery] bool? popular = null,
+    [FromQuery] bool? recent = null,
     [FromQuery] int skip = 0,
     [FromQuery] int take = 50,
     [FromQuery] string? sortBy = "CreatedAt",
@@ -51,6 +61,9 @@ public class ProjectsController : ControllerBase {
       CreatorId = creatorId,
       CategoryId = categoryId,
       SearchTerm = searchTerm,
+      Featured = featured,
+      Popular = popular,
+      Recent = recent,
       Skip = skip,
       Take = Math.Min(take, 100), // Limit max items
       SortBy = sortBy,

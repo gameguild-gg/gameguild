@@ -7,7 +7,7 @@ public record GetContentTypePermissionsQuery : IQuery<IEnumerable<PermissionType
 {
     public Guid UserId { get; init; }
 
-    public Guid TenantId { get; init; }
+    public Guid? TenantId { get; init; }
 
-    public string ContentType { get; init; } = string.Empty;
+    public string? ContentType { get; init; }
 }
