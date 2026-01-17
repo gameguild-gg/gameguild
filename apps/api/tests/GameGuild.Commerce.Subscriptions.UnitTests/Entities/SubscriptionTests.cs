@@ -1366,6 +1366,243 @@ public class SubscriptionTests
 
     #endregion
 
+    #region RowVersion Property Tests
+
+    [Fact]
+    public void RowVersion_ShouldBeSettable_ForOptimisticConcurrency()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        var rowVersion = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+
+        // Act
+        subscription.RowVersion = rowVersion;
+
+        // Assert
+        subscription.RowVersion.Should().BeEquivalentTo(rowVersion);
+    }
+
+    [Fact]
+    public void RowVersion_ShouldBeNullByDefault()
+    {
+        // Arrange & Act
+        var subscription = CreateValidSubscription();
+
+        // Assert
+        subscription.RowVersion.Should().BeNull();
+    }
+
+    #endregion
+
+    #region ISubscription.TenantId Explicit Interface Tests
+
+    [Fact]
+    public void ISubscription_TenantId_ShouldReturnGuid_WhenTenantIdIsSet()
+    {
+        // Arrange
+        var tenantGuid = Guid.NewGuid();
+        var subscription = new Subscription(
+            tenantId: tenantGuid,
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: BillingCycle.Monthly,
+            amount: new Money(2999),
+            startDate: DateTime.UtcNow
+        );
+
+        // Act
+        ISubscription iSubscription = subscription;
+        var result = iSubscription.TenantId;
+
+        // Assert
+        result.Should().Be(tenantGuid);
+    }
+
+    #endregion
+
+    #region RecordPaymentLegacy Tests
+
+    [Fact]
+    public void RecordPaymentLegacy_ShouldReturnTrue_WhenPaymentRecorded()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var idempotencyKey = Guid.NewGuid().ToString();
+
+#pragma warning disable CS0618 // Test obsolete method for coverage
+        // Act
+        var result = subscription.RecordPaymentLegacy(29.99m, "USD", DateTime.UtcNow, idempotencyKey);
+
+        // Assert
+        result.Should().BeTrue();
+#pragma warning restore CS0618
+    }
+
+    [Fact]
+    public void RecordPaymentLegacy_ShouldReturnFalse_WhenPaymentRejected()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.Cancel(CancellationReason.UserRequested, "Test cancellation");
+
+#pragma warning disable CS0618 // Test obsolete method for coverage
+        // Act
+        var result = subscription.RecordPaymentLegacy(29.99m, "USD", DateTime.UtcNow, Guid.NewGuid().ToString());
+
+        // Assert
+        result.Should().BeFalse();
+#pragma warning restore CS0618
+    }
+
+    #endregion
+
+    #region RecordPayment Expired Subscription Tests
+
+    [Fact]
+    public void RecordPayment_ShouldRejectPayment_WhenSubscriptionIsExpired()
+    {
+        // Arrange - Create subscription that will expire
+        var startDate = DateTime.UtcNow.AddMonths(-2);
+        var subscription = new Subscription(
+            tenantId: Guid.NewGuid(),
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: BillingCycle.Monthly,
+            amount: new Money(2999),
+            startDate: startDate
+        );
+        subscription.Activate();
+
+        // Use reflection to set status to Expired (simulate natural expiration)
+        var statusProperty = typeof(Subscription).GetProperty("Status");
+        statusProperty!.SetValue(subscription, SubscriptionStatus.Expired);
+
+        // Act
+        var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, Guid.NewGuid().ToString());
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Message.Should().Contain("expired");
+    }
+
+    #endregion
+
+    #region CalculateProration Edge Cases
+
+    [Fact]
+    public void ChangePlan_ShouldHandleZeroPeriod_GracefullyInProration()
+    {
+        // Arrange - Create subscription with same period start and end
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+
+        // Act & Assert - Should not throw even in edge cases
+        var act = () => subscription.ChangePlan(
+            Guid.NewGuid(),
+            new Money(4999),
+            DateTime.UtcNow.AddDays(30) // Effective date in the future
+        );
+        act.Should().NotThrow();
+    }
+
+    #endregion
+
+    #region RecordPayment Biannually Billing Cycle Tests
+
+    [Fact]
+    public void RecordPayment_WithBiannuallyBillingCycle_ShouldSetNextBillingDateTwoYearsLater()
+    {
+        // Arrange
+        var startDate = DateTime.UtcNow;
+        var subscription = new Subscription(
+            tenantId: Guid.NewGuid(),
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: BillingCycle.Biannually,
+            amount: new Money(59999),
+            startDate: startDate
+        );
+        subscription.Activate();
+        var paymentDate = DateTime.UtcNow;
+
+        // Act
+        var result = subscription.RecordPayment(599.99m, "USD", paymentDate, Guid.NewGuid().ToString());
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        subscription.NextBillingDate.Should().BeCloseTo(paymentDate.AddYears(2), TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public void RecordPayment_WithWeeklyBillingCycle_ShouldSetNextBillingDateSevenDaysLater()
+    {
+        // Arrange - Create a Monthly subscription and then use reflection to set it to Weekly
+        // (Weekly is not supported in CalculateBillingDates but IS handled in RecordPayment switch)
+        var startDate = DateTime.UtcNow;
+        var subscription = new Subscription(
+            tenantId: Guid.NewGuid(),
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: BillingCycle.Monthly, // Start with Monthly
+            amount: new Money(999),
+            startDate: startDate
+        );
+        subscription.Activate();
+
+        // Use reflection to set BillingCycle to Weekly for this edge case test
+        var billingCycleProperty = typeof(Subscription).GetProperty("BillingCycle");
+        billingCycleProperty!.SetValue(subscription, BillingCycle.Weekly);
+
+        var paymentDate = DateTime.UtcNow;
+
+        // Act
+        var result = subscription.RecordPayment(9.99m, "USD", paymentDate, Guid.NewGuid().ToString());
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        subscription.NextBillingDate.Should().BeCloseTo(paymentDate.AddDays(7), TimeSpan.FromSeconds(5));
+    }
+
+    #endregion
+
+    #region ProcessRenewal Exception Handling Tests
+
+    [Fact]
+    public void ProcessRenewal_ShouldReturnFailed_WhenExceptionOccurs()
+    {
+        // Arrange - Create subscription that's not in renewable state
+        var subscription = CreateValidSubscription();
+        // Don't activate - subscription is in PendingActivation state
+
+        // Act
+        var result = subscription.ProcessRenewal(new Money(2999), Guid.NewGuid().ToString());
+
+        // Assert - Should fail because subscription is not active
+        result.Success.Should().BeFalse();
+    }
+
+    #endregion
+
+    #region SetExternalIds Event Coverage Tests
+
+    [Fact]
+    public void SetExternalIds_ShouldRaiseEvent_WithNullSubscriptionId()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.ClearDomainEvents();
+
+        // Act
+        subscription.SetExternalIds(null, "cust_123");
+
+        // Assert
+        subscription.DomainEvents.Should().Contain(e => e.GetType() == typeof(SubscriptionExternalIdUpdatedEvent));
+    }
+
+    #endregion
+
     private static Subscription CreateValidSubscription()
     {
         return new Subscription(

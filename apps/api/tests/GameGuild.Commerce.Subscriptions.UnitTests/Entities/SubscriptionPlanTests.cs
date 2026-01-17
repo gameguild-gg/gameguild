@@ -861,6 +861,34 @@ public class SubscriptionPlanTests
 
     #endregion
 
+    #region Metadata Property Tests
+
+    [Fact]
+    public void Metadata_ShouldBeSettable()
+    {
+        // Arrange
+        var plan = CreateValidPlan();
+        var metadata = "{\"tier\":\"premium\",\"legacyId\":\"old-plan-123\"}";
+
+        // Act
+        plan.Metadata = metadata;
+
+        // Assert
+        plan.Metadata.Should().Be(metadata);
+    }
+
+    [Fact]
+    public void Metadata_ShouldBeNullByDefault()
+    {
+        // Arrange & Act
+        var plan = CreateValidPlan();
+
+        // Assert
+        plan.Metadata.Should().BeNull();
+    }
+
+    #endregion
+
     private static TestSubscriptionPlan CreateValidPlan()
     {
         return new TestSubscriptionPlan(
