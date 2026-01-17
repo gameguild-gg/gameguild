@@ -1,6 +1,7 @@
 import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
-import { detectProjectLayout, extractEditorStates, type LayoutType } from "@/lib/storage/editor/layout-detector"
+import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/layout-detector"
+import { getLayoutFromType, type ProjectType, type InternalLayout } from "@/lib/storage/editor/project-types"
 import type { SequentialPanelStructure, PreviewMode } from "@/lib/storage/editor/panel-structure"
 
 // Parameter interface
@@ -23,8 +24,8 @@ export interface CheckSelectedProjectParams {
   setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
   setProjectTags: (tags: string[]) => void
   setIsFirstTime: (value: boolean) => void
-  setCurrentLayout: (layout: LayoutType) => void // Layout auto-detected (single, multiple, or sequential)
-  setCurrentProjectType: (type: string) => void // Project type
+  setCurrentLayout: (layout: InternalLayout) => void // Layout auto-detected (single, multiple, or sequential)
+  setCurrentProjectType: (type: ProjectType) => void // Project type
   setEditorState: (state: string) => void
   setBlockStates: (states: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void
   setSequentialStructure?: (structure: SequentialPanelStructure) => void
@@ -73,9 +74,12 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
           // Extract mode from preferences or default to free-page
           const projectMode = projectData.preferences?.global?.mode || "free-page"
           
+          // Layout \u00e9 derivado diretamente do tipo de projeto
+          const finalLayout = getLayoutFromType(projectData.type as ProjectType)
+          
           // Set layout and type
-          setCurrentLayout(layoutInfo.layoutType)
-          setCurrentProjectType(projectData.type)
+          setCurrentLayout(finalLayout)
+          setCurrentProjectType(projectData.type as ProjectType)
           
           // Set project metadata immediately
           setCurrentProjectId(projectData.id)
@@ -126,8 +130,8 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
             }
           }
           
-          // Extract editor states
-          const states = extractEditorStates(projectData.data, layoutInfo.layoutType)
+          // Extract editor states using project type
+          const states = extractEditorStates(projectData.data, projectData.type as ProjectType)
           
           // Wait for layout to render before loading editor data
           setTimeout(() => {

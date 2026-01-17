@@ -13,7 +13,8 @@ import {
   NODE_RESTRICTIONS,
   getSuggestedLayoutForMode
 } from "@/lib/storage/editor/project-modes"
-import { createProjectData, type LayoutType } from "@/lib/storage/editor/layout-detector"
+import { createProjectData } from "@/lib/storage/editor/layout-detector"
+import { type ProjectType, PROJECT_TYPES, getLayoutFromType } from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
@@ -41,9 +42,8 @@ interface CreateProjectDialogProps {
     name: string
     tags: string[]
     storageType: "local" | "gameguild-cloud" | "google-drive"
-    type: string // Project type (type1, type2, etc.)
+    type: ProjectType // Project type
     mode: ProjectMode
-    layout: LayoutType // Layout: single or multiple
   }) => void
   onProjectsListUpdate: () => void
   onAvailableTagsUpdate: () => void
@@ -67,13 +67,7 @@ export function CreateProjectDialog({
   const [showTagDropdown, setShowTagDropdown] = useState(false)
   const [storageOption, setStorageOption] = useState<StorageOption>("local")
   const [projectMode, setProjectMode] = useState<ProjectMode>("free-page")
-  const [projectType, setProjectType] = useState<string>("type1") // Project type (type1, type2, type3, etc.)
-  
-  // Auto-determine layout based on project type
-  const layoutType: LayoutType = 
-    projectType === "type1" ? "single" : 
-    projectType === "type2" ? "multiple" : 
-    "sequential"
+  const [projectType, setProjectType] = useState<ProjectType>(PROJECT_TYPES.TYPE1)
 
   // Close tag dropdown when clicking outside
   useEffect(() => {
@@ -175,15 +169,16 @@ export function CreateProjectDialog({
         nodes: {}
       }
       
-      // Create data structure based on selected layout
+      // Create data structure based on project type
       // For sequential layout, the parent component will create the structure
       let projectData: string
+      const layoutType = getLayoutFromType(projectType)
       
       if (layoutType === "sequential") {
         // Temporary placeholder - will be replaced by parent component
         projectData = JSON.stringify({ version: "sequential-v1", panels: [] })
       } else {
-        projectData = createProjectData(layoutType, {
+        projectData = createProjectData(projectType, {
           blocks: {
             b1: emptyState,
           },
@@ -197,7 +192,7 @@ export function CreateProjectDialog({
         projectTags, 
         storageOption, 
         preferences,
-        projectType as "type1" | "type2" | "type3" // Project type
+        projectType // Project type
       )
 
       // Call the callback to update parent state
@@ -208,7 +203,6 @@ export function CreateProjectDialog({
         storageType: storageOption,
         type: projectType,
         mode: projectMode,
-        layout: layoutType,
       })
 
       // Reset form state
@@ -218,7 +212,7 @@ export function CreateProjectDialog({
       setShowTagDropdown(false)
       setStorageOption("local")
       setProjectMode("free-page")
-      setProjectType("type1")
+      setProjectType(PROJECT_TYPES.TYPE1)
       onOpenChange(false)
 
       // Update lists
@@ -278,14 +272,14 @@ export function CreateProjectDialog({
               {/* Type 1 - Single Panel */}
               <button
                 type="button"
-                onClick={() => setProjectType("type1")}
+                onClick={() => setProjectType(PROJECT_TYPES.TYPE1)}
                 className={`relative p-3 rounded-lg border-2 transition-all text-left ${
-                  projectType === "type1"
+                  projectType === PROJECT_TYPES.TYPE1
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
                     : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
-                {projectType === "type1" && (
+                {projectType === PROJECT_TYPES.TYPE1 && (
                   <div className="absolute top-2 right-2">
                     <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -320,14 +314,14 @@ export function CreateProjectDialog({
               {/* Type 2 - Multiple Panel */}
               <button
                 type="button"
-                onClick={() => setProjectType("type2")}
+                onClick={() => setProjectType(PROJECT_TYPES.TYPE2)}
                 className={`relative p-3 rounded-lg border-2 transition-all text-left ${
-                  projectType === "type2"
+                  projectType === PROJECT_TYPES.TYPE2
                     ? "border-green-500 bg-green-50 dark:bg-green-950"
                     : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
-                {projectType === "type2" && (
+                {projectType === PROJECT_TYPES.TYPE2 && (
                   <div className="absolute top-2 right-2">
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -368,14 +362,14 @@ export function CreateProjectDialog({
               {/* Type 3 - Sequential */}
               <button
                 type="button"
-                onClick={() => setProjectType("type3")}
+                onClick={() => setProjectType(PROJECT_TYPES.TYPE3)}
                 className={`relative p-3 rounded-lg border-2 transition-all text-left ${
-                  projectType === "type3"
+                  projectType === PROJECT_TYPES.TYPE3
                     ? "border-purple-500 bg-purple-50 dark:bg-purple-950"
                     : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
               >
-                {projectType === "type3" && (
+                {projectType === PROJECT_TYPES.TYPE3 && (
                   <div className="absolute top-2 right-2">
                     <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

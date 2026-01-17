@@ -2,13 +2,14 @@ import { SyncManager } from "../../sync/editor/sync-manager"
 import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
 import type { ProjectPreferences } from "./project-preferences"
+import type { ProjectType } from "./project-types"
 
 export type { ProjectPreferences } from "./project-preferences"
 
 export interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3" // Project type (not layout - layout is auto-detected from data structure)
+  type: ProjectType // Project type (not layout - layout is auto-detected from data structure)
   data: string // Serialized project data (format detected by layout-detector)
   tags: string[]
   size: number

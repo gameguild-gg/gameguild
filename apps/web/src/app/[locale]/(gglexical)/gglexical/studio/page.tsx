@@ -32,7 +32,8 @@ import { EnhancedStorageAdapter, type ProjectPreferences } from "@/lib/storage/e
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
 import { type ProjectMode, NODE_RESTRICTIONS, PROJECT_MODES } from "@/lib/storage/editor/project-modes"
-import { detectProjectLayout, extractEditorStates, createProjectData, type LayoutType } from "@/lib/storage/editor/layout-detector"
+import { detectProjectLayout, extractEditorStates, createProjectData } from "@/lib/storage/editor/layout-detector"
+import { getLayoutFromType, type ProjectType, type InternalLayout, PROJECT_TYPES } from "@/lib/storage/editor/project-types"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
@@ -52,16 +53,6 @@ import {
   updatePanelState,
   serializeSequentialStructure
 } from "@/lib/storage/editor/panel-structure"
-
-export type ProjectType = "type1" | "type2" | "type3"
-
-export interface ProjectDataType1 {
-  data: string // Single editor JSON state
-}
-
-export interface ProjectDataType2 {
-  blocks: Record<string, string> // Dynamic blocks: b1, b2, b3...
-}
 
 interface ProjectData {
   id: string
@@ -102,8 +93,8 @@ function formatSize(sizeInKB: number): string {
 export default function Page() {
   const router = useRouter()
   // Layout detection and state management
-  const [currentLayout, setCurrentLayout] = useState<LayoutType>("single")
-  const [currentProjectType, setCurrentProjectType] = useState<ProjectType>("type1")
+  const [currentLayout, setCurrentLayout] = useState<InternalLayout>("single")
+  const [currentProjectType, setCurrentProjectType] = useState<ProjectType>(PROJECT_TYPES.TYPE1)
   
   // Type1 states (single editor with b1)
   const [editorState, setEditorState] = useState<string>("")
@@ -153,7 +144,7 @@ export default function Page() {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewState, setPreviewState] = useState<SerializedEditorState | null>(null)
   const [previewBlockStates, setPreviewBlockStates] = useState<Record<string, SerializedEditorState>>({})
-  const [previewLayout, setPreviewLayout] = useState<LayoutType>("single")
+  const [previewLayout, setPreviewLayout] = useState<InternalLayout>("single")
   const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
   const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>("free-page")
 
@@ -257,7 +248,7 @@ export default function Page() {
           blocks[blockId] = state ? JSON.parse(state) : null
         })
       }
-      dataToCalculate = createProjectData(currentLayout, { blocks })
+      dataToCalculate = createProjectData(currentProjectType, { blocks })
     }
     
     const size = estimateSize(dataToCalculate)
@@ -455,7 +446,7 @@ export default function Page() {
           blocks[blockId] = state ? JSON.parse(state) : null
         })
       }
-      dataToSave = createProjectData(currentLayout, { blocks })
+      dataToSave = createProjectData(currentProjectType, { blocks })
     }
     
     const refToUse = currentLayout === "single" ? editorRef : {
@@ -504,7 +495,7 @@ export default function Page() {
           blocks[blockId] = state ? JSON.parse(state) : null
         })
       }
-      dataToSave = createProjectData(currentLayout, { blocks })
+      dataToSave = createProjectData(currentProjectType, { blocks })
     }
     
     const refToUse = currentLayout === "single" ? editorRef : {
@@ -589,7 +580,7 @@ export default function Page() {
             blocks[blockId] = state ? JSON.parse(state) : null
           })
         }
-        const dataToSave = createProjectData(currentLayout, { blocks })
+        const dataToSave = createProjectData(currentProjectType, { blocks })
         
         await storageAdapter.save(
           currentProjectId, 
@@ -663,7 +654,7 @@ export default function Page() {
         blocks[blockId] = state ? JSON.parse(state) : null
       })
     }
-    const stateToUse = createProjectData(currentLayout, { blocks })
+    const stateToUse = createProjectData(currentProjectType, { blocks })
     
     const refToUse = currentLayout === "single" ? editorRef : {
       current: Object.values(blockRefs.current)[0] ?? null
@@ -879,14 +870,8 @@ export default function Page() {
                       // Detectar layout automaticamente baseado na estrutura de data
                       const layoutInfo = detectProjectLayout(projectData.data)
                       
-                      // Force layout based on project type for type2/type3
-                      // Type2 must always be multi-panel even with 1 block
-                      let finalLayoutType: LayoutType = layoutInfo.layoutType
-                      if (projectData.type === "type2" && (layoutInfo.layoutType === "single" || layoutInfo.layoutType === "multiple")) {
-                        finalLayoutType = "multiple"
-                      } else if (projectData.type === "type3") {
-                        finalLayoutType = "sequential"
-                      }
+                      // Layout é derivado diretamente do tipo de projeto
+                      const finalLayout = getLayoutFromType(projectData.type)
                       
                       // Extract mode from preferences or default to free-page
                       const projectMode = projectData.preferences?.global?.mode || "free-page"
@@ -895,7 +880,7 @@ export default function Page() {
                       setCurrentProjectId(projectData.id)
                       setCurrentProjectName(projectData.name)
                       setCurrentProjectType(projectData.type)  // tipo do projeto
-                      setCurrentLayout(finalLayoutType)  // layout corrigido baseado no tipo
+                      setCurrentLayout(finalLayout)  // layout derivado do tipo
                       setCurrentProjectStorageType(projectData.storageType || "local")
                       setProjectTags(projectData.tags || [])
                       setCurrentProjectMode(projectMode)
@@ -925,13 +910,13 @@ export default function Page() {
                         return
                       }
                       
-                      // Extract editor states baseado no layout detectado
-                      const states = extractEditorStates(projectData.data, finalLayoutType)
+                      // Extract editor states baseado no tipo de projeto
+                      const states = extractEditorStates(projectData.data, projectData.type)
                       
-                      // Load editor data based on detected layout
+                      // Load editor data based on project type
                       setTimeout(() => {
                         try {
-                          if (finalLayoutType === "single" && editorRef.current && states.blocks.b1) {
+                          if (finalLayout === "single" && editorRef.current && states.blocks.b1) {
                             // Single panel: load single editor from b1
                             if (!states.blocks.b1.root) {
                               throw new Error("Invalid Lexical format")
@@ -939,7 +924,7 @@ export default function Page() {
                             const editorState = editorRef.current.parseEditorState(JSON.stringify(states.blocks.b1))
                             editorRef.current.setEditorState(editorState)
                             setEditorState(JSON.stringify(states.blocks.b1))
-                          } else if (finalLayoutType === "multiple" && states.blocks) {
+                          } else if (finalLayout === "multiple" && states.blocks) {
                             // Multi-panel layout: load all blocks
                             // Clear existing blockRefs when loading a new project
                             blockRefs.current = {}
@@ -1059,16 +1044,15 @@ export default function Page() {
                 const emptyState =
                   {"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}
                 
-                // Project data já vem com layout definido - detectar automaticamente  
-                // Se não tiver data, criar estrutura baseada no tipo de layout desejado
+                // Project data já vem com layout definido - usar tipo para determinar layout
+                // Se não tiver data, criar estrutura baseada no tipo de projeto
                 let dataString: string
-                let layoutType: LayoutType
+                const layoutType = getLayoutFromType(projectData.type)
                 
-                if (projectData.layout === "sequential") {
+                if (layoutType === "sequential") {
                   // Sequential panels
                   const initialStructure = createEmptySequentialStructure()
                   dataString = serializeSequentialStructure(initialStructure)
-                  layoutType = "sequential"
                   setSequentialStructure(initialStructure)
                   setCurrentPanelIndex(0)
                   
@@ -1095,14 +1079,12 @@ export default function Page() {
                       console.error("Failed to save sequential structure:", error)
                     }
                   }, 200)
-                } else if (projectData.layout === "multiple") {
+                } else if (layoutType === "multiple") {
                   // Multiple panel
-                  dataString = createProjectData("multiple", { blocks: { b1: emptyState } })
-                  layoutType = "multiple"
+                  dataString = createProjectData(projectData.type, { blocks: { b1: emptyState } })
                 } else {
                   // Single panel (default)
-                  dataString = createProjectData("single", { blocks: { b1: emptyState } })
-                  layoutType = "single"
+                  dataString = createProjectData(projectData.type, { blocks: { b1: emptyState } })
                 }
                 
                 // Set the layout and project type from the project data

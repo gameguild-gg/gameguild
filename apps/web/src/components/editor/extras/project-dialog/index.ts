@@ -9,11 +9,13 @@ export { ProjectSearchFilters } from './project-search-filters'
 export { ProjectPagination } from './project-pagination'
 export { AdvancedFilters } from './advanced-filters'
 
+import type { ProjectType } from '@/lib/storage/editor/project-types'
+
 // Types
 export interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
+  type: ProjectType
   data: string
   tags: string[]
   size: number
