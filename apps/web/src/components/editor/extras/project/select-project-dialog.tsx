@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { FileText, Search, X, HardDrive, Cloud, Database } from "lucide-react"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
+  type: ProjectType
   data: string
   tags: string[]
   size: number

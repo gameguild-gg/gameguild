@@ -8,6 +8,7 @@ import type { ProjectMode } from "@/lib/storage/editor/project-modes"
 import { Button } from "@/components/ui/button"
 import { Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
+import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface EditorLayoutType2Props {
   blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
@@ -18,7 +19,7 @@ interface EditorLayoutType2Props {
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId: string
   mode?: ProjectMode
-  currentProjectType?: "type1" | "type2" | "type3"
+  currentProjectType?: ProjectType
   storageAdapter?: any
 }
 

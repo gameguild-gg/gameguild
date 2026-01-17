@@ -20,6 +20,7 @@ import {
 import { PanelNavigationSidebar } from "./panel-navigation-sidebar"
 import { EditorLayoutType1 } from "./editor-layout-type1"
 import { EditorLayoutType2 } from "./editor-layout-type2"
+import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface EditorLayoutSequentialProps {
   structure: SequentialPanelStructure
@@ -31,7 +32,7 @@ interface EditorLayoutSequentialProps {
   onLoadingChange: (setLoading: (loading: boolean) => void) => void
   projectId: string
   mode: ProjectMode
-  currentProjectType?: "type1" | "type2" | "type3"
+  currentProjectType?: ProjectType
   storageAdapter?: any
 }
 
