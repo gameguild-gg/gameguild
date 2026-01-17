@@ -2,7 +2,7 @@ import { SyncManager } from "../../sync/editor/sync-manager"
 import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
 import type { ProjectPreferences } from "./project-preferences"
-import type { ProjectType } from "./project-types"
+import { type ProjectType, PROJECT_TYPES } from "./project-types"
 
 export type { ProjectPreferences } from "./project-preferences"
 
@@ -31,7 +31,7 @@ interface TagData {
 interface ProjectMetadata {
   id: string
   name: string
-  type: "type1" | "type2" | "type3" // Project type (not layout)
+  type: ProjectType // Project type (not layout)
   tags: string[]
   size: number
   hash: string
@@ -168,7 +168,7 @@ export class EnhancedStorageAdapter {
     }
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: "type1" | "type2" | "type3" = "type1"): Promise<void> {
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: ProjectType = PROJECT_TYPES.TYPE1): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
@@ -181,7 +181,7 @@ export class EnhancedStorageAdapter {
     const projectData: ProjectData = {
       id,
       name,
-      type: type || existing?.type || "type1", // Preserve existing type or use provided
+      type: type || existing?.type || PROJECT_TYPES.TYPE1, // Preserve existing type or use provided
       data,
       tags,
       size: this.estimateSize(data),
@@ -281,14 +281,14 @@ export class EnhancedStorageAdapter {
           // Save downloaded project locally
           await this.saveToIndexedDB({
             ...googleDriveProject,
-            type: googleDriveProject.type || "type1",
+            type: googleDriveProject.type || PROJECT_TYPES.TYPE1,
             hash,
             syncStatus: "synced",
             storageType: "google-drive",
           })
           return {
             ...googleDriveProject,
-            type: googleDriveProject.type || "type1",
+            type: googleDriveProject.type || PROJECT_TYPES.TYPE1,
             hash,
             storageType: "google-drive" as const,
           }
@@ -304,14 +304,14 @@ export class EnhancedStorageAdapter {
         // Save downloaded project locally
         await this.saveToIndexedDB({
           ...serverProject,
-          type: serverProject.type || "type1",
+          type: serverProject.type || PROJECT_TYPES.TYPE1,
           hash,
           syncStatus: "synced",
           storageType: "gameguild-cloud", // Server projects are cloud-based
         })
         return {
           ...serverProject,
-          type: serverProject.type || "type1",
+          type: serverProject.type || PROJECT_TYPES.TYPE1,
           hash,
           storageType: "gameguild-cloud" as const,
         }
@@ -333,14 +333,14 @@ export class EnhancedStorageAdapter {
             // Update local copy with newer version from Google Drive
             await this.saveToIndexedDB({
               ...googleDriveProject,
-              type: googleDriveProject.type || "type1",
+              type: googleDriveProject.type || PROJECT_TYPES.TYPE1,
               hash,
               syncStatus: "synced",
               storageType: "google-drive",
             })
             return {
               ...googleDriveProject,
-              type: googleDriveProject.type || "type1",
+              type: googleDriveProject.type || PROJECT_TYPES.TYPE1,
               hash,
               storageType: "google-drive" as const,
             }
@@ -360,14 +360,14 @@ export class EnhancedStorageAdapter {
         // Update local project with server version, preserving storage type
         await this.saveToIndexedDB({
           ...syncedProject,
-          type: syncedProject.type || localProject.type || "type1",
+          type: syncedProject.type || localProject.type || PROJECT_TYPES.TYPE1,
           hash,
           syncStatus: "synced",
           storageType: localProject.storageType,
         })
         return {
           ...syncedProject,
-          type: syncedProject.type || localProject.type || "type1",
+          type: syncedProject.type || localProject.type || PROJECT_TYPES.TYPE1,
           hash,
           storageType: localProject.storageType,
         }

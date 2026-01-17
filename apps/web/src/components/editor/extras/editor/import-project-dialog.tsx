@@ -10,11 +10,12 @@ import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { Upload, FileText, Archive, X } from "lucide-react"
 import { ProjectImporter, type ImportedProjectData } from "@/lib/interopAdapter/project-importer"
+import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
+  type: ProjectType
   data: string
   tags: string[]
   size: number

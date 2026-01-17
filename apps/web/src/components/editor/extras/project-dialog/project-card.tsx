@@ -4,11 +4,12 @@ import type React from "react"
 import { Button } from "@/components/ui/button"
 import { FolderOpen, Trash2, Download, Info, HardDrive, Cloud, Database, Wifi, WifiOff, Eye, Blocks } from "lucide-react"
 import { useGoogleDriveAuth } from "@/hooks/editor/use-google-drive-auth"
+import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
+  type: ProjectType
   data: string
   tags: string[]
   size: number
@@ -49,7 +50,7 @@ export function ProjectCard({
   const { isAuthenticated: isGoogleDriveAuthenticated } = useGoogleDriveAuth()
 
   // Get project type label
-  const getProjectTypeLabel = (type: "type1" | "type2" | "type3"): string => {
+  const getProjectTypeLabel = (type: ProjectType): string => {
     switch (type) {
       case "type1":
         return "Single Project"
