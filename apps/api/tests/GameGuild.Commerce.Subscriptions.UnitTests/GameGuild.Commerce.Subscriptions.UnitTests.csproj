@@ -9,8 +9,31 @@
         <RootNamespace>GameGuild.Commerce.Subscriptions.UnitTests</RootNamespace>
     </PropertyGroup>
 
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <!-- COVERAGE THRESHOLDS - Build will FAIL if coverage drops below these values      -->
+    <!-- Run with: dotnet test /p:CollectCoverage=true                                   -->
+    <!-- ═══════════════════════════════════════════════════════════════════════════════ -->
+    <PropertyGroup>
+        <!-- Enable coverage collection when /p:CollectCoverage=true is passed -->
+        <CollectCoverage>false</CollectCoverage>
+        <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+        <CoverletOutput>./TestResults/coverage.cobertura.xml</CoverletOutput>
+        
+        <!-- Minimum coverage thresholds (build fails if not met) -->
+        <Threshold>50</Threshold>
+        <ThresholdType>line,branch,method</ThresholdType>
+        <ThresholdStat>total</ThresholdStat>
+        
+        <!-- Exclude test files and auto-generated code from coverage -->
+        <ExcludeByFile>**/*Tests.cs,**/obj/**,**/Migrations/**</ExcludeByFile>
+        
+        <!-- Include only the Subscriptions module in coverage -->
+        <Include>[GameGuild.Commerce.Subscriptions]*</Include>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="coverlet.collector"/>
+        <PackageReference Include="coverlet.msbuild"/>
         <PackageReference Include="FluentAssertions"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk"/>
         <PackageReference Include="Moq"/>
