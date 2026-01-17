@@ -106,7 +106,7 @@
         <PackageVersion Include="AWSSDK.S3" Version="3.7.300" />
 
         <!-- Image Processing -->
-        <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.9" />
+        <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.11" />
 
         <!-- Testing packages -->
         <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
