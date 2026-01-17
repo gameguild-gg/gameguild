@@ -622,7 +622,8 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
             BillingCycle.Quarterly => paymentDate.AddMonths(3),
             BillingCycle.SemiAnnually => paymentDate.AddMonths(6),
             BillingCycle.Annually => paymentDate.AddYears(1),
-            BillingCycle.Biannually => paymentDate.AddYears(2)
+            BillingCycle.Biannually => paymentDate.AddYears(2),
+            _ => paymentDate.AddMonths(1) // Fallback for any undefined enum values
         };
 
         BillingCycleCount++;
