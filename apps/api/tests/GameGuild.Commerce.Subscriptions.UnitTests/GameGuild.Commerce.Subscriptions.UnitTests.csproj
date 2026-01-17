@@ -19,8 +19,8 @@
         <CoverletOutputFormat>cobertura</CoverletOutputFormat>
         <CoverletOutput>./TestResults/coverage.cobertura.xml</CoverletOutput>
         
-        <!-- Minimum coverage thresholds (build fails if not met) -->
-        <Threshold>50</Threshold>
+        <!-- Minimum coverage thresholds (build fails if not met) - ENFORCED AT 75% -->
+        <Threshold>75</Threshold>
         <ThresholdType>line,branch,method</ThresholdType>
         <ThresholdStat>total</ThresholdStat>
         
