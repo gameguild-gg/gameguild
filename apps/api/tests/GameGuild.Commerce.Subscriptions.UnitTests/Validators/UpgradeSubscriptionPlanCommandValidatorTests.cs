@@ -22,8 +22,7 @@ public class UpgradeSubscriptionPlanCommandValidatorTests
         var command = new UpgradeSubscriptionPlanCommand(
             SubscriptionId: Guid.NewGuid(),
             NewPlanId: Guid.NewGuid(),
-            EffectiveDate: DateTime.UtcNow.Date.AddDays(1),
-            ProrateBilling: true
+            EffectiveDate: DateTime.UtcNow.Date.AddDays(1)
         );
 
         // Act
@@ -41,8 +40,7 @@ public class UpgradeSubscriptionPlanCommandValidatorTests
         var command = new UpgradeSubscriptionPlanCommand(
             SubscriptionId: Guid.NewGuid(),
             NewPlanId: Guid.NewGuid(),
-            EffectiveDate: null,
-            ProrateBilling: false
+            EffectiveDate: null
         );
 
         // Act
@@ -59,8 +57,7 @@ public class UpgradeSubscriptionPlanCommandValidatorTests
         var command = new UpgradeSubscriptionPlanCommand(
             SubscriptionId: Guid.NewGuid(),
             NewPlanId: Guid.NewGuid(),
-            EffectiveDate: DateTime.UtcNow.Date,
-            ProrateBilling: true
+            EffectiveDate: DateTime.UtcNow.Date
         );
 
         // Act
@@ -77,8 +74,7 @@ public class UpgradeSubscriptionPlanCommandValidatorTests
         var command = new UpgradeSubscriptionPlanCommand(
             SubscriptionId: Guid.Empty,
             NewPlanId: Guid.NewGuid(),
-            EffectiveDate: null,
-            ProrateBilling: false
+            EffectiveDate: null
         );
 
         // Act
@@ -98,8 +94,7 @@ public class UpgradeSubscriptionPlanCommandValidatorTests
         var command = new UpgradeSubscriptionPlanCommand(
             SubscriptionId: Guid.NewGuid(),
             NewPlanId: Guid.Empty,
-            EffectiveDate: null,
-            ProrateBilling: false
+            EffectiveDate: null
         );
 
         // Act
@@ -119,8 +114,7 @@ public class UpgradeSubscriptionPlanCommandValidatorTests
         var command = new UpgradeSubscriptionPlanCommand(
             SubscriptionId: Guid.NewGuid(),
             NewPlanId: Guid.NewGuid(),
-            EffectiveDate: DateTime.UtcNow.Date.AddDays(-1),
-            ProrateBilling: false
+            EffectiveDate: DateTime.UtcNow.Date.AddDays(-1)
         );
 
         // Act
@@ -140,8 +134,7 @@ public class UpgradeSubscriptionPlanCommandValidatorTests
         var command = new UpgradeSubscriptionPlanCommand(
             SubscriptionId: Guid.Empty,
             NewPlanId: Guid.Empty,
-            EffectiveDate: null,
-            ProrateBilling: false
+            EffectiveDate: null
         );
 
         // Act

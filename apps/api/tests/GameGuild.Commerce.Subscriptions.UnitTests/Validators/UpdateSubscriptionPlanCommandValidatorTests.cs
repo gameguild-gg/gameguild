@@ -22,7 +22,8 @@ public class UpdateSubscriptionPlanCommandValidatorTests
         var command = new UpdateSubscriptionPlanCommand(
             Id: Guid.NewGuid(),
             Name: "Updated Plan",
-            Description: "Updated description"
+            Description: "Updated description",
+            SortOrder: 1
         );
 
         // Act
@@ -40,7 +41,8 @@ public class UpdateSubscriptionPlanCommandValidatorTests
         var command = new UpdateSubscriptionPlanCommand(
             Id: Guid.Empty,
             Name: "Updated Plan",
-            Description: "Updated description"
+            Description: "Updated description",
+            SortOrder: 1
         );
 
         // Act
@@ -54,30 +56,14 @@ public class UpdateSubscriptionPlanCommandValidatorTests
     }
 
     [Fact]
-    public void Validate_ShouldPass_WithNullName()
-    {
-        // Arrange
-        var command = new UpdateSubscriptionPlanCommand(
-            Id: Guid.NewGuid(),
-            Name: null,
-            Description: "Updated description"
-        );
-
-        // Act
-        var result = _validator.Validate(command);
-
-        // Assert
-        result.IsValid.Should().BeTrue();
-    }
-
-    [Fact]
     public void Validate_ShouldPass_WithNullDescription()
     {
         // Arrange
         var command = new UpdateSubscriptionPlanCommand(
             Id: Guid.NewGuid(),
             Name: "Updated Plan",
-            Description: null
+            Description: null,
+            SortOrder: 1
         );
 
         // Act
@@ -88,13 +74,32 @@ public class UpdateSubscriptionPlanCommandValidatorTests
     }
 
     [Fact]
-    public void Validate_ShouldPass_WithAllNullOptionalFields()
+    public void Validate_ShouldPass_WithNullSortOrder()
     {
         // Arrange
         var command = new UpdateSubscriptionPlanCommand(
             Id: Guid.NewGuid(),
-            Name: null,
-            Description: null
+            Name: "Updated Plan",
+            Description: "Description",
+            SortOrder: null
+        );
+
+        // Act
+        var result = _validator.Validate(command);
+
+        // Assert
+        result.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Validate_ShouldPass_WithAllOptionalFieldsNull()
+    {
+        // Arrange
+        var command = new UpdateSubscriptionPlanCommand(
+            Id: Guid.NewGuid(),
+            Name: "Updated Plan",
+            Description: null,
+            SortOrder: null
         );
 
         // Act

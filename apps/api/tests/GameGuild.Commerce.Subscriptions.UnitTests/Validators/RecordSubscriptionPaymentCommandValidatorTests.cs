@@ -48,7 +48,7 @@ public class RecordSubscriptionPaymentCommandValidatorTests
             Currency: "EUR",
             PaymentDate: DateTime.UtcNow.AddHours(-1),
             IdempotencyKey: "payment-key-456",
-            ForBillingCycle: DateTime.UtcNow.AddMonths(-1)
+            ForBillingCycle: 3
         );
 
         // Act
@@ -162,12 +162,12 @@ public class RecordSubscriptionPaymentCommandValidatorTests
     [InlineData(999999.99)]
     public void Validate_ShouldPass_WithPositiveAmounts(decimal amount)
     {
-        // Arrange
+        // Arrange - use a time safely in the past to avoid race conditions
         var command = new RecordSubscriptionPaymentCommand(
             SubscriptionId: Guid.NewGuid(),
             Amount: amount,
             Currency: "USD",
-            PaymentDate: DateTime.UtcNow,
+            PaymentDate: DateTime.UtcNow.AddMinutes(-1),
             IdempotencyKey: Guid.NewGuid().ToString()
         );
 
