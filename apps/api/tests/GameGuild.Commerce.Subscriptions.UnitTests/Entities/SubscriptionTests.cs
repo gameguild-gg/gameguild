@@ -961,6 +961,411 @@ public class SubscriptionTests
 
     #endregion
 
+    #region RecordPayment Out-of-Order Protection Tests
+
+    [Fact]
+    public void RecordPayment_WithBillingCycle_ShouldRejectOutOfOrderPayments()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        
+        // First payment for billing cycle 1
+        subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "payment_1", forBillingCycle: 1);
+        
+        // Act - Try to record payment for earlier billing cycle
+        var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "payment_0", forBillingCycle: 0);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.IsRejectedOutOfOrder.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RecordPayment_WithSameBillingCycle_ShouldReturnAlreadyProcessed()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        
+        // First payment for billing cycle 1
+        subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "payment_1", forBillingCycle: 1);
+        
+        // Act - Try to record another payment for same billing cycle (different idempotency key)
+        var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow.AddMinutes(5), "payment_1_retry", forBillingCycle: 1);
+
+        // Assert
+        result.IsAlreadyProcessed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void RecordPayment_WithSameBillingCycle_ShouldUpdatePaymentDateIfNewer()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var firstPaymentDate = DateTime.UtcNow.AddDays(-1);
+        var secondPaymentDate = DateTime.UtcNow;
+        
+        // First payment for billing cycle 1
+        subscription.RecordPayment(29.99m, "USD", firstPaymentDate, "payment_1", forBillingCycle: 1);
+        
+        // Act - Record another payment for same billing cycle with newer date
+        subscription.RecordPayment(29.99m, "USD", secondPaymentDate, "payment_1_retry", forBillingCycle: 1);
+
+        // Assert
+        subscription.LastPaymentAt.Should().Be(secondPaymentDate);
+    }
+
+    [Fact]
+    public void RecordPayment_OnExpiredSubscription_ShouldBeRejected()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.StartTrial(DateTime.UtcNow.AddDays(14));
+        subscription.EndTrial(convertToPaid: false); // This cancels with TrialEnded reason
+        
+        // Note: Expired status requires a specific transition - let's test cancelled behavior
+        // which covers the economic invariant for cancelled/expired
+
+        // Act
+        var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "payment_expired");
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.IsRejectedCancelled.Should().BeTrue();
+    }
+
+    #endregion
+
+    #region Billing Cycle Calculation Tests
+
+    [Theory]
+    [InlineData(BillingCycle.Monthly, 30)] // Approximately
+    [InlineData(BillingCycle.Quarterly, 90)] // Approximately
+    [InlineData(BillingCycle.SemiAnnually, 180)] // Approximately
+    [InlineData(BillingCycle.Annually, 365)] // Approximately
+    [InlineData(BillingCycle.Biannually, 730)] // Approximately
+    public void RecordPayment_ShouldSetCorrectNextBillingDate_ForDifferentCycles(BillingCycle cycle, int expectedDaysApprox)
+    {
+        // Arrange
+        var subscription = new Subscription(
+            tenantId: Guid.NewGuid(),
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: cycle,
+            amount: new Money(2999),
+            startDate: DateTime.UtcNow,
+            trialEndDate: null
+        );
+        subscription.Activate();
+        var paymentDate = DateTime.UtcNow;
+
+        // Act
+        subscription.RecordPayment(29.99m, "USD", paymentDate, $"payment_{cycle}");
+
+        // Assert - Next billing should be approximately the expected days away
+        var daysDiff = (subscription.NextBillingDate - paymentDate).TotalDays;
+        daysDiff.Should().BeApproximately(expectedDaysApprox, 5); // Allow 5 days tolerance for month variations
+    }
+
+    [Fact]
+    public void Constructor_WithUnsupportedBillingCycle_ShouldThrowArgumentOutOfRangeException()
+    {
+        // Arrange - Weekly is in the enum but not supported in CalculateBillingDates
+        // Act
+        var act = () => new Subscription(
+            tenantId: Guid.NewGuid(),
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: BillingCycle.Weekly,
+            amount: new Money(2999),
+            startDate: DateTime.UtcNow,
+            trialEndDate: null
+        );
+
+        // Assert
+        act.Should().Throw<ArgumentOutOfRangeException>()
+            .WithMessage("*cycle*");
+    }
+
+    [Theory]
+    [InlineData(BillingCycle.Quarterly)]
+    [InlineData(BillingCycle.SemiAnnually)]
+    [InlineData(BillingCycle.Annually)]
+    [InlineData(BillingCycle.Biannually)]
+    public void Constructor_ShouldCalculateCorrectBillingDates_ForDifferentCycles(BillingCycle cycle)
+    {
+        // Arrange
+        var startDate = DateTime.UtcNow;
+
+        // Act
+        var subscription = new Subscription(
+            tenantId: Guid.NewGuid(),
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: cycle,
+            amount: new Money(2999),
+            startDate: startDate,
+            trialEndDate: null
+        );
+
+        // Assert - Verify billing dates are set
+        subscription.CurrentPeriodStart.Should().Be(startDate);
+        subscription.CurrentPeriodEnd.Should().BeAfter(startDate);
+        subscription.NextBillingDate.Should().BeAfter(startDate);
+    }
+
+    #endregion
+
+    #region Metadata Update Tests
+
+    [Fact]
+    public void UpdateMetadata_ShouldThrow_WhenMetadataIsEmpty()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+
+        // Act
+        var act = () => subscription.UpdateMetadata("");
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void UpdateMetadata_ShouldThrow_WhenMetadataIsNull()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+
+        // Act
+        var act = () => subscription.UpdateMetadata(null!);
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void UpdateMetadata_ShouldThrow_WhenMetadataExceeds2000Characters()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        var longMetadata = new string('x', 2001);
+
+        // Act
+        var act = () => subscription.UpdateMetadata(longMetadata);
+
+        // Assert
+        act.Should().Throw<ArgumentException>()
+            .WithMessage("*2000 characters*");
+    }
+
+    [Fact]
+    public void UpdateMetadata_ShouldSucceed_WithExactly2000Characters()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        var maxMetadata = new string('x', 2000);
+
+        // Act
+        subscription.UpdateMetadata(maxMetadata);
+
+        // Assert
+        subscription.Metadata.Should().Be(maxMetadata);
+    }
+
+    #endregion
+
+    #region SetAutoRenew Edge Cases
+
+    [Fact]
+    public void SetAutoRenew_ShouldThrow_WhenSubscriptionIsCancelled()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.Cancel(CancellationReason.UserRequested);
+
+        // Act
+        var act = () => subscription.SetAutoRenew(true);
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*cancelled*");
+    }
+
+    [Fact]
+    public void SetAutoRenew_ShouldSucceed_WhenSubscriptionIsPastDue()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.RecordPaymentFailure("Card declined", DateTime.UtcNow);
+
+        // Act
+        var act = () => subscription.SetAutoRenew(false);
+
+        // Assert
+        act.Should().NotThrow();
+        subscription.AutoRenew.Should().BeFalse();
+    }
+
+    #endregion
+
+    #region ISubscription Interface Tests
+
+    [Fact]
+    public void ISubscription_TenantId_ShouldReturnGuidValue()
+    {
+        // Arrange
+        var tenantId = Guid.NewGuid();
+        var subscription = new Subscription(
+            tenantId: tenantId,
+            planId: Guid.NewGuid(),
+            createdByUserId: Guid.NewGuid(),
+            billingCycle: BillingCycle.Monthly,
+            amount: new Money(2999),
+            startDate: DateTime.UtcNow
+        );
+
+        // Act - Access via interface
+        ISubscription iSubscription = subscription;
+        var result = iSubscription.TenantId;
+
+        // Assert
+        result.Should().Be(tenantId);
+    }
+
+    #endregion
+
+    #region Suspend With Metadata Tests
+
+    [Fact]
+    public void Suspend_WithReason_ShouldStoreReasonInMetadata()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var reason = "Payment failed multiple times";
+
+        // Act
+        subscription.Suspend(reason);
+
+        // Assert
+        subscription.Status.Should().Be(SubscriptionStatus.Suspended);
+        subscription.Metadata.Should().Contain("suspensionReason");
+        subscription.Metadata.Should().Contain(reason);
+    }
+
+    [Fact]
+    public void Suspend_WithoutReason_ShouldNotSetMetadata()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+
+        // Act
+        subscription.Suspend();
+
+        // Assert
+        subscription.Status.Should().Be(SubscriptionStatus.Suspended);
+        subscription.Metadata.Should().BeNull();
+    }
+
+    [Fact]
+    public void Reactivate_ShouldClearMetadata()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.Suspend("Test reason");
+        subscription.Metadata.Should().NotBeNull();
+
+        // Act
+        subscription.Reactivate();
+
+        // Assert
+        subscription.Metadata.Should().BeNull();
+    }
+
+    #endregion
+
+    #region Cancel Idempotency Tests
+
+    [Fact]
+    public void Cancel_ShouldBeIdempotent_WhenAlreadyCancelled()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.Cancel(CancellationReason.UserRequested, "First cancel");
+        var originalCancelledAt = subscription.CancelledAt;
+
+        // Act - Cancel again
+        subscription.Cancel(CancellationReason.PaymentFailed, "Second cancel");
+
+        // Assert - Should not change anything
+        subscription.CancellationReason.Should().Be(CancellationReason.UserRequested);
+        subscription.CancellationNote.Should().Be("First cancel");
+        subscription.CancelledAt.Should().Be(originalCancelledAt);
+    }
+
+    [Fact]
+    public void Cancel_WithEffectiveDate_ShouldSetEndDate()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        var effectiveDate = DateTime.UtcNow.AddDays(30);
+
+        // Act
+        subscription.Cancel(CancellationReason.UserRequested, effectiveDate: effectiveDate);
+
+        // Assert
+        subscription.EndDate.Should().Be(effectiveDate);
+    }
+
+    #endregion
+
+    #region GetDaysUntilNextBilling Tests
+
+    [Fact]
+    public void GetDaysUntilNextBilling_ShouldReturnPositive_WhenActive()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+
+        // Act
+        var result = subscription.GetDaysUntilNextBilling();
+
+        // Assert
+        result.Should().BeGreaterOrEqualTo(0);
+    }
+
+    #endregion
+
+    #region UnlockPriceVersion Event Tests
+
+    [Fact]
+    public void UnlockPriceVersion_ShouldRaiseDomainEvent_WhenUnlocking()
+    {
+        // Arrange
+        var subscription = CreateValidSubscription();
+        subscription.Activate();
+        subscription.LockToPriceVersion(Guid.NewGuid());
+        subscription.ClearDomainEvents();
+
+        // Act
+        subscription.UnlockPriceVersion();
+
+        // Assert
+        subscription.DomainEvents.Should().Contain(e => e.GetType() == typeof(SubscriptionPriceVersionUnlockedEvent));
+    }
+
+    #endregion
+
     private static Subscription CreateValidSubscription()
     {
         return new Subscription(
