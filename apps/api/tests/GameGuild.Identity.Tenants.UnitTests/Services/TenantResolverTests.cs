@@ -202,4 +202,232 @@ public class TenantResolverTests
 
         resolver.GetResolvedTenantId(context).Should().Be(tenantId);
     }
+
+    [Fact]
+    public void GetResolvedTenantId_Should_Return_Null_When_Not_Present()
+    {
+        var resolver = new TenantResolver(Mock.Of<IMediator>(), Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+        var context = new DefaultHttpContext();
+
+        resolver.GetResolvedTenantId(context).Should().BeNull();
+    }
+
+    [Fact]
+    public void GetResolvedTenantId_Should_Return_Null_When_Wrong_Type()
+    {
+        var resolver = new TenantResolver(Mock.Of<IMediator>(), Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+        var context = new DefaultHttpContext();
+        context.Items[HttpContextKeys.AuthorizationTenantId] = "not-a-guid";
+
+        resolver.GetResolvedTenantId(context).Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Log_Warning_When_Header_Tenant_Not_Found()
+    {
+        var tenantId = Guid.NewGuid();
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetTenantByIdQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+        context.Request.Headers[TenantResolver.TenantIdHeader] = tenantId.ToString();
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Skip_Localhost_For_Domain_Resolution()
+    {
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var domainsRepo = new Mock<ITenantDomainsRepository>();
+        var resolver = new TenantResolver(mediator.Object, domainsRepo.Object, NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+        context.Request.Host = new HostString("localhost", 5000);
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+        domainsRepo.Verify(r => r.GetByDomainAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never());
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Skip_Domain_When_Tenant_Is_Inactive()
+    {
+        var tenantId = Guid.NewGuid();
+        var inactiveTenant = new Tenant { Id = tenantId, Name = "Inactive", Slug = "inactive", IsActive = false };
+        var domain = new TenantDomain { TenantId = tenantId, Tenant = inactiveTenant, TopLevelDomain = "example.com" };
+
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var domainsRepo = new Mock<ITenantDomainsRepository>();
+        domainsRepo.Setup(r => r.GetByDomainAsync("inactive.example.com", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(domain);
+
+        var resolver = new TenantResolver(mediator.Object, domainsRepo.Object, NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+        context.Request.Host = new HostString("inactive.example.com");
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Skip_Query_When_Tenant_Not_Found()
+    {
+        var tenantId = Guid.NewGuid();
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetTenantByIdQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+        context.Request.Query = new QueryCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+        {
+            [TenantResolver.TenantIdQueryKey] = tenantId.ToString()
+        });
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Skip_Route_When_Tenant_Not_Found()
+    {
+        var tenantId = Guid.NewGuid();
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetTenantByIdQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+        context.Request.RouteValues[TenantResolver.TenantIdQueryKey] = tenantId.ToString();
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Skip_Claims_When_Tenant_Not_Found()
+    {
+        var tenantId = Guid.NewGuid();
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetTenantByIdQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+        var claims = new List<Claim> { new(TenantResolver.TenantIdClaimType, tenantId.ToString()) };
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test"));
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Skip_Claims_When_User_Not_Authenticated()
+    {
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+        var claims = new List<Claim> { new(TenantResolver.TenantIdClaimType, Guid.NewGuid().ToString()) };
+        // User is not authenticated (no authentication type)
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(claims));
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Skip_Claims_When_TenantId_Is_Empty_Guid()
+    {
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((Tenant?)null);
+
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+        var claims = new List<Claim> { new(TenantResolver.TenantIdClaimType, Guid.Empty.ToString()) };
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test"));
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+    }
+
+    [Fact]
+    public async Task ResolveAsync_Should_Skip_Default_When_Inactive()
+    {
+        var inactiveTenant = new Tenant { Id = Guid.NewGuid(), Name = "Inactive", Slug = "inactive", IsActive = false, IsDefault = true };
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.IsAny<GetDefaultTenantQuery>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(inactiveTenant);
+
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var context = new DefaultHttpContext();
+
+        var result = await resolver.ResolveAsync(context);
+
+        result.Should().Be(TenantResolutionResult.None);
+    }
+
+    [Fact]
+    public async Task ResolveByIdentifierAsync_Should_Reject_Empty_Guid()
+    {
+        var mediator = new Mock<IMediator>();
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var result = await resolver.ResolveByIdentifierAsync(Guid.Empty.ToString());
+
+        result.Should().BeNull();
+        mediator.Verify(m => m.Send(It.IsAny<GetTenantBySlugQuery>(), It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [Fact]
+    public async Task ResolveByIdentifierAsync_Should_Return_Null_For_Inactive_Slug_Tenant()
+    {
+        var inactiveTenant = new Tenant { Id = Guid.NewGuid(), Name = "Inactive", Slug = "inactive-slug", IsActive = false };
+        var mediator = new Mock<IMediator>();
+        mediator.Setup(m => m.Send(It.Is<GetTenantBySlugQuery>(q => q.Slug == "inactive-slug"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(inactiveTenant);
+
+        var resolver = new TenantResolver(mediator.Object, Mock.Of<ITenantDomainsRepository>(), NullLogger<TenantResolver>.Instance);
+
+        var result = await resolver.ResolveByIdentifierAsync("inactive-slug");
+
+        result.Should().BeNull();
+    }
 }

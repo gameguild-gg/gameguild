@@ -182,6 +182,63 @@ public class TenantDtoTests
         var response = TenantUsageValidationResponse.Valid();
 
         response.IsValid.Should().BeTrue();
+        response.Metrics.Should().NotBeNull();
+        response.Metrics.Should().BeEmpty();
+    }
+
+    [Fact]
+    public void TenantUsageValidationResponse_Valid_With_Metrics_Should_Include_Metrics()
+    {
+        var metrics = new Dictionary<string, UsageMetric>
+        {
+            ["api_calls"] = new TestUsageMetric("api_calls", 50, 100, "calls")
+        };
+
+        var response = TenantUsageValidationResponse.Valid(metrics);
+
+        response.IsValid.Should().BeTrue();
+        response.Metrics.Should().ContainKey("api_calls");
+        response.Metrics["api_calls"].Current.Should().Be(50);
+    }
+
+    [Fact]
+    public void TenantUsageValidationResponse_Invalid_Should_Create_Invalid_Response()
+    {
+        var violations = new List<string> { "Limit exceeded", "Plan expired" };
+
+        var response = TenantUsageValidationResponse.Invalid(violations);
+
+        response.IsValid.Should().BeFalse();
+        response.Violations.Should().Contain("Limit exceeded");
+        response.Violations.Should().Contain("Plan expired");
+        response.RequiresUpgrade.Should().BeFalse();
+    }
+
+    [Fact]
+    public void TenantUsageValidationResponse_Invalid_With_Metrics_Should_Include_Metrics()
+    {
+        var violations = new List<string> { "Limit exceeded" };
+        var metrics = new Dictionary<string, UsageMetric>
+        {
+            ["storage"] = new TestUsageMetric("storage", 100, 50, "GB")
+        };
+
+        var response = TenantUsageValidationResponse.Invalid(violations, metrics);
+
+        response.IsValid.Should().BeFalse();
+        response.Metrics.Should().ContainKey("storage");
+        response.Metrics["storage"].Current.Should().Be(100);
+    }
+
+    [Fact]
+    public void TenantUsageValidationResponse_Invalid_With_RequiresUpgrade_Should_Set_Flag()
+    {
+        var violations = new List<string> { "Quota exceeded" };
+
+        var response = TenantUsageValidationResponse.Invalid(violations, null, requiresUpgrade: true);
+
+        response.IsValid.Should().BeFalse();
+        response.RequiresUpgrade.Should().BeTrue();
     }
 
     [Fact]
