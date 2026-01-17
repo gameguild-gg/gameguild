@@ -7,11 +7,12 @@ import { FolderOpen } from "lucide-react"
 import { DownloadConfirmDialog } from "@/components/editor/extras/dialogs/download-confirm-dialog"
 import { ProjectGridView } from "./project-grid-view"
 import { ProjectListView } from "./project-list-view"
+import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface ProjectData {
   id: string
   name: string
-  type: "type1" | "type2" | "type3"
+  type: ProjectType
   data: string
   tags: string[]
   size: number
@@ -42,7 +43,7 @@ interface ProjectListProps {
     projectTags: string[],
     createdAt: string,
     updatedAt: string,
-    projectType?: "type1" | "type2" | "type3",
+    projectType?: ProjectType,
     projectPreferences?: any
   ) => void
   showDeleteButton?: boolean
@@ -121,7 +122,7 @@ export function ProjectList({
           const exportProjectData = {
             id: downloadDialog.project.id,
             name: downloadDialog.project.name,
-            type: (downloadDialog.project.type || "type1") as "type1" | "type2" | "type3",
+            type: (downloadDialog.project.type || "type1") as ProjectType,
             data: downloadDialog.project.data,
             tags: downloadDialog.project.tags,
             size: new Blob([downloadDialog.project.data]).size,

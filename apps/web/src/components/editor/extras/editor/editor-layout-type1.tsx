@@ -4,6 +4,7 @@ import { Editor } from "@/components/editor/lexical-editor"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
+import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 interface EditorLayoutType1Props {
   editorRef: React.MutableRefObject<LexicalEditor | null>
@@ -12,7 +13,7 @@ interface EditorLayoutType1Props {
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId: string
   mode?: ProjectMode
-  currentProjectType?: "type1" | "type2" | "type3"
+  currentProjectType?: ProjectType
   storageAdapter?: any
 }
 

@@ -102,6 +102,7 @@ import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
+import { type ProjectType} from "@/lib/storage/editor/project-types"
 
 // Create and export the EditorLoadingContext
 export const EditorLoadingContext = createContext<boolean>(false)
@@ -359,7 +360,7 @@ interface EditorProps {
   projectId?: string | null
   mode?: ProjectMode
   blockId?: string  // Block identifier (b1, b2, b3, etc.)
-  currentProjectType?: "type1" | "type2" | "type3"
+  currentProjectType?: ProjectType
   storageAdapter?: any
   currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
 }
