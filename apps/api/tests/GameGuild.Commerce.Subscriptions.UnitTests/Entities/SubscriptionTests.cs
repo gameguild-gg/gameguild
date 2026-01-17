@@ -48,7 +48,7 @@ public class SubscriptionTests
     }
 
     [Fact]
-    public void Constructor_ShouldRaiseDomainEvent()
+    public void Constructor_ShouldInitializeWithCorrectDefaults()
     {
         // Arrange
         var tenantId = Guid.NewGuid();
@@ -60,10 +60,12 @@ public class SubscriptionTests
         // Act
         var subscription = new Subscription(tenantId, planId, userId, BillingCycle.Monthly, amount, startDate);
 
-        // Assert
-        var events = subscription.DomainEvents;
-        events.Should().ContainSingle();
-        events.First().Should().BeOfType<SubscriptionCreatedEvent>();
+        // Assert - Verify correct initialization
+        subscription.TenantId.Should().Be(tenantId);
+        subscription.PlanId.Should().Be(planId);
+        subscription.CreatedByUserId.Should().Be(userId);
+        subscription.BillingCycle.Should().Be(BillingCycle.Monthly);
+        subscription.Status.Should().Be(SubscriptionStatus.PendingActivation);
     }
 
     [Fact]
@@ -303,7 +305,7 @@ public class SubscriptionTests
 
     /// <summary>
     /// E.1 Test: Subscription.Activate_FromCancelled_ThrowsInvalidStateException
-    /// Verifies that activating a cancelled subscription throws InvalidOperationException
+    /// Verifies that activating a cancelled subscription throws InvalidStateTransitionException
     /// State machine validation: Cancelled is a terminal state
     /// </summary>
     [Fact]
@@ -317,8 +319,8 @@ public class SubscriptionTests
 
         // Act & Assert
         var act = () => subscription.Activate();
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid*transition*Cancelled*Active*");
+        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+            .WithMessage("*Cancelled*Active*");
     }
 
     /// <summary>

@@ -1,15 +1,27 @@
+using Microsoft.Extensions.Caching.Memory;
+
 namespace GameGuild.Commerce.Subscriptions;
 
 /// <summary>
-///     Service implementation for subscription plan business operations
+///     Service implementation for subscription plan business operations with caching
 /// </summary>
 public class SubscriptionPlanService : ISubscriptionPlanService
 {
     private readonly ISubscriptionPlanRepository _planRepository;
+    private readonly IMemoryCache _cache;
 
-    public SubscriptionPlanService(ISubscriptionPlanRepository planRepository)
+    // Cache keys
+    private const string ActivePlansCacheKey = "SubscriptionPlans:Active";
+    private const string PlanByIdCacheKeyPrefix = "SubscriptionPlans:ById:";
+
+    // Cache durations
+    private static readonly TimeSpan ActivePlansCacheDuration = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan PlanByIdCacheDuration = TimeSpan.FromMinutes(10);
+
+    public SubscriptionPlanService(ISubscriptionPlanRepository planRepository, IMemoryCache cache)
     {
         _planRepository = planRepository;
+        _cache = cache;
     }
 
     /// <inheritdoc />
@@ -29,7 +41,12 @@ public class SubscriptionPlanService : ISubscriptionPlanService
             throw new InvalidOperationException($"A subscription plan with slug '{slug}' already exists.");
 
         var plan = new SubscriptionPlan(name, slug, monthlyPriceInCents, currency, description);
-        return await _planRepository.AddAsync(plan, cancellationToken);
+        var result = await _planRepository.AddAsync(plan, cancellationToken);
+
+        // Invalidate active plans cache since a new plan was added
+        _cache.Remove(ActivePlansCacheKey);
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -48,7 +65,11 @@ public class SubscriptionPlanService : ISubscriptionPlanService
             throw new InvalidOperationException($"A subscription plan with name '{name}' already exists.");
 
         plan.UpdateDetails(name, description, sortOrder);
-        return await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+
+        InvalidatePlanCache(planId);
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -60,7 +81,11 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     {
         var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
         plan.UpdatePricing(monthlyPriceInCents, annualPriceInCents);
-        return await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+
+        InvalidatePlanCache(planId);
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -73,7 +98,11 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     {
         var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
         plan.UpdateLimits(maxUsers, maxStorageMb, maxApiCallsPerMonth);
-        return await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+
+        InvalidatePlanCache(planId);
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -87,7 +116,11 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     {
         var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
         plan.UpdateFeatures(hasPrioritySupport, hasAdvancedAnalytics, hasCustomBranding, features);
-        return await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+
+        InvalidatePlanCache(planId);
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -95,7 +128,11 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     {
         var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
         plan.Activate();
-        return await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+
+        InvalidatePlanCache(planId);
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -103,7 +140,11 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     {
         var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
         plan.Deactivate();
-        return await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+
+        InvalidatePlanCache(planId);
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -111,7 +152,11 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     {
         var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
         plan.SetFeatured(featured);
-        return await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+
+        InvalidatePlanCache(planId);
+
+        return result;
     }
 
     /// <inheritdoc />
@@ -119,13 +164,33 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     {
         var plan = await GetPlanOrThrowAsync(planId, cancellationToken);
         plan.SetExternalId(externalId);
-        return await _planRepository.UpdateAsync(plan, cancellationToken);
+        var result = await _planRepository.UpdateAsync(plan, cancellationToken);
+
+        InvalidatePlanCache(planId);
+
+        return result;
     }
 
     /// <inheritdoc />
-    public Task<SubscriptionPlan?> GetByIdAsync(Guid planId, CancellationToken cancellationToken = default)
+    public async Task<SubscriptionPlan?> GetByIdAsync(Guid planId, CancellationToken cancellationToken = default)
     {
-        return _planRepository.GetByIdAsync(planId, cancellationToken);
+        var cacheKey = $"{PlanByIdCacheKeyPrefix}{planId}";
+
+        if (_cache.TryGetValue(cacheKey, out SubscriptionPlan? cachedPlan))
+            return cachedPlan;
+
+        var plan = await _planRepository.GetByIdAsync(planId, cancellationToken);
+
+        if (plan is not null)
+        {
+            var cacheOptions = new MemoryCacheEntryOptions()
+                .SetAbsoluteExpiration(PlanByIdCacheDuration)
+                .SetSlidingExpiration(TimeSpan.FromMinutes(2));
+
+            _cache.Set(cacheKey, plan, cacheOptions);
+        }
+
+        return plan;
     }
 
     /// <inheritdoc />
@@ -135,9 +200,21 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     }
 
     /// <inheritdoc />
-    public Task<IEnumerable<SubscriptionPlan>> GetActiveAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<SubscriptionPlan>> GetActiveAsync(CancellationToken cancellationToken = default)
     {
-        return _planRepository.GetActiveAsync(cancellationToken);
+        if (_cache.TryGetValue(ActivePlansCacheKey, out IEnumerable<SubscriptionPlan>? cachedPlans) && cachedPlans is not null)
+            return cachedPlans;
+
+        var plans = await _planRepository.GetActiveAsync(cancellationToken);
+        var plansList = plans.ToList();
+
+        var cacheOptions = new MemoryCacheEntryOptions()
+            .SetAbsoluteExpiration(ActivePlansCacheDuration)
+            .SetSlidingExpiration(TimeSpan.FromMinutes(1));
+
+        _cache.Set(ActivePlansCacheKey, plansList, cacheOptions);
+
+        return plansList;
     }
 
     /// <inheritdoc />
@@ -251,6 +328,8 @@ public class SubscriptionPlanService : ISubscriptionPlanService
             throw new InvalidOperationException($"Cannot delete plan with {activeSubscriptionCount} active subscriptions. Deactivate the plan instead.");
 
         await _planRepository.DeleteAsync(planId, cancellationToken);
+
+        InvalidatePlanCache(planId);
     }
 
     private async Task<SubscriptionPlan> GetPlanOrThrowAsync(Guid planId, CancellationToken cancellationToken)
@@ -267,5 +346,14 @@ public class SubscriptionPlanService : ISubscriptionPlanService
     private class DefaultPlanUsageStatistics : PlanUsageStatistics
     {
         public new DateTime CalculatedAt { get; set; } = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    ///     Invalidates cache entries for a specific plan
+    /// </summary>
+    private void InvalidatePlanCache(Guid planId)
+    {
+        _cache.Remove($"{PlanByIdCacheKeyPrefix}{planId}");
+        _cache.Remove(ActivePlansCacheKey);
     }
 }

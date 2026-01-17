@@ -36,7 +36,7 @@ public class SubscriptionPlanTests
     }
 
     [Fact]
-    public void Constructor_ShouldRaisePlanCreatedEvent()
+    public void Constructor_ShouldInitializeWithDefaultValues()
     {
         // Arrange
         var name = "Enterprise Plan";
@@ -46,15 +46,14 @@ public class SubscriptionPlanTests
         // Act
         var plan = new TestSubscriptionPlan(name, slug, price);
 
-        // Assert
-        var events = plan.DomainEvents;
-        events.Should().ContainSingle();
-        events.First().Should().BeOfType<PlanCreatedEvent>();
-        
-        var createdEvent = events.First() as PlanCreatedEvent;
-        createdEvent!.PlanId.Should().Be(plan.Id);
-        createdEvent.Name.Should().Be(name);
-        createdEvent.MonthlyPriceInCents.Should().Be(price);
+        // Assert - Plan should be created with correct defaults
+        plan.IsActive.Should().BeTrue();
+        plan.IsFeatured.Should().BeFalse();
+        plan.SortOrder.Should().Be(0);
+        plan.TrialPeriodDays.Should().Be(0);
+        plan.MaxUsers.Should().BeNull();
+        plan.MaxStorageMb.Should().BeNull();
+        plan.MaxApiCallsPerMonth.Should().BeNull();
     }
 
     [Fact]

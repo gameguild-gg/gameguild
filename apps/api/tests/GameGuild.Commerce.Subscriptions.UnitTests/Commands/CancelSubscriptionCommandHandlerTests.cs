@@ -57,8 +57,8 @@ public class CancelSubscriptionCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Subscription not found");
+        await act.Should().ThrowAsync<GameGuild.SharedKernel.SubscriptionNotFoundException>()
+            .WithMessage($"*{subscriptionId}*");
     }
 
     [Fact]

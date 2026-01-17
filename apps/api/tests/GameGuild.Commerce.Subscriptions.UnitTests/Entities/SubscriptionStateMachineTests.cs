@@ -162,8 +162,8 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.Activate();
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid subscription state transition*");
+        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+            .WithMessage("*Cancelled*Active*");
     }
 
     [Fact]
@@ -175,8 +175,8 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.Reactivate();
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid subscription state transition*");
+        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+            .WithMessage("*Cancelled*Active*");
     }
 
     [Fact]
@@ -187,8 +187,8 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.Suspend("Cannot suspend pending");
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid subscription state transition*");
+        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+            .WithMessage("*PendingActivation*Suspended*");
     }
 
     [Fact]
@@ -199,8 +199,8 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.Suspend("Cannot suspend trial");
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid subscription state transition*");
+        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+            .WithMessage("*Trialing*Suspended*");
     }
 
     [Fact]
@@ -211,8 +211,8 @@ public class SubscriptionStateMachineTests
 
         // Act & Assert
         var act = () => subscription.StartTrial(DateTime.UtcNow.AddDays(14));
-        act.Should().Throw<InvalidOperationException>()
-            .WithMessage("*Invalid subscription state transition*");
+        act.Should().Throw<GameGuild.SharedKernel.InvalidStateTransitionException>()
+            .WithMessage("*Active*Trialing*");
     }
 
     #endregion
