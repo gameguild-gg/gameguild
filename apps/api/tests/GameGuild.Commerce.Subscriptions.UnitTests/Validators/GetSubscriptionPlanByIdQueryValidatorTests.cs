@@ -4,22 +4,22 @@ using Xunit;
 namespace GameGuild.Commerce.Subscriptions.UnitTests.Validators;
 
 /// <summary>
-/// Tests for GetSubscriptionByIdQueryValidator
+/// Tests for GetSubscriptionPlanByIdQueryValidator
 /// </summary>
-public class GetSubscriptionByIdQueryValidatorTests
+public class GetSubscriptionPlanByIdQueryValidatorTests
 {
-    private readonly GetSubscriptionByIdQueryValidator _validator;
+    private readonly GetSubscriptionPlanByIdQueryValidator _validator;
 
-    public GetSubscriptionByIdQueryValidatorTests()
+    public GetSubscriptionPlanByIdQueryValidatorTests()
     {
-        _validator = new GetSubscriptionByIdQueryValidator();
+        _validator = new GetSubscriptionPlanByIdQueryValidator();
     }
 
     [Fact]
     public void Validate_ShouldPass_WithValidQuery()
     {
         // Arrange
-        var query = new GetSubscriptionByIdQuery(SubscriptionId: Guid.NewGuid());
+        var query = new GetSubscriptionPlanByIdQuery(Id: Guid.NewGuid());
 
         // Act
         var result = _validator.Validate(query);
@@ -30,10 +30,10 @@ public class GetSubscriptionByIdQueryValidatorTests
     }
 
     [Fact]
-    public void Validate_ShouldFail_WhenSubscriptionIdIsEmpty()
+    public void Validate_ShouldFail_WhenIdIsEmpty()
     {
         // Arrange
-        var query = new GetSubscriptionByIdQuery(SubscriptionId: Guid.Empty);
+        var query = new GetSubscriptionPlanByIdQuery(Id: Guid.Empty);
 
         // Act
         var result = _validator.Validate(query);
@@ -41,7 +41,7 @@ public class GetSubscriptionByIdQueryValidatorTests
         // Assert
         result.IsValid.Should().BeFalse();
         result.Errors.Should().Contain(e =>
-            e.PropertyName == nameof(GetSubscriptionByIdQuery.SubscriptionId) &&
+            e.PropertyName == nameof(GetSubscriptionPlanByIdQuery.Id) &&
             e.ErrorMessage.Contains("required"));
     }
 
@@ -51,7 +51,7 @@ public class GetSubscriptionByIdQueryValidatorTests
         // Arrange & Act & Assert
         for (int i = 0; i < 5; i++)
         {
-            var query = new GetSubscriptionByIdQuery(SubscriptionId: Guid.NewGuid());
+            var query = new GetSubscriptionPlanByIdQuery(Id: Guid.NewGuid());
             var result = _validator.Validate(query);
             result.IsValid.Should().BeTrue();
         }
