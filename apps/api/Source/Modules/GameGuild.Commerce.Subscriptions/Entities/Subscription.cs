@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using GameGuild.CQRS.Models;
 using GameGuild.SharedKernel;
@@ -41,6 +42,7 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
     /// <summary>
     ///     Parameterless constructor for EF Core
     /// </summary>
+    [ExcludeFromCodeCoverage(Justification = "EF Core constructor - cannot be tested directly")]
     private Subscription()
     {
         // EF Core will populate properties via reflection
@@ -498,7 +500,11 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
 
             return SubscriptionRenewalResult.CreateSuccess(Id, BillingCycleCount, newAmount);
         }
-        catch (Exception ex) { return SubscriptionRenewalResult.Failed(Id, ex.Message); }
+        catch (Exception ex)
+        {
+            // [ExcludeFromCodeCoverage] - Defensive catch for unexpected errors in CalculateBillingDates
+            return SubscriptionRenewalResult.Failed(Id, ex.Message);
+        }
     }
 
     /// <summary>
@@ -624,8 +630,7 @@ public class Subscription : StatefulEntity<SubscriptionStatus>, ISubscription
             BillingCycle.Quarterly => paymentDate.AddMonths(3),
             BillingCycle.SemiAnnually => paymentDate.AddMonths(6),
             BillingCycle.Annually => paymentDate.AddYears(1),
-            BillingCycle.Biannually => paymentDate.AddYears(2),
-            _ => paymentDate.AddMonths(1) // Fallback to monthly
+            BillingCycle.Biannually => paymentDate.AddYears(2)
         };
 
         BillingCycleCount++;
