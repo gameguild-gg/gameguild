@@ -90,7 +90,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
     /// Verifies that failed payment processing updates subscription to PastDue status
     /// </summary>
     [Fact]
-    public async Task ProcessRenewal_WithFailedPayment_SetsPastDueStatus()
+    public Task ProcessRenewal_WithFailedPayment_SetsPastDueStatus()
     {
         // Arrange - This test would need to simulate a failed payment scenario
         // For unit testing, we can test the entity directly
@@ -101,6 +101,7 @@ public class RegressionTests : IClassFixture<WebApplicationFactory<GameGuild.API
 
         // Assert
         subscription.Status.Should().Be(SubscriptionStatus.PastDue);
+        return Task.CompletedTask;
     }
 
     #endregion

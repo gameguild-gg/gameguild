@@ -302,7 +302,7 @@ public class ApplePayReceiptValidationService : IApplePayReceiptValidationServic
 
             // Extract the leaf certificate's public key for signature verification
             var leafCertBytes = Convert.FromBase64String(header.X5c[0]);
-            using var leafCert = new X509Certificate2(leafCertBytes);
+            using var leafCert = X509CertificateLoader.LoadCertificate(leafCertBytes);
 
             // Verify the JWS signature
             if (!VerifyJwsSignature(parts, leafCert, header.Alg))

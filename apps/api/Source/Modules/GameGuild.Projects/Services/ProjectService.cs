@@ -25,7 +25,7 @@ public class ProjectService(IApplicationDbContext context) : IProjectService {
                         .Include(p => p.Versions)
                         .Include(p => p.ProjectMetadata)
                         .Include(p => p.Teams)
-                        .ThenInclude(t => t.Team)
+                        .ThenInclude(t => t.Team!)
                         .ThenInclude(t => t.Members)
                         .Include(p => p.Followers)
                         .ThenInclude(f => f.User)
@@ -271,7 +271,7 @@ public class ProjectService(IApplicationDbContext context) : IProjectService {
     return true;
   }
 
-  public async Task<IEnumerable<ProjectTeam>> GetProjectTeamsAsync(Guid projectId) { return await context.Set<ProjectTeam>().Include(pt => pt.Team).ThenInclude(t => t.Members).Where(pt => pt.ProjectId == projectId && pt.IsActive).ToListAsync(); }
+  public async Task<IEnumerable<ProjectTeam>> GetProjectTeamsAsync(Guid projectId) { return await context.Set<ProjectTeam>().Include(pt => pt.Team!).ThenInclude(t => t.Members).Where(pt => pt.ProjectId == projectId && pt.IsActive).ToListAsync(); }
 
   public async Task<IEnumerable<Project>> GetProjectsByTeamAsync(Guid teamId) {
     return await context.Set<ProjectTeam>().Include(pt => pt.Project!)

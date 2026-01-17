@@ -14,7 +14,7 @@ using Xunit;
 namespace GameGuild.Commerce.Subscriptions.IntegrationTests.Security;
 
 /// <summary>
-///     E.2 Integration Tests: Authentication & Tenant Isolation
+///     E.2 Integration Tests: Authentication and Tenant Isolation
 ///     From: COMMERCE_MODULES_CODE_SMELL_CORRECTNESS_REPORT.md Section E.2
 ///     These tests verify that Commerce endpoints properly require authentication
 ///     and enforce tenant isolation boundaries.

@@ -462,24 +462,18 @@ public class CommerceSecurityIntegrationTests : IClassFixture<WebApplicationFact
         return plan.Id;
     }
 
-    private async Task<Guid> SeedFailedInvoiceAsync(Guid subscriptionId)
+    private Task<Guid> SeedFailedInvoiceAsync(Guid subscriptionId)
     {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
         // Create a failed invoice - implementation depends on Invoice entity
         // This is a placeholder that would need to match actual domain model
-        return Guid.NewGuid();
+        return Task.FromResult(Guid.NewGuid());
     }
 
-    private async Task<Guid> SeedInvoiceWithMaxFailuresAsync(Guid subscriptionId)
+    private Task<Guid> SeedInvoiceWithMaxFailuresAsync(Guid subscriptionId)
     {
-        using var scope = _factory.Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
         // Create an invoice that has exceeded max retry attempts
         // This is a placeholder that would need to match actual domain model
-        return Guid.NewGuid();
+        return Task.FromResult(Guid.NewGuid());
     }
 
     public void Dispose()

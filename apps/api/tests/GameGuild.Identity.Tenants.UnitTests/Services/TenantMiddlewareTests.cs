@@ -1,3 +1,4 @@
+#pragma warning disable CS0618 // Type or member is obsolete - Testing legacy TenantMiddleware keys intentionally
 using FluentAssertions;
 using GameGuild.CQRS;
 using Microsoft.AspNetCore.Http;

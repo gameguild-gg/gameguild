@@ -1,3 +1,4 @@
+#pragma warning disable CS0618 // Type or member is obsolete - Testing legacy middleware intentionally
 using FluentAssertions;
 using GameGuild.Identity.Authentication;
 using Microsoft.AspNetCore.Http;

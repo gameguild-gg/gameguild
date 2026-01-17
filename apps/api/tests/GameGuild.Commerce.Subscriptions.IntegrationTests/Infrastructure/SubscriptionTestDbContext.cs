@@ -17,12 +17,12 @@ public class SubscriptionTestDbContext : ApplicationDbContext
     /// <summary>
     /// Subscriptions DbSet for testing
     /// </summary>
-    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public new DbSet<Subscription> Subscriptions => Set<Subscription>();
 
     /// <summary>
     /// Subscription Plans DbSet for testing
     /// </summary>
-    public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
+    public new DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
