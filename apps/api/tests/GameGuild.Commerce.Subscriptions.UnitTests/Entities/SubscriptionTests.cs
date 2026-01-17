@@ -891,7 +891,7 @@ public class SubscriptionTests
         var subscription = CreateValidSubscription();
         subscription.Activate();
         // Cancel the subscription
-        subscription.Cancel(CancellationReason.UserCancelled);
+        subscription.Cancel(CancellationReason.UserRequested);
 
         // Act - Try to record payment on cancelled subscription
         var result = subscription.RecordPayment(29.99m, "USD", DateTime.UtcNow, "payment_cancelled");
