@@ -3,8 +3,10 @@ import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
 import type { ProjectPreferences } from "./project-preferences"
 import { type ProjectType, PROJECT_TYPES } from "./project-types"
+import { type StorageType, STORAGE_TYPES, type SyncStatus, SYNC_STATUS } from "./storage-types"
 
 export type { ProjectPreferences } from "./project-preferences"
+export type { StorageType, SyncStatus } from "./storage-types"
 
 export interface ProjectData {
   id: string
@@ -16,8 +18,8 @@ export interface ProjectData {
   createdAt: string
   updatedAt: string
   hash: string
-  syncStatus?: "synced" | "pending" | "conflict" | "local-only"
-  storageType: "local" | "gameguild-cloud" | "google-drive"
+  syncStatus?: SyncStatus
+  storageType: StorageType
   isLocallyAvailable?: boolean // Computed dynamically based on local storage check
   preferences?: ProjectPreferences // Project-level preferences
 }
@@ -37,8 +39,8 @@ interface ProjectMetadata {
   hash: string
   createdAt: string
   updatedAt: string
-  syncStatus?: "synced" | "pending" | "conflict" | "local-only"
-  storageType: "local" | "gameguild-cloud" | "google-drive"
+  syncStatus?: SyncStatus
+  storageType: StorageType
   preferences?: ProjectPreferences
 }
 
@@ -134,7 +136,7 @@ export class EnhancedStorageAdapter {
           if (!project.storageType) {
             const updatedProject: ProjectData = {
               ...project,
-              storageType: "local", // Default to local for existing projects
+              storageType: STORAGE_TYPES.LOCAL, // Default to local for existing projects
             }
             projectStore.put(updatedProject)
 
@@ -149,7 +151,7 @@ export class EnhancedStorageAdapter {
               createdAt: project.createdAt,
               updatedAt: project.updatedAt,
               syncStatus: project.syncStatus,
-              storageType: "local",
+              storageType: STORAGE_TYPES.LOCAL,
             }
             metadataStore.put(metadata)
           }
@@ -168,7 +170,7 @@ export class EnhancedStorageAdapter {
     }
   }
 
-  async save(id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: ProjectType = PROJECT_TYPES.TYPE1): Promise<void> {
+  async save(id: string, name: string, data: string, tags: string[] = [], storageType: StorageType = STORAGE_TYPES.LOCAL, preferences?: ProjectPreferences, type: ProjectType = PROJECT_TYPES.TYPE1): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const hash = await HashManager.generateHash(data)
@@ -188,7 +190,7 @@ export class EnhancedStorageAdapter {
       hash,
       createdAt: existing ? existing.createdAt : now,
       updatedAt: now,
-      syncStatus: "pending",
+      syncStatus: SYNC_STATUS.PENDING,
       storageType,
       preferences: preferences || existing?.preferences, // Preserve existing preferences if not provided
     }
@@ -200,7 +202,7 @@ export class EnhancedStorageAdapter {
     await this.updateTagProjectRelationships(id, oldTags, tags)
 
     // Handle sync based on storage type
-    if (storageType === "google-drive") {
+    if (storageType === STORAGE_TYPES.GOOGLE_DRIVE) {
       // Sync to Google Drive
       console.log("Attempting Google Drive sync for project:", name)
       console.log("GoogleDriveService isReady:", this.googleDriveSync ? "GoogleDriveSync initialized" : "GoogleDriveSync NOT initialized")
@@ -210,7 +212,7 @@ export class EnhancedStorageAdapter {
         if (syncResult.success) {
           console.log("Google Drive sync successful for project:", name)
           // Update sync status to synced
-          projectData.syncStatus = "synced"
+          projectData.syncStatus = SYNC_STATUS.SYNCED
           await this.saveToIndexedDB(projectData)
         } else {
           console.error("Google Drive sync failed:", syncResult.error)
@@ -220,7 +222,7 @@ export class EnhancedStorageAdapter {
         console.error("Google Drive sync error:", error)
         // Keep as pending for retry
       }
-    } else if (storageType === "gameguild-cloud") {
+    } else if (storageType === STORAGE_TYPES.GAMEGUILD_CLOUD) {
       // Queue for GameGuild cloud sync
       await this.syncManager.queueProjectUpdate(projectData)
     }
@@ -283,14 +285,14 @@ export class EnhancedStorageAdapter {
             ...googleDriveProject,
             type: googleDriveProject.type || PROJECT_TYPES.TYPE1,
             hash,
-            syncStatus: "synced",
-            storageType: "google-drive",
+            syncStatus: SYNC_STATUS.SYNCED,
+            storageType: STORAGE_TYPES.GOOGLE_DRIVE,
           })
           return {
             ...googleDriveProject,
             type: googleDriveProject.type || PROJECT_TYPES.TYPE1,
             hash,
-            storageType: "google-drive" as const,
+            storageType: STORAGE_TYPES.GOOGLE_DRIVE,
           }
         }
       }
@@ -306,14 +308,14 @@ export class EnhancedStorageAdapter {
           ...serverProject,
           type: serverProject.type || PROJECT_TYPES.TYPE1,
           hash,
-          syncStatus: "synced",
-          storageType: "gameguild-cloud", // Server projects are cloud-based
+          syncStatus: SYNC_STATUS.SYNCED,
+          storageType: STORAGE_TYPES.GAMEGUILD_CLOUD, // Server projects are cloud-based
         })
         return {
           ...serverProject,
           type: serverProject.type || PROJECT_TYPES.TYPE1,
           hash,
-          storageType: "gameguild-cloud" as const,
+          storageType: STORAGE_TYPES.GAMEGUILD_CLOUD,
         }
       }
 
@@ -321,7 +323,7 @@ export class EnhancedStorageAdapter {
     }
 
     // Handle sync based on storage type
-    if (localProject.storageType === "google-drive") {
+    if (localProject.storageType === STORAGE_TYPES.GOOGLE_DRIVE) {
       // For Google Drive projects, always check if we have the latest version
       if (await this.googleDriveSync.isGoogleDriveAvailable()) {
         try {
@@ -335,14 +337,14 @@ export class EnhancedStorageAdapter {
               ...googleDriveProject,
               type: googleDriveProject.type || PROJECT_TYPES.TYPE1,
               hash,
-              syncStatus: "synced",
-              storageType: "google-drive",
+              syncStatus: SYNC_STATUS.SYNCED,
+              storageType: STORAGE_TYPES.GOOGLE_DRIVE,
             })
             return {
               ...googleDriveProject,
               type: googleDriveProject.type || PROJECT_TYPES.TYPE1,
               hash,
-              storageType: "google-drive" as const,
+              storageType: STORAGE_TYPES.GOOGLE_DRIVE,
             }
           }
         } catch (error) {
@@ -350,7 +352,7 @@ export class EnhancedStorageAdapter {
           // Continue with local version
         }
       }
-    } else if (localProject.storageType === "gameguild-cloud") {
+    } else if (localProject.storageType === STORAGE_TYPES.GAMEGUILD_CLOUD) {
       // Check if local project needs sync with server
       const syncedProject = await this.syncManager.syncProjectIfNeeded(localProject)
       if (syncedProject) {
@@ -362,7 +364,7 @@ export class EnhancedStorageAdapter {
           ...syncedProject,
           type: syncedProject.type || localProject.type || PROJECT_TYPES.TYPE1,
           hash,
-          syncStatus: "synced",
+          syncStatus: SYNC_STATUS.SYNCED,
           storageType: localProject.storageType,
         })
         return {
@@ -448,7 +450,7 @@ export class EnhancedStorageAdapter {
     // Efficiently determine which projects are locally available
     const localGoogleDriveProjectIds = new Set(
       localProjects
-        .filter(p => p.storageType === "google-drive")
+        .filter(p => p.storageType === STORAGE_TYPES.GOOGLE_DRIVE)
         .map(p => p.id)
     )
     
@@ -533,7 +535,7 @@ export class EnhancedStorageAdapter {
     searchTerm: string,
     tags: string[],
     filterMode: "all" | "any" = "any",
-    storageTypeFilter?: "local" | "gameguild-cloud" | "google-drive",
+    storageTypeFilter?: StorageType,
   ): Promise<ProjectData[]> {
     if (!this.db) throw new Error("IndexedDB not initialized")
 
@@ -759,7 +761,7 @@ export class EnhancedStorageAdapter {
   }
 
   // Storage type management
-  async updateProjectStorageType(id: string, storageType: "local" | "gameguild-cloud" | "google-drive"): Promise<void> {
+  async updateProjectStorageType(id: string, storageType: StorageType): Promise<void> {
     if (!this.isInitialized) throw new Error("Storage adapter not initialized")
 
     const project = await this.loadFromIndexedDB(id)
@@ -771,7 +773,7 @@ export class EnhancedStorageAdapter {
       ...project,
       storageType,
       updatedAt: new Date().toISOString(),
-      syncStatus: "pending",
+      syncStatus: SYNC_STATUS.PENDING,
     }
 
     await this.saveToIndexedDB(updatedProject)
@@ -780,7 +782,7 @@ export class EnhancedStorageAdapter {
     console.log(`Updated storage type for project "${project.name}" to: ${storageType}`)
   }
 
-  async getProjectsByStorageType(storageType: "local" | "gameguild-cloud" | "google-drive"): Promise<ProjectData[]> {
+  async getProjectsByStorageType(storageType: StorageType): Promise<ProjectData[]> {
     const allProjects = await this.listFromIndexedDB()
     return allProjects.filter((project) => project.storageType === storageType)
   }
@@ -798,7 +800,7 @@ export class EnhancedStorageAdapter {
       ...project,
       preferences,
       updatedAt: new Date().toISOString(),
-      syncStatus: "pending",
+      syncStatus: SYNC_STATUS.PENDING,
     }
 
     await this.saveToIndexedDB(updatedProject)
@@ -828,13 +830,13 @@ export class EnhancedStorageAdapter {
 
     allProjects.forEach((project) => {
       switch (project.storageType) {
-        case "local":
+        case STORAGE_TYPES.LOCAL:
           stats.local++
           break
-        case "gameguild-cloud":
+        case STORAGE_TYPES.GAMEGUILD_CLOUD:
           stats.gameguildCloud++
           break
-        case "google-drive":
+        case STORAGE_TYPES.GOOGLE_DRIVE:
           stats.googleDrive++
           break
       }
