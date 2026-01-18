@@ -38,6 +38,8 @@ import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confi
 import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
+import { PreviewRendererSequentialContinuous } from "@/components/editor/extras/preview/preview-renderer-sequential-continuous"
+import { PreviewRendererSequentialSlide } from "@/components/editor/extras/preview/preview-renderer-sequential-slide"
 import type { SerializedEditorState } from "lexical"
 import { 
   type SequentialPanelStructure, 
@@ -145,8 +147,11 @@ export default function Page() {
   const [previewState, setPreviewState] = useState<SerializedEditorState | null>(null)
   const [previewBlockStates, setPreviewBlockStates] = useState<Record<string, SerializedEditorState>>({})
   const [previewLayout, setPreviewLayout] = useState<InternalLayout>("single")
+  const [previewSequentialStructure, setPreviewSequentialStructure] = useState<SequentialPanelStructure | null>(null)
+  const [previewSequentialMode, setPreviewSequentialMode] = useState<PreviewMode>("continuous")
   const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
   const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>("free-page")
+  const [currentProjectPreferences, setCurrentProjectPreferences] = useState<ProjectPreferences | undefined>(undefined)
 
   // Sequential panel states
   const [sequentialStructure, setSequentialStructure] = useState<SequentialPanelStructure | null>(null)
@@ -169,6 +174,11 @@ export default function Page() {
     } else {
       router.push(url)
     }
+  }
+
+  const handlePreferencesChange = (newPreferences: ProjectPreferences) => {
+    // Update preferences in memory - they will be saved when project is saved
+    setCurrentProjectPreferences(newPreferences)
   }
 
   // Initialize IndexedDB and load projects
@@ -588,7 +598,7 @@ export default function Page() {
           dataToSave, 
           projectTags,
           currentProjectStorageType,
-          undefined,
+          currentProjectPreferences,
           currentProjectType
         )
         
@@ -703,7 +713,21 @@ export default function Page() {
 
     try {
       // Handle preview based on layout type
-      if (currentLayout === "single") {
+      if (currentLayout === "sequential") {
+        // Sequential layout
+        if (!sequentialStructure || sequentialStructure.panels.length === 0) {
+          toast.error("No content", {
+            description: "Sequential structure is empty",
+            duration: 3000,
+          })
+          return
+        }
+        
+        setPreviewSequentialStructure(sequentialStructure)
+        setPreviewSequentialMode(previewMode)
+        setPreviewLayout("sequential")
+        setPreviewOpen(true)
+      } else if (currentLayout === "single") {
         if (!editorState) {
           toast.error("No content", {
             description: "Editor is empty",
@@ -884,6 +908,7 @@ export default function Page() {
                       setCurrentProjectStorageType(projectData.storageType || "local")
                       setProjectTags(projectData.tags || [])
                       setCurrentProjectMode(projectMode)
+                      setCurrentProjectPreferences(projectData.preferences)
                       setIsFirstTime(false)
                       
                       // Mark project load time to prevent auto-save for 1 second
@@ -1216,6 +1241,9 @@ export default function Page() {
                 mode={currentProjectMode}
                 currentProjectType={currentProjectType}
                 storageAdapter={storageAdapter}
+                preferences={currentProjectPreferences}
+                onPreferencesChange={handlePreferencesChange}
+                currentProjectId={currentProjectId}
               />
             )}
           </div>
@@ -1254,8 +1282,8 @@ export default function Page() {
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent 
-          className={previewLayout === "multiple" ? "max-w-none! p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
-          style={previewLayout === "multiple" ? { width: '95vw', maxWidth: '95vw' } : undefined}
+          className={(previewLayout === "multiple" || previewLayout === "sequential") ? "max-w-none! p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
+          style={(previewLayout === "multiple" || previewLayout === "sequential") ? { width: '95vw', maxWidth: '95vw' } : undefined}
         >
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
@@ -1265,7 +1293,31 @@ export default function Page() {
           )}
           {previewLayout === "multiple" && Object.keys(previewBlockStates).length >= 1 && (
             <div className="w-full max-h-[80vh] overflow-y-auto">
-              <PreviewRendererType2 blockStates={previewBlockStates} />
+              <PreviewRendererType2 
+                blockStates={previewBlockStates} 
+                preferences={currentProjectPreferences}
+              />
+            </div>
+          )}
+          {previewLayout === "sequential" && previewSequentialStructure && (
+            <div className="w-full max-h-[80vh] overflow-y-auto">
+              {previewSequentialMode === "slide" ? (
+                <PreviewRendererSequentialSlide
+                  structure={previewSequentialStructure}
+                  projectId={currentProjectId}
+                  projectName={currentProjectName}
+                  storageAdapter={storageAdapter}
+                  preferences={currentProjectPreferences}
+                />
+              ) : (
+                <PreviewRendererSequentialContinuous
+                  structure={previewSequentialStructure}
+                  projectId={currentProjectId}
+                  projectName={currentProjectName}
+                  storageAdapter={storageAdapter}
+                  preferences={currentProjectPreferences}
+                />
+              )}
             </div>
           )}
         </DialogContent>

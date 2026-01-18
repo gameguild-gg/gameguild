@@ -3,6 +3,7 @@
 import { PreviewRenderer } from "./preview-renderer"
 import { PreviewRendererType2 } from "./preview-renderer-type2"
 import type { SequentialPanelStructure } from "@/lib/storage/editor/panel-structure"
+import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 
 interface PreviewRendererSequentialContinuousProps {
   structure: SequentialPanelStructure
@@ -11,6 +12,7 @@ interface PreviewRendererSequentialContinuousProps {
   storageAdapter?: {
     load: (id: string) => Promise<any>
   }
+  preferences?: ProjectPreferences
 }
 
 export function PreviewRendererSequentialContinuous({
@@ -18,6 +20,7 @@ export function PreviewRendererSequentialContinuous({
   projectId,
   projectName,
   storageAdapter,
+  preferences,
 }: PreviewRendererSequentialContinuousProps) {
   const sortedPanels = [...structure.panels].sort((a, b) => a.order - b.order)
 
@@ -68,6 +71,7 @@ export function PreviewRendererSequentialContinuous({
                 }, {} as Record<string, any>)}
                 projectId={projectId}
                 storageAdapter={storageAdapter}
+                preferences={preferences}
               />
             ) : (
               <div className="py-8 text-center text-gray-500 dark:text-gray-400">
