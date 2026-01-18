@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import type { SerializedEditorState } from "lexical"
+import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 import { PreviewRenderer } from "./preview-renderer"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 
@@ -11,9 +12,10 @@ interface PreviewRendererType2Props {
   storageAdapter?: {
     load: (id: string) => Promise<any>
   }
+  preferences?: ProjectPreferences
 }
 
-export function PreviewRendererType2({ blockStates, projectId, storageAdapter }: PreviewRendererType2Props) {
+export function PreviewRendererType2({ blockStates, projectId, storageAdapter, preferences }: PreviewRendererType2Props) {
   // Get blocks for multi-panel display (1 or more)
   const blockEntries = Object.entries(blockStates).sort((a, b) => {
     const numA = parseInt(a[0].slice(1))
@@ -25,22 +27,28 @@ export function PreviewRendererType2({ blockStates, projectId, storageAdapter }:
     return <div className="p-8 text-center text-gray-500">No blocks available for preview</div>
   }
   
-  // If only 1 block, show it in full width with studio-like design
+  const singleBlockWidth = preferences?.global?.type2SingleBlockWidth || "wide"
+  
+  // If only 1 block, show it in full width or narrow based on preference
   if (blockEntries.length === 1) {
     const [blockId, state] = blockEntries[0]!
     return (
-      <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <div className="p-2 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-            Panel 1
-          </span>
-        </div>
-        <div className="p-6 sm:p-8 md:p-12">
-          <PreviewRenderer 
-            serializedState={state}
-            projectId={projectId}
-            storageAdapter={storageAdapter}
-          />
+      <div className={singleBlockWidth === "narrow" ? "flex justify-center w-full" : ""}>
+        <div className={`border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 ${
+          singleBlockWidth === "narrow" ? "w-full max-w-4xl mx-auto" : "w-full"
+        }`}>
+          <div className="p-2 flex items-center justify-center border-b border-gray-200 dark:border-gray-700">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              Panel 1
+            </span>
+          </div>
+          <div className="p-6 sm:p-8 md:p-12">
+            <PreviewRenderer 
+              serializedState={state}
+              projectId={projectId}
+              storageAdapter={storageAdapter}
+            />
+          </div>
         </div>
       </div>
     )

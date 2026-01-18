@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { PreviewRenderer } from "./preview-renderer"
 import { PreviewRendererType2 } from "./preview-renderer-type2"
 import type { SequentialPanelStructure } from "@/lib/storage/editor/panel-structure"
+import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 
 interface PreviewRendererSequentialSlideProps {
   structure: SequentialPanelStructure
@@ -14,6 +15,7 @@ interface PreviewRendererSequentialSlideProps {
   storageAdapter?: {
     load: (id: string) => Promise<any>
   }
+  preferences?: ProjectPreferences
 }
 
 export function PreviewRendererSequentialSlide({
@@ -21,6 +23,7 @@ export function PreviewRendererSequentialSlide({
   projectId,
   projectName,
   storageAdapter,
+  preferences,
 }: PreviewRendererSequentialSlideProps) {
   const sortedPanels = [...structure.panels].sort((a, b) => a.order - b.order)
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -150,6 +153,7 @@ export function PreviewRendererSequentialSlide({
                 }, {} as Record<string, any>)}
                 projectId={projectId}
                 storageAdapter={storageAdapter}
+                preferences={preferences}
               />
             ) : (
               <div className="py-8 text-center text-gray-500 dark:text-gray-400">

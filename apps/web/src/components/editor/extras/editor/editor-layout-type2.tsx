@@ -1,12 +1,11 @@
-"use client"
-
 import { Editor } from "@/components/editor/lexical-editor"
 import type { LexicalEditor } from "lexical"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
+import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2 } from "lucide-react"
+import { Plus, Trash2, Maximize2, Minimize2 } from "lucide-react"
 import { toast } from "sonner"
 import { type ProjectType} from "@/lib/storage/editor/project-types"
 
@@ -21,6 +20,9 @@ interface EditorLayoutType2Props {
   mode?: ProjectMode
   currentProjectType?: ProjectType
   storageAdapter?: any
+  preferences?: ProjectPreferences
+  onPreferencesChange?: (preferences: ProjectPreferences) => void
+  currentProjectId?: string
 }
 
 /**
@@ -38,6 +40,9 @@ export function EditorLayoutType2({
   mode = "free-page",
   currentProjectType,
   storageAdapter,
+  preferences,
+  onPreferencesChange,
+  currentProjectId,
 }: EditorLayoutType2Props) {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   
@@ -46,6 +51,27 @@ export function EditorLayoutType2({
     const numB = parseInt(b.slice(1))
     return numA - numB
   })
+  
+  const singleBlockWidth = preferences?.global?.type2SingleBlockWidth || "wide"
+  
+  const handleWidthToggle = () => {
+    if (!onPreferencesChange || !preferences || !currentProjectId) return
+    
+    const newWidth = singleBlockWidth === "wide" ? "narrow" : "wide"
+    const updatedPreferences: ProjectPreferences = {
+      ...preferences,
+      global: {
+        ...preferences.global,
+        type2SingleBlockWidth: newWidth,
+      },
+    }
+    onPreferencesChange(updatedPreferences)
+    
+    toast.success("Width updated", {
+      description: `Layout set to ${newWidth}`,
+      duration: 2000,
+    })
+  }
   
   const handleAddBlock = () => {
     if (onBlockAdd) {
@@ -111,6 +137,27 @@ export function EditorLayoutType2({
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             {blocks.length} {blocks.length === 1 ? "Panel" : "Panels"}
           </span>
+          {blocks.length === 1 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleWidthToggle}
+              className="gap-2 h-8"
+              title={singleBlockWidth === "wide" ? "Switch to narrow layout" : "Switch to wide layout"}
+            >
+              {singleBlockWidth === "wide" ? (
+                <>
+                  <Minimize2 className="h-4 w-4" />
+                  Narrow
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-4 w-4" />
+                  Wide
+                </>
+              )}
+            </Button>
+          )}
         </div>
         <Button
           size="sm"
@@ -124,7 +171,8 @@ export function EditorLayoutType2({
       </div>
       
       {/* Multi Panel Content - Side by side */}
-      <div className="flex">
+      <div className={`flex ${blocks.length === 1 && singleBlockWidth === "narrow" ? "justify-center" : ""}`}>
+        <div className={blocks.length === 1 && singleBlockWidth === "narrow" ? "w-full max-w-4xl" : "contents"}>
         {blocks.map((blockId, index) => {
           // Get or create ref for this block
           if (!localRefs.current[blockId]) {
@@ -172,6 +220,7 @@ export function EditorLayoutType2({
             </div>
           )
         })}
+        </div>
       </div>
     </div>
   )

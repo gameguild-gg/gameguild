@@ -9,6 +9,7 @@ export interface ProjectPreferences {
     mode?: ProjectMode
     restrictions?: NodeRestrictions
     previewMode?: PreviewMode // Preview mode for sequential panels
+    type2SingleBlockWidth?: "narrow" | "wide" // Width preference for type2 with single block
   }
   nodes: {
     [nodeType: string]: {
@@ -31,7 +32,8 @@ export const DEFAULT_PROJECT_PREFERENCES: ProjectPreferences = {
       blocks: {
         b1: [null, null]
       }
-    }
+    },
+    type2SingleBlockWidth: "wide" // Default to wide for type2 single block
   },
   nodes: {}
 }

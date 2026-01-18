@@ -311,6 +311,7 @@ export default function PreviewPage() {
                       projectId={currentProject.id}
                       projectName={currentProject.name}
                       storageAdapter={storageAdapter}
+                      preferences={currentProject.preferences}
                     />
                   ) : (
                     <PreviewRendererSequentialContinuous
@@ -318,6 +319,7 @@ export default function PreviewPage() {
                       projectId={currentProject.id}
                       projectName={currentProject.name}
                       storageAdapter={storageAdapter}
+                      preferences={currentProject.preferences}
                     />
                   )
                 ) : currentLayout === "single" && Object.keys(states.blocks).length > 0 ? (
@@ -332,7 +334,7 @@ export default function PreviewPage() {
                     setSidebarOpen={setSidebarOpen}
                   />
                 ) : currentLayout === "multiple" && Object.keys(states.blocks).length >= 1 ? (
-                  <PreviewRendererType2 blockStates={states.blocks as Record<string, any>} projectId={currentProject.id} storageAdapter={storageAdapter} />
+                  <PreviewRendererType2 blockStates={states.blocks as Record<string, any>} projectId={currentProject.id} storageAdapter={storageAdapter} preferences={currentProject.preferences} />
                 ) : (
                   <div className="border border-red-200 bg-red-50 shadow-sm dark:border-red-700 dark:bg-red-900/20">
                     <div className="p-6 px-12 py-12">
