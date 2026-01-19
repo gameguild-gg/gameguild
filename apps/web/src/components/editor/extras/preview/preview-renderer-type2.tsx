@@ -2,9 +2,10 @@
 
 import { useState, useRef, useEffect } from "react"
 import type { SerializedEditorState } from "lexical"
-import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
+import type { ProjectPreferences, PanelData } from "@/lib/storage/editor/project-preferences"
 import { PreviewRenderer } from "./preview-renderer"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { AdvancedMultiBlockPreview } from "./advanced-multi-block-preview"
 
 interface PreviewRendererType2Props {
   blockStates: Record<string, SerializedEditorState>
@@ -13,9 +14,10 @@ interface PreviewRendererType2Props {
     load: (id: string) => Promise<any>
   }
   preferences?: ProjectPreferences
+  onLayoutChange?: (panels: PanelData[], direction: "horizontal" | "vertical") => void
 }
 
-export function PreviewRendererType2({ blockStates, projectId, storageAdapter, preferences }: PreviewRendererType2Props) {
+export function PreviewRendererType2({ blockStates, projectId, storageAdapter, preferences, onLayoutChange }: PreviewRendererType2Props) {
   // Get blocks for multi-panel display (1 or more)
   const blockEntries = Object.entries(blockStates).sort((a, b) => {
     const numA = parseInt(a[0].slice(1))
@@ -25,6 +27,20 @@ export function PreviewRendererType2({ blockStates, projectId, storageAdapter, p
   
   if (blockEntries.length === 0) {
     return <div className="p-8 text-center text-gray-500">No blocks available for preview</div>
+  }
+  
+  // If 3+ blocks, use AdvancedMultiBlockPreview with panels and tabs
+  if (blockEntries.length >= 3) {
+    return (
+      <AdvancedMultiBlockPreview
+        blockStates={blockStates}
+        projectId={projectId}
+        storageAdapter={storageAdapter}
+        preferences={preferences}
+        isEditable={true}
+        onLayoutChange={onLayoutChange}
+      />
+    )
   }
   
   const singleBlockWidth = preferences?.global?.type2SingleBlockWidth || "wide"
@@ -54,7 +70,22 @@ export function PreviewRendererType2({ blockStates, projectId, storageAdapter, p
     )
   }
   
-  // Multiple blocks: show with resizable panels
+  // 2 blocks: show with resizable panels
+  return <TwoBlockPreview blockStates={blockStates} blockEntries={blockEntries} projectId={projectId} storageAdapter={storageAdapter} />
+}
+
+// Separate component for 2-block preview to avoid hooks issues
+function TwoBlockPreview({
+  blockStates,
+  blockEntries,
+  projectId,
+  storageAdapter,
+}: {
+  blockStates: Record<string, SerializedEditorState>
+  blockEntries: [string, SerializedEditorState][]
+  projectId?: string
+  storageAdapter?: { load: (id: string) => Promise<any> }
+}) {
   const firstBlock = blockEntries[0]!
   const secondBlock = blockEntries[1]!
   
