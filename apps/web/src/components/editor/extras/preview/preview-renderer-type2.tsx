@@ -5,7 +5,7 @@ import type { SerializedEditorState } from "lexical"
 import type { ProjectPreferences, PanelData } from "@/lib/storage/editor/project-preferences"
 import { PreviewRenderer } from "./preview-renderer"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { AdvancedMultiBlockPreview } from "./advanced-multi-block-preview"
+import { AdvancedMultiBlockPreview } from "./multi-block-preview"
 
 interface PreviewRendererType2Props {
   blockStates: Record<string, SerializedEditorState>

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Maximize2, Minimize2 } from "lucide-react"
 import { toast } from "sonner"
 import { type ProjectType} from "@/lib/storage/editor/project-types"
-import { AdvancedMultiBlockEditor } from "./advanced-multi-block-editor-dnd"
+import { AdvancedMultiBlockEditor } from "./multi-block-editor"
 
 interface EditorLayoutType2Props {
   blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
