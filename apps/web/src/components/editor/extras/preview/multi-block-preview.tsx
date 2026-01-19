@@ -61,27 +61,20 @@ export function AdvancedMultiBlockPreview({
     if (saved && saved.length > 0) {
       return saved
     }
-    // Default: 2 panels with blocks split
-    if (blocks.length === 3) {
-      return [
-        { id: 'panel-1', blockIds: [blocks[0]!, blocks[1]!], defaultSize: 50 },
-        { id: 'panel-2', blockIds: [blocks[2]!], defaultSize: 50 },
-      ]
-    }
-    const mid = Math.ceil(blocks.length / 2)
+    // Default: Always start with 1 panel containing all blocks
+    // Single Panel Mode will be applied automatically when panels.length === 1
     return [
-      { id: 'panel-1', blockIds: blocks.slice(0, mid), defaultSize: 50 },
-      { id: 'panel-2', blockIds: blocks.slice(mid), defaultSize: 50 },
+      { id: 'panel-1', blockIds: blocks, defaultSize: 100 }
     ]
   })
 
-  const [direction, setDirection] = useState<"horizontal" | "vertical">(
-    preferences?.global?.multiBlockDirection || "horizontal"
-  )
   const [maximizedBlock, setMaximizedBlock] = useState<string | null>(null)
   const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(new Set())
   const [activeId, setActiveId] = useState<string | null>(null)
   const panelRefs = useRef<Record<string, ImperativePanelHandle | null>>({})
+
+  // Check if we're in single panel mode
+  const isSinglePanelMode = panels.length === 1
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -161,7 +154,7 @@ export function AdvancedMultiBlockPreview({
 
       setPanels(newPanels)
       if (onLayoutChange) {
-        onLayoutChange(newPanels, direction)
+        onLayoutChange(newPanels, "horizontal")
       }
     } else if (sourcePanel) {
       // Reorder within same panel
@@ -176,63 +169,9 @@ export function AdvancedMultiBlockPreview({
         )
         setPanels(newPanels)
         if (onLayoutChange) {
-          onLayoutChange(newPanels, direction)
+          onLayoutChange(newPanels, "horizontal")
         }
       }
-    }
-  }
-
-  const handleMoveBlockToNewPanel = (blockId: string, fromPanelId: string) => {
-    setPanels(prev => {
-      const fromPanel = prev.find(p => p.id === fromPanelId)
-      if (!fromPanel || fromPanel.blockIds.length <= 1) return prev
-
-      const newPanelId = `panel-${Date.now()}`
-      const updated = prev.map(p => 
-        p.id === fromPanelId 
-          ? { ...p, blockIds: p.blockIds.filter(id => id !== blockId) }
-          : p
-      )
-      
-      const newPanels = [
-        ...updated,
-        { id: newPanelId, blockIds: [blockId], defaultSize: 30 }
-      ]
-      
-      if (onLayoutChange) {
-        onLayoutChange(newPanels, direction)
-      }
-      return newPanels
-    })
-  }
-
-  const handleMoveBlockToPanel = (blockId: string, fromPanelId: string, toPanelId: string) => {
-    setPanels(prev => {
-      const fromPanel = prev.find(p => p.id === fromPanelId)
-      if (!fromPanel || fromPanel.blockIds.length <= 1) return prev
-
-      const updated = prev.map(p => {
-        if (p.id === fromPanelId) {
-          return { ...p, blockIds: p.blockIds.filter(id => id !== blockId) }
-        }
-        if (p.id === toPanelId) {
-          return { ...p, blockIds: [...p.blockIds, blockId] }
-        }
-        return p
-      })
-      
-      if (onLayoutChange) {
-        onLayoutChange(updated, direction)
-      }
-      return updated
-    })
-  }
-
-  const toggleDirection = () => {
-    const newDirection = direction === "horizontal" ? "vertical" : "horizontal"
-    setDirection(newDirection)
-    if (onLayoutChange) {
-      onLayoutChange(panels, newDirection)
     }
   }
 
@@ -283,6 +222,55 @@ export function AdvancedMultiBlockPreview({
     )
   }
 
+  // Single Panel Mode
+  if (isSinglePanelMode) {
+    const panel = panels[0]!
+    const singleBlockWidth = preferences?.global?.type2SingleBlockWidth || "wide"
+    const panelDirection = panel.direction || "horizontal"
+
+    return (
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex flex-col h-full w-full bg-white dark:bg-gray-900">
+        <div className="flex-1 overflow-hidden">
+          <div className={singleBlockWidth === "narrow" ? "flex justify-center w-full h-full" : "h-full"}>
+            <div className={`flex flex-col h-full border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 ${
+              singleBlockWidth === "narrow" ? "w-full max-w-4xl" : "w-full"
+            }`}>
+              <PreviewPanelContent
+                panel={panel}
+                panels={panels}
+                blockStates={blockStates}
+                projectId={projectId}
+                storageAdapter={storageAdapter}
+                isEditable={isEditable}
+                onToggleMaximizeBlock={handleToggleMaximizeBlock}
+                onToggleCollapse={undefined}
+                showCollapseButton={false}
+                isFirstPanel={false}
+                activeId={activeId}
+              />
+            </div>
+          </div>
+        </div>
+
+        <DragOverlay>
+          {activeId ? (
+            <div className="bg-blue-500 text-white px-4 py-2 rounded shadow-lg font-medium">
+              Block {parseInt(activeId.slice(1))}
+            </div>
+          ) : null}
+        </DragOverlay>
+      </div>
+      </DndContext>
+    )
+  }
+
+  // Multi Panel Mode
   return (
     <DndContext
       sensors={sensors}
@@ -293,7 +281,7 @@ export function AdvancedMultiBlockPreview({
       <div className="flex flex-col h-full w-full bg-white dark:bg-gray-900">
         {/* Panels */}
         <div className="flex-1 overflow-hidden">
-          <PanelGroup direction={direction}>
+          <PanelGroup direction="horizontal">
           {panels.map((panel, panelIndex) => {
             const isCollapsed = collapsedPanels.has(panel.id)
             const isFirstPanel = panelIndex === 0
@@ -348,7 +336,6 @@ export function AdvancedMultiBlockPreview({
                       projectId={projectId}
                       storageAdapter={storageAdapter}
                       isEditable={isEditable}
-                      onMoveBlockToPanel={handleMoveBlockToPanel}
                       onToggleMaximizeBlock={handleToggleMaximizeBlock}
                       onToggleCollapse={() => handleToggleCollapsePanel(panel.id)}
                       showCollapseButton={isFirstPanel || isLastPanel}
@@ -359,8 +346,8 @@ export function AdvancedMultiBlockPreview({
                 </Panel>
                 
                 {panelIndex < panels.length - 1 && (
-                  <PanelResizeHandle className={`group ${direction === "horizontal" ? "w-2" : "h-2"} bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-500 transition-colors relative flex items-center justify-center`}>
-                    <div className={`${direction === "horizontal" ? "w-1 h-12" : "h-1 w-12"} bg-gray-400 dark:bg-gray-600 rounded-full group-hover:bg-blue-600 transition-colors`} />
+                  <PanelResizeHandle className="group w-2 bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-500 transition-colors relative flex items-center justify-center">
+                    <div className="w-1 h-12 bg-gray-400 dark:bg-gray-600 rounded-full group-hover:bg-blue-600 transition-colors" />
                   </PanelResizeHandle>
                 )}
               </>
@@ -380,7 +367,77 @@ export function AdvancedMultiBlockPreview({
   </DndContext>
   )
 }
+// Single Panel Tabs Component
+function PreviewSinglePanelTabs({
+  blockIds,
+  blockStates,
+  projectId,
+  storageAdapter,
+  onToggleMaximize,
+}: {
+  blockIds: string[]
+  blockStates: Record<string, SerializedEditorState>
+  projectId?: string
+  storageAdapter?: { load: (id: string) => Promise<any> }
+  onToggleMaximize: (blockId: string) => void
+}) {
+  const [activeTab, setActiveTab] = useState(blockIds[0] || "")
 
+  useEffect(() => {
+    if (!blockIds.includes(activeTab) && blockIds.length > 0) {
+      setActiveTab(blockIds[0]!)
+    }
+  }, [blockIds, activeTab])
+
+  return (
+    <>
+      <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2">
+        <div className="flex items-center gap-1 overflow-x-auto flex-1 py-2">
+          {blockIds.map(blockId => (
+            <button
+              key={blockId}
+              onClick={() => setActiveTab(blockId)}
+              className={`px-3 py-1.5 text-sm font-medium rounded transition-colors whitespace-nowrap ${
+                activeTab === blockId
+                  ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+            >
+              Block {parseInt(blockId.slice(1))}
+            </button>
+          ))}
+        </div>
+        
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onToggleMaximize(activeTab)}
+          className="h-7 w-7 p-0"
+          title="Fullscreen"
+        >
+          <Maximize2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      
+      {blockIds.map(blockId => (
+        <div
+          key={blockId}
+          className={`flex-1 overflow-auto p-6 sm:p-8 md:p-12 ${
+            activeTab === blockId ? 'block' : 'hidden'
+          }`}
+        >
+          {blockStates[blockId] && (
+            <PreviewRenderer
+              serializedState={blockStates[blockId]!}
+              projectId={projectId}
+              storageAdapter={storageAdapter}
+            />
+          )}
+        </div>
+      ))}
+    </>
+  )
+}
 interface PreviewPanelContentProps {
   panel: PanelData
   panels: PanelData[]
@@ -390,7 +447,6 @@ interface PreviewPanelContentProps {
     load: (id: string) => Promise<any>
   }
   isEditable: boolean
-  onMoveBlockToPanel: (blockId: string, fromPanelId: string, toPanelId: string) => void
   onToggleMaximizeBlock: (blockId: string) => void
   onToggleCollapse?: () => void
   showCollapseButton?: boolean
@@ -405,7 +461,6 @@ function PreviewPanelContent({
   projectId,
   storageAdapter,
   isEditable,
-  onMoveBlockToPanel,
   onToggleMaximizeBlock,
   onToggleCollapse,
   showCollapseButton,
@@ -414,10 +469,14 @@ function PreviewPanelContent({
 }: PreviewPanelContentProps) {
   const [activeTab, setActiveTab] = useState(panel.blockIds[0] || "")
   
+  const isSinglePanelMode = panels.length === 1
+  
   const { setNodeRef, isOver } = useSortable({
     id: panel.id,
     data: { type: 'panel' }
   })
+
+  const panelDirection = panel.direction || "horizontal"
 
   useEffect(() => {
     if (!panel.blockIds.includes(activeTab) && panel.blockIds.length > 0) {
@@ -449,7 +508,13 @@ function PreviewPanelContent({
         // Single block: no tabs
         <>
           <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <PreviewTab blockId={panel.blockIds[0]!} isDragging={activeId === panel.blockIds[0]} />
+            {isSinglePanelMode ? (
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span>Block {parseInt(panel.blockIds[0]!.slice(1))}</span>
+              </div>
+            ) : (
+              <PreviewTab blockId={panel.blockIds[0]!} isDragging={activeId === panel.blockIds[0]} />
+            )}
             {isEditable && (
               <div className="flex items-center gap-1">
                 {showCollapseButton && onToggleCollapse && (
@@ -486,8 +551,44 @@ function PreviewPanelContent({
             )}
           </div>
         </>
+      ) : panelDirection === "vertical" ? (
+        // Multiple blocks: vertical layout (stacked)
+        <>
+          <div className="flex items-center justify-end p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            {isEditable && (
+              <div className="flex items-center gap-1">
+                {showCollapseButton && onToggleCollapse && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={onToggleCollapse}
+                    className="h-7 w-7 p-0"
+                    title={isFirstPanel ? "Collapse left panel" : "Collapse right panel"}
+                  >
+                    {isFirstPanel ? <ChevronsLeft className="h-3.5 w-3.5" /> : <ChevronsRight className="h-3.5 w-3.5" />}
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="flex-1 overflow-auto">
+            {panel.blockIds.map((blockId, index) => (
+              <div key={blockId} className={index > 0 ? "border-t border-gray-200 dark:border-gray-700" : ""}>
+                <div className="p-6 sm:p-8 md:p-12">
+                  {blockStates[blockId] && (
+                    <PreviewRenderer
+                      serializedState={blockStates[blockId]!}
+                      projectId={projectId}
+                      storageAdapter={storageAdapter}
+                    />
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
-        // Multiple blocks: use tabs
+        // Multiple blocks: horizontal layout (tabs)
         <>
           <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2">
             <SortableContext items={panel.blockIds} strategy={horizontalListSortingStrategy}>
