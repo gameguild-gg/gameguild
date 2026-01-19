@@ -40,6 +40,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
 
 interface AdvancedMultiBlockEditorProps {
   blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
@@ -105,6 +106,8 @@ export function AdvancedMultiBlockEditor({
   const [activeId, setActiveId] = useState<string | null>(null)
   const [maximizedBlock, setMaximizedBlock] = useState<string | null>(null)
   const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(new Set())
+  const [deleteBlockConfirm, setDeleteBlockConfirm] = useState<{ open: boolean; blockId: string | null }>({ open: false, blockId: null })
+  const [deletePanelConfirm, setDeletePanelConfirm] = useState<{ open: boolean; panelId: string | null }>({ open: false, panelId: null })
   const localRefs = useRef<Record<string, React.RefObject<LexicalEditor | null>>>({})
   const panelRefs = useRef<Record<string, ImperativePanelHandle | null>>({})
 
@@ -273,9 +276,14 @@ export function AdvancedMultiBlockEditor({
   }
 
   const handleRemoveBlock = (blockId: string) => {
-    if (onBlockRemove) {
-      onBlockRemove(blockId)
+    setDeleteBlockConfirm({ open: true, blockId })
+  }
+
+  const confirmRemoveBlock = () => {
+    if (deleteBlockConfirm.blockId && onBlockRemove) {
+      onBlockRemove(deleteBlockConfirm.blockId)
       toast.success("Block removed")
+      setDeleteBlockConfirm({ open: false, blockId: null })
     }
   }
 
@@ -295,12 +303,17 @@ export function AdvancedMultiBlockEditor({
       toast.error("Cannot remove", { description: "Must have at least one panel" })
       return
     }
+    setDeletePanelConfirm({ open: true, panelId })
+  }
+
+  const confirmRemovePanel = () => {
+    if (!deletePanelConfirm.panelId) return
 
     setPanels(prev => {
-      const panelToRemove = prev.find(p => p.id === panelId)
+      const panelToRemove = prev.find(p => p.id === deletePanelConfirm.panelId)
       if (!panelToRemove) return prev
 
-      const remaining = prev.filter(p => p.id !== panelId)
+      const remaining = prev.filter(p => p.id !== deletePanelConfirm.panelId)
       
       if (remaining.length > 0 && panelToRemove.blockIds.length > 0) {
         remaining[0] = {
@@ -311,6 +324,7 @@ export function AdvancedMultiBlockEditor({
 
       saveLayout(remaining)
       toast.success("Panel removed")
+      setDeletePanelConfirm({ open: false, panelId: null })
       return remaining
     })
   }
@@ -498,6 +512,25 @@ export function AdvancedMultiBlockEditor({
           </div>
         ) : null}
       </DragOverlay>
+
+      <DeleteConfirmDialog
+        open={deleteBlockConfirm.open}
+        onOpenChange={(open) => setDeleteBlockConfirm({ open, blockId: null })}
+        title="Remove Block"
+        itemName={deleteBlockConfirm.blockId ? `Block ${parseInt(deleteBlockConfirm.blockId.slice(1))}` : undefined}
+        itemType="block"
+        onConfirm={confirmRemoveBlock}
+      />
+
+      <DeleteConfirmDialog
+        open={deletePanelConfirm.open}
+        onOpenChange={(open) => setDeletePanelConfirm({ open, panelId: null })}
+        title="Remove Panel"
+        itemName={deletePanelConfirm.panelId ? `Panel` : undefined}
+        itemType="panel"
+        onConfirm={confirmRemovePanel}
+        description={deletePanelConfirm.panelId ? "Are you sure you want to remove this panel? All blocks in this panel will be moved to the first panel." : undefined}
+      />
     </DndContext>
   )
 }
@@ -592,19 +625,17 @@ function DraggablePanelContent({
                   <Plus className="h-4 w-4 mr-2" />
                   Add Block
                 </DropdownMenuItem>
+                {panels.length > 1 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onRemovePanel(panel.id)} className="text-red-600">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove Panel
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
-            
-            {panels.length > 1 && (
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => onRemovePanel(panel.id)}
-                className="h-7 w-7 p-0 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600"
-              >
-                <X className="h-3.5 w-3.5" />
-              </Button>
-            )}
           </div>
         </div>
         <div className={`flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50 dark:bg-gray-900 border-2 border-dashed border-gray-300 dark:border-gray-700 transition-colors m-4 rounded-lg ${
@@ -666,19 +697,14 @@ function DraggablePanelContent({
                     <Trash2 className="h-4 w-4 mr-2" />
                     Remove Block
                   </DropdownMenuItem>
+                  {panels.length > 1 && (
+                    <DropdownMenuItem onClick={() => onRemovePanel(panel.id)} className="text-red-600">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove Panel
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
-              
-              {panels.length > 1 && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onRemovePanel(panel.id)}
-                  className="h-7 w-7 p-0 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              )}
             </div>
           </div>
           <div className="flex-1 overflow-auto p-4 sm:p-6 md:p-8 lg:p-12">
@@ -750,19 +776,14 @@ function DraggablePanelContent({
                     <Trash2 className="h-4 w-4 mr-2" />
                     Remove Block
                   </DropdownMenuItem>
+                  {panels.length > 1 && (
+                    <DropdownMenuItem onClick={() => onRemovePanel(panel.id)} className="text-red-600">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove Panel
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
-              
-              {panels.length > 1 && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => onRemovePanel(panel.id)}
-                  className="h-7 w-7 p-0 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              )}
             </div>
           </div>
           
