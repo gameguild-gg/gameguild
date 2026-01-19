@@ -8,8 +8,8 @@ import type { ProjectMode } from "@/lib/storage/editor/project-modes"
 import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 import { Button } from "@/components/ui/button"
 import { 
-  Plus, Trash2, X, Maximize2, GripVertical, MoreVertical,
-  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight
+  Plus, Trash2, X, Maximize2, Minimize2, GripVertical, MoreVertical,
+  ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Layers, LayoutGrid
 } from "lucide-react"
 import { toast } from "sonner"
 import { type ProjectType } from "@/lib/storage/editor/project-types"
@@ -62,6 +62,7 @@ interface PanelData {
   id: string
   blockIds: string[]
   defaultSize?: number
+  direction?: "horizontal" | "vertical"
 }
 
 export function AdvancedMultiBlockEditor({
@@ -90,16 +91,10 @@ export function AdvancedMultiBlockEditor({
     if (saved && saved.length > 0) {
       return saved
     }
-    if (blocks.length === 3) {
-      return [
-        { id: 'panel-1', blockIds: [blocks[0]!, blocks[1]!], defaultSize: 50 },
-        { id: 'panel-2', blockIds: [blocks[2]!], defaultSize: 50 },
-      ]
-    }
-    const mid = Math.ceil(blocks.length / 2)
+    // Default: Always start with 1 panel containing all blocks
+    // Single Panel Mode will be applied automatically when panels.length === 1
     return [
-      { id: 'panel-1', blockIds: blocks.slice(0, mid), defaultSize: 50 },
-      { id: 'panel-2', blockIds: blocks.slice(mid), defaultSize: 50 },
+      { id: 'panel-1', blockIds: blocks, defaultSize: 100 }
     ]
   })
 
@@ -333,6 +328,48 @@ export function AdvancedMultiBlockEditor({
     setMaximizedBlock(prev => prev === blockId ? null : blockId)
   }
 
+  // Check if we're in single panel mode (1 panel, any number of blocks)
+  const isSinglePanelMode = panels.length === 1
+
+  const handleTogglePanelDirection = (panelId: string) => {
+    setPanels(prev => {
+      const newPanels = prev.map(p => {
+        if (p.id === panelId) {
+          const currentDirection = p.direction || "horizontal"
+          const newDirection: "horizontal" | "vertical" = currentDirection === "horizontal" ? "vertical" : "horizontal"
+          return { ...p, direction: newDirection }
+        }
+        return p
+      })
+      saveLayout(newPanels)
+      toast.success("Layout updated", {
+        description: `Blocks layout set to ${newPanels.find(p => p.id === panelId)?.direction}`,
+        duration: 2000,
+      })
+      return newPanels
+    })
+  }
+
+  const handleWidthToggle = () => {
+    if (!onPreferencesChange || !preferences) return
+    
+    const currentWidth = preferences.global?.type2SingleBlockWidth || "wide"
+    const newWidth = currentWidth === "wide" ? "narrow" : "wide"
+    const updatedPreferences: ProjectPreferences = {
+      ...preferences,
+      global: {
+        ...preferences.global,
+        type2SingleBlockWidth: newWidth,
+      },
+    }
+    onPreferencesChange(updatedPreferences)
+    
+    toast.success("Width updated", {
+      description: `Layout set to ${newWidth}`,
+      duration: 2000,
+    })
+  }
+
   const handleToggleCollapsePanel = (panelId: string) => {
     const panelRef = panelRefs.current[panelId]
     if (!panelRef) return
@@ -390,6 +427,124 @@ export function AdvancedMultiBlockEditor({
     )
   }
 
+  // Single Panel Mode - simplified interface for 1 panel (any number of blocks)
+  if (isSinglePanelMode) {
+    const panel = panels[0]!
+    const singleBlockWidth = preferences?.global?.type2SingleBlockWidth || "wide"
+
+    return (
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex flex-col h-full border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {panel.blockIds.length} {panel.blockIds.length === 1 ? "Block" : "Blocks"}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleWidthToggle}
+              className="gap-2 h-8"
+              title={singleBlockWidth === "wide" ? "Switch to narrow layout" : "Switch to wide layout"}
+            >
+              {singleBlockWidth === "wide" ? (
+                <>
+                  <Minimize2 className="h-4 w-4" />
+                  Narrow
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-4 w-4" />
+                  Wide
+                </>
+              )}
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCreatePanel}
+              className="gap-2 h-8"
+            >
+              <Plus className="h-4 w-4" />
+              New Panel
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleAddBlock(panel.id)}
+              className="gap-2 h-8"
+            >
+              <Plus className="h-4 w-4" />
+              Add Block
+            </Button>
+          </div>
+        </div>
+
+        <div className={`flex-1 overflow-hidden ${singleBlockWidth === "narrow" ? "flex justify-center" : ""}`}>
+          <div className={`flex flex-col h-full ${singleBlockWidth === "narrow" ? "w-full max-w-4xl" : "w-full"}`}>
+            <DraggablePanelContent
+              panel={panel}
+              panels={panels}
+              blocks={blocks}
+              blockStates={blockStates}
+              blockRefs={localRefs.current}
+              onBlockChange={onBlockChange}
+              onLoadingChange={onLoadingChange}
+              projectId={projectId}
+              mode={mode}
+              currentProjectType={currentProjectType}
+              storageAdapter={storageAdapter}
+              onRemoveBlock={handleRemoveBlock}
+              onRemovePanel={handleRemovePanel}
+              onToggleMaximizeBlock={handleToggleMaximizeBlock}
+              onAddBlock={handleAddBlock}
+              onToggleCollapse={undefined}
+              showCollapseButton={false}
+              isFirstPanel={false}
+              activeId={activeId}
+              onTogglePanelDirection={handleTogglePanelDirection}
+            />
+          </div>
+        </div>
+
+        <DeleteConfirmDialog
+          open={deleteBlockConfirm.open}
+          onOpenChange={(open) => setDeleteBlockConfirm({ open, blockId: null })}
+          title="Remove Block"
+          itemName={deleteBlockConfirm.blockId ? `Block ${parseInt(deleteBlockConfirm.blockId.slice(1))}` : undefined}
+          itemType="block"
+          onConfirm={confirmRemoveBlock}
+        />
+
+        <DeleteConfirmDialog
+          open={deletePanelConfirm.open}
+          onOpenChange={(open) => setDeletePanelConfirm({ open, panelId: null })}
+          title="Remove Panel"
+          itemName={deletePanelConfirm.panelId ? `Panel` : undefined}
+          itemType="panel"
+          onConfirm={confirmRemovePanel}
+          description={deletePanelConfirm.panelId ? "Are you sure you want to remove this panel? All blocks in this panel will be moved to the first panel." : undefined}
+        />
+
+        <DragOverlay>
+          {activeId ? (
+            <div className="bg-blue-500 text-white px-4 py-2 rounded shadow-lg font-medium">
+              Block {parseInt(activeId.slice(1))}
+            </div>
+          ) : null}
+        </DragOverlay>
+      </div>
+      </DndContext>
+    )
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -402,9 +557,6 @@ export function AdvancedMultiBlockEditor({
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {blocks.length} Blocks • {panels.length} Panels
-            </span>
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              Drag tabs to reorder
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -489,6 +641,7 @@ export function AdvancedMultiBlockEditor({
                         showCollapseButton={isFirstPanel || isLastPanel}
                         isFirstPanel={isFirstPanel}
                         activeId={activeId}
+                        onTogglePanelDirection={handleTogglePanelDirection}
                       />
                     )}
                   </Panel>
@@ -555,6 +708,7 @@ interface DraggablePanelContentProps {
   showCollapseButton?: boolean
   isFirstPanel?: boolean
   activeId: string | null
+  onTogglePanelDirection: (panelId: string) => void
 }
 
 function DraggablePanelContent({
@@ -577,12 +731,16 @@ function DraggablePanelContent({
   showCollapseButton,
   isFirstPanel,
   activeId,
+  onTogglePanelDirection,
 }: DraggablePanelContentProps) {
   const [activeTab, setActiveTab] = useState(panel.blockIds[0] || "")
+  const panelDirection = panel.direction || "horizontal"
+  
+  const isSinglePanelMode = panels.length === 1
   
   const { setNodeRef, isOver } = useSortable({
     id: panel.id,
-    data: { type: 'panel' }
+    data: { type: 'panel' },
   })
 
   useEffect(() => {
@@ -658,7 +816,13 @@ function DraggablePanelContent({
       {panel.blockIds.length === 1 ? (
         <>
           <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-            <DraggableTab blockId={panel.blockIds[0]!} isDragging={activeId === panel.blockIds[0]} />
+            {isSinglePanelMode ? (
+              <div className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span>Block {parseInt(panel.blockIds[0]!.slice(1))}</span>
+              </div>
+            ) : (
+              <DraggableTab blockId={panel.blockIds[0]!} isDragging={activeId === panel.blockIds[0]} />
+            )}
             <div className="flex items-center gap-1">
               {showCollapseButton && onToggleCollapse && (
                 <Button
@@ -721,6 +885,92 @@ function DraggablePanelContent({
             />
           </div>
         </>
+      ) : panelDirection === "vertical" ? (
+        <>
+          {/* Vertical layout - blocks stacked */}
+          <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              {panel.blockIds.length} Blocks (Stacked)
+            </span>
+            <div className="flex items-center gap-1">
+              {showCollapseButton && onToggleCollapse && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={onToggleCollapse}
+                  className="h-7 w-7 p-0"
+                  title={isFirstPanel ? "Collapse left panel" : "Collapse right panel"}
+                >
+                  {isFirstPanel ? <ChevronsLeft className="h-3.5 w-3.5" /> : <ChevronsRight className="h-3.5 w-3.5" />}
+                </Button>
+              )}
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0">
+                    <MoreVertical className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => onTogglePanelDirection(panel.id)}>
+                    Use Tabs
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onAddBlock(panel.id)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Block
+                  </DropdownMenuItem>
+                  {panels.length > 1 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => onRemovePanel(panel.id)} className="text-red-600">
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Remove Panel
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          
+          <div className="flex flex-col overflow-auto">
+            {panel.blockIds.map((blockId, index) => (
+              <div
+                key={blockId}
+                className={`flex-1 ${index < panel.blockIds.length - 1 ? "border-b border-gray-200 dark:border-gray-700" : ""}`}
+              >
+                <div className="p-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Block {parseInt(blockId.slice(1))}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => onRemoveBlock(blockId)}
+                    className="h-6 w-6 p-0 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400"
+                    title="Remove block"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
+                </div>
+                <div className="p-4 sm:p-6 md:p-8 lg:p-12">
+                  <Editor
+                    editorRef={blockRefs[blockId]}
+                    initialState={blockStates[blockId]}
+                    onChange={(state) => onBlockChange(blockId, state)}
+                    onLoadingChange={onLoadingChange}
+                    projectId={projectId}
+                    mode={mode}
+                    blockId={blockId}
+                    currentProjectType={currentProjectType}
+                    storageAdapter={storageAdapter}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <>
           <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2">
@@ -767,6 +1017,14 @@ function DraggablePanelContent({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  {panel.blockIds.length > 1 && (
+                    <>
+                      <DropdownMenuItem onClick={() => onTogglePanelDirection(panel.id)}>
+                        Stack Blocks
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
                   <DropdownMenuItem onClick={() => onAddBlock(panel.id)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Block
