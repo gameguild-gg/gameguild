@@ -1296,6 +1296,18 @@ export default function Page() {
               <PreviewRendererType2 
                 blockStates={previewBlockStates} 
                 preferences={currentProjectPreferences}
+                onLayoutChange={(panels, direction) => {
+                  if (currentProjectPreferences) {
+                    handlePreferencesChange({
+                      ...currentProjectPreferences,
+                      global: {
+                        ...currentProjectPreferences.global,
+                        advancedMultiBlockPanels: panels,
+                        multiBlockDirection: direction,
+                      }
+                    })
+                  }
+                }}
               />
             </div>
           )}

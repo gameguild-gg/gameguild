@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Plus, Trash2, Maximize2, Minimize2 } from "lucide-react"
 import { toast } from "sonner"
 import { type ProjectType} from "@/lib/storage/editor/project-types"
+import { AdvancedMultiBlockEditor } from "./advanced-multi-block-editor-dnd"
 
 interface EditorLayoutType2Props {
   blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
@@ -30,6 +31,69 @@ interface EditorLayoutType2Props {
  * This layout displays multiple editors side by side (b1, b2, b3...bN)
  */
 export function EditorLayoutType2({
+  blockRefs,
+  blockStates,
+  onBlockChange,
+  onBlockAdd,
+  onBlockRemove,
+  onLoadingChange,
+  projectId,
+  mode = "free-page",
+  currentProjectType,
+  storageAdapter,
+  preferences,
+  onPreferencesChange,
+  currentProjectId,
+}: EditorLayoutType2Props) {
+  const blocks = Object.keys(blockStates).sort((a, b) => {
+    const numA = parseInt(a.slice(1))
+    const numB = parseInt(b.slice(1))
+    return numA - numB
+  })
+  
+  // Use AdvancedMultiBlockEditor for 3+ blocks
+  if (blocks.length >= 3) {
+    return (
+      <AdvancedMultiBlockEditor
+        blockRefs={blockRefs}
+        blockStates={blockStates}
+        onBlockChange={onBlockChange}
+        onBlockAdd={onBlockAdd}
+        onBlockRemove={onBlockRemove}
+        onLoadingChange={onLoadingChange}
+        projectId={projectId}
+        mode={mode}
+        currentProjectType={currentProjectType}
+        storageAdapter={storageAdapter}
+        preferences={preferences}
+        onPreferencesChange={onPreferencesChange}
+        currentProjectId={currentProjectId}
+      />
+    )
+  }
+  
+  // Use separate component for 1-2 blocks to avoid hooks issues
+  return (
+    <OneOrTwoBlockEditor
+      blockRefs={blockRefs}
+      blockStates={blockStates}
+      onBlockChange={onBlockChange}
+      onBlockAdd={onBlockAdd}
+      onBlockRemove={onBlockRemove}
+      onLoadingChange={onLoadingChange}
+      projectId={projectId}
+      mode={mode}
+      currentProjectType={currentProjectType}
+      storageAdapter={storageAdapter}
+      preferences={preferences}
+      onPreferencesChange={onPreferencesChange}
+      currentProjectId={currentProjectId}
+    />
+  )
+}
+
+// Separate component for 1-2 blocks to avoid hooks issues
+function OneOrTwoBlockEditor({
   blockRefs,
   blockStates,
   onBlockChange,

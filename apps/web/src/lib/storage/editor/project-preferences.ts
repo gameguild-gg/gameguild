@@ -1,6 +1,14 @@
 import type { ShikiTheme } from "@/components/editor/extras/code-studio/types"
 import type { ProjectMode, NodeRestrictions } from "./project-modes"
 import type { PreviewMode } from "./panel-structure"
+import type { MultiBlockLayout } from "./multi-block-layout"
+
+// Panel data for advanced multi-block layout
+export interface PanelData {
+  id: string
+  blockIds: string[]
+  defaultSize?: number
+}
 
 // Project-level preferences structure
 export interface ProjectPreferences {
@@ -10,6 +18,9 @@ export interface ProjectPreferences {
     restrictions?: NodeRestrictions
     previewMode?: PreviewMode // Preview mode for sequential panels
     type2SingleBlockWidth?: "narrow" | "wide" // Width preference for type2 with single block
+    type2MultiBlockLayout?: MultiBlockLayout // Custom layout for multiple blocks (3+)
+    advancedMultiBlockPanels?: PanelData[] // Advanced layout with resizable panels
+    multiBlockDirection?: "horizontal" | "vertical" // Layout direction
   }
   nodes: {
     [nodeType: string]: {
