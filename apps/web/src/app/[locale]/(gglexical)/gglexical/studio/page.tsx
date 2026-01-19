@@ -227,6 +227,7 @@ export default function Page() {
         setPreviewMode,
         setCurrentProjectMode,
         setLastProjectLoadTime,
+        setCurrentProjectPreferences,
       })
     }
     
@@ -463,14 +464,14 @@ export default function Page() {
       current: Object.values(blockRefs.current)[0] ?? null
     } as React.RefObject<LexicalEditor | null>
     
-    // Prepare preferences with previewMode for sequential layout
-    const preferences = currentLayout === "sequential" ? {
+    // Always use currentProjectPreferences to ensure all settings are saved
+    const preferences = currentProjectPreferences || {
       global: {
         mode: currentProjectMode,
-        previewMode: previewMode
+        ...(currentLayout === "sequential" && { previewMode: previewMode })
       },
       nodes: {}
-    } : undefined
+    }
     
     await saveProject({
       currentProjectId,
