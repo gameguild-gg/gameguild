@@ -1,17 +1,17 @@
-# Week 02: Network Addressing
+# Network Addressing
 
 ---
 
 ## Part 1: IP Addressing (Tuesday)
 
-### Why This Matters for Networked Games
+### Why This Matters for Networked Applications
 
-Every packet your game sends needs a destination. Every server your players connect to has an address. Understanding IP addressing lets you:
+Every packet your application or service sends needs a destination. Every server, client, or peer you connect to has an address. Understanding IP addressing lets you:
 
-- Configure game servers correctly
-- Debug "can't connect" issues
-- Design network architectures that scale
-- Understand NAT traversal
+- Configure servers and services correctly
+- Debug connectivity issues
+- Design scalable network architectures
+- Understand NAT traversal and address translation
 
 ---
 
@@ -35,17 +35,17 @@ uint32_t ip = (192 << 24) | (168 << 16) | (1 << 8) | 100;
 
 **Special addresses you'll use constantly:**
 
-| Address           | Purpose                         |
-| ----------------- | ------------------------------- |
-| `127.0.0.1`       | Localhost (this machine)        |
-| `0.0.0.0`         | "Any" address (server bind)     |
-| `255.255.255.255` | Broadcast                       |
-| `192.168.x.x`     | Private LAN (your home network) |
-| `10.x.x.x`        | Private LAN (corporate/cloud)   |
+| Address           | Purpose                                |
+| ----------------- | -------------------------------------- |
+| `127.0.0.1`       | Localhost (this machine)               |
+| `0.0.0.0`         | "Any" address (bind to all interfaces) |
+| `255.255.255.255` | Broadcast                              |
+| `192.168.x.x`     | Private LAN (home/office)              |
+| `10.x.x.x`        | Private LAN (corporate/cloud)          |
 
 ::: note
 
-Most of your testing happens on `127.0.0.1`. Your server binds to `0.0.0.0` to accept connections on any interface.
+Most local testing happens on `127.0.0.1`. Servers and services often bind to `0.0.0.0` to accept connections on any interface.
 
 :::
 
@@ -97,7 +97,7 @@ addr6.sin6_family = AF_INET6;
 inet_pton(AF_INET6, "::1", &addr6.sin6_addr);
 ```
 
-**Game dev reality:** Most games still use IPv4. Xbox Live and PlayStation Network handle IPv6 internally. You'll encounter it in cloud deployments.
+**Industry reality:** Most applications and games still use IPv4. Large platforms (cloud, gaming, enterprise) may handle IPv6 internally. You'll encounter IPv6 in modern deployments and infrastructure.
 
 ---
 
@@ -263,17 +263,17 @@ Combine everything: given an IP/CIDR, calculate network address, broadcast addre
 
 **Problem:** Humans remember names. Computers use numbers.
 
-**Solution:** Domain Name System - a distributed database mapping names → IPs.
+**Solution:** Domain Name System (DNS) - a distributed database mapping names → IPs.
 
 ```
-game.example.com → 203.0.113.50
+service.example.com → 203.0.113.50
 ```
 
 ---
 
 ## Practice Activity 6: DNS Name Parsing
 
-Extract the subdomain, domain, and TLD from a fully qualified domain name.
+Extract the subdomain, domain, and TLD from a fully qualified domain name (FQDN).
 
 !!! code
 {
@@ -288,7 +288,7 @@ Extract the subdomain, domain, and TLD from a fully qualified domain name.
 
 ### DNS Resolution Process
 
-When your game client connects to `game.example.com:7777`:
+When your client or application connects to `service.example.com:7777`:
 
 ```
 1. Client → Local Resolver: "What's game.example.com?"
@@ -305,14 +305,14 @@ When your game client connects to `game.example.com:7777`:
 
 ### DNS Record Types
 
-| Type  | Purpose                       | Example                           |
-| ----- | ----------------------------- | --------------------------------- |
-| A     | IPv4 address                  | `game.example.com → 203.0.113.50` |
-| AAAA  | IPv6 address                  | `game.example.com → 2001:db8::1`  |
-| CNAME | Alias to another name         | `www → game.example.com`          |
-| MX    | Mail server                   | `example.com → mail.example.com`  |
-| TXT   | Arbitrary text (verification) | SPF, DKIM records                 |
-| NS    | Nameserver for domain         | `example.com → ns1.example.com`   |
+| Type  | Purpose                       | Example                              |
+| ----- | ----------------------------- | ------------------------------------ |
+| A     | IPv4 address                  | `service.example.com → 203.0.113.50` |
+| AAAA  | IPv6 address                  | `service.example.com → 2001:db8::1`  |
+| CNAME | Alias to another name         | `www → service.example.com`          |
+| MX    | Mail server                   | `example.com → mail.example.com`     |
+| TXT   | Arbitrary text (verification) | SPF, DKIM records                    |
+| NS    | Nameserver for domain         | `example.com → ns1.example.com`      |
 
 ---
 
@@ -346,18 +346,18 @@ for (auto* p = result; p != nullptr; p = p->ai_next) {
 freeaddrinfo(result);
 ```
 
-**Game dev consideration:** DNS resolution is blocking and can take seconds. Always resolve asynchronously or cache results.
+**Developer consideration:** DNS resolution is blocking and can take seconds. Always resolve asynchronously or cache results.
 
 ---
 
 ### Routing Basics
 
-**The question:** How does a packet get from your game client to a server across the world?
+**The question:** How does a packet get from your client or device to a server across the world?
 
 **The answer:** Hop by hop, using routing tables.
 
 ```
-Your PC → Home Router → ISP Router → ... → Data Center → Game Server
+Your PC → Home Router → ISP Router → ... → Data Center → Application Server
 ```
 
 Each router:
@@ -403,7 +403,7 @@ route print
 
 **Traceroute:** Exploits TTL to discover the path:
 
-**Game dev use:** Diagnosing high latency. "Where is the lag coming from?"
+**Developer use:** Diagnosing high latency. "Where is the lag coming from?"
 
 ---
 
@@ -460,7 +460,7 @@ traceroute to google.com (142.250.185.46), 64 hops max, 52 byte packets
 # try us!
 traceroute gameguild.gg
 
-# Game servers
+# Application servers
 traceroute steampowered.com
 traceroute epicgames.com
 
@@ -490,7 +490,7 @@ A **packet analyzer** that captures and inspects network traffic in real-time.
 
 1. **Select interface** (usually your main network adapter)
 2. **Start capture** (blue shark fin button)
-3. **Generate traffic** (browse a website, run your game)
+3. **Generate traffic** (browse a website, run your application)
 4. **Stop capture** (red square)
 5. **Analyze packets**
 
@@ -525,7 +525,7 @@ A **packet analyzer** that captures and inspects network traffic in real-time.
 | Filter                        | Shows                             |
 | ----------------------------- | --------------------------------- |
 | `ip.addr == 192.168.1.100`    | Traffic to/from this IP           |
-| `tcp.port == 7777`            | Traffic on your game port         |
+| `tcp.port == 7777`            | Traffic on your application port  |
 | `udp`                         | All UDP traffic                   |
 | `dns`                         | DNS queries and responses         |
 | `tcp.analysis.retransmission` | Retransmitted packets (problems!) |
@@ -583,7 +583,7 @@ Content-Type: text/html
 ...
 ```
 
-**Game dev use:** Debug your custom protocol. See exactly what bytes are exchanged.
+**Developer use:** Debug your custom protocol. See exactly what bytes are exchanged.
 
 ---
 
