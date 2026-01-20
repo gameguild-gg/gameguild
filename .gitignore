@@ -46,7 +46,7 @@ x86/
 /[Tt]estResults/
 /[Ll]ogs/
 # Node.js Dependencies
-/node_modules
+**/node_modules
 
 # Node.js Package Managers
 /.pnp
