@@ -6,9 +6,10 @@ import networkingWeek01QuizMd from './01-intro/02-quiz.md';
 import networkingWeek01SetupMd from './01-intro/02-setup.md';
 import networkingWeek01AssignmentMd from './01-intro/03-assignment.md';
 import networkingWeek02Lecture from './02-addressing/01-lecture.md';
-import networkingWeek02ReadingsMd from './02-addressing/02-readings.md';
-import networkingWeek02QuizMd from './02-addressing/03-quiz.md';
-import networkingWeek02AssignmentMd from './02-addressing/04-assignment.md';
+import networkingWeek02LectureReveal from './02-addressing/02-lecture-reveal.md';
+import networkingWeek02ReadingsMd from './02-addressing/03-readings.md';
+import networkingWeek02QuizMd from './02-addressing/04-quiz.md';
+import networkingWeek02AssignmentMd from './02-addressing/05-assignment.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -234,6 +235,29 @@ export const networkingWeek02Intro: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const networkingWeek02LectureSlides: ProgramContent & { slug: string } = {
+    id: 'week-02-slides',
+    slug: 'slides',
+    programId: 'networking-program-1',
+    parentId: 'week-02',
+    title: 'Lecture Slides',
+    description: 'Presentation slides for Week 02 lecture on IP addressing, subnetting, DNS, and routing.',
+    type: 0, // Page
+    body: networkingWeek02LectureReveal,
+    sortOrder: 0,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek02Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 export const networkingWeek02Readings: ProgramContent & { slug: string } = {
     id: 'week-02-readings',
     slug: 'readings',
@@ -304,7 +328,7 @@ export const networkingWeek02Assignment: ProgramContent & { slug: string } = {
 };
 
 networkingWeek01Intro.children = [networkingWeek01Readings, networkingWeek01Quiz, networkingWeek01Setup, networkingWeek01Assignment];
-networkingWeek02Intro.children = [networkingWeek02Readings, networkingWeek02Quiz, networkingWeek02Assignment];
+networkingWeek02Intro.children = [networkingWeek02LectureSlides, networkingWeek02Readings, networkingWeek02Quiz, networkingWeek02Assignment];
 networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
 
