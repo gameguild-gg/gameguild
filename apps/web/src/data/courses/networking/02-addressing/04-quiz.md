@@ -258,9 +258,9 @@
 !!! quiz
 {
 "title": "Subnet Planning",
-"question": "You're setting up a LAN for a small team with 50 devices and want some growth room. What minimum subnet would you use?",
+"question": "You're setting up a LAN for a small team with 50 devices and want some growth room. What absolute minimum subnet would you use?",
 "options": ["/26", "/24", "/25", "/27"],
-"answers": ["/25"]
+"answers": ["/26"]
 }
 !!!
 
