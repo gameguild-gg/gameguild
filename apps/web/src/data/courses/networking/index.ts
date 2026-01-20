@@ -1,4 +1,4 @@
-import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/generated';
+import { Product, ProductProgram, Program, ProgramContent, ProgramContentType } from '@/lib/api/generated';
 
 import networkingWeek01Lecture from './01-intro/00-lecture.md';
 import networkingWeek01ReadingsMd from './01-intro/01-readings.md';
@@ -242,7 +242,7 @@ export const networkingWeek02LectureSlides: ProgramContent & { slug: string } = 
     parentId: 'week-02',
     title: 'Lecture Slides',
     description: 'Presentation slides for Week 02 lecture on IP addressing, subnetting, DNS, and routing.',
-    type: 0, // Page
+    type: ProgramContentType.REVEAL,
     body: networkingWeek02LectureReveal,
     sortOrder: 0,
     isRequired: false,
