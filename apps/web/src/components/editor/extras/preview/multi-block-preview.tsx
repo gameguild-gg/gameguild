@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import type { SerializedEditorState } from "lexical"
-import type { ProjectPreferences, PanelData } from "@/lib/storage/editor/project-preferences"
+import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 import { PreviewRenderer } from "./preview-renderer"
 import { 
   Maximize2, Minimize2, GripVertical,
@@ -29,7 +29,9 @@ import {
   useSortable,
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { DraggableTab } from "../multi-block/draggable-tab"
+import { DraggableTabButton } from "../multi-block/draggable-tab-button"
+import type { PanelData } from "../multi-block/types"
 
 interface AdvancedMultiBlockPreviewProps {
   blockStates: Record<string, SerializedEditorState>
@@ -543,7 +545,7 @@ function PreviewPanelContent({
                 <span>Block {parseInt(panel.blockIds[0]!.slice(1))}</span>
               </div>
             ) : (
-              <PreviewTab blockId={panel.blockIds[0]!} isDragging={activeId === panel.blockIds[0]} />
+              <DraggableTab blockId={panel.blockIds[0]!} isDragging={activeId === panel.blockIds[0]} />
             )}
             {isEditable && (
               <div className="flex items-center gap-1">
@@ -624,7 +626,7 @@ function PreviewPanelContent({
             <SortableContext items={panel.blockIds} strategy={horizontalListSortingStrategy}>
               <div className="flex items-center gap-1 overflow-x-auto flex-1 py-2">
                 {panel.blockIds.map(blockId => (
-                  <PreviewTabButton
+                  <DraggableTabButton
                     key={blockId}
                     blockId={blockId}
                     isActive={activeTab === blockId}
@@ -681,59 +683,5 @@ function PreviewPanelContent({
         </>
       )}
     </div>
-  )
-}
-
-function PreviewTab({ blockId, isDragging }: { blockId: string; isDragging: boolean }) {
-  return (
-    <div className={`flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 ${
-      isDragging ? 'opacity-50' : ''
-    }`}>
-      <GripVertical className="h-4 w-4 text-gray-400" />
-      <span>Block {parseInt(blockId.slice(1))}</span>
-    </div>
-  )
-}
-
-function PreviewTabButton({ 
-  blockId, 
-  isActive, 
-  isDragging, 
-  onClick 
-}: { 
-  blockId: string
-  isActive: boolean
-  isDragging: boolean
-  onClick: () => void
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: blockId })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
-  return (
-    <button
-      ref={setNodeRef}
-      style={style}
-      onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded transition-colors whitespace-nowrap cursor-grab active:cursor-grabbing ${
-        isActive
-          ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm"
-          : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-      } ${isDragging ? 'opacity-50' : ''}`}
-      {...attributes}
-      {...listeners}
-    >
-      <GripVertical className="h-3.5 w-3.5 text-gray-400" />
-      Block {parseInt(blockId.slice(1))}
-    </button>
   )
 }
