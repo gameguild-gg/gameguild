@@ -112,7 +112,7 @@
         "katex": "^0.16.22",
         "lexical": "^0.38.2",
         "lucide-react": "^0.525.0",
-        "mermaid": "^11.7.0",
+        "mermaid": "^11.12.2",
         "monaco-editor": "^0.52.2",
         "newrelic": "latest",
         "next": "15.4.10",
