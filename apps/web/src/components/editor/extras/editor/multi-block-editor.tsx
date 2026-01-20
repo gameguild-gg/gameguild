@@ -42,6 +42,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
 import { RestrictionsConfigDialog } from "./restrictions-config-dialog"
+import { DraggableTab } from "../multi-block/draggable-tab"
+import { DraggableTabButton } from "../multi-block/draggable-tab-button"
+import type { PanelData } from "../multi-block/types"
 
 interface AdvancedMultiBlockEditorProps {
   blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
@@ -57,13 +60,6 @@ interface AdvancedMultiBlockEditorProps {
   preferences?: ProjectPreferences
   onPreferencesChange?: (preferences: ProjectPreferences) => void
   currentProjectId?: string
-}
-
-interface PanelData {
-  id: string
-  blockIds: string[]
-  defaultSize?: number
-  direction?: "horizontal" | "vertical"
 }
 
 export function AdvancedMultiBlockEditor({
@@ -1141,78 +1137,5 @@ function DraggablePanelContent({
         </>
       )}
     </div>
-  )
-}
-
-function DraggableTab({ blockId, isDragging }: { blockId: string; isDragging: boolean }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: blockId })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
-  return (
-    <div 
-      ref={setNodeRef}
-      style={style}
-      className={`flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-grab active:cursor-grabbing ${
-        isDragging ? 'opacity-50' : ''
-      }`}
-      {...attributes}
-      {...listeners}
-    >
-      <GripVertical className="h-4 w-4 text-gray-400" />
-      <span>Block {parseInt(blockId.slice(1))}</span>
-    </div>
-  )
-}
-
-function DraggableTabButton({ 
-  blockId, 
-  isActive, 
-  isDragging, 
-  onClick 
-}: { 
-  blockId: string
-  isActive: boolean
-  isDragging: boolean
-  onClick: () => void
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: blockId })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
-  return (
-    <button
-      ref={setNodeRef}
-      style={style}
-      onClick={onClick}
-      className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded transition-colors whitespace-nowrap cursor-grab active:cursor-grabbing ${
-        isActive
-          ? "bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm"
-          : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-      } ${isDragging ? 'opacity-50' : ''}`}
-      {...attributes}
-      {...listeners}
-    >
-      <GripVertical className="h-3.5 w-3.5 text-gray-400" />
-      Block {parseInt(blockId.slice(1))}
-    </button>
   )
 }
