@@ -2,6 +2,47 @@
 
 ---
 
+## Visualizing IP Packet Headers
+
+Here are simplified diagrams of IPv4 and IPv6 packet headers using Mermaid:
+
+### IPv4 Packet Header
+
+```mermaid
+packet-beta
+title IPv4 Packet Header
+  0-3: "Version"
+  4-7: "IHL"
+  8-15: "Type of Service"
+  16-31: "Total Length"
+  32-47: "Identification"
+  48-50: "Flags"
+  51-63: "Fragment Offset"
+  64-71: "Time To Live"
+  72-79: "Protocol"
+  80-95: "Header Checksum"
+  96-127: "Source Address"
+  128-159: "Destination Address"
+  160-191: "Options + Padding"
+```
+
+### IPv6 Packet Header
+
+```mermaid
+packet-beta
+title IPv6 Packet Header
+  0-3: "Version"
+  4-11: "Traffic Class"
+  12-31: "Flow Label"
+  32-47: "Payload Length"
+  48-55: "Next Header"
+  56-63: "Hop Limit"
+  64-191: "Source Address"
+  192-319: "Destination Address"
+```
+
+---
+
 ## Part 1: IP Addressing (Tuesday)
 
 ### Why This Matters for Networked Applications
