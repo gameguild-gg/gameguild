@@ -1,3 +1,10 @@
+# [2.40.0](https://github.com/gameguild-gg/gameguild/compare/v2.39.0...v2.40.0) (2026-01-20)
+
+
+### Features
+
+* **networking/week02:** Add detailed lecture slides and new quiz format ([686be05](https://github.com/gameguild-gg/gameguild/commit/686be0545f5175b423ac66f90076dd884aaf8cf8))
+
 # [2.39.0](https://github.com/gameguild-gg/gameguild/compare/v2.38.0...v2.39.0) (2026-01-15)
 
 
