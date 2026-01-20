@@ -59,7 +59,7 @@ import type { VegaLiteData } from "../nodes/vega-lite-node"
 import type { TableData } from "../nodes/table-node"
 import { ModeSelectionDialog } from "../extras/code-studio/mode-selection-dialog"
 import type { CodeStudioMode } from "../extras/code-studio/types"
-import type { ProjectMode } from "@/lib/storage/editor/project-modes"
+import type { ProjectMode, NodeRestrictions } from "@/lib/storage/editor/project-modes"
 import { isNodeAllowed } from "@/lib/storage/editor/project-modes"
 import type { ProjectData as ImportedProjectData } from "../nodes/project-node"
 import { SelectProjectDialog } from "../extras/project/select-project-dialog"
@@ -108,13 +108,15 @@ export const INSERT_PROJECT_COMMAND = createCommand<ImportedProjectData>("INSERT
 interface FloatingContentInsertPluginProps {
   mode?: ProjectMode
   blockId?: string  // Block identifier (b1, b2, b3, etc.)
+  panelId?: string  // Panel identifier (panel-1, panel-2, etc.)
+  customRestrictions?: NodeRestrictions  // Custom project-specific restrictions
   currentProjectId?: string
   currentProjectType?: "type1" | "type2" | "type3"
   storageAdapter?: any
   currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
 }
 
-export function FloatingContentInsertPlugin({ mode = "free-page", blockId, currentProjectId, currentProjectType, storageAdapter, currentStorageType = "local" }: FloatingContentInsertPluginProps = {}) {
+export function FloatingContentInsertPlugin({ mode = "free-page", blockId, panelId, customRestrictions, currentProjectId, currentProjectType, storageAdapter, currentStorageType = "local" }: FloatingContentInsertPluginProps = {}) {
   const [editor] = useLexicalComposerContext()
   const [show, setShow] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
@@ -619,8 +621,8 @@ export function FloatingContentInsertPlugin({ mode = "free-page", blockId, curre
       return true
     }
     
-    // Verificar se o node é permitido neste blockId para este modo
-    return isNodeAllowed(nodeType, blockId, mode)
+    // Verificar se o node é permitido neste blockId para este modo (considerando panel e custom restrictions)
+    return isNodeAllowed(nodeType, blockId, mode, panelId, customRestrictions)
   })
 
   if (

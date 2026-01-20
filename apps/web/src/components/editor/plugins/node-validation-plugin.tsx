@@ -16,21 +16,23 @@ import {
   createCommand
 } from "lexical"
 import { toast } from "sonner"
-import { isNodeAllowed, type ProjectMode } from "@/lib/storage/editor/project-modes"
+import { isNodeAllowed, type ProjectMode, type NodeRestrictions } from "@/lib/storage/editor/project-modes"
 
 export const INSERT_NODE_COMMAND: LexicalCommand<{ nodeType: string }> = createCommand()
 
 interface NodeValidationPluginProps {
   mode: ProjectMode
   blockId?: string  // Block identifier (b1, b2, b3, etc.)
+  panelId?: string  // Panel identifier (panel-1, panel-2, etc.)
+  customRestrictions?: NodeRestrictions  // Custom project-specific restrictions
 }
 
-export function NodeValidationPlugin({ mode, blockId }: NodeValidationPluginProps) {
+export function NodeValidationPlugin({ mode, blockId, panelId, customRestrictions }: NodeValidationPluginProps) {
   const [editor] = useLexicalComposerContext()
 
   useEffect(() => {
-    // If no blockId specified or free-page mode, allow everything
-    if (!blockId || mode === "free-page") {
+    // If no blockId specified or free-page mode with no custom restrictions, allow everything
+    if (!blockId || (mode === "free-page" && !customRestrictions)) {
       return
     }
 
@@ -40,8 +42,8 @@ export function NodeValidationPlugin({ mode, blockId }: NodeValidationPluginProp
       (payload) => {
         const { nodeType } = payload
         
-        // Check if node is allowed
-        if (!isNodeAllowed(nodeType, blockId, mode)) {
+        // Check if node is allowed (considering panel and custom restrictions)
+        if (!isNodeAllowed(nodeType, blockId, mode, panelId, customRestrictions)) {
           // Get friendly names for nodes
           const nodeFriendlyNames: Record<string, string> = {
             "code-studio": "Code Studio",
@@ -69,7 +71,7 @@ export function NodeValidationPlugin({ mode, blockId }: NodeValidationPluginProp
     return () => {
       removeListener()
     }
-  }, [editor, mode, blockId])
+  }, [editor, mode, blockId, panelId, customRestrictions])
 
   return null
 }
