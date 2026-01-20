@@ -545,8 +545,8 @@ A **packet analyzer** that captures and inspects network traffic in real-time.
 ├─────────────────────────────────────────────────────────┤
 │ Packet List (summary of each packet)                    │
 │   No.  Time      Source        Dest          Protocol   │
-│   1    0.000     192.168.1.100 8.8.8.8       DNS       │
-│   2    0.045     8.8.8.8       192.168.1.100 DNS       │
+│   1    0.000     192.168.1.100 8.8.8.8       DNS        │
+│   2    0.045     8.8.8.8       192.168.1.100 DNS        │
 ├─────────────────────────────────────────────────────────┤
 │ Packet Details (protocol tree)                          │
 │   ▼ Ethernet II                                         │
@@ -555,7 +555,7 @@ A **packet analyzer** that captures and inspects network traffic in real-time.
 │   ▼ Domain Name System (query)                          │
 ├─────────────────────────────────────────────────────────┤
 │ Packet Bytes (raw hex + ASCII)                          │
-│   0000   45 00 00 3c 1c 46 40 00 40 06 ...             │
+│   0000   45 00 00 3c 1c 46 40 00 40 06 ...              │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -641,29 +641,3 @@ Content-Type: text/html
 | Wireshark  | Capture and analyze packets, essential debugging tool |
 
 ---
-
-## Coding Assignment 02: IP Calculator
-
-Build a subnet analyzer that takes an IP address with CIDR notation and outputs:
-
-- Network address
-- Broadcast address
-- First usable host
-- Last usable host
-- Total usable hosts
-- Subnet mask (dotted decimal)
-
-**Example:**
-
-```
-Input:  192.168.100.50/26
-Output:
-  Network:    192.168.100.0
-  Broadcast:  192.168.100.63
-  First Host: 192.168.100.1
-  Last Host:  192.168.100.62
-  Hosts:      62
-  Mask:       255.255.255.192
-```
-
-**Hint:** Use bitwise operations. The mask is `0xFFFFFFFF << (32 - prefix)`.
