@@ -42,9 +42,20 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
 import { RestrictionsConfigDialog } from "./restrictions-config-dialog"
-import { DraggableTab } from "../multi-block/draggable-tab"
-import { DraggableTabButton } from "../multi-block/draggable-tab-button"
-import type { PanelData } from "../multi-block/types"
+import { 
+  DraggableTab, 
+  DraggableTabButton, 
+  type PanelData,
+  EmptyPanel,
+  PanelHeader,
+  type PanelHeaderAction,
+  usePanelCollapse,
+  usePanelSync,
+  generatePanelId,
+  sortBlocks,
+  DEFAULT_PANEL_SIZE,
+  NEW_PANEL_SIZE,
+} from "../multi-block"
 
 interface AdvancedMultiBlockEditorProps {
   blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
@@ -77,11 +88,7 @@ export function AdvancedMultiBlockEditor({
   onPreferencesChange,
   currentProjectId,
 }: AdvancedMultiBlockEditorProps) {
-  const blocks = Object.keys(blockStates).sort((a, b) => {
-    const numA = parseInt(a.slice(1))
-    const numB = parseInt(b.slice(1))
-    return numA - numB
-  })
+  const blocks = sortBlocks(Object.keys(blockStates))
 
   const [panels, setPanels] = useState<PanelData[]>(() => {
     const saved = preferences?.global?.advancedMultiBlockPanels
@@ -91,7 +98,7 @@ export function AdvancedMultiBlockEditor({
     // Default: Always start with 1 panel containing all blocks
     // Single Panel Mode will be applied automatically when panels.length === 1
     return [
-      { id: 'panel-1', blockIds: blocks, defaultSize: 100 }
+      { id: 'panel-1', blockIds: blocks, defaultSize: DEFAULT_PANEL_SIZE }
     ]
   })
 
@@ -110,11 +117,19 @@ export function AdvancedMultiBlockEditor({
 
   const [activeId, setActiveId] = useState<string | null>(null)
   const [maximizedBlock, setMaximizedBlock] = useState<string | null>(null)
-  const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(new Set())
   const [deleteBlockConfirm, setDeleteBlockConfirm] = useState<{ open: boolean; blockId: string | null }>({ open: false, blockId: null })
   const [deletePanelConfirm, setDeletePanelConfirm] = useState<{ open: boolean; panelId: string | null }>({ open: false, panelId: null })
   const localRefs = useRef<Record<string, React.RefObject<LexicalEditor | null>>>({})
-  const panelRefs = useRef<Record<string, ImperativePanelHandle | null>>({})
+
+  // Use shared hooks
+  const {
+    collapsedPanels,
+    panelRefs,
+    handleToggleCollapse: handleToggleCollapsePanel,
+    handleCollapsedTabClick,
+    onPanelCollapse,
+    onPanelExpand,
+  } = usePanelCollapse()
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -145,54 +160,16 @@ export function AdvancedMultiBlockEditor({
   })
 
   const [pendingBlockPanel, setPendingBlockPanel] = useState<string | null>(null)
-  const isLoadingProject = useRef(false)
 
-  // Track when preferences change to prevent auto-sync during project load
-  useEffect(() => {
-    if (preferences?.global?.advancedMultiBlockPanels) {
-      isLoadingProject.current = true
-      // Reset flag after panels are applied
-      setTimeout(() => {
-        isLoadingProject.current = false
-      }, 500)
-    }
-  }, [currentProjectId])
-
-  useEffect(() => {
-    // Skip auto-sync if we're loading a project with saved panel configuration
-    if (isLoadingProject.current) {
-      return
-    }
-
-    const allPanelBlocks = panels.flatMap(p => p.blockIds)
-    const missingBlocks = blocks.filter(b => !allPanelBlocks.includes(b))
-    const removedBlocks = allPanelBlocks.filter(b => !blocks.includes(b))
-
-    if (missingBlocks.length > 0 || removedBlocks.length > 0) {
-      setPanels(prev => {
-        // Remove deleted blocks from panels, but keep empty panels
-        let updated = prev.map(p => ({
-          ...p,
-          blockIds: p.blockIds.filter(b => blocks.includes(b))
-        }))
-
-        // Only auto-add missing blocks to panel 1 if there's no pending panel target
-        if (missingBlocks.length > 0 && updated.length > 0 && !pendingBlockPanel) {
-          updated[0] = {
-            ...updated[0]!,
-            blockIds: [...updated[0]!.blockIds, ...missingBlocks]
-          }
-        }
-
-        // Only create default panel if all panels were removed and there are blocks
-        if (updated.length === 0 && blocks.length > 0) {
-          updated = [{ id: 'panel-1', blockIds: blocks, defaultSize: 100 }]
-        }
-
-        return updated
-      })
-    }
-  }, [blocks, pendingBlockPanel])
+  // Use shared sync hook
+  usePanelSync({
+    blocks,
+    panels,
+    setPanels,
+    pendingBlockPanel,
+    projectId: currentProjectId,
+    preferences,
+  })
 
   // When blocks change, assign pending block to target panel
   useEffect(() => {
@@ -310,17 +287,11 @@ export function AdvancedMultiBlockEditor({
   }
 
   const handleCreatePanel = () => {
-    // Find highest panel number and increment
-    const panelNumbers = panels.map(p => {
-      const match = p.id.match(/^panel-(\d+)$/)
-      return match && match[1] ? parseInt(match[1], 10) : 0
-    })
-    const maxNumber = panelNumbers.length > 0 ? Math.max(...panelNumbers) : 0
-    const newPanelId = `panel-${maxNumber + 1}`
+    const newPanelId = generatePanelId(panels)
     
     const newPanels = [
       ...panels,
-      { id: newPanelId, blockIds: [], defaultSize: 30 }
+      { id: newPanelId, blockIds: [], defaultSize: NEW_PANEL_SIZE }
     ]
     setPanels(newPanels)
     saveLayout(newPanels)
@@ -361,9 +332,6 @@ export function AdvancedMultiBlockEditor({
   const handleToggleMaximizeBlock = (blockId: string) => {
     setMaximizedBlock(prev => prev === blockId ? null : blockId)
   }
-
-  // Check if we're in single panel mode (1 panel, any number of blocks)
-  const isSinglePanelMode = panels.length === 1
 
   const handleTogglePanelDirection = (panelId: string) => {
     setPanels(prev => {
@@ -417,33 +385,8 @@ export function AdvancedMultiBlockEditor({
     onPreferencesChange(updatedPreferences)
   }
 
-  const handleToggleCollapsePanel = (panelId: string) => {
-    const panelRef = panelRefs.current[panelId]
-    if (!panelRef) return
-
-    const isCollapsed = collapsedPanels.has(panelId)
-    
-    if (isCollapsed) {
-      panelRef.expand()
-    } else {
-      panelRef.collapse()
-    }
-  }
-
-  const handleCollapsedTabClick = (panelId: string, blockId: string) => {
-    const panelRef = panelRefs.current[panelId]
-    if (!panelRef) return
-
-    panelRef.expand()
-    
-    // Set active tab after a short delay to ensure panel is expanded
-    setTimeout(() => {
-      const panel = panels.find(p => p.id === panelId)
-      if (panel && panel.blockIds.includes(blockId)) {
-        // This will be handled by the panel content component
-      }
-    }, 100)
-  }
+  // Check if we're in single panel mode (1 panel, any number of blocks)
+  const isSinglePanelMode = panels.length === 1
 
   if (maximizedBlock) {
     const blockRef = localRefs.current[maximizedBlock]
@@ -648,16 +591,8 @@ export function AdvancedMultiBlockEditor({
                     minSize={10}
                     collapsible={true}
                     collapsedSize={3}
-                    onCollapse={() => {
-                      setCollapsedPanels(prev => new Set(prev).add(panel.id))
-                    }}
-                    onExpand={() => {
-                      setCollapsedPanels(prev => {
-                        const next = new Set(prev)
-                        next.delete(panel.id)
-                        return next
-                      })
-                    }}
+                    onCollapse={() => onPanelCollapse(panel.id)}
+                    onExpand={() => onPanelExpand(panel.id)}
                   >
                     {isCollapsed ? (
                       <div className="w-12 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
@@ -665,7 +600,7 @@ export function AdvancedMultiBlockEditor({
                           {panel.blockIds.map(blockId => (
                             <button
                               key={blockId}
-                              onClick={() => handleCollapsedTabClick(panel.id, blockId)}
+                              onClick={() => handleCollapsedTabClick(panel.id)}
                               className="w-full px-2 py-3 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors writing-mode-vertical transform rotate-180"
                               style={{ writingMode: 'vertical-rl' }}
                             >
