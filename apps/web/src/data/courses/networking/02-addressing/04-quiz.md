@@ -230,8 +230,8 @@
 
 !!! quiz
 {
-"title": "Game Server Setup",
-"question": "Your game server needs to accept connections from players on the local network (192.168.1.0/24). What address should it bind to?",
+"title": "Service Binding on LAN",
+"question": "Your service needs to accept connections from users on the local network (192.168.1.0/24). What address should it bind to?",
 "options": ["127.0.0.1", "255.255.255.255", "0.0.0.0", "192.168.1.1"],
 "answers": ["0.0.0.0"]
 }
@@ -239,8 +239,8 @@
 
 !!! quiz
 {
-"title": "Network Diagnosis",
-"question": "True or False: If a player reports high latency to your game server, running traceroute would help you identify where in the network path the delay is occurring.",
+"title": "Latency Diagnosis",
+"question": "True or False: If users report high latency to your app or API, running traceroute would help you identify where in the network path the delay is occurring.",
 "options": ["False", "True"],
 "answers": ["True"]
 }
@@ -249,7 +249,7 @@
 !!! quiz
 {
 "title": "DNS Caching",
-"question": "Why do game servers typically cache DNS resolutions instead of looking them up every time?",
+"question": "Why do backend services typically cache DNS resolutions instead of looking them up every time?",
 "options": ["To comply with networking standards", "To reduce latency and server load", "To prevent IP spoofing", "To improve security"],
 "answers": ["To reduce latency and server load"]
 }
@@ -258,7 +258,7 @@
 !!! quiz
 {
 "title": "Subnet Planning",
-"question": "You're setting up a LAN for a game development studio with 50 computers. You want some growth room. What minimum subnet would you use?",
+"question": "You're setting up a LAN for a small team with 50 devices and want some growth room. What minimum subnet would you use?",
 "options": ["/26", "/24", "/25", "/27"],
 "answers": ["/25"]
 }
@@ -267,7 +267,7 @@
 !!! quiz
 {
 "title": "Wireshark Host Filter",
-"question": "You want to see only traffic to/from your game server (IP 203.0.113.50). The Wireshark display filter would be:",
+"question": "You want to see only traffic to/from a specific server (IP 203.0.113.50). The Wireshark display filter would be:",
 "options": ["host 203.0.113.50", "ip.addr == 203.0.113.50", "tcp.port == 203", "ip.dst == 203.0.113.50"],
 "answers": ["ip.addr == 203.0.113.50"]
 }
@@ -276,7 +276,7 @@
 !!! quiz
 {
 "title": "IPv6 Adoption",
-"question": "True or False: Most modern games already use IPv6 exclusively because IPv4 addresses are depleted.",
+"question": "True or False: Most modern apps already use IPv6 exclusively because IPv4 addresses are depleted.",
 "options": ["True", "False"],
 "answers": ["False"]
 }
