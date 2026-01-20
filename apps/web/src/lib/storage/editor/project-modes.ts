@@ -15,10 +15,12 @@ export type ProjectMode = "free-page" | "code-page" | "quiz-page"
 type NodeList = string | string[] | null
 
 export interface NodeRestrictions {
-  blocks: Record<string, [NodeList, NodeList]>  // {b1: [bloqueados, liberados], b2: [...], ...}
+  blocks?: Record<string, [NodeList, NodeList]>  // {b1: [bloqueados, liberados], b2: [...], ...}
+  panels?: Record<string, [NodeList, NodeList]>  // {panel-1: [bloqueados, liberados], panel-2: [...], ...}
   // [bloqueados, liberados] - primeiro define bloqueio, segundo define permissão
   // '*' bloqueia/libera todos, string específico, ou null para nenhum
   // ex: {b1: ['*', 'code-studio']} = bloqueia todos exceto code-studio no b1
+  // ex: {panel-1: ['*', 'code-studio']} = bloqueia todos exceto code-studio em todos blocks do panel-1
 }
 
 export interface ProjectModeConfig {
@@ -44,16 +46,23 @@ export const NODE_RESTRICTIONS: Record<ProjectMode, NodeRestrictions> = {
   },
   "code-page": {
     blocks: {
-      b2: ['code-studio', null],      // bloqueia code-studio no b1 (painel esquerdo/principal)
-      b1: ['*', 'code-studio'],        // bloqueia todos exceto code-studio no b2
+      b1: ['code-studio', null],      // bloqueia code-studio no b1 (painel esquerdo/principal)
+      b2: ['*', 'code-studio'],        // bloqueia todos exceto code-studio no b2
       // Outros blocos herdam regra do b2
+    },
+    panels: {
+      // Painéis podem ter suas próprias restrições que se aplicam a todos os blocks dentro deles
+      // Exemplo: 'panel-2': ['*', 'code-studio'] = apenas code-studio permitido em todos blocks do panel-2
     }
   },
   "quiz-page": {
     blocks: {
-      b2: ['quiz', null],        // bloqueia quiz no b1 (painel esquerdo/principal)
-      b1: ['*', 'quiz'],         // bloqueia todos exceto quiz no b2
+      b1: ['quiz', null],        // bloqueia quiz no b1 (painel esquerdo/principal)
+      b2: ['*', 'quiz'],         // bloqueia todos exceto quiz no b2
       // Outros blocos herdam regra do b2
+    },
+    panels: {
+      // Exemplo: 'panel-2': ['*', 'quiz'] = apenas quiz permitido em todos blocks do panel-2
     }
   }
 }
@@ -84,34 +93,48 @@ export const PROJECT_MODES: Record<ProjectMode, Omit<ProjectModeConfig, 'mode'>>
  * @param nodeType - The type of node to check
  * @param blockId - The block to check ("b1", "b2", etc.)
  * @param mode - The project mode
+ * @param panelId - Optional panel ID to check panel-level restrictions
+ * @param customRestrictions - Optional custom restrictions that override defaults
  */
 export function isNodeAllowed(
   nodeType: string,
   blockId: string,
-  mode: ProjectMode
+  mode: ProjectMode,
+  panelId?: string,
+  customRestrictions?: NodeRestrictions
 ): boolean {
-  const restrictions = NODE_RESTRICTIONS[mode]
+  // Use custom restrictions if provided, otherwise use mode defaults
+  const restrictions = customRestrictions || NODE_RESTRICTIONS[mode]
   
-  if (!restrictions || !restrictions.blocks) {
+  if (!restrictions) {
     return true
   }
 
-  // Buscar restrições específicas do bloco, ou usar padrão
-  let blockRestrictions = restrictions.blocks[blockId]
+  // Priority: panel restrictions > block restrictions > defaults
+  let blockRestrictions: [NodeList, NodeList] | undefined
+
+  // 1. Check if there are panel-level restrictions
+  if (panelId && restrictions.panels?.[panelId]) {
+    blockRestrictions = restrictions.panels[panelId]
+  }
   
-  // Se não tem restrição específica, tentar usar b1 como padrão para single
-  // ou b2 como padrão para outros blocos
-  if (!blockRestrictions) {
+  // 2. Check if there are block-specific restrictions (only if no panel restriction found)
+  if (!blockRestrictions && restrictions.blocks?.[blockId]) {
+    blockRestrictions = restrictions.blocks[blockId]
+  }
+  
+  // 3. Try to use default block patterns
+  if (!blockRestrictions && restrictions.blocks) {
     if (blockId === 'b1') {
-      blockRestrictions = restrictions.blocks.b1 || [null, null]
+      blockRestrictions = restrictions.blocks.b1
     } else {
       // Outros blocos herdam de b2, ou b1 se b2 não existir
-      blockRestrictions = restrictions.blocks.b2 || restrictions.blocks.b1 || [null, null]
+      blockRestrictions = restrictions.blocks.b2 || restrictions.blocks.b1
     }
   }
   
   if (!blockRestrictions) {
-    return true  // sem restrições neste bloco
+    return true  // sem restrições
   }
 
   const [blocked, allowed] = blockRestrictions
@@ -156,4 +179,119 @@ export function isNodeAllowed(
  */
 export function getSuggestedLayoutForMode(mode: ProjectMode): "single" | "multiple" {
   return PROJECT_MODES[mode].suggestedLayout || "single"
+}
+
+/**
+ * Create custom restrictions for a specific block
+ */
+export function setBlockRestriction(
+  currentRestrictions: NodeRestrictions | undefined,
+  blockId: string,
+  blocked: NodeList,
+  allowed: NodeList
+): NodeRestrictions {
+  const restrictions = currentRestrictions || { blocks: {}, panels: {} }
+  return {
+    ...restrictions,
+    blocks: {
+      ...restrictions.blocks,
+      [blockId]: [blocked, allowed]
+    }
+  }
+}
+
+/**
+ * Create custom restrictions for a specific panel
+ */
+export function setPanelRestriction(
+  currentRestrictions: NodeRestrictions | undefined,
+  panelId: string,
+  blocked: NodeList,
+  allowed: NodeList
+): NodeRestrictions {
+  const restrictions = currentRestrictions || { blocks: {}, panels: {} }
+  return {
+    ...restrictions,
+    panels: {
+      ...restrictions.panels,
+      [panelId]: [blocked, allowed]
+    }
+  }
+}
+
+/**
+ * Remove restrictions for a specific block
+ */
+export function removeBlockRestriction(
+  currentRestrictions: NodeRestrictions | undefined,
+  blockId: string
+): NodeRestrictions {
+  if (!currentRestrictions?.blocks) return currentRestrictions || { blocks: {}, panels: {} }
+  
+  const { [blockId]: _, ...remainingBlocks } = currentRestrictions.blocks
+  return {
+    ...currentRestrictions,
+    blocks: remainingBlocks
+  }
+}
+
+/**
+ * Remove restrictions for a specific panel
+ */
+export function removePanelRestriction(
+  currentRestrictions: NodeRestrictions | undefined,
+  panelId: string
+): NodeRestrictions {
+  if (!currentRestrictions?.panels) return currentRestrictions || { blocks: {}, panels: {} }
+  
+  const { [panelId]: _, ...remainingPanels } = currentRestrictions.panels
+  return {
+    ...currentRestrictions,
+    panels: remainingPanels
+  }
+}
+
+/**
+ * Get restrictions for a specific block or panel
+ */
+export function getRestrictions(
+  restrictions: NodeRestrictions | undefined,
+  blockId?: string,
+  panelId?: string
+): [NodeList, NodeList] | undefined {
+  if (!restrictions) return undefined
+  
+  // Panel restrictions have priority
+  if (panelId && restrictions.panels?.[panelId]) {
+    return restrictions.panels[panelId]
+  }
+  
+  // Then block restrictions
+  if (blockId && restrictions.blocks?.[blockId]) {
+    return restrictions.blocks[blockId]
+  }
+  
+  return undefined
+}
+
+/**
+ * Get a human-readable description of restrictions
+ */
+export function describeRestrictions(restriction: [NodeList, NodeList] | undefined): string {
+  if (!restriction) return "No restrictions"
+  
+  const [blocked, allowed] = restriction
+  
+  if (allowed === '*') return "All nodes allowed"
+  if (allowed) {
+    const allowedList = Array.isArray(allowed) ? allowed.join(', ') : allowed
+    return `Only ${allowedList} allowed`
+  }
+  if (blocked === '*') return "All nodes blocked"
+  if (blocked) {
+    const blockedList = Array.isArray(blocked) ? blocked.join(', ') : blocked
+    return `${blockedList} blocked`
+  }
+  
+  return "No restrictions"
 }

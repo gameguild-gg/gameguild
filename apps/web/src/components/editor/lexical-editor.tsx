@@ -360,6 +360,8 @@ interface EditorProps {
   projectId?: string | null
   mode?: ProjectMode
   blockId?: string  // Block identifier (b1, b2, b3, etc.)
+  panelId?: string  // Panel identifier (panel-1, panel-2, etc.)
+  customRestrictions?: any  // Custom project-specific restrictions
   currentProjectType?: ProjectType
   storageAdapter?: any
   currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
@@ -420,7 +422,7 @@ const MATCHERS: LinkMatcher[] = [
 ]
 
 // Atualizar a função Editor para incluir o EditorRefPlugin:
-export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId, mode, blockId, currentProjectType, storageAdapter, currentStorageType }: EditorProps) {
+export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId, mode, blockId, panelId, customRestrictions, currentProjectType, storageAdapter, currentStorageType }: EditorProps) {
   const [isLoadingProject, setIsLoadingProject] = useState(false)
 
   useEffect(() => {
@@ -454,7 +456,9 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             />
             <FloatingContentInsertPlugin 
               mode={mode} 
-              blockId={blockId} 
+              blockId={blockId}
+              panelId={panelId}
+              customRestrictions={customRestrictions}
               currentProjectId={projectId || undefined}
               currentProjectType={currentProjectType}
               storageAdapter={storageAdapter}
