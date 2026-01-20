@@ -236,7 +236,7 @@ export function AdvancedMultiBlockPreview({
         <div className="flex flex-col h-full w-full bg-white dark:bg-gray-900">
         <div className="flex-1 overflow-hidden">
           <div className={singleBlockWidth === "narrow" ? "flex justify-center w-full h-full" : "h-full"}>
-            <div className={`flex flex-col h-full border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 ${
+            <div className={`flex flex-col h-full bg-white shadow-sm dark:bg-gray-900 ${
               singleBlockWidth === "narrow" ? "w-full max-w-4xl" : "w-full"
             }`}>
               <PreviewPanelContent
@@ -520,9 +520,9 @@ function PreviewPanelContent({
           </div>
         </>
       ) : panelDirection === "vertical" ? (
-        // Multiple blocks: vertical layout (stacked)
+        // Multiple blocks: vertical layout (stacked) - painel tem barra de rolagem única
         <>
-          <div className="flex items-center justify-end p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          <div className="shrink-0 flex items-center justify-end p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             {isEditable && (
               <div className="flex items-center gap-1">
                 {showCollapseButton && onToggleCollapse && (
@@ -556,9 +556,9 @@ function PreviewPanelContent({
           </div>
         </>
       ) : (
-        // Multiple blocks: horizontal layout (tabs)
+        // Multiple blocks: horizontal layout (tabs) - tabs fixas, cada block com barra própria
         <>
-          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2">
+          <div className="shrink-0 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2">
             <SortableContext items={panel.blockIds} strategy={horizontalListSortingStrategy}>
               <div className="flex items-center gap-1 overflow-x-auto flex-1 py-2">
                 {panel.blockIds.map(blockId => (
