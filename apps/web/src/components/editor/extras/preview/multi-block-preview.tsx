@@ -1,16 +1,15 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import type { SerializedEditorState } from "lexical"
 import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 import { PreviewRenderer } from "./preview-renderer"
 import { 
-  Maximize2, Minimize2, GripVertical,
-  ChevronLeft, ChevronRight,
+  Maximize2, Minimize2,
   ChevronsLeft, ChevronsRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Panel, PanelGroup, PanelResizeHandle, ImperativePanelHandle } from "react-resizable-panels"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import {
   DndContext,
   DragOverlay,
@@ -29,9 +28,17 @@ import {
   useSortable,
   horizontalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { DraggableTab } from "../multi-block/draggable-tab"
-import { DraggableTabButton } from "../multi-block/draggable-tab-button"
-import type { PanelData } from "../multi-block/types"
+import {
+  DraggableTab,
+  DraggableTabButton,
+  EmptyPanel,
+  CollapsedPanel,
+  usePanelCollapse,
+  usePanelSync,
+  sortBlocks,
+  DRAG_ACTIVATION_DISTANCE,
+  type PanelData,
+} from "../multi-block"
 
 interface AdvancedMultiBlockPreviewProps {
   blockStates: Record<string, SerializedEditorState>
@@ -52,11 +59,7 @@ export function AdvancedMultiBlockPreview({
   isEditable = true,
   onLayoutChange,
 }: AdvancedMultiBlockPreviewProps) {
-  const blocks = Object.keys(blockStates).sort((a, b) => {
-    const numA = parseInt(a.slice(1))
-    const numB = parseInt(b.slice(1))
-    return numA - numB
-  })
+  const blocks = sortBlocks(Object.keys(blockStates))
 
   const [panels, setPanels] = useState<PanelData[]>(() => {
     const saved = preferences?.global?.advancedMultiBlockPanels
@@ -84,10 +87,25 @@ export function AdvancedMultiBlockPreview({
   }, [preferences?.global?.advancedMultiBlockPanels, projectId])
 
   const [maximizedBlock, setMaximizedBlock] = useState<string | null>(null)
-  const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(new Set())
   const [activeId, setActiveId] = useState<string | null>(null)
-  const panelRefs = useRef<Record<string, ImperativePanelHandle | null>>({})
-  const isLoadingProject = useRef(false)
+
+  // Use shared collapse hook
+  const {
+    collapsedPanels,
+    panelRefs,
+    handleCollapsedTabClick,
+    onPanelCollapse,
+    onPanelExpand,
+  } = usePanelCollapse()
+
+  // Use shared sync hook
+  usePanelSync({
+    blocks,
+    panels,
+    setPanels,
+    preferences,
+    projectId,
+  })
 
   // Check if we're in single panel mode
   const isSinglePanelMode = panels.length === 1
@@ -95,58 +113,13 @@ export function AdvancedMultiBlockPreview({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: DRAG_ACTIVATION_DISTANCE,
       },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
-
-  // Track when preferences change to prevent auto-sync during project load
-  useEffect(() => {
-    if (preferences?.global?.advancedMultiBlockPanels) {
-      isLoadingProject.current = true
-      // Reset flag after panels are applied
-      setTimeout(() => {
-        isLoadingProject.current = false
-      }, 500)
-    }
-  }, [preferences?.global?.advancedMultiBlockPanels, projectId])
-
-  // Sync panels when blocks change
-  useEffect(() => {
-    // Skip auto-sync if we're loading a project with saved panel configuration
-    if (isLoadingProject.current) {
-      return
-    }
-
-    const allPanelBlocks = panels.flatMap(p => p.blockIds)
-    const missingBlocks = blocks.filter(b => !allPanelBlocks.includes(b))
-    const removedBlocks = allPanelBlocks.filter(b => !blocks.includes(b))
-
-    if (missingBlocks.length > 0 || removedBlocks.length > 0) {
-      setPanels(prev => {
-        let updated = prev.map(p => ({
-          ...p,
-          blockIds: p.blockIds.filter(b => blocks.includes(b))
-        })).filter(p => p.blockIds.length > 0)
-
-        if (missingBlocks.length > 0 && updated.length > 0) {
-          updated[0] = {
-            ...updated[0]!,
-            blockIds: [...updated[0]!.blockIds, ...missingBlocks]
-          }
-        }
-
-        if (updated.length === 0 && blocks.length > 0) {
-          updated = [{ id: 'panel-1', blockIds: blocks, defaultSize: 100 }]
-        }
-
-        return updated
-      })
-    }
-  }, [blocks])
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
@@ -222,13 +195,6 @@ export function AdvancedMultiBlockPreview({
     } else {
       panelRef.collapse()
     }
-  }
-
-  const handleCollapsedTabClick = (panelId: string, blockId: string) => {
-    const panelRef = panelRefs.current[panelId]
-    if (!panelRef) return
-
-    panelRef.expand()
   }
 
   if (maximizedBlock) {
@@ -328,38 +294,17 @@ export function AdvancedMultiBlockPreview({
                   minSize={10}
                   collapsible={true}
                   collapsedSize={3}
-                  onCollapse={() => {
-                    setCollapsedPanels(prev => new Set(prev).add(panel.id))
-                  }}
-                  onExpand={() => {
-                    setCollapsedPanels(prev => {
-                      const next = new Set(prev)
-                      next.delete(panel.id)
-                      return next
-                    })
-                  }}
+                  onCollapse={() => onPanelCollapse(panel.id)}
+                  onExpand={() => onPanelExpand(panel.id)}
                 >
                   {isCollapsed ? (
-                    <div className="w-12 bg-gray-100 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col h-full">
-                      <div className="flex-1 overflow-y-auto py-2">
-                        {panel.blockIds.map(blockId => (
-                          <button
-                            key={blockId}
-                            onClick={() => handleCollapsedTabClick(panel.id, blockId)}
-                            className="w-full px-2 py-3 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors writing-mode-vertical transform rotate-180"
-                            style={{ writingMode: 'vertical-rl' }}
-                          >
-                            Block {parseInt(blockId.slice(1))}
-                          </button>
-                        ))}
-                      </div>
-                      <button
-                        onClick={() => handleToggleCollapsePanel(panel.id)}
-                        className="w-full p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border-t border-gray-200 dark:border-gray-700"
-                      >
-                        {isFirstPanel ? <ChevronRight className="h-4 w-4 mx-auto" /> : <ChevronLeft className="h-4 w-4 mx-auto" />}
-                      </button>
-                    </div>
+                    <CollapsedPanel
+                      panelId={panel.id}
+                      blockIds={panel.blockIds}
+                      isFirstPanel={isFirstPanel}
+                      onTabClick={handleCollapsedTabClick}
+                      onToggleCollapse={handleToggleCollapsePanel}
+                    />
                   ) : (
                     <PreviewPanelContent
                       panel={panel}
@@ -517,16 +462,7 @@ function PreviewPanelContent({
   }, [panel.blockIds, activeTab])
 
   if (panel.blockIds.length === 0) {
-    return (
-      <div 
-        ref={setNodeRef}
-        className={`flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50 dark:bg-gray-900 border border-dashed border-gray-300 dark:border-gray-700 transition-colors ${
-          isOver ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''
-        }`}
-      >
-        <p className="text-sm text-gray-500 dark:text-gray-400">Empty Panel</p>
-      </div>
-    )
+    return <EmptyPanel panelId={panel.id} isOver={isOver} showAddButton={false} />
   }
 
   return (
