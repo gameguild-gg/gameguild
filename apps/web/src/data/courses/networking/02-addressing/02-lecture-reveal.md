@@ -2,7 +2,18 @@
 
 ---
 
-## Why This Matters for Networked Games
+## Why This Matters for Networked Applications
+
+Every packet your application, service, or game sends needs a destination.
+
+- Configure servers and services correctly
+- Debug connectivity issues
+- Design scalable network architectures
+- Understand NAT traversal and address translation
+
+---
+
+## Why This Matters for Game Programmers (GPR)
 
 Every packet your game sends needs a destination.
 
@@ -10,6 +21,17 @@ Every packet your game sends needs a destination.
 - Debug "can't connect" issues
 - Design network architectures that scale
 - Understand NAT traversal
+
+---
+
+## Why This Matters for Computer Scientists (CSI)
+
+Every distributed system, cloud service, or client/server app relies on addressing.
+
+- Build robust distributed systems
+- Debug network failures in any environment
+- Design secure, scalable architectures
+- Understand how the Internet routes data
 
 ---
 
@@ -41,21 +63,23 @@ uint32_t ip = (192 << 24) | (168 << 16) | (1 << 8) | 100;
 
 ## Special IPv4 Addresses
 
-| Address           | Purpose                         |
-| ----------------- | ------------------------------- |
-| `127.0.0.1`       | Localhost (this machine)        |
-| `0.0.0.0`         | "Any" address (server bind)     |
-| `255.255.255.255` | Broadcast                       |
-| `192.168.x.x`     | Private LAN (your home network) |
-| `10.x.x.x`        | Private LAN (corporate/cloud)   |
+| Address           | Purpose                                |
+| ----------------- | -------------------------------------- |
+| `127.0.0.1`       | Localhost (this machine)               |
+| `0.0.0.0`         | "Any" address (bind to all interfaces) |
+| `255.255.255.255` | Broadcast                              |
+| `192.168.x.x`     | Private LAN (home/office)              |
+| `10.x.x.x`        | Private LAN (corporate/cloud)          |
 
 ---
 
 ## Key Insight
 
-> Most of your testing happens on `127.0.0.1`
->
 > Your server binds to `0.0.0.0` to accept connections on any interface
+
+> Most local testing happens on `127.0.0.1`
+>
+> Servers and services often bind to `0.0.0.0` to accept connections on any interface
 
 ---
 
@@ -102,13 +126,13 @@ bool is_v6 = addr6.is_v6();  // true
 
 ---
 
-## Game Dev Reality
+## Industry Reality
 
-Most games still use IPv4.
+Most applications and games still use IPv4.
 
-Xbox Live and PlayStation Network handle IPv6 internally.
+Large platforms (cloud, gaming, enterprise) may handle IPv6 internally.
 
-You'll encounter IPv6 in cloud deployments.
+You'll encounter IPv6 in modern deployments and infrastructure.
 
 ---
 
@@ -258,10 +282,10 @@ Set all host bits to 1:
 
 **Problem:** Humans remember names. Computers use numbers.
 
-**Solution:** Domain Name System
+**Solution:** Domain Name System (DNS)
 
 ```
-game.example.com → 203.0.113.50
+service.example.com → 203.0.113.50
 ```
 
 ---
@@ -285,19 +309,19 @@ Each step is cached.
 
 **TTL (Time To Live)** controls how long.
 
-Game servers typically cache DNS resolutions to reduce latency.
+Backend services and game servers typically cache DNS resolutions to reduce latency.
 
 ---
 
 ## DNS Record Types
 
-| Type  | Purpose               | Example                           |
-| ----- | --------------------- | --------------------------------- |
-| A     | IPv4 address          | `game.example.com → 203.0.113.50` |
-| AAAA  | IPv6 address          | `game.example.com → 2001:db8::1`  |
-| CNAME | Alias to another name | `www → game.example.com`          |
-| MX    | Mail server           | `example.com → mail.example.com`  |
-| NS    | Nameserver for domain | `example.com → ns1.example.com`   |
+| Type  | Purpose               | Example                              |
+| ----- | --------------------- | ------------------------------------ |
+| A     | IPv4 address          | `service.example.com → 203.0.113.50` |
+| AAAA  | IPv6 address          | `service.example.com → 2001:db8::1`  |
+| CNAME | Alias to another name | `www → service.example.com`          |
+| MX    | Mail server           | `example.com → mail.example.com`     |
+| NS    | Nameserver for domain | `example.com → ns1.example.com`      |
 
 ---
 
@@ -310,7 +334,7 @@ using boost::asio::ip::tcp;
 boost::asio::io_context io;
 tcp::resolver resolver(io);
 
-auto endpoints = resolver.resolve("game.example.com", "7777");
+auto endpoints = resolver.resolve("service.example.com", "7777");
 
 for (const auto& ep : endpoints) {
     std::cout << ep.endpoint().address() << std::endl;
@@ -333,7 +357,7 @@ for (const auto& ep : endpoints) {
 
 ## How Packets Travel
 
-**The question:** How does a packet get from your game client to a server across the world?
+**The question:** How does a packet get from your client, device, or application to a server across the world?
 
 **The answer:** Hop by hop, using routing tables.
 
@@ -342,7 +366,7 @@ for (const auto& ep : endpoints) {
 ## Packet Path
 
 ```
-Your PC → Home Router → ISP Router → ... → Data Center → Game Server
+Your PC → Home Router → ISP Router → ... → Data Center → Application Server
 ```
 
 ---
@@ -402,7 +426,7 @@ traceroute google.com
 tracert google.com
 ```
 
-**Game dev use:** Diagnosing high latency.
+Uses: Diagnosing high latency.
 
 ---
 
@@ -476,13 +500,13 @@ A **packet analyzer** that captures and inspects network traffic in real-time.
 
 ## Essential Display Filters
 
-| Filter                        | Shows                     |
-| ----------------------------- | ------------------------- |
-| `ip.addr == 192.168.1.100`    | Traffic to/from this IP   |
-| `tcp.port == 7777`            | Traffic on your game port |
-| `udp`                         | All UDP traffic           |
-| `dns`                         | DNS queries and responses |
-| `tcp.analysis.retransmission` | Retransmitted packets     |
+| Filter                        | Shows                                 |
+| ----------------------------- | ------------------------------------- |
+| `ip.addr == 192.168.1.100`    | Traffic to/from this IP               |
+| `tcp.port == 7777`            | Traffic on your application/game port |
+| `udp`                         | All UDP traffic                       |
+| `dns`                         | DNS queries and responses             |
+| `tcp.analysis.retransmission` | Retransmitted packets                 |
 
 ---
 
@@ -517,4 +541,4 @@ Right-click a TCP packet → **Follow → TCP Stream**
 
 Shows the entire conversation as readable text.
 
-**Game dev use:** Debug your custom protocol.
+Use case: Debug your custom protocol.
