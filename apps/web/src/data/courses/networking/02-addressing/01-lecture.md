@@ -626,11 +626,3 @@ Output:
 ```
 
 **Hint:** Use bitwise operations. The mask is `0xFFFFFFFF << (32 - prefix)`.
-
----
-
-## Next Week Preview
-
-**Week 03:** Transport Layer - UDP vs TCP
-
-We'll implement actual socket communication. Your IP Calculator prepares you to understand the addressing that underlies every `connect()` and `bind()` call.
