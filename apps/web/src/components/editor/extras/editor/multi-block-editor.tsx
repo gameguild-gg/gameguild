@@ -429,7 +429,7 @@ export function AdvancedMultiBlockEditor({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex flex-col h-full border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+        <div className="flex flex-col h-full bg-white dark:bg-gray-900">
         <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -549,7 +549,7 @@ export function AdvancedMultiBlockEditor({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+      <div className="flex flex-col h-full bg-white dark:bg-gray-900">
         <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -887,8 +887,8 @@ function DraggablePanelContent({
         </>
       ) : panelDirection === "vertical" ? (
         <>
-          {/* Vertical layout - blocks stacked */}
-          <div className="flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          {/* Vertical layout - blocks stacked - painel tem barra de rolagem única */}
+          <div className="shrink-0 flex items-center justify-between p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
               {panel.blockIds.length} Blocks (Stacked)
             </span>
@@ -975,7 +975,8 @@ function DraggablePanelContent({
         </>
       ) : (
         <>
-          <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2">
+          {/* Horizontal layout (tabs) - tabs fixas, cada block com barra própria */}
+          <div className="shrink-0 flex items-center justify-between border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-2">
             <SortableContext items={panel.blockIds} strategy={horizontalListSortingStrategy}>
               <div className="flex items-center gap-1 overflow-x-auto flex-1 py-2">
                 {panel.blockIds.map(blockId => (

@@ -42,20 +42,22 @@ export function EditorLayoutType2({
 }: EditorLayoutType2Props) {
   // Always use AdvancedMultiBlockEditor, even for 1 block
   return (
-    <AdvancedMultiBlockEditor
-      blockRefs={blockRefs}
-      blockStates={blockStates}
-      onBlockChange={onBlockChange}
-      onBlockAdd={onBlockAdd}
-      onBlockRemove={onBlockRemove}
-      onLoadingChange={onLoadingChange}
-      projectId={projectId}
-      mode={mode}
-      currentProjectType={currentProjectType}
-      storageAdapter={storageAdapter}
-      preferences={preferences}
-      onPreferencesChange={onPreferencesChange}
-      currentProjectId={currentProjectId}
-    />
+    <div className="h-[calc(100vh-12rem)] border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+      <AdvancedMultiBlockEditor
+        blockRefs={blockRefs}
+        blockStates={blockStates}
+        onBlockChange={onBlockChange}
+        onBlockAdd={onBlockAdd}
+        onBlockRemove={onBlockRemove}
+        onLoadingChange={onLoadingChange}
+        projectId={projectId}
+        mode={mode}
+        currentProjectType={currentProjectType}
+        storageAdapter={storageAdapter}
+        preferences={preferences}
+        onPreferencesChange={onPreferencesChange}
+        currentProjectId={currentProjectId}
+      />
+    </div>
   )
 }
