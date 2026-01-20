@@ -41,6 +41,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { DeleteConfirmDialog } from "../dialogs/delete-confirm-dialog"
+import { RestrictionsConfigDialog } from "./restrictions-config-dialog"
 
 interface AdvancedMultiBlockEditorProps {
   blockRefs: React.MutableRefObject<Record<string, LexicalEditor | null>>
@@ -98,6 +99,19 @@ export function AdvancedMultiBlockEditor({
     ]
   })
 
+  // Update panels when preferences change (e.g., when project is loaded)
+  useEffect(() => {
+    const saved = preferences?.global?.advancedMultiBlockPanels
+    if (saved && saved.length > 0) {
+      // Only update if different to avoid unnecessary re-renders
+      const currentPanelsJson = JSON.stringify(panels)
+      const savedPanelsJson = JSON.stringify(saved)
+      if (currentPanelsJson !== savedPanelsJson) {
+        setPanels(saved)
+      }
+    }
+  }, [preferences?.global?.advancedMultiBlockPanels, currentProjectId])
+
   const [activeId, setActiveId] = useState<string | null>(null)
   const [maximizedBlock, setMaximizedBlock] = useState<string | null>(null)
   const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(new Set())
@@ -135,8 +149,25 @@ export function AdvancedMultiBlockEditor({
   })
 
   const [pendingBlockPanel, setPendingBlockPanel] = useState<string | null>(null)
+  const isLoadingProject = useRef(false)
+
+  // Track when preferences change to prevent auto-sync during project load
+  useEffect(() => {
+    if (preferences?.global?.advancedMultiBlockPanels) {
+      isLoadingProject.current = true
+      // Reset flag after panels are applied
+      setTimeout(() => {
+        isLoadingProject.current = false
+      }, 500)
+    }
+  }, [currentProjectId])
 
   useEffect(() => {
+    // Skip auto-sync if we're loading a project with saved panel configuration
+    if (isLoadingProject.current) {
+      return
+    }
+
     const allPanelBlocks = panels.flatMap(p => p.blockIds)
     const missingBlocks = blocks.filter(b => !allPanelBlocks.includes(b))
     const removedBlocks = allPanelBlocks.filter(b => !blocks.includes(b))
@@ -283,7 +314,14 @@ export function AdvancedMultiBlockEditor({
   }
 
   const handleCreatePanel = () => {
-    const newPanelId = `panel-${Date.now()}`
+    // Find highest panel number and increment
+    const panelNumbers = panels.map(p => {
+      const match = p.id.match(/^panel-(\d+)$/)
+      return match && match[1] ? parseInt(match[1], 10) : 0
+    })
+    const maxNumber = panelNumbers.length > 0 ? Math.max(...panelNumbers) : 0
+    const newPanelId = `panel-${maxNumber + 1}`
+    
     const newPanels = [
       ...panels,
       { id: newPanelId, blockIds: [], defaultSize: 30 }
@@ -368,6 +406,19 @@ export function AdvancedMultiBlockEditor({
       description: `Layout set to ${newWidth}`,
       duration: 2000,
     })
+  }
+
+  const handleRestrictionsChange = (newRestrictions: any) => {
+    if (!onPreferencesChange || !preferences) return
+    
+    const updatedPreferences: ProjectPreferences = {
+      ...preferences,
+      global: {
+        ...preferences.global,
+        restrictions: newRestrictions,
+      },
+    }
+    onPreferencesChange(updatedPreferences)
   }
 
   const handleToggleCollapsePanel = (panelId: string) => {
@@ -466,6 +517,12 @@ export function AdvancedMultiBlockEditor({
             </Button>
           </div>
           <div className="flex items-center gap-2">
+            <RestrictionsConfigDialog
+              currentRestrictions={preferences?.global?.restrictions}
+              onRestrictionsChange={handleRestrictionsChange}
+              availableBlocks={blocks}
+              availablePanels={panels.map(p => p.id)}
+            />
             <Button
               size="sm"
               variant="outline"
@@ -510,6 +567,7 @@ export function AdvancedMultiBlockEditor({
               isFirstPanel={false}
               activeId={activeId}
               onTogglePanelDirection={handleTogglePanelDirection}
+              customRestrictions={preferences?.global?.restrictions}
             />
           </div>
         </div>
@@ -560,6 +618,12 @@ export function AdvancedMultiBlockEditor({
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <RestrictionsConfigDialog
+              currentRestrictions={preferences?.global?.restrictions}
+              onRestrictionsChange={handleRestrictionsChange}
+              availableBlocks={blocks}
+              availablePanels={panels.map(p => p.id)}
+            />
             <Button
               size="sm"
               variant="outline"
@@ -642,6 +706,7 @@ export function AdvancedMultiBlockEditor({
                         isFirstPanel={isFirstPanel}
                         activeId={activeId}
                         onTogglePanelDirection={handleTogglePanelDirection}
+                        customRestrictions={preferences?.global?.restrictions}
                       />
                     )}
                   </Panel>
@@ -709,6 +774,7 @@ interface DraggablePanelContentProps {
   isFirstPanel?: boolean
   activeId: string | null
   onTogglePanelDirection: (panelId: string) => void
+  customRestrictions?: any
 }
 
 function DraggablePanelContent({
@@ -732,6 +798,7 @@ function DraggablePanelContent({
   isFirstPanel,
   activeId,
   onTogglePanelDirection,
+  customRestrictions,
 }: DraggablePanelContentProps) {
   const [activeTab, setActiveTab] = useState(panel.blockIds[0] || "")
   const panelDirection = panel.direction || "horizontal"
@@ -882,6 +949,8 @@ function DraggablePanelContent({
               blockId={panel.blockIds[0]!}
               currentProjectType={currentProjectType}
               storageAdapter={storageAdapter}
+              panelId={panel.id}
+              customRestrictions={customRestrictions}
             />
           </div>
         </>
@@ -965,6 +1034,8 @@ function DraggablePanelContent({
                     blockId={blockId}
                     currentProjectType={currentProjectType}
                     storageAdapter={storageAdapter}
+                    panelId={panel.id}
+                    customRestrictions={customRestrictions}
                   />
                 </div>
               </div>
@@ -1062,6 +1133,8 @@ function DraggablePanelContent({
                 blockId={blockId}
                 currentProjectType={currentProjectType}
                 storageAdapter={storageAdapter}
+                panelId={panel.id}
+                customRestrictions={customRestrictions}
               />
             </div>
           ))}

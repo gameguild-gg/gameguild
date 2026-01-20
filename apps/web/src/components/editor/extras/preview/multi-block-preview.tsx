@@ -68,10 +68,24 @@ export function AdvancedMultiBlockPreview({
     ]
   })
 
+  // Update panels when preferences change (e.g., when project is loaded)
+  useEffect(() => {
+    const saved = preferences?.global?.advancedMultiBlockPanels
+    if (saved && saved.length > 0) {
+      // Only update if different to avoid unnecessary re-renders
+      const currentPanelsJson = JSON.stringify(panels)
+      const savedPanelsJson = JSON.stringify(saved)
+      if (currentPanelsJson !== savedPanelsJson) {
+        setPanels(saved)
+      }
+    }
+  }, [preferences?.global?.advancedMultiBlockPanels, projectId])
+
   const [maximizedBlock, setMaximizedBlock] = useState<string | null>(null)
   const [collapsedPanels, setCollapsedPanels] = useState<Set<string>>(new Set())
   const [activeId, setActiveId] = useState<string | null>(null)
   const panelRefs = useRef<Record<string, ImperativePanelHandle | null>>({})
+  const isLoadingProject = useRef(false)
 
   // Check if we're in single panel mode
   const isSinglePanelMode = panels.length === 1
@@ -87,8 +101,24 @@ export function AdvancedMultiBlockPreview({
     })
   )
 
+  // Track when preferences change to prevent auto-sync during project load
+  useEffect(() => {
+    if (preferences?.global?.advancedMultiBlockPanels) {
+      isLoadingProject.current = true
+      // Reset flag after panels are applied
+      setTimeout(() => {
+        isLoadingProject.current = false
+      }, 500)
+    }
+  }, [preferences?.global?.advancedMultiBlockPanels, projectId])
+
   // Sync panels when blocks change
   useEffect(() => {
+    // Skip auto-sync if we're loading a project with saved panel configuration
+    if (isLoadingProject.current) {
+      return
+    }
+
     const allPanelBlocks = panels.flatMap(p => p.blockIds)
     const missingBlocks = blocks.filter(b => !allPanelBlocks.includes(b))
     const removedBlocks = allPanelBlocks.filter(b => !blocks.includes(b))
