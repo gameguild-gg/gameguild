@@ -11,6 +11,7 @@ import week01Assignment from './01-introduction/07-assignment-01.md';
 import databasesSyllabus from './syllabus.md';
 
 // Week 02 imports
+import week02Lecture from './02-sql-fundamentals/00-lecture.md';
 import week02Readings from './02-sql-fundamentals/00-readings-02.md';
 import week02DDL from './02-sql-fundamentals/01-data-definition-language.md';
 import week02DML from './02-sql-fundamentals/02-data-manipulation-language.md';
@@ -276,23 +277,47 @@ export const week01AssignmentContent: ProgramContent = {
 };
 
 // Week 02: SQL Fundamentals - Parent content
+export const week02LectureContent: ProgramContent = {
+    id: 'databases-week-02-lecture',
+    programId: 'databases-program-1',
+    slug: 'sql-fundamentals-lecture',
+    parentId: undefined,
+    title: 'SQL Fundamentals Lecture',
+    description: 'Reveal.js lecture covering DDL, DML, DQL, constraints, idempotency, and DBML',
+    type: ProgramContentType.REVEAL,
+    body: week02Lecture,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Week 02: SQL Fundamentals - Readings
 export const week02ReadingsContent: ProgramContent = {
     id: 'databases-week-02-readings',
     programId: 'databases-program-1',
     slug: 'sql-fundamentals',
-    parentId: undefined,
+    parentId: 'databases-week-02-lecture',
     title: 'SQL Fundamentals',
     description: 'Learn DDL, DML, DQL, constraints, idempotency, and DBML',
     type: 0, // Page
     body: week02Readings,
-    sortOrder: 3,
+    sortOrder: 4,
     isRequired: true,
     gradingMethod: 0, // None
     maxPoints: null,
     estimatedMinutes: 40,
     visibility: 1, // Published
     program: databasesProgram,
-    parent: undefined,
+    parent: week02LectureContent,
     children: [],
     contentInteractions: [],
     createdAt: '2023-01-01T00:00:00Z',
@@ -560,7 +585,7 @@ export const week02QuizConstraintsContent: ProgramContent = {
 databasesProgram.programContents = [
     databasesSyllabusContent,
     week01IntroContent,
-    week02ReadingsContent,
+    week02LectureContent,
 ];
 
 // Set up parent-child relationships
@@ -573,15 +598,15 @@ week01IntroContent.children = [
     week01AssignmentContent,
 ];
 
-week02ReadingsContent.children = [
+
+week02LectureContent.children = [
     week02DDLContent,
     week02DMLContent,
     week02DQLContent,
     week02ConstraintsContent,
     week02IdempotencyContent,
     week02DBMLContent,
-    week02QuizzesContent,
-];
+    week02QuizzesContent,];
 
 week02QuizzesContent.children = [
     week02QuizIdempotencyContent,
