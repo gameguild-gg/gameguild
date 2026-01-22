@@ -101,7 +101,7 @@
 !!! quiz
 {
 "title": "Audit Trail INSERT SELECT - DML",
-"question": "Given this SQL statement:\n\nINSERT INTO audit_trail (action, table_name, record_id, old_value, new_value, changed_by, changed_at)\nSELECT 'UPDATE', 'products', p.id, p.price::TEXT, (p.price \* 1.10)::TEXT, 'system_batch', NOW()\nFROM products p\nWHERE p.category = 'electronics';\n\nWhat does this statement do?",
+"question": "Given this SQL statement:\n\nINSERT INTO audit_trail (action, table_name, record_id, old_value, new_value, changed_by, changed_at)\nSELECT 'UPDATE', 'products', p.id, p.price::TEXT, (p.price * 1.10)::TEXT, 'system_batch', NOW()\nFROM products p\nWHERE p.category = 'electronics';\n\nWhat does this statement do?",
 "options": [
 "Updates all electronics products to increase their price by 10%",
 "Logs planned price changes for electronics products to an audit table without modifying the products",
