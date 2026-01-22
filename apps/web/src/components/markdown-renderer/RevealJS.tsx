@@ -12,6 +12,21 @@ interface RevealJSProps {
   height?: string;
 }
 
+// Helper function to get slide number from URL hash
+const getSlideFromHash = (): number | null => {
+  if (typeof window === 'undefined') return null;
+  const hash = window.location.hash.slice(1); // Remove the '#'
+  const slideNum = parseInt(hash, 10);
+  return !isNaN(slideNum) && slideNum >= 0 ? slideNum : null;
+};
+
+// Helper function to update URL hash without triggering navigation
+const updateHashWithSlide = (slideIndex: number): void => {
+  if (typeof window === 'undefined') return;
+  const newUrl = `${window.location.pathname}${window.location.search}#${slideIndex}`;
+  window.history.replaceState(null, '', newUrl);
+};
+
 // Helper function to render all mermaid diagrams in a container
 const renderMermaidDiagrams = async (container: HTMLElement): Promise<void> => {
   try {
@@ -169,12 +184,23 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
         await revealInstance.initialize();
         revealInstanceRef.current = revealInstance;
 
+        // Add event listener to update URL hash when slide changes
+        revealInstance.on('slidechanged', (event: { indexh: number; indexv: number }) => {
+          // Use horizontal index (indexh) as the slide number
+          // For vertical slides, could use format like "3/1" but keeping simple for now
+          updateHashWithSlide(event.indexh);
+        });
+
         // Force layout after initialization to ensure proper sizing
         setTimeout(() => {
           if (revealInstanceRef.current) {
             revealInstanceRef.current.layout();
-            // Ensure we're on the first slide
-            revealInstanceRef.current.slide(0);
+            // Navigate to slide from URL hash, or first slide if no hash
+            const initialSlide = getSlideFromHash();
+            revealInstanceRef.current.slide(initialSlide ?? 0);
+            // Update hash to reflect current slide (in case hash was invalid)
+            const currentSlide = revealInstanceRef.current.getIndices().h;
+            updateHashWithSlide(currentSlide);
             // Force sync to make sure markdown is rendered
             revealInstanceRef.current.sync();
           }
@@ -223,9 +249,24 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
       }
     };
 
+    // Handle browser back/forward navigation with hash changes
+    const handleHashChange = (): void => {
+      const slideNum = getSlideFromHash();
+      if (slideNum !== null && revealInstanceRef.current) {
+        const currentSlide = revealInstanceRef.current.getIndices().h;
+        if (currentSlide !== slideNum) {
+          revealInstanceRef.current.slide(slideNum);
+        }
+      }
+    };
+
     loadRevealJS();
 
+    // Listen for hash changes (browser back/forward)
+    window.addEventListener('hashchange', handleHashChange);
+
     return () => {
+      window.removeEventListener('hashchange', handleHashChange);
       if (revealInstanceRef.current) {
         revealInstanceRef.current.destroy();
         revealInstanceRef.current = null;
