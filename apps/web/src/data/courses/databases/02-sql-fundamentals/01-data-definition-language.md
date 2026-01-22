@@ -6,12 +6,12 @@ DDL (Data Definition Language) is the subset of SQL used to define and manage th
 
 ## Core DDL Statements
 
-| Statement | Purpose |
-|-----------|---------|
-| `CREATE`  | Creates a new database object |
-| `ALTER`   | Modifies an existing object |
-| `DROP`    | Deletes an object |
-| `TRUNCATE`| Removes all data from a table (but keeps structure) |
+| Statement  | Purpose                                             |
+| ---------- | --------------------------------------------------- |
+| `CREATE`   | Creates a new database object                       |
+| `ALTER`    | Modifies an existing object                         |
+| `DROP`     | Deletes an object                                   |
+| `TRUNCATE` | Removes all data from a table (but keeps structure) |
 
 ## CREATE DATABASE
 
@@ -22,6 +22,8 @@ Creates a new database instance.
 ```sql
 CREATE DATABASE ecommerce;
 ```
+
+After creating a database, connect to it before creating schemas/tables.
 
 :::
 
@@ -58,28 +60,28 @@ CREATE TABLE users (
 
 Common PostgreSQL data types:
 
-| Category | Types |
-|----------|-------|
-| Numeric | `INTEGER`, `BIGINT`, `SERIAL`, `DECIMAL`, `NUMERIC`, `FLOAT`, `REAL` |
-| Text | `CHAR(n)`, `VARCHAR(n)`, `TEXT` |
-| Boolean | `BOOLEAN` |
-| Date/Time | `DATE`, `TIME`, `TIMESTAMP`, `INTERVAL` |
-| Binary | `BYTEA` |
-| JSON | `JSON`, `JSONB` |
-| UUID | `UUID` |
+| Category  | Types                                                                |
+| --------- | -------------------------------------------------------------------- |
+| Numeric   | `INTEGER`, `BIGINT`, `SERIAL`, `DECIMAL`, `NUMERIC`, `FLOAT`, `REAL` |
+| Text      | `CHAR(n)`, `VARCHAR(n)`, `TEXT`                                      |
+| Boolean   | `BOOLEAN`                                                            |
+| Date/Time | `DATE`, `TIME`, `TIMESTAMP`, `INTERVAL`                              |
+| Binary    | `BYTEA`                                                              |
+| JSON      | `JSON`, `JSONB`                                                      |
+| UUID      | `UUID`                                                               |
 
 ### Constraints
 
 Constraints enforce rules on data to maintain integrity:
 
-| Constraint | Description |
-|------------|-------------|
-| `PRIMARY KEY` | Uniquely identifies each row |
+| Constraint    | Description                               |
+| ------------- | ----------------------------------------- |
+| `PRIMARY KEY` | Uniquely identifies each row              |
 | `FOREIGN KEY` | References a primary key in another table |
-| `NOT NULL` | Column cannot contain NULL values |
-| `UNIQUE` | All values in column must be different |
-| `CHECK` | Values must satisfy a condition |
-| `DEFAULT` | Sets a default value if none provided |
+| `NOT NULL`    | Column cannot contain NULL values         |
+| `UNIQUE`      | All values in column must be different    |
+| `CHECK`       | Values must satisfy a condition           |
+| `DEFAULT`     | Sets a default value if none provided     |
 
 ::: example "Table with constraints"
 
@@ -100,12 +102,12 @@ CREATE TABLE products (
 
 Different strategies for primary key generation:
 
-| Type | Description | Pros | Cons |
-|------|-------------|------|------|
-| `SERIAL` | Auto-incrementing integer | Simple, compact | Predictable, not distributed-friendly |
-| `BIGSERIAL` | Auto-incrementing big integer | Larger range | Same as SERIAL |
-| `UUID` | Universally unique identifier | Globally unique, distributed-friendly | Larger storage, less readable |
-| `IDENTITY` | SQL standard auto-increment | Standard compliant | PostgreSQL 10+ only |
+| Type        | Description                   | Pros                                  | Cons                                  |
+| ----------- | ----------------------------- | ------------------------------------- | ------------------------------------- |
+| `SERIAL`    | Auto-incrementing integer     | Simple, compact                       | Predictable, not distributed-friendly |
+| `BIGSERIAL` | Auto-incrementing big integer | Larger range                          | Same as SERIAL                        |
+| `UUID`      | Universally unique identifier | Globally unique, distributed-friendly | Larger storage, less readable         |
+| `IDENTITY`  | SQL standard auto-increment   | Standard compliant                    | PostgreSQL 10+ only                   |
 
 ::: example "Different ID strategies"
 
@@ -224,12 +226,14 @@ DROP TABLE IF EXISTS users;              -- ✅ Safe
 ## Practice
 
 Try creating a schema for an e-commerce system with these tables:
+
 - `customers` (id, name, email, created_at)
 - `products` (id, name, description, price, stock)
 - `orders` (id, customer_id, order_date, status)
 - `order_items` (id, order_id, product_id, quantity, unit_price)
 
 Think about:
+
 - Which ID strategy to use?
 - What constraints are needed?
 - What are the relationships between tables?

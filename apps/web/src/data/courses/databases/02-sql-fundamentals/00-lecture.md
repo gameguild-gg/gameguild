@@ -76,6 +76,8 @@ CREATE DATABASE ecommerce;
 CREATE SCHEMA inventory;
 ```
 
+After creating a database, connect to it before creating schemas/tables.
+
 ---
 
 ## CREATE TABLE
