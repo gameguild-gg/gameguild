@@ -23,6 +23,7 @@
 | A   | GDC 2006 - [Three States and a Plan: The AI of F.E.A.R.](https://www.gdcvault.com/play/1013282/Three-States-and-a-Plan) (Jeff Orkin)       | 45 min | GOAP vs BT trade-offs, action planning, tactical behaviors |
 | B   | GDC 2018 - [Beyond Killzone: Creating New AI for Horizon Zero Dawn](https://www.gdcvault.com/play/1025010/Beyond-Killzone-Creating-New-AI) | 60 min | Scaling BTs for 25+ character types, open-world AI         |
 | C   | GDC 2016 - [AI Behavior Editing and Debugging in The Division](https://www.gdcvault.com/play/1023382/AI-Behavior-Editing-and-Debugging)    | 30 min | Production BT debugging, Snowdrop engine tools             |
+| D   | AI and Games - [Behavior Trees: The Cornerstone of Modern Game AI](https://www.youtube.com/watch?v=6VBCXvfNlCM)                            | 10 min | BT fundamentals, real-world examples                       |
 
 ## Documentation & Tutorials
 

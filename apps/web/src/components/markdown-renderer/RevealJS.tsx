@@ -12,6 +12,69 @@ interface RevealJSProps {
   height?: string;
 }
 
+// Helper function to render all mermaid diagrams in a container
+const renderMermaidDiagrams = async (container: HTMLElement): Promise<void> => {
+  try {
+    const mermaid = (await import('mermaid')).default;
+
+    // Initialize mermaid with default config
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      securityLevel: 'loose',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+      },
+    });
+
+    // Find all code blocks with mermaid language class
+    // Markdown ```mermaid blocks get rendered as <code class="language-mermaid"> or <code class="mermaid">
+    const mermaidBlocks = container.querySelectorAll(
+      'code.language-mermaid, code.mermaid, pre.language-mermaid > code, pre.mermaid > code'
+    );
+
+    for (let i = 0; i < mermaidBlocks.length; i++) {
+      const block = mermaidBlocks[i];
+      if (!block) continue;
+
+      const code = block.textContent ?? '';
+
+      if (!code.trim()) continue;
+
+      try {
+        // Generate unique ID for this diagram
+        const id = `mermaid-diagram-${Date.now()}-${i}`;
+
+        // Render the mermaid diagram
+        const { svg } = await mermaid.render(id, code.trim());
+
+        // Create a container for the rendered SVG
+        const svgContainer = document.createElement('div');
+        svgContainer.className = 'mermaid-rendered';
+        svgContainer.innerHTML = svg;
+
+        // Style the container to center the diagram
+        svgContainer.style.display = 'flex';
+        svgContainer.style.justifyContent = 'center';
+        svgContainer.style.alignItems = 'center';
+        svgContainer.style.width = '100%';
+
+
+        // Replace the code block's parent (pre) or the block itself
+        const parent = block.closest('pre') ?? block.parentElement;
+        if (parent?.parentElement) {
+          parent.parentElement.replaceChild(svgContainer, parent);
+        }
+      } catch (renderError) {
+        console.warn('Failed to render mermaid diagram:', renderError);
+      }
+    }
+  } catch (err) {
+    console.warn('Mermaid not available:', err);
+  }
+};
+
 const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const slidesRef = useRef<HTMLDivElement>(null);
@@ -59,9 +122,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
         const highlightModule = await import(
           'reveal.js/plugin/highlight/highlight.esm.js'
         );
-        const mathModule = await import(
-          'reveal.js/plugin/math/math.esm.js'
-        );
+        const mathModule = await import('reveal.js/plugin/math/math.esm.js');
 
         Reveal = revealModule.default;
         Markdown = markdownModule.default;
@@ -119,12 +180,23 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
           }
         }, 100);
 
+        // Render mermaid diagrams after markdown is processed
+        setTimeout(async () => {
+          if (containerRef.current) {
+            await renderMermaidDiagrams(containerRef.current);
+            // Re-layout after mermaid renders
+            if (revealInstanceRef.current) {
+              revealInstanceRef.current.layout();
+            }
+          }
+        }, 200);
+
         // Additional sync after a longer delay to handle any late rendering
         setTimeout(() => {
           if (revealInstanceRef.current) {
             revealInstanceRef.current.layout();
           }
-        }, 300);
+        }, 500);
 
         // Setup ResizeObserver to auto-resize presentation when container changes
         if (containerRef.current) {
@@ -171,6 +243,16 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
         try {
           slidesRef.current.innerHTML = `<section data-markdown><textarea data-template>${content}</textarea></section>`;
           await revealInstanceRef.current.sync();
+
+          // Render mermaid diagrams after content sync
+          setTimeout(async () => {
+            if (containerRef.current) {
+              await renderMermaidDiagrams(containerRef.current);
+              if (revealInstanceRef.current) {
+                revealInstanceRef.current.layout();
+              }
+            }
+          }, 100);
         } catch (err) {
           const errorMessage = err instanceof Error ? err.message : String(err);
           setError(`Error syncing Reveal.js: ${errorMessage}`);
@@ -210,7 +292,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
   };
 
   if (!isClient) {
-    return <div className="reveal-container">Loading presentation...</div>;
+    return <div className="reveal-container flex-1">Loading presentation...</div>;
   }
 
   if (error) {
@@ -220,9 +302,9 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
   return (
     <div
       ref={containerRef}
-      className="reveal-container w-full min-h-[50vh] sm:min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh] overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg"
+      className="reveal-container w-full flex-1 flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg"
     >
-      <div className="reveal w-full min-h-[50vh] sm:min-h-[60vh] md:min-h-[70vh] lg:min-h-[80vh]">
+      <div className="reveal w-full flex-1">
         <div className="slides" ref={slidesRef}></div>
       </div>
       <button
