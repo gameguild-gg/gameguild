@@ -17,7 +17,7 @@ export function CourseContentLayoutClient({ courseSlug, courseTitle, content, ch
     const { isSidebarOpen, mounted } = useSidebar();
 
     return (
-        <div className="flex min-h-screen relative overflow-hidden">
+        <div className="flex h-screen relative overflow-hidden">
             {/* Sidebar */}
             <CourseContentSidebar
                 courseSlug={courseSlug}
@@ -27,7 +27,7 @@ export function CourseContentLayoutClient({ courseSlug, courseTitle, content, ch
 
             {/* Main Content Area */}
             <main className={cn(
-                "flex-1 transition-all duration-300 ease-in-out",
+                "flex-1 flex flex-col transition-all duration-300 ease-in-out",
                 // Start with desktop layout (sidebar open) to prevent layout shift
                 "lg:ml-80",
                 // Only hide margin after mount if sidebar is closed
@@ -39,7 +39,7 @@ export function CourseContentLayoutClient({ courseSlug, courseTitle, content, ch
                 <SidebarToggle />
 
                 {/* Content Container */}
-                <div className="h-full overflow-auto min-w-0">
+                <div className="flex-1 flex flex-col overflow-auto min-w-0">
                     {children}
                 </div>
             </main>
