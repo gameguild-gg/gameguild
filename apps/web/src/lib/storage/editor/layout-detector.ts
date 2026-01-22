@@ -167,26 +167,10 @@ export function createProjectData(projectType: ProjectType, states: Partial<Edit
 }
 
 /**
- * Cria um estado vazio do editor Lexical
+ * Cria um estado vazio no formato cells (basilar)
  */
 function createEmptyEditorState() {
   return {
-    root: {
-      children: [
-        {
-          children: [],
-          direction: null,
-          format: "",
-          indent: 0,
-          type: "paragraph",
-          version: 1,
-        },
-      ],
-      direction: null,
-      format: "",
-      indent: 0,
-      type: "root",
-      version: 1,
-    },
+    cells: []
   }
 }

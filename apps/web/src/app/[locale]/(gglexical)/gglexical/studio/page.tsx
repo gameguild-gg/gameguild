@@ -726,9 +726,11 @@ export default function Page() {
           return
         }
         
-        // Parse and set single panel preview state
+        // Parse cells and convert to Lexical for preview
         const parsed = JSON.parse(editorState)
-        setPreviewState(parsed)
+        const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+        const lexicalState = cellsToLexical(parsed)
+        setPreviewState(lexicalState)
         setPreviewLayout("single")
         setPreviewOpen(true)
       } else {
@@ -742,11 +744,13 @@ export default function Page() {
         }
         
         // Parse all block states dynamically
+        const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
         const parsedStates: Record<string, SerializedEditorState> = {}
         for (const [blockId, state] of Object.entries(blockStates)) {
           if (state) {
             try {
-              parsedStates[blockId] = JSON.parse(state)
+              const cellsData = JSON.parse(state)
+              parsedStates[blockId] = cellsToLexical(cellsData)
             } catch (error) {
               console.error(`Failed to parse block ${blockId}:`, error)
             }
@@ -932,24 +936,28 @@ export default function Page() {
                       setTimeout(() => {
                         try {
                           if (finalLayout === "single" && editorRef.current && states.blocks.b1) {
-                            // Single panel: load single editor from b1
-                            if (!states.blocks.b1.root) {
-                              throw new Error("Invalid Lexical format")
-                            }
-                            const editorState = editorRef.current.parseEditorState(JSON.stringify(states.blocks.b1))
-                            editorRef.current.setEditorState(editorState)
+                            // Single panel: load single editor from b1 (cells format)
+                            // Store cells format directly
                             setEditorState(JSON.stringify(states.blocks.b1))
+                            
+                            // Convert cells to Lexical for UI
+                            const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                            const lexicalState = cellsToLexical(states.blocks.b1)
+                            const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
+                            editorRef.current.setEditorState(editorState)
                           } else if (finalLayout === "multiple" && states.blocks) {
                             // Multi-panel layout: load all blocks
                             // Clear existing blockRefs when loading a new project
                             blockRefs.current = {}
                             
                             const newBlockStates: Record<string, string> = {}
+                            const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                            
                             Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
-                              if (blockState && blockState.root) {
+                              if (blockState) {
                                 // Initialize ref for each block
                                 blockRefs.current[blockId] = null
-                                // Store state for component
+                                // Store state in cells format
                                 newBlockStates[blockId] = JSON.stringify(blockState)
                               }
                             })
@@ -963,7 +971,10 @@ export default function Page() {
                                 const ref = blockRefs.current[blockId]
                                 if (ref) {
                                   try {
-                                    const editorState = ref.parseEditorState(stateString)
+                                    // Convert cells to Lexical for UI
+                                    const cellsData = JSON.parse(stateString)
+                                    const lexicalState = cellsToLexical(cellsData)
+                                    const editorState = ref.parseEditorState(JSON.stringify(lexicalState))
                                     ref.setEditorState(editorState)
                                   } catch (error) {
                                     console.error(`Failed to load state for block ${blockId}:`, error)
