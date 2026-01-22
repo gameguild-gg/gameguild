@@ -17,6 +17,7 @@ import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/l
 import { getLayoutFromType, type ProjectType, type InternalLayout } from "@/lib/storage/editor/project-types"
 import { checkSelectedProject as checkProjectPreview } from "@/components/editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/editor/extras/preview/preview-load-operations"
+import { cellsToLexical } from "@/lib/storage/editor/cell-structure"
 
 
 export default function PreviewPage() {
@@ -167,7 +168,15 @@ export default function PreviewPage() {
     // Layout é derivado diretamente do tipo de projeto
     const finalLayout = getLayoutFromType(currentProject.type)
     
-    const states = extractEditorStates(currentProject.data, currentProject.type)
+    const cellStates = extractEditorStates(currentProject.data, currentProject.type)
+    
+    // Convert cells to Lexical for preview renderers
+    const states = {
+      blocks: Object.entries(cellStates.blocks).reduce((acc, [blockId, cellsData]) => {
+        acc[blockId] = cellsToLexical(cellsData)
+        return acc
+      }, {} as Record<string, any>)
+    }
     
     // Get preview mode from preferences (default to continuous)
     const previewMode = currentProject.preferences?.global?.previewMode || "continuous"

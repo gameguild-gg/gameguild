@@ -63,12 +63,16 @@ export function PreviewRendererSequentialContinuous({
               </div>
             ) : panel.type === "multiple" && panel.blocks && Object.keys(panel.blocks).length >= 1 ? (
               <PreviewRendererType2
-                blockStates={Object.entries(panel.blocks).reduce((acc, [blockId, blockState]) => {
-                  acc[blockId] = typeof blockState === "string"
-                    ? JSON.parse(blockState)
-                    : blockState;
-                  return acc;
-                }, {} as Record<string, any>)}
+                blockStates={(() => {
+                  const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                  return Object.entries(panel.blocks).reduce((acc, [blockId, blockState]) => {
+                    const cellsData = typeof blockState === "string"
+                      ? JSON.parse(blockState)
+                      : blockState;
+                    acc[blockId] = cellsToLexical(cellsData);
+                    return acc;
+                  }, {} as Record<string, any>)
+                })()}
                 projectId={projectId}
                 storageAdapter={storageAdapter}
                 preferences={preferences}

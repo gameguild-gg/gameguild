@@ -103,6 +103,7 @@ import type { LexicalEditor } from "lexical"
 import type React from "react"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
 import { type ProjectType} from "@/lib/storage/editor/project-types"
+import { lexicalToCells, cellsToLexical, type CellularContent } from "@/lib/storage/editor/cell-structure"
 
 // Create and export the EditorLoadingContext
 export const EditorLoadingContext = createContext<boolean>(false)
@@ -359,9 +360,9 @@ interface EditorProps {
   onLoadingChange?: (setLoading: (loading: boolean) => void) => void
   projectId?: string | null
   mode?: ProjectMode
-  blockId?: string  // Block identifier (b1, b2, b3, etc.)
-  panelId?: string  // Panel identifier (panel-1, panel-2, etc.)
-  customRestrictions?: any  // Custom project-specific restrictions
+  blockId?: string
+  panelId?: string
+  customRestrictions?: any
   currentProjectType?: ProjectType
   storageAdapter?: any
   currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
@@ -422,7 +423,21 @@ const MATCHERS: LinkMatcher[] = [
 ]
 
 // Atualizar a função Editor para incluir o EditorRefPlugin:
-export function Editor({ className, initialState, onChange, editorRef, onLoadingChange, projectId, mode, blockId, panelId, customRestrictions, currentProjectType, storageAdapter, currentStorageType }: EditorProps) {
+export function Editor({ 
+  className, 
+  initialState, 
+  onChange, 
+  editorRef, 
+  onLoadingChange, 
+  projectId, 
+  mode, 
+  blockId, 
+  panelId, 
+  customRestrictions, 
+  currentProjectType, 
+  storageAdapter, 
+  currentStorageType
+}: EditorProps) {
   const [isLoadingProject, setIsLoadingProject] = useState(false)
 
   useEffect(() => {
@@ -431,18 +446,32 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
     }
   }, [onLoadingChange])
 
+  // Cells as native format - convert to Lexical only for internal UI
+  const lexicalInitialState = initialState
+    ? (() => {
+        try {
+          const parsed = JSON.parse(initialState)
+          // Always expect cells format
+          return JSON.stringify(cellsToLexical(parsed))
+        } catch {
+          // If parsing fails, create empty cells structure
+          return JSON.stringify(cellsToLexical({ cells: [] }))
+        }
+      })()
+    : JSON.stringify(cellsToLexical({ cells: [] }))
+
   return (
     <LexicalComposer
       initialConfig={{
         ...initialConfig,
-        editorState: initialState || undefined,
+        editorState: lexicalInitialState,
       }}
     >
       <StorageAdapterProvider value={storageAdapter}>
         <ProjectIdProvider value={projectId || null}>
           <EditorLoadingProvider value={isLoadingProject}>
         <div className={cn("rounded-lg border-2 border-gray-300 dark:border-gray-700", className)}>
-          <YouTubeAudioStyle />
+          
           {/*<EditorToolbar />*/}
           <div className="relative">
             <RichTextPlugin
@@ -491,7 +520,8 @@ export function Editor({ className, initialState, onChange, editorRef, onLoading
             <OnChangePlugin
               onChange={(editorState) => {
                 if (onChange) {
-                  onChange(JSON.stringify(editorState.toJSON()))
+                  const cellContent = lexicalToCells(editorState.toJSON())
+                  onChange(JSON.stringify(cellContent))
                 }
               }}
             />

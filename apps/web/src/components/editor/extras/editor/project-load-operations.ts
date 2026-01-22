@@ -145,13 +145,14 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
             try {
               if (finalLayout === "single" && editorRef.current && states.blocks.b1) {
                 // Single panel layout - uses b1
-                if (!states.blocks.b1.root) {
-                  throw new Error("Project data is not in expected Lexical format")
-                }
-                
-                const editorState = editorRef.current.parseEditorState(JSON.stringify(states.blocks.b1))
-                editorRef.current.setEditorState(editorState)
+                // States are in cells format - store them directly
                 setEditorState(JSON.stringify(states.blocks.b1))
+                
+                // Convert cells to Lexical for UI
+                const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                const lexicalState = cellsToLexical(states.blocks.b1)
+                const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
+                editorRef.current.setEditorState(editorState)
                 
               } else if (finalLayout === "multiple" && states.blocks) {
                 // Multi panel layout - load all blocks dynamically
@@ -159,12 +160,13 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
                 blockRefs.current = {}
                 
                 const newBlockStates: Record<string, string> = {}
+                const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
                 
                 Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
-                  if (blockState && blockState.root) {
+                  if (blockState) {
                     // Initialize ref for each block
                     blockRefs.current[blockId] = null
-                    // Store state
+                    // Store state in cells format
                     newBlockStates[blockId] = JSON.stringify(blockState)
                   }
                 })
@@ -178,7 +180,10 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
                     const ref = blockRefs.current[blockId]
                     if (ref) {
                       try {
-                        const editorState = ref.parseEditorState(stateString)
+                        // Convert cells to Lexical for UI
+                        const cellsData = JSON.parse(stateString)
+                        const lexicalState = cellsToLexical(cellsData)
+                        const editorState = ref.parseEditorState(JSON.stringify(lexicalState))
                         ref.setEditorState(editorState)
                       } catch (error) {
                         console.error(`Failed to load state for block ${blockId}:`, error)
