@@ -11,6 +11,7 @@ import ai4games2Week01Readings from "./01-fsm/02-readings.md";
 import ai4games2Week01Quiz from "./01-fsm/03-quiz.md";
 import ai4games2Week01Setup from "./01-fsm/04-setup.md";
 import ai4games2Week01Assignment from "./01-fsm/05-assignment.md";
+import ai4games2Week02Slides from "./02-bt/00-reveal.md";
 import ai4games2Week02Lecture from "./02-bt/01-lecture.md";
 import ai4games2Week02Readings from "./02-bt/02-readings.md";
 import ai4games2Week02Quiz from "./02-bt/03-quiz.md";
@@ -398,6 +399,29 @@ export const ai4games2Week02AssignmentContent: ProgramContent = {
   gradingMethod: 1,
   maxPoints: 10,
   estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week02LectureContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week02SlidesContent: ProgramContent = {
+  id: "ai4games2-week-02-slides",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-02-lecture",
+  title: "Week 2: Slides",
+  slug: "slides",
+  description: "Behavior Trees presentation slides covering industry examples and production patterns",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week02Slides,
+  sortOrder: 4,
+  isRequired: false,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 45,
   visibility: 1,
   program: ai4games2Program,
   parent: ai4games2Week02LectureContent,
@@ -900,6 +924,7 @@ ai4games2Week01LectureContent.children = [
 ];
 ai4games2Week02LectureContent.children = [
   ai4games2Week02ReadingsContent,
+  ai4games2Week02SlidesContent,
   ai4games2Week02QuizContent,
   ai4games2Week02AssignmentContent,
 ];

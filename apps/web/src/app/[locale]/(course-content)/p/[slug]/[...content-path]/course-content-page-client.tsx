@@ -45,14 +45,14 @@ export function CourseContentPageClient({
     const isPresentationMode = isReveal || isMarp || isRemark;
 
     return (
-        <div className="flex-1 flex flex-col min-h-0">
-            <div className={isPresentationMode ? "w-full" : "mx-auto max-w-4xl w-full"}>
+        <div className={isPresentationMode ? "flex-1 flex flex-col h-full" : "flex-1 flex flex-col min-h-0"}>
+            <div className={isPresentationMode ? "w-full h-full flex-1 flex flex-col" : "mx-auto max-w-4xl w-full"}>
                 {/* Content */}
-                <Card className={`transition-all duration-300 py-0 ${isPresentationMode ? 'border-0 shadow-none' : ''}`}>
-                    <CardContent className={isPresentationMode ? "px-0 py-0" : "px-6 py-6"}>
+                <Card className={`transition-all duration-300 py-0 ${isPresentationMode ? 'border-0 shadow-none h-full flex-1 flex flex-col' : ''}`}>
+                    <CardContent className={isPresentationMode ? "px-0 py-0 h-full flex-1 flex flex-col" : "px-6 py-6"}>
                         {/* Content Body */}
                         {content.body !== undefined && content.body !== null && (
-                            <div className={isPresentationMode ? "" : "prose max-w-none"}>
+                            <div className={isPresentationMode ? "h-full flex-1 flex flex-col" : "prose max-w-none"}>
                                 {typeof content.body === 'string' ? (
                                     <MarkdownRenderer content={bodyContent} renderer={renderer} />
                                 ) : (
