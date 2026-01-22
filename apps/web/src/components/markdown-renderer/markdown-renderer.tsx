@@ -2,7 +2,6 @@
 
 import 'katex/dist/katex.min.css';
 import { useTheme } from 'next-themes';
-import NextImage from 'next/image';
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -82,14 +81,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, renderer =
     h5: (props) => <h5 className="text-lg font-semibold mt-2 mb-1 text-foreground" {...props} />,
     h6: (props) => <h6 className="text-base font-semibold mt-2 mb-1 text-foreground" {...props} />,
     p: (props) => <p className="mb-4 text-foreground" {...props} />,
-    img: (props) => (
-      <NextImage
-        className="max-w-full h-auto rounded-lg shadow-sm"
-        width={0}
-        height={0}
-        sizes="100vw"
-        style={{ width: '100%', height: 'auto', maxWidth: '100%' }}
-        {...props}
+    img: ({ node, ...props }) => (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={props.src}
+        alt={props.alt ?? ''}
+        className="rounded-lg shadow-sm"
+        style={{ maxWidth: '100%', height: 'auto', width: 'auto' }}
+        loading="lazy"
       />
     ),
     ul: (props) => <ul className="list-disc pl-5 mb-4 text-foreground" {...props} />,
