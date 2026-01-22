@@ -55,7 +55,7 @@
 
 .markdown-content img {
   max-width: 100% !important;
-  width: 100% !important;
+  width: auto !important;
   height: auto !important;
   display: block !important;
   margin: 1rem auto !important;
