@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { OpenProjectDialogPreview } from "@/components/editor/extras/preview/open-project-dialog-preview"
 import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-adapter"
 import Link from "next/link"
-import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewRendererType1 } from "@/components/editor/extras/preview/preview-renderer-type1"
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
 import { PreviewRendererSequentialContinuous } from "@/components/editor/extras/preview/preview-renderer-sequential-continuous"
@@ -19,11 +18,6 @@ import { getLayoutFromType, type ProjectType, type InternalLayout } from "@/lib/
 import { checkSelectedProject as checkProjectPreview } from "@/components/editor/extras/preview/preview-load-operations"
 import type { ProjectData } from "@/components/editor/extras/preview/preview-load-operations"
 
-interface SerializedEditorState {
-  root: {
-    children: any[]
-  }
-}
 
 export default function PreviewPage() {
   const [currentProject, setCurrentProject] = useState<ProjectData | null>(null)

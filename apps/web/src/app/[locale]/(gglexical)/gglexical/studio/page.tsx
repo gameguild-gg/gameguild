@@ -1,9 +1,8 @@
 "use client"
 
-import { Editor } from "@/components/editor/lexical-editor"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Save, HardDrive, Eye, Blocks, Home, Monitor, Presentation, Plus } from "lucide-react"
+import { Save, Eye, Blocks, Home } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -19,7 +18,6 @@ import { SyncStatusIndicator } from "@/components/editor/extras/editor/sync-stat
 import { EditableProjectTitle } from "@/components/editor/extras/editor/editable-project-title"
 import { ProjectStorageInfo } from "@/components/editor/extras/editor/project-storage-info"
 import { ProjectModeIndicator } from "@/components/editor/extras/editor/project-mode-indicator"
-import { PanelNavigationSidebar } from "@/components/editor/extras/editor/panel-navigation-sidebar"
 import { PreviewModeSelector } from "@/components/editor/extras/editor/preview-mode-selector"
 import { handleTitleEdit as titleEdit, handleTitleSave as titleSave } from "@/components/editor/extras/editor/project-title-operations"
 import { handleSave as saveProject, handleSaveAs as saveAsProject } from "@/components/editor/extras/editor/project-save-operations"
@@ -31,11 +29,10 @@ import { EditorLayoutSequential } from "@/components/editor/extras/editor/editor
 import { EnhancedStorageAdapter, type ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
-import { type ProjectMode, NODE_RESTRICTIONS, PROJECT_MODES } from "@/lib/storage/editor/project-modes"
+import { type ProjectMode } from "@/lib/storage/editor/project-modes"
 import { detectProjectLayout, extractEditorStates, createProjectData } from "@/lib/storage/editor/layout-detector"
 import { getLayoutFromType, type ProjectType, type InternalLayout, PROJECT_TYPES } from "@/lib/storage/editor/project-types"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
-import { assetManager } from "@/lib/storage/assets/asset-manager"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
 import { PreviewRendererSequentialContinuous } from "@/components/editor/extras/preview/preview-renderer-sequential-continuous"
@@ -43,16 +40,8 @@ import { PreviewRendererSequentialSlide } from "@/components/editor/extras/previ
 import type { SerializedEditorState } from "lexical"
 import { 
   type SequentialPanelStructure, 
-  type PanelLayoutType, 
   type PreviewMode,
-  isSequentialStructure,
-  parseSequentialStructure,
   createEmptySequentialStructure,
-  addPanel,
-  removePanel,
-  reorderPanels,
-  updatePanelName,
-  updatePanelState,
   serializeSequentialStructure
 } from "@/lib/storage/editor/panel-structure"
 
