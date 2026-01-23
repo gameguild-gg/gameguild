@@ -6,11 +6,27 @@
 //     GeneralFeedback: string | null; // markdown / gglexical content for general feedback
 // }
 
+// enum QuizAssessmentEntryType {
+//     FillInTheBlank = "FILL_IN_THE_BLANK",
+//     Formula = "FORMULA",
+//     HotSpot = "HOT_SPOT",
+//     Matching = "MATCHING",
+//     MultipleCategorization = "MULTIPLE_CATEGORIZATION",
+//     Essay = "ESSAY",
+//     FileUpload = "FILE_UPLOAD",
+//     SingleChoice = "SINGLE_CHOICE",
+//     MultipleChoice = "MULTIPLE_CHOICE",
+//     NumericEntry = "NUMERIC_ENTRY",
+//     TrueFalse = "TRUE_FALSE",
+//     Ordering = "ORDERING"
+// }
+
 // class QuizAssessmentEntry {
 //     title: string;
 //     stem: string; // markdown / gglexical content for the question stem
 //     points: number;
 //     feedback: StudentFeedbackForQuizEntry | null;
+//     type: QuizAssessmentEntryType;
 // }
 
 
@@ -46,6 +62,7 @@
 
 // class QuizFillInTheBlankEntry extends QuizAssessmentEntry {
 //     filltheblankOptions: QuizFillInTheBlankOption[];
+//     type: QuizAssessmentEntryType;.FillInTheBlank;
 // }
 
 
@@ -64,6 +81,7 @@
 //     variables: QuizFormulaEntryVariable[];
 //     formula: string; // formula to calculate the answer, e.g., (a + b) / c
 //     tolerance: number; // acceptable tolerance for numerical answers
+//     type: QuizAssessmentEntryType.Formula;
 // }
 
 
@@ -94,6 +112,7 @@
 //     pairs: QuizMatchingEntryPair[];
 //     distractors: QuizMatchingEntryPair[]; // extra pairs that are not matched
 //     allowPartialCredit: boolean;
+//     type: QuizAssessmentEntryType.Matching;
 // }
 
 
@@ -108,6 +127,7 @@
 // class QuizMultipleCategorizationEntry extends QuizAssessmentEntry {
 //     pairs: QuizMultipleCategorizationEntryPair[];
 //     distractors: string[];
+//     type: QuizAssessmentEntryType;.MultipleCategorization;
 // }
 
 
@@ -127,8 +147,9 @@
 // }
 
 // class QuizEssayEntry extends QuizAssessmentEntry {
-//     type: QuizEssayEntryType;
+//     size: QuizEssayEntryType;
 //     options: QuizEssayEntryOptions;
+//     type: QuizAssessmentEntryType.Essay;
 // }
 
 // // File upload
@@ -137,6 +158,7 @@
 //     allowedFileTypes: string[]; // e.g., ['pdf', 'docx', 'png']
 //     maxFileSizeMB: number; // maximum file size in megabytes
 //     maxFiles: number; // maximum number of files allowed
+//     type: QuizAssessmentEntryType.FileUpload;
 // }
 
 
@@ -145,6 +167,7 @@
 // class QuizSingleChoiceEntry extends QuizAssessmentEntry {
 //     distractors: string[]; // list of distractors
 //     answer: string; // the correct choice.
+//     type: QuizAssessmentEntryType.SingleChoice;
 // }
 
 // // MULTIPLE CHOICE
@@ -152,6 +175,7 @@
 // class QuizMultipleChoiceEntry extends QuizAssessmentEntry {
 //     distractors: string[]; // list of distractors
 //     answers: string[]; // list of correct choices. 
+//     type: QuizAssessmentEntryType.MultipleChoice;
 // }
 
 // // NUMERIC ENTRY
@@ -165,6 +189,7 @@
 // class QuizNumericEntryBase extends QuizAssessmentEntry {
 //     answer: number; // the correct numeric answer
 //     validationType: QuizNumericEntryValidationType;
+//     type: QuizAssessmentEntryType.NumericEntry;
 // }
 
 // class QuizNumericEntryMargin extends QuizNumericEntryBase {
@@ -191,13 +216,14 @@
 
 // class QuizTrueFalseEntry extends QuizAssessmentEntry {
 //     answer: boolean; // the correct answer (true or false)
-// }
+//     type: QuizAssessmentEntryType.TrueFalse;
 
 // // ORDERING
 
 // class QuizOrderingEntry extends QuizAssessmentEntry {
 //     items: string[]; // ordered list of items (markdown / gglexical content)
 //     allowPartialCredit: boolean; // whether to give partial credit for partially correct ordering
+//     type: QuizAssessmentEntryType.Ordering;
 // }
 
 // // QUIZ ASSESSMENT ROOT
@@ -221,3 +247,28 @@
 
 //     entries: QuizAssessmentEntry[];
 // }
+
+
+// const t: QuizAssessment = {
+//     id: "quiz1",
+//     type: QuizAssessmentType.Graded,
+//     points: 100,
+//     parent: null,
+//     dueDate: null,
+//     availableDate: null,
+//     untilDate: null,
+//     instructions: "Please complete the quiz.",
+//     entries: [
+//         new QuizTrueFalseEntry({
+//             title: "Sample True/False Question",
+//             stem: "The sky is blue.",
+//             points: 10,
+//             answer: true,
+//             feedback: {
+//                 CorrectAnswerFeedback: "Correct! The sky appears blue due to the scattering of sunlight.",
+//                 IncorrectAnswerFeedback: "Incorrect. The sky appears blue due to the scattering of sunlight.",
+//                 GeneralFeedback: "The sky's color is a result of Rayleigh scattering."
+//             }
+//         })
+//     ]
+// };
