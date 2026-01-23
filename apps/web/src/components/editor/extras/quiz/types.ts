@@ -40,7 +40,6 @@ export interface QuizFeedback {
 export interface QuizSettings {
   allowRetry: boolean
   shuffleOptions?: boolean
-  backgroundColor?: "white" | "blue" | "green" | "purple" | "orange" | "gray"
 }
 
 // ============================================================================
@@ -293,7 +292,6 @@ export function isRating(entry: QuizEntry): entry is RatingEntry {
 export function createDefaultSettings(): QuizSettings {
   return {
     allowRetry: true,
-    backgroundColor: "white",
   }
 }
 
