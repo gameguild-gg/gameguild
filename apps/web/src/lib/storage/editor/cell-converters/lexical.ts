@@ -6,14 +6,14 @@
 
 import type { SerializedEditorState, SerializedLexicalNode } from "lexical"
 import type { CellularDocument, Cell, CellularContent } from "../cell-structure"
-import type { TextLexicalMeta, HeadingLexicalMeta, ListLexicalMeta } from "../cell-metadata"
+import type { TextLexicalMeta, HeadingLexicalMeta, ListLexicalMeta } from "./cell-metadata"
 import { 
   createTextMeta, 
   createHeadingMeta, 
   createListMeta, 
   createDecoratorMeta 
-} from "../cell-metadata"
-import { LEXICAL_TO_CELL_TYPE, CELL_TO_LEXICAL_TYPE } from "../cell-data"
+} from "./cell-metadata"
+import { LEXICAL_TO_CELL_TYPE, CELL_TO_LEXICAL_TYPE } from "./cell-data"
 
 // ============================================================================
 // Lexical -> Cellular

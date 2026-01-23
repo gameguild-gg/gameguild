@@ -11,8 +11,8 @@
  */
 
 // Re-export dos tipos componentizados
-export * from "./cell-data"
-export * from "./cell-metadata"
+export * from "./cell-converters/cell-data"
+export * from "./cell-converters/cell-metadata"
 
 // Re-export dos converters (inclui lexicalToCells, cellsToLexical, toCells, fromCells)
 export * from "./cell-converters"
@@ -23,15 +23,15 @@ import type {
   HeadingData,
   QuoteData,
   ListData,
-} from "./cell-data"
+} from "./cell-converters/cell-data"
 import type { 
   LexicalMetadata,
   TextLexicalMeta,
   HeadingLexicalMeta,
   ListLexicalMeta,
   DecoratorLexicalMeta,
-} from "./cell-metadata"
-import { createTextMeta } from "./cell-metadata"
+} from "./cell-converters/cell-metadata"
+import { createTextMeta } from "./cell-converters/cell-metadata"
 
 // ============================================================================
 // Cell Tuple: [Data, Metadata]
