@@ -1,97 +1,119 @@
 /**
- * Simplified Quiz Settings Dialog with React Hook Form
- * Cleaner implementation with proper form management
+ * Quiz Settings Dialog
+ * Full-screen dialog for editing quiz questions
  */
 
 "use client"
 
 import { useState, useEffect } from "react"
 import { useForm, FormProvider } from "react-hook-form"
-import { X, BookOpen, Save, RotateCcw, FileText, Users } from "lucide-react"
+import { X, BookOpen, Save, FileText, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { QuizWrapper } from "@/components/editor/extras/quiz/quiz-wrapper"
-import { QuizDisplay } from "@/components/editor/extras/quiz/quiz-display"
+import { QuizWrapper } from "./quiz-wrapper"
 import { QuizTypeSelector } from "./quiz-type-selector"
+import { QuizRenderer } from "./renderers/quiz-renderer"
+import { QuizFeedback } from "./quiz-feedback"
+import { useQuizAnswers } from "./hooks/use-quiz-answers"
+import {
+  type QuizEntry,
+  QuizEntryType,
+  createEmptyAnswerState,
+} from "./types"
+
+// Editors
+import { SingleChoiceEditor } from "./editors/single-choice-editor"
 import { MultipleChoiceEditor } from "./editors/multiple-choice-editor"
 import { TrueFalseEditor } from "./editors/true-false-editor"
 import { FillBlankEditor } from "./editors/fill-blank-editor"
-import { RatingEditor } from "./editors/rating-editor"
+import { ShortAnswerEditor } from "./editors/short-answer-editor"
+import { EssayEditor } from "./editors/essay-editor"
+import { MatchingEditor } from "./editors/matching-editor"
+import { OrderingEditor } from "./editors/ordering-editor"
 import { CategorizationEditor } from "./editors/categorization-editor"
-import { useQuizAnswers } from "./hooks/use-quiz-answers"
-import type { QuizData } from "../../nodes/quiz-node"
+import { RatingEditor } from "./editors/rating-editor"
 
 interface QuizSettingsDialogProps {
   isOpen: boolean
   onClose: () => void
-  data: QuizData
-  onSave: (data: QuizData) => void
+  entry: QuizEntry
+  onSave: (entry: QuizEntry) => void
 }
 
-export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettingsDialogProps) {
-  const [showTypeSelector, setShowTypeSelector] = useState(!data.question)
+function getEditorComponent(type: QuizEntryType) {
+  switch (type) {
+    case QuizEntryType.SingleChoice:
+      return SingleChoiceEditor
+    case QuizEntryType.MultipleChoice:
+      return MultipleChoiceEditor
+    case QuizEntryType.TrueFalse:
+      return TrueFalseEditor
+    case QuizEntryType.FillInTheBlank:
+      return FillBlankEditor
+    case QuizEntryType.ShortAnswer:
+      return ShortAnswerEditor
+    case QuizEntryType.Essay:
+      return EssayEditor
+    case QuizEntryType.Matching:
+      return MatchingEditor
+    case QuizEntryType.Ordering:
+      return OrderingEditor
+    case QuizEntryType.Categorization:
+      return CategorizationEditor
+    case QuizEntryType.Rating:
+      return RatingEditor
+    default:
+      return null
+  }
+}
 
-  const form = useForm<QuizData>({
-    defaultValues: data,
+function getTypeLabel(type: QuizEntryType): string {
+  const labels: Record<QuizEntryType, string> = {
+    [QuizEntryType.SingleChoice]: "Single Choice",
+    [QuizEntryType.MultipleChoice]: "Multiple Choice",
+    [QuizEntryType.TrueFalse]: "True/False",
+    [QuizEntryType.FillInTheBlank]: "Fill in the Blank",
+    [QuizEntryType.ShortAnswer]: "Short Answer",
+    [QuizEntryType.Essay]: "Essay",
+    [QuizEntryType.Matching]: "Matching",
+    [QuizEntryType.Ordering]: "Ordering",
+    [QuizEntryType.Categorization]: "Categorization",
+    [QuizEntryType.Rating]: "Rating",
+  }
+  return labels[type] || type
+}
+
+export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSettingsDialogProps) {
+  const [showTypeSelector, setShowTypeSelector] = useState(!entry.stem)
+
+  const form = useForm<QuizEntry>({
+    defaultValues: entry,
   })
 
-  const { register, watch, setValue, handleSubmit, reset } = form
-  const questionType = watch("questionType")
-  const question = watch("question")
-  const backgroundColor = watch("backgroundColor")
+  const { watch, setValue, handleSubmit, reset } = form
+  const currentEntry = watch()
+  const stem = watch("stem")
+  const backgroundColor = watch("settings.backgroundColor")
 
   // Quiz answers hook for preview testing
   const {
-    selectedAnswers,
-    setSelectedAnswers,
+    answerState,
+    updateAnswerState,
     showFeedback,
     isCorrect,
     checkAnswers,
     resetQuiz,
-  } = useQuizAnswers({
-    data: {
-      question: question,
-      questionType: questionType,
-      answers: watch("answers") || [],
-      correctFeedback: watch("correctFeedback") || "",
-      incorrectFeedback: watch("incorrectFeedback") || "",
-      allowRetry: watch("allowRetry"),
-      backgroundColor: backgroundColor,
-      fillBlankFields: watch("fillBlankFields"),
-      ratingScale: watch("ratingScale"),
-      correctRating: watch("correctRating"),
-    },
-  })
+  } = useQuizAnswers({ entry: currentEntry })
 
   // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
-      const dataToLoad = { ...data }
-      
-      // For categorization: convert categories back to matchingPairs format
-      if (data.questionType === "categorization" && (data as any).categories) {
-        const categories = (data as any).categories || []
-        dataToLoad.matchingPairs = categories.map((cat: any) => ({
-          id: cat.id,
-          left: cat.name,
-          right: cat.description || "",
-        })) as any
-        
-        // Ensure answers have categoryIds
-        dataToLoad.answers = (data.answers || []).map((answer: any) => ({
-          id: answer.id,
-          text: answer.text,
-          isCorrect: answer.isCorrect,
-          categoryIds: Array.isArray(answer.categoryIds) ? answer.categoryIds : [],
-        })) as any
-      }
-      
-      reset(dataToLoad)
-      setShowTypeSelector(!data.question)
+      reset(entry)
+      setShowTypeSelector(!entry.stem)
       document.body.style.overflow = "hidden"
       document.body.style.pointerEvents = "none"
     }
@@ -99,84 +121,17 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       document.body.style.overflow = ""
       document.body.style.pointerEvents = ""
     }
-  }, [isOpen, data, reset])
+  }, [isOpen, entry, reset])
 
-  const handleTypeSelect = (template: any) => {
-    setValue("questionType", template.type)
-    setValue("question", template.defaultData.questions[0].question)
-
-    if (template.defaultData.questions[0].options) {
-      setValue(
-        "answers",
-        template.defaultData.questions[0].options.map((option: string, index: number) => ({
-          id: (index + 1).toString(),
-          text: option,
-          isCorrect: index === template.defaultData.questions[0].correctAnswer,
-        }))
-      )
-    } else if (template.type === "true-false") {
-      setValue("answers", [
-        { id: "true", text: "True", isCorrect: template.defaultData.questions[0].correctAnswer === true },
-        { id: "false", text: "False", isCorrect: template.defaultData.questions[0].correctAnswer === false },
-      ])
-    } else if (template.type === "categorization") {
-      // For categorization: set categories and answers with their category assignments
-      const categories = template.defaultData.questions[0].categories || []
-      const answers = template.defaultData.questions[0].answers || []
-      
-      // Set categories in matchingPairs field - PRESERVE ORIGINAL IDs
-      setValue(
-        "matchingPairs",
-        categories.map((cat: any) => ({
-          id: cat.id, // Keep original ID!
-          left: cat.name,
-          right: cat.description || "",
-        }))
-      )
-      
-      // Set answers with categoryIds
-      setValue(
-        "answers",
-        answers.map((ans: any) => ({
-          id: ans.id,
-          text: ans.text,
-          isCorrect: false,
-          categoryIds: ans.categoryIds || [],
-        } as any))
-      )
-    }
-
+  const handleTypeSelect = (newEntry: QuizEntry) => {
+    reset(newEntry)
     setShowTypeSelector(false)
   }
 
-  const onSubmit = (formData: QuizData) => {
+  const onSubmit = (formData: QuizEntry) => {
     document.body.style.overflow = ""
     document.body.style.pointerEvents = ""
-    
-    // For categorization, ensure answers have categoryIds preserved
-    if (formData.questionType === "categorization") {
-      const answersWithCategoryIds = formData.answers.map((answer: any) => ({
-        id: answer.id,
-        text: answer.text,
-        isCorrect: answer.isCorrect,
-        categoryIds: Array.isArray(answer.categoryIds) ? answer.categoryIds : [],
-      }))
-      
-      // Also pass categories as a new field
-      const dataToSave = {
-        ...formData,
-        answers: answersWithCategoryIds,
-        categories: (formData.matchingPairs || []).map((cat: any) => ({
-          id: cat.id,
-          name: cat.left,
-          description: cat.right,
-        })),
-      }
-      
-      onSave(dataToSave as any)
-    } else {
-      onSave(formData)
-    }
+    onSave(formData)
     onClose()
   }
 
@@ -188,6 +143,8 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
 
   if (!isOpen) return null
 
+  const EditorComponent = getEditorComponent(currentEntry.type)
+
   return (
     <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
@@ -195,11 +152,11 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
       onClick={handleClose}
     >
       <div
-        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col"
+        className="bg-white dark:bg-gray-900 border dark:border-gray-700 shadow-2xl w-full max-w-7xl h-[90vh] flex flex-col rounded-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-t-lg">
           <div className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Quiz Builder</h2>
@@ -220,14 +177,14 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
               <div className="flex items-center gap-4 p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                    Type: <span className="font-medium text-gray-800 dark:text-gray-200">{questionType}</span>
+                    Type: <span className="font-medium text-gray-800 dark:text-gray-200">{getTypeLabel(currentEntry.type)}</span>
                   </span>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => setShowTypeSelector(true)}
-                    className="border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    className="border-gray-300 dark:border-gray-600"
                   >
                     Change Type
                   </Button>
@@ -251,18 +208,15 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                       <Label className="text-sm font-medium">Question</Label>
                       <Textarea
                         placeholder="Enter your question here..."
-                        {...register("question", { required: true })}
+                        value={stem}
+                        onChange={(e) => setValue("stem", e.target.value)}
                         rows={3}
                         className="resize-none"
                       />
                     </div>
 
-                    {/* Question Type Specific Editors */}
-                    {questionType === "multiple-choice" && <MultipleChoiceEditor />}
-                    {questionType === "true-false" && <TrueFalseEditor />}
-                    {questionType === "fill-blank" && <FillBlankEditor />}
-                    {questionType === "rating" && <RatingEditor />}
-                    {questionType === "categorization" && <CategorizationEditor />}
+                    {/* Question Type Specific Editor */}
+                    {EditorComponent && <EditorComponent />}
 
                     {/* Feedback Messages */}
                     <div className="space-y-4">
@@ -272,7 +226,8 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                           <Label className="text-xs text-gray-600">Correct Answer Feedback</Label>
                           <Input
                             placeholder="Great job! That's correct!"
-                            {...register("correctFeedback")}
+                            value={currentEntry.feedback?.correct || ""}
+                            onChange={(e) => setValue("feedback.correct", e.target.value)}
                             className="mt-1"
                           />
                         </div>
@@ -280,7 +235,8 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                           <Label className="text-xs text-gray-600">Incorrect Answer Feedback</Label>
                           <Input
                             placeholder="Not quite right. Try again!"
-                            {...register("incorrectFeedback")}
+                            value={currentEntry.feedback?.incorrect || ""}
+                            onChange={(e) => setValue("feedback.incorrect", e.target.value)}
                             className="mt-1"
                           />
                         </div>
@@ -294,15 +250,15 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                         <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border">
                           <Label className="text-sm">Allow Retry</Label>
                           <Switch
-                            checked={watch("allowRetry")}
-                            onCheckedChange={(checked) => setValue("allowRetry", checked)}
+                            checked={currentEntry.settings.allowRetry}
+                            onCheckedChange={(checked) => setValue("settings.allowRetry", checked)}
                           />
                         </div>
                         <div>
                           <Label className="text-xs text-gray-600">Background Color</Label>
                           <Select
-                            value={watch("backgroundColor")}
-                            onValueChange={(value) => setValue("backgroundColor", value)}
+                            value={backgroundColor || "white"}
+                            onValueChange={(value) => setValue("settings.backgroundColor", value as any)}
                           >
                             <SelectTrigger className="mt-1">
                               <SelectValue />
@@ -332,35 +288,44 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
                   </div>
                   <div className="flex-1 p-4 overflow-auto bg-white dark:bg-gray-950">
                     <QuizWrapper backgroundColor={backgroundColor}>
-                      {question ? (
-                        <QuizDisplay
-                          data={{
-                            question: question,
-                            questionType: questionType,
-                            answers: watch("answers") || [],
-                            correctFeedback: watch("correctFeedback") || "",
-                            incorrectFeedback: watch("incorrectFeedback") || "",
-                            allowRetry: watch("allowRetry"),
-                            backgroundColor: backgroundColor,
-                            fillBlankFields: watch("fillBlankFields"),
-                            ratingScale: watch("ratingScale"),
-                            correctRating: watch("correctRating"),
-                            // For categorization: pass categories and answers with categoryIds
-                            ...(questionType === "categorization" && {
-                              categories: (watch("matchingPairs") || []).map((cat: any) => ({
-                                id: cat.id,
-                                name: cat.left,
-                                description: cat.right,
-                              })),
-                            }),
-                          }}
-                          selectedAnswers={selectedAnswers}
-                          setSelectedAnswers={setSelectedAnswers}
-                          showFeedback={showFeedback}
-                          isCorrect={isCorrect}
-                          checkAnswers={checkAnswers}
-                          resetQuiz={resetQuiz}
-                        />
+                      {stem ? (
+                        <div className="space-y-4">
+                          {/* Question text - hide for fill-blank */}
+                          {currentEntry.type !== QuizEntryType.FillInTheBlank && (
+                            <div className="text-lg font-medium">{stem}</div>
+                          )}
+
+                          <QuizRenderer
+                            entry={currentEntry}
+                            answerState={answerState}
+                            onAnswerChange={updateAnswerState}
+                            disabled={false}
+                            showFeedback={showFeedback}
+                          />
+
+                          {/* Submit button */}
+                          {!showFeedback && (
+                            <button
+                              type="button"
+                              onClick={checkAnswers}
+                              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                            >
+                              Submit Answer
+                            </button>
+                          )}
+
+                          {/* Feedback */}
+                          {showFeedback && (
+                            <QuizFeedback
+                              isCorrect={isCorrect}
+                              correctFeedback={currentEntry.feedback?.correct || ""}
+                              incorrectFeedback={currentEntry.feedback?.incorrect || ""}
+                              allowRetry={currentEntry.settings.allowRetry}
+                              onRetry={resetQuiz}
+                              showRetryButton={true}
+                            />
+                          )}
+                        </div>
                       ) : (
                         <div className="space-y-4">
                           <div className="text-lg font-medium text-gray-400">Your question will appear here...</div>
@@ -373,12 +338,12 @@ export function QuizSettingsDialog({ isOpen, onClose, data, onSave }: QuizSettin
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900">
+              <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 rounded-b-lg">
                 <div className="flex gap-2 justify-end">
                   <Button type="button" variant="outline" onClick={handleClose}>
                     Cancel
                   </Button>
-                  <Button type="submit" className="flex items-center gap-2" disabled={!question?.trim()}>
+                  <Button type="submit" className="flex items-center gap-2" disabled={!stem?.trim()}>
                     <Save className="h-4 w-4" />
                     Save Quiz
                   </Button>

@@ -1,39 +1,41 @@
+/**
+ * Quiz Display
+ * Renders a complete quiz with question, renderer, submit button, and feedback
+ */
+
 "use client"
 
 import { QuizFeedback } from "./quiz-feedback"
-import { QuizRenderer } from "../../nodes/quiz/renderers/quiz-renderer"
-import type { QuizData } from "../../nodes/quiz-node"
+import { QuizRenderer } from "./renderers/quiz-renderer"
+import { useQuizAnswers } from "./hooks/use-quiz-answers"
+import { type QuizEntry, QuizEntryType } from "./types"
 
 interface QuizDisplayProps {
-  data: QuizData
-  selectedAnswers: string[]
-  setSelectedAnswers: (answers: string[]) => void
-  showFeedback: boolean
-  isCorrect: boolean
-  checkAnswers: () => void
-  resetQuiz?: () => void
+  entry: QuizEntry
 }
 
-export function QuizDisplay({
-  data,
-  selectedAnswers,
-  setSelectedAnswers,
-  showFeedback,
-  isCorrect,
-  checkAnswers,
-  resetQuiz,
-}: QuizDisplayProps) {
+export function QuizDisplay({ entry }: QuizDisplayProps) {
+  const {
+    answerState,
+    updateAnswerState,
+    showFeedback,
+    isCorrect,
+    checkAnswers,
+    resetQuiz,
+  } = useQuizAnswers({ entry })
 
   return (
     <div className="space-y-4">
       {/* Question text - hide for fill-blank as it's rendered inline */}
-      {data.questionType !== "fill-blank" && <div className="text-lg font-medium">{data.question}</div>}
+      {entry.type !== QuizEntryType.FillInTheBlank && (
+        <div className="text-lg font-medium">{entry.stem}</div>
+      )}
 
       {/* Render appropriate question type */}
       <QuizRenderer
-        data={data}
-        selectedAnswers={selectedAnswers}
-        onAnswerChange={setSelectedAnswers}
+        entry={entry}
+        answerState={answerState}
+        onAnswerChange={updateAnswerState}
         disabled={false}
         showFeedback={showFeedback}
       />
@@ -52,11 +54,11 @@ export function QuizDisplay({
       {showFeedback && (
         <QuizFeedback
           isCorrect={isCorrect}
-          correctFeedback={data.correctFeedback || ""}
-          incorrectFeedback={data.incorrectFeedback || ""}
-          allowRetry={data.allowRetry}
+          correctFeedback={entry.feedback?.correct || ""}
+          incorrectFeedback={entry.feedback?.incorrect || ""}
+          allowRetry={entry.settings.allowRetry}
           onRetry={resetQuiz}
-          showRetryButton={data.allowRetry && !!resetQuiz}
+          showRetryButton={entry.settings.allowRetry}
         />
       )}
     </div>

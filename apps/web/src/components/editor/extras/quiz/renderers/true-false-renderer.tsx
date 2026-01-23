@@ -1,26 +1,35 @@
 /**
- * True/False Question Renderer
+ * True/False Renderer
  * Displays a simple true/false question with two buttons
  */
 
+"use client"
+
+import type { TrueFalseEntry, QuizAnswerState } from "../types"
+
 interface TrueFalseRendererProps {
-  question: {
-    question: string
-    correctAnswer: boolean
-  }
-  selectedAnswer?: boolean | null
-  onAnswerSelect: (answer: boolean) => void
+  entry: TrueFalseEntry
+  answerState: QuizAnswerState
+  onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
   showFeedback?: boolean
 }
 
 export function TrueFalseRenderer({
-  question,
-  selectedAnswer,
-  onAnswerSelect,
+  entry,
+  answerState,
+  onAnswerChange,
   disabled = false,
   showFeedback = false,
 }: TrueFalseRendererProps) {
+  const selectedId = answerState.selectedOptionIds[0]
+  const selectedAnswer = selectedId === "true" ? true : selectedId === "false" ? false : null
+
+  const handleSelect = (answer: boolean) => {
+    if (disabled || showFeedback) return
+    onAnswerChange({ selectedOptionIds: [answer ? "true" : "false"] })
+  }
+
   return (
     <div className="space-y-3">
       <button
@@ -34,7 +43,7 @@ export function TrueFalseRenderer({
           }
           ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
         `}
-        onClick={() => !disabled && !showFeedback && onAnswerSelect(true)}
+        onClick={() => handleSelect(true)}
         disabled={disabled || showFeedback}
       >
         <svg
@@ -64,7 +73,7 @@ export function TrueFalseRenderer({
           }
           ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
         `}
-        onClick={() => !disabled && !showFeedback && onAnswerSelect(false)}
+        onClick={() => handleSelect(false)}
         disabled={disabled || showFeedback}
       >
         <svg
