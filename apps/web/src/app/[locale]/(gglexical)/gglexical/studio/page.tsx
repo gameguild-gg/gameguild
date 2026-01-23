@@ -1067,8 +1067,8 @@ export default function Page() {
               storageAdapter={storageAdapter}
               availableTags={availableTags}
               onProjectCreate={(projectData) => {
-                const emptyState =
-                  {"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1}],"direction":null,"format":"","indent":0,"type":"root","version":1}}
+                // Create empty cells structure (basilar format)
+                const emptyCells = { cells: [] }
                 
                 // Project data já vem com layout definido - usar tipo para determinar layout
                 // Se não tiver data, criar estrutura baseada no tipo de projeto
@@ -1107,10 +1107,10 @@ export default function Page() {
                   }, 200)
                 } else if (layoutType === "multiple") {
                   // Multiple panel
-                  dataString = createProjectData(projectData.type, { blocks: { b1: emptyState } })
+                  dataString = createProjectData(projectData.type, { blocks: { b1: emptyCells } })
                 } else {
                   // Single panel (default)
-                  dataString = createProjectData(projectData.type, { blocks: { b1: emptyState } })
+                  dataString = createProjectData(projectData.type, { blocks: { b1: emptyCells } })
                 }
                 
                 // Set the layout and project type from the project data
@@ -1123,16 +1123,23 @@ export default function Page() {
                 
                 // Wait for layout to render, then initialize editors
                 setTimeout(() => {
-                  const emptyStateString = JSON.stringify(emptyState)
+                  // Convert cells to Lexical for editor initialization
+                  const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+                  const lexicalState = cellsToLexical(emptyCells)
+                  const lexicalStateString = JSON.stringify(lexicalState)
+                  
                   if (layoutType === "single") {
+                    // Store cells format in state
+                    setEditorState(JSON.stringify(emptyCells))
+                    // Initialize editor with Lexical format
                     if (editorRef.current) {
-                      editorRef.current.setEditorState(editorRef.current.parseEditorState(emptyStateString))
+                      editorRef.current.setEditorState(editorRef.current.parseEditorState(lexicalStateString))
                     }
-                    setEditorState(emptyStateString)
                   } else if (layoutType === "multiple") {
                     // multiple panel - initialize blocks (starts with b1, extensible to b2, b3...)
+                    // Store cells format in state
                     const newBlockStates: Record<string, string> = {
-                      b1: emptyStateString,
+                      b1: JSON.stringify(emptyCells),
                     }
                     setBlockStates(newBlockStates)
                   }
@@ -1195,27 +1202,11 @@ export default function Page() {
                   const nextNum = Math.max(...blockNumbers, 0) + 1
                   const newBlockId = `b${nextNum}`
                   
-                  // Create empty state
-                  const emptyState = JSON.stringify({
-                    root: {
-                      children: [{
-                        children: [],
-                        direction: null,
-                        format: "",
-                        indent: 0,
-                        type: "paragraph",
-                        version: 1
-                      }],
-                      direction: null,
-                      format: "",
-                      indent: 0,
-                      type: "root",
-                      version: 1
-                    }
-                  })
+                  // Create empty cells structure (basilar format)
+                  const emptyCells = JSON.stringify({ cells: [] })
                   
                   // Add new block
-                  setBlockStates(prev => ({ ...prev, [newBlockId]: emptyState }))
+                  setBlockStates(prev => ({ ...prev, [newBlockId]: emptyCells }))
                   
                   // Initialize ref
                   blockRefs.current[newBlockId] = null
