@@ -170,7 +170,5 @@ export function createProjectData(projectType: ProjectType, states: Partial<Edit
  * Cria um estado vazio no formato cells (basilar)
  */
 function createEmptyEditorState() {
-  return {
-    cells: []
-  }
+  return []
 }

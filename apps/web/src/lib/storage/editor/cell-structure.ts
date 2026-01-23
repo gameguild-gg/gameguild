@@ -48,13 +48,19 @@ export type CellType =
   | "project"
 
 interface BaseCell {
-  id: string
   type: CellType
 }
 
 export interface TextCell extends BaseCell {
   type: "text" | "heading" | "paragraph" | "quote" | "list"
   content: SerializedLexicalNode[]
+  // Optional properties for specific node types
+  tag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" // for heading
+  listType?: "number" | "bullet" | "check" // for list
+  start?: number // for numbered lists
+  direction?: "ltr" | "rtl" | null
+  format?: string | number
+  indent?: number
 }
 
 export interface QuizCell extends BaseCell {
@@ -180,86 +186,112 @@ export type Cell =
   | TableCell
   | ProjectCell
 
-export interface CellularContent {
-  cells: Cell[]
-}
+// Type alias for the cellular content - just an array of cells
+export type CellularContent = Cell[]
 
 export function lexicalToCells(editorState: SerializedEditorState): CellularContent {
   const cells: Cell[] = []
-  let cellId = 0
 
   function processNode(node: SerializedLexicalNode) {
-    const id = `cell-${cellId++}`
-
     switch (node.type) {
       case "quiz":
-        cells.push({ id, type: "quiz", data: (node as any).data })
+        cells.push({ type: "quiz", data: (node as any).data })
         break
       case "code-studio":
-        cells.push({ id, type: "code-studio", data: (node as any).data })
+        cells.push({ type: "code-studio", data: (node as any).data })
         break
       case "image":
-        cells.push({ id, type: "image", data: (node as any).data })
+        cells.push({ type: "image", data: (node as any).data })
         break
       case "video":
-        cells.push({ id, type: "video", data: (node as any).data })
+        cells.push({ type: "video", data: (node as any).data })
         break
       case "audio":
-        cells.push({ id, type: "audio", data: (node as any).data })
+        cells.push({ type: "audio", data: (node as any).data })
         break
       case "gallery":
-        cells.push({ id, type: "gallery", data: (node as any).data })
+        cells.push({ type: "gallery", data: (node as any).data })
         break
       case "youtube":
-        cells.push({ id, type: "youtube", data: (node as any).data })
+        cells.push({ type: "youtube", data: (node as any).data })
         break
       case "spotify":
-        cells.push({ id, type: "spotify", data: (node as any).data })
+        cells.push({ type: "spotify", data: (node as any).data })
         break
       case "mermaid":
-        cells.push({ id, type: "mermaid", data: (node as any).data })
+        cells.push({ type: "mermaid", data: (node as any).data })
         break
       case "vega-lite":
-        cells.push({ id, type: "vega-lite", data: (node as any).data })
+        cells.push({ type: "vega-lite", data: (node as any).data })
         break
       case "presentation":
-        cells.push({ id, type: "presentation", data: (node as any).data })
+        cells.push({ type: "presentation", data: (node as any).data })
         break
       case "source":
-        cells.push({ id, type: "source", data: (node as any).data })
+        cells.push({ type: "source", data: (node as any).data })
         break
       case "markdown":
-        cells.push({ id, type: "markdown", data: (node as any).data })
+        cells.push({ type: "markdown", data: (node as any).data })
         break
       case "html":
-        cells.push({ id, type: "html", data: (node as any).data })
+        cells.push({ type: "html", data: (node as any).data })
         break
       case "header":
-        cells.push({ id, type: "header", data: (node as any).data })
+        cells.push({ type: "header", data: (node as any).data })
         break
       case "divider":
-        cells.push({ id, type: "divider", data: (node as any).data })
+        cells.push({ type: "divider", data: (node as any).data })
         break
       case "button":
-        cells.push({ id, type: "button", data: (node as any).data })
+        cells.push({ type: "button", data: (node as any).data })
         break
       case "admonition":
-        cells.push({ id, type: "admonition", data: (node as any).data })
+        cells.push({ type: "admonition", data: (node as any).data })
         break
       case "table":
-        cells.push({ id, type: "table", data: (node as any).data })
+        cells.push({ type: "table", data: (node as any).data })
         break
       case "project":
-        cells.push({ id, type: "project", data: (node as any).data })
+        cells.push({ type: "project", data: (node as any).data })
         break
       case "paragraph":
+        cells.push({ 
+          type: "paragraph", 
+          content: (node as any).children || [],
+          direction: (node as any).direction,
+          format: (node as any).format,
+          indent: (node as any).indent,
+        })
+        break
       case "heading":
+        cells.push({ 
+          type: "heading", 
+          content: (node as any).children || [],
+          tag: (node as any).tag,
+          direction: (node as any).direction,
+          format: (node as any).format,
+          indent: (node as any).indent,
+        })
+        break
       case "quote":
+        cells.push({ 
+          type: "quote", 
+          content: (node as any).children || [],
+          direction: (node as any).direction,
+          format: (node as any).format,
+          indent: (node as any).indent,
+        })
+        break
       case "list":
         cells.push({ 
-          id, 
-          type: node.type as "paragraph" | "heading" | "quote" | "list", 
-          content: (node as any).children || [] 
+          type: "list", 
+          content: (node as any).children || [],
+          listType: (node as any).listType,
+          start: (node as any).start,
+          tag: (node as any).tag,
+          direction: (node as any).direction,
+          format: (node as any).format,
+          indent: (node as any).indent,
         })
         break
       default:
@@ -273,13 +305,13 @@ export function lexicalToCells(editorState: SerializedEditorState): CellularCont
     editorState.root.children.forEach(processNode)
   }
 
-  return { cells }
+  return cells
 }
 
 export function cellsToLexical(content: CellularContent | any): SerializedEditorState {
   
-  // Handle cells format
-  if (!content || !content.cells) {
+  // Handle cells format - should be an array
+  if (!content || !Array.isArray(content)) {
     // Return empty but valid Lexical state
     return {
       root: {
@@ -302,7 +334,7 @@ export function cellsToLexical(content: CellularContent | any): SerializedEditor
   
   const children: SerializedLexicalNode[] = []
 
-  for (const cell of content.cells) {
+  for (const cell of content) {
     switch (cell.type) {
       case "quiz":
         children.push({ type: "quiz", data: cell.data, version: 1 } as any)
@@ -365,12 +397,46 @@ export function cellsToLexical(content: CellularContent | any): SerializedEditor
         children.push({ type: "project", data: cell.data, version: 1 } as any)
         break
       case "paragraph":
+        children.push({
+          type: "paragraph",
+          children: cell.content,
+          direction: cell.direction ?? null,
+          format: cell.format ?? "",
+          indent: cell.indent ?? 0,
+          version: 1,
+        } as any)
+        break
       case "heading":
+        children.push({
+          type: "heading",
+          children: cell.content,
+          tag: cell.tag ?? "h1",
+          direction: cell.direction ?? null,
+          format: cell.format ?? "",
+          indent: cell.indent ?? 0,
+          version: 1,
+        } as any)
+        break
       case "quote":
+        children.push({
+          type: "quote",
+          children: cell.content,
+          direction: cell.direction ?? null,
+          format: cell.format ?? "",
+          indent: cell.indent ?? 0,
+          version: 1,
+        } as any)
+        break
       case "list":
         children.push({
-          type: cell.type,
+          type: cell.listType === "number" ? "number" : "bullet",
           children: cell.content,
+          listType: cell.listType ?? "bullet",
+          start: cell.start ?? 1,
+          tag: cell.tag ?? "ul",
+          direction: cell.direction ?? null,
+          format: cell.format ?? "",
+          indent: cell.indent ?? 0,
           version: 1,
         } as any)
         break
