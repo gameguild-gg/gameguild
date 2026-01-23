@@ -276,7 +276,30 @@ export function lexicalToCells(editorState: SerializedEditorState): CellularCont
   return { cells }
 }
 
-export function cellsToLexical(content: CellularContent): SerializedEditorState {
+export function cellsToLexical(content: CellularContent | any): SerializedEditorState {
+  
+  // Handle cells format
+  if (!content || !content.cells) {
+    // Return empty but valid Lexical state
+    return {
+      root: {
+        type: "root",
+        format: "",
+        indent: 0,
+        version: 1,
+        children: [{
+          type: "paragraph",
+          children: [],
+          direction: null,
+          format: "",
+          indent: 0,
+          version: 1,
+        } as any],
+        direction: "ltr",
+      },
+    }
+  }
+  
   const children: SerializedLexicalNode[] = []
 
   for (const cell of content.cells) {
