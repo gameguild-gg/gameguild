@@ -11,7 +11,6 @@ import { X, BookOpen, Save, FileText, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { QuizWrapper } from "./quiz-wrapper"
@@ -97,7 +96,6 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
   const { watch, setValue, handleSubmit, reset } = form
   const currentEntry = watch()
   const stem = watch("stem")
-  const backgroundColor = watch("settings.backgroundColor")
 
   // Quiz answers hook for preview testing
   const {
@@ -254,25 +252,6 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                             onCheckedChange={(checked) => setValue("settings.allowRetry", checked)}
                           />
                         </div>
-                        <div>
-                          <Label className="text-xs text-gray-600">Background Color</Label>
-                          <Select
-                            value={backgroundColor || "white"}
-                            onValueChange={(value) => setValue("settings.backgroundColor", value as any)}
-                          >
-                            <SelectTrigger className="mt-1">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="white">White</SelectItem>
-                              <SelectItem value="blue">Blue</SelectItem>
-                              <SelectItem value="green">Green</SelectItem>
-                              <SelectItem value="purple">Purple</SelectItem>
-                              <SelectItem value="orange">Orange</SelectItem>
-                              <SelectItem value="gray">Gray</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -287,7 +266,7 @@ export function QuizSettingsDialog({ isOpen, onClose, entry, onSave }: QuizSetti
                     </h3>
                   </div>
                   <div className="flex-1 p-4 overflow-auto bg-white dark:bg-gray-950">
-                    <QuizWrapper backgroundColor={backgroundColor}>
+                    <QuizWrapper>
                       {stem ? (
                         <div className="space-y-4">
                           {/* Question text - hide for fill-blank */}

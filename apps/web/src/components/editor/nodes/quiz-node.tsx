@@ -149,7 +149,7 @@ function QuizComponent({ entry, nodeKey }: QuizComponentProps) {
     <>
       <div className="my-8 relative group">
         <div className="relative">
-          <QuizWrapper backgroundColor={entry.settings.backgroundColor}>
+          <QuizWrapper>
             <QuizDisplay entry={entry} />
           </QuizWrapper>
 
