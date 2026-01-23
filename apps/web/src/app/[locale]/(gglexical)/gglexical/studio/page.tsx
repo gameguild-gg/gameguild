@@ -44,6 +44,7 @@ import {
   createEmptySequentialStructure,
   serializeSequentialStructure
 } from "@/lib/storage/editor/panel-structure"
+import type { CellularContent } from "@/lib/storage/editor/cell-structure"
 
 interface ProjectData {
   id: string
@@ -1068,7 +1069,7 @@ export default function Page() {
               availableTags={availableTags}
               onProjectCreate={(projectData) => {
                 // Create empty cells structure (basilar format)
-                const emptyCells = { cells: [] }
+                const emptyCells: CellularContent = []
                 
                 // Project data já vem com layout definido - usar tipo para determinar layout
                 // Se não tiver data, criar estrutura baseada no tipo de projeto
@@ -1203,7 +1204,7 @@ export default function Page() {
                   const newBlockId = `b${nextNum}`
                   
                   // Create empty cells structure (basilar format)
-                  const emptyCells = JSON.stringify({ cells: [] })
+                  const emptyCells = JSON.stringify([])
                   
                   // Add new block
                   setBlockStates(prev => ({ ...prev, [newBlockId]: emptyCells }))

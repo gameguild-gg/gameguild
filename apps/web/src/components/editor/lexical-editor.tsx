@@ -455,10 +455,10 @@ export function Editor({
           return JSON.stringify(cellsToLexical(parsed))
         } catch {
           // If parsing fails, create empty cells structure
-          return JSON.stringify(cellsToLexical({ cells: [] }))
+          return JSON.stringify(cellsToLexical([]))
         }
       })()
-    : JSON.stringify(cellsToLexical({ cells: [] }))
+    : JSON.stringify(cellsToLexical([]))
 
   return (
     <LexicalComposer
