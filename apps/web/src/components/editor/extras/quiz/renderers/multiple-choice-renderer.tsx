@@ -1,50 +1,65 @@
 /**
- * Multiple Choice Question Renderer
- * Displays multiple choice questions with single or multi-select capability
+ * Multiple Choice Renderer
+ * Displays multiple choice questions with checkbox-style multi-select
  */
 
-import type { QuizAnswer } from "../../quiz-node"
+"use client"
+
+import type { MultipleChoiceEntry, QuizAnswerState } from "../types"
 
 interface MultipleChoiceRendererProps {
-  question: {
-    question: string
-    answers: QuizAnswer[]
-  }
-  selectedAnswers: string[]
-  onAnswerToggle: (answerId: string) => void
+  entry: MultipleChoiceEntry
+  answerState: QuizAnswerState
+  onAnswerChange: (updates: Partial<QuizAnswerState>) => void
   disabled?: boolean
   showFeedback?: boolean
 }
 
 export function MultipleChoiceRenderer({
-  question,
-  selectedAnswers,
-  onAnswerToggle,
+  entry,
+  answerState,
+  onAnswerChange,
   disabled = false,
   showFeedback = false,
 }: MultipleChoiceRendererProps) {
-  const correctAnswers = question.answers.filter((a) => a.isCorrect)
-  const maxSelections = correctAnswers.length
-  const canSelectMore = selectedAnswers.length < maxSelections
+  const selectedIds = answerState.selectedOptionIds
+  const maxSelections = entry.correctOptionIds.length
+  const canSelectMore = selectedIds.length < maxSelections
+
+  const handleToggle = (optionId: string) => {
+    if (disabled || showFeedback) return
+
+    const isSelected = selectedIds.includes(optionId)
+    let newSelection: string[]
+
+    if (isSelected) {
+      newSelection = selectedIds.filter((id) => id !== optionId)
+    } else if (canSelectMore) {
+      newSelection = [...selectedIds, optionId]
+    } else {
+      return
+    }
+
+    onAnswerChange({ selectedOptionIds: newSelection })
+  }
 
   return (
     <div className="space-y-3">
       {maxSelections > 1 && (
         <div className="text-sm text-gray-600 bg-blue-50 border border-blue-200 rounded-lg p-3">
           <span className="font-medium">
-            Select {maxSelections} answer{maxSelections > 1 ? "s" : ""} ({selectedAnswers.length}/{maxSelections}{" "}
-            selected)
+            Select {maxSelections} answer{maxSelections > 1 ? "s" : ""} ({selectedIds.length}/{maxSelections} selected)
           </span>
         </div>
       )}
 
-      {question.answers.map((answer) => {
-        const isSelected = selectedAnswers.includes(answer.id)
-        const canClick = !disabled && (isSelected || canSelectMore)
+      {entry.options.map((option) => {
+        const isSelected = selectedIds.includes(option.id)
+        const canClick = isSelected || canSelectMore
 
         return (
           <button
-            key={answer.id}
+            key={option.id}
             type="button"
             className={`
               relative flex items-center w-full p-4 rounded-lg border-2 transition-all duration-200
@@ -53,7 +68,7 @@ export function MultipleChoiceRenderer({
               ${disabled || showFeedback ? "cursor-not-allowed opacity-75" : "hover:shadow-sm"}
               ${!canClick ? "cursor-not-allowed opacity-50" : ""}
             `}
-            onClick={() => canClick && onAnswerToggle(answer.id)}
+            onClick={() => canClick && handleToggle(option.id)}
             disabled={disabled || showFeedback}
           >
             <div
@@ -72,7 +87,7 @@ export function MultipleChoiceRenderer({
                 </svg>
               )}
             </div>
-            <span className="text-base font-medium text-gray-800">{answer.text}</span>
+            <span className="text-base font-medium text-gray-800">{option.text}</span>
           </button>
         )
       })}
