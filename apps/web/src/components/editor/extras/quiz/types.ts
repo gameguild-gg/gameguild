@@ -104,14 +104,12 @@ export interface FillBlankTextInput {
 
 export interface FillBlankDropdownInput {
   type: FillBlankInputType.Dropdown
-  options: string[]
-  correctOption: string
+  options: string[] // First option is correct, rest are distractors
 }
 
 export interface FillBlankWordBankInput {
   type: FillBlankInputType.WordBank
-  wordBank: string[] // All available words
-  correctWords: string[] // Correct words for this blank
+  words: string[] // First word is correct, rest are distractors
 }
 
 export type FillBlankInput =

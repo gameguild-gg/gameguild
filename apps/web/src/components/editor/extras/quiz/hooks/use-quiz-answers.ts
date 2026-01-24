@@ -78,9 +78,11 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
               )
             }
             case FillBlankInputType.Dropdown:
-              return userAnswer === blank.input.correctOption
+              // First option is the correct answer
+              return userAnswer === blank.input.options[0]
             case FillBlankInputType.WordBank:
-              return blank.input.correctWords.includes(userAnswer)
+              // First word is the correct answer
+              return userAnswer === blank.input.words[0]
             default:
               return false
           }
