@@ -125,7 +125,7 @@ export interface FillBlankField {
 
 export interface FillInTheBlankEntry extends QuizEntryBase {
   type: QuizEntryType.FillInTheBlank
-  // Stem contains ___ markers for blanks
+  // Stem contains ___ or _word_ markers for blanks
   blanks: FillBlankField[]
 }
 

@@ -44,8 +44,8 @@ export function FillBlankRenderer({
   disabled = false,
   showFeedback = false,
 }: FillBlankRendererProps) {
-  // Split stem by blank markers (___)
-  const parts = entry.stem.split("___")
+  // Split stem by blank markers (___ or _word_)
+  const parts = entry.stem.split(/___|\b_[^_]+_\b/)
 
   // Track which word is being dragged (by unique index)
   const [draggedWordIndex, setDraggedWordIndex] = useState<number | null>(null)
