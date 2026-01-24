@@ -64,8 +64,8 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
 
       case QuizEntryType.FillInTheBlank: {
         correct = entry.blanks.every((blank) => {
-          const userAnswer = (answerState.textAnswers[blank.id] || "").trim()
-          if (!userAnswer) return false
+          const rawAnswer = (answerState.textAnswers[blank.id] || "").trim()
+          if (!rawAnswer) return false
 
           switch (blank.input.type) {
             case FillBlankInputType.Text: {
@@ -73,16 +73,18 @@ export function useQuizAnswers({ entry }: UseQuizAnswersProps): UseQuizAnswersRe
               const caseSensitive = textInput.caseSensitive ?? false
               return textInput.acceptedAnswers.some((accepted) =>
                 caseSensitive
-                  ? userAnswer === accepted
-                  : userAnswer.toLowerCase() === accepted.toLowerCase()
+                  ? rawAnswer === accepted
+                  : rawAnswer.toLowerCase() === accepted.toLowerCase()
               )
             }
             case FillBlankInputType.Dropdown:
               // First option is the correct answer
-              return userAnswer === blank.input.options[0]
+              return rawAnswer === blank.input.options[0]
             case FillBlankInputType.WordBank:
+              // Extract just the word part (format is "word|uniqueIndex")
+              const userWord = rawAnswer.includes("|") ? rawAnswer.split("|")[0] : rawAnswer
               // First word is the correct answer
-              return userAnswer === blank.input.words[0]
+              return userWord === blank.input.words[0]
             default:
               return false
           }
