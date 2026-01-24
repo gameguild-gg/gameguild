@@ -2,16 +2,15 @@
  * Cell Data Types
  * 
  * Data contém o conteúdo puro da célula, agnóstico de UI.
- * O `type` fica apenas aqui, não no metadata.
+ * O `type` fica no metadata, não aqui.
  * 
  * Convenção de chaves JSON (minificadas):
- * - t: type
  * - c: content (para text cells)
  * - d: data (para decorator cells)
  */
 
 import type { SerializedLexicalNode } from "lexical"
-import type { QuizData } from "@/components/editor/nodes/quiz-node"
+import type { QuizEntry } from "@/components/editor/extras/quiz"
 import type { CodeStudioData } from "@/components/editor/extras/code-studio/types"
 import type { ImageData } from "@/components/editor/nodes/image-node"
 import type { VideoData } from "@/components/editor/nodes/video-node"
@@ -118,67 +117,55 @@ export const CELL_TO_LEXICAL_TYPE: Record<CellType, string> = {
 }
 
 // ============================================================================
-// Base Cell Data
+// Base Cell Data (sem type - type fica no metadata)
 // ============================================================================
-
-interface BaseCellData<T extends CellType> {
-  /** type */
-  t: T
-}
 
 // ============================================================================
 // Text Cell Data (paragraph, heading, quote, list)
 // ============================================================================
 
-export interface TextCellData<T extends "p" | "h" | "q" | "l"> extends BaseCellData<T> {
+export interface TextCellData {
   /** content: SerializedLexicalNode[] */
   c: SerializedLexicalNode[]
 }
-
-export type ParagraphData = TextCellData<"p">
-export type HeadingData = TextCellData<"h">
-export type QuoteData = TextCellData<"q">
-export type ListData = TextCellData<"l">
 
 // ============================================================================
 // Decorator Cell Data (nodes with custom data)
 // ============================================================================
 
-interface DecoratorCellData<T extends CellType, D> extends BaseCellData<T> {
+export interface DecoratorCellData<D> {
   /** data */
   d: D
 }
 
-export type QuizCellData = DecoratorCellData<"quiz", QuizData>
-export type CodeStudioCellData = DecoratorCellData<"code", CodeStudioData>
-export type ImageCellData = DecoratorCellData<"img", ImageData>
-export type VideoCellData = DecoratorCellData<"vid", VideoData>
-export type AudioCellData = DecoratorCellData<"aud", AudioData>
-export type GalleryCellData = DecoratorCellData<"gal", GalleryData>
-export type YouTubeCellData = DecoratorCellData<"yt", YouTubeData>
-export type SpotifyCellData = DecoratorCellData<"spot", SpotifyData>
-export type MermaidCellData = DecoratorCellData<"mmd", MermaidData>
-export type VegaLiteCellData = DecoratorCellData<"vega", VegaLiteData>
-export type PresentationCellData = DecoratorCellData<"pres", PresentationData>
-export type SourceCellData = DecoratorCellData<"src", SourceData>
-export type MarkdownCellData = DecoratorCellData<"md", MarkdownData>
-export type HTMLCellData = DecoratorCellData<"html", HTMLData>
-export type HeaderCellData = DecoratorCellData<"hdr", HeaderData>
-export type DividerCellData = DecoratorCellData<"div", DividerData>
-export type ButtonCellData = DecoratorCellData<"btn", ButtonData>
-export type AdmonitionCellData = DecoratorCellData<"adm", AdmonitionData>
-export type TableCellData = DecoratorCellData<"tbl", TableData>
-export type ProjectCellData = DecoratorCellData<"proj", ProjectNodeData_Internal>
+export type QuizCellData = DecoratorCellData<QuizEntry>
+export type CodeStudioCellData = DecoratorCellData<CodeStudioData>
+export type ImageCellData = DecoratorCellData<ImageData>
+export type VideoCellData = DecoratorCellData<VideoData>
+export type AudioCellData = DecoratorCellData<AudioData>
+export type GalleryCellData = DecoratorCellData<GalleryData>
+export type YouTubeCellData = DecoratorCellData<YouTubeData>
+export type SpotifyCellData = DecoratorCellData<SpotifyData>
+export type MermaidCellData = DecoratorCellData<MermaidData>
+export type VegaLiteCellData = DecoratorCellData<VegaLiteData>
+export type PresentationCellData = DecoratorCellData<PresentationData>
+export type SourceCellData = DecoratorCellData<SourceData>
+export type MarkdownCellData = DecoratorCellData<MarkdownData>
+export type HTMLCellData = DecoratorCellData<HTMLData>
+export type HeaderCellData = DecoratorCellData<HeaderData>
+export type DividerCellData = DecoratorCellData<DividerData>
+export type ButtonCellData = DecoratorCellData<ButtonData>
+export type AdmonitionCellData = DecoratorCellData<AdmonitionData>
+export type TableCellData = DecoratorCellData<TableData>
+export type ProjectCellData = DecoratorCellData<ProjectNodeData_Internal>
 
 // ============================================================================
 // Union de todos os CellData
 // ============================================================================
 
+/** Union de todos os tipos de data específicos */
 export type CellData = 
-  | ParagraphData
-  | HeadingData
-  | QuoteData
-  | ListData
+  | TextCellData
   | QuizCellData
   | CodeStudioCellData
   | ImageCellData
@@ -200,14 +187,17 @@ export type CellData =
   | TableCellData
   | ProjectCellData
 
+/** Tipo genérico para qualquer data (para uso em funções genéricas) */
+export type AnyCellData = TextCellData | DecoratorCellData<any>
+
 // ============================================================================
 // Type guards
 // ============================================================================
 
-export function isTextCell(data: CellData): data is TextCellData<"p" | "h" | "q" | "l"> {
-  return data.t === "p" || data.t === "h" || data.t === "q" || data.t === "l"
+export function isTextCellData(data: AnyCellData): data is TextCellData {
+  return "c" in data && !("d" in data)
 }
 
-export function isDecoratorCell(data: CellData): data is Exclude<CellData, TextCellData<"p" | "h" | "q" | "l">> {
-  return !isTextCell(data)
+export function isDecoratorCellData(data: AnyCellData): data is DecoratorCellData<any> {
+  return "d" in data
 }

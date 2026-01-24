@@ -4,7 +4,7 @@
  * Modelo celular genérico com separação [data, metadata].
  * Cada célula é uma tupla onde:
  * - índice 0: CellData (conteúdo puro, agnóstico de UI)
- * - índice 1: CellMetadata (propriedades específicas do editor)
+ * - índice 1: CellMetadata (propriedades específicas do editor, incluindo type)
  * 
  * Estrutura do documento:
  * { v: 0, u: "lexical", c: [[data, meta], [data, meta], ...] }
@@ -18,34 +18,34 @@ export * from "./cell-converters/cell-metadata"
 export * from "./cell-converters"
 
 import type { 
-  CellData, 
-  ParagraphData,
-  HeadingData,
-  QuoteData,
-  ListData,
+  CellData,
+  AnyCellData,
+  TextCellData,
+  DecoratorCellData,
 } from "./cell-converters/cell-data"
 import type { 
   LexicalMetadata,
-  TextLexicalMeta,
+  ParagraphLexicalMeta,
+  QuoteLexicalMeta,
   HeadingLexicalMeta,
   ListLexicalMeta,
   DecoratorLexicalMeta,
 } from "./cell-converters/cell-metadata"
-import { createTextMeta } from "./cell-converters/cell-metadata"
+import { createParagraphMeta } from "./cell-converters/cell-metadata"
 
 // ============================================================================
 // Cell Tuple: [Data, Metadata]
 // ============================================================================
 
 /** Tupla genérica: [CellData, Metadata] */
-export type CellTuple<D extends CellData = CellData, M extends LexicalMetadata = LexicalMetadata> = [D, M]
+export type CellTuple<D extends AnyCellData = AnyCellData, M extends LexicalMetadata = LexicalMetadata> = [D, M]
 
 // Tuplas tipadas por tipo de célula
-export type ParagraphTuple = CellTuple<ParagraphData, TextLexicalMeta>
-export type HeadingTuple = CellTuple<HeadingData, HeadingLexicalMeta>
-export type QuoteTuple = CellTuple<QuoteData, TextLexicalMeta>
-export type ListTuple = CellTuple<ListData, ListLexicalMeta>
-export type DecoratorTuple = CellTuple<Exclude<CellData, ParagraphData | HeadingData | QuoteData | ListData>, DecoratorLexicalMeta>
+export type ParagraphTuple = CellTuple<TextCellData, ParagraphLexicalMeta>
+export type HeadingTuple = CellTuple<TextCellData, HeadingLexicalMeta>
+export type QuoteTuple = CellTuple<TextCellData, QuoteLexicalMeta>
+export type ListTuple = CellTuple<TextCellData, ListLexicalMeta>
+export type DecoratorTuple = CellTuple<DecoratorCellData<any>, DecoratorLexicalMeta<any>>
 
 /** Union de todas as tuplas possíveis */
 export type Cell = ParagraphTuple | HeadingTuple | QuoteTuple | ListTuple | DecoratorTuple
@@ -79,8 +79,8 @@ export function createEmptyDocument(origin: UIOrigin = "lexical"): CellularDocum
     v: 0,
     u: origin,
     c: [[
-      { t: "p", c: [] },
-      createTextMeta()
+      { c: [] },
+      createParagraphMeta()
     ]]
   }
 }

@@ -6,14 +6,21 @@
 
 import type { SerializedEditorState, SerializedLexicalNode } from "lexical"
 import type { CellularDocument, Cell, CellularContent } from "../cell-structure"
-import type { TextLexicalMeta, HeadingLexicalMeta, ListLexicalMeta } from "./cell-metadata"
+import type { 
+  ParagraphLexicalMeta, 
+  QuoteLexicalMeta, 
+  HeadingLexicalMeta, 
+  ListLexicalMeta,
+  LexicalMetadata,
+} from "./cell-metadata"
 import { 
-  createTextMeta, 
+  createParagraphMeta,
+  createQuoteMeta,
   createHeadingMeta, 
   createListMeta, 
   createDecoratorMeta 
 } from "./cell-metadata"
-import { LEXICAL_TO_CELL_TYPE, CELL_TO_LEXICAL_TYPE } from "./cell-data"
+import { LEXICAL_TO_CELL_TYPE, CELL_TO_LEXICAL_TYPE, type CellType } from "./cell-data"
 
 // ============================================================================
 // Lexical -> Cellular
@@ -38,33 +45,33 @@ export function lexicalToCells(editorState: SerializedEditorState): CellularDocu
       // Text cells
       case "p":
         cells.push([
-          { t: "p", c: (node as any).children || [] },
-          createTextMeta((node as any).direction, (node as any).format, (node as any).indent)
+          { c: (node as any).children || [] },
+          createParagraphMeta((node as any).direction, (node as any).format, (node as any).indent)
         ])
         break
       case "h":
         cells.push([
-          { t: "h", c: (node as any).children || [] },
+          { c: (node as any).children || [] },
           createHeadingMeta((node as any).tag, (node as any).direction, (node as any).format, (node as any).indent)
         ])
         break
       case "q":
         cells.push([
-          { t: "q", c: (node as any).children || [] },
-          createTextMeta((node as any).direction, (node as any).format, (node as any).indent)
+          { c: (node as any).children || [] },
+          createQuoteMeta((node as any).direction, (node as any).format, (node as any).indent)
         ])
         break
       case "l":
         cells.push([
-          { t: "l", c: (node as any).children || [] },
+          { c: (node as any).children || [] },
           createListMeta((node as any).listType, (node as any).start, (node as any).direction, (node as any).format, (node as any).indent)
         ])
         break
       // Decorator cells - todos seguem o mesmo padrão
       default:
         cells.push([
-          { t: cellType, d: (node as any).data } as any,
-          createDecoratorMeta()
+          { d: (node as any).data } as any,
+          createDecoratorMeta(cellType)
         ])
         break
     }
@@ -130,55 +137,62 @@ export function cellsToLexical(doc: CellularDocument | CellularContent | any): S
 
   for (const tuple of cells) {
     const [data, meta] = tuple
-    const lexicalType = CELL_TO_LEXICAL_TYPE[data.t]
+    const cellType = meta.t as CellType
+    const lexicalType = CELL_TO_LEXICAL_TYPE[cellType]
     
     if (!lexicalType) continue
 
-    switch (data.t) {
+    switch (cellType) {
       // Text cells
-      case "p":
+      case "p": {
+        const m = meta as ParagraphLexicalMeta
         children.push({
           type: "paragraph",
-          children: data.c,
-          direction: (meta as TextLexicalMeta).d,
-          format: (meta as TextLexicalMeta).f,
-          indent: (meta as TextLexicalMeta).i,
-          version: meta.v,
+          children: (data as any).c,
+          direction: m.d,
+          format: m.f,
+          indent: m.i,
+          version: m.v,
         } as any)
         break
-      case "h":
+      }
+      case "h": {
+        const m = meta as HeadingLexicalMeta
         children.push({
           type: "heading",
-          children: data.c,
-          tag: (meta as HeadingLexicalMeta).t,
-          direction: (meta as HeadingLexicalMeta).d,
-          format: (meta as HeadingLexicalMeta).f,
-          indent: (meta as HeadingLexicalMeta).i,
-          version: meta.v,
+          children: (data as any).c,
+          tag: m.tg,
+          direction: m.d,
+          format: m.f,
+          indent: m.i,
+          version: m.v,
         } as any)
         break
-      case "q":
+      }
+      case "q": {
+        const m = meta as QuoteLexicalMeta
         children.push({
           type: "quote",
-          children: data.c,
-          direction: (meta as TextLexicalMeta).d,
-          format: (meta as TextLexicalMeta).f,
-          indent: (meta as TextLexicalMeta).i,
-          version: meta.v,
+          children: (data as any).c,
+          direction: m.d,
+          format: m.f,
+          indent: m.i,
+          version: m.v,
         } as any)
         break
+      }
       case "l": {
-        const listMeta = meta as ListLexicalMeta
+        const m = meta as ListLexicalMeta
         children.push({
-          type: listMeta.lt === "number" ? "number" : "bullet",
-          children: data.c,
-          listType: listMeta.lt,
-          start: listMeta.s,
-          tag: listMeta.t,
-          direction: listMeta.d,
-          format: listMeta.f,
-          indent: listMeta.i,
-          version: meta.v,
+          type: m.lt === "number" ? "number" : "bullet",
+          children: (data as any).c,
+          listType: m.lt,
+          start: m.s,
+          tag: m.tg,
+          direction: m.d,
+          format: m.f,
+          indent: m.i,
+          version: m.v,
         } as any)
         break
       }

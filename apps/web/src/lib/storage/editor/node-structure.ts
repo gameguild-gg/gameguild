@@ -1,5 +1,5 @@
 import type { SerializedEditorState } from "lexical"
-import type { QuizData } from "@/components/editor/nodes/quiz-node"
+import type { QuizEntry } from "@/components/editor/extras/quiz"
 import type { CodeStudioData } from "@/components/editor/extras/code-studio/types"
 import type { ImageData } from "@/components/editor/nodes/image-node"
 import type { VideoData } from "@/components/editor/nodes/video-node"
@@ -55,7 +55,7 @@ export interface LexicalNodeData extends BaseNodeData {
 
 export interface QuizNodeData extends BaseNodeData {
   type: "quiz"
-  data: QuizData
+  data: QuizEntry
 }
 
 export interface CodeStudioNodeData extends BaseNodeData {
