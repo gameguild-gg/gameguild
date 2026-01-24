@@ -47,19 +47,20 @@ export function FillBlankRenderer({
   // Split stem by blank markers (___)
   const parts = entry.stem.split("___")
 
-  // Track which word is being dragged
-  const [draggedWord, setDraggedWord] = useState<string | null>(null)
+  // Track which word is being dragged (by unique index)
+  const [draggedWordIndex, setDraggedWordIndex] = useState<number | null>(null)
 
   // Serialize blanks for dependency tracking (detects deep changes)
   const blanksKey = JSON.stringify(entry.blanks)
 
-  // Collect all words from Word Bank blanks and shuffle them
+  // Collect all words from Word Bank blanks and shuffle them (with unique index)
   const wordBankWords = useMemo(() => {
-    const words: { word: string; blankId: string }[] = []
+    const words: { word: string; blankId: string; uniqueIndex: number }[] = []
+    let idx = 0
     entry.blanks.forEach((blank) => {
       if (blank.input.type === FillBlankInputType.WordBank) {
         blank.input.words.filter(w => w.trim()).forEach((word) => {
-          words.push({ word, blankId: blank.id })
+          words.push({ word, blankId: blank.id, uniqueIndex: idx++ })
         })
       }
     })
@@ -67,13 +68,17 @@ export function FillBlankRenderer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blanksKey])
 
-  // Get used words from answer state
-  const usedWords = useMemo(() => {
-    const used = new Set<string>()
+  // Track which unique indices have been used (stored as "blankId:uniqueIndex")
+  const usedWordIndices = useMemo(() => {
+    const used = new Set<number>()
+    // Parse from textAnswers which stores "word|uniqueIndex"
     entry.blanks.forEach((blank) => {
       if (blank.input.type === FillBlankInputType.WordBank) {
         const answer = answerState.textAnswers[blank.id]
-        if (answer) used.add(answer)
+        if (answer && answer.includes("|")) {
+          const idx = parseInt(answer.split("|")[1] || "", 10)
+          if (!isNaN(idx)) used.add(idx)
+        }
       }
     })
     return used
@@ -81,7 +86,7 @@ export function FillBlankRenderer({
   }, [blanksKey, answerState.textAnswers])
 
   // Available words (not yet used)
-  const availableWords = wordBankWords.filter(({ word }) => !usedWords.has(word))
+  const availableWords = wordBankWords.filter(({ uniqueIndex }) => !usedWordIndices.has(uniqueIndex))
 
   const handleInputChange = useCallback((blankId: string, value: string) => {
     if (disabled || showFeedback) return
@@ -93,22 +98,26 @@ export function FillBlankRenderer({
     })
   }, [disabled, showFeedback, answerState.textAnswers, onAnswerChange])
 
-  const handleDragStart = useCallback((word: string) => {
+  const handleDragStart = useCallback((uniqueIndex: number) => {
     if (disabled || showFeedback) return
-    setDraggedWord(word)
+    setDraggedWordIndex(uniqueIndex)
   }, [disabled, showFeedback])
 
   const handleDragEnd = useCallback(() => {
-    setDraggedWord(null)
+    setDraggedWordIndex(null)
   }, [])
 
   const handleDrop = useCallback((blankId: string) => {
-    if (draggedWord && !disabled && !showFeedback) {
-      // If the blank already has a value, return it to the pool
-      handleInputChange(blankId, draggedWord)
-      setDraggedWord(null)
+    if (draggedWordIndex !== null && !disabled && !showFeedback) {
+      // Find the word by unique index
+      const wordItem = wordBankWords.find(w => w.uniqueIndex === draggedWordIndex)
+      if (wordItem) {
+        // Store as "word|uniqueIndex" to track which specific instance was used
+        handleInputChange(blankId, `${wordItem.word}|${wordItem.uniqueIndex}`)
+      }
+      setDraggedWordIndex(null)
     }
-  }, [draggedWord, disabled, showFeedback, handleInputChange])
+  }, [draggedWordIndex, disabled, showFeedback, handleInputChange, wordBankWords])
 
   const handleRemoveFromBlank = useCallback((blankId: string) => {
     if (disabled || showFeedback) return
@@ -189,7 +198,9 @@ export function FillBlankRenderer({
             title={currentValue ? "Click to remove" : "Drag a word here"}
           >
             {currentValue ? (
-              <span className="text-purple-700 dark:text-purple-300 font-medium">{currentValue}</span>
+              <span className="text-purple-700 dark:text-purple-300 font-medium">
+                {currentValue.includes("|") ? currentValue.split("|")[0] : currentValue}
+              </span>
             ) : (
               <span className="text-gray-400 dark:text-gray-500 text-sm">Drop here</span>
             )}
@@ -220,17 +231,17 @@ export function FillBlankRenderer({
           </p>
           {availableWords.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {availableWords.map(({ word }, index) => (
+              {availableWords.map(({ word, uniqueIndex }) => (
                 <span
-                  key={index}
+                  key={uniqueIndex}
                   draggable={!disabled && !showFeedback}
-                  onDragStart={() => handleDragStart(word)}
+                  onDragStart={() => handleDragStart(uniqueIndex)}
                   onDragEnd={handleDragEnd}
                   className={`px-4 py-2 bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-600 rounded-lg text-gray-700 dark:text-gray-300 shadow-sm transition-all ${
                     !disabled && !showFeedback
                       ? "cursor-grab hover:border-purple-500 hover:shadow-md active:cursor-grabbing"
                       : "opacity-70"
-                  } ${draggedWord === word ? "opacity-50 scale-95" : ""}`}
+                  } ${draggedWordIndex === uniqueIndex ? "opacity-50 scale-95" : ""}`}
                 >
                   {word}
                 </span>
@@ -238,7 +249,7 @@ export function FillBlankRenderer({
             </div>
           ) : (
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
-              {usedWords.size > 0
+              {usedWordIndices.size > 0
                 ? "All words have been placed. Click a filled blank to remove."
                 : "Add words in the configuration to see them here."}
             </p>
