@@ -50,29 +50,114 @@ export function FillBlankEditor() {
 
   const stem = watch("stem")
   const blanks = watch("blanks") || []
-  const blankCount = (stem?.split("___").length || 1) - 1
 
-  // Auto-sync blanks with ___ markers in stem
+  // Parse blanks from stem - supports both ___ and _word_
+  // ___ = empty blank, _word_ = blank with preset correct answer
+  const parsedBlanks = (stem || "").match(/___|\b_[^_]+_\b/g) || []
+  const blankCount = parsedBlanks.length
+
+  // Extract correct answers from _word_ patterns
+  const extractedAnswers = parsedBlanks.map((match) => {
+    if (match === "___") return null
+    // Extract word from _word_ pattern
+    return match.slice(1, -1) // Remove surrounding underscores
+  })
+
+  // Auto-sync blanks with patterns in stem
   useEffect(() => {
     const currentBlanks = getValues("blanks") || []
 
-    if (blankCount > currentBlanks.length) {
-      const newBlanks = [...currentBlanks]
-      for (let i = currentBlanks.length; i < blankCount; i++) {
-        newBlanks.push({
-          id: Math.random().toString(36).substring(7),
-          position: i,
-          input: createDefaultInput(FillBlankInputType.Text),
-        })
+    // Helper to update input with locked answer
+    const updateInputWithLockedAnswer = (input: FillBlankInput, lockedAnswer: string): FillBlankInput => {
+      switch (input.type) {
+        case FillBlankInputType.Text:
+          if (input.acceptedAnswers[0] !== lockedAnswer) {
+            return { ...input, acceptedAnswers: [lockedAnswer, ...input.acceptedAnswers.slice(1)] }
+          }
+          break
+        case FillBlankInputType.Dropdown:
+          if (input.options[0] !== lockedAnswer) {
+            return { ...input, options: [lockedAnswer, ...input.options.slice(1)] }
+          }
+          break
+        case FillBlankInputType.WordBank:
+          if (input.words[0] !== lockedAnswer) {
+            return { ...input, words: [lockedAnswer, ...input.words.slice(1)] }
+          }
+          break
+      }
+      return input
+    }
+
+    if (blankCount !== currentBlanks.length) {
+      const newBlanks = []
+      for (let i = 0; i < blankCount; i++) {
+        const existingBlank = currentBlanks[i]
+        const extractedAnswer = extractedAnswers[i]
+
+        if (existingBlank) {
+          // Update existing blank with extracted answer if available
+          if (extractedAnswer) {
+            const updatedInput = updateInputWithLockedAnswer(existingBlank.input, extractedAnswer)
+            if (updatedInput !== existingBlank.input) {
+              newBlanks.push({
+                ...existingBlank,
+                input: updatedInput,
+              })
+              continue
+            }
+          }
+          newBlanks.push(existingBlank)
+        } else {
+          // Create new blank
+          const defaultInput = createDefaultInput(FillBlankInputType.Text)
+          if (extractedAnswer && defaultInput.type === FillBlankInputType.Text) {
+            defaultInput.acceptedAnswers[0] = extractedAnswer
+          }
+          newBlanks.push({
+            id: Math.random().toString(36).substring(7),
+            position: i,
+            input: defaultInput,
+          })
+        }
       }
       replace(newBlanks)
-    } else if (blankCount < currentBlanks.length && blankCount >= 0) {
-      replace(currentBlanks.slice(0, blankCount))
+    } else {
+      // Check if any extracted answers changed
+      let needsUpdate = false
+      const updatedBlanks = currentBlanks.map((blank, i) => {
+        const extractedAnswer = extractedAnswers[i]
+        if (extractedAnswer) {
+          const updatedInput = updateInputWithLockedAnswer(blank.input, extractedAnswer)
+          if (updatedInput !== blank.input) {
+            needsUpdate = true
+            return { ...blank, input: updatedInput }
+          }
+        }
+        return blank
+      })
+      if (needsUpdate) {
+        replace(updatedBlanks)
+      }
     }
-  }, [blankCount, getValues, replace])
+  }, [blankCount, extractedAnswers.join(","), getValues, replace])
 
   const changeInputType = (blankIndex: number, newType: FillBlankInputType) => {
-    setValue(`blanks.${blankIndex}.input`, createDefaultInput(newType))
+    const lockedAnswer = extractedAnswers[blankIndex]
+    const newInput = createDefaultInput(newType)
+    
+    // If there's a locked answer from source, set it as the first option
+    if (lockedAnswer) {
+      if (newType === FillBlankInputType.Text && newInput.type === FillBlankInputType.Text) {
+        newInput.acceptedAnswers[0] = lockedAnswer
+      } else if (newType === FillBlankInputType.Dropdown && newInput.type === FillBlankInputType.Dropdown) {
+        newInput.options[0] = lockedAnswer
+      } else if (newType === FillBlankInputType.WordBank && newInput.type === FillBlankInputType.WordBank) {
+        newInput.words[0] = lockedAnswer
+      }
+    }
+    
+    setValue(`blanks.${blankIndex}.input`, newInput)
   }
 
   // ============================================================================
@@ -179,9 +264,14 @@ export function FillBlankEditor() {
       <div className="text-sm text-gray-600 dark:text-gray-400 bg-blue-50 dark:bg-blue-950/30 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
         <p className="font-medium mb-2">💡 Tip for Fill-in-the-Blank:</p>
         <p>
-          Use <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">___</code> to create blanks in your question.
+          Use <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">___</code> to create empty blanks.
         </p>
-        <p className="mt-1">Example: &quot;The capital of Brazil is ___ and it is in the state of ___.&quot;</p>
+        <p className="mt-1">
+          Use <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">_answer_</code> to create a blank with a preset correct answer.
+        </p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+          Example: &quot;The _Jupiter_ is the largest planet in our _solar_ system.&quot;
+        </p>
       </div>
 
       <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -199,6 +289,7 @@ export function FillBlankEditor() {
 
       {fields.map((field, blankIndex) => {
         const input = blanks[blankIndex]?.input
+        const lockedAnswer = extractedAnswers[blankIndex] // Derived from stem at runtime
         if (!input) return null
 
         return (
@@ -207,9 +298,16 @@ export function FillBlankEditor() {
             className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-4 bg-gray-50 dark:bg-gray-800/30"
           >
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Blank #{blankIndex + 1}
-              </Label>
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Blank #{blankIndex + 1}
+                </Label>
+                {lockedAnswer && (
+                  <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
+                    🔒 From source
+                  </span>
+                )}
+              </div>
               <Select
                 value={input.type}
                 onValueChange={(value) => changeInputType(blankIndex, value as FillBlankInputType)}
@@ -237,27 +335,40 @@ export function FillBlankEditor() {
                   Accepted Answers (any of these will be correct)
                 </Label>
                 <div className="space-y-2">
-                  {input.acceptedAnswers.map((answer: string, answerIndex: number) => (
-                    <div key={answerIndex} className="flex items-center gap-2">
-                      <Input
-                        placeholder={`Answer ${answerIndex + 1}`}
-                        value={answer}
-                        onChange={(e) => updateTextAnswer(blankIndex, answerIndex, e.target.value)}
-                        className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 flex-1"
-                      />
-                      {input.acceptedAnswers.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeTextAnswer(blankIndex, answerIndex)}
-                          className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 h-9 w-9 shrink-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                  {input.acceptedAnswers.map((answer: string, answerIndex: number) => {
+                    const isLocked = answerIndex === 0 && !!lockedAnswer
+                    return (
+                      <div key={answerIndex} className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            placeholder={answerIndex === 0 ? "✓ Correct answer" : `Alternative ${answerIndex}`}
+                            value={answer}
+                            onChange={(e) => updateTextAnswer(blankIndex, answerIndex, e.target.value)}
+                            disabled={isLocked}
+                            className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${
+                              isLocked ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""
+                            }`}
+                          />
+                          {isLocked && (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 dark:text-gray-400">
+                              🔒 Edit in source
+                            </span>
+                          )}
+                        </div>
+                        {input.acceptedAnswers.length > 1 && !isLocked && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeTextAnswer(blankIndex, answerIndex)}
+                            className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 h-9 w-9 shrink-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
                 <Button
                   type="button"
@@ -279,36 +390,44 @@ export function FillBlankEditor() {
                   Options (first is the correct answer)
                 </Label>
                 <div className="space-y-2">
-                  {input.options.map((option: string, optionIndex: number) => (
-                    <div key={optionIndex} className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <Input
-                          placeholder={optionIndex === 0 ? "✓ Correct answer" : `Distractor ${optionIndex}`}
-                          value={option}
-                          onChange={(e) => updateDropdownOption(blankIndex, optionIndex, e.target.value)}
-                          className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${
-                            optionIndex === 0 ? "border-green-500 dark:border-green-600 ring-1 ring-green-500/20" : ""
-                          }`}
-                        />
-                        {optionIndex === 0 && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 dark:text-green-400 font-medium">
-                            Correct
-                          </span>
+                  {input.options.map((option: string, optionIndex: number) => {
+                    const isLocked = optionIndex === 0 && !!lockedAnswer
+                    return (
+                      <div key={optionIndex} className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            placeholder={optionIndex === 0 ? "✓ Correct answer" : `Distractor ${optionIndex}`}
+                            value={option}
+                            onChange={(e) => updateDropdownOption(blankIndex, optionIndex, e.target.value)}
+                            disabled={isLocked}
+                            className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${
+                              optionIndex === 0 ? "border-green-500 dark:border-green-600 ring-1 ring-green-500/20" : ""
+                            } ${isLocked ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""}`}
+                          />
+                          {isLocked ? (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 dark:text-gray-400">
+                              🔒 Edit in source
+                            </span>
+                          ) : optionIndex === 0 ? (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 dark:text-green-400 font-medium">
+                              Correct
+                            </span>
+                          ) : null}
+                        </div>
+                        {input.options.length > 2 && !isLocked && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeDropdownOption(blankIndex, optionIndex)}
+                            className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 h-9 w-9 shrink-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
-                      {input.options.length > 2 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeDropdownOption(blankIndex, optionIndex)}
-                          className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 h-9 w-9 shrink-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <Button
                   type="button"
@@ -330,36 +449,44 @@ export function FillBlankEditor() {
                   Words (first is the correct answer)
                 </Label>
                 <div className="space-y-2">
-                  {input.words.map((word: string, wordIndex: number) => (
-                    <div key={wordIndex} className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <Input
-                          placeholder={wordIndex === 0 ? "✓ Correct word" : `Distractor ${wordIndex}`}
-                          value={word}
-                          onChange={(e) => updateWordBankWord(blankIndex, wordIndex, e.target.value)}
-                          className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${
-                            wordIndex === 0 ? "border-green-500 dark:border-green-600 ring-1 ring-green-500/20" : ""
-                          }`}
-                        />
-                        {wordIndex === 0 && (
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 dark:text-green-400 font-medium">
-                            Correct
-                          </span>
+                  {input.words.map((word: string, wordIndex: number) => {
+                    const isLocked = wordIndex === 0 && !!lockedAnswer
+                    return (
+                      <div key={wordIndex} className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Input
+                            placeholder={wordIndex === 0 ? "✓ Correct word" : `Distractor ${wordIndex}`}
+                            value={word}
+                            onChange={(e) => updateWordBankWord(blankIndex, wordIndex, e.target.value)}
+                            disabled={isLocked}
+                            className={`bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 ${
+                              wordIndex === 0 ? "border-green-500 dark:border-green-600 ring-1 ring-green-500/20" : ""
+                            } ${isLocked ? "bg-gray-100 dark:bg-gray-700 cursor-not-allowed" : ""}`}
+                          />
+                          {isLocked ? (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 dark:text-gray-400">
+                              🔒 Edit in source
+                            </span>
+                          ) : wordIndex === 0 ? (
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-green-600 dark:text-green-400 font-medium">
+                              Correct
+                            </span>
+                          ) : null}
+                        </div>
+                        {input.words.length > 2 && !isLocked && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeWordBankWord(blankIndex, wordIndex)}
+                            className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 h-9 w-9 shrink-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
-                      {input.words.length > 2 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeWordBankWord(blankIndex, wordIndex)}
-                          className="text-gray-500 hover:text-red-600 dark:text-gray-400 dark:hover:text-red-400 h-9 w-9 shrink-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <Button
                   type="button"
