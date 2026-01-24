@@ -143,18 +143,56 @@ export function FillBlankEditor() {
   }, [blankCount, extractedAnswers.join(","), getValues, replace])
 
   const changeInputType = (blankIndex: number, newType: FillBlankInputType) => {
+    const currentInput = getValues(`blanks.${blankIndex}.input`)
     const lockedAnswer = extractedAnswers[blankIndex]
-    const newInput = createDefaultInput(newType)
     
-    // If there's a locked answer from source, set it as the first option
-    if (lockedAnswer) {
-      if (newType === FillBlankInputType.Text && newInput.type === FillBlankInputType.Text) {
-        newInput.acceptedAnswers[0] = lockedAnswer
-      } else if (newType === FillBlankInputType.Dropdown && newInput.type === FillBlankInputType.Dropdown) {
-        newInput.options[0] = lockedAnswer
-      } else if (newType === FillBlankInputType.WordBank && newInput.type === FillBlankInputType.WordBank) {
-        newInput.words[0] = lockedAnswer
-      }
+    // Extract current values from the existing input
+    let existingValues: string[] = []
+    switch (currentInput.type) {
+      case FillBlankInputType.Text:
+        existingValues = currentInput.acceptedAnswers.filter((v: string) => v.trim() !== "")
+        break
+      case FillBlankInputType.Dropdown:
+        existingValues = currentInput.options.filter((v: string) => v.trim() !== "")
+        break
+      case FillBlankInputType.WordBank:
+        existingValues = currentInput.words.filter((v: string) => v.trim() !== "")
+        break
+    }
+    
+    // Ensure at least one value (locked or empty placeholder)
+    if (existingValues.length === 0) {
+      existingValues = lockedAnswer ? [lockedAnswer] : [""]
+    } else if (lockedAnswer && existingValues[0] !== lockedAnswer) {
+      // Ensure locked answer is first
+      existingValues = [lockedAnswer, ...existingValues.filter(v => v !== lockedAnswer)]
+    }
+    
+    // Create new input with preserved values
+    let newInput: FillBlankInput
+    switch (newType) {
+      case FillBlankInputType.Text:
+        newInput = { 
+          type: FillBlankInputType.Text, 
+          acceptedAnswers: existingValues.length > 0 ? existingValues : [""] 
+        }
+        break
+      case FillBlankInputType.Dropdown:
+        // Dropdown needs at least 2 options
+        const dropdownOptions = existingValues.length >= 2 ? existingValues : [...existingValues, ""]
+        newInput = { 
+          type: FillBlankInputType.Dropdown, 
+          options: dropdownOptions 
+        }
+        break
+      case FillBlankInputType.WordBank:
+        // Word bank needs at least 2 words
+        const wordBankWords = existingValues.length >= 2 ? existingValues : [...existingValues, ""]
+        newInput = { 
+          type: FillBlankInputType.WordBank, 
+          words: wordBankWords 
+        }
+        break
     }
     
     setValue(`blanks.${blankIndex}.input`, newInput)
