@@ -53,7 +53,7 @@ export function FillBlankRenderer({
   // Serialize blanks for dependency tracking (detects deep changes)
   const blanksKey = JSON.stringify(entry.blanks)
 
-  // Collect all words from Word Bank blanks (no shuffle during editing for better UX)
+  // Collect all words from Word Bank blanks and shuffle them
   const wordBankWords = useMemo(() => {
     const words: { word: string; blankId: string }[] = []
     entry.blanks.forEach((blank) => {
@@ -63,7 +63,7 @@ export function FillBlankRenderer({
         })
       }
     })
-    return words
+    return shuffleArray(words)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blanksKey])
 
