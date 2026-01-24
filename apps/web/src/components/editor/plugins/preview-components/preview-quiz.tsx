@@ -10,7 +10,7 @@ export function PreviewQuiz({ node }: { node: SerializedQuizNode }) {
   }
 
   return (
-    <QuizWrapper backgroundColor={node.entry.settings.backgroundColor}>
+    <QuizWrapper>
       <QuizDisplay entry={node.entry} />
     </QuizWrapper>
   )
