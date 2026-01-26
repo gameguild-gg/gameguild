@@ -28,17 +28,17 @@ WHERE category = 'Electronics'
 
 **Truth Table for AND:**
 
-| A | B | A AND B |
-|---|---|---------|
-| TRUE | TRUE | TRUE |
-| TRUE | FALSE | FALSE |
-| FALSE | TRUE | FALSE |
-| FALSE | FALSE | FALSE |
-| TRUE | NULL | NULL |
-| NULL | TRUE | NULL |
-| FALSE | NULL | FALSE |
-| NULL | FALSE | FALSE |
-| NULL | NULL | NULL |
+| A     | B     | A AND B |
+| ----- | ----- | ------- |
+| TRUE  | TRUE  | TRUE    |
+| TRUE  | FALSE | FALSE   |
+| FALSE | TRUE  | FALSE   |
+| FALSE | FALSE | FALSE   |
+| TRUE  | NULL  | NULL    |
+| NULL  | TRUE  | NULL    |
+| FALSE | NULL  | FALSE   |
+| NULL  | FALSE | FALSE   |
+| NULL  | NULL  | NULL    |
 
 ### OR Operator
 
@@ -56,17 +56,17 @@ WHERE discount_percent > 0 OR stock_quantity < 10;
 
 **Truth Table for OR:**
 
-| A | B | A OR B |
-|---|---|--------|
-| TRUE | TRUE | TRUE |
-| TRUE | FALSE | TRUE |
-| FALSE | TRUE | TRUE |
-| FALSE | FALSE | FALSE |
-| TRUE | NULL | TRUE |
-| NULL | TRUE | TRUE |
-| FALSE | NULL | NULL |
-| NULL | FALSE | NULL |
-| NULL | NULL | NULL |
+| A     | B     | A OR B |
+| ----- | ----- | ------ |
+| TRUE  | TRUE  | TRUE   |
+| TRUE  | FALSE | TRUE   |
+| FALSE | TRUE  | TRUE   |
+| FALSE | FALSE | FALSE  |
+| TRUE  | NULL  | TRUE   |
+| NULL  | TRUE  | TRUE   |
+| FALSE | NULL  | NULL   |
+| NULL  | FALSE | NULL   |
+| NULL  | NULL  | NULL   |
 
 ### NOT Operator
 
@@ -88,11 +88,11 @@ WHERE NOT (price > 100 AND category = 'Electronics');
 
 **Truth Table for NOT:**
 
-| A | NOT A |
-|---|-------|
-| TRUE | FALSE |
-| FALSE | TRUE |
-| NULL | NULL |
+| A     | NOT A |
+| ----- | ----- |
+| TRUE  | FALSE |
+| FALSE | TRUE  |
+| NULL  | NULL  |
 
 ### Operator Precedence
 
@@ -117,6 +117,18 @@ WHERE (category = 'Books' OR category = 'Music') AND price < 20;
 ```
 
 ⚠️ **Always use parentheses when mixing AND and OR** to make your intent clear.
+
+### Basic comparison operators (quick refresher)
+
+- Equality/inequality: `=`, `<>` (or `!=`)
+- Comparisons: `<`, `>`, `<=`, `>=`
+- Combine with AND/OR:
+
+```sql
+WHERE price >= 500
+WHERE price BETWEEN 20 AND 100
+WHERE status IN ('pending','confirmed','processing')
+```
 
 ---
 
@@ -152,13 +164,14 @@ WHERE id IN (SELECT DISTINCT user_id FROM orders);
 -- Find products never ordered
 SELECT * FROM products
 WHERE id NOT IN (
-    SELECT DISTINCT product_id 
-    FROM order_items 
+    SELECT DISTINCT product_id
+    FROM order_items
     WHERE product_id IS NOT NULL
 );
 ```
 
 ⚠️ **Warning:** `NOT IN` with NULL values can cause unexpected results:
+
 ```sql
 -- If subquery returns: (1, 2, NULL)
 -- NOT IN (1, 2, NULL) is always NULL (unknown), returning no rows!
@@ -213,10 +226,10 @@ WHERE price NOT BETWEEN 10 AND 50;
 
 ### Wildcards
 
-| Wildcard | Meaning | Example |
-|----------|---------|---------|
-| `%` | Zero or more characters | `'Jo%'` matches "Jo", "John", "Jones" |
-| `_` | Exactly one character | `'J_n'` matches "Jon", "Jan", "Jen" |
+| Wildcard | Meaning                 | Example                               |
+| -------- | ----------------------- | ------------------------------------- |
+| `%`      | Zero or more characters | `'Jo%'` matches "Jo", "John", "Jones" |
+| `_`      | Exactly one character   | `'J_n'` matches "Jon", "Jan", "Jen"   |
 
 ### Examples
 
@@ -305,12 +318,12 @@ SELECT * FROM users WHERE first_name ~* '^(john|jane)$';
 SELECT * FROM users WHERE email !~ '@gmail\.com$';
 ```
 
-| Operator | Description |
-|----------|-------------|
-| `~` | Matches regex (case-sensitive) |
-| `~*` | Matches regex (case-insensitive) |
-| `!~` | Does not match (case-sensitive) |
-| `!~*` | Does not match (case-insensitive) |
+| Operator | Description                       |
+| -------- | --------------------------------- |
+| `~`      | Matches regex (case-sensitive)    |
+| `~*`     | Matches regex (case-insensitive)  |
+| `!~`     | Does not match (case-sensitive)   |
+| `!~*`    | Does not match (case-insensitive) |
 
 ---
 
@@ -355,6 +368,13 @@ FROM users;
 -- Use fallback values
 SELECT COALESCE(nickname, first_name, 'Anonymous') AS display_name
 FROM users;
+
+-- Build contact strings with concatenation
+SELECT
+    first_name || ' ' || last_name AS full_name,
+    COALESCE(phone, 'No phone on file') AS contact_phone
+FROM users
+ORDER BY last_name;
 ```
 
 ### NULLIF
@@ -379,7 +399,7 @@ SELECT * FROM users
 WHERE phone IS DISTINCT FROM '555-0100';
 
 -- IS NOT DISTINCT FROM
-SELECT * FROM users  
+SELECT * FROM users
 WHERE phone IS NOT DISTINCT FROM NULL;  -- Same as IS NULL
 ```
 
@@ -394,7 +414,7 @@ WHERE phone IS NOT DISTINCT FROM NULL;  -- Same as IS NULL
 Compare one expression to multiple values:
 
 ```sql
-SELECT 
+SELECT
     order_id,
     status,
     CASE status
@@ -412,7 +432,7 @@ FROM orders;
 Use any boolean expressions:
 
 ```sql
-SELECT 
+SELECT
     product_name,
     price,
     CASE
@@ -429,7 +449,7 @@ FROM products;
 ```sql
 -- Custom sort order
 SELECT * FROM orders
-ORDER BY 
+ORDER BY
     CASE status
         WHEN 'pending' THEN 1
         WHEN 'processing' THEN 2
@@ -444,8 +464,8 @@ ORDER BY
 ```sql
 -- Conditional filtering
 SELECT * FROM products
-WHERE 
-    CASE 
+WHERE
+    CASE
         WHEN category = 'Electronics' THEN price > 100
         WHEN category = 'Books' THEN price > 20
         ELSE price > 50
@@ -456,7 +476,7 @@ WHERE
 
 ```sql
 -- Count by category
-SELECT 
+SELECT
     COUNT(CASE WHEN status = 'active' THEN 1 END) AS active_count,
     COUNT(CASE WHEN status = 'inactive' THEN 1 END) AS inactive_count,
     COUNT(CASE WHEN status = 'pending' THEN 1 END) AS pending_count
@@ -470,7 +490,7 @@ FROM users;
 ### Current Date and Time
 
 ```sql
-SELECT 
+SELECT
     CURRENT_DATE,           -- 2026-01-26
     CURRENT_TIME,           -- 14:30:00.123456-05:00
     CURRENT_TIMESTAMP,      -- 2026-01-26 14:30:00.123456-05:00
@@ -512,7 +532,7 @@ FROM orders;
 
 ```sql
 -- Add/subtract intervals
-SELECT 
+SELECT
     NOW() + INTERVAL '1 day' AS tomorrow,
     NOW() - INTERVAL '1 week' AS last_week,
     NOW() + INTERVAL '3 months' AS three_months_later,
@@ -549,7 +569,7 @@ WHERE EXTRACT(YEAR FROM created_at) = 2026;
 ### Date Formatting
 
 ```sql
-SELECT 
+SELECT
     TO_CHAR(created_at, 'YYYY-MM-DD') AS iso_date,
     TO_CHAR(created_at, 'Month DD, YYYY') AS long_date,
     TO_CHAR(created_at, 'HH12:MI AM') AS time_12h,
@@ -565,25 +585,25 @@ Real-world queries often combine multiple filtering techniques:
 
 ```sql
 -- Complex product search
-SELECT 
+SELECT
     p.name,
     p.price,
     c.name AS category,
-    CASE 
+    CASE
         WHEN p.stock_quantity = 0 THEN 'Out of Stock'
         WHEN p.stock_quantity < 10 THEN 'Low Stock'
         ELSE 'In Stock'
     END AS availability
 FROM products p
 JOIN categories c ON p.category_id = c.id
-WHERE 
+WHERE
     p.is_active = true
     AND p.price BETWEEN 20 AND 100
     AND c.name IN ('Electronics', 'Books', 'Games')
     AND p.name ILIKE '%wireless%'
     AND p.created_at >= NOW() - INTERVAL '1 year'
     AND p.deleted_at IS NULL
-ORDER BY 
+ORDER BY
     CASE WHEN p.stock_quantity > 0 THEN 0 ELSE 1 END,
     p.price;
 ```
@@ -593,28 +613,35 @@ ORDER BY
 ## Practice Exercises
 
 ### Exercise 1: Boolean Logic
+
 Write queries to find:
+
 1. Products that are either in 'Electronics' category AND cost over $50, OR in 'Books' category AND cost under $20
 2. Users who signed up in 2025 AND have NOT made any purchases
 3. Orders that are NOT (cancelled OR refunded) AND were placed in the last 30 days
 
 ### Exercise 2: Pattern Matching
+
 Find:
+
 1. All users with Gmail addresses (case-insensitive)
 2. Products with SKUs starting with "ELEC-" followed by exactly 4 digits
 3. Users whose names contain exactly two words (first and last name with single space)
 
 ### Exercise 3: NULL Handling
+
 1. Find all orders where the shipping address is not set
 2. Display users with their phone numbers, showing "No phone" for NULLs
 3. Find products where the description is either NULL or empty string
 
 ### Exercise 4: CASE Expressions
+
 1. Create a query that labels orders as 'New' (< 7 days), 'Recent' (7-30 days), or 'Old' (> 30 days)
 2. Count how many products are in each price tier (Budget/Mid-Range/Premium/Luxury)
 3. Sort users by subscription tier: 'enterprise' first, then 'premium', then 'free'
 
 ### Exercise 5: Date Filtering
+
 1. Find all orders placed on a Monday
 2. Find users who signed up in the same month as they made their first purchase
 3. Calculate the average order value per month for the last 12 months
