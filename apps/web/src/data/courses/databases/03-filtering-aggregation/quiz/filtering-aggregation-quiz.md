@@ -128,17 +128,17 @@ Consider this WHERE clause: `WHERE price > 100 OR category = 'Books' AND in_stoc
 
 Consider these LIKE patterns for finding products:
 
-- A: `SELECT * FROM products WHERE name LIKE 'Pro%Plus';`
-- B: `SELECT * FROM products WHERE name LIKE '%Pro%Plus%';`
-- C: `SELECT * FROM products WHERE name LIKE 'Pro_Plus';`
-- D: `SELECT * FROM products WHERE name = 'Pro*Plus';`
+- A: `SELECT * FROM products WHERE name LIKE '%Pro%Plus%';`
+- B: `SELECT * FROM products WHERE name = 'Pro*Plus';`
+- C: `SELECT * FROM products WHERE name LIKE 'Pro%Plus';`
+- D: `SELECT * FROM products WHERE name LIKE 'Pro_Plus';`
 
 !!! quiz
 {
 "title": "Question 11: LIKE Pattern Matching",
 "question": "Which query correctly finds all products with names starting with 'Pro' and ending with 'Plus'?",
 "options": ["A", "B", "C", "D"],
-"answers": ["A"]
+"answers": ["C"]
 }
 !!!
 
@@ -155,7 +155,7 @@ SELECT COUNT(*), COUNT(shipped_at) FROM orders;
 {
 "title": "Question 12: COUNT Behavior",
 "question": "What can you conclude from the query result above?",
-"options": ["There are 100 shipped orders and 75 total orders", "There are 100 total orders and 25 have not been shipped yet (NULL shipped_at)", "There are 175 total orders in the table", "The query has an error because you can't use two COUNT functions"],
+"options": ["There are 175 total orders in the table", "The query has an error because you can't use two COUNT functions", "There are 100 shipped orders and 75 total orders", "There are 100 total orders and 25 have not been shipped yet (NULL shipped_at)"],
 "answers": ["There are 100 total orders and 25 have not been shipped yet (NULL shipped_at)"]
 }
 !!!
@@ -164,17 +164,17 @@ SELECT COUNT(*), COUNT(shipped_at) FROM orders;
 
 Consider these queries to find users with no phone number:
 
-- A: `SELECT * FROM users WHERE phone = NULL;`
-- B: `SELECT * FROM users WHERE phone == NULL;`
-- C: `SELECT * FROM users WHERE phone IS NULL;`
-- D: `SELECT * FROM users WHERE phone = '';`
+- A: `SELECT * FROM users WHERE phone IS NULL;`
+- B: `SELECT * FROM users WHERE phone = NULL;`
+- C: `SELECT * FROM users WHERE phone = '';`
+- D: `SELECT * FROM users WHERE phone == NULL;`
 
 !!! quiz
 {
 "title": "Question 13: NULL Checking",
 "question": "Which query correctly finds users who have no phone number recorded?",
 "options": ["A", "B", "C", "D"],
-"answers": ["C"]
+"answers": ["A"]
 }
 !!!
 
@@ -197,7 +197,7 @@ ORDER BY product_count DESC;
 {
 "title": "Question 14: GROUP BY and HAVING",
 "question": "What does this query return?",
-"options": ["All categories with their product counts, filtered to show only products over $50", "Categories that have at least 5 products priced over $50, sorted by count descending", "The top 5 categories by total product count", "Products grouped by category where the average price is over $50"],
+"options": ["Products grouped by category where the average price is over $50", "The top 5 categories by total product count", "Categories that have at least 5 products priced over $50, sorted by count descending", "All categories with their product counts, filtered to show only products over $50"],
 "answers": ["Categories that have at least 5 products priced over $50, sorted by count descending"]
 }
 !!!
@@ -208,7 +208,7 @@ ORDER BY product_count DESC;
 {
 "title": "Question 15: WHERE vs HAVING",
 "question": "Which statement about WHERE vs HAVING is correct?",
-"options": ["WHERE filters after grouping, HAVING filters before grouping", "WHERE filters individual rows before grouping, HAVING filters groups after aggregation", "WHERE and HAVING can be used interchangeably", "HAVING can only be used with COUNT(*), not other aggregate functions"],
+"options": ["WHERE and HAVING can be used interchangeably", "WHERE filters individual rows before grouping, HAVING filters groups after aggregation", "HAVING can only be used with COUNT(*), not other aggregate functions", "WHERE filters after grouping, HAVING filters before grouping"],
 "answers": ["WHERE filters individual rows before grouping, HAVING filters groups after aggregation"]
 }
 !!!
@@ -219,7 +219,7 @@ ORDER BY product_count DESC;
 {
 "title": "Question 16: NULLIF Function",
 "question": "What is the result of this expression: NULLIF(100, 100)?",
-"options": ["100", "0", "NULL", "An error"],
+"options": ["An error", "NULL", "100", "0"],
 "answers": ["NULL"]
 }
 !!!
@@ -230,17 +230,17 @@ Table: orders (id, status, shipped_at) where shipped_at is NULL for unshipped or
 
 Consider these queries to calculate the percentage of shipped orders:
 
-- A: `SELECT COUNT(shipped_at) / COUNT(*) * 100 AS pct_shipped FROM orders;`
-- B: `SELECT COUNT(shipped_at) * 100.0 / COUNT(*) AS pct_shipped FROM orders;`
-- C: `SELECT AVG(shipped_at) * 100 AS pct_shipped FROM orders;`
-- D: `SELECT SUM(shipped_at) / COUNT(*) * 100 AS pct_shipped FROM orders;`
+- A: `SELECT AVG(shipped_at) * 100 AS pct_shipped FROM orders;`
+- B: `SELECT COUNT(shipped_at) / COUNT(*) * 100 AS pct_shipped FROM orders;`
+- C: `SELECT SUM(shipped_at) / COUNT(*) * 100 AS pct_shipped FROM orders;`
+- D: `SELECT COUNT(shipped_at) * 100.0 / COUNT(*) AS pct_shipped FROM orders;`
 
 !!! quiz
 {
 "title": "Question 17: Percentage Calculation",
 "question": "Which query correctly calculates the percentage of orders that have been shipped?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["D"]
 }
 !!!
 
@@ -250,7 +250,7 @@ Consider these queries to calculate the percentage of shipped orders:
 {
 "title": "Question 18: COALESCE Return Value",
 "question": "What does COALESCE(bonus, commission, 0) return if bonus is 500, commission is 200?",
-"options": ["0", "200", "500", "700"],
+"options": ["700", "500", "0", "200"],
 "answers": ["500"]
 }
 !!!
@@ -259,17 +259,17 @@ Consider these queries to calculate the percentage of shipped orders:
 
 Consider these LIKE patterns:
 
-- A: `LIKE '%%%'`
-- B: `LIKE '___'`
-- C: `LIKE '...'`
-- D: `LIKE '[3]'`
+- A: `LIKE '...'`
+- B: `LIKE '%%%'`
+- C: `LIKE '[3]'`
+- D: `LIKE '___'`
 
 !!! quiz
 {
 "title": "Question 19: Pattern Matching Length",
 "question": "Which pattern matches strings that have exactly 3 characters?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["D"]
 }
 !!!
 
@@ -290,7 +290,7 @@ HAVING AVG(salary) > 50000;
 {
 "title": "Question 20: Alias in HAVING",
 "question": "Why can't we write HAVING avg_salary > 50000 instead?",
-"options": ["HAVING doesn't support column aliases", "avg_salary is a reserved keyword", "The alias avg_salary is created in SELECT, which executes after HAVING", "You must always repeat the aggregate function in HAVING"],
+"options": ["You must always repeat the aggregate function in HAVING", "The alias avg_salary is created in SELECT, which executes after HAVING", "HAVING doesn't support column aliases", "avg_salary is a reserved keyword"],
 "answers": ["The alias avg_salary is created in SELECT, which executes after HAVING"]
 }
 !!!
@@ -302,25 +302,25 @@ Consider these queries to find duplicate email addresses:
 Option A:
 
 ```sql
-SELECT email FROM users WHERE COUNT(email) > 1;
+SELECT DISTINCT email FROM users WHERE email IS NOT NULL;
 ```
 
 Option B:
 
 ```sql
-SELECT email, COUNT(*) FROM users GROUP BY email HAVING COUNT(*) > 1;
+SELECT email FROM users GROUP BY email WHERE COUNT(*) > 1;
 ```
 
 Option C:
 
 ```sql
-SELECT DISTINCT email FROM users WHERE email IS NOT NULL;
+SELECT email, COUNT(*) FROM users GROUP BY email HAVING COUNT(*) > 1;
 ```
 
 Option D:
 
 ```sql
-SELECT email FROM users GROUP BY email WHERE COUNT(*) > 1;
+SELECT email FROM users WHERE COUNT(email) > 1;
 ```
 
 !!! quiz
@@ -328,7 +328,7 @@ SELECT email FROM users GROUP BY email WHERE COUNT(*) > 1;
 "title": "Question 21: Finding Duplicates",
 "question": "Which query finds duplicate email addresses in the users table?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["C"]
 }
 !!!
 
@@ -348,7 +348,7 @@ END
 {
 "title": "Question 22: CASE Expression",
 "question": "What does this CASE expression return when status is 'pending'?",
-"options": ["'pending'", "NULL", "'Waiting'", "An error because 'pending' is not handled"],
+"options": ["An error because 'pending' is not handled", "'Waiting'", "'pending'", "NULL"],
 "answers": ["'Waiting'"]
 }
 !!!
@@ -360,29 +360,29 @@ Consider these queries to count unique customers in January 2026:
 Option A:
 
 ```sql
-SELECT COUNT(customer_id) FROM orders
-WHERE created_at BETWEEN '2026-01-01' AND '2026-01-31';
+SELECT COUNT(DISTINCT customer_id) FROM orders
+WHERE created_at >= '2026-01-01' AND created_at < '2026-02-01';
 ```
 
 Option B:
 
 ```sql
-SELECT COUNT(DISTINCT customer_id) FROM orders
-WHERE created_at >= '2026-01-01' AND created_at < '2026-02-01';
+SELECT COUNT(customer_id) FROM orders
+WHERE created_at BETWEEN '2026-01-01' AND '2026-01-31';
 ```
 
 Option C:
 
 ```sql
-SELECT DISTINCT COUNT(customer_id) FROM orders
-WHERE created_at BETWEEN '2026-01-01' AND '2026-01-31';
+SELECT SUM(DISTINCT customer_id) FROM orders
+WHERE created_at >= '2026-01-01' AND created_at < '2026-02-01';
 ```
 
 Option D:
 
 ```sql
-SELECT SUM(DISTINCT customer_id) FROM orders
-WHERE created_at >= '2026-01-01' AND created_at < '2026-02-01';
+SELECT DISTINCT COUNT(customer_id) FROM orders
+WHERE created_at BETWEEN '2026-01-01' AND '2026-01-31';
 ```
 
 !!! quiz
@@ -390,7 +390,7 @@ WHERE created_at >= '2026-01-01' AND created_at < '2026-02-01';
 "title": "Question 23: COUNT DISTINCT",
 "question": "Which query correctly counts how many unique customers placed orders in January 2026?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["A"]
 }
 !!!
 
@@ -413,7 +413,7 @@ GROUP BY category;
 {
 "title": "Question 24: GROUP BY Validation",
 "question": "What is wrong with this query?",
-"options": ["COUNT(*) cannot be used with GROUP BY", "product_name is in SELECT but not in GROUP BY or an aggregate function", "category should be in the HAVING clause", "Nothing is wrong, this query is valid"],
+"options": ["Nothing is wrong, this query is valid", "category should be in the HAVING clause", "product_name is in SELECT but not in GROUP BY or an aggregate function", "COUNT(*) cannot be used with GROUP BY"],
 "answers": ["product_name is in SELECT but not in GROUP BY or an aggregate function"]
 }
 !!!
@@ -424,7 +424,7 @@ GROUP BY category;
 {
 "title": "Question 25: Case-Insensitive Matching",
 "question": "Which operator should you use for case-insensitive pattern matching in PostgreSQL?",
-"options": ["LIKE", "SIMILAR TO", "ILIKE", "LOWER LIKE"],
+"options": ["LOWER LIKE", "ILIKE", "LIKE", "SIMILAR TO"],
 "answers": ["ILIKE"]
 }
 !!!
@@ -443,18 +443,18 @@ Option A:
 
 ```sql
 SELECT * FROM employees
-WHERE salary BETWEEN 40000 AND 80000
-  AND department IN ('Engineering', 'Marketing')
-  AND manager_id IS NOT NULL;
+WHERE salary >= 40000 OR salary <= 80000
+  AND department = 'Engineering' OR department = 'Marketing'
+  AND manager_id != NULL;
 ```
 
 Option B:
 
 ```sql
 SELECT * FROM employees
-WHERE salary >= 40000 OR salary <= 80000
-  AND department = 'Engineering' OR department = 'Marketing'
-  AND manager_id != NULL;
+WHERE salary > 40000 AND salary < 80000
+  AND department IN ('Engineering', 'Marketing')
+  AND manager_id IS NOT NULL;
 ```
 
 Option C:
@@ -470,7 +470,7 @@ Option D:
 
 ```sql
 SELECT * FROM employees
-WHERE salary > 40000 AND salary < 80000
+WHERE salary BETWEEN 40000 AND 80000
   AND department IN ('Engineering', 'Marketing')
   AND manager_id IS NOT NULL;
 ```
@@ -480,7 +480,7 @@ WHERE salary > 40000 AND salary < 80000
 "title": "Question 26: Filtering Employees",
 "question": "Which query correctly implements the requirement?",
 "options": ["A", "B", "C", "D"],
-"answers": ["A"]
+"answers": ["D"]
 }
 !!!
 
@@ -514,7 +514,7 @@ HAVING COUNT(*) > 100;
 {
 "title": "Question 27: Query Description",
 "question": "What does this query do?",
-"options": ["Counts all users grouped by exact age, showing only ages with more than 100 users", "Categorizes active users into age groups, counts each group, calculates average spending, and only shows groups with more than 100 users", "Finds the top 100 users by spending in each age category", "Updates user age groups based on their purchase history"],
+"options": ["Updates user age groups based on their purchase history", "Categorizes active users into age groups, counts each group, calculates average spending, and only shows groups with more than 100 users", "Counts all users grouped by exact age, showing only ages with more than 100 users", "Finds the top 100 users by spending in each age category"],
 "answers": ["Categorizes active users into age groups, counts each group, calculates average spending, and only shows groups with more than 100 users"]
 }
 !!!
@@ -530,15 +530,28 @@ Option A:
 ```sql
 SELECT
     EXTRACT(MONTH FROM order_date) AS month,
+    total_revenue,
+    order_count,
+    avg_order_value
+FROM orders
+WHERE EXTRACT(YEAR FROM order_date) = 2025
+HAVING total_revenue > 10000;
+```
+
+Option B:
+
+```sql
+SELECT
+    EXTRACT(MONTH FROM order_date) AS month,
     SUM(amount) AS total_revenue,
     COUNT(*) AS order_count,
     AVG(amount) AS avg_order_value
 FROM orders
-WHERE EXTRACT(YEAR FROM order_date) = 2025 AND SUM(amount) > 10000
-GROUP BY EXTRACT(MONTH FROM order_date);
+GROUP BY EXTRACT(MONTH FROM order_date)
+HAVING EXTRACT(YEAR FROM order_date) = 2025 AND SUM(amount) > 10000;
 ```
 
-Option B:
+Option C:
 
 ```sql
 SELECT
@@ -552,7 +565,7 @@ GROUP BY EXTRACT(MONTH FROM order_date)
 HAVING SUM(amount) > 10000;
 ```
 
-Option C:
+Option D:
 
 ```sql
 SELECT
@@ -561,21 +574,8 @@ SELECT
     COUNT(*) AS order_count,
     AVG(amount) AS avg_order_value
 FROM orders
-GROUP BY EXTRACT(MONTH FROM order_date)
-HAVING EXTRACT(YEAR FROM order_date) = 2025 AND SUM(amount) > 10000;
-```
-
-Option D:
-
-```sql
-SELECT
-    EXTRACT(MONTH FROM order_date) AS month,
-    total_revenue,
-    order_count,
-    avg_order_value
-FROM orders
-WHERE EXTRACT(YEAR FROM order_date) = 2025
-HAVING total_revenue > 10000;
+WHERE EXTRACT(YEAR FROM order_date) = 2025 AND SUM(amount) > 10000
+GROUP BY EXTRACT(MONTH FROM order_date);
 ```
 
 !!! quiz
@@ -583,7 +583,7 @@ HAVING total_revenue > 10000;
 "title": "Question 28: Monthly Revenue",
 "question": "Which query correctly implements the requirement?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["C"]
 }
 !!!
 
@@ -607,7 +607,7 @@ WHERE product_id NOT IN (
 {
 "title": "Question 29: Subquery Analysis",
 "question": "What does this query find?",
-"options": ["Products that have been ordered at least once", "Products that have never been ordered", "All distinct products from order_items", "Products with NULL product_id values"],
+"options": ["All distinct products from order_items", "Products that have never been ordered", "Products with NULL product_id values", "Products that have been ordered at least once"],
 "answers": ["Products that have never been ordered"]
 }
 !!!
@@ -625,6 +625,32 @@ SELECT
     c.name,
     COUNT(o.id) AS order_count,
     SUM(o.total) AS total_spent
+FROM customers c, orders o
+GROUP BY c.id, c.name
+HAVING order_count > 5 AND total_spent > 500
+ORDER BY total_spent DESC;
+```
+
+Option B:
+
+```sql
+SELECT
+    c.name,
+    order_count,
+    total_spent
+FROM customers c
+JOIN orders o ON c.id = o.customer_id
+WHERE order_count > 5 AND total_spent > 500
+ORDER BY total_spent DESC;
+```
+
+Option C:
+
+```sql
+SELECT
+    c.name,
+    COUNT(o.id) AS order_count,
+    SUM(o.total) AS total_spent
 FROM customers c
 JOIN orders o ON c.id = o.customer_id
 WHERE COUNT(o.id) > 5 AND SUM(o.total) > 500
@@ -632,7 +658,7 @@ GROUP BY c.id, c.name
 ORDER BY total_spent DESC;
 ```
 
-Option B:
+Option D:
 
 ```sql
 SELECT
@@ -646,38 +672,12 @@ HAVING COUNT(o.id) > 5 AND SUM(o.total) > 500
 ORDER BY total_spent DESC;
 ```
 
-Option C:
-
-```sql
-SELECT
-    c.name,
-    COUNT(o.id) AS order_count,
-    SUM(o.total) AS total_spent
-FROM customers c, orders o
-GROUP BY c.id, c.name
-HAVING order_count > 5 AND total_spent > 500
-ORDER BY total_spent DESC;
-```
-
-Option D:
-
-```sql
-SELECT
-    c.name,
-    order_count,
-    total_spent
-FROM customers c
-JOIN orders o ON c.id = o.customer_id
-WHERE order_count > 5 AND total_spent > 500
-ORDER BY total_spent DESC;
-```
-
 !!! quiz
 {
 "title": "Question 30: Customer Aggregation",
 "question": "Which query correctly implements the requirement?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["D"]
 }
 !!!
 
@@ -803,17 +803,17 @@ ORDER BY total_spent DESC;
 
 Consider these expressions to search for product names containing a literal underscore:
 
-- A: `WHERE name LIKE '%_%'`
-- B: `WHERE name LIKE '%\__%' ESCAPE '\'`
-- C: `WHERE name LIKE '%!_%' ESCAPE '!'`
-- D: `WHERE name LIKE '%[_]%'`
+- A: `WHERE name LIKE '%[_]%'`
+- B: `WHERE name LIKE '%!_%' ESCAPE '!'`
+- C: `WHERE name LIKE '%_%'`
+- D: `WHERE name LIKE '%\__%' ESCAPE '\'`
 
 !!! quiz
 {
 "title": "Question 41: Escaping Special Characters",
 "question": "Which expression correctly searches for product names containing a literal underscore character?",
 "options": ["A", "B", "C", "D"],
-"answers": ["C"]
+"answers": ["B"]
 }
 !!!
 
@@ -823,7 +823,7 @@ Consider these expressions to search for product names containing a literal unde
 {
 "title": "Question 42: Regex Operator ~_",
 "question": "What does the regex operator ~_ do in PostgreSQL?",
-"options": ["Matches the pattern case-sensitively", "Matches the pattern case-insensitively", "Negates the regex match", "Performs a partial match only"],
+"options": ["Performs a partial match only", "Negates the regex match", "Matches the pattern case-insensitively", "Matches the pattern case-sensitively"],
 "answers": ["Matches the pattern case-insensitively"]
 }
 !!!
@@ -836,7 +836,7 @@ Given these values in column `score`: 10, 20, NULL, 30, NULL.
 {
 "title": "Question 43: SUM with NULL Values",
 "question": "What does SUM(score) return?",
-"options": ["NULL", "60", "12 (average)", "0"],
+"options": ["0", "60", "NULL", "12 (average)"],
 "answers": ["60"]
 }
 !!!
@@ -845,17 +845,17 @@ Given these values in column `score`: 10, 20, NULL, 30, NULL.
 
 Consider these queries to find earliest and latest order dates:
 
-- A: `SELECT FIRST(order_date), LAST(order_date) FROM orders;`
-- B: `SELECT MIN(order_date), MAX(order_date) FROM orders;`
-- C: `SELECT EARLIEST(order_date), LATEST(order_date) FROM orders;`
-- D: `SELECT order_date[0], order_date[-1] FROM orders;`
+- A: `SELECT MIN(order_date), MAX(order_date) FROM orders;`
+- B: `SELECT order_date[0], order_date[-1] FROM orders;`
+- C: `SELECT FIRST(order_date), LAST(order_date) FROM orders;`
+- D: `SELECT EARLIEST(order_date), LATEST(order_date) FROM orders;`
 
 !!! quiz
 {
 "title": "Question 44: Min/Max Dates",
 "question": "Which query correctly finds the earliest and latest order dates?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["A"]
 }
 !!!
 
@@ -874,7 +874,7 @@ SELECT
 {
 "title": "Question 45: IS DISTINCT FROM Results",
 "question": "What does this query return?",
-"options": ["TRUE, TRUE, TRUE", "TRUE, FALSE, TRUE", "NULL, NULL, TRUE", "TRUE, TRUE, FALSE"],
+"options": ["NULL, NULL, TRUE", "TRUE, FALSE, TRUE", "TRUE, TRUE, FALSE", "TRUE, TRUE, TRUE"],
 "answers": ["TRUE, FALSE, TRUE"]
 }
 !!!
@@ -883,17 +883,17 @@ SELECT
 
 Consider these queries to truncate timestamps:
 
-- A: `SELECT WEEK(created_at) FROM orders;`
-- B: `SELECT DATE_TRUNC('week', created_at) FROM orders;`
-- C: `SELECT EXTRACT(WEEK FROM created_at) FROM orders;`
-- D: `SELECT TRUNCATE(created_at, 'week') FROM orders;`
+- A: `SELECT TRUNCATE(created_at, 'week') FROM orders;`
+- B: `SELECT EXTRACT(WEEK FROM created_at) FROM orders;`
+- C: `SELECT DATE_TRUNC('week', created_at) FROM orders;`
+- D: `SELECT WEEK(created_at) FROM orders;`
 
 !!! quiz
 {
 "title": "Question 46: DATE_TRUNC",
 "question": "Which query correctly truncates timestamps to the start of each week?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["C"]
 }
 !!!
 
@@ -903,7 +903,7 @@ Consider these queries to truncate timestamps:
 {
 "title": "Question 47: AGE Function",
 "question": "What does AGE('2026-03-15', '2025-01-10') return in PostgreSQL?",
-"options": ["The number of days between the dates", "An interval representing the difference (e.g., '1 year 2 mons 5 days')", "The second date subtracted from the first as a timestamp", "An error because AGE requires timestamps"],
+"options": ["An error because AGE requires timestamps", "The number of days between the dates", "An interval representing the difference (e.g., '1 year 2 mons 5 days')", "The second date subtracted from the first as a timestamp"],
 "answers": ["An interval representing the difference (e.g., '1 year 2 mons 5 days')"]
 }
 !!!
@@ -918,8 +918,8 @@ Option A:
 
 ```sql
 SELECT category_id,
-    COUNT(is_active = true) AS active,
-    COUNT(is_active = false) AS inactive
+    SUM(is_active) AS active,
+    SUM(NOT is_active) AS inactive
 FROM products GROUP BY category_id;
 ```
 
@@ -927,21 +927,12 @@ Option B:
 
 ```sql
 SELECT category_id,
-    COUNT(CASE WHEN is_active = true THEN 1 END) AS active,
-    COUNT(CASE WHEN is_active = false THEN 1 END) AS inactive
+    COUNT(is_active = true) AS active,
+    COUNT(is_active = false) AS inactive
 FROM products GROUP BY category_id;
 ```
 
 Option C:
-
-```sql
-SELECT category_id,
-    SUM(is_active) AS active,
-    SUM(NOT is_active) AS inactive
-FROM products GROUP BY category_id;
-```
-
-Option D:
 
 ```sql
 SELECT category_id,
@@ -950,12 +941,21 @@ SELECT category_id,
 FROM products GROUP BY category_id;
 ```
 
+Option D:
+
+```sql
+SELECT category_id,
+    COUNT(CASE WHEN is_active = true THEN 1 END) AS active,
+    COUNT(CASE WHEN is_active = false THEN 1 END) AS inactive
+FROM products GROUP BY category_id;
+```
+
 !!! quiz
 {
 "title": "Question 48: Conditional Counting",
 "question": "Which query correctly counts active vs inactive products per category?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["D"]
 }
 !!!
 
@@ -978,7 +978,7 @@ GROUP BY category_id;
 {
 "title": "Question 49: FILTER Clause",
 "question": "What does this PostgreSQL-specific query do?",
-"options": ["Filters the entire result set to only expensive, in-stock products", "Counts expensive products and averages prices of in-stock products separately per category", "Returns an error because FILTER is not valid SQL", "Creates two separate result sets and combines them"],
+"options": ["Creates two separate result sets and combines them", "Returns an error because FILTER is not valid SQL", "Counts expensive products and averages prices of in-stock products separately per category", "Filters the entire result set to only expensive, in-stock products"],
 "answers": ["Counts expensive products and averages prices of in-stock products separately per category"]
 }
 !!!
@@ -987,17 +987,17 @@ GROUP BY category_id;
 
 Consider these patterns to match email addresses from any `.edu` domain:
 
-- A: `WHERE email LIKE '%@%.edu'`
-- B: `WHERE email ~ '@.*\.edu$'`
-- C: `WHERE email SIMILAR TO '%@%.edu'`
-- D: `WHERE email ~* '@[a-z]+\.edu$'`
+- A: `WHERE email SIMILAR TO '%@%.edu'`
+- B: `WHERE email ~* '@[a-z]+\.edu$'`
+- C: `WHERE email ~ '@.*\.edu$'`
+- D: `WHERE email LIKE '%@%.edu'`
 
 !!! quiz
 {
 "title": "Question 50: Regex Email Matching",
 "question": "Which pattern matches email addresses from any .edu domain using PostgreSQL regex?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["C"]
 }
 !!!
 
@@ -1007,7 +1007,7 @@ Consider these patterns to match email addresses from any `.edu` domain:
 {
 "title": "Question 51: Boolean Logic with NULL",
 "question": "What is the result of NOT (NULL OR FALSE)?",
-"options": ["TRUE", "FALSE", "NULL", "An error"],
+"options": ["An error", "NULL", "TRUE", "FALSE"],
 "answers": ["NULL"]
 }
 !!!
@@ -1016,17 +1016,17 @@ Consider these patterns to match email addresses from any `.edu` domain:
 
 Consider these queries to find orders placed in the last 30 days:
 
-- A: `SELECT * FROM orders WHERE order_date > DATE_SUB(NOW(), 30);`
-- B: `SELECT * FROM orders WHERE order_date >= NOW() - INTERVAL '30 days';`
-- C: `SELECT * FROM orders WHERE order_date BETWEEN NOW() - 30 AND NOW();`
-- D: `SELECT * FROM orders WHERE DATEDIFF(NOW(), order_date) <= 30;`
+- A: `SELECT * FROM orders WHERE order_date >= NOW() - INTERVAL '30 days';`
+- B: `SELECT * FROM orders WHERE order_date > DATE_SUB(NOW(), 30);`
+- C: `SELECT * FROM orders WHERE DATEDIFF(NOW(), order_date) <= 30;`
+- D: `SELECT * FROM orders WHERE order_date BETWEEN NOW() - 30 AND NOW();`
 
 !!! quiz
 {
 "title": "Question 52: Date Arithmetic",
 "question": "Which query finds all orders placed in the last 30 days?",
 "options": ["A", "B", "C", "D"],
-"answers": ["B"]
+"answers": ["A"]
 }
 !!!
 
@@ -1045,7 +1045,7 @@ FROM products;
 {
 "title": "Question 53: Aggregate Arithmetic",
 "question": "What does this query calculate?",
-"options": ["The difference between the highest and lowest prices, and the interval between newest and oldest products", "The total price and total time of all products", "An error because you cannot subtract dates", "The average price range and time span per product"],
+"options": ["An error because you cannot subtract dates", "The difference between the highest and lowest prices, and the interval between newest and oldest products", "The average price range and time span per product", "The total price and total time of all products"],
 "answers": ["The difference between the highest and lowest prices, and the interval between newest and oldest products"]
 }
 !!!
@@ -1056,7 +1056,7 @@ FROM products;
 {
 "title": "Question 54: NOT LIKE with NULL",
 "question": "Which statement about NOT LIKE with NULL values is correct?",
-"options": ["NULL NOT LIKE '%test%' returns TRUE", "NULL NOT LIKE '%test%' returns FALSE", "NULL NOT LIKE '%test%' returns NULL", "NULL NOT LIKE '%test%' causes an error"],
+"options": ["NULL NOT LIKE '%test%' causes an error", "NULL NOT LIKE '%test%' returns NULL", "NULL NOT LIKE '%test%' returns TRUE", "NULL NOT LIKE '%test%' returns FALSE"],
 "answers": ["NULL NOT LIKE '%test%' returns NULL"]
 }
 !!!
@@ -1067,7 +1067,7 @@ FROM products;
 {
 "title": "Question 55: TO_CHAR Day Format",
 "question": "What does TO_CHAR(created_at, 'Day') return for a date that falls on Monday?",
-"options": ["1", "'Mon'", "'Monday ' (padded with spaces)", "'MONDAY'"],
+"options": ["'MONDAY'", "'Monday ' (padded with spaces)", "1", "'Mon'"],
 "answers": ["'Monday ' (padded with spaces)"]
 }
 !!!
