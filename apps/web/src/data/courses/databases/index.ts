@@ -24,6 +24,12 @@ import week02QuizDDLDMLDQL from './02-sql-fundamentals/quiz/ddl-dml-dql-quiz.md'
 import week02QuizIdempotencyFix from './02-sql-fundamentals/quiz/idempotency-fix-quiz.md';
 import week02QuizIdempotency from './02-sql-fundamentals/quiz/idempotency-quiz.md';
 
+// Week 03 imports
+import week03AggregationGrouping from './03-filtering-aggregation/aggregation-and-grouping.md';
+import week03FilteringPatternMatching from './03-filtering-aggregation/filtering-and-pattern-matching.md';
+import week03Quiz from './03-filtering-aggregation/quiz/filtering-aggregation-quiz.md';
+import week03Reveal from './03-filtering-aggregation/reveal.md';
+
 // Program definition
 export const databasesProgram: Program = {
     id: 'databases-program-1',
@@ -580,12 +586,106 @@ export const week02QuizConstraintsContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 03: Filtering, Aggregation & Grouping
+export const week03RevealContent: ProgramContent = {
+    id: 'databases-week-03-reveal',
+    programId: 'databases-program-1',
+    slug: 'filtering-aggregation-reveal',
+    parentId: undefined,
+    title: 'Filtering, Pattern Matching & Aggregation',
+    description: 'Reveal.js presentation covering WHERE clauses, pattern matching, NULL handling, aggregate functions, GROUP BY, and HAVING',
+    type: ProgramContentType.REVEAL,
+    body: week03Reveal,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 50,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week03FilteringPatternMatchingContent: ProgramContent = {
+    id: 'databases-week-03-filtering-pattern-matching',
+    programId: 'databases-program-1',
+    slug: 'filtering-pattern-matching',
+    parentId: 'databases-week-03-reveal',
+    title: 'Filtering & Pattern Matching',
+    description: 'Learn boolean logic, IN/BETWEEN operators, LIKE/ILIKE, regex, NULL handling, CASE expressions, and date filters',
+    type: 0, // Page
+    body: week03FilteringPatternMatching,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week03RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week03AggregationGroupingContent: ProgramContent = {
+    id: 'databases-week-03-aggregation-grouping',
+    programId: 'databases-program-1',
+    slug: 'aggregation-grouping',
+    parentId: 'databases-week-03-reveal',
+    title: 'Aggregation & Grouping',
+    description: 'Master COUNT, SUM, AVG, MIN, MAX, GROUP BY, HAVING, DISTINCT aggregates, and conditional aggregation',
+    type: 0, // Page
+    body: week03AggregationGrouping,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week03RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week03QuizContent: ProgramContent = {
+    id: 'databases-week-03-quiz',
+    programId: 'databases-program-1',
+    slug: 'filtering-aggregation-quiz',
+    parentId: 'databases-week-03-reveal',
+    title: 'Quiz: Filtering & Aggregation',
+    description: 'Test your understanding of boolean logic, filtering operators, pattern matching, NULL handling, CASE expressions, and aggregate functions',
+    type: 0, // Page
+    body: week03Quiz,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week03RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents and product-program relations
 // only the parent contents go directly under the program
 databasesProgram.programContents = [
     databasesSyllabusContent,
     week01IntroContent,
     week02LectureContent,
+    week03RevealContent,
 ];
 
 // Set up parent-child relationships
@@ -613,6 +713,12 @@ week02QuizzesContent.children = [
     week02QuizIdempotencyFixContent,
     week02QuizDDLDMLDQLContent,
     week02QuizConstraintsContent,
+];
+
+week03RevealContent.children = [
+    week03FilteringPatternMatchingContent,
+    week03AggregationGroupingContent,
+    week03QuizContent,
 ];
 
 databasesProduct.productPrograms = [databasesProductProgram];
