@@ -10,6 +10,11 @@ import networkingWeek02LectureReveal from './02-addressing/02-lecture-reveal.md'
 import networkingWeek02ReadingsMd from './02-addressing/03-readings.md';
 import networkingWeek02QuizMd from './02-addressing/04-quiz.md';
 import networkingWeek02AssignmentMd from './02-addressing/05-assignment.md';
+import networkingWeek03Lecture from './03-udp/00-lecture.md';
+import networkingWeek03LectureReveal from './03-udp/01-reveal.md';
+import networkingWeek03ReadingsMd from './03-udp/02-readings.md';
+import networkingWeek03QuizMd from './03-udp/03-quiz.md';
+import networkingWeek03AssignmentMd from './03-udp/04-assignment.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -327,9 +332,125 @@ export const networkingWeek02Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const networkingWeek03Intro: ProgramContent & { slug: string } = {
+    id: 'week-03',
+    slug: 'week-03',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 03 — UDP and Datagram Sockets',
+    description: 'UDP protocol, Berkeley sockets API, datagram communication, broadcast discovery, and Boost.Asio.',
+    type: 0, // Page
+    body: networkingWeek03Lecture,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek03LectureSlides: ProgramContent & { slug: string } = {
+    id: 'week-03-slides',
+    slug: 'slides',
+    programId: 'networking-program-1',
+    parentId: 'week-03',
+    title: 'Lecture Slides',
+    description: 'Presentation slides for Week 03 lecture on UDP and datagram sockets.',
+    type: ProgramContentType.REVEAL,
+    body: networkingWeek03LectureReveal,
+    sortOrder: 0,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek03Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek03Readings: ProgramContent & { slug: string } = {
+    id: 'week-03-readings',
+    slug: 'readings',
+    programId: 'networking-program-1',
+    parentId: 'week-03',
+    title: 'Readings',
+    description: 'Required readings on UDP protocol, sockets API, and broadcast networking.',
+    type: 0, // Page
+    body: networkingWeek03ReadingsMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 110,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek03Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek03Quiz: ProgramContent & { slug: string } = {
+    id: 'week-03-quiz',
+    slug: 'quiz',
+    programId: 'networking-program-1',
+    parentId: 'week-03',
+    title: 'Quiz 03',
+    description: 'Test your understanding of UDP protocol, datagram sockets, and broadcast.',
+    type: 0, // Page
+    body: networkingWeek03QuizMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek03Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek03Assignment: ProgramContent & { slug: string } = {
+    id: 'week-03-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-03',
+    title: 'Assignment 03',
+    description: 'Build a UDP echo client/server with broadcast-based server discovery.',
+    type: 0, // Page
+    body: networkingWeek03AssignmentMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek03Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 networkingWeek01Intro.children = [networkingWeek01Readings, networkingWeek01Quiz, networkingWeek01Setup, networkingWeek01Assignment];
 networkingWeek02Intro.children = [networkingWeek02LectureSlides, networkingWeek02Readings, networkingWeek02Quiz, networkingWeek02Assignment];
-networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro];
+networkingWeek03Intro.children = [networkingWeek03LectureSlides, networkingWeek03Readings, networkingWeek03Quiz, networkingWeek03Assignment];
+networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
 
 export default networkingProgram;
