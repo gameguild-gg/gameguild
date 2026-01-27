@@ -12,10 +12,10 @@ import type { SerializedEditorState } from "lexical"
 export type SlideLayoutType = "single" | "multiple"
 
 export interface SlideData {
-  id: string // formato: s_<timestamp>_<random>
+  id: string // formato: s1, s2, s3...
   type: SlideLayoutType
   name?: string // Nome opcional do slide (ex: "Introdução", "Capítulo 1")
-  order: number // Ordem do slide na sequência
+  // Ordem é definida pela posição no array slides[]
   
   // Blocos do slide (b1 para single, b1+b2+b3... para multiple)
   blocks: Record<string, SerializedEditorState | string>
@@ -60,9 +60,8 @@ export function migrateToSlideshowStructure(data: string): SlideshowStructure {
         version: "slideshow-v1",
         slides: [
           {
-            id: generateSlideId(),
+            id: "s1",
             type: Object.keys(blocks).length > 1 ? "multiple" : "single",
-            order: 0,
             blocks: Object.entries(blocks).reduce((acc, [key, value]: [string, any]) => {
               acc[key] = typeof value === 'string' ? value : JSON.stringify(value)
               return acc
@@ -77,9 +76,8 @@ export function migrateToSlideshowStructure(data: string): SlideshowStructure {
       version: "slideshow-v1",
       slides: [
         {
-          id: generateSlideId(),
+          id: "s1",
           type: "single",
-          order: 0,
           blocks: {
             b1: typeof parsed === 'string' ? parsed : JSON.stringify(parsed)
           }
@@ -124,9 +122,8 @@ export function createEmptySlideshowStructure(): SlideshowStructure {
     version: "slideshow-v1",
     slides: [
       {
-        id: generateSlideId(),
+        id: "s1",
         type: "single",
-        order: 0,
         name: "Slide 1",
         blocks: {
           b1: JSON.stringify(emptyState)
@@ -165,9 +162,8 @@ export function addSlide(
   }
   
   const newSlide: SlideData = {
-    id: generateSlideId(),
+    id: generateSlideId(structure),
     type,
-    order: position !== undefined ? position : structure.slides.length,
     name: `Slide ${structure.slides.length + 1}`,
     blocks: type === "single" ? {
       b1: JSON.stringify(emptyState)
@@ -182,10 +178,6 @@ export function addSlide(
   if (position !== undefined) {
     // Inserir na posição específica
     newSlides.splice(position, 0, newSlide)
-    // Reordenar todos os slides
-    newSlides.forEach((slide, index) => {
-      slide.order = index
-    })
   } else {
     // Adicionar no final
     newSlides.push(newSlide)
@@ -204,12 +196,7 @@ export function removeSlide(
   structure: SlideshowStructure,
   slideId: string
 ): SlideshowStructure {
-  const newSlides = structure.slides
-    .filter(s => s.id !== slideId)
-    .map((slide, index) => ({
-      ...slide,
-      order: index
-    }))
+  const newSlides = structure.slides.filter(s => s.id !== slideId)
   
   return {
     ...structure,
@@ -233,11 +220,6 @@ export function reorderSlides(
   }
   
   newSlides.splice(toIndex, 0, movedSlide)
-  
-  // Atualizar ordem
-  newSlides.forEach((slide, index) => {
-    slide.order = index
-  })
   
   return {
     ...structure,
@@ -278,10 +260,25 @@ export function updateSlideState(
 }
 
 /**
- * Gera um ID único para slide
+ * Gera um ID único para slide no formato s1, s2, s3...
+ * Encontra o próximo número disponível baseado nos IDs existentes
  */
-export function generateSlideId(): string {
-  return `s_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+export function generateSlideId(structure?: SlideshowStructure): string {
+  if (!structure || structure.slides.length === 0) {
+    return "s1"
+  }
+  
+  // Extrai os números dos IDs existentes (s1 -> 1, s2 -> 2, etc.)
+  const existingNumbers = structure.slides
+    .map(slide => {
+      const match = slide.id.match(/^s(\d+)$/)
+      return match && match[1] ? parseInt(match[1], 10) : 0
+    })
+    .filter(n => n > 0)
+  
+  // Encontra o próximo número disponível
+  const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0
+  return `s${maxNumber + 1}`
 }
 
 /**
