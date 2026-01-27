@@ -25,7 +25,7 @@ import { calculateProjectAssetsSize as calculateAssets } from "@/components/edit
 import { checkSelectedProject as checkProject } from "@/components/editor/extras/editor/project-load-operations"
 import { EditorLayoutType1 } from "@/components/editor/extras/editor/editor-layout-type1"
 import { EditorLayoutType2 } from "@/components/editor/extras/editor/editor-layout-type2"
-import { EditorLayoutSequential } from "@/components/editor/extras/editor/editor-layout-sequential"
+import { EditorLayoutSlideshow } from "@/components/editor/extras/editor/editor-layout-slideshow"
 import { EnhancedStorageAdapter, type ProjectPreferences } from "@/lib/storage/editor/enhanced-storage-adapter"
 import { syncConfig } from "@/lib/sync/editor/sync-config"
 import { SaveAsDialog } from "@/components/editor/extras/editor/save-as-dialog"
@@ -35,15 +35,15 @@ import { getLayoutFromType, type ProjectType, type InternalLayout, PROJECT_TYPES
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
-import { PreviewRendererSequentialContinuous } from "@/components/editor/extras/preview/preview-renderer-sequential-continuous"
-import { PreviewRendererSequentialSlide } from "@/components/editor/extras/preview/preview-renderer-sequential-slide"
+import { PreviewRendererSlideshowContinuous } from "@/components/editor/extras/preview/preview-renderer-slideshow-continuous"
+import { PreviewRendererSlideshowSlide } from "@/components/editor/extras/preview/preview-renderer-slideshow-slide"
 import type { SerializedEditorState } from "lexical"
 import { 
-  type SequentialPanelStructure, 
+  type SlideshowStructure, 
   type PreviewMode,
-  createEmptySequentialStructure,
-  serializeSequentialStructure
-} from "@/lib/storage/editor/panel-structure"
+  createEmptySlideshowStructure,
+  serializeSlideshowStructure
+} from "@/lib/storage/editor/slideshow-structure"
 import type { CellularContent } from "@/lib/storage/editor/cell-structure"
 
 interface ProjectData {
@@ -137,16 +137,16 @@ export default function Page() {
   const [previewState, setPreviewState] = useState<SerializedEditorState | null>(null)
   const [previewBlockStates, setPreviewBlockStates] = useState<Record<string, SerializedEditorState>>({})
   const [previewLayout, setPreviewLayout] = useState<InternalLayout>("single")
-  const [previewSequentialStructure, setPreviewSequentialStructure] = useState<SequentialPanelStructure | null>(null)
-  const [previewSequentialMode, setPreviewSequentialMode] = useState<PreviewMode>("continuous")
+  const [previewSlideshowStructure, setPreviewSlideshowStructure] = useState<SlideshowStructure | null>(null)
+  const [previewSlideshowMode, setPreviewSlideshowMode] = useState<PreviewMode>("continuous")
   const [lastProjectLoadTime, setLastProjectLoadTime] = useState<number>(0)
   const [currentProjectMode, setCurrentProjectMode] = useState<ProjectMode>("free-page")
   const [currentProjectPreferences, setCurrentProjectPreferences] = useState<ProjectPreferences | undefined>(undefined)
 
-  // Sequential panel states
-  const [sequentialStructure, setSequentialStructure] = useState<SequentialPanelStructure | null>(null)
-  const [currentPanelIndex, setCurrentPanelIndex] = useState(0)
-  const [panelEditorRefs, setPanelEditorRefs] = useState<Map<string, React.RefObject<LexicalEditor>>>(new Map())
+  // Slideshow slide states
+  const [slideshowStructure, setSlideshowStructure] = useState<SlideshowStructure | null>(null)
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0)
+  const [slideEditorRefs, setSlideEditorRefs] = useState<Map<string, React.RefObject<LexicalEditor>>>(new Map())
   const [previewMode, setPreviewMode] = useState<PreviewMode>("continuous")
   
   const [nextUrl, setNextUrl] = useState<string | null>(null)
@@ -211,9 +211,9 @@ export default function Page() {
         setCurrentProjectType: (type: string) => setCurrentProjectType(type as ProjectType),
         setEditorState,
         setBlockStates,
-        setSequentialStructure,
-        setCurrentPanelIndex,
-        setPanelEditorRefs,
+        setSlideshowStructure,
+        setCurrentSlideIndex,
+        setSlideEditorRefs,
         setPreviewMode,
         setCurrentProjectMode,
         setLastProjectLoadTime,
@@ -237,8 +237,8 @@ export default function Page() {
   useEffect(() => {
     let dataToCalculate: string
     
-    if (currentLayout === "sequential" && sequentialStructure) {
-      dataToCalculate = serializeSequentialStructure(sequentialStructure)
+    if (currentLayout === "slideshow" && slideshowStructure) {
+      dataToCalculate = serializeSlideshowStructure(slideshowStructure)
     } else {
       const blocks: Record<string, any> = {}
       if (currentLayout === "single") {
@@ -254,7 +254,7 @@ export default function Page() {
     
     const size = estimateSize(dataToCalculate)
     setCurrentProjectSize(size)
-  }, [editorState, blockStates, currentLayout, sequentialStructure])
+  }, [editorState, blockStates, currentLayout, slideshowStructure])
 
   // Calculate assets size when project changes or editor content changes
   useEffect(() => {
@@ -263,7 +263,7 @@ export default function Page() {
     } else {
       setCurrentProjectAssetsSize(0)
     }
-  }, [currentProjectId, isDbInitialized, editorState, blockStates, sequentialStructure])
+  }, [currentProjectId, isDbInitialized, editorState, blockStates, slideshowStructure])
 
   const storageAdapter = {
     save: async (id: string, name: string, data: string, tags: string[] = [], storageType: "local" | "gameguild-cloud" | "google-drive" = "local", preferences?: ProjectPreferences, type: string = "type1") => {
@@ -433,9 +433,9 @@ export default function Page() {
     // Prepare the correct state based on layout type
     let dataToSave: string
     
-    if (currentLayout === "sequential" && sequentialStructure) {
-      // Sequential layout: serialize the structure
-      dataToSave = serializeSequentialStructure(sequentialStructure)
+    if (currentLayout === "slideshow" && slideshowStructure) {
+      // Slideshow layout: serialize the structure
+      dataToSave = serializeSlideshowStructure(slideshowStructure)
     } else {
       // Single or Multi-block layout
       const blocks: Record<string, any> = {}
@@ -458,7 +458,7 @@ export default function Page() {
     const preferences = currentProjectPreferences || {
       global: {
         mode: currentProjectMode,
-        ...(currentLayout === "sequential" && { previewMode: previewMode })
+        ...(currentLayout === "slideshow" && { previewMode: previewMode })
       },
       nodes: {}
     }
@@ -482,9 +482,9 @@ export default function Page() {
     // Prepare the correct state based on layout type
     let dataToSave: string
     
-    if (currentLayout === "sequential" && sequentialStructure) {
-      // Sequential layout: serialize the structure
-      dataToSave = serializeSequentialStructure(sequentialStructure)
+    if (currentLayout === "slideshow" && slideshowStructure) {
+      // Slideshow layout: serialize the structure
+      dataToSave = serializeSlideshowStructure(slideshowStructure)
     } else {
       // Single or Multi-block layout
       const blocks: Record<string, any> = {}
@@ -704,19 +704,19 @@ export default function Page() {
 
     try {
       // Handle preview based on layout type
-      if (currentLayout === "sequential") {
-        // Sequential layout
-        if (!sequentialStructure || sequentialStructure.panels.length === 0) {
+      if (currentLayout === "slideshow") {
+        // Slideshow layout
+        if (!slideshowStructure || slideshowStructure.slides.length === 0) {
           toast.error("No content", {
-            description: "Sequential structure is empty",
+            description: "Slideshow structure is empty",
             duration: 3000,
           })
           return
         }
         
-        setPreviewSequentialStructure(sequentialStructure)
-        setPreviewSequentialMode(previewMode)
-        setPreviewLayout("sequential")
+        setPreviewSlideshowStructure(slideshowStructure)
+        setPreviewSlideshowMode(previewMode)
+        setPreviewLayout("slideshow")
         setPreviewOpen(true)
       } else if (currentLayout === "single") {
         if (!editorState) {
@@ -909,21 +909,21 @@ export default function Page() {
                       // Mark project load time to prevent auto-save for 1 second
                       setLastProjectLoadTime(Date.now())
                       
-                      // Handle sequential layout
-                      if (layoutInfo.isSequential && layoutInfo.sequentialData) {
-                        setSequentialStructure(layoutInfo.sequentialData)
-                        setCurrentPanelIndex(0)
+                      // Handle slideshow layout
+                      if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
+                        setSlideshowStructure(layoutInfo.slideshowData)
+                        setCurrentSlideIndex(0)
                         
                         // Load previewMode from preferences or default to continuous
                         const savedPreviewMode = projectData.preferences?.global?.previewMode || "continuous"
                         setPreviewMode(savedPreviewMode as PreviewMode)
                         
-                        // Initialize editor refs for all panels
+                        // Initialize editor refs for all slides
                         const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
-                        layoutInfo.sequentialData.panels.forEach(panel => {
-                          newRefs.set(panel.id, { current: undefined as any })
+                        layoutInfo.slideshowData.slides.forEach(slide => {
+                          newRefs.set(slide.id, { current: undefined as any })
                         })
-                        setPanelEditorRefs(newRefs)
+                        setSlideEditorRefs(newRefs)
                         
                         // Update URL hash with project ID
                         window.history.pushState(null, '', `#${projectData.id}`)
@@ -1022,8 +1022,8 @@ export default function Page() {
                     Preview
                   </Button>
 
-                  {/* Preview Mode Selector (Sequential Layout Only) */}
-                  {currentLayout === "sequential" && sequentialStructure && (
+                  {/* Preview Mode Selector (Slideshow Layout Only) */}
+                  {currentLayout === "slideshow" && slideshowStructure && (
                     <PreviewModeSelector
                       previewMode={previewMode}
                       onPreviewModeChange={setPreviewMode}
@@ -1076,21 +1076,21 @@ export default function Page() {
                 let dataString: string
                 const layoutType = getLayoutFromType(projectData.type)
                 
-                if (layoutType === "sequential") {
-                  // Sequential panels
-                  const initialStructure = createEmptySequentialStructure()
-                  dataString = serializeSequentialStructure(initialStructure)
-                  setSequentialStructure(initialStructure)
-                  setCurrentPanelIndex(0)
+                if (layoutType === "slideshow") {
+                  // Slideshow slides
+                  const initialStructure = createEmptySlideshowStructure()
+                  dataString = serializeSlideshowStructure(initialStructure)
+                  setSlideshowStructure(initialStructure)
+                  setCurrentSlideIndex(0)
                   
-                  // Initialize editor refs for first panel
+                  // Initialize editor refs for first slide
                   const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
-                  if (initialStructure.panels[0]) {
-                    newRefs.set(initialStructure.panels[0].id, { current: undefined as any })
+                  if (initialStructure.slides[0]) {
+                    newRefs.set(initialStructure.slides[0].id, { current: undefined as any })
                   }
-                  setPanelEditorRefs(newRefs)
+                  setSlideEditorRefs(newRefs)
                   
-                  // Update the project in storage with the correct sequential structure
+                  // Update the project in storage with the correct slideshow structure
                   setTimeout(async () => {
                     try {
                       await storageAdapter.save(
@@ -1103,7 +1103,7 @@ export default function Page() {
                         projectData.type
                       )
                     } catch (error) {
-                      console.error("Failed to save sequential structure:", error)
+                      console.error("Failed to save slideshow structure:", error)
                     }
                   }, 200)
                 } else if (layoutType === "multiple") {
@@ -1144,7 +1144,7 @@ export default function Page() {
                     }
                     setBlockStates(newBlockStates)
                   }
-                  // Sequential panels will be initialized as they render
+                  // Slideshow slides will be initialized as they render
                 }, 100)
                 
                 setCurrentProjectId(projectData.id)
@@ -1161,14 +1161,14 @@ export default function Page() {
             />
 
             {/* Editor Container - Render based on layout type */}
-            {currentLayout === "sequential" && sequentialStructure ? (
-              <EditorLayoutSequential
-                structure={sequentialStructure}
-                onStructureChange={setSequentialStructure}
-                currentPanelIndex={currentPanelIndex}
-                onPanelIndexChange={setCurrentPanelIndex}
-                panelEditorRefs={panelEditorRefs}
-                onPanelEditorRefsChange={setPanelEditorRefs}
+            {currentLayout === "slideshow" && slideshowStructure ? (
+              <EditorLayoutSlideshow
+                structure={slideshowStructure}
+                onStructureChange={setSlideshowStructure}
+                currentSlideIndex={currentSlideIndex}
+                onSlideIndexChange={setCurrentSlideIndex}
+                slideEditorRefs={slideEditorRefs}
+                onSlideEditorRefsChange={setSlideEditorRefs}
                 onLoadingChange={(setLoading) => {
                   setLoadingRef.current = setLoading
                 }}
@@ -1275,8 +1275,8 @@ export default function Page() {
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent 
-          className={(previewLayout === "multiple" || previewLayout === "sequential") ? "max-w-none! p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
-          style={(previewLayout === "multiple" || previewLayout === "sequential") ? { width: '95vw', maxWidth: '95vw' } : undefined}
+          className={(previewLayout === "multiple" || previewLayout === "slideshow") ? "max-w-none! p-6" : "max-w-4xl max-h-[90vh] overflow-y-auto"}
+          style={(previewLayout === "multiple" || previewLayout === "slideshow") ? { width: '95vw', maxWidth: '95vw' } : undefined}
         >
           <DialogHeader>
             <DialogTitle>Preview</DialogTitle>
@@ -1304,19 +1304,19 @@ export default function Page() {
               />
             </div>
           )}
-          {previewLayout === "sequential" && previewSequentialStructure && (
+          {previewLayout === "slideshow" && previewSlideshowStructure && (
             <div className="w-full max-h-[80vh] overflow-y-auto">
-              {previewSequentialMode === "slide" ? (
-                <PreviewRendererSequentialSlide
-                  structure={previewSequentialStructure}
+              {previewSlideshowMode === "slide" ? (
+                <PreviewRendererSlideshowSlide
+                  structure={previewSlideshowStructure}
                   projectId={currentProjectId}
                   projectName={currentProjectName}
                   storageAdapter={storageAdapter}
                   preferences={currentProjectPreferences}
                 />
               ) : (
-                <PreviewRendererSequentialContinuous
-                  structure={previewSequentialStructure}
+                <PreviewRendererSlideshowContinuous
+                  structure={previewSlideshowStructure}
                   projectId={currentProjectId}
                   projectName={currentProjectName}
                   storageAdapter={storageAdapter}

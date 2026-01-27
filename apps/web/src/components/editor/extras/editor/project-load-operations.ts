@@ -2,7 +2,7 @@ import { LexicalEditor } from "lexical"
 import { toast } from "sonner"
 import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/layout-detector"
 import { getLayoutFromType, type ProjectType, type InternalLayout } from "@/lib/storage/editor/project-types"
-import type { SequentialPanelStructure, PreviewMode } from "@/lib/storage/editor/panel-structure"
+import type { SlideshowStructure, PreviewMode } from "@/lib/storage/editor/slideshow-structure"
 
 // Parameter interface
 export interface CheckSelectedProjectParams {
@@ -24,13 +24,13 @@ export interface CheckSelectedProjectParams {
   setCurrentProjectStorageType: (type: "local" | "gameguild-cloud" | "google-drive") => void
   setProjectTags: (tags: string[]) => void
   setIsFirstTime: (value: boolean) => void
-  setCurrentLayout: (layout: InternalLayout) => void // Layout auto-detected (single, multiple, or sequential)
+  setCurrentLayout: (layout: InternalLayout) => void // Layout auto-detected (single, multiple, or slideshow)
   setCurrentProjectType: (type: ProjectType) => void // Project type
   setEditorState: (state: string) => void
   setBlockStates: (states: Record<string, string> | ((prev: Record<string, string>) => Record<string, string>)) => void
-  setSequentialStructure?: (structure: SequentialPanelStructure) => void
-  setCurrentPanelIndex?: (index: number) => void
-  setPanelEditorRefs?: (refs: Map<string, React.RefObject<LexicalEditor>>) => void
+  setSlideshowStructure?: (structure: SlideshowStructure) => void
+  setCurrentSlideIndex?: (index: number) => void
+  setSlideEditorRefs?: (refs: Map<string, React.RefObject<LexicalEditor>>) => void
   setPreviewMode?: (mode: PreviewMode) => void
   setCurrentProjectMode?: (mode: any) => void
   setLastProjectLoadTime?: (time: number) => void
@@ -54,9 +54,9 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
     setCurrentProjectType,
     setEditorState,
     setBlockStates,
-    setSequentialStructure,
-    setCurrentPanelIndex,
-    setPanelEditorRefs,
+    setSlideshowStructure,
+    setCurrentSlideIndex,
+    setSlideEditorRefs,
     setPreviewMode,
     setCurrentProjectMode,
     setLastProjectLoadTime,
@@ -105,22 +105,22 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
             setLastProjectLoadTime(Date.now())
           }
           
-          // Handle sequential layout
-          if (layoutInfo.isSequential && layoutInfo.sequentialData) {
-            if (setSequentialStructure && setCurrentPanelIndex && setPanelEditorRefs && setPreviewMode) {
-              setSequentialStructure(layoutInfo.sequentialData)
-              setCurrentPanelIndex(0)
+          // Handle slideshow layout
+          if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
+            if (setSlideshowStructure && setCurrentSlideIndex && setSlideEditorRefs && setPreviewMode) {
+              setSlideshowStructure(layoutInfo.slideshowData)
+              setCurrentSlideIndex(0)
               
               // Load previewMode from preferences or default to continuous
               const savedPreviewMode = projectData.preferences?.global?.previewMode || "continuous"
               setPreviewMode(savedPreviewMode as PreviewMode)
               
-              // Initialize editor refs for all panels
+              // Initialize editor refs for all slides
               const newRefs = new Map<string, React.RefObject<LexicalEditor>>()
-              layoutInfo.sequentialData.panels.forEach(panel => {
-                newRefs.set(panel.id, { current: undefined as any })
+              layoutInfo.slideshowData.slides.forEach(slide => {
+                newRefs.set(slide.id, { current: undefined as any })
               })
-              setPanelEditorRefs(newRefs)
+              setSlideEditorRefs(newRefs)
               
               // Update URL hash if not already set
               if (window.location.hash !== `#${projectData.id}`) {
@@ -133,7 +133,7 @@ export async function checkSelectedProject(params: CheckSelectedProjectParams): 
                 icon: "📂",
               })
               
-              return // Exit early for sequential layout
+              return // Exit early for slideshow layout
             }
           }
           

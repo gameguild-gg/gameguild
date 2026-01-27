@@ -4,29 +4,29 @@ import { Button } from "@/components/ui/button"
 import { Plus, Trash2, GripVertical, Layout, LayoutGrid } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import type { PanelData, PanelLayoutType } from "@/lib/storage/editor/panel-structure"
+import type { SlideData, SlideLayoutType } from "@/lib/storage/editor/slideshow-structure"
 
-interface PanelNavigationSidebarProps {
-  panels: PanelData[]
-  currentPanelIndex: number
-  onPanelSelect: (index: number) => void
-  onPanelAdd: (type: PanelLayoutType, position?: number) => void
-  onPanelRemove: (panelId: string) => void
-  onPanelReorder: (fromIndex: number, toIndex: number) => void
-  onPanelNameChange: (panelId: string, name: string) => void
+interface SlideNavigationSidebarProps {
+  slides: SlideData[]
+  currentSlideIndex: number
+  onSlideSelect: (index: number) => void
+  onSlideAdd: (type: SlideLayoutType, position?: number) => void
+  onSlideRemove: (slideId: string) => void
+  onSlideReorder: (fromIndex: number, toIndex: number) => void
+  onSlideNameChange: (slideId: string, name: string) => void
 }
 
-export function PanelNavigationSidebar({
-  panels,
-  currentPanelIndex,
-  onPanelSelect,
-  onPanelAdd,
-  onPanelRemove,
-  onPanelReorder,
-  onPanelNameChange,
-}: PanelNavigationSidebarProps) {
+export function SlideNavigationSidebar({
+  slides,
+  currentSlideIndex,
+  onSlideSelect,
+  onSlideAdd,
+  onSlideRemove,
+  onSlideReorder,
+  onSlideNameChange,
+}: SlideNavigationSidebarProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-  const [editingPanelId, setEditingPanelId] = useState<string | null>(null)
+  const [editingSlideId, setEditingSlideId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
 
   const handleDragStart = (index: number) => {
@@ -37,7 +37,7 @@ export function PanelNavigationSidebar({
     e.preventDefault()
     if (draggedIndex === null || draggedIndex === index) return
     
-    onPanelReorder(draggedIndex, index)
+    onSlideReorder(draggedIndex, index)
     setDraggedIndex(index)
   }
 
@@ -45,20 +45,20 @@ export function PanelNavigationSidebar({
     setDraggedIndex(null)
   }
 
-  const handleNameEdit = (panel: PanelData) => {
-    setEditingPanelId(panel.id)
-    setEditingName(panel.name || `Panel ${panel.order + 1}`)
+  const handleNameEdit = (slide: SlideData) => {
+    setEditingSlideId(slide.id)
+    setEditingName(slide.name || `Slide ${slide.order + 1}`)
   }
 
-  const handleNameSave = (panelId: string) => {
+  const handleNameSave = (slideId: string) => {
     if (editingName.trim()) {
-      onPanelNameChange(panelId, editingName.trim())
+      onSlideNameChange(slideId, editingName.trim())
     }
-    setEditingPanelId(null)
+    setEditingSlideId(null)
   }
 
   const handleNameCancel = () => {
-    setEditingPanelId(null)
+    setEditingSlideId(null)
     setEditingName("")
   }
 
@@ -67,53 +67,53 @@ export function PanelNavigationSidebar({
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-800">
         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-          Panels ({panels.length})
+          Slides ({slides.length})
         </h3>
         
-        {/* Add Panel Buttons */}
+        {/* Add Slide Buttons */}
         <div className="flex gap-2">
           <Button
-            onClick={() => onPanelAdd("single")}
+            onClick={() => onSlideAdd("single")}
             variant="outline"
             size="sm"
             className="flex-1 text-xs"
-            title="Add Single Panel"
+            title="Add Simple Slide"
           >
             <Layout className="h-3 w-3 mr-1" />
-            Single
+            Simple
           </Button>
           <Button
-            onClick={() => onPanelAdd("multiple")}
+            onClick={() => onSlideAdd("multiple")}
             variant="outline"
             size="sm"
             className="flex-1 text-xs"
-            title="Add Multiple Panel"
+            title="Add Multi-Panel Slide"
           >
             <LayoutGrid className="h-3 w-3 mr-1" />
-            Multiple
+            Multi-Panel
           </Button>
         </div>
       </div>
 
-      {/* Panels List */}
+      {/* Slides List */}
       <div className="flex-1 overflow-y-auto p-2">
-        {panels.length === 0 ? (
+        {slides.length === 0 ? (
           <div className="text-center py-8 text-sm text-gray-500">
-            No panels yet. Add one to get started.
+            No slides yet. Add one to get started.
           </div>
         ) : (
           <div className="space-y-2">
-            {panels.map((panel, index) => (
+            {slides.map((slide, index) => (
               <div
-                key={panel.id}
+                key={slide.id}
                 draggable
                 onDragStart={() => handleDragStart(index)}
                 onDragOver={(e) => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
-                onClick={() => onPanelSelect(index)}
+                onClick={() => onSlideSelect(index)}
                 className={cn(
                   "group relative p-3 rounded-lg border-2 cursor-pointer transition-all",
-                  currentPanelIndex === index
+                  currentSlideIndex === index
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                     : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600",
                   draggedIndex === index && "opacity-50"
@@ -125,13 +125,13 @@ export function PanelNavigationSidebar({
                 </div>
 
                 <div className="pl-6">
-                  {/* Panel Number and Type */}
+                  {/* Slide Number and Type */}
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                         #{index + 1}
                       </span>
-                      {panel.type === "multiple" ? (
+                      {slide.type === "multiple" ? (
                         <LayoutGrid className="h-3 w-3 text-blue-500" />
                       ) : (
                         <Layout className="h-3 w-3 text-green-500" />
@@ -139,31 +139,31 @@ export function PanelNavigationSidebar({
                     </div>
                     
                     {/* Delete Button */}
-                    {panels.length > 1 && (
+                    {slides.length > 1 && (
                       <Button
                         onClick={(e) => {
                           e.stopPropagation()
-                          onPanelRemove(panel.id)
+                          onSlideRemove(slide.id)
                         }}
                         variant="ghost"
                         size="sm"
                         className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        title="Remove Panel"
+                        title="Remove Slide"
                       >
                         <Trash2 className="h-3 w-3 text-red-500" />
                       </Button>
                     )}
                   </div>
 
-                  {/* Panel Name (Editable) */}
-                  {editingPanelId === panel.id ? (
+                  {/* Slide Name (Editable) */}
+                  {editingSlideId === slide.id ? (
                     <input
                       type="text"
                       value={editingName}
                       onChange={(e) => setEditingName(e.target.value)}
-                      onBlur={() => handleNameSave(panel.id)}
+                      onBlur={() => handleNameSave(slide.id)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") handleNameSave(panel.id)
+                        if (e.key === "Enter") handleNameSave(slide.id)
                         if (e.key === "Escape") handleNameCancel()
                       }}
                       onClick={(e) => e.stopPropagation()}
@@ -174,24 +174,24 @@ export function PanelNavigationSidebar({
                     <div
                       onDoubleClick={(e) => {
                         e.stopPropagation()
-                        handleNameEdit(panel)
+                        handleNameEdit(slide)
                       }}
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate"
-                      title={panel.name || `Panel ${index + 1}`}
+                      title={slide.name || `Slide ${index + 1}`}
                     >
-                      {panel.name || `Panel ${index + 1}`}
+                      {slide.name || `Slide ${index + 1}`}
                     </div>
                   )}
 
-                  {/* Panel Type Badge */}
+                  {/* Slide Type Badge */}
                   <div className="mt-1">
                     <span className={cn(
                       "inline-block px-2 py-0.5 text-xs rounded",
-                      panel.type === "multiple"
+                      slide.type === "multiple"
                         ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
                         : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
                     )}>
-                      {panel.type === "multiple" ? "Multiple Panel" : "Single Panel"}
+                      {slide.type === "multiple" ? "Multi-Panel" : "Simple"}
                     </span>
                   </div>
                 </div>
@@ -204,13 +204,13 @@ export function PanelNavigationSidebar({
       {/* Footer with Add Button */}
       <div className="p-3 border-t border-gray-200 dark:border-gray-800">
         <Button
-          onClick={() => onPanelAdd("multiple")}
+          onClick={() => onSlideAdd("multiple")}
           variant="outline"
           size="sm"
           className="w-full"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Panel
+          Add Slide
         </Button>
       </div>
     </div>
