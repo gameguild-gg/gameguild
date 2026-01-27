@@ -5,11 +5,11 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-r
 import { Button } from "@/components/ui/button"
 import { PreviewRenderer } from "./preview-renderer"
 import { PreviewRendererType2 } from "./preview-renderer-type2"
-import type { SequentialPanelStructure } from "@/lib/storage/editor/panel-structure"
+import type { SlideshowStructure } from "@/lib/storage/editor/slideshow-structure"
 import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 
-interface PreviewRendererSequentialSlideProps {
-  structure: SequentialPanelStructure
+interface PreviewRendererSlideshowSlideProps {
+  structure: SlideshowStructure
   projectId: string
   projectName?: string
   storageAdapter?: {
@@ -18,30 +18,30 @@ interface PreviewRendererSequentialSlideProps {
   preferences?: ProjectPreferences
 }
 
-export function PreviewRendererSequentialSlide({
+export function PreviewRendererSlideshowSlide({
   structure,
   projectId,
   projectName,
   storageAdapter,
   preferences,
-}: PreviewRendererSequentialSlideProps) {
-  const sortedPanels = [...structure.panels].sort((a, b) => a.order - b.order)
+}: PreviewRendererSlideshowSlideProps) {
+  const sortedSlides = [...structure.slides].sort((a, b) => a.order - b.order)
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  const currentPanel = sortedPanels[currentIndex]
-  const totalPanels = sortedPanels.length
+  const currentSlide = sortedSlides[currentIndex]
+  const totalSlides = sortedSlides.length
 
   const goToFirst = () => setCurrentIndex(0)
   const goToPrevious = () => setCurrentIndex(Math.max(0, currentIndex - 1))
-  const goToNext = () => setCurrentIndex(Math.min(totalPanels - 1, currentIndex + 1))
-  const goToLast = () => setCurrentIndex(totalPanels - 1)
+  const goToNext = () => setCurrentIndex(Math.min(totalSlides - 1, currentIndex + 1))
+  const goToLast = () => setCurrentIndex(totalSlides - 1)
 
-  if (totalPanels === 0) {
+  if (totalSlides === 0) {
     return (
       <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
         <div className="p-12 text-center">
           <p className="text-gray-500 dark:text-gray-400">
-            No panels in this sequential project
+            No slides in this slideshow
           </p>
         </div>
       </div>
@@ -77,11 +77,11 @@ export function PreviewRendererSequentialSlide({
 
         <div className="flex items-center gap-3">
           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Panel {currentIndex + 1} of {totalPanels}
+            Slide {currentIndex + 1} of {totalSlides}
           </span>
-          {currentPanel?.name && (
+          {currentSlide?.name && (
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              • {currentPanel.name}
+              • {currentSlide.name}
             </span>
           )}
         </div>
@@ -91,7 +91,7 @@ export function PreviewRendererSequentialSlide({
             variant="outline"
             size="sm"
             onClick={goToNext}
-            disabled={currentIndex === totalPanels - 1}
+            disabled={currentIndex === totalSlides - 1}
             className="gap-1"
           >
             Next
@@ -101,7 +101,7 @@ export function PreviewRendererSequentialSlide({
             variant="outline"
             size="sm"
             onClick={goToLast}
-            disabled={currentIndex === totalPanels - 1}
+            disabled={currentIndex === totalSlides - 1}
             className="gap-1"
           >
             Last
@@ -110,44 +110,44 @@ export function PreviewRendererSequentialSlide({
         </div>
       </div>
 
-      {/* Current Panel Content */}
-      {currentPanel && (
+      {/* Current Slide Content */}
+      {currentSlide && (
         <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-          {/* Panel Header */}
-          {currentPanel.name && (
+          {/* Slide Header */}
+          {currentSlide.name && (
             <div className="border-b border-gray-200 bg-gray-50 px-6 py-3 dark:border-gray-800 dark:bg-gray-800/50">
               <div className="flex items-center gap-3">
                 <span className="flex h-7 w-7 items-center justify-center rounded bg-blue-100 text-sm font-semibold text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
                   {currentIndex + 1}
                 </span>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {currentPanel.name}
+                  {currentSlide.name}
                 </h2>
               </div>
             </div>
           )}
 
-          {/* Panel Content */}
+          {/* Slide Content */}
           <div className="p-6">
-            {currentPanel.type === "single" && currentPanel.blocks && Object.keys(currentPanel.blocks).length > 0 ? (
+            {currentSlide.type === "single" && currentSlide.blocks && Object.keys(currentSlide.blocks).length > 0 ? (
               <div className="max-w-4xl mx-auto">
                 <div className="sm:p-2 md:p-6">
                   <PreviewRenderer
                     serializedState={
-                      typeof Object.values(currentPanel.blocks)[0] === "string"
-                        ? JSON.parse(Object.values(currentPanel.blocks)[0] as string)
-                        : Object.values(currentPanel.blocks)[0]
+                      typeof Object.values(currentSlide.blocks)[0] === "string"
+                        ? JSON.parse(Object.values(currentSlide.blocks)[0] as string)
+                        : Object.values(currentSlide.blocks)[0]
                     }
                     projectId={projectId}
                     storageAdapter={storageAdapter}
                   />
                 </div>
               </div>
-            ) : currentPanel.type === "multiple" && currentPanel.blocks && Object.keys(currentPanel.blocks).length >= 1 ? (
+            ) : currentSlide.type === "multiple" && currentSlide.blocks && Object.keys(currentSlide.blocks).length >= 1 ? (
               <PreviewRendererType2
                 blockStates={(() => {
                   const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
-                  return Object.entries(currentPanel.blocks).reduce((acc, [blockId, blockState]) => {
+                  return Object.entries(currentSlide.blocks).reduce((acc, [blockId, blockState]) => {
                     const cellsData = typeof blockState === "string"
                       ? JSON.parse(blockState)
                       : blockState;
@@ -161,7 +161,7 @@ export function PreviewRendererSequentialSlide({
               />
             ) : (
               <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                Empty panel
+                Empty slide
               </div>
             )}
           </div>
@@ -169,18 +169,18 @@ export function PreviewRendererSequentialSlide({
       )}
 
       {/* Quick Navigation Dots */}
-      {totalPanels > 1 && (
+      {totalSlides > 1 && (
         <div className="flex items-center justify-center gap-2 py-4">
-          {sortedPanels.map((panel, index) => (
+          {sortedSlides.map((slide, index) => (
             <button
-              key={panel.id}
+              key={slide.id}
               onClick={() => setCurrentIndex(index)}
               className={`h-2 rounded-full transition-all ${
                 index === currentIndex
                   ? "w-8 bg-blue-600 dark:bg-blue-400"
                   : "w-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500"
               }`}
-              title={panel.name || `Panel ${index + 1}`}
+              title={slide.name || `Slide ${index + 1}`}
             />
           ))}
         </div>

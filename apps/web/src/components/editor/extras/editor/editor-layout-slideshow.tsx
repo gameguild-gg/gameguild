@@ -7,28 +7,28 @@ import { Plus } from "lucide-react"
 import { toast } from "sonner"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
 import type {
-  SequentialPanelStructure,
-  PanelLayoutType,
-} from "@/lib/storage/editor/panel-structure"
+  SlideshowStructure,
+  SlideLayoutType,
+} from "@/lib/storage/editor/slideshow-structure"
 import {
-  addPanel,
-  removePanel,
-  reorderPanels,
-  updatePanelName,
-  updatePanelState,
-} from "@/lib/storage/editor/panel-structure"
-import { PanelNavigationSidebar } from "./panel-navigation-sidebar"
+  addSlide,
+  removeSlide,
+  reorderSlides,
+  updateSlideName,
+  updateSlideState,
+} from "@/lib/storage/editor/slideshow-structure"
+import { SlideNavigationSidebar } from "./slide-navigation-sidebar"
 import { EditorLayoutType1 } from "./editor-layout-type1"
 import { EditorLayoutType2 } from "./editor-layout-type2"
 import { type ProjectType} from "@/lib/storage/editor/project-types"
 
-interface EditorLayoutSequentialProps {
-  structure: SequentialPanelStructure
-  onStructureChange: (structure: SequentialPanelStructure) => void
-  currentPanelIndex: number
-  onPanelIndexChange: (index: number) => void
-  panelEditorRefs: Map<string, React.RefObject<LexicalEditor>>
-  onPanelEditorRefsChange: (refs: Map<string, React.RefObject<LexicalEditor>>) => void
+interface EditorLayoutSlideshowProps {
+  structure: SlideshowStructure
+  onStructureChange: (structure: SlideshowStructure) => void
+  currentSlideIndex: number
+  onSlideIndexChange: (index: number) => void
+  slideEditorRefs: Map<string, React.RefObject<LexicalEditor>>
+  onSlideEditorRefsChange: (refs: Map<string, React.RefObject<LexicalEditor>>) => void
   onLoadingChange: (setLoading: (loading: boolean) => void) => void
   projectId: string
   mode: ProjectMode
@@ -36,29 +36,29 @@ interface EditorLayoutSequentialProps {
   storageAdapter?: any
 }
 
-export function EditorLayoutSequential({
+export function EditorLayoutSlideshow({
   structure,
   onStructureChange,
-  currentPanelIndex,
-  onPanelIndexChange,
-  panelEditorRefs,
-  onPanelEditorRefsChange,
+  currentSlideIndex,
+  onSlideIndexChange,
+  slideEditorRefs,
+  onSlideEditorRefsChange,
   onLoadingChange,
   projectId,
   mode,
   currentProjectType,
   storageAdapter,
-}: EditorLayoutSequentialProps) {
-  const panelContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+}: EditorLayoutSlideshowProps) {
+  const slideContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
-  const handleSidebarPanelSelect = (index: number) => {
-    onPanelIndexChange(index)
+  const handleSidebarSlideSelect = (index: number) => {
+    onSlideIndexChange(index)
     // Scroll only when clicking from sidebar
-    const currentPanel = structure.panels[index]
-    if (currentPanel) {
-      const panelElement = panelContainerRefs.current.get(currentPanel.id)
-      if (panelElement) {
-        panelElement.scrollIntoView({
+    const currentSlide = structure.slides[index]
+    if (currentSlide) {
+      const slideElement = slideContainerRefs.current.get(currentSlide.id)
+      if (slideElement) {
+        slideElement.scrollIntoView({
           behavior: "smooth",
           block: "start",
         })
@@ -66,140 +66,140 @@ export function EditorLayoutSequential({
     }
   }
 
-  const handlePanelAdd = (type: PanelLayoutType) => {
-    const newStructure = addPanel(structure, type)
+  const handleSlideAdd = (type: SlideLayoutType) => {
+    const newStructure = addSlide(structure, type)
     onStructureChange(newStructure)
-    // Initialize ref for new panel
-    const lastPanel = newStructure.panels[newStructure.panels.length - 1]
-    const newRefs = new Map(panelEditorRefs)
-    if (lastPanel) {
-      newRefs.set(lastPanel.id, { current: undefined as any })
+    // Initialize ref for new slide
+    const lastSlide = newStructure.slides[newStructure.slides.length - 1]
+    const newRefs = new Map(slideEditorRefs)
+    if (lastSlide) {
+      newRefs.set(lastSlide.id, { current: undefined as any })
     }
-    onPanelEditorRefsChange(newRefs)
-    // Navigate to new panel
-    onPanelIndexChange(newStructure.panels.length - 1)
+    onSlideEditorRefsChange(newRefs)
+    // Navigate to new slide
+    onSlideIndexChange(newStructure.slides.length - 1)
   }
 
-  const handlePanelRemove = (panelId: string) => {
-    if (structure.panels.length === 1) {
-      toast.error("Cannot remove last panel", {
-        description: "At least one panel is required",
+  const handleSlideRemove = (slideId: string) => {
+    if (structure.slides.length === 1) {
+      toast.error("Cannot remove last slide", {
+        description: "At least one slide is required",
         duration: 3000,
       })
       return
     }
-    const newStructure = removePanel(structure, panelId)
+    const newStructure = removeSlide(structure, slideId)
     onStructureChange(newStructure)
     // Remove ref
-    const newRefs = new Map(panelEditorRefs)
-    newRefs.delete(panelId)
-    onPanelEditorRefsChange(newRefs)
+    const newRefs = new Map(slideEditorRefs)
+    newRefs.delete(slideId)
+    onSlideEditorRefsChange(newRefs)
     // Adjust current index if needed
-    if (currentPanelIndex >= newStructure.panels.length) {
-      onPanelIndexChange(newStructure.panels.length - 1)
+    if (currentSlideIndex >= newStructure.slides.length) {
+      onSlideIndexChange(newStructure.slides.length - 1)
     }
   }
 
-  const handlePanelReorder = (fromIndex: number, toIndex: number) => {
-    const newStructure = reorderPanels(structure, fromIndex, toIndex)
+  const handleSlideReorder = (fromIndex: number, toIndex: number) => {
+    const newStructure = reorderSlides(structure, fromIndex, toIndex)
     onStructureChange(newStructure)
-    // Update current index to follow the moved panel
-    if (currentPanelIndex === fromIndex) {
-      onPanelIndexChange(toIndex)
-    } else if (currentPanelIndex === toIndex) {
-      onPanelIndexChange(fromIndex < toIndex ? toIndex - 1 : toIndex + 1)
+    // Update current index to follow the moved slide
+    if (currentSlideIndex === fromIndex) {
+      onSlideIndexChange(toIndex)
+    } else if (currentSlideIndex === toIndex) {
+      onSlideIndexChange(fromIndex < toIndex ? toIndex - 1 : toIndex + 1)
     }
   }
 
-  const handlePanelNameChange = (panelId: string, name: string) => {
-    const newStructure = updatePanelName(structure, panelId, name)
+  const handleSlideNameChange = (slideId: string, name: string) => {
+    const newStructure = updateSlideName(structure, slideId, name)
     onStructureChange(newStructure)
   }
 
-  const handleAddPanelAtPosition = (type: PanelLayoutType, position: number) => {
-    const newStructure = addPanel(structure, type, position)
+  const handleAddSlideAtPosition = (type: SlideLayoutType, position: number) => {
+    const newStructure = addSlide(structure, type, position)
     onStructureChange(newStructure)
-    const newPanel = newStructure.panels[position]
-    const newRefs = new Map(panelEditorRefs)
-    if (newPanel) {
-      newRefs.set(newPanel.id, { current: undefined as any })
+    const newSlide = newStructure.slides[position]
+    const newRefs = new Map(slideEditorRefs)
+    if (newSlide) {
+      newRefs.set(newSlide.id, { current: undefined as any })
     }
-    onPanelEditorRefsChange(newRefs)
-    onPanelIndexChange(position)
+    onSlideEditorRefsChange(newRefs)
+    onSlideIndexChange(position)
   }
 
   return (
     <div className="flex gap-0 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
-      {/* Panel Navigation Sidebar */}
+      {/* Slide Navigation Sidebar */}
       <div className="w-64 border-r border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-        <PanelNavigationSidebar
-          panels={structure.panels}
-          currentPanelIndex={currentPanelIndex}
-          onPanelSelect={handleSidebarPanelSelect}
-          onPanelAdd={handlePanelAdd}
-          onPanelRemove={handlePanelRemove}
-          onPanelReorder={handlePanelReorder}
-          onPanelNameChange={handlePanelNameChange}
+        <SlideNavigationSidebar
+          slides={structure.slides}
+          currentSlideIndex={currentSlideIndex}
+          onSlideSelect={handleSidebarSlideSelect}
+          onSlideAdd={handleSlideAdd}
+          onSlideRemove={handleSlideRemove}
+          onSlideReorder={handleSlideReorder}
+          onSlideNameChange={handleSlideNameChange}
         />
       </div>
 
-      {/* Continuous Scroll Container - All panels visible */}
+      {/* Continuous Scroll Container - All slides visible */}
       <div className="flex-1 overflow-y-auto max-h-[calc(100vh-12rem)] bg-gray-50 dark:bg-gray-950">
         <div className="space-y-4 p-6">
-          {structure.panels.map((panel, index) => (
+          {structure.slides.map((slide, index) => (
             <div 
-              key={panel.id}
+              key={slide.id}
               ref={(el) => {
                 if (el) {
-                  panelContainerRefs.current.set(panel.id, el)
+                  slideContainerRefs.current.set(slide.id, el)
                 } else {
-                  panelContainerRefs.current.delete(panel.id)
+                  slideContainerRefs.current.delete(slide.id)
                 }
               }}
             >
               <div
                 className={`border-2 transition-all rounded-lg overflow-hidden ${
-                  currentPanelIndex === index
+                  currentSlideIndex === index
                     ? "border-blue-500 shadow-lg ring-2 ring-blue-200 dark:ring-blue-800"
                     : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
                 }`}
-                onClick={() => onPanelIndexChange(index)}
+                onClick={() => onSlideIndexChange(index)}
               >
-                {/* Panel Header */}
+                {/* Slide Header */}
                 <div className="bg-white dark:bg-gray-900 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {panel.name || `Panel ${panel.order + 1}`}
+                      {slide.name || `Slide ${slide.order + 1}`}
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                      {panel.type === "single" ? "Single" : "Multiple"}
+                      {slide.type === "single" ? "Simple" : "Multi-Panel"}
                     </span>
                   </div>
                 </div>
 
-                {/* Panel Content */}
-                {panel.type === "single" ? (
+                {/* Slide Content */}
+                {slide.type === "single" ? (
                   <div className="bg-white dark:bg-gray-900">
                     <div className="max-w-4xl mx-auto">
                       <div className="sm:p-2 md:p-6">
                         <EditorLayoutType1
-                          editorRef={panelEditorRefs.get(panel.id) as any}
+                          editorRef={slideEditorRefs.get(slide.id) as any}
                           editorState={
-                            panel.blocks && Object.keys(panel.blocks).length > 0
-                              ? (typeof Object.values(panel.blocks)[0] === "string"
-                                  ? Object.values(panel.blocks)[0] as string
-                                  : JSON.stringify(Object.values(panel.blocks)[0] || ""))
+                            slide.blocks && Object.keys(slide.blocks).length > 0
+                              ? (typeof Object.values(slide.blocks)[0] === "string"
+                                  ? Object.values(slide.blocks)[0] as string
+                                  : JSON.stringify(Object.values(slide.blocks)[0] || ""))
                               : ""
                           }
                           onEditorChange={(newState) => {
-                            const firstBlockId = Object.keys(panel.blocks || {})[0] || "b1";
-                            const newStructure = updatePanelState(structure, panel.id, {
+                            const firstBlockId = Object.keys(slide.blocks || {})[0] || "b1";
+                            const newStructure = updateSlideState(structure, slide.id, {
                               [firstBlockId]: newState,
                             })
                             onStructureChange(newStructure)
                           }}
                           onLoadingChange={(setLoading) => {
-                            if (currentPanelIndex === index) {
+                            if (currentSlideIndex === index) {
                               onLoadingChange(setLoading)
                             }
                           }}
@@ -214,23 +214,23 @@ export function EditorLayoutSequential({
                 ) : (
                   <div className="bg-white dark:bg-gray-900">
                     <EditorLayoutType2
-                      blockRefs={{ current: Object.keys(panel.blocks || {}).reduce((acc, blockId) => {
-                        acc[blockId] = panelEditorRefs.get(`${panel.id}-${blockId}`)?.current || null;
+                      blockRefs={{ current: Object.keys(slide.blocks || {}).reduce((acc, blockId) => {
+                        acc[blockId] = slideEditorRefs.get(`${slide.id}-${blockId}`)?.current || null;
                         return acc;
                       }, {} as Record<string, LexicalEditor | null>) }}
-                      blockStates={Object.entries(panel.blocks || {}).reduce((acc, [blockId, blockState]) => {
+                      blockStates={Object.entries(slide.blocks || {}).reduce((acc, [blockId, blockState]) => {
                         acc[blockId] = typeof blockState === "string"
                           ? blockState
                           : JSON.stringify(blockState || "");
                         return acc;
                       }, {} as Record<string, string>)}
                       onBlockChange={(blockId: string, newState: string) => {
-                        const newBlocks = { ...panel.blocks, [blockId]: newState };
-                        const newStructure = updatePanelState(structure, panel.id, newBlocks)
+                        const newBlocks = { ...slide.blocks, [blockId]: newState };
+                        const newStructure = updateSlideState(structure, slide.id, newBlocks)
                         onStructureChange(newStructure)
                       }}
                       onLoadingChange={(setLoading) => {
-                        if (currentPanelIndex === index) {
+                        if (currentSlideIndex === index) {
                           onLoadingChange(setLoading)
                         }
                       }}
@@ -243,26 +243,26 @@ export function EditorLayoutSequential({
                 )}
               </div>
 
-              {/* Add Panel Button */}
+              {/* Add Slide Button */}
               <div className="flex justify-center my-4">
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleAddPanelAtPosition("single", index + 1)}
+                    onClick={() => handleAddSlideAtPosition("single", index + 1)}
                     className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
                   >
                     <Plus className="h-4 w-4" />
-                    Add Single Panel
+                    Add Simple Slide
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleAddPanelAtPosition("multiple", index + 1)}
+                    onClick={() => handleAddSlideAtPosition("multiple", index + 1)}
                     className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
                   >
                     <Plus className="h-4 w-4" />
-                    Add Multiple Panel
+                    Add Multi-Panel Slide
                   </Button>
                 </div>
               </div>
