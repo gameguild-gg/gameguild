@@ -26,6 +26,22 @@ title IPv4 Packet Header
   160-191: "Options + Padding"
 ```
 
+| Field                   | Description                                                    |
+| ----------------------- | -------------------------------------------------------------- |
+| **Version**             | IP version (4 for IPv4)                                        |
+| **IHL**                 | Header length in 32-bit words (typically 5 = 20 bytes)         |
+| **Type of Service**     | Priority and quality hints (rarely used in practice)           |
+| **Total Length**        | Entire packet size in bytes (header + data)                    |
+| **Identification**      | Unique ID to reassemble fragmented packets                     |
+| **Flags**               | Fragmentation control (Don't Fragment, More Fragments)         |
+| **Fragment Offset**     | Position of this fragment in the original packet               |
+| **Time To Live**        | Hop counter; decremented at each router, packet discarded at 0 |
+| **Protocol**            | Next layer protocol (6 = TCP, 17 = UDP, 1 = ICMP)              |
+| **Header Checksum**     | Error detection for header only (not payload)                  |
+| **Source Address**      | Sender's 32-bit IP address                                     |
+| **Destination Address** | Recipient's 32-bit IP address                                  |
+| **Options + Padding**   | Optional; rarely used (timestamps, routing)                    |
+
 ### IPv6 Packet Header
 
 ```mermaid
@@ -40,6 +56,21 @@ title IPv6 Packet Header
   64-191: "Source Address"
   192-319: "Destination Address"
 ```
+
+| Field                   | Description                                                           |
+| ----------------------- | --------------------------------------------------------------------- |
+| **Version**             | IP version (6 for IPv6)                                               |
+| **Traffic Class**       | Priority/QoS hints (like IPv4's Type of Service)                      |
+| **Flow Label**          | Identifies packets belonging to the same flow for special handling    |
+| **Payload Length**      | Size of data after this header (excludes header itself)               |
+| **Next Header**         | Protocol of the next header (TCP=6, UDP=17, or extension header type) |
+| **Hop Limit**           | Same as TTL; decremented at each hop, discarded at 0                  |
+| **Source Address**      | Sender's 128-bit IP address                                           |
+| **Destination Address** | Recipient's 128-bit IP address                                        |
+
+::: note
+IPv6 is simpler: no checksum (handled by transport layer), no fragmentation fields (handled by extension headers), fixed 40-byte header.
+:::
 
 ---
 

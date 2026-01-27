@@ -18,8 +18,6 @@ Beej's Guide uses C and POSIX/Linux system calls directly. In this course, we'll
 
 **Total reading time: ~110 minutes (~1.8 hours)**
 
-
-
 ---
 
 ## Videos (Pick One)
@@ -89,13 +87,13 @@ This week's assignment involves building a UDP echo client/server with broadcast
 
 1. **Echo Server Pattern**: Server receives a datagram and sends back the same content to the sender
 2. **Broadcast Discovery**: Client sends to broadcast address (e.g., `255.255.255.255` or subnet broadcast), server responds with its address
-3. **`SO_BROADCAST` option**: Must be enabled on socket to send broadcast packets
-4. **`recvfrom()` captures sender**: Returns the address of whoever sent the packet, enabling reply
+3. **`broadcast(true)` option**: Must be enabled on socket to send broadcast packets (`socket.set_option(boost::asio::socket_base::broadcast(true))`)
+4. **`receive_from()` captures sender**: Returns the address of whoever sent the packet via the endpoint parameter, enabling reply
 
 **Recommended reading order for the assignment:**
 
 1. RFC 768 → understand the protocol
-2. Beej Ch. 5.1-5.3, 5.8 → learn the API
+2. Beej Ch. 5.1-5.3, 5.8 → learn the API (BSD style, concepts map to Boost.Asio)
 3. Beej Ch. 6.3 → see a working example
 4. Beej Ch. 7.7 → understand broadcasting
-5. Boost.Asio UDP tutorials → if using Boost for your wrapper
+5. Boost.Asio UDP tutorials → translate concepts to Boost.Asio

@@ -1,11 +1,5 @@
 # Week 01
 
-::: warning
-
-This content is still work in progress.
-
-:::
-
 <details>
 <summary>Click to expand instructor notes</summary>
 
