@@ -45,9 +45,9 @@ export function SlideNavigationSidebar({
     setDraggedIndex(null)
   }
 
-  const handleNameEdit = (slide: SlideData) => {
+  const handleNameEdit = (slide: SlideData, index: number) => {
     setEditingSlideId(slide.id)
-    setEditingName(slide.name || `Slide ${slide.order + 1}`)
+    setEditingName(slide.name || `Slide ${index + 1}`)
   }
 
   const handleNameSave = (slideId: string) => {
@@ -174,7 +174,7 @@ export function SlideNavigationSidebar({
                     <div
                       onDoubleClick={(e) => {
                         e.stopPropagation()
-                        handleNameEdit(slide)
+                        handleNameEdit(slide, index)
                       }}
                       className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate"
                       title={slide.name || `Slide ${index + 1}`}
