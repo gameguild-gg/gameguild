@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Monitor, Presentation } from "lucide-react"
 import { toast } from "sonner"
-import type { PreviewMode } from "@/lib/storage/editor/panel-structure"
+import type { PreviewMode } from "@/lib/storage/editor/slideshow-structure"
 
 interface PreviewModeSelectorProps {
   previewMode: PreviewMode
@@ -25,12 +25,12 @@ export function PreviewModeSelector({
         onClick={() => {
           onPreviewModeChange("continuous")
           toast.success("Preview mode changed", {
-            description: "Preview will show all panels in continuous scroll",
+            description: "Preview will show all slides in continuous scroll",
             duration: 2000
           })
         }}
         className="gap-2 h-8"
-        title="Show all panels in continuous scroll"
+        title="Show all slides in continuous scroll"
       >
         <Monitor className="h-3.5 w-3.5" />
         Continuous
@@ -41,12 +41,12 @@ export function PreviewModeSelector({
         onClick={() => {
           onPreviewModeChange("slide")
           toast.success("Preview mode changed", {
-            description: "Preview will show one panel at a time",
+            description: "Preview will show one slide at a time",
             duration: 2000
           })
         }}
         className="gap-2 h-8"
-        title="Show one panel at a time (presentation mode)"
+        title="Show one slide at a time (presentation mode)"
       >
         <Presentation className="h-3.5 w-3.5" />
         Slide

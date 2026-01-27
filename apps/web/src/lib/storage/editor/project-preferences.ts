@@ -1,6 +1,6 @@
 import type { ShikiTheme } from "@/components/editor/extras/code-studio/types"
 import type { ProjectMode, NodeRestrictions } from "./project-modes"
-import type { PreviewMode } from "./panel-structure"
+import type { PreviewMode } from "./slideshow-structure"
 import type { MultiBlockLayout } from "./multi-block-layout"
 
 // Panel data for advanced multi-block layout
@@ -17,7 +17,7 @@ export interface ProjectPreferences {
     shikiTheme?: ShikiTheme
     mode?: ProjectMode
     restrictions?: NodeRestrictions
-    previewMode?: PreviewMode // Preview mode for sequential panels
+    previewMode?: PreviewMode // Preview mode for slideshow
     type2SingleBlockWidth?: "narrow" | "wide" // Width preference for type2 with single block
     type2MultiBlockLayout?: MultiBlockLayout // Custom layout for multiple blocks (3+)
     advancedMultiBlockPanels?: PanelData[] // Advanced layout with resizable panels

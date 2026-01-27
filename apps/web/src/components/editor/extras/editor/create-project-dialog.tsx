@@ -170,13 +170,13 @@ export function CreateProjectDialog({
       }
       
       // Create data structure based on project type
-      // For sequential layout, the parent component will create the structure
+      // For slideshow layout, the parent component will create the structure
       let projectData: string
       const layoutType = getLayoutFromType(projectType)
       
-      if (layoutType === "sequential") {
+      if (layoutType === "slideshow") {
         // Temporary placeholder - will be replaced by parent component
-        projectData = JSON.stringify({ version: "sequential-v1", panels: [] })
+        projectData = JSON.stringify({ version: "slideshow-v1", slides: [] })
       } else {
         projectData = createProjectData(projectType, {
           blocks: {
@@ -269,7 +269,7 @@ export function CreateProjectDialog({
           <div>
             <Label className="text-sm font-semibold mb-2 block">Project Layout *</Label>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {/* Type 1 - Single Panel */}
+              {/* Type 1 - Simple */}
               <button
                 type="button"
                 onClick={() => setProjectType(PROJECT_TYPES.TYPE1)}
@@ -302,7 +302,7 @@ export function CreateProjectDialog({
                   </div>
                 </div>
                 
-                <h3 className="font-semibold text-base mb-1">Single Panel</h3>
+                <h3 className="font-semibold text-base mb-1">Simple</h3>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
                   One vertical editor for simple documents, articles, or notes.
                 </p>
@@ -311,7 +311,7 @@ export function CreateProjectDialog({
                 </div>
               </button>
 
-              {/* Type 2 - Multiple Panel */}
+              {/* Type 2 - Multi-Panel */}
               <button
                 type="button"
                 onClick={() => setProjectType(PROJECT_TYPES.TYPE2)}
@@ -350,7 +350,7 @@ export function CreateProjectDialog({
                   </div>
                 </div>
                 
-                <h3 className="font-semibold text-base mb-1">Multi Panel</h3>
+                <h3 className="font-semibold text-base mb-1">Multi-Panel</h3>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
                   Multiple panels side-by-side (starts with 1, add more as needed) for comparison or parallel content.
                 </p>
@@ -359,7 +359,7 @@ export function CreateProjectDialog({
                 </div>
               </button>
 
-              {/* Type 3 - Sequential */}
+              {/* Type 3 - Slideshow */}
               <button
                 type="button"
                 onClick={() => setProjectType(PROJECT_TYPES.TYPE3)}
@@ -403,12 +403,12 @@ export function CreateProjectDialog({
                   </div>
                 </div>
                 
-                <h3 className="font-semibold text-base mb-1">Sequential Panel</h3>
+                <h3 className="font-semibold text-base mb-1">Slideshow</h3>
                 <p className="text-xs text-gray-600 dark:text-gray-400 mb-1.5">
-                  Multiple panels in sequence, like slides for presentations or tutorials.
+                  Multiple slides in sequence for presentations or tutorials.
                 </p>
                 <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Sequential Layout</span>
+                  <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-[10px]">Slideshow Layout</span>
                 </div>
               </button>
             </div>

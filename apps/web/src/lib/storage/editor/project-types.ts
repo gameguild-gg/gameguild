@@ -25,7 +25,7 @@ export type ProjectType = typeof PROJECT_TYPES[keyof typeof PROJECT_TYPES]
  * Layout interno usado pelos componentes
  * Derivado automaticamente do tipo de projeto
  */
-export type InternalLayout = "single" | "multiple" | "sequential"
+export type InternalLayout = "single" | "multiple" | "slideshow"
 
 /**
  * Configuração de cada tipo de projeto
@@ -45,7 +45,7 @@ export interface ProjectTypeConfig {
  */
 export const PROJECT_TYPE_CONFIG: Record<ProjectType, ProjectTypeConfig> = {
   [PROJECT_TYPES.TYPE1]: {
-    label: 'Single Panel',
+    label: 'Simple',
     description: 'One vertical editor for simple documents',
     layout: 'single',
     minBlocks: 1,
@@ -53,7 +53,7 @@ export const PROJECT_TYPE_CONFIG: Record<ProjectType, ProjectTypeConfig> = {
     allowsDynamicBlocks: false,
   },
   [PROJECT_TYPES.TYPE2]: {
-    label: 'Multi Panel',
+    label: 'Multi-Panel',
     description: 'Multiple panels (1 or more)',
     layout: 'multiple',
     minBlocks: 1,
@@ -61,9 +61,9 @@ export const PROJECT_TYPE_CONFIG: Record<ProjectType, ProjectTypeConfig> = {
     allowsDynamicBlocks: true,
   },
   [PROJECT_TYPES.TYPE3]: {
-    label: 'Sequential Panel',
-    description: 'Multiple panels in sequence',
-    layout: 'sequential',
+    label: 'Slideshow',
+    description: 'Multiple slides in sequence for presentations',
+    layout: 'slideshow',
     minBlocks: 1,
     maxBlocks: Infinity,
     allowsDynamicBlocks: true,

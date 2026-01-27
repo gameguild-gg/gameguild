@@ -9,8 +9,8 @@ import { EnhancedStorageAdapter } from "@/lib/storage/editor/enhanced-storage-ad
 import Link from "next/link"
 import { PreviewRendererType1 } from "@/components/editor/extras/preview/preview-renderer-type1"
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
-import { PreviewRendererSequentialContinuous } from "@/components/editor/extras/preview/preview-renderer-sequential-continuous"
-import { PreviewRendererSequentialSlide } from "@/components/editor/extras/preview/preview-renderer-sequential-slide"
+import { PreviewRendererSlideshowContinuous } from "@/components/editor/extras/preview/preview-renderer-slideshow-continuous"
+import { PreviewRendererSlideshowSlide } from "@/components/editor/extras/preview/preview-renderer-slideshow-slide"
 import { useRouter } from "next/navigation"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
 import { detectProjectLayout, extractEditorStates } from "@/lib/storage/editor/layout-detector"
@@ -150,8 +150,8 @@ export default function PreviewPage() {
   const getLayoutAndStates = (): { 
     layout: InternalLayout; 
     states: { blocks: Record<string, any> };
-    isSequential: boolean;
-    sequentialData?: any;
+    hasSlides: boolean;
+    slideshowData?: any;
     projectType?: ProjectType;
     previewMode?: "continuous" | "slide";
   } => {
@@ -159,7 +159,7 @@ export default function PreviewPage() {
       return {
         layout: "single",
         states: { blocks: {} },
-        isSequential: false,
+        hasSlides: false,
       }
     }
     
@@ -184,14 +184,14 @@ export default function PreviewPage() {
     return {
       layout: finalLayout,
       states,
-      isSequential: layoutInfo.isSequential,
-      sequentialData: layoutInfo.sequentialData,
+      hasSlides: layoutInfo.hasSlides,
+      slideshowData: layoutInfo.slideshowData,
       projectType: currentProject.type,
       previewMode,
     }
   }
 
-  const { layout: currentLayout, states, isSequential, sequentialData, projectType, previewMode } = getLayoutAndStates()
+  const { layout: currentLayout, states, hasSlides, slideshowData, projectType, previewMode } = getLayoutAndStates()
 
   return (
     <>
@@ -305,20 +305,20 @@ export default function PreviewPage() {
               </div>
             </div>
 
-            {currentProject && (Object.keys(states.blocks).length > 0 || isSequential) ? (
+            {currentProject && (Object.keys(states.blocks).length > 0 || hasSlides) ? (
               <>
-                {isSequential && sequentialData ? (
+                {hasSlides && slideshowData ? (
                   previewMode === "slide" ? (
-                    <PreviewRendererSequentialSlide
-                      structure={sequentialData}
+                    <PreviewRendererSlideshowSlide
+                      structure={slideshowData}
                       projectId={currentProject.id}
                       projectName={currentProject.name}
                       storageAdapter={storageAdapter}
                       preferences={currentProject.preferences}
                     />
                   ) : (
-                    <PreviewRendererSequentialContinuous
-                      structure={sequentialData}
+                    <PreviewRendererSlideshowContinuous
+                      structure={slideshowData}
                       projectId={currentProject.id}
                       projectName={currentProject.name}
                       storageAdapter={storageAdapter}

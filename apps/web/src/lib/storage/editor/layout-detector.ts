@@ -2,20 +2,20 @@
  * Layout Detection System
  * 
  * Detecta automaticamente o tipo de layout baseado na estrutura dos dados do projeto.
- * - Single Panel: dados com estrutura {blocks: {b1}}
- * - Multi Panel: dados com estrutura {blocks: {b1, b2, b3...}}
- * - Sequential: array de painéis (estrutura v1 com panels[])
+ * - Single: dados com estrutura {blocks: {b1}}
+ * - Multi-Panel: dados com estrutura {blocks: {b1, b2, b3...}}
+ * - Slideshow: array de slides (estrutura v1 com slides[])
  */
 
-import { isSequentialStructure, parseSequentialStructure, type SequentialPanelStructure } from './panel-structure'
+import { isSlideshowStructure, parseSlideshowStructure, type SlideshowStructure } from './slideshow-structure'
 import { getLayoutFromType, type ProjectType, type InternalLayout } from './project-types'
 
 export interface LayoutDetectionResult {
   layoutType: InternalLayout
   isSinglePanel: boolean
   isMultiPanel: boolean
-  isSequential: boolean
-  sequentialData?: SequentialPanelStructure
+  hasSlides: boolean
+  slideshowData?: SlideshowStructure
   blockCount?: number // Number of blocks (b1, b2, b3...)
   blocks?: string[] // Block identifiers: ["b1", "b2", "b3"...]
 }
@@ -31,15 +31,15 @@ export interface EditorStates {
  */
 export function detectProjectLayout(data: string): LayoutDetectionResult {
   try {
-    // Check if it's sequential structure first
-    if (isSequentialStructure(data)) {
-      const sequentialData = parseSequentialStructure(data)
+    // Check if it's slideshow structure first
+    if (isSlideshowStructure(data)) {
+      const slideshowData = parseSlideshowStructure(data)
       return {
-        layoutType: "sequential",
+        layoutType: "slideshow",
         isSinglePanel: false,
         isMultiPanel: false,
-        isSequential: true,
-        sequentialData,
+        hasSlides: true,
+        slideshowData,
       }
     }
     
@@ -52,7 +52,7 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
         layoutType: "multiple",
         isSinglePanel: false,
         isMultiPanel: true,
-        isSequential: false,
+        hasSlides: false,
         blockCount: blockKeys.length,
         blocks: blockKeys.sort((a, b) => {
           const numA = parseInt(a.slice(1))
@@ -67,7 +67,7 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
       layoutType: "single",
       isSinglePanel: true,
       isMultiPanel: false,
-      isSequential: false,
+      hasSlides: false,
       blockCount: 1,
       blocks: ["b1"],
     }
@@ -77,7 +77,7 @@ export function detectProjectLayout(data: string): LayoutDetectionResult {
       layoutType: "single",
       isSinglePanel: true,
       isMultiPanel: false,
-      isSequential: false,
+      hasSlides: false,
     }
   }
 }
@@ -134,10 +134,10 @@ export function extractEditorStates(data: string, projectType: ProjectType): Edi
  * @param states - Estados dos editores (ou estrutura sequencial)
  * @returns String JSON formatada corretamente
  */
-export function createProjectData(projectType: ProjectType, states: Partial<EditorStates> | SequentialPanelStructure, blockCount?: number): string {
+export function createProjectData(projectType: ProjectType, states: Partial<EditorStates> | SlideshowStructure, blockCount?: number): string {
   const layoutType = getLayoutFromType(projectType)
-  // Se for estrutura sequencial completa, apenas serializar
-  if ('version' in states && 'panels' in states) {
+  // Se for estrutura slideshow completa, apenas serializar
+  if ('version' in states && 'slides' in states) {
     return JSON.stringify(states)
   }
   
