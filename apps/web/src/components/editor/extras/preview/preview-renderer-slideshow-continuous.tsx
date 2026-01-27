@@ -22,11 +22,12 @@ export function PreviewRendererSlideshowContinuous({
   storageAdapter,
   preferences,
 }: PreviewRendererSlideshowContinuousProps) {
-  const sortedSlides = [...structure.slides].sort((a, b) => a.order - b.order)
+  // A ordem dos slides é definida pela posição no array
+  const slides = structure.slides
 
   return (
     <div className="space-y-6">
-      {sortedSlides.map((slide, index) => (
+      {slides.map((slide, index) => (
         <div
           key={slide.id}
           className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900"
@@ -86,7 +87,7 @@ export function PreviewRendererSlideshowContinuous({
         </div>
       ))}
 
-      {sortedSlides.length === 0 && (
+      {slides.length === 0 && (
         <div className="border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
           <div className="p-12 text-center">
             <p className="text-gray-500 dark:text-gray-400">

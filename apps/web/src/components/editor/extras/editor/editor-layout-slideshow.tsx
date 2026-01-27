@@ -169,7 +169,7 @@ export function EditorLayoutSlideshow({
                 <div className="bg-white dark:bg-gray-900 px-4 py-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {slide.name || `Slide ${slide.order + 1}`}
+                      {slide.name || `Slide ${index + 1}`}
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
                       {slide.type === "single" ? "Simple" : "Multi-Panel"}

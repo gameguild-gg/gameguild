@@ -25,11 +25,12 @@ export function PreviewRendererSlideshowSlide({
   storageAdapter,
   preferences,
 }: PreviewRendererSlideshowSlideProps) {
-  const sortedSlides = [...structure.slides].sort((a, b) => a.order - b.order)
+  // A ordem dos slides é definida pela posição no array
+  const slides = structure.slides
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  const currentSlide = sortedSlides[currentIndex]
-  const totalSlides = sortedSlides.length
+  const currentSlide = slides[currentIndex]
+  const totalSlides = slides.length
 
   const goToFirst = () => setCurrentIndex(0)
   const goToPrevious = () => setCurrentIndex(Math.max(0, currentIndex - 1))
@@ -171,7 +172,7 @@ export function PreviewRendererSlideshowSlide({
       {/* Quick Navigation Dots */}
       {totalSlides > 1 && (
         <div className="flex items-center justify-center gap-2 py-4">
-          {sortedSlides.map((slide, index) => (
+          {slides.map((slide, index) => (
             <button
               key={slide.id}
               onClick={() => setCurrentIndex(index)}
