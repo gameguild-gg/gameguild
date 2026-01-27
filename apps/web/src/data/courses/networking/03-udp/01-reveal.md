@@ -247,7 +247,7 @@ Sockets are identified by:
 ```mermaid
 graph TD
     subgraph Server["UDP Server"]
-        S1["socket()"] --> S2["bind()"]
+        S1["udp::socket()"] --> S2["bind()"]
         S2 --> S3["receive_from()"]
         S3 --> S4["send_to()"]
         S4 --> S3
@@ -257,7 +257,7 @@ graph TD
 ```mermaid
 graph TD
     subgraph Client["UDP Client"]
-        C1["socket()"] --> C2["send_to()"]
+        C1["udp::socket()"] --> C2["send_to()"]
         C2 --> C3["receive_from()"]
     end
 ```
@@ -307,7 +307,7 @@ Clients don't need a specific port. Bind to port **0**:
 udp::socket socket(io_context, udp::endpoint(udp::v4(), 0));
 
 // Check which port we got
-std::cout << "Bound to port: " 
+std::cout << "Bound to port: "
           << socket.local_endpoint().port() << "\n";
 // Output: "Bound to port: 52847"
 ```
