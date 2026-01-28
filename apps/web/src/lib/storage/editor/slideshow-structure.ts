@@ -2,22 +2,19 @@
  * Slideshow Structure System (type3)
  * 
  * Estrutura para projetos tipo Slideshow
- * Cada slide pode conter painéis (panels) com blocos (blocks) e células (cells)
+ * Cada slide usa o mesmo sistema de multi-panel do type2
  * 
- * Hierarquia: slides[] → panels[] → blocks[] → cells[]
+ * Hierarquia: slides[] → blocks[] → cells[]
  */
 
 import type { SerializedEditorState } from "lexical"
 
-export type SlideLayoutType = "single" | "multiple"
-
 export interface SlideData {
   id: string // formato: s1, s2, s3...
-  type: SlideLayoutType
   name?: string // Nome opcional do slide (ex: "Introdução", "Capítulo 1")
   // Ordem é definida pela posição no array slides[]
   
-  // Blocos do slide (b1 para single, b1+b2+b3... para multiple)
+  // Blocos do slide (b1, b2, b3... - mesmo sistema do type2)
   blocks: Record<string, SerializedEditorState | string>
 }
 
@@ -61,7 +58,6 @@ export function migrateToSlideshowStructure(data: string): SlideshowStructure {
         slides: [
           {
             id: "s1",
-            type: Object.keys(blocks).length > 1 ? "multiple" : "single",
             blocks: Object.entries(blocks).reduce((acc, [key, value]: [string, any]) => {
               acc[key] = typeof value === 'string' ? value : JSON.stringify(value)
               return acc
@@ -77,7 +73,6 @@ export function migrateToSlideshowStructure(data: string): SlideshowStructure {
       slides: [
         {
           id: "s1",
-          type: "single",
           blocks: {
             b1: typeof parsed === 'string' ? parsed : JSON.stringify(parsed)
           }
@@ -123,7 +118,6 @@ export function createEmptySlideshowStructure(): SlideshowStructure {
     slides: [
       {
         id: "s1",
-        type: "single",
         name: "Slide 1",
         blocks: {
           b1: JSON.stringify(emptyState)
@@ -135,10 +129,10 @@ export function createEmptySlideshowStructure(): SlideshowStructure {
 
 /**
  * Adiciona um novo slide à estrutura
+ * Cada slide usa o sistema multi-block (mesmo que type2)
  */
 export function addSlide(
   structure: SlideshowStructure, 
-  type: SlideLayoutType,
   position?: number
 ): SlideshowStructure {
   const emptyState = {
@@ -163,13 +157,9 @@ export function addSlide(
   
   const newSlide: SlideData = {
     id: generateSlideId(structure),
-    type,
     name: `Slide ${structure.slides.length + 1}`,
-    blocks: type === "single" ? {
+    blocks: {
       b1: JSON.stringify(emptyState)
-    } : {
-      b1: JSON.stringify(emptyState),
-      b2: JSON.stringify(emptyState)
     }
   }
   

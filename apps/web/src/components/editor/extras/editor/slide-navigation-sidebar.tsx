@@ -1,16 +1,17 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Plus, Trash2, GripVertical, Layout, LayoutGrid } from "lucide-react"
+import { Plus, Trash2, GripVertical, Layers } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import type { SlideData, SlideLayoutType } from "@/lib/storage/editor/slideshow-structure"
+import type { SlideData } from "@/lib/storage/editor/slideshow-structure"
+import { DeleteConfirmDialog } from "@/components/editor/extras/dialogs/delete-confirm-dialog"
 
 interface SlideNavigationSidebarProps {
   slides: SlideData[]
   currentSlideIndex: number
   onSlideSelect: (index: number) => void
-  onSlideAdd: (type: SlideLayoutType, position?: number) => void
+  onSlideAdd: () => void
   onSlideRemove: (slideId: string) => void
   onSlideReorder: (fromIndex: number, toIndex: number) => void
   onSlideNameChange: (slideId: string, name: string) => void
@@ -28,6 +29,11 @@ export function SlideNavigationSidebar({
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [editingSlideId, setEditingSlideId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; slideId: string | null; slideName: string }>({
+    open: false,
+    slideId: null,
+    slideName: ""
+  })
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index)
@@ -62,6 +68,21 @@ export function SlideNavigationSidebar({
     setEditingName("")
   }
 
+  const handleDeleteClick = (slide: SlideData, index: number) => {
+    setDeleteConfirm({
+      open: true,
+      slideId: slide.id,
+      slideName: slide.name || `Slide ${index + 1}`
+    })
+  }
+
+  const confirmDelete = () => {
+    if (deleteConfirm.slideId) {
+      onSlideRemove(deleteConfirm.slideId)
+    }
+    setDeleteConfirm({ open: false, slideId: null, slideName: "" })
+  }
+
   return (
     <div className="w-64 h-full bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col">
       {/* Header */}
@@ -70,29 +91,17 @@ export function SlideNavigationSidebar({
           Slides ({slides.length})
         </h3>
         
-        {/* Add Slide Buttons */}
-        <div className="flex gap-2">
-          <Button
-            onClick={() => onSlideAdd("single")}
-            variant="outline"
-            size="sm"
-            className="flex-1 text-xs"
-            title="Add Simple Slide"
-          >
-            <Layout className="h-3 w-3 mr-1" />
-            Simple
-          </Button>
-          <Button
-            onClick={() => onSlideAdd("multiple")}
-            variant="outline"
-            size="sm"
-            className="flex-1 text-xs"
-            title="Add Multi-Panel Slide"
-          >
-            <LayoutGrid className="h-3 w-3 mr-1" />
-            Multi-Panel
-          </Button>
-        </div>
+        {/* Add Slide Button */}
+        <Button
+          onClick={() => onSlideAdd()}
+          variant="outline"
+          size="sm"
+          className="w-full"
+          title="Add New Slide"
+        >
+          <Plus className="h-3 w-3 mr-1" />
+          Add Slide
+        </Button>
       </div>
 
       {/* Slides List */}
@@ -125,17 +134,13 @@ export function SlideNavigationSidebar({
                 </div>
 
                 <div className="pl-6">
-                  {/* Slide Number and Type */}
+                  {/* Slide Number */}
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                         #{index + 1}
                       </span>
-                      {slide.type === "multiple" ? (
-                        <LayoutGrid className="h-3 w-3 text-blue-500" />
-                      ) : (
-                        <Layout className="h-3 w-3 text-green-500" />
-                      )}
+                      <Layers className="h-3 w-3 text-blue-500" />
                     </div>
                     
                     {/* Delete Button */}
@@ -143,7 +148,7 @@ export function SlideNavigationSidebar({
                       <Button
                         onClick={(e) => {
                           e.stopPropagation()
-                          onSlideRemove(slide.id)
+                          handleDeleteClick(slide, index)
                         }}
                         variant="ghost"
                         size="sm"
@@ -183,15 +188,10 @@ export function SlideNavigationSidebar({
                     </div>
                   )}
 
-                  {/* Slide Type Badge */}
+                  {/* Block Count Badge */}
                   <div className="mt-1">
-                    <span className={cn(
-                      "inline-block px-2 py-0.5 text-xs rounded",
-                      slide.type === "multiple"
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-                        : "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
-                    )}>
-                      {slide.type === "multiple" ? "Multi-Panel" : "Simple"}
+                    <span className="inline-block px-2 py-0.5 text-xs rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                      {Object.keys(slide.blocks || {}).length} block{Object.keys(slide.blocks || {}).length !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>
@@ -204,7 +204,7 @@ export function SlideNavigationSidebar({
       {/* Footer with Add Button */}
       <div className="p-3 border-t border-gray-200 dark:border-gray-800">
         <Button
-          onClick={() => onSlideAdd("multiple")}
+          onClick={() => onSlideAdd()}
           variant="outline"
           size="sm"
           className="w-full"
@@ -213,6 +213,16 @@ export function SlideNavigationSidebar({
           Add Slide
         </Button>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ open, slideId: null, slideName: "" })}
+        title="Remove Slide"
+        itemName={deleteConfirm.slideName}
+        itemType="slide"
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }
