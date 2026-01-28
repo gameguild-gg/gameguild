@@ -1176,6 +1176,8 @@ export default function Page() {
                 mode={currentProjectMode}
                 currentProjectType={currentProjectType}
                 storageAdapter={storageAdapter}
+                preferences={currentProjectPreferences}
+                onPreferencesChange={handlePreferencesChange}
               />
             ) : currentLayout === "single" ? (
               <EditorLayoutType1

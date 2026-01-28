@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { PreviewRenderer } from "./preview-renderer"
 import { PreviewRendererType2 } from "./preview-renderer-type2"
 import type { SlideshowStructure } from "@/lib/storage/editor/slideshow-structure"
 import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
@@ -128,23 +127,9 @@ export function PreviewRendererSlideshowSlide({
             </div>
           )}
 
-          {/* Slide Content */}
+          {/* Slide Content - Always uses multi-block system */}
           <div className="p-6">
-            {currentSlide.type === "single" && currentSlide.blocks && Object.keys(currentSlide.blocks).length > 0 ? (
-              <div className="max-w-4xl mx-auto">
-                <div className="sm:p-2 md:p-6">
-                  <PreviewRenderer
-                    serializedState={
-                      typeof Object.values(currentSlide.blocks)[0] === "string"
-                        ? JSON.parse(Object.values(currentSlide.blocks)[0] as string)
-                        : Object.values(currentSlide.blocks)[0]
-                    }
-                    projectId={projectId}
-                    storageAdapter={storageAdapter}
-                  />
-                </div>
-              </div>
-            ) : currentSlide.type === "multiple" && currentSlide.blocks && Object.keys(currentSlide.blocks).length >= 1 ? (
+            {currentSlide.blocks && Object.keys(currentSlide.blocks).length > 0 ? (
               <PreviewRendererType2
                 blockStates={(() => {
                   const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")

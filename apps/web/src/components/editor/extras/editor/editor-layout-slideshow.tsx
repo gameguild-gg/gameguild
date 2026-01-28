@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { toast } from "sonner"
 import type { ProjectMode } from "@/lib/storage/editor/project-modes"
+import type { ProjectPreferences } from "@/lib/storage/editor/project-preferences"
 import type {
   SlideshowStructure,
-  SlideLayoutType,
 } from "@/lib/storage/editor/slideshow-structure"
 import {
   addSlide,
@@ -18,7 +18,6 @@ import {
   updateSlideState,
 } from "@/lib/storage/editor/slideshow-structure"
 import { SlideNavigationSidebar } from "./slide-navigation-sidebar"
-import { EditorLayoutType1 } from "./editor-layout-type1"
 import { EditorLayoutType2 } from "./editor-layout-type2"
 import { type ProjectType} from "@/lib/storage/editor/project-types"
 
@@ -34,6 +33,8 @@ interface EditorLayoutSlideshowProps {
   mode: ProjectMode
   currentProjectType?: ProjectType
   storageAdapter?: any
+  preferences?: ProjectPreferences
+  onPreferencesChange?: (preferences: ProjectPreferences) => void
 }
 
 export function EditorLayoutSlideshow({
@@ -48,6 +49,8 @@ export function EditorLayoutSlideshow({
   mode,
   currentProjectType,
   storageAdapter,
+  preferences,
+  onPreferencesChange,
 }: EditorLayoutSlideshowProps) {
   const slideContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
@@ -66,8 +69,8 @@ export function EditorLayoutSlideshow({
     }
   }
 
-  const handleSlideAdd = (type: SlideLayoutType) => {
-    const newStructure = addSlide(structure, type)
+  const handleSlideAdd = () => {
+    const newStructure = addSlide(structure)
     onStructureChange(newStructure)
     // Initialize ref for new slide
     const lastSlide = newStructure.slides[newStructure.slides.length - 1]
@@ -116,8 +119,8 @@ export function EditorLayoutSlideshow({
     onStructureChange(newStructure)
   }
 
-  const handleAddSlideAtPosition = (type: SlideLayoutType, position: number) => {
-    const newStructure = addSlide(structure, type, position)
+  const handleAddSlideAtPosition = (position: number) => {
+    const newStructure = addSlide(structure, position)
     onStructureChange(newStructure)
     const newSlide = newStructure.slides[position]
     const newRefs = new Map(slideEditorRefs)
@@ -172,99 +175,80 @@ export function EditorLayoutSlideshow({
                       {slide.name || `Slide ${index + 1}`}
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-                      {slide.type === "single" ? "Simple" : "Multi-Panel"}
+                      {Object.keys(slide.blocks || {}).length} block{Object.keys(slide.blocks || {}).length !== 1 ? 's' : ''}
                     </span>
                   </div>
                 </div>
 
-                {/* Slide Content */}
-                {slide.type === "single" ? (
-                  <div className="bg-white dark:bg-gray-900">
-                    <div className="max-w-4xl mx-auto">
-                      <div className="sm:p-2 md:p-6">
-                        <EditorLayoutType1
-                          editorRef={slideEditorRefs.get(slide.id) as any}
-                          editorState={
-                            slide.blocks && Object.keys(slide.blocks).length > 0
-                              ? (typeof Object.values(slide.blocks)[0] === "string"
-                                  ? Object.values(slide.blocks)[0] as string
-                                  : JSON.stringify(Object.values(slide.blocks)[0] || ""))
-                              : ""
-                          }
-                          onEditorChange={(newState) => {
-                            const firstBlockId = Object.keys(slide.blocks || {})[0] || "b1";
-                            const newStructure = updateSlideState(structure, slide.id, {
-                              [firstBlockId]: newState,
-                            })
-                            onStructureChange(newStructure)
-                          }}
-                          onLoadingChange={(setLoading) => {
-                            if (currentSlideIndex === index) {
-                              onLoadingChange(setLoading)
-                            }
-                          }}
-                          projectId={projectId}
-                          mode={mode}
-                          currentProjectType={currentProjectType}
-                          storageAdapter={storageAdapter}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-white dark:bg-gray-900">
-                    <EditorLayoutType2
-                      blockRefs={{ current: Object.keys(slide.blocks || {}).reduce((acc, blockId) => {
-                        acc[blockId] = slideEditorRefs.get(`${slide.id}-${blockId}`)?.current || null;
-                        return acc;
-                      }, {} as Record<string, LexicalEditor | null>) }}
-                      blockStates={Object.entries(slide.blocks || {}).reduce((acc, [blockId, blockState]) => {
-                        acc[blockId] = typeof blockState === "string"
-                          ? blockState
-                          : JSON.stringify(blockState || "");
-                        return acc;
-                      }, {} as Record<string, string>)}
-                      onBlockChange={(blockId: string, newState: string) => {
-                        const newBlocks = { ...slide.blocks, [blockId]: newState };
-                        const newStructure = updateSlideState(structure, slide.id, newBlocks)
-                        onStructureChange(newStructure)
-                      }}
-                      onLoadingChange={(setLoading) => {
-                        if (currentSlideIndex === index) {
-                          onLoadingChange(setLoading)
-                        }
-                      }}
-                      projectId={projectId}
-                      mode={mode}
-                      currentProjectType={currentProjectType}
-                      storageAdapter={storageAdapter}
-                    />
-                  </div>
-                )}
+                {/* Slide Content - Always uses EditorLayoutType2 (multi-block system) */}
+                <div className="bg-white dark:bg-gray-900">
+                  <EditorLayoutType2
+                    blockRefs={{ current: Object.keys(slide.blocks || {}).reduce((acc, blockId) => {
+                      acc[blockId] = slideEditorRefs.get(`${slide.id}-${blockId}`)?.current || null;
+                      return acc;
+                    }, {} as Record<string, LexicalEditor | null>) }}
+                    blockStates={Object.entries(slide.blocks || {}).reduce((acc, [blockId, blockState]) => {
+                      acc[blockId] = typeof blockState === "string"
+                        ? blockState
+                        : JSON.stringify(blockState || "");
+                      return acc;
+                    }, {} as Record<string, string>)}
+                    onBlockChange={(blockId: string, newState: string) => {
+                      const newBlocks = { ...slide.blocks, [blockId]: newState };
+                      const newStructure = updateSlideState(structure, slide.id, newBlocks)
+                      onStructureChange(newStructure)
+                    }}
+                    onBlockAdd={() => {
+                      // Find next block number
+                      const blockNumbers = Object.keys(slide.blocks || {}).map(key => parseInt(key.slice(1)))
+                      const nextNum = Math.max(...blockNumbers, 0) + 1
+                      const newBlockId = `b${nextNum}`
+                      
+                      // Create empty cells structure
+                      const emptyCells = JSON.stringify([])
+                      
+                      // Add new block
+                      const newBlocks = { ...slide.blocks, [newBlockId]: emptyCells }
+                      const newStructure = updateSlideState(structure, slide.id, newBlocks)
+                      onStructureChange(newStructure)
+                    }}
+                    onBlockRemove={(blockId: string) => {
+                      if (Object.keys(slide.blocks || {}).length <= 1) {
+                        return // Prevent removing last block
+                      }
+                      
+                      // Remove block
+                      const newBlocks = { ...slide.blocks }
+                      delete newBlocks[blockId]
+                      const newStructure = updateSlideState(structure, slide.id, newBlocks)
+                      onStructureChange(newStructure)
+                    }}
+                    onLoadingChange={(setLoading) => {
+                      if (currentSlideIndex === index) {
+                        onLoadingChange(setLoading)
+                      }
+                    }}
+                    projectId={projectId}
+                    mode={mode}
+                    currentProjectType={currentProjectType}
+                    storageAdapter={storageAdapter}
+                    preferences={preferences}
+                    onPreferencesChange={onPreferencesChange}
+                  />
+                </div>
               </div>
 
               {/* Add Slide Button */}
               <div className="flex justify-center my-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAddSlideAtPosition("single", index + 1)}
-                    className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Simple Slide
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleAddSlideAtPosition("multiple", index + 1)}
-                    className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Multi-Panel Slide
-                  </Button>
-                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleAddSlideAtPosition(index + 1)}
+                  className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Slide
+                </Button>
               </div>
             </div>
           ))}
