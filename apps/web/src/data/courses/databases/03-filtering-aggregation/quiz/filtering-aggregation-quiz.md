@@ -35,7 +35,7 @@ This quiz tests your understanding of **boolean logic**, **filtering operators**
 !!! quiz
 {
 "title": "Question 3: COUNT Variations",
-"question": "COUNT(*) and COUNT(column_name) always return the same result.",
+"question": "COUNT(\*) and COUNT(column_name) always return the same result.",
 "options": ["True", "False"],
 "answers": ["False"]
 }
@@ -616,17 +616,17 @@ WHERE product_id NOT IN (
 
 ### Question 30 - Requirement → SQL
 
-**Requirement:** Find customers who have placed more than 5 orders AND have spent a total of more than $500, showing their name, order count, and total spent, sorted by total spent descending.
+**Requirement:** Find customers (by customer_id) who have placed more than 5 orders AND have spent a total of more than $500, showing their customer_id, order count, and total spent, sorted by total spent descending.
 
 Option A:
 
 ```sql
 SELECT
-    c.name,
-    COUNT(o.id) AS order_count,
-    SUM(o.total) AS total_spent
-FROM customers c, orders o
-GROUP BY c.id, c.name
+    customer_id,
+    COUNT(*) AS order_count,
+    SUM(total) AS total_spent
+FROM orders
+GROUP BY customer_id
 HAVING order_count > 5 AND total_spent > 500
 ORDER BY total_spent DESC;
 ```
@@ -635,11 +635,10 @@ Option B:
 
 ```sql
 SELECT
-    c.name,
+    customer_id,
     order_count,
     total_spent
-FROM customers c
-JOIN orders o ON c.id = o.customer_id
+FROM orders
 WHERE order_count > 5 AND total_spent > 500
 ORDER BY total_spent DESC;
 ```
@@ -648,13 +647,12 @@ Option C:
 
 ```sql
 SELECT
-    c.name,
-    COUNT(o.id) AS order_count,
-    SUM(o.total) AS total_spent
-FROM customers c
-JOIN orders o ON c.id = o.customer_id
-WHERE COUNT(o.id) > 5 AND SUM(o.total) > 500
-GROUP BY c.id, c.name
+    customer_id,
+    COUNT(*) AS order_count,
+    SUM(total) AS total_spent
+FROM orders
+WHERE COUNT(*) > 5 AND SUM(total) > 500
+GROUP BY customer_id
 ORDER BY total_spent DESC;
 ```
 
@@ -662,13 +660,12 @@ Option D:
 
 ```sql
 SELECT
-    c.name,
-    COUNT(o.id) AS order_count,
-    SUM(o.total) AS total_spent
-FROM customers c
-JOIN orders o ON c.id = o.customer_id
-GROUP BY c.id, c.name
-HAVING COUNT(o.id) > 5 AND SUM(o.total) > 500
+    customer_id,
+    COUNT(*) AS order_count,
+    SUM(total) AS total_spent
+FROM orders
+GROUP BY customer_id
+HAVING COUNT(*) > 5 AND SUM(total) > 500
 ORDER BY total_spent DESC;
 ```
 
