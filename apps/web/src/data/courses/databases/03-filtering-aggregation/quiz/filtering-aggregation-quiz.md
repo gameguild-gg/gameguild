@@ -35,7 +35,7 @@ This quiz tests your understanding of **boolean logic**, **filtering operators**
 !!! quiz
 {
 "title": "Question 3: COUNT Variations",
-"question": "COUNT(\*) and COUNT(column_name) always return the same result.",
+"question": "COUNT(*) and COUNT(column_name) always return the same result.",
 "options": ["True", "False"],
 "answers": ["False"]
 }
