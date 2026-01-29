@@ -242,21 +242,19 @@ GROUP BY category;  -- valid
 
 ---
 
-## GROUP BY with JOINs & multiple keys
+## GROUP BY with multiple keys
 
 ```sql
--- Revenue per category (join + multi-key group)
+-- Orders by status and payment method
 SELECT
-	c.id AS category_id,
-	c.name,
-	SUM(oi.line_total) AS total_revenue,
-	COUNT(*) AS items_sold
-FROM order_items oi
-JOIN products p ON p.id = oi.product_id
-JOIN categories c ON c.id = p.category_id
-GROUP BY c.id, c.name
-HAVING SUM(oi.line_total) > 5000
-ORDER BY total_revenue DESC;
+	status,
+	payment_method,
+	COUNT(*) AS order_count,
+	SUM(total_amount) AS revenue
+FROM orders
+GROUP BY status, payment_method
+HAVING SUM(total_amount) > 5000
+ORDER BY revenue DESC;
 ```
 
 - Remember every selected non-aggregate column must be grouped.
@@ -387,13 +385,12 @@ ORDER BY month;
 
 ```sql
 SELECT
-	c.name,
-	COUNT(o.id) AS order_count,
-	SUM(o.total) AS total_spent
-FROM customers c
-JOIN orders o ON c.id = o.customer_id
-GROUP BY c.id, c.name
-HAVING COUNT(o.id) > 5 AND SUM(o.total) > 500
+	customer_id,
+	COUNT(*) AS order_count,
+	SUM(total) AS total_spent
+FROM orders
+GROUP BY customer_id
+HAVING COUNT(*) > 5 AND SUM(total) > 500
 ORDER BY total_spent DESC;
 ```
 
