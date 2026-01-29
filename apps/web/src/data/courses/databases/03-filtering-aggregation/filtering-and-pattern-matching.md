@@ -586,26 +586,25 @@ Real-world queries often combine multiple filtering techniques:
 ```sql
 -- Complex product search
 SELECT
-    p.name,
-    p.price,
-    c.name AS category,
+    name,
+    price,
+    category_id,
     CASE
-        WHEN p.stock_quantity = 0 THEN 'Out of Stock'
-        WHEN p.stock_quantity < 10 THEN 'Low Stock'
+        WHEN stock_quantity = 0 THEN 'Out of Stock'
+        WHEN stock_quantity < 10 THEN 'Low Stock'
         ELSE 'In Stock'
     END AS availability
-FROM products p
-JOIN categories c ON p.category_id = c.id
+FROM products
 WHERE
-    p.is_active = true
-    AND p.price BETWEEN 20 AND 100
-    AND c.name IN ('Electronics', 'Books', 'Games')
-    AND p.name ILIKE '%wireless%'
-    AND p.created_at >= NOW() - INTERVAL '1 year'
-    AND p.deleted_at IS NULL
+    is_active = true
+    AND price BETWEEN 20 AND 100
+    AND category_id IN (1, 2, 3)  -- Electronics, Books, Games
+    AND name ILIKE '%wireless%'
+    AND created_at >= NOW() - INTERVAL '1 year'
+    AND deleted_at IS NULL
 ORDER BY
-    CASE WHEN p.stock_quantity > 0 THEN 0 ELSE 1 END,
-    p.price;
+    CASE WHEN stock_quantity > 0 THEN 0 ELSE 1 END,
+    price;
 ```
 
 ---
