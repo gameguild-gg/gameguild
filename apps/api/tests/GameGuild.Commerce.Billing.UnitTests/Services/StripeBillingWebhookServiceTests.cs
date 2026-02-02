@@ -89,6 +89,92 @@ public class StripeBillingWebhookServiceTests
         billingService.Verify(b => b.RecordPaymentAsync(subscription.Id, 50m, "USD", It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
+        [Fact]
+        public async Task ProcessStripeWebhookAsync_Should_Record_Failure_On_Payment_Failed()
+        {
+            var repository = new Mock<IBillingWebhookRepository>();
+            repository
+                .Setup(r => r.GetByExternalEventIdAsync("evt_4", PaymentProviders.Stripe, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((BillingWebhookEvent?)null);
+            repository
+                .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+            repository
+                .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+            var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+            var queryService = new Mock<ISubscriptionQueryService>();
+            queryService
+                .Setup(q => q.GetByExternalIdAsync("sub_456", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(subscription);
+
+            var billingService = new Mock<ISubscriptionBillingService>();
+
+            var service = CreateService(repository, queryService.Object, billingService.Object, Mock.Of<ISubscriptionLifecycleService>(), Mock.Of<ISubscriptionExternalIdService>());
+
+            var payload = "{\"id\":\"evt_4\",\"type\":\"invoice.payment_failed\",\"data\":{\"object\":{\"subscription\":\"sub_456\"}}}";
+
+            var result = await service.ProcessStripeWebhookAsync("evt_4", "invoice.payment_failed", payload, "sig", CancellationToken.None);
+
+            result.Processed.Should().BeTrue();
+            billingService.Verify(b => b.RecordPaymentFailureAsync(subscription.Id, It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ProcessStripeWebhookAsync_Should_Cancel_Subscription_On_Deleted()
+        {
+            var repository = new Mock<IBillingWebhookRepository>();
+            repository
+                .Setup(r => r.GetByExternalEventIdAsync("evt_5", PaymentProviders.Stripe, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((BillingWebhookEvent?)null);
+            repository
+                .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+            repository
+                .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+            var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+            var queryService = new Mock<ISubscriptionQueryService>();
+            queryService
+                .Setup(q => q.GetByExternalIdAsync("sub_789", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(subscription);
+
+            var lifecycle = new Mock<ISubscriptionLifecycleService>();
+
+            var service = CreateService(repository, queryService.Object, Mock.Of<ISubscriptionBillingService>(), lifecycle.Object, Mock.Of<ISubscriptionExternalIdService>());
+
+            var payload = "{\"id\":\"evt_5\",\"type\":\"customer.subscription.deleted\",\"data\":{\"object\":{\"id\":\"sub_789\"}}}";
+
+            var result = await service.ProcessStripeWebhookAsync("evt_5", "customer.subscription.deleted", payload, "sig", CancellationToken.None);
+
+            result.Processed.Should().BeTrue();
+            lifecycle.Verify(l => l.CancelAsync(subscription.Id, CancellationReason.Custom, It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task ProcessStripeWebhookAsync_Should_Handle_Unhandled_Event_Type()
+        {
+            var repository = new Mock<IBillingWebhookRepository>();
+            repository
+                .Setup(r => r.GetByExternalEventIdAsync("evt_6", PaymentProviders.Stripe, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((BillingWebhookEvent?)null);
+            repository
+                .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+            repository
+                .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+            var service = CreateService(repository, Mock.Of<ISubscriptionQueryService>(), Mock.Of<ISubscriptionBillingService>(), Mock.Of<ISubscriptionLifecycleService>(), Mock.Of<ISubscriptionExternalIdService>());
+
+            var payload = "{\"id\":\"evt_6\",\"type\":\"unknown.event\",\"data\":{\"object\":{}}}";
+            var result = await service.ProcessStripeWebhookAsync("evt_6", "unknown.event", payload, "sig", CancellationToken.None);
+
+            result.Processed.Should().BeTrue();
+        }
+
     private static StripeBillingWebhookService CreateService(
         Mock<IBillingWebhookRepository> repository,
         ISubscriptionQueryService queryService,

@@ -96,6 +96,132 @@ public class PayPalBillingWebhookServiceTests
         externalIdService.Verify(s => s.SetExternalIdsAsync(subscription.Id, "sub_123", null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task ProcessPayPalWebhookAsync_Should_Record_Failure_On_Capture_Denied()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.PayPal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+        repository
+            .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+        var verification = new Mock<IPayPalSignatureVerificationService>();
+        verification
+            .Setup(v => v.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PayPalVerificationResult.Success());
+
+        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+        var query = new Mock<ISubscriptionQueryService>();
+        query.Setup(q => q.GetByExternalIdAsync("sub_999", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+
+        var billing = new Mock<ISubscriptionBillingService>();
+
+        var service = new PayPalBillingWebhookService(
+            repository.Object,
+            verification.Object,
+            NullLogger<PayPalBillingWebhookService>.Instance,
+            Mock.Of<ISubscriptionLifecycleService>(),
+            query.Object,
+            billing.Object,
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var payload = "{\"event_type\":\"PAYMENT.CAPTURE.DENIED\",\"resource\":{\"id\":\"pay_1\",\"billing_agreement_id\":\"sub_999\",\"status\":\"DENIED\",\"amount\":{\"total\":\"10.00\",\"currency\":\"USD\"}}}";
+        var result = await service.ProcessPayPalWebhookAsync("wh", payload, "tx", "time", "sig", null, null, CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+        billing.Verify(b => b.RecordPaymentFailureAsync(subscription.Id, It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessPayPalWebhookAsync_Should_Cancel_Subscription_On_Cancelled()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.PayPal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+        repository
+            .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+        var verification = new Mock<IPayPalSignatureVerificationService>();
+        verification
+            .Setup(v => v.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PayPalVerificationResult.Success());
+
+        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+        var query = new Mock<ISubscriptionQueryService>();
+        query.Setup(q => q.GetByExternalIdAsync("sub_888", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+
+        var lifecycle = new Mock<ISubscriptionLifecycleService>();
+
+        var service = new PayPalBillingWebhookService(
+            repository.Object,
+            verification.Object,
+            NullLogger<PayPalBillingWebhookService>.Instance,
+            lifecycle.Object,
+            query.Object,
+            Mock.Of<ISubscriptionBillingService>(),
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var payload = "{\"event_type\":\"BILLING.SUBSCRIPTION.CANCELLED\",\"resource\":{\"id\":\"sub_888\",\"status\":\"CANCELLED\"}}";
+        var result = await service.ProcessPayPalWebhookAsync("wh", payload, "tx", "time", "sig", null, null, CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+        lifecycle.Verify(l => l.CancelAsync(subscription.Id, CancellationReason.Custom, It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessPayPalWebhookAsync_Should_Record_Payment_On_Sale_Completed()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.PayPal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+        repository
+            .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+        var verification = new Mock<IPayPalSignatureVerificationService>();
+        verification
+            .Setup(v => v.VerifySignatureAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<string?>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(PayPalVerificationResult.Success());
+
+        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+        var query = new Mock<ISubscriptionQueryService>();
+        query.Setup(q => q.GetByExternalIdAsync("sub_777", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(subscription);
+
+        var billing = new Mock<ISubscriptionBillingService>();
+
+        var service = new PayPalBillingWebhookService(
+            repository.Object,
+            verification.Object,
+            NullLogger<PayPalBillingWebhookService>.Instance,
+            Mock.Of<ISubscriptionLifecycleService>(),
+            query.Object,
+            billing.Object,
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var payload = "{\"event_type\":\"PAYMENT.SALE.COMPLETED\",\"resource\":{\"id\":\"pay_2\",\"billing_agreement_id\":\"sub_777\",\"status\":\"COMPLETED\",\"amount\":{\"total\":\"10.00\",\"currency\":\"USD\"}}}";
+        var result = await service.ProcessPayPalWebhookAsync("wh", payload, "tx", "time", "sig", null, null, CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+        billing.Verify(b => b.RecordPaymentAsync(subscription.Id, It.IsAny<decimal>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
     private static PayPalBillingWebhookService CreateService(
         Mock<IBillingWebhookRepository> repository,
         IPayPalSignatureVerificationService verification,

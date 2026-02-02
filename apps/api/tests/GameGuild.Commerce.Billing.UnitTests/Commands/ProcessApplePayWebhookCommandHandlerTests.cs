@@ -68,6 +68,44 @@ public class ProcessApplePayWebhookCommandHandlerTests
         result.EventId.Should().Be("tx_1");
     }
 
+    [Fact]
+    public async Task Handle_Should_Process_When_TransactionId_Present()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        var validator = new Mock<IApplePayReceiptValidationService>();
+        validator
+            .Setup(v => v.VerifyNotificationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AppleNotificationVerificationResult.Failed("bad"));
+
+        var handler = new ProcessApplePayWebhookCommandHandler(
+            CreateService(repository.Object, validator.Object),
+            NullLogger<ProcessApplePayWebhookCommandHandler>.Instance);
+
+        var payload = "{\"transactionId\":\"tx\",\"eventType\":\"DID_RENEW\"}";
+        var result = await handler.Handle(new ProcessApplePayWebhookCommand(payload, "merchant", "sig"), CancellationToken.None);
+
+        result.Processed.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Handle_Should_Process_Invalid_Json_As_Unknown()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        var validator = new Mock<IApplePayReceiptValidationService>();
+        validator
+            .Setup(v => v.VerifyNotificationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AppleNotificationVerificationResult.Failed("bad"));
+
+        var handler = new ProcessApplePayWebhookCommandHandler(
+            CreateService(repository.Object, validator.Object),
+            NullLogger<ProcessApplePayWebhookCommandHandler>.Instance);
+
+        var result = await handler.Handle(new ProcessApplePayWebhookCommand("{", "merchant", "sig"), CancellationToken.None);
+
+        result.Processed.Should().BeFalse();
+    }
+
+
     private static ApplePayBillingWebhookService CreateService(
         IBillingWebhookRepository repository,
         IApplePayReceiptValidationService validator)

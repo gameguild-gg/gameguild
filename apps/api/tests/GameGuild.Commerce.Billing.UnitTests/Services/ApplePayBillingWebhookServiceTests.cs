@@ -90,6 +90,236 @@ public class ApplePayBillingWebhookServiceTests
         externalIdService.Verify(s => s.SetExternalIdsAsync(subscription.Id, "orig", null, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public async Task ProcessAppStoreNotificationAsync_Should_Record_Payment_On_Renewed()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.AppleAppStore, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+        repository
+            .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+        var validator = new Mock<IApplePayReceiptValidationService>();
+        validator
+            .Setup(v => v.VerifyNotificationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AppleNotificationVerificationResult.Success("DID_RENEW", null, "tx", "orig", "prod", null, "Sandbox"));
+
+        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+        var query = new Mock<ISubscriptionQueryService>();
+        query.Setup(q => q.GetByExternalIdAsync("orig", It.IsAny<CancellationToken>())).ReturnsAsync(subscription);
+
+        var billing = new Mock<ISubscriptionBillingService>();
+
+        var service = new ApplePayBillingWebhookService(
+            repository.Object,
+            validator.Object,
+            NullLogger<ApplePayBillingWebhookService>.Instance,
+            Mock.Of<ISubscriptionLifecycleService>(),
+            query.Object,
+            billing.Object,
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var result = await service.ProcessAppStoreNotificationAsync("payload", CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+        billing.Verify(b => b.RecordPaymentAsync(subscription.Id, It.IsAny<decimal>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAppStoreNotificationAsync_Should_Record_Failure_On_Failed_To_Renew()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.AppleAppStore, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+        repository
+            .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+        var validator = new Mock<IApplePayReceiptValidationService>();
+        validator
+            .Setup(v => v.VerifyNotificationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AppleNotificationVerificationResult.Success("DID_FAIL_TO_RENEW", "BILLING_RETRY", "tx", "orig", "prod", null, "Sandbox"));
+
+        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+        var query = new Mock<ISubscriptionQueryService>();
+        query.Setup(q => q.GetByExternalIdAsync("orig", It.IsAny<CancellationToken>())).ReturnsAsync(subscription);
+
+        var billing = new Mock<ISubscriptionBillingService>();
+
+        var service = new ApplePayBillingWebhookService(
+            repository.Object,
+            validator.Object,
+            NullLogger<ApplePayBillingWebhookService>.Instance,
+            Mock.Of<ISubscriptionLifecycleService>(),
+            query.Object,
+            billing.Object,
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var result = await service.ProcessAppStoreNotificationAsync("payload", CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+        billing.Verify(b => b.RecordPaymentFailureAsync(subscription.Id, It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAppStoreNotificationAsync_Should_Cancel_On_Expired()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.AppleAppStore, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+        repository
+            .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+        var validator = new Mock<IApplePayReceiptValidationService>();
+        validator
+            .Setup(v => v.VerifyNotificationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AppleNotificationVerificationResult.Success("EXPIRED", null, "tx", "orig", "prod", null, "Sandbox"));
+
+        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+        var query = new Mock<ISubscriptionQueryService>();
+        query.Setup(q => q.GetByExternalIdAsync("orig", It.IsAny<CancellationToken>())).ReturnsAsync(subscription);
+
+        var lifecycle = new Mock<ISubscriptionLifecycleService>();
+
+        var service = new ApplePayBillingWebhookService(
+            repository.Object,
+            validator.Object,
+            NullLogger<ApplePayBillingWebhookService>.Instance,
+            lifecycle.Object,
+            query.Object,
+            Mock.Of<ISubscriptionBillingService>(),
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var result = await service.ProcessAppStoreNotificationAsync("payload", CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+        lifecycle.Verify(l => l.CancelAsync(subscription.Id, CancellationReason.Custom, It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAppStoreNotificationAsync_Should_Cancel_On_GracePeriodExpired()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.AppleAppStore, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+        repository
+            .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+        var validator = new Mock<IApplePayReceiptValidationService>();
+        validator
+            .Setup(v => v.VerifyNotificationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AppleNotificationVerificationResult.Success("GRACE_PERIOD_EXPIRED", null, "tx", "orig", "prod", null, "Sandbox"));
+
+        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+        var query = new Mock<ISubscriptionQueryService>();
+        query.Setup(q => q.GetByExternalIdAsync("orig", It.IsAny<CancellationToken>())).ReturnsAsync(subscription);
+
+        var lifecycle = new Mock<ISubscriptionLifecycleService>();
+
+        var service = new ApplePayBillingWebhookService(
+            repository.Object,
+            validator.Object,
+            NullLogger<ApplePayBillingWebhookService>.Instance,
+            lifecycle.Object,
+            query.Object,
+            Mock.Of<ISubscriptionBillingService>(),
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var result = await service.ProcessAppStoreNotificationAsync("payload", CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+        lifecycle.Verify(l => l.CancelAsync(subscription.Id, CancellationReason.Custom, It.IsAny<string>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessAppStoreNotificationAsync_Should_Handle_AutoRenew_Disabled()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.AppleAppStore, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+        repository
+            .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+        var validator = new Mock<IApplePayReceiptValidationService>();
+        validator
+            .Setup(v => v.VerifyNotificationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AppleNotificationVerificationResult.Success("DID_CHANGE_RENEWAL_STATUS", "AUTO_RENEW_DISABLED", "tx", "orig", "prod", null, "Sandbox"));
+
+        var subscription = new Subscription(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), BillingCycle.Monthly, new Money(10m, "USD"), DateTime.UtcNow);
+        var query = new Mock<ISubscriptionQueryService>();
+        query.Setup(q => q.GetByExternalIdAsync("orig", It.IsAny<CancellationToken>())).ReturnsAsync(subscription);
+
+        var service = new ApplePayBillingWebhookService(
+            repository.Object,
+            validator.Object,
+            NullLogger<ApplePayBillingWebhookService>.Instance,
+            Mock.Of<ISubscriptionLifecycleService>(),
+            query.Object,
+            Mock.Of<ISubscriptionBillingService>(),
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var result = await service.ProcessAppStoreNotificationAsync("payload", CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task ProcessAppStoreNotificationAsync_Should_Handle_Refund_Event()
+    {
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.AppleAppStore, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent?)null);
+        repository
+            .Setup(r => r.CreateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+        repository
+            .Setup(r => r.UpdateAsync(It.IsAny<BillingWebhookEvent>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BillingWebhookEvent e, CancellationToken _) => e);
+
+        var validator = new Mock<IApplePayReceiptValidationService>();
+        validator
+            .Setup(v => v.VerifyNotificationAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(AppleNotificationVerificationResult.Success("REFUND", null, "tx", "orig", "prod", null, "Sandbox"));
+
+        var service = new ApplePayBillingWebhookService(
+            repository.Object,
+            validator.Object,
+            NullLogger<ApplePayBillingWebhookService>.Instance,
+            Mock.Of<ISubscriptionLifecycleService>(),
+            Mock.Of<ISubscriptionQueryService>(),
+            Mock.Of<ISubscriptionBillingService>(),
+            Mock.Of<ISubscriptionExternalIdService>());
+
+        var result = await service.ProcessAppStoreNotificationAsync("payload", CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+    }
+
     private static ApplePayBillingWebhookService CreateService(
         Mock<IBillingWebhookRepository> repository,
         IApplePayReceiptValidationService validator,

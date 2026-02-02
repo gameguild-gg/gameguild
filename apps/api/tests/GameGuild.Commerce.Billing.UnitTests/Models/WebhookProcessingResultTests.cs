@@ -27,6 +27,14 @@ public class WebhookProcessingResultTests
     }
 
     [Fact]
+    public void AlreadyProcessed_Should_Default_Timestamp_When_Null()
+    {
+        var result = WebhookProcessingResult.AlreadyProcessed("evt");
+
+        result.ProcessedAt.Should().NotBeNull();
+    }
+
+    [Fact]
     public void Failed_Should_Set_Error_Fields()
     {
         var result = WebhookProcessingResult.Failed("evt", "bad", requiresRetry: false);

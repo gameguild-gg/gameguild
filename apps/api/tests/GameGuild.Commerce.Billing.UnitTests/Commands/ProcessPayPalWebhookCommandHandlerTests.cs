@@ -41,6 +41,30 @@ public class ProcessPayPalWebhookCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_Should_Handle_Invalid_Json_Payload()
+    {
+        var existingEvent = new BillingWebhookEvent
+        {
+            ExternalEventId = "tx",
+            Provider = PaymentProviders.PayPal,
+            ProcessedAt = DateTime.UtcNow.AddMinutes(-1)
+        };
+
+        var repository = new Mock<IBillingWebhookRepository>();
+        repository
+            .Setup(r => r.GetByExternalEventIdAsync("tx", PaymentProviders.PayPal, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingEvent);
+
+        var handler = new ProcessPayPalWebhookCommandHandler(
+            CreateService(repository.Object, Mock.Of<IPayPalSignatureVerificationService>()),
+            NullLogger<ProcessPayPalWebhookCommandHandler>.Instance);
+
+        var result = await handler.Handle(new ProcessPayPalWebhookCommand("{", "tx", "sig", "time"), CancellationToken.None);
+
+        result.Processed.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task Handle_Should_Return_Failed_When_Verification_Fails()
     {
         var repository = new Mock<IBillingWebhookRepository>();

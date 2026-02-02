@@ -65,4 +65,23 @@ public class UnifiedWebhookEventTests
         unified.Status.Should().Be(WebhookEventStatus.Unknown);
         unified.Provider.Should().Be(PaymentProviders.Stripe);
     }
+
+    [Theory]
+    [InlineData("pending", WebhookEventStatus.Pending)]
+    [InlineData("canceled", WebhookEventStatus.Canceled)]
+    [InlineData("refunded", WebhookEventStatus.Refunded)]
+    public void FromStripeSubscription_Should_Map_Additional_Statuses(string status, WebhookEventStatus expected)
+    {
+        var payload = new StripeSubscriptionWebhookPayload
+        {
+            TenantId = Guid.NewGuid(),
+            ExternalSubscriptionId = "sub_1",
+            Status = status,
+            Amount = 10
+        };
+
+        var unified = UnifiedWebhookEvent.FromStripeSubscription(payload, "customer.subscription.updated", "evt");
+
+        unified.Status.Should().Be(expected);
+    }
 }

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Commerce;
+using GameGuild.Commerce.Billing;
 using Xunit;
 
 namespace GameGuild.Commerce.Billing.UnitTests.Constants;
@@ -29,5 +30,21 @@ public class PaymentProvidersTests
     {
         CurrencyCodes.IsSupported("usd").Should().BeTrue();
         CurrencyCodes.IsSupported("xyz").Should().BeFalse();
+    }
+
+    [Fact]
+    public void PayPalSettings_BaseUrl_Should_Use_Live_When_Production()
+    {
+        var settings = new PayPalSettings { Environment = "live" };
+
+        settings.BaseUrl.Should().Be("https://api-m.paypal.com");
+    }
+
+    [Fact]
+    public void ApplePaySettings_BaseUrl_Should_Use_Production_When_Set()
+    {
+        var settings = new ApplePaySettings { Environment = "production" };
+
+        settings.BaseUrl.Should().Be("https://api.storekit.itunes.apple.com");
     }
 }

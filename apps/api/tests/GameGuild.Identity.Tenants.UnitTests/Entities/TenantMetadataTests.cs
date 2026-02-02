@@ -19,8 +19,8 @@ public class TenantMetadataTests
         metadata.SetCustomFields(fields);
         var roundtrip = metadata.GetCustomFields(NullLogger<TenantMetadata>.Instance);
 
-        roundtrip["plan"].ToString().Should().Be("pro");
-        roundtrip["seats"].ToString().Should().Be("10");
+        roundtrip["plan"]?.ToString().Should().Be("pro");
+        roundtrip["seats"]?.ToString().Should().Be("10");
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class TenantMetadataTests
 
         var result = metadata.GetBusinessInfo(NullLogger<TenantMetadata>.Instance);
 
-        result["legalName"].ToString().Should().Be("Acme");
+        result["legalName"]?.ToString().Should().Be("Acme");
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class TenantMetadataTests
 
         var result = metadata.GetContactInfo(NullLogger<TenantMetadata>.Instance);
 
-        result["email"].ToString().Should().Be("support@example.com");
+        result["email"]?.ToString().Should().Be("support@example.com");
     }
 
     [Fact]

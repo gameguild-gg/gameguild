@@ -14,6 +14,14 @@ public class WebhookHeadersTests
     }
 
     [Fact]
+    public void PayPalWebhookHeaders_IsValid_Should_Fail_When_Missing_Fields()
+    {
+        var headers = new PayPalWebhookHeaders("", "time", "sig");
+
+        headers.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
     public void PayPalWebhookHeaders_FromHeaders_Should_Copy_Values()
     {
         var headers = PayPalWebhookHeaders.FromHeaders("tx", "time", "sig", "cert", "algo");
@@ -31,10 +39,26 @@ public class WebhookHeadersTests
     }
 
     [Fact]
+    public void StripeWebhookHeaders_IsValid_Should_Fail_When_Empty()
+    {
+        var headers = new StripeWebhookHeaders(string.Empty);
+
+        headers.IsValid.Should().BeFalse();
+    }
+
+    [Fact]
     public void AppleNotificationHeaders_IsValid_Should_Require_Payload()
     {
         var headers = new AppleNotificationHeaders("payload");
 
         headers.IsValid.Should().BeTrue();
+    }
+
+    [Fact]
+    public void AppleNotificationHeaders_IsValid_Should_Fail_When_Empty()
+    {
+        var headers = new AppleNotificationHeaders(string.Empty);
+
+        headers.IsValid.Should().BeFalse();
     }
 }
