@@ -616,6 +616,25 @@ public enum PermissionType
 
     #endregion
 
+    #region Commerce Permissions
+
+    /// <summary>
+    ///     Permission to monetize content (enable revenue generation)
+    /// </summary>
+    Monetize = 92,
+
+    /// <summary>
+    ///     Permission to set pricing for content
+    /// </summary>
+    Pricing = 93,
+
+    /// <summary>
+    ///     Permission to add paywall to content
+    /// </summary>
+    Paywall = 94,
+
+    #endregion
+
     #region Administrative GameGuild.Permissions
 
     /// <summary>

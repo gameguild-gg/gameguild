@@ -90,31 +90,6 @@ public sealed class RequireResourcePermissionAttribute<TPermission, TResource> :
 }
 
 /// <summary>
-///     Alias without "Attribute" suffix for cleaner usage.
-///     Usage: [RequireResourcePermission&lt;PermissionType, Entity&gt;(PermissionType.Read)]
-/// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-public sealed class RequireResourcePermission<TPermission, TResource> : Attribute, IResourcePermissionMarker
-    where TPermission : struct, Enum
-    where TResource : class
-{
-    public RequireResourcePermission(TPermission requiredPermission, string resourceIdParameterName = "id")
-    {
-        RequiredPermission = requiredPermission;
-        ResourceIdParameterName = resourceIdParameterName ?? throw new ArgumentNullException(nameof(resourceIdParameterName));
-    }
-
-    public TPermission RequiredPermission { get; }
-    public string ResourceIdParameterName { get; }
-    public Type ResourceType => typeof(TResource);
-    public Type PermissionEnumType => typeof(TPermission);
-    
-    // IResourcePermissionMarker implementation
-    object IResourcePermissionMarker.RequiredPermission => RequiredPermission;
-    string IResourcePermissionMarker.ResourceIdParameterName => ResourceIdParameterName;
-}
-
-/// <summary>
 ///     Specifies that the action method requires a specific permission on a content type.
 ///     Content-type level permissions apply to all instances of the content type within a tenant.
 /// </summary>
@@ -133,42 +108,12 @@ public sealed class RequireContentTypePermissionAttribute<TResource> : Attribute
 }
 
 /// <summary>
-///     Alias without "Attribute" suffix for cleaner usage.
-/// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-public sealed class RequireContentTypePermission<TResource> : Attribute, IContentTypePermissionMarker
-    where TResource : class
-{
-    public RequireContentTypePermission(object permission)
-    {
-        Permission = permission ?? throw new ArgumentNullException(nameof(permission));
-    }
-
-    public object Permission { get; }
-    public Type ResourceType => typeof(TResource);
-}
-
-/// <summary>
 ///     Specifies that the action method requires a specific tenant-level permission.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
 public sealed class RequireTenantPermissionAttribute : Attribute
 {
     public RequireTenantPermissionAttribute(object permission)
-    {
-        Permission = permission ?? throw new ArgumentNullException(nameof(permission));
-    }
-
-    public object Permission { get; }
-}
-
-/// <summary>
-///     Alias without "Attribute" suffix for cleaner usage.
-/// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-public sealed class RequireTenantPermission : Attribute
-{
-    public RequireTenantPermission(object permission)
     {
         Permission = permission ?? throw new ArgumentNullException(nameof(permission));
     }

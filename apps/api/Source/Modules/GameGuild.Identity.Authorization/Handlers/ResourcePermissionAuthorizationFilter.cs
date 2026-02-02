@@ -93,7 +93,6 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         return attr is IResourcePermissionMarker
             || attr is IContentTypePermissionMarker
             || attr is RequireTenantPermissionAttribute
-            || attr is RequireTenantPermission
             || attr is RequiresPermissionAttribute
             || attr is RequirePermissionAttribute;
     }
@@ -120,10 +119,6 @@ public class ResourcePermissionAuthorizationFilter : IAsyncAuthorizationFilter
         if (attr is RequireTenantPermissionAttribute tenantAttr)
         {
             return await CheckTenantPermissionAsync(tenantAttr.Permission, actor, permissionQueryService);
-        }
-        if (attr is RequireTenantPermission tenantAttr2)
-        {
-            return await CheckTenantPermissionAsync(tenantAttr2.Permission, actor, permissionQueryService);
         }
 
         // Handle simple permission attributes
