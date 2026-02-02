@@ -11,6 +11,7 @@ Entity-Relationship (ER) modeling is a technique for designing database schemas 
 An **entity** is a real-world object or concept that can be distinctly identified. In a database, an entity typically becomes a **table**.
 
 **Examples:**
+
 - Customer
 - Product
 - Order
@@ -23,6 +24,7 @@ An **entity** is a real-world object or concept that can be distinctly identifie
 **Attributes** are properties that describe an entity. They become **columns** in a table.
 
 **Customer Entity Attributes:**
+
 - customer_id (identifier)
 - name
 - email
@@ -32,6 +34,7 @@ An **entity** is a real-world object or concept that can be distinctly identifie
 ### Relationships
 
 A **relationship** describes how entities are associated with each other. The three main types are:
+
 - One-to-One (1:1)
 - One-to-Many (1:N)
 - Many-to-Many (M:N)
@@ -46,19 +49,25 @@ Each record in Table A relates to **exactly one** record in Table B, and vice ve
 
 **Example:** Each employee has one employee badge, and each badge belongs to one employee.
 
-```
-┌──────────────┐         ┌──────────────┐
-│   Employee   │─────────│    Badge     │
-│──────────────│   1:1   │──────────────│
-│ employee_id  │         │ badge_id     │
-│ name         │         │ employee_id  │──FK
-│ email        │         │ issue_date   │
-└──────────────┘         └──────────────┘
+```mermaid
+erDiagram
+    EMPLOYEE ||--|| BADGE : has
+    EMPLOYEE {
+        int employee_id PK
+        string name
+        string email
+    }
+    BADGE {
+        int badge_id PK
+        int employee_id FK
+        date issue_date
+    }
 ```
 
 **Implementation Options:**
 
 Option 1: Foreign key in either table
+
 ```sql
 CREATE TABLE employees (
     employee_id SERIAL PRIMARY KEY,
@@ -74,6 +83,7 @@ CREATE TABLE badges (
 ```
 
 Option 2: Same primary key (shared key)
+
 ```sql
 CREATE TABLE badges (
     employee_id INT PRIMARY KEY REFERENCES employees(employee_id),
@@ -89,15 +99,19 @@ Each record in Table A can relate to **many** records in Table B, but each recor
 
 **Example:** One department has many employees, but each employee belongs to one department.
 
-```
-┌──────────────┐         ┌──────────────┐
-│  Department  │─────────│   Employee   │
-│──────────────│   1:N   │──────────────│
-│ dept_id      │         │ employee_id  │
-│ name         │         │ name         │
-│ budget       │         │ dept_id      │──FK
-└──────────────┘         └──────────────┘
-       1                       Many
+```mermaid
+erDiagram
+    DEPARTMENT ||--o{ EMPLOYEE : contains
+    DEPARTMENT {
+        int dept_id PK
+        string name
+        decimal budget
+    }
+    EMPLOYEE {
+        int employee_id PK
+        string name
+        int dept_id FK
+    }
 ```
 
 **Implementation:** Put the foreign key in the "many" side.
@@ -117,6 +131,7 @@ CREATE TABLE employees (
 ```
 
 **More Examples of 1:N:**
+
 - One customer → many orders
 - One author → many books
 - One category → many products
@@ -128,15 +143,26 @@ Each record in Table A can relate to **many** records in Table B, and vice versa
 
 **Example:** Students enroll in many courses, and courses have many students.
 
-```
-┌──────────────┐         ┌──────────────┐         ┌──────────────┐
-│   Student    │─────────│  Enrollment  │─────────│    Course    │
-│──────────────│   1:N   │──────────────│   N:1   │──────────────│
-│ student_id   │         │ student_id   │──FK     │ course_id    │
-│ name         │         │ course_id    │──FK     │ title        │
-│ email        │         │ enrolled_at  │         │ credits      │
-└──────────────┘         │ grade        │         └──────────────┘
-                         └──────────────┘
+```mermaid
+erDiagram
+    STUDENT ||--o{ ENROLLMENT : enrolls
+    COURSE ||--o{ ENROLLMENT : has
+    STUDENT {
+        int student_id PK
+        string name
+        string email
+    }
+    COURSE {
+        int course_id PK
+        string title
+        int credits
+    }
+    ENROLLMENT {
+        int student_id PK,FK
+        int course_id PK,FK
+        timestamp enrolled_at
+        char grade
+    }
 ```
 
 **Implementation:** Create a **junction table** (also called linking table, bridge table, or associative table).
@@ -165,6 +191,7 @@ CREATE TABLE enrollments (
 ```
 
 **More Examples of M:N:**
+
 - Products ↔ Orders (→ order_items)
 - Users ↔ Roles (→ user_roles)
 - Movies ↔ Actors (→ movie_cast)
@@ -196,12 +223,12 @@ CREATE TABLE order_items (
 
 ### Junction Table Naming Conventions
 
-| Pattern | Example |
-|---------|---------|
-| Plural of both entities | `students_courses` |
-| Describes the relationship | `enrollments` |
-| Entity + Entity | `student_course` |
-| Verb-based | `registrations` |
+| Pattern                    | Example            |
+| -------------------------- | ------------------ |
+| Plural of both entities    | `students_courses` |
+| Describes the relationship | `enrollments`      |
+| Entity + Entity            | `student_course`   |
+| Verb-based                 | `registrations`    |
 
 **Recommendation:** Use a descriptive name that reflects the relationship meaning.
 
@@ -222,76 +249,86 @@ Many (optional):     ──○<──
 
 **Example: Customer orders products**
 
+```mermaid
+erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ ORDER_ITEM : contains
+    PRODUCT ||--o{ ORDER_ITEM : in
+    CUSTOMER {
+        int id PK
+        string name
+        string email
+    }
+    ORDER {
+        int id PK
+        int customer FK
+        date date
+        decimal total
+    }
+    PRODUCT {
+        int id PK
+        string name
+        decimal price
+    }
+    ORDER_ITEM {
+        int order_id PK,FK
+        int product_id PK,FK
+        int quantity
+    }
 ```
-┌──────────────┐         ┌──────────────┐         ┌──────────────┐
-│   Customer   │         │    Order     │         │   Product    │
-│──────────────│         │──────────────│         │──────────────│
-│ PK id        │─┼─────○<│ PK id        │>○─────┼─│ PK id        │
-│    name      │         │ FK customer  │         │    name      │
-│    email     │         │    date      │         │    price     │
-└──────────────┘         │    total     │         └──────────────┘
-                         └──────────────┘
-                         
+
 Customer: 1 (mandatory) to Many (optional) Orders
 Order: Many to Many Products (via order_items)
-```
 
 ### Chen Notation
 
 Uses shapes to represent entities and relationships:
 
-```
-┌───────────┐           ◇           ┌───────────┐
-│  Entity1  │─────────◇has◇─────────│  Entity2  │
-└───────────┘                       └───────────┘
-     │
-  ○──┼──○
-  Attributes
+```mermaid
+flowchart LR
+    E1[Entity1] --- R{has} --- E2[Entity2]
+    E1 -.- A1((attr1))
+    E1 -.- A2((attr2))
 ```
 
 - **Rectangle:** Entity
 - **Diamond:** Relationship
-- **Oval:** Attribute
+- **Oval/Circle:** Attribute
 - **Double rectangle:** Weak entity
 
 ### UML Class Diagram Notation
 
 Shows entities as classes with attributes:
 
+```mermaid
+classDiagram
+    class Customer {
+        +int id
+        +string name
+        +string email
+        +getOrders()
+    }
+    class Order {
+        +int id
+        +date order_date
+        +decimal total
+    }
+    Customer "1" --> "*" Order : places
 ```
-┌─────────────────────┐
-│      Customer       │
-├─────────────────────┤
-│ + id: INT           │
-│ + name: VARCHAR     │
-│ + email: VARCHAR    │
-├─────────────────────┤
-│ + getOrders()       │
-└─────────────────────┘
-         │
-         │ 1
-         │
-         │ *
-┌─────────────────────┐
-│       Order         │
-├─────────────────────┤
-│ + id: INT           │
-│ + order_date: DATE  │
-│ + total: DECIMAL    │
-└─────────────────────┘
 
-1 = one
-* = many (zero or more)
-```
+- `1` = exactly one
+- `*` = zero or more (many)
+- `1..*` = one or more
+- `0..1` = zero or one
 
 ### Cardinality Notation Comparison
 
-| Relationship | Crow's Foot | UML | Chen |
-|--------------|-------------|-----|------|
-| One (mandatory) | `──┼──` | `1` | `1` |
-| One (optional) | `──○──` | `0..1` | `0,1` |
-| Many (mandatory) | `──┼<──` | `1..*` | `1,N` |
-| Many (optional) | `──○<──` | `*` or `0..*` | `0,N` |
+| Relationship     | Crow's Foot | UML           | Chen  |
+| ---------------- | ----------- | ------------- | ----- |
+| One (mandatory)  | `──┼──`     | `1`           | `1`   |
+| One (optional)   | `──○──`     | `0..1`        | `0,1` |
+| Many (mandatory) | `──┼<──`    | `1..*`        | `1,N` |
+| Many (optional)  | `──○<──`    | `*` or `0..*` | `0,N` |
 
 ---
 
@@ -333,14 +370,14 @@ An entity that relates to itself.
 
 ### 1:N Self-Reference: Employees and Managers
 
-```
-┌──────────────────────┐
-│      Employee        │
-│──────────────────────│
-│ PK employee_id       │◄──┐
-│    name              │   │ manages
-│ FK manager_id        │───┘
-└──────────────────────┘
+```mermaid
+erDiagram
+    EMPLOYEE ||--o{ EMPLOYEE : manages
+    EMPLOYEE {
+        int employee_id PK
+        string name
+        int manager_id FK
+    }
 ```
 
 ```sql
@@ -409,16 +446,23 @@ A **weak entity** cannot exist without its parent entity. It has no meaningful p
 
 **Example:** Order line items cannot exist without an order.
 
+```mermaid
+erDiagram
+    ORDER ||--|{ ORDER_ITEM : contains
+    ORDER {
+        int order_id PK
+        date date
+        decimal total
+    }
+    ORDER_ITEM {
+        int order_id PK,FK
+        int line_number PK
+        int product_id
+        int quantity
+    }
 ```
-┌──────────────┐         ┌──────────────────┐
-│    Order     │─────────│    Order Item    │ (weak)
-│──────────────│   1:N   │──────────────────│
-│ PK order_id  │         │ PK,FK order_id   │
-│    date      │         │ PK line_number   │
-│    total     │         │    product_id    │
-└──────────────┘         │    quantity      │
-                         └──────────────────┘
-```
+
+> Note: `ORDER_ITEM` is a **weak entity** - it cannot exist without its parent `ORDER`.
 
 ```sql
 CREATE TABLE order_items (
@@ -436,40 +480,44 @@ The `ON DELETE CASCADE` ensures that when an order is deleted, its items are aut
 
 ## Complete ER Diagram Example: E-Commerce
 
-```
-┌────────────────┐
-│    Customer    │
-├────────────────┤
-│ PK customer_id │
-│    email       │──UNIQUE
-│    name        │
-│    created_at  │
-└───────┬────────┘
-        │
-        │ 1
-        │
-        │ *
-┌───────┴────────┐                    ┌────────────────┐
-│     Order      │                    │    Product     │
-├────────────────┤                    ├────────────────┤
-│ PK order_id    │                    │ PK product_id  │
-│ FK customer_id │                    │    name        │
-│    order_date  │                    │    price       │
-│    status      │                    │ FK category_id │
-│    total       │                    └───────┬────────┘
-└───────┬────────┘                            │
-        │                                     │ *
-        │ 1                                   │
-        │                                     │ 1
-        │ *                           ┌───────┴────────┐
-┌───────┴────────┐                    │    Category    │
-│   Order Item   │                    ├────────────────┤
-├────────────────┤                    │ PK category_id │
-│ PK,FK order_id │                    │    name        │
-│ PK,FK product  │────────────────────│ FK parent_id   │──(self-ref)
-│    quantity    │                    └────────────────┘
-│    unit_price  │
-└────────────────┘
+```mermaid
+erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ ORDER_ITEM : contains
+    PRODUCT ||--o{ ORDER_ITEM : in
+    CATEGORY ||--o{ PRODUCT : contains
+    CATEGORY ||--o{ CATEGORY : "parent of"
+
+    CUSTOMER {
+        int customer_id PK
+        string email UK
+        string name
+        timestamp created_at
+    }
+    ORDER {
+        int order_id PK
+        int customer_id FK
+        date order_date
+        string status
+        decimal total
+    }
+    ORDER_ITEM {
+        int order_id PK,FK
+        int product_id PK,FK
+        int quantity
+        decimal unit_price
+    }
+    PRODUCT {
+        int product_id PK
+        string name
+        decimal price
+        int category_id FK
+    }
+    CATEGORY {
+        int category_id PK
+        string name
+        int parent_id FK
+    }
 ```
 
 ### SQL Implementation
@@ -530,17 +578,20 @@ CREATE INDEX idx_products_category ON products(category_id);
 ### Step 1: Identify Entities
 
 List all the "things" you need to store data about:
+
 - Customers, Products, Orders, Categories, Reviews, etc.
 
 ### Step 2: Identify Attributes
 
 For each entity, list its properties:
+
 - Customer: id, name, email, phone, address
 - Product: id, name, description, price, stock_quantity
 
 ### Step 3: Identify Relationships
 
 Determine how entities relate:
+
 - Customer places Order (1:N)
 - Order contains Products (M:N → junction table)
 - Product belongs to Category (N:1)
@@ -548,6 +599,7 @@ Determine how entities relate:
 ### Step 4: Determine Cardinality
 
 For each relationship, ask:
+
 - Can an A exist without a B? (optional vs mandatory)
 - Can an A have multiple Bs? (one vs many)
 
@@ -583,6 +635,7 @@ For each scenario, identify the relationship type (1:1, 1:N, M:N):
 ### Exercise 2: Design a Schema
 
 Create an ER diagram and SQL DDL for a simple blog system with:
+
 - Users who write posts
 - Posts that belong to categories
 - Users who can comment on posts
@@ -591,6 +644,7 @@ Create an ER diagram and SQL DDL for a simple blog system with:
 ### Exercise 3: Junction Table Design
 
 Design the junction table(s) for:
+
 - A movie database where actors appear in movies with specific roles
 - A recipe app where recipes use ingredients with quantities and units
 
