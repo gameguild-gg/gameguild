@@ -1,0 +1,227 @@
+/**
+ * @game-guild/api-client - Code Generation Pipeline
+ *
+ * Main entry point for generating typed API client from OpenAPI specification.
+ *
+ * Usage:
+ *   pnpm generate                    # Generate from default API URL
+ *   OPENAPI_URL=... pnpm generate    # Generate from custom URL
+ *   pnpm generate --watch            # Watch mode (re-generate on spec changes)
+ */
+
+import { createHash } from 'crypto';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+import { fetchOpenApiSpec, type OpenApiSpec } from './fetch-spec.js';
+import { normalizeSpec } from './normalize.js';
+import { generateTypes } from './codegen/types.js';
+import { generateEndpoints } from './codegen/endpoints.js';
+import { generateErrors } from './codegen/errors.js';
+import { generateModules } from './codegen/modules.js';
+import { formatOutput } from './utils/formatting.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Configuration
+const CONFIG = {
+  apiUrl: process.env.OPENAPI_URL || 'http://localhost:5295/swagger/v1/swagger.json',
+  outputDir: join(__dirname, '..', 'src', 'generated'),
+  metadataFile: join(__dirname, '..', 'src', 'generated', '.metadata.json'),
+  watch: process.argv.includes('--watch'),
+  force: process.argv.includes('--force'),
+};
+
+interface GeneratorMetadata {
+  hash: string;
+  timestamp: string;
+  apiVersion: string | undefined;
+  specUrl: string;
+}
+
+/**
+ * Calculate SHA256 hash of the OpenAPI spec for change detection
+ */
+function calculateHash(spec: OpenApiSpec): string {
+  return createHash('sha256').update(JSON.stringify(spec, null, 0)).digest('hex');
+}
+
+/**
+ * Load previous generation metadata
+ */
+function loadMetadata(): GeneratorMetadata | null {
+  if (!existsSync(CONFIG.metadataFile)) {
+    return null;
+  }
+  try {
+    return JSON.parse(readFileSync(CONFIG.metadataFile, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Save generation metadata for incremental builds
+ */
+function saveMetadata(hash: string, spec: OpenApiSpec): void {
+  const metadata: GeneratorMetadata = {
+    hash,
+    timestamp: new Date().toISOString(),
+    apiVersion: spec.info?.version,
+    specUrl: CONFIG.apiUrl,
+  };
+
+  if (!existsSync(dirname(CONFIG.metadataFile))) {
+    mkdirSync(dirname(CONFIG.metadataFile), { recursive: true });
+  }
+
+  writeFileSync(CONFIG.metadataFile, JSON.stringify(metadata, null, 2));
+}
+
+/**
+ * Ensure output directory exists
+ */
+function ensureOutputDir(): void {
+  if (!existsSync(CONFIG.outputDir)) {
+    mkdirSync(CONFIG.outputDir, { recursive: true });
+  }
+
+  // Create modules subdirectory
+  const modulesDir = join(CONFIG.outputDir, 'modules');
+  if (!existsSync(modulesDir)) {
+    mkdirSync(modulesDir, { recursive: true });
+  }
+}
+
+/**
+ * Write generated file with formatting
+ */
+async function writeGeneratedFile(filename: string, content: string): Promise<void> {
+  const filepath = join(CONFIG.outputDir, filename);
+  const formatted = await formatOutput(content, filepath);
+  writeFileSync(filepath, formatted);
+  console.log(`  ✓ Generated ${filename}`);
+}
+
+/**
+ * Main generation pipeline
+ */
+async function generate(): Promise<void> {
+  console.log('🚀 @game-guild/api-client Code Generator\n');
+  console.log(`📡 Fetching OpenAPI spec from: ${CONFIG.apiUrl}`);
+
+  try {
+    // Step 1: Fetch OpenAPI specification
+    const rawSpec = await fetchOpenApiSpec(CONFIG.apiUrl);
+    const currentHash = calculateHash(rawSpec);
+
+    // Step 2: Check if regeneration is needed
+    const metadata = loadMetadata();
+    if (!CONFIG.force && metadata?.hash === currentHash) {
+      console.log('✅ API spec unchanged, skipping generation\n');
+      return;
+    }
+
+    console.log(`📋 API Version: ${rawSpec.info?.version || 'unknown'}`);
+    console.log(`🔄 Spec hash: ${currentHash.slice(0, 12)}...\n`);
+
+    // Step 3: Normalize the specification
+    console.log('🔧 Normalizing OpenAPI spec...');
+    const spec = normalizeSpec(rawSpec);
+
+    // Step 4: Ensure output directory exists
+    ensureOutputDir();
+
+    // Step 5: Generate code
+    console.log('📝 Generating TypeScript code...');
+
+    // Generate types (DTOs, models, enums)
+    const typesCode = generateTypes(spec);
+    await writeGeneratedFile('types.gen.ts', typesCode);
+
+    // Generate error types
+    const errorsCode = generateErrors(spec);
+    await writeGeneratedFile('errors.gen.ts', errorsCode);
+
+    // Generate endpoint definitions
+    const endpointsCode = generateEndpoints(spec);
+    await writeGeneratedFile('endpoints.gen.ts', endpointsCode);
+
+    // Generate module-grouped endpoints
+    const modules = generateModules(spec);
+    for (const [moduleName, moduleCode] of Object.entries(modules)) {
+      await writeGeneratedFile(`modules/${moduleName}.gen.ts`, moduleCode);
+    }
+
+    // Generate index file
+    const indexCode = generateIndex(Object.keys(modules));
+    await writeGeneratedFile('index.ts', indexCode);
+
+    // Step 6: Save metadata
+    saveMetadata(currentHash, rawSpec);
+
+    console.log('\n✅ Code generation complete!\n');
+  } catch (error) {
+    console.error('\n❌ Generation failed:', error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+}
+
+/**
+ * Generate index file that re-exports all generated code
+ */
+function generateIndex(moduleNames: string[]): string {
+  const moduleExports = moduleNames.map((name) => `export * from './modules/${name}.gen.js';`).join('\n');
+
+  return `/**
+ * @game-guild/api-client - Generated API Types and Endpoints
+ *
+ * ⚠️  AUTO-GENERATED FILE - DO NOT EDIT MANUALLY
+ *
+ * Generated from: ${CONFIG.apiUrl}
+ * Generated at: ${new Date().toISOString()}
+ *
+ * To regenerate, run: pnpm generate
+ */
+
+// Re-export all types
+export * from './types.gen.js';
+
+// Re-export error types
+export * from './errors.gen.js';
+
+// Re-export endpoint definitions
+export * from './endpoints.gen.js';
+
+// Re-export module-grouped endpoints
+${moduleExports}
+`;
+}
+
+/**
+ * Watch mode - poll for spec changes
+ */
+async function watchMode(): Promise<void> {
+  console.log('👀 Watch mode enabled - polling for changes every 10s\n');
+
+  // Initial generation
+  await generate();
+
+  // Poll for changes
+  setInterval(async () => {
+    try {
+      await generate();
+    } catch {
+      // Ignore errors in watch mode, will retry
+    }
+  }, 10_000);
+}
+
+// Entry point
+if (CONFIG.watch) {
+  watchMode().catch(console.error);
+} else {
+  generate().catch(console.error);
+}

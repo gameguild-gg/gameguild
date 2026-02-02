@@ -1,0 +1,196 @@
+/**
+ * React Query Integration
+ * 
+ * React Query hooks for API client with optimistic updates support
+ */
+
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  type UseQueryOptions,
+  type UseMutationOptions,
+  type QueryKey,
+} from '@tanstack/react-query';
+import type { ApiClient } from '../../runtime/client.js';
+import type { Result } from '../../runtime/result/types.js';
+import type { ApiError } from '../../runtime/errors/types.js';
+
+/**
+ * Optimistic update configuration
+ */
+export interface OptimisticUpdateConfig<TData, TVariables> {
+  /**
+   * Optimistic data to show immediately
+   */
+  optimisticData?: (variables: TVariables, currentData?: TData) => TData;
+
+  /**
+   * Rollback on error
+   */
+  rollbackOnError?: boolean;
+
+  /**
+   * Query keys to invalidate on success
+   */
+  invalidateKeys?: QueryKey[];
+
+  /**
+   * Query keys to refetch on success
+   */
+  refetchKeys?: QueryKey[];
+}
+
+/**
+ * Extended mutation options with optimistic updates
+ */
+export interface ExtendedMutationOptions<TData, TVariables>
+  extends Omit<UseMutationOptions<TData, ApiError, TVariables>, 'mutationFn'> {
+  /**
+   * Optimistic update configuration
+   */
+  optimistic?: OptimisticUpdateConfig<TData, TVariables>;
+}
+
+/**
+ * Transform Result<T, ApiError> to throw on error for React Query
+ */
+function unwrapResult<T>(result: Result<T, ApiError>): T {
+  if (result.ok) {
+    return result.data;
+  }
+  throw result.error;
+}
+
+/**
+ * Create query hook factory
+ */
+export function createQueryHook<TData, TParams extends unknown[]>(
+  queryKeyFactory: (...params: TParams) => QueryKey,
+  queryFn: (...params: TParams) => Promise<Result<TData, ApiError>>
+) {
+  return function useApiQuery(
+    params: TParams,
+    options?: Omit<UseQueryOptions<TData, ApiError>, 'queryKey' | 'queryFn'>
+  ) {
+    return useQuery<TData, ApiError>({
+      queryKey: queryKeyFactory(...params),
+      queryFn: async () => unwrapResult(await queryFn(...params)),
+      ...options,
+    });
+  };
+}
+
+/**
+ * Create mutation hook factory with optimistic updates
+ */
+export function createMutationHook<TData, TVariables>(
+  mutationFn: (variables: TVariables) => Promise<Result<TData, ApiError>>
+) {
+  return function useApiMutation(options?: ExtendedMutationOptions<TData, TVariables>) {
+    const queryClient = useQueryClient();
+    const { optimistic, ...mutationOptions } = options || {};
+
+    return useMutation<TData, ApiError, TVariables>({
+      mutationFn: async (variables) => unwrapResult(await mutationFn(variables)),
+
+      onMutate: async (variables: TVariables) => {
+        if (!optimistic?.optimisticData) {
+          return options?.onMutate?.(variables);
+        }
+
+        // Cancel outgoing refetches
+        const invalidateKeys = optimistic.invalidateKeys || [];
+        await Promise.all(
+          invalidateKeys.map((key) => queryClient.cancelQueries({ queryKey: key }))
+        );
+
+        // Snapshot previous values
+        const previousData = invalidateKeys.map((key: QueryKey) => ({
+          key,
+          data: queryClient.getQueryData(key),
+        }));
+
+        // Optimistically update
+        invalidateKeys.forEach((key: QueryKey) => {
+          const currentData = queryClient.getQueryData<TData>(key);
+          const optimisticValue = optimistic.optimisticData!(variables, currentData);
+          queryClient.setQueryData(key, optimisticValue);
+        });
+
+        await options?.onMutate?.(variables);
+
+        return { previousData };
+      },
+
+      onError: (error: ApiError, variables: TVariables, context: any) => {
+        // Rollback on error if configured
+        if (optimistic?.rollbackOnError !== false && context?.previousData) {
+          context.previousData.forEach(({ key, data }: { key: QueryKey; data: any }) => {
+            queryClient.setQueryData(key, data);
+          });
+        }
+
+        options?.onError?.(error, variables, context);
+      },
+
+      onSuccess: async (data: TData, variables: TVariables, context: any) => {
+        // Invalidate queries
+        if (optimistic?.invalidateKeys) {
+          await Promise.all(
+            optimistic.invalidateKeys.map((key) =>
+              queryClient.invalidateQueries({ queryKey: key })
+            )
+          );
+        }
+
+        // Refetch queries
+        if (optimistic?.refetchKeys) {
+          await Promise.all(
+            optimistic.refetchKeys.map((key) =>
+              queryClient.refetchQueries({ queryKey: key })
+            )
+          );
+        }
+
+        await options?.onSuccess?.(data, variables, context);
+      },
+
+      ...mutationOptions,
+    });
+  };
+}
+
+/**
+ * Create React Query hooks for a module
+ */
+export interface ModuleHooks {
+  queries: Record<string, ReturnType<typeof createQueryHook>>;
+  mutations: Record<string, ReturnType<typeof createMutationHook>>;
+}
+
+/**
+ * Generate query key from endpoint info
+ */
+export function generateQueryKey(
+  module: string,
+  operation: string,
+  params?: Record<string, unknown>
+): QueryKey {
+  const key: unknown[] = [module, operation];
+  if (params && Object.keys(params).length > 0) {
+    key.push(params);
+  }
+  return key as QueryKey;
+}
+
+/**
+ * Example: Create hooks for a specific API client
+ */
+export function createApiClientHooks(client: ApiClient) {
+  // This will be extended by generated code
+  return {
+    client,
+    queryClient: useQueryClient,
+  };
+}
