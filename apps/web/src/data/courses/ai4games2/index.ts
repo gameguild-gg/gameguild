@@ -636,7 +636,7 @@ export const ai4games2Week04AssignmentContent: ProgramContent = {
   isRequired: true,
   gradingMethod: 1,
   maxPoints: 100,
-  estimatedMinutes: 300,
+  estimatedMinutes: 120,
   visibility: 1,
   program: ai4games2Program,
   parent: ai4games2Week04SlidesContent,
