@@ -7,6 +7,29 @@ import 'highlight.js/styles/monokai.css';
 import 'reveal.js/dist/reveal.css';
 import 'reveal.js/dist/theme/white.css';
 
+// Custom styles to fix code block scrolling
+const revealCodeStyles = `
+  .reveal pre {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .reveal pre code {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .reveal pre.code-wrapper {
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .reveal .hljs {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+`;
+
 interface RevealJSProps {
   content: string;
   height?: string;
@@ -345,6 +368,7 @@ const RevealJS: React.FC<RevealJSProps> = ({ content, height = '600px' }) => {
       ref={containerRef}
       className="reveal-container w-full flex-1 flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700 rounded-lg"
     >
+      <style dangerouslySetInnerHTML={{ __html: revealCodeStyles }} />
       <div className="reveal w-full flex-1">
         <div className="slides" ref={slidesRef}></div>
       </div>

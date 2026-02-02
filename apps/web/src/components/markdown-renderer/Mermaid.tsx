@@ -84,12 +84,24 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
                 }
               });
 
-              // Remove fixed dimensions and let CSS control sizing
-              svgElement.removeAttribute('width');
-              svgElement.removeAttribute('height');
-              svgElement.style.width = '100%';
-              svgElement.style.height = 'auto';
-              svgElement.style.maxWidth = '100%';
+              // Extract dimensions from viewBox to use as intrinsic size
+              const viewBox = svgElement.getAttribute('viewBox');
+              if (viewBox) {
+                const parts = viewBox.split(' ');
+                if (parts.length === 4) {
+                  const vbWidth = parseFloat(parts[2]);
+                  const vbHeight = parseFloat(parts[3]);
+                  // Set explicit dimensions from viewBox so SVG renders at natural size
+                  // max-width will clamp if it exceeds container
+                  svgElement.style.width = `${vbWidth}px`;
+                  svgElement.style.height = `${vbHeight}px`;
+                  svgElement.style.maxWidth = '100%';
+                  svgElement.style.maxHeight = '100%';
+                  // Remove width/height attributes to let CSS control sizing
+                  svgElement.removeAttribute('width');
+                  svgElement.removeAttribute('height');
+                }
+              }
             }
           } catch {
             // Silently ignore DOM manipulation errors
@@ -121,10 +133,11 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
       className="mermaid-container"
       style={{
         textAlign: 'center',
-        margin: '1rem 0',
+        margin: '1rem auto',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
+        width: 'fit-content',
         maxWidth: '100%',
         backgroundColor: '#ffffff',
         borderRadius: '0.5rem',
