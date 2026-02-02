@@ -20,6 +20,11 @@ import ai4games2Week03Lecture from "./03-utility/01-lecture.md";
 import ai4games2Week03Readings from "./03-utility/02-readings.md";
 import ai4games2Week03Quiz from "./03-utility/03-quiz.md";
 import ai4games2Week03Assignment from "./03-utility/04-assignment.md";
+import ai4games2Week04Slides from "./04-minmax/00-reveal.md";
+import ai4games2Week04Lecture from "./04-minmax/01-lecture.md";
+import ai4games2Week04Readings from "./04-minmax/02-readings.md";
+import ai4games2Week04Quiz from "./04-minmax/03-quiz.md";
+import ai4games2Week04Assignment from "./04-minmax/04-assignment.md";
 import ai4games2ExtraOldLecture from "./old/extras/llms.md";
 import ai4games2Week01OldLecture from "./old/week01/lecture.md";
 import ai4games2Week01OldReadings from "./old/week01/readings.md";
@@ -525,6 +530,122 @@ export const ai4games2Week03AssignmentContent: ProgramContent = {
   updatedAt: "2023-01-01T00:00:00Z",
 };
 
+// Week 04 Content (MinMax & Alpha-Beta Pruning)
+export const ai4games2Week04SlidesContent: ProgramContent = {
+  id: "ai4games2-week-04-slides",
+  programId: "ai4games2-program",
+  parentId: undefined,
+  title: "Week 4: MinMax & Alpha-Beta Pruning",
+  slug: "week-04",
+  description: "Adversarial search, minimax algorithm, alpha-beta pruning, and game tree optimization",
+  type: ProgramContentType.REVEAL,
+  body: ai4games2Week04Slides,
+  sortOrder: 4,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 60,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: undefined,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week04LectureContent: ProgramContent = {
+  id: "ai4games2-week-04-lecture",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-04-slides",
+  title: "Week 4: Lecture Notes",
+  slug: "lecture",
+  description: "Detailed lecture notes on MinMax search and Alpha-Beta pruning",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week04Lecture,
+  sortOrder: 1,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 45,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week04SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week04ReadingsContent: ProgramContent = {
+  id: "ai4games2-week-04-readings",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-04-slides",
+  title: "Week 4: Readings",
+  slug: "readings",
+  description: "Required readings and videos for MinMax and Alpha-Beta Pruning",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week04Readings,
+  sortOrder: 2,
+  isRequired: true,
+  gradingMethod: 0,
+  maxPoints: null,
+  estimatedMinutes: 135,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week04SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week04QuizContent: ProgramContent = {
+  id: "ai4games2-week-04-quiz",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-04-slides",
+  title: "Week 4: Quiz",
+  slug: "quiz",
+  description: "Test your understanding of MinMax algorithm and Alpha-Beta pruning",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week04Quiz,
+  sortOrder: 3,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 10,
+  estimatedMinutes: 15,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week04SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
+export const ai4games2Week04AssignmentContent: ProgramContent = {
+  id: "ai4games2-week-04-assignment",
+  programId: "ai4games2-program",
+  parentId: "ai4games2-week-04-slides",
+  title: "Week 4: Assignment",
+  slug: "assignment",
+  description: "Implement a game AI using MinMax with Alpha-Beta pruning",
+  type: ProgramContentType.PAGE,
+  body: ai4games2Week04Assignment,
+  sortOrder: 4,
+  isRequired: true,
+  gradingMethod: 1,
+  maxPoints: 100,
+  estimatedMinutes: 300,
+  visibility: 1,
+  program: ai4games2Program,
+  parent: ai4games2Week04SlidesContent,
+  children: [],
+  contentInteractions: [],
+  createdAt: "2023-01-01T00:00:00Z",
+  updatedAt: "2023-01-01T00:00:00Z",
+};
+
 export const ai4games2Week02OldContent: ProgramContent = {
   id: "ai4games2-week-02",
   programId: "ai4games2-program",
@@ -957,6 +1078,12 @@ ai4games2Week03LectureContent.children = [
   ai4games2Week03QuizContent,
   ai4games2Week03AssignmentContent,
 ];
+ai4games2Week04SlidesContent.children = [
+  ai4games2Week04LectureContent,
+  ai4games2Week04ReadingsContent,
+  ai4games2Week04QuizContent,
+  ai4games2Week04AssignmentContent,
+];
 ai4games2Week02OldContent.children = [ai4games2Week02OldPcgContent];
 ai4games2Week03OldContent.children = [ai4games2Week03OldAstarContent];
 ai4games2Week04OldContent.children = [ai4games2Week04OldAssignmentContent];
@@ -988,6 +1115,7 @@ ai4games2Program.programContents = [
   ai4games2Week01LectureContent,
   ai4games2Week02LectureContent,
   ai4games2Week03LectureContent,
+  ai4games2Week04SlidesContent,
   ai4games2OldContent,
 ];
 
