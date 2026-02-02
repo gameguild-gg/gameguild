@@ -15,8 +15,11 @@
 
     <ItemGroup>
         <ProjectReference Include="..\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning\GameGuild.Learning.csproj" />
         <ProjectReference Include="..\GameGuild.Learning.Courses\GameGuild.Learning.Courses.csproj" />
         <ProjectReference Include="..\GameGuild.Learning.Enrollments\GameGuild.Learning.Enrollments.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Experience.LearningPaths\GameGuild.Learning.Experience.LearningPaths.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning.Experience.Discovery\GameGuild.Learning.Experience.Discovery.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj" />
     </ItemGroup>
 

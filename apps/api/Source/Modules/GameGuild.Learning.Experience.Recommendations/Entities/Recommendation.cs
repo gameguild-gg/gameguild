@@ -99,6 +99,45 @@ public class UserLearningProfile : EntityBase
         TotalHoursLearned += hours;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void UpdatePreferences(
+        string? preferredCategories = null,
+        string? preferredDifficulty = null,
+        string? preferredDuration = null,
+        string? learningGoals = null,
+        string? skills = null)
+    {
+        if (preferredCategories != null) PreferredCategories = preferredCategories;
+        if (preferredDifficulty != null) PreferredDifficulty = preferredDifficulty;
+        if (preferredDuration != null) PreferredDuration = preferredDuration;
+        if (learningGoals != null) LearningGoals = learningGoals;
+        if (skills != null) Skills = skills;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void AddSkill(string skill)
+    {
+        var currentSkills = string.IsNullOrEmpty(Skills) 
+            ? new List<string>() 
+            : System.Text.Json.JsonSerializer.Deserialize<List<string>>(Skills) ?? new List<string>();
+        
+        if (!currentSkills.Contains(skill, StringComparer.OrdinalIgnoreCase))
+        {
+            currentSkills.Add(skill);
+            Skills = System.Text.Json.JsonSerializer.Serialize(currentSkills);
+            UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public void RemoveSkill(string skill)
+    {
+        if (string.IsNullOrEmpty(Skills)) return;
+        
+        var currentSkills = System.Text.Json.JsonSerializer.Deserialize<List<string>>(Skills) ?? new List<string>();
+        currentSkills.RemoveAll(s => s.Equals(skill, StringComparison.OrdinalIgnoreCase));
+        Skills = currentSkills.Count > 0 ? System.Text.Json.JsonSerializer.Serialize(currentSkills) : null;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 
 public enum RecommendationType
