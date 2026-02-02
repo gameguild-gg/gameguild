@@ -61,6 +61,7 @@ public class Post : EntityBase
     public void DecrementComments() { if (CommentsCount > 0) CommentsCount--; }
     public void IncrementShares() => SharesCount++;
     public void IncrementViews() => ViewsCount++;
+    public void Delete() => SoftDelete();
 }
 
 /// <summary>
@@ -104,6 +105,7 @@ public class PostComment : EntityBase
 
     public void IncrementLikes() => LikesCount++;
     public void DecrementLikes() { if (LikesCount > 0) LikesCount--; }
+    public void Delete() => SoftDelete();
 }
 
 public enum PostVisibility

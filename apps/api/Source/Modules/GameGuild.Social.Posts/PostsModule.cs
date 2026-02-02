@@ -1,0 +1,21 @@
+using GameGuild.Social.Posts.Services;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace GameGuild.Social.Posts;
+
+/// <summary>
+/// Module registration for Post services
+/// </summary>
+public static class PostsModule
+{
+    /// <summary>
+    /// Adds Post module services to the DI container
+    /// </summary>
+    public static IServiceCollection AddPostsModule(this IServiceCollection services)
+    {
+        services.AddScoped<IPostService, PostService>();
+        services.AddScoped<IPostAnnouncementService, PostAnnouncementService>();
+
+        return services;
+    }
+}
