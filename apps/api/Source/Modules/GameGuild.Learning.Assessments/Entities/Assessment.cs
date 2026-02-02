@@ -53,6 +53,54 @@ public class Assessment : EntityBase
         if (AvailableUntil.HasValue && now > AvailableUntil.Value) return false;
         return true;
     }
+
+    public void SetDescription(string? description)
+    {
+        Description = description;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetTimeLimit(int? timeLimitMinutes)
+    {
+        TimeLimitMinutes = timeLimitMinutes;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetMaxAttempts(int? maxAttempts)
+    {
+        MaxAttempts = maxAttempts;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetAvailability(DateTime? availableFrom, DateTime? availableUntil)
+    {
+        AvailableFrom = availableFrom;
+        AvailableUntil = availableUntil;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Update(
+        string? title,
+        string? description,
+        int? maxScore,
+        int? passingScore,
+        int? timeLimitMinutes,
+        int? maxAttempts,
+        bool? isRequired,
+        DateTime? availableFrom,
+        DateTime? availableUntil)
+    {
+        if (title != null) Title = title;
+        Description = description;
+        if (maxScore.HasValue) MaxScore = maxScore.Value;
+        if (passingScore.HasValue) PassingScore = passingScore.Value;
+        TimeLimitMinutes = timeLimitMinutes;
+        MaxAttempts = maxAttempts;
+        if (isRequired.HasValue) IsRequired = isRequired.Value;
+        AvailableFrom = availableFrom;
+        AvailableUntil = availableUntil;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 
 /// <summary>
