@@ -1,8 +1,7 @@
 .markdown-content {
   line-height: 1.7;
-  width: 100% !important;
-  max-width: none !important;
-  min-width: 100% !important;
+  width: 100%;
+  max-width: 100%;
   color: hsl(var(--foreground)) !important;
 }
 
