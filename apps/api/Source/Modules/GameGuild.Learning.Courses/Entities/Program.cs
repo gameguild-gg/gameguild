@@ -22,7 +22,13 @@ namespace GameGuild.Learning.Courses;
 [Index(nameof(EnrollmentStatus))]
 [Index(nameof(CreatedAt))]
 [Index(nameof(TenantId))]
+[Index(nameof(CreatorId))]
 public class Program : EntityBase {
+    /// <summary>
+    /// The user ID of the program creator/owner
+    /// </summary>
+    public Guid? CreatorId { get; set; }
+
     /// <summary>
     /// Program title
     /// </summary>
@@ -123,16 +129,15 @@ public class Program : EntityBase {
     /// </summary>
     public virtual ICollection<ProgramUser> ProgramUsers { get; set; } = new List<ProgramUser>();
 
-    // Product-program relationships (TODO: Implement ProductProgram type)
+    // NOTE: ProductProgram navigation requires Commerce module integration
     // public virtual ICollection<ProductProgram> ProductPrograms { get; set; } = new List<ProductProgram>();
 
-    /*
-    Program certificates (TODO: Implement when Certificates module is available)
-    public virtual ICollection<Certificate> Certificates { get; set; } = new List<Certificate>();
+    // NOTE: Certificate navigation would require Certificate entity to reference ProgramId instead of CourseId
+    // This is a design decision - certificates are currently issued per Course, not per Program
+    // public virtual ICollection<Certificate> Certificates { get; set; } = new List<Certificate>();
 
-    Feedback submissions for this program (TODO: Implement when Feedbacks module is available)
-    public virtual ICollection<ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<ProgramFeedbackSubmission>();
-    */
+    // NOTE: ProgramFeedbackSubmission entity does not exist yet - requires Feedbacks module implementation
+    // public virtual ICollection<ProgramFeedbackSubmission> FeedbackSubmissions { get; set; } = new List<ProgramFeedbackSubmission>();
 
     /// <summary>
     /// Program ratings

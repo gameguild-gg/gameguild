@@ -16,6 +16,8 @@
         <ProjectReference Include="..\GameGuild.Identity.Authentication\GameGuild.Identity.Authentication.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Authorization\GameGuild.Identity.Authorization.csproj" />
         <ProjectReference Include="..\GameGuild.Identity.Users\GameGuild.Identity.Users.csproj" />
+        <ProjectReference Include="..\GameGuild.Tags\GameGuild.Tags.csproj" />
+        <ProjectReference Include="..\GameGuild.Learning\GameGuild.Learning.csproj" />
     </ItemGroup>
 
 </Project>

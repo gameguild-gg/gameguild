@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using GameGuild.Enums;
+using GameGuild.Identity.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute;
 
@@ -12,7 +14,7 @@ namespace GameGuild.Learning.Courses;
 public class ActivityGradeController(IActivityGradeService activityGradeService) : ControllerBase {
   /// <summary> Grade a content interaction (Program-level Edit permission required) </summary>
   [HttpPost]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")] // generic stays; no change needed
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ActivityGradeDto>> GradeActivity(Guid programId, [FromBody] CreateActivityGradeDto gradeDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -30,7 +32,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
   /// <summary> Get grade for a specific content interaction (Program-level Read permission required) </summary>
   [HttpGet("interaction/{contentInteractionId}")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")] // generic stays
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<ActivityGradeDto>> GetGrade(Guid programId, Guid contentInteractionId) {
     var grade = await activityGradeService.GetGradeAsync(contentInteractionId);
 
@@ -44,7 +46,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
   /// <summary> Get all grades given by a specific grader (Program-level Read permission required) </summary>
   [HttpGet("grader/{graderProgramUserId}")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ActivityGradeDto>>> GetGradesByGrader(Guid programId, Guid graderProgramUserId) {
     var grades = await activityGradeService.GetGradesByGraderAsync(graderProgramUserId);
 
@@ -56,7 +58,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
   /// <summary> Get all grades received by a specific student (Program-level Read permission required) </summary>
   [HttpGet("student/{programUserId}")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ActivityGradeDto>>> GetGradesByStudent(Guid programId, Guid programUserId) {
     var grades = await activityGradeService.GetGradesByStudentAsync(programUserId);
 
@@ -68,7 +70,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
   /// <summary> Update an existing grade (Program-level Edit permission required) </summary>
   [HttpPut("{gradeId}")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Edit, "programId")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Edit, "programId")]
   public async Task<ActionResult<ActivityGradeDto>> UpdateGrade(Guid programId, Guid gradeId, [FromBody] UpdateActivityGradeDto updateDto) {
     if (!ModelState.IsValid) return BadRequest(ModelState);
 
@@ -84,7 +86,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
   /// <summary> Delete a grade (Program-level Delete permission required) </summary>
   [HttpDelete("{gradeId}")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Delete, "programId")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Delete, "programId")]
   public async Task<ActionResult> DeleteGrade(Guid programId, Guid gradeId) {
     // Verify the grade belongs to the specified program
     await ValidateGradeBelongsToProgram(gradeId, programId);
@@ -98,7 +100,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
   /// <summary> Get pending grades for a program (content interactions needing grading) (Program-level Read permission required) </summary>
   [HttpGet("pending")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ContentInteractionDto>>> GetPendingGrades(Guid programId) {
     var pendingInteractions = await activityGradeService.GetPendingGradesAsync(programId);
 
@@ -107,7 +109,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
   /// <summary> Get grade statistics for a program (Program-level Read permission required) </summary>
   [HttpGet("statistics")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<GradeStatisticsDto>> GetGradeStatistics(Guid programId) {
     var statistics = await activityGradeService.GetGradeStatisticsAsync(programId);
 
@@ -116,7 +118,7 @@ public class ActivityGradeController(IActivityGradeService activityGradeService)
 
   /// <summary> Get all grades for a specific content item (Program-level Read permission required) </summary>
   [HttpGet("content/{contentId}")]
-  // [GameGuild.Identity.Authorization.RequireResourcePermission<GameGuild.Modules.Programs.ProgramPermission, GameGuild.Modules.Programs.Entities.Program>(PermissionType.Read, "programId")]
+  [RequireResourcePermission<PermissionType, Program>(PermissionType.Read, "programId")]
   public async Task<ActionResult<IEnumerable<ActivityGradeDto>>> GetGradesByContent(Guid programId, Guid contentId) {
     var grades = await activityGradeService.GetGradesByContentAsync(contentId);
 

@@ -119,20 +119,41 @@ public class ContentProgressService : IContentProgressService {
 
   /// <summary> Check if user can access specific content (based on prerequisites) </summary>
   public async Task<bool> CanAccessContentAsync(Guid userId, Guid contentId) {
-    // Get content with prerequisites
+    // Get content with its program
     var content = await _context.Set<ProgramContent>().FirstOrDefaultAsync(pc => pc.Id == contentId);
 
     if (content == null) return false;
 
-    // TODO: Implement prerequisite checking
-    // For now, allow access to all content
-    // In a full implementation, you would check:
-    // 1. Previous content completion requirements
-    // 2. Time-based restrictions
-    // 3. Grade requirements
-    // 4. Instructor approval requirements
+    // Get all content items in the same program, ordered by sort order
+    var programContents = await _context.Set<ProgramContent>()
+        .Where(pc => pc.ProgramId == content.ProgramId)
+        .OrderBy(pc => pc.SortOrder)
+        .ToListAsync();
 
-    return true;
+    // Find the index of the current content
+    var contentIndex = programContents.FindIndex(pc => pc.Id == contentId);
+    
+    // First item is always accessible
+    if (contentIndex <= 0) return true;
+
+    // Check if all previous required content items are completed
+    var previousRequiredContents = programContents
+        .Take(contentIndex)
+        .Where(pc => pc.IsRequired)
+        .Select(pc => pc.Id)
+        .ToList();
+
+    if (previousRequiredContents.Count == 0) return true;
+
+    // Get user progress for previous required content
+    var completedCount = await _context.Set<ContentProgress>()
+        .Where(cp => cp.UserId == userId 
+            && previousRequiredContents.Contains(cp.ContentId)
+            && cp.CompletionStatus == ContentCompletionStatus.Completed)
+        .CountAsync();
+
+    // User can access if all previous required content is completed
+    return completedCount >= previousRequiredContents.Count;
   }
 
   /// <summary> Get content completion statistics for a program </summary>

@@ -1,15 +1,28 @@
 using GameGuild.Abstractions;
-
-
+using GameGuild.Learning.Abstractions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Learning.Courses;
 
 /// <summary> Service implementation for program enrollment management </summary>
 public class ProgramEnrollmentService : IProgramEnrollmentService {
   private readonly IApplicationDbContext _context;
+  private readonly ILogger<ProgramEnrollmentService> _logger;
+  private readonly ICertificateIssuanceService? _certificateIssuanceService;
+  private readonly IProductProgramProvider? _productProgramProvider;
 
-  public ProgramEnrollmentService(IApplicationDbContext context) { _context = context; }
+  public ProgramEnrollmentService(
+      IApplicationDbContext context, 
+      ILogger<ProgramEnrollmentService> logger,
+      ICertificateIssuanceService? certificateIssuanceService = null,
+      IProductProgramProvider? productProgramProvider = null) 
+  { 
+    _context = context; 
+    _logger = logger;
+    _certificateIssuanceService = certificateIssuanceService;
+    _productProgramProvider = productProgramProvider;
+  }
 
   /// <summary> Enroll a user in a program </summary>
   public async Task<ProgramEnrollment> EnrollUserAsync(Guid userId, Guid programId, EnrollmentSource source = EnrollmentSource.Manual) {
@@ -47,20 +60,36 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
 
   /// <summary> Auto-enroll user in all programs included in a product </summary>
   public async Task<IEnumerable<ProgramEnrollment>> AutoEnrollInProductProgramsAsync(Guid userId, Guid productId) {
-    // Get all programs in the product
-    var productPrograms = await _context.Set<ProductProgram>().Include(pp => pp.Program).Where(pp => pp.ProductId == productId).OrderBy(pp => pp.SortOrder).ToListAsync();
+    // Use IProductProgramProvider if available, otherwise fall back to direct query
+    // This abstraction allows the Learning module to remain loosely coupled to Commerce
+    IReadOnlyList<Guid> programIds;
+    
+    if (_productProgramProvider != null) {
+      programIds = await _productProgramProvider.GetProgramIdsForProductAsync(productId);
+    } else {
+      // Fallback for backward compatibility - direct query
+      _logger.LogWarning("IProductProgramProvider not configured, using direct ProductProgram query");
+      programIds = await _context.Set<ProductProgram>()
+          .Where(pp => pp.ProductId == productId)
+          .OrderBy(pp => pp.SortOrder)
+          .Select(pp => pp.ProgramId)
+          .ToListAsync();
+    }
 
     var enrollments = new List<ProgramEnrollment>();
 
-    foreach (var productProgram in productPrograms) {
+    foreach (var programId in programIds) {
       try {
-        var enrollment = await EnrollUserAsync(userId, productProgram.ProgramId, EnrollmentSource.ProductPurchase);
+        var enrollment = await EnrollUserAsync(userId, programId, EnrollmentSource.ProductPurchase);
         enrollments.Add(enrollment);
+        _logger.LogInformation(
+            "Successfully enrolled user {UserId} in program {ProgramId} from product {ProductId}",
+            userId, programId, productId);
       }
       catch (Exception ex) {
-        // Log error but continue with other programs
-        // You might want to add proper logging here
-        Console.WriteLine($"Failed to enroll user {userId} in program {productProgram.ProgramId}: {ex.Message}");
+        _logger.LogWarning(ex,
+            "Failed to enroll user {UserId} in program {ProgramId} from product {ProductId}",
+            userId, programId, productId);
       }
     }
 
@@ -155,18 +184,52 @@ public class ProgramEnrollmentService : IProgramEnrollmentService {
   public async Task<bool> IssueCertificateAsync(Guid enrollmentId) {
     var enrollment = await _context.Set<ProgramEnrollment>().Include(pe => pe.Program).Include(pe => pe.User).FirstOrDefaultAsync(pe => pe.Id == enrollmentId);
 
-    if (enrollment == null || enrollment.CompletionStatus != CompletionStatus.Completed) return false;
+    if (enrollment == null || enrollment.CompletionStatus != CompletionStatus.Completed) {
+      _logger.LogWarning(
+          "Cannot issue certificate for enrollment {EnrollmentId}: enrollment not found or not completed",
+          enrollmentId);
+      return false;
+    }
 
-    if (enrollment.CertificateIssued) return true; // Already issued
+    if (enrollment.CertificateIssued) {
+      _logger.LogInformation("Certificate already issued for enrollment {EnrollmentId}", enrollmentId);
+      return true; // Already issued
+    }
 
-    // TODO: Integrate with certificate service to generate actual certificate
-    // For now, just mark as issued
+    // Try to issue via certificate issuance service if available (DIP: depends on abstraction)
+    if (_certificateIssuanceService != null) {
+      var result = await _certificateIssuanceService.IssueCertificateForEnrollmentAsync(
+          enrollmentId,
+          enrollment.UserId,
+          enrollment.ProgramId,
+          enrollment.TenantId);
+
+      if (result.IsSuccess) {
+        _logger.LogInformation(
+            "Certificate issued successfully for enrollment {EnrollmentId}, certificate ID: {CertificateId}",
+            enrollmentId, result.Value);
+      } else {
+        _logger.LogWarning(
+            "Failed to issue certificate for enrollment {EnrollmentId}: {Error}",
+            enrollmentId, result.Error.Description);
+      }
+    } else {
+      _logger.LogDebug(
+          "No certificate issuance service configured, skipping certificate generation for enrollment {EnrollmentId}",
+          enrollmentId);
+    }
+
+    // Mark enrollment as having certificate issued
     enrollment.CertificateIssued = true;
     enrollment.CertificateIssuedAt = DateTime.UtcNow;
     enrollment.CompletionStatus = CompletionStatus.CompletedWithCertificate;
     enrollment.Touch();
 
     await _context.SaveChangesAsync();
+
+    _logger.LogInformation(
+        "Certificate issuance completed for enrollment {EnrollmentId}",
+        enrollmentId);
 
     return true;
   }

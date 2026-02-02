@@ -1,4 +1,6 @@
+using GameGuild.CQRS;
+
 namespace GameGuild.Learning.Courses;
 
-// Query to get creator's program statistics
-    // TODO: Type does not exist - public record GetCreatorProgramStatisticsQuery(string CreatorId, DateTime? FromDate = null, DateTime? ToDate = null) : IQuery<CreatorProgramStatistics>;
+/// <summary> Query to get creator's program statistics </summary>
+public record GetCreatorProgramStatisticsQuery(Guid CreatorId, DateTime? FromDate = null, DateTime? ToDate = null) : IQuery<CreatorProgramStatistics>;
