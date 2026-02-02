@@ -28,10 +28,10 @@ Normalization theory provides the foundation for good database design, but real-
 
 Most applications aim for **Third Normal Form (3NF)** as the default, then selectively denormalize for performance-critical queries.
 
-```
-Under-normalized ←────────── 3NF ──────────→ Over-normalized
-(redundancy,               (balance)        (too many joins,
- anomalies)                                  complexity)
+```mermaid
+flowchart LR
+    A["Under-normalized<br/>(redundancy, anomalies)"] <--> B["3NF<br/>(balance)"] <--> C["Over-normalized<br/>(too many joins, complexity)"]
+    style B fill:#90EE90,stroke:#228B22,stroke-width:3px
 ```
 
 ---

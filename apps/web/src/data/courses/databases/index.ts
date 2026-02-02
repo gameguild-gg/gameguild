@@ -30,6 +30,15 @@ import week03FilteringPatternMatching from './03-filtering-aggregation/filtering
 import week03Quiz from './03-filtering-aggregation/quiz/filtering-aggregation-quiz.md';
 import week03Reveal from './03-filtering-aggregation/reveal.md';
 
+// Week 04 imports
+import week04EntityRelationships from './04-normalization/entity-relationships.md';
+import week04IndexingFundamentals from './04-normalization/indexing-fundamentals.md';
+import week04NormalizationTheory from './04-normalization/normalization-theory.md';
+import week04PracticalNormalization from './04-normalization/practical-normalization.md';
+import week04QuizNormalization from './04-normalization/quiz/normalization-quiz.md';
+import week04Readings from './04-normalization/readings-04.md';
+import week04Reveal from './04-normalization/reveal.md';
+
 // Program definition
 export const databasesProgram: Program = {
     id: 'databases-program-1',
@@ -679,6 +688,170 @@ export const week03QuizContent: ProgramContent = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+// Week 04: Normalization & Database Design - Parent content (Reveal)
+export const week04RevealContent: ProgramContent = {
+    id: 'databases-week-04-reveal',
+    programId: 'databases-program-1',
+    slug: 'normalization-design',
+    parentId: undefined,
+    title: 'Normalization & Database Design',
+    description: 'Reveal.js presentation covering normal forms, functional dependencies, ER modeling, constraints, indexing, and denormalization',
+    type: ProgramContentType.REVEAL,
+    body: week04Reveal,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Week 04 child contents
+export const week04NormalizationTheoryContent: ProgramContent = {
+    id: 'databases-week-04-normalization-theory',
+    programId: 'databases-program-1',
+    slug: 'normalization-theory',
+    parentId: 'databases-week-04-reveal',
+    title: 'Normalization Theory',
+    description: 'Learn 1NF, 2NF, 3NF, BCNF and functional dependencies',
+    type: 0, // Page
+    body: week04NormalizationTheory,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week04RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week04PracticalNormalizationContent: ProgramContent = {
+    id: 'databases-week-04-practical-normalization',
+    programId: 'databases-program-1',
+    slug: 'practical-normalization',
+    parentId: 'databases-week-04-reveal',
+    title: 'Practical Normalization & Denormalization',
+    description: 'When to normalize, when to denormalize, and real-world schema analysis',
+    type: 0, // Page
+    body: week04PracticalNormalization,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week04RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week04EntityRelationshipsContent: ProgramContent = {
+    id: 'databases-week-04-entity-relationships',
+    programId: 'databases-program-1',
+    slug: 'entity-relationships',
+    parentId: 'databases-week-04-reveal',
+    title: 'Entity-Relationship Modeling',
+    description: 'ER diagrams, cardinality (1:1, 1:N, M:N), junction tables, and notation styles',
+    type: 0, // Page
+    body: week04EntityRelationships,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 45,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week04RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week04IndexingFundamentalsContent: ProgramContent = {
+    id: 'databases-week-04-indexing-fundamentals',
+    programId: 'databases-program-1',
+    slug: 'indexing-fundamentals',
+    parentId: 'databases-week-04-reveal',
+    title: 'Indexing Fundamentals',
+    description: 'B-Tree indexes, index types, when to index, and EXPLAIN ANALYZE',
+    type: 0, // Page
+    body: week04IndexingFundamentals,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 40,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week04RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const week04ReadingsContent: ProgramContent = {
+    id: 'databases-week-04-readings',
+    programId: 'databases-program-1',
+    slug: 'readings-04',
+    parentId: 'databases-week-04-reveal',
+    title: 'Week 04 Readings & Resources',
+    description: 'Sample databases, ER diagram tools, and PostgreSQL documentation',
+    type: 0, // Page
+    body: week04Readings,
+    sortOrder: 5,
+    isRequired: false,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 15,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week04RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+// Week 04 Quiz content (direct child of reveal)
+export const week04QuizNormalizationContent: ProgramContent = {
+    id: 'databases-week-04-quiz-normalization',
+    programId: 'databases-program-1',
+    slug: 'normalization-quiz',
+    parentId: 'databases-week-04-reveal',
+    title: 'Quiz: Normalization, Entity-Relationships & Indexing',
+    description: 'Comprehensive quiz covering normal forms, ER modeling, and indexing fundamentals',
+    type: 0, // Page
+    body: week04QuizNormalization,
+    sortOrder: 6,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 75,
+    visibility: 1, // Published
+    program: databasesProgram,
+    parent: week04RevealContent,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 // Wire program contents and product-program relations
 // only the parent contents go directly under the program
 databasesProgram.programContents = [
@@ -686,6 +859,7 @@ databasesProgram.programContents = [
     week01IntroContent,
     week02LectureContent,
     week03RevealContent,
+    week04RevealContent,
 ];
 
 // Set up parent-child relationships
@@ -719,6 +893,15 @@ week03RevealContent.children = [
     week03FilteringPatternMatchingContent,
     week03AggregationGroupingContent,
     week03QuizContent,
+];
+
+week04RevealContent.children = [
+    week04NormalizationTheoryContent,
+    week04PracticalNormalizationContent,
+    week04EntityRelationshipsContent,
+    week04IndexingFundamentalsContent,
+    week04ReadingsContent,
+    week04QuizNormalizationContent,
 ];
 
 databasesProduct.productPrograms = [databasesProductProgram];

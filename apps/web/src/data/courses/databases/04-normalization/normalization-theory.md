@@ -364,16 +364,12 @@ JOIN professor_subjects ps ON sp.professor = ps.professor;
 
 ### The Ladder
 
-```
-Unnormalized
-     ↓
-   1NF  (atomic values)
-     ↓
-   2NF  (remove partial dependencies)
-     ↓
-   3NF  (remove transitive dependencies)
-     ↓
-  BCNF  (every determinant is a superkey)
+```mermaid
+flowchart TD
+    A[Unnormalized] --> B[1NF<br/>atomic values]
+    B --> C[2NF<br/>remove partial dependencies]
+    C --> D[3NF<br/>remove transitive dependencies]
+    D --> E[BCNF<br/>every determinant is a superkey]
 ```
 
 ### Quick Checks

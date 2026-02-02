@@ -45,14 +45,20 @@ Now the same query might only need to examine ~20 rows (log₂ of 1 million ≈ 
 
 Most databases use **B-Tree** (Balanced Tree) indexes by default. They maintain sorted data and allow searches, insertions, and deletions in O(log n) time.
 
-```
-                    [50]
-                   /    \
-              [25]        [75]
-             /    \      /    \
-          [10] [30]   [60]  [90]
-          /  \   \     /     /  \
-         [5][15][35] [55]  [80][95]
+```mermaid
+graph TD
+    A[50] --> B[25]
+    A --> C[75]
+    B --> D[10]
+    B --> E[30]
+    C --> F[60]
+    C --> G[90]
+    D --> H[5]
+    D --> I[15]
+    E --> J[35]
+    F --> K[55]
+    G --> L[80]
+    G --> M[95]
 ```
 
 B-Trees are excellent for:
