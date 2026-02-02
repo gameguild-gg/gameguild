@@ -83,6 +83,44 @@ public class Cohort : EntityBase
         IsOpen = false;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void Cancel()
+    {
+        Status = CohortStatus.Cancelled;
+        IsOpen = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetDescription(string? description)
+    {
+        Description = description;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetMeetingSchedule(string? schedule)
+    {
+        MeetingSchedule = schedule;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Update(
+        string? name,
+        string? description,
+        DateTime? startDate,
+        DateTime? endDate,
+        int? maxCapacity,
+        Guid? instructorId,
+        string? meetingSchedule)
+    {
+        if (name != null) Name = name;
+        Description = description;
+        if (startDate.HasValue) StartDate = startDate.Value;
+        if (endDate.HasValue) EndDate = endDate.Value;
+        if (maxCapacity.HasValue) MaxCapacity = maxCapacity.Value;
+        InstructorId = instructorId;
+        MeetingSchedule = meetingSchedule;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }
 
 public enum CohortStatus
