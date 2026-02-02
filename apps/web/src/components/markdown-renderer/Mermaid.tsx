@@ -88,9 +88,11 @@ const Mermaid: React.FC<MermaidProps> = ({ chart }) => {
               const viewBox = svgElement.getAttribute('viewBox');
               if (viewBox) {
                 const parts = viewBox.split(' ');
-                if (parts.length === 4) {
-                  const vbWidth = parseFloat(parts[2]);
-                  const vbHeight = parseFloat(parts[3]);
+                const widthStr = parts[2];
+                const heightStr = parts[3];
+                if (parts.length === 4 && widthStr && heightStr) {
+                  const vbWidth = parseFloat(widthStr);
+                  const vbHeight = parseFloat(heightStr);
                   // Set explicit dimensions from viewBox so SVG renders at natural size
                   // max-width will clamp if it exceeds container
                   svgElement.style.width = `${vbWidth}px`;
