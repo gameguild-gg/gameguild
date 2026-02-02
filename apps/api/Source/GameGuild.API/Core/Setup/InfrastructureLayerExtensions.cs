@@ -5,6 +5,7 @@ using GameGuild.API.Database;
 using GameGuild.Commerce.Billing;
 using GameGuild.Commerce.Payments;
 using GameGuild.Commerce.Subscriptions;
+using GameGuild.Features;
 using GameGuild.Identity.Authentication;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context;
@@ -192,6 +193,11 @@ public static class InfrastructureLayerExtensions
         stepStopwatch.Restart();
         services.AddPaymentsModule(configuration);
         logger.LogInformation("Payments Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
+        // 10e. Features Module (feature flags, OpenFeature provider, analytics)
+        stepStopwatch.Restart();
+        services.AddFeaturesModule();
+        logger.LogInformation("Features Module registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
 
         // 11. Repositories
         services.AddRepositories(logger);

@@ -28,7 +28,15 @@ public static class OpenApiExtensions
         options.Validate();
 
         // Add native .NET 9 OpenAPI support
-        services.AddOpenApi();
+        // JSON serialization options are configured globally in Program.cs
+        services.AddOpenApi(openApiOptions =>
+        {
+            // Custom document transformer for any OpenAPI customizations
+            openApiOptions.AddDocumentTransformer<OpenApiDocumentTransformer>();
+        });
+        
+        // Register custom document transformer
+        services.AddSingleton<OpenApiDocumentTransformer>();
 
         // Add Swashbuckle for Swagger UI
         services.AddSwaggerGen(c =>
@@ -249,5 +257,18 @@ public static class OpenApiExtensions
         services.AddEndpointsApiExplorer();
 
         return services;
+    }
+}
+
+/// <summary>
+///     Custom OpenAPI document transformer that ensures proper serialization
+/// </summary>
+internal sealed class OpenApiDocumentTransformer : Microsoft.AspNetCore.OpenApi.IOpenApiDocumentTransformer
+{
+    public Task TransformAsync(Microsoft.OpenApi.Models.OpenApiDocument document, Microsoft.AspNetCore.OpenApi.OpenApiDocumentTransformerContext context, CancellationToken cancellationToken)
+    {
+        // Document is already transformed by the default pipeline
+        // This transformer is just a placeholder to ensure we can customize if needed
+        return Task.CompletedTask;
     }
 }

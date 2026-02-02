@@ -6,6 +6,7 @@ using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Products;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
+using GameGuild.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -55,6 +56,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.ApplyConfiguration(new GameGuild.Commerce.Payments.TaxJurisdictionConfiguration());
         modelBuilder.ApplyConfiguration(new GameGuild.Commerce.Payments.TaxRateConfiguration());
         modelBuilder.ApplyConfiguration(new GameGuild.Commerce.Payments.TaxRuleConfiguration());
+
+        // Apply Features module configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(FeatureFlag).Assembly, 
+            type => type.Namespace?.StartsWith("GameGuild.Features") == true);
 
         // NOTE: The following modules are currently disabled. Uncomment when enabling them.
         // // Apply Resources module configurations (using automatic discovery)
@@ -217,6 +222,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<TenantSecurityVersion> TenantSecurityVersions { get => Set<TenantSecurityVersion>(); }
 
     public DbSet<AccessControlListEntry> AccessControlListEntries { get => Set<AccessControlListEntry>(); }
+
+    #endregion
+
+    #region Features Module
+
+    public DbSet<FeatureFlag> FeatureFlags { get => Set<FeatureFlag>(); }
+
+    public DbSet<FeatureFlagTarget> FeatureFlagTargets { get => Set<FeatureFlagTarget>(); }
+
+    public DbSet<FeatureFlagUsage> FeatureFlagUsages { get => Set<FeatureFlagUsage>(); }
 
     #endregion
 

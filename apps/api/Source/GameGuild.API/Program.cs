@@ -1,0 +1,84 @@
+using GameGuild.API;
+using GameGuild.API.Setup;
+
+// ===========================================================================================
+// GameGuild API - Entry Point
+// ===========================================================================================
+// This file configures the web application builder, registers all required services
+// across the Infrastructure, Application, and Presentation layers, and sets up the
+// HTTP request pipeline.
+//
+// Service Registration Order:
+//   1. Infrastructure Layer: Database context, repositories, external services, caching
+//   2. Application Layer: CQRS handlers, validators, business logic, module registration
+//   3. Presentation Layer: Controllers, GraphQL, authentication, CORS, Swagger/OpenAPI
+// ===========================================================================================
+
+// Create the web application builder with default configuration
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure global JSON serializer options BEFORE any services
+// Configure System.Text.Json defaults globally for all JSON operations
+var defaultOptions = new System.Text.Json.JsonSerializerOptions
+{
+    MaxDepth = 128,
+    ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles,
+    WriteIndented = true
+};
+System.Text.Json.JsonSerializerOptions.Default.MaxDepth = 128;
+System.Text.Json.JsonSerializerOptions.Default.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+
+// Configure HTTP JSON options with the same settings
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.MaxDepth = 128;
+    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    options.SerializerOptions.WriteIndented = true;
+});
+
+// Configure MVC JSON options with the same settings
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.MaxDepth = 128;
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    options.JsonSerializerOptions.WriteIndented = true;
+});
+
+// Configure application settings from appsettings.json and environment-specific files
+builder.AddAppSettings();
+
+// Load environment variables for sensitive configuration (e.g., connection strings, secrets)
+builder.AddEnvironmentVariables();
+
+// Configure structured logging with Serilog for comprehensive application logging
+builder.AddStructuredLogging();
+
+// Add services to the container
+// Order matters: Infrastructure -> Application -> Presentation
+
+// Infrastructure layer: Database context, repositories, external services, caching
+builder.AddInfrastructureLayer();
+
+// Application layer: CQRS handlers, validators, business logic, module registration
+builder.AddApplicationLayer();
+
+// Presentation layer: Controllers, GraphQL, authentication, CORS, Swagger/OpenAPI
+builder.AddPresentationLayer();
+
+// Build the configured web application
+var app = builder.Build();
+
+// Configure the HTTP request pipeline (middleware, routing, endpoints)
+app.ConfigurePipeline();
+
+// Start the application and listen for incoming requests
+await app.RunAsync().ConfigureAwait(false);
+
+// REMARK: Required for functional and integration tests to work.
+namespace GameGuild.API
+{
+    /// <summary>
+    /// Exposes the Program class to integration tests (e.g. TestHost).
+    /// </summary>
+    public class Program { }
+}

@@ -865,6 +865,13 @@ public static class ServiceCollectionExtensions
         // Log individual controllers from GameGuild.Audit
         LogControllersFromAssembly(typeof(AuthController).Assembly, logger, controllerStopwatch);
         
+        controllerStopwatch.Restart();
+        services.AddControllers()
+            .AddApplicationPart(typeof(GameGuild.Features.FeatureFlagsController).Assembly); // Features module
+        
+        // Log individual controllers from GameGuild.Features
+        LogControllersFromAssembly(typeof(GameGuild.Features.FeatureFlagsController).Assembly, logger, controllerStopwatch);
+        
         services.AddControllers()
             .AddJsonOptions(jsonOptions =>
             {
