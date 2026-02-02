@@ -1,0 +1,15 @@
+packages:
+  # Applications
+  - "apps/*"
+
+  # Shared libraries
+  - "packages/common"
+  - "packages/ui"
+  - "packages/analytics"
+  - "packages/cookies"
+  - "packages/errors"
+  - "packages/web3"
+  - "packages/api-client"
+
+  # Config packages
+  - "packages/configs/*"
