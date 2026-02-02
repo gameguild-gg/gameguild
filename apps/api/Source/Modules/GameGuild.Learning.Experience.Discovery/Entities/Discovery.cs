@@ -104,24 +104,40 @@ public class CourseCollection : EntityBase
 public class SearchHistory : EntityBase
 {
     public Guid? UserId { get; private set; }
+    public new Guid? TenantId { get; private set; }
     public string Query { get; private set; } = string.Empty;
     public int ResultCount { get; private set; }
     public Guid? ClickedCourseId { get; private set; }
+    public int? ClickedPosition { get; private set; }
     public string? Filters { get; private set; } // JSON
 
     private SearchHistory() { } // EF Core
 
-    public static SearchHistory Create(string query, int resultCount, Guid? userId = null)
+    public static SearchHistory Create(
+        string query, 
+        int resultCount, 
+        Guid? userId = null,
+        string? filters = null,
+        Guid? tenantId = null)
     {
         return new SearchHistory
         {
             Id = Guid.NewGuid(),
             UserId = userId,
+            TenantId = tenantId,
             Query = query,
             ResultCount = resultCount,
+            Filters = filters,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
+    }
+
+    public void RecordClick(Guid courseId, int position)
+    {
+        ClickedCourseId = courseId;
+        ClickedPosition = position;
+        UpdatedAt = DateTime.UtcNow;
     }
 }
 
