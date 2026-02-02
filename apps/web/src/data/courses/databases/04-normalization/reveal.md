@@ -193,6 +193,37 @@ CREATE TABLE student_phones (
 
 ---
 
+## The Problem: Partial Dependencies
+
+Consider an **order_items** table that tracks which products are in each order:
+
+| order_id | product_id | order_date | product_name | product_price | quantity |
+| -------- | ---------- | ---------- | ------------ | ------------- | -------- |
+| 1        | 101        | 2024-01-15 | Laptop       | 999.99        | 1        |
+| 1        | 102        | 2024-01-15 | Mouse        | 29.99         | 2        |
+| 2        | 101        | 2024-01-16 | Laptop       | 999.99        | 3        |
+
+**Composite Primary Key:** `(order_id, product_id)`
+
+This table is in **1NF** ✅ but has **partial dependencies** ❌
+
+---
+
+## Analyzing the Dependencies
+
+| Attribute       | Depends On               | Type       |
+| --------------- | ------------------------ | ---------- |
+| `quantity`      | `(order_id, product_id)` | ✅ Full    |
+| `order_date`    | `order_id` only          | ❌ Partial |
+| `product_name`  | `product_id` only        | ❌ Partial |
+| `product_price` | `product_id` only        | ❌ Partial |
+
+**Update Anomaly:** If "Laptop" price changes to $899.99, we must update **every row** containing that product!
+
+**Redundancy:** "Laptop" and "999.99" are stored twice unnecessarily.
+
+---
+
 ## Second Normal Form (2NF)
 
 A table is in **2NF** if:
@@ -200,31 +231,45 @@ A table is in **2NF** if:
 1. It is in 1NF
 2. Every non-key attribute is **fully functionally dependent** on the **entire** primary key
 
-> 2NF addresses **partial dependencies**
-
-> **Note:** Only applies to tables with **composite** primary keys!
+> 2NF eliminates **partial dependencies**
 
 ---
 
-## 2NF Violation Example
+## What is a Composite Primary Key?
 
-**Primary Key:** `(order_id, product_id)`
+A **composite primary key** uses **two or more columns** together to uniquely identify a row.
 
-| order_id | product_id | product_name | product_price | quantity |
-| -------- | ---------- | ------------ | ------------- | -------- |
-| 1        | 101        | Laptop       | 999.99        | 1        |
-| 1        | 102        | Mouse        | 29.99         | 2        |
-| 2        | 101        | Laptop       | 999.99        | 1        |
+```sql
+PRIMARY KEY (order_id, product_id)
+```
 
-**Dependencies:**
+- `order_id = 1` alone doesn't identify a unique row (order 1 has multiple products)
+- `product_id = 101` alone doesn't identify a unique row (product 101 appears in multiple orders)
+- `(order_id = 1, product_id = 101)` uniquely identifies exactly one row
 
-- ✅ `(order_id, product_id) → quantity` (full dependency)
-- ❌ `product_id → product_name` (partial - only part of PK!)
-- ❌ `product_id → product_price` (partial)
+> **2NF only applies to tables with composite keys!**
+> Single-column primary keys are automatically in 2NF if they're in 1NF.
 
 ---
 
-## 2NF Fixed
+## Converting to 2NF
+
+**Strategy:** Move partially dependent attributes to their own tables.
+
+- `order_date` depends only on `order_id` → create **orders** table
+- `product_name`, `product_price` depend only on `product_id` → create **products** table
+- `quantity` depends on full key → stays in **order_items**
+
+---
+
+## 2NF Solution
+
+**orders table:**
+
+| order_id | order_date |
+| -------- | ---------- |
+| 1        | 2024-01-15 |
+| 2        | 2024-01-16 |
 
 **products table:**
 
@@ -239,7 +284,9 @@ A table is in **2NF** if:
 | -------- | ---------- | -------- |
 | 1        | 101        | 1        |
 | 1        | 102        | 2        |
-| 2        | 101        | 1        |
+| 2        | 101        | 3        |
+
+Now each fact is stored **once**: no redundancy, no update anomalies!
 
 ---
 
@@ -249,8 +296,25 @@ A table is in **3NF** if:
 
 1. It is in 2NF
 2. There are **no transitive dependencies**
-   - Every non-key attribute depends **only** on the primary key
-   - Not on other non-key attributes
+
+---
+
+## What is a Transitive Dependency?
+
+A **transitive dependency** occurs when a non-key attribute depends on another non-key attribute, which in turn depends on the primary key:
+
+$$\text{PK} \rightarrow A \rightarrow B$$
+
+**Example chain:**
+
+```mermaid
+flowchart LR
+    A["employee_id<br/>(PK)"] --> B["department_id<br/>(non-key)"] --> C["department_name<br/>(non-key)"]
+```
+
+The `department_name` doesn't depend directly on `employee_id`. Instead, it depends on `department_id`, which happens to be in the same row.
+
+**Problem:** If a department changes its name, you must update every employee row in that department!
 
 ---
 
@@ -264,10 +328,16 @@ A table is in **3NF** if:
 | 2           | Bob           | 10            | Engineering     | 500000            |
 | 3           | Carol         | 20            | Marketing       | 300000            |
 
-**Transitive Dependencies:**
+**Dependency Analysis:**
 
-- ❌ `department_id → department_name`
-- ❌ `department_id → department_budget`
+| Dependency                        | Type                              |
+| --------------------------------- | --------------------------------- |
+| `employee_id → employee_name`     | ✅ Direct (OK)                    |
+| `employee_id → department_id`     | ✅ Direct (OK)                    |
+| `employee_id → department_name`   | ❌ Transitive (via department_id) |
+| `employee_id → department_budget` | ❌ Transitive (via department_id) |
+
+**Redundancy:** "Engineering" and "500000" are stored twice!
 
 ---
 
@@ -295,7 +365,39 @@ A table is in **3NF** if:
 A table is in **BCNF** if:
 
 1. It is in 3NF
-2. For every functional dependency `X → Y`, X must be a **superkey**
+2. For **every** functional dependency `X → Y`, X must be a **superkey**
+
+---
+
+### What's a Functional Dependency?
+
+A functional dependency `X → Y` means: **If you know the values of X, you can uniquely determine the values of Y**
+
+Examples:
+
+- `student_id → name` (one student ID determines exactly one name)
+- `isbn → title` (one ISBN determines exactly one book title)
+- `(order_id, product_id) → quantity` (one order + product combo determines one quantity)
+
+---
+
+### What's a Superkey?
+
+A **superkey** is a set of columns that **uniquely identifies each row** (like a primary key, but possibly with extra columns)
+
+Examples:
+
+- If PK is `student_id`, then `student_id` is a superkey
+- If PK is `student_id`, then `(student_id, name)` is also a superkey (extra column)
+- If PK is `(order_id, product_id)`, then `(order_id, product_id)` is a superkey
+
+---
+
+### BCNF Rule
+
+Every column that determines something (`X` in `X → Y`) must be able to uniquely identify rows by itself.
+
+**In plain English:** Only keys can determine non-key attributes. Non-key attributes cannot determine anything.
 
 BCNF is stricter than 3NF and handles edge cases with overlapping candidate keys.
 
@@ -341,12 +443,12 @@ But `professor` is not a superkey! ❌
 
 ## Normal Forms Summary
 
-| Form     | Eliminates              | Requirement                        |
-| -------- | ----------------------- | ---------------------------------- |
-| **1NF**  | Multi-valued attributes | Atomic values, no repeating groups |
-| **2NF**  | Partial dependencies    | Full dependency on entire PK       |
-| **3NF**  | Transitive dependencies | Non-key attrs depend only on PK    |
-| **BCNF** | Remaining anomalies     | Every determinant is a superkey    |
+| Form     | Problem Solved          | How to Achieve It                             | When You're Done               |
+| -------- | ----------------------- | --------------------------------------------- | ------------------------------ |
+| **1NF**  | Multi-valued attributes | Break atomic rule: each cell has ONE value    | No repeating groups, no arrays |
+| **2NF**  | Partial dependencies    | Every column depends on ENTIRE composite key  | No data in "wrong" tables      |
+| **3NF**  | Transitive dependencies | Non-key columns depend ONLY on primary key    | No chain dependencies          |
+| **BCNF** | Overlapping key issues  | Every determinant must be a complete superkey | Most restrictive form          |
 
 ---
 
