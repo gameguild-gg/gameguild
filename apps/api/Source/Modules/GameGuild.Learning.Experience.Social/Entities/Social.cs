@@ -161,3 +161,101 @@ public class DiscussionReply : EntityBase
     public void AcceptAsAnswer() { IsAcceptedAnswer = true; UpdatedAt = DateTime.UtcNow; }
     public void Upvote() => UpvoteCount++;
 }
+
+/// <summary>
+/// Represents a like/upvote on a course (Social Proof feature)
+/// </summary>
+public class CourseLike : EntityBase
+{
+    public Guid CourseId { get; private set; }
+    public Guid UserId { get; private set; }
+    public new Guid? TenantId { get; private set; }
+
+    private CourseLike() { } // EF Core
+
+    public static CourseLike Create(Guid courseId, Guid userId, Guid? tenantId = null)
+    {
+        return new CourseLike
+        {
+            Id = Guid.NewGuid(),
+            CourseId = courseId,
+            UserId = userId,
+            TenantId = tenantId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+}
+
+/// <summary>
+/// Represents a personalized feed item for a user
+/// </summary>
+public class PersonalizedFeedItem : EntityBase
+{
+    public Guid UserId { get; private set; }
+    public new Guid? TenantId { get; private set; }
+    public FeedItemType ItemType { get; private set; }
+    public Guid? CourseId { get; private set; }
+    public Guid? DiscussionId { get; private set; }
+    public Guid? ReviewId { get; private set; }
+    public Guid? LearningPathId { get; private set; }
+    public double RelevanceScore { get; private set; }
+    public string? Reason { get; private set; }
+    public bool IsViewed { get; private set; }
+    public bool IsDismissed { get; private set; }
+    public DateTime ExpiresAt { get; private set; }
+
+    private PersonalizedFeedItem() { } // EF Core
+
+    public static PersonalizedFeedItem Create(
+        Guid userId,
+        FeedItemType itemType,
+        Guid? tenantId = null,
+        Guid? courseId = null,
+        Guid? discussionId = null,
+        Guid? reviewId = null,
+        Guid? learningPathId = null,
+        double relevanceScore = 0.5,
+        string? reason = null,
+        int expiresInDays = 7)
+    {
+        return new PersonalizedFeedItem
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            TenantId = tenantId,
+            ItemType = itemType,
+            CourseId = courseId,
+            DiscussionId = discussionId,
+            ReviewId = reviewId,
+            LearningPathId = learningPathId,
+            RelevanceScore = Math.Clamp(relevanceScore, 0.0, 1.0),
+            Reason = reason,
+            IsViewed = false,
+            IsDismissed = false,
+            ExpiresAt = DateTime.UtcNow.AddDays(expiresInDays),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+    }
+
+    public void MarkViewed() { IsViewed = true; UpdatedAt = DateTime.UtcNow; }
+    public void Dismiss() { IsDismissed = true; UpdatedAt = DateTime.UtcNow; }
+}
+
+/// <summary>
+/// Types of items that can appear in a personalized feed
+/// </summary>
+public enum FeedItemType
+{
+    NewCourse = 0,
+    PopularCourse = 1,
+    TrendingDiscussion = 2,
+    FeaturedReview = 3,
+    LearningPathSuggestion = 4,
+    CourseUpdate = 5,
+    InstructorActivity = 6,
+    PeerActivity = 7,
+    AchievementUnlocked = 8,
+    SkillMilestone = 9
+}
