@@ -57,7 +57,7 @@ A tree where:
 
 - **Nodes** = game states
 - **Edges** = moves
-- **Leaves** = terminal states (win/lose/draw)
+- **Leaves** = terminal states (win/lose/draw/evaluate)
 
 ---
 
@@ -79,9 +79,9 @@ flowchart TD
 
 Leaf nodes have **utility values**:
 
-- `+∞` or large positive = MAX wins
-- `-∞` or large negative = MIN wins
-- `0` = draw
+- $+\infty$ or large positive = MAX wins
+- $-\infty$ or large negative = MIN wins
+- $0$ = draw
 
 ---
 
@@ -153,7 +153,7 @@ int minimax(State& state, int depth, bool isMaxPlayer) {
 
 ### Negamax Simplification
 
-Key insight: `max(a, b) = -min(-a, -b)`
+Key insight: $\max(a, b) = -\min(-a, -b)$
 
 In a zero-sum game: **my score = -opponent's score**
 
@@ -182,12 +182,12 @@ int negamax(State& state, int depth) {
 
 ### Minimax Complexity
 
-- **Branching factor:** b (e.g., ~35 for chess)
-- **Depth:** d
-- **Time:** O(b^d)
-- **Space:** O(d)
+- **Branching factor:** $b$ (e.g., ~35 for chess)
+- **Depth:** $d$
+- **Time:** $O(b^d)$
+- **Space:** $O(d)$
 
-Chess: 35^10 = 2.7 x 10^15 nodes (intractable!)
+Chess: $35^{10} = 2.7 \times 10^{15}$ nodes (intractable!)
 
 ---
 
@@ -449,18 +449,18 @@ Best move leads to value **3**.
 
 ### Alpha and Beta
 
-- **α (alpha)** = best value MAX can guarantee so far
-- **β (beta)** = best value MIN can guarantee so far
+- $\alpha$ = best value MAX can guarantee so far
+- $\beta$ = best value MIN can guarantee so far
 
-Initially: α = -∞, β = +∞
+Initially: $\alpha = -\infty$, $\beta = +\infty$
 
 ---
 
 ### Pruning Condition
 
-**At a MIN node:** if value ≤ α, prune (beta cutoff)
+**At a MIN node:** if value $\leq \alpha$, prune (beta cutoff)
 
-**At a MAX node:** if value ≥ β, prune (alpha cutoff)
+**At a MAX node:** if value $\geq \beta$, prune (alpha cutoff)
 
 ---
 
@@ -479,16 +479,16 @@ flowchart TD
     style G fill:#ddd,stroke-dasharray: 5 5
 ```
 
-After seeing 2 ≤ 3 (α), we prune!
+After seeing $2 \leq 3$ ($\alpha$), we prune!
 
 ---
 
 ### Step-by-Step
 
 1. Evaluate left subtree → MIN returns 3
-2. α = 3 at root (best for MAX so far)
+2. $\alpha = 3$ at root (best for MAX so far)
 3. Start right subtree, see value 2
-4. 2 ≤ α (3), so MIN would pick ≤2
+4. $2 \leq \alpha$ (3), so MIN would pick $\leq 2$
 5. MAX already has 3, so **prune**!
 
 ---
@@ -546,11 +546,13 @@ int negamaxAB(State& state, int depth, int alpha, int beta) {
 
 ### Alpha-Beta Savings
 
-| Move Ordering | Nodes Evaluated       |
-| ------------- | --------------------- |
-| Worst case    | b^d (same as minimax) |
-| Random        | b^(3d/4)              |
-| **Best case** | **b^(d/2) = √(b^d)**  |
+Where $b$ = branching factor, $d$ = search depth:
+
+| Move Ordering | Nodes Evaluated              |
+| ------------- | ---------------------------- |
+| Worst case    | $O(b^d)$ (same as minimax)   |
+| Random        | $O(b^{3d/4})$                |
+| **Best case** | $O(b^{d/2}) = O(\sqrt{b^d})$ |
 
 With perfect ordering: **search twice as deep!**
 
@@ -748,7 +750,7 @@ flowchart TD
     style G fill:#fbb,stroke-dasharray: 5 5
 ```
 
-**b(2) <= a(3)**: Prune! MIN would return <=2, MAX already has 3.
+$\beta(2) \leq \alpha(3)$: Prune! MIN would return $\leq 2$, MAX already has 3.
 
 ---
 
@@ -781,7 +783,7 @@ MAX picks max(3,2)=**3**. Saved one node evaluation!
 - Same result as minimax (value = 3)
 - Evaluated **6 nodes** instead of 7
 - Savings grow exponentially with depth
-- Key: pruning happens when b <= a
+- Key: pruning happens when $\beta \leq \alpha$
 
 ---
 
@@ -849,7 +851,30 @@ int search(State& state, int depth /*, ... */) {
 Same position can be reached via different move orders:
 
 ```
-1. e4 e5 2. Nf3 = 1. Nf3 e5 2. e4
+Path A: 1. e4 e5 2. Nf3       Path B: 1. Nf3 e5 2. e4
+```
+
+Both reach the same position:
+
+```
+    a   b   c   d   e   f   g   h
+  ┌───┬───┬───┬───┬───┬───┬───┬───┐
+8 │ ♜ │ ♞ │ ♝ │ ♛ │ ♚ │ ♝ │ ♞ │ ♜ │
+  ├───┼───┼───┼───┼───┼───┼───┼───┤
+7 │ ♟ │ ♟ │ ♟ │ ♟ │   │ ♟ │ ♟ │ ♟ │
+  ├───┼───┼───┼───┼───┼───┼───┼───┤
+6 │   │   │   │   │   │   │   │   │
+  ├───┼───┼───┼───┼───┼───┼───┼───┤
+5 │   │   │   │   │ ♟ │   │   │   │
+  ├───┼───┼───┼───┼───┼───┼───┼───┤
+4 │   │   │   │   │ ♙ │   │   │   │
+  ├───┼───┼───┼───┼───┼───┼───┼───┤
+3 │   │   │   │   │   │ ♘ │   │   │
+  ├───┼───┼───┼───┼───┼───┼───┼───┤
+2 │ ♙ │ ♙ │ ♙ │ ♙ │   │ ♙ │ ♙ │ ♙ │
+  ├───┼───┼───┼───┼───┼───┼───┼───┤
+1 │ ♖ │ ♘ │ ♗ │ ♕ │ ♔ │ ♗ │   │ ♖ │
+  └───┴───┴───┴───┴───┴───┴───┴───┘
 ```
 
 Why evaluate twice?
@@ -956,9 +981,9 @@ Move searchIterative(State& state, double maxTime) {
 
 | Algorithm          | Time Complexity |
 | ------------------ | --------------- |
-| Minimax            | O(b^d)          |
-| Alpha-Beta (worst) | O(b^d)          |
-| Alpha-Beta (best)  | O(b^(d/2))      |
+| Minimax            | $O(b^d)$        |
+| Alpha-Beta (worst) | $O(b^d)$        |
+| Alpha-Beta (best)  | $O(b^{d/2})$    |
 
 **Good move ordering transforms exponential savings!**
 
