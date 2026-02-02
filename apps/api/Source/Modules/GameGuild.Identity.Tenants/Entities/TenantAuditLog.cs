@@ -106,7 +106,7 @@ public class TenantAuditLogConfiguration : IEntityTypeConfiguration<TenantAuditL
         builder.Property(x => x.CorrelationId)
             .HasMaxLength(100);
 
-        // Configure JSON columns for dictionary properties
+        // Configure JSON columns - PostgreSQL natively supports jsonb
         builder.Property(x => x.BeforeValues)
             .HasColumnType("jsonb");
 
