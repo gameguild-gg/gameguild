@@ -1,0 +1,118 @@
+name: 💎 Feature Request
+description: "Propose a new feature, service, or improvement, prioritize your request with an attached bounty."
+title: "[Enhancement]: "
+labels: [ "enhancement", "triage" ]
+type: feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > **This is the issue template for proposing new features, services, or improvements.**
+        > Before proposing a new feature, please check the [existing issues](https://github.com/gameguild-gg/website/issues) to see if has already been requested.
+
+        # 💎 Bounty Program
+        You can prioritize the resolution of this issue by adding a bounty through our [Bounty Program](https://console.algora.io/org/GameGuild/bounties/new).
+
+  - type: dropdown
+    attributes:
+      label: Request Type
+      description: Select the type of request you are making.
+      options:
+        - New Feature
+        - New Service
+        - Improvement
+        - General Task
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 👤 User Story
+      description: "Describe who needs this and why. Format: 'As a [user type], I want [functionality] so that [benefit]'"
+      placeholder: "As a game developer, I want to upload custom assets so that I can showcase my portfolio."
+    validations:
+      required: true
+
+  - type: input
+    id: route_url
+    attributes:
+      label: "Route URL"
+      description: "Provide a URL demonstrating the issue, if applicable. Or the route URL where the feature should be implemented."
+      placeholder: "https://gameguild.gg/the_route_goes_here"
+
+  - type: textarea
+    attributes:
+      label: 🚨 Problem Statement, Use Case, or Opportunity
+      description: Describe the problem, use case, or opportunity that this feature, service, or improvement will address. What gap does this fill?
+      placeholder: "Currently, users cannot... This creates friction because... This opportunity would enable..."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 💡 Proposed Solution
+      description: Provide a detailed description of the feature, improvement, or service you are proposing. Be specific (project) functionality, user experience, or design.
+      placeholder: "The solution should include... Users would interact with it by... The UI/UX would feature..."
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: ✅ Acceptance Criteria
+      description: List the specific criteria or outcomes that must be met for this feature to be considered complete. Use checkboxes for clarity.
+      placeholder: |
+        - [ ] Users can upload files up to 10MB
+        - [ ] Supported formats: PNG, JPG, GIF
+        - [ ] Preview is shown before confirmation
+        - [ ] Success/error messages are displayed
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: 📈 Impact, Risks and Benefits
+      description: Describe the potential impact, risks, and benefits of implementing this feature, service, or improvement.
+      placeholder: |
+        **Benefits:** 
+        - Improved user engagement
+        - Reduced support tickets
+        
+        **Risks:**
+        - Increased server storage costs
+        - Potential for abuse
+        
+        **Impact:**
+        - Expected to affect 70% of active users
+        - Estimated 20% increase in user retention
+
+  - type: textarea
+    attributes:
+      label: 📚 Context and Examples
+      description: Add any additional context, use cases, design mockups, charts, screenshots, or videos that can help explain the feature request. Include examples from other platforms if relevant.
+      placeholder: "Similar to how [Platform X] handles this... See attached mockup... Reference: [link]"
+
+  - type: checkboxes
+    id: technical_requirements
+    attributes:
+      label: 🔧 Technical Requirements
+      description: Check off technical aspects that need to be addressed (optional, for contributors)
+      options:
+        - label: Frontend changes required
+          required: false
+        - label: Backend/API changes required
+          required: false
+        - label: Database schema changes required
+          required: false
+        - label: Third-party integrations needed
+          required: false
+        - label: Documentation updates needed
+          required: false
+        - label: Tests must be written
+          required: false
+
+  - type: textarea
+    attributes:
+      label: 🖇️ Related Issues
+      description: If applicable, link any related issues, pull requests, or discussions here.
+      placeholder: "Related to #123, depends on #456, blocks #789"

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "game-guild/game-guild"
+    }
+  ],
+  "commit": false,
+  "fixed": [],
+  "linked": [
+    [
+      "@game-guild/eslint-config",
+      "@game-guild/prettier-config",
+      "@game-guild/typescript-config",
+      "@game-guild/tailwind-config",
+      "@game-guild/jest-config"
+    ]
+  ],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@game-guild/web"
+  ],
+  "privatePackages": {
+    "version": true,
+    "tag": false
+  }
+}
