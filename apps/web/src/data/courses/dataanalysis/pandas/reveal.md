@@ -428,6 +428,33 @@ combined = pd.concat([series1, series2])
 print(combined)
 ```
 
+```
+a    10
+b    20
+c    30
+d    40
+e    50
+dtype: int64
+```
+
+---
+
+## Where Method
+
+```python
+arr = np.arange(1, 10)
+s = pd.Series(arr)
+# Replace values less than 5 with -1,
+modified = s.where(s >= 5, -1)
+print(modified)
+# if you dont pass the replace value it will put NaN as the value
+modified = s.where(s >= 5)
+print(modified)
+# to remove the keys and values that are NaN
+modified = s.where(s >= 5).dropna()
+print(modified)
+```
+
 ---
 
 # Summary
