@@ -419,6 +419,17 @@ dtype: int64
 
 ---
 
+## Concatenating Series
+
+```python
+series1 = pd.Series([10, 20, 30], index=['a', 'b', 'c'])
+series2 = pd.Series([40, 50], index=['d', 'e'])
+combined = pd.concat([series1, series2])
+print(combined)
+```
+
+---
+
 # Summary
 
 ---
