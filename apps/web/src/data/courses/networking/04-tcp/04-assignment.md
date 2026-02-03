@@ -195,16 +195,16 @@ void handle_client(std::shared_ptr<tcp::socket> socket,
 | Component                          | Points                  |
 | ---------------------------------- | ----------------------- |
 | **Video starts with feature list** | Required (0 if missing) |
-| Multi-client support               | 20                      |
-| Non-blocking server                | 20                      |
-| Single chatroom broadcast          | 20                      |
-| Graceful `/quit` exit              | 20                      |
-| **Base Total**                     | **80**                  |
+| Multi-client support               | 25                      |
+| Non-blocking server                | 25                      |
+| Single chatroom broadcast          | 25                      |
+| Graceful `/quit` exit              | 25                      |
+| **Base Total**                     | **100**                 |
 | Extra: `/msg` private messages     | +10                     |
 | Extra: `/nick` username change     | +5                      |
 | Extra: Zombie socket detection     | +10                     |
 | Extra: Other features (max 3)      | +5 each (max +15)       |
-| **Maximum Total**                  | **120**                 |
+| **Maximum Total**                  | **140**                 |
 
 ---
 
