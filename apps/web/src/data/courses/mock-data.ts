@@ -1,6 +1,7 @@
 import { Product, ProductProgram, Program, ProgramContent } from '@/lib/api/generated';
 import { ai4gamesProduct, ai4gamesProductProgram, ai4gamesProgram } from './ai4games';
 import { ai4games2Product, ai4games2ProductProgram, ai4games2Program } from './ai4games2';
+import { dataanalysisProduct, dataanalysisProductProgram, dataanalysisProgram } from './dataanalysis';
 import databasesProgram, { databasesProduct, databasesProductProgram } from './databases';
 import { dsaProduct, dsaProductProgram, dsaProgram } from './dsa';
 import gamePublishingProgram, { gamePublishingProduct, gamePublishingProductProgram } from './game-publishing';
@@ -15,6 +16,7 @@ ai4games2Product.productPrograms = [ai4games2ProductProgram];
 databasesProduct.productPrograms = [databasesProductProgram];
 networkingProduct.productPrograms = [networkingProductProgram];
 dsaProduct.productPrograms = [dsaProductProgram];
+dataanalysisProduct.productPrograms = [dataanalysisProductProgram];
 
 export const mockPrograms: Program[] = [
   ai4games2Program,
@@ -26,6 +28,7 @@ export const mockPrograms: Program[] = [
   dsaProgram,
   intro2gproProgram,
   gamePublishingProgram,
+  dataanalysisProgram,
 ];
 
 export const mockProducts: Product[] = [
@@ -38,6 +41,7 @@ export const mockProducts: Product[] = [
   dsaProduct,
   intro2gproProduct,
   gamePublishingProduct,
+  dataanalysisProduct,
 ];
 
 export const mockProductPrograms: ProductProgram[] = [
@@ -50,6 +54,7 @@ export const mockProductPrograms: ProductProgram[] = [
   dsaProductProgram,
   intro2gproProductProgram,
   gamePublishingProductProgram,
+  dataanalysisProductProgram,
 ];
 
 export const mockProgramContents: ProgramContent[] = [
@@ -62,6 +67,7 @@ export const mockProgramContents: ProgramContent[] = [
   ...(dsaProgram.programContents ?? []),
   ...(intro2gproProgram.programContents ?? []),
   ...(gamePublishingProgram.programContents ?? []),
+  ...(dataanalysisProgram.programContents ?? []),
 ];
 
 export function getProgramBySlug(slug: string): Program | null {
