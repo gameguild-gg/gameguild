@@ -366,6 +366,7 @@ interface EditorProps {
   currentProjectType?: ProjectType
   storageAdapter?: any
   currentStorageType?: "local" | "gameguild-cloud" | "google-drive"
+  readOnly?: boolean
 }
 
 // Criar um plugin para gerenciar a referência do editor:
@@ -436,7 +437,8 @@ export function Editor({
   customRestrictions, 
   currentProjectType, 
   storageAdapter, 
-  currentStorageType
+  currentStorageType,
+  readOnly = false
 }: EditorProps) {
   const [isLoadingProject, setIsLoadingProject] = useState(false)
 
@@ -465,6 +467,7 @@ export function Editor({
       initialConfig={{
         ...initialConfig,
         editorState: lexicalInitialState,
+        editable: !readOnly,
       }}
     >
       <StorageAdapterProvider value={storageAdapter}>
@@ -478,22 +481,24 @@ export function Editor({
               contentEditable={<ContentEditable className="min-h-[450px] p-3 outline-none text-gray-900 dark:text-gray-100" />}
               placeholder={
                 <div className="pointer-events-none absolute left-[13px] top-[13px] select-none text-gray-400 dark:text-gray-500">
-                  Start typing...
+                  {readOnly ? "Viewing historical version (read-only)" : "Start typing..."}
                 </div>
               }
               ErrorBoundary={LexicalErrorBoundary}
             />
-            <FloatingContentInsertPlugin 
-              mode={mode} 
-              blockId={blockId}
-              panelId={panelId}
-              customRestrictions={customRestrictions}
-              currentProjectId={projectId || undefined}
-              currentProjectType={currentProjectType}
-              storageAdapter={storageAdapter}
-              currentStorageType={currentStorageType}
-            />
-            <FloatingTextFormatToolbarPlugin />
+            {!readOnly && (
+              <FloatingContentInsertPlugin 
+                mode={mode} 
+                blockId={blockId}
+                panelId={panelId}
+                customRestrictions={customRestrictions}
+                currentProjectId={projectId || undefined}
+                currentProjectType={currentProjectType}
+                storageAdapter={storageAdapter}
+                currentStorageType={currentStorageType}
+              />
+            )}
+            {!readOnly && <FloatingTextFormatToolbarPlugin />}
             <LinkPlugin />
             <AutoLinkPlugin matchers={MATCHERS} />
             <ImagePlugin />

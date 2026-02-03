@@ -11,10 +11,11 @@ interface SlideNavigationSidebarProps {
   slides: SlideData[]
   currentSlideIndex: number
   onSlideSelect: (index: number) => void
-  onSlideAdd: () => void
-  onSlideRemove: (slideId: string) => void
-  onSlideReorder: (fromIndex: number, toIndex: number) => void
-  onSlideNameChange: (slideId: string, name: string) => void
+  onSlideAdd?: () => void
+  onSlideRemove?: (slideId: string) => void
+  onSlideReorder?: (fromIndex: number, toIndex: number) => void
+  onSlideNameChange?: (slideId: string, name: string) => void
+  readOnly?: boolean
 }
 
 export function SlideNavigationSidebar({
@@ -25,6 +26,7 @@ export function SlideNavigationSidebar({
   onSlideRemove,
   onSlideReorder,
   onSlideNameChange,
+  readOnly = false,
 }: SlideNavigationSidebarProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [editingSlideId, setEditingSlideId] = useState<string | null>(null)
@@ -43,7 +45,7 @@ export function SlideNavigationSidebar({
     e.preventDefault()
     if (draggedIndex === null || draggedIndex === index) return
     
-    onSlideReorder(draggedIndex, index)
+    onSlideReorder?.(draggedIndex, index)
     setDraggedIndex(index)
   }
 
@@ -58,7 +60,7 @@ export function SlideNavigationSidebar({
 
   const handleNameSave = (slideId: string) => {
     if (editingName.trim()) {
-      onSlideNameChange(slideId, editingName.trim())
+      onSlideNameChange?.(slideId, editingName.trim())
     }
     setEditingSlideId(null)
   }
@@ -78,7 +80,7 @@ export function SlideNavigationSidebar({
 
   const confirmDelete = () => {
     if (deleteConfirm.slideId) {
-      onSlideRemove(deleteConfirm.slideId)
+      onSlideRemove?.(deleteConfirm.slideId)
     }
     setDeleteConfirm({ open: false, slideId: null, slideName: "" })
   }
@@ -91,17 +93,19 @@ export function SlideNavigationSidebar({
           Slides ({slides.length})
         </h3>
         
-        {/* Add Slide Button */}
-        <Button
-          onClick={() => onSlideAdd()}
-          variant="outline"
-          size="sm"
-          className="w-full"
-          title="Add New Slide"
-        >
-          <Plus className="h-3 w-3 mr-1" />
-          Add Slide
-        </Button>
+        {/* Add Slide Button - hidden in readOnly mode */}
+        {!readOnly && onSlideAdd && (
+          <Button
+            onClick={() => onSlideAdd()}
+            variant="outline"
+            size="sm"
+            className="w-full"
+            title="Add New Slide"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Add Slide
+          </Button>
+        )}
       </div>
 
       {/* Slides List */}
@@ -115,9 +119,9 @@ export function SlideNavigationSidebar({
             {slides.map((slide, index) => (
               <div
                 key={slide.id}
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
+                draggable={!readOnly && !!onSlideReorder}
+                onDragStart={() => !readOnly && onSlideReorder && handleDragStart(index)}
+                onDragOver={(e) => !readOnly && onSlideReorder && handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
                 onClick={() => onSlideSelect(index)}
                 className={cn(
@@ -128,12 +132,14 @@ export function SlideNavigationSidebar({
                   draggedIndex === index && "opacity-50"
                 )}
               >
-                {/* Drag Handle */}
-                <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
-                  <GripVertical className="h-4 w-4 text-gray-400" />
-                </div>
+                {/* Drag Handle - hidden in readOnly mode */}
+                {!readOnly && onSlideReorder && (
+                  <div className="absolute left-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+                    <GripVertical className="h-4 w-4 text-gray-400" />
+                  </div>
+                )}
 
-                <div className="pl-6">
+                <div className={!readOnly && onSlideReorder ? "pl-6" : "pl-2"}>
                   {/* Slide Number */}
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
@@ -143,8 +149,8 @@ export function SlideNavigationSidebar({
                       <Layers className="h-3 w-3 text-blue-500" />
                     </div>
                     
-                    {/* Delete Button */}
-                    {slides.length > 1 && (
+                    {/* Delete Button - hidden in readOnly mode */}
+                    {!readOnly && slides.length > 1 && onSlideRemove && (
                       <Button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -178,10 +184,14 @@ export function SlideNavigationSidebar({
                   ) : (
                     <div
                       onDoubleClick={(e) => {
+                        if (readOnly || !onSlideNameChange) return
                         e.stopPropagation()
                         handleNameEdit(slide, index)
                       }}
-                      className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate"
+                      className={cn(
+                        "text-sm font-medium text-gray-700 dark:text-gray-300 truncate",
+                        !readOnly && onSlideNameChange && "cursor-text"
+                      )}
                       title={slide.name || `Slide ${index + 1}`}
                     >
                       {slide.name || `Slide ${index + 1}`}
@@ -201,18 +211,20 @@ export function SlideNavigationSidebar({
         )}
       </div>
 
-      {/* Footer with Add Button */}
-      <div className="p-3 border-t border-gray-200 dark:border-gray-800">
-        <Button
-          onClick={() => onSlideAdd()}
-          variant="outline"
-          size="sm"
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Slide
-        </Button>
-      </div>
+      {/* Footer with Add Button - hidden in readOnly mode */}
+      {!readOnly && onSlideAdd && (
+        <div className="p-3 border-t border-gray-200 dark:border-gray-800">
+          <Button
+            onClick={() => onSlideAdd()}
+            variant="outline"
+            size="sm"
+            className="w-full"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Slide
+          </Button>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog

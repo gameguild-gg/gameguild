@@ -19,6 +19,7 @@ interface EditorLayoutType2Props {
   preferences?: ProjectPreferences
   onPreferencesChange?: (preferences: ProjectPreferences) => void
   currentProjectId?: string
+  readOnly?: boolean
 }
 
 /**
@@ -39,6 +40,7 @@ export function EditorLayoutType2({
   preferences,
   onPreferencesChange,
   currentProjectId,
+  readOnly = false,
 }: EditorLayoutType2Props) {
   // Always use AdvancedMultiBlockEditor, even for 1 block
   return (
@@ -47,16 +49,17 @@ export function EditorLayoutType2({
         blockRefs={blockRefs}
         blockStates={blockStates}
         onBlockChange={onBlockChange}
-        onBlockAdd={onBlockAdd}
-        onBlockRemove={onBlockRemove}
+        onBlockAdd={readOnly ? undefined : onBlockAdd}
+        onBlockRemove={readOnly ? undefined : onBlockRemove}
         onLoadingChange={onLoadingChange}
         projectId={projectId}
         mode={mode}
         currentProjectType={currentProjectType}
         storageAdapter={storageAdapter}
         preferences={preferences}
-        onPreferencesChange={onPreferencesChange}
+        onPreferencesChange={readOnly ? undefined : onPreferencesChange}
         currentProjectId={currentProjectId}
+        readOnly={readOnly}
       />
     </div>
   )

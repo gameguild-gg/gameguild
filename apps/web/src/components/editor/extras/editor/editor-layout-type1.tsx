@@ -15,6 +15,7 @@ interface EditorLayoutType1Props {
   mode?: ProjectMode
   currentProjectType?: ProjectType
   storageAdapter?: any
+  readOnly?: boolean
 }
 
 /**
@@ -30,6 +31,7 @@ export function EditorLayoutType1({
   mode = "free-page",
   currentProjectType,
   storageAdapter,
+  readOnly = false,
 }: EditorLayoutType1Props) {
   // For non-free modes in type1, use "single" panel to apply restrictions
   const panel = mode !== "free-page" ? "single" : undefined
@@ -48,6 +50,7 @@ export function EditorLayoutType1({
           blockId="b1"
           currentProjectType={currentProjectType}
           storageAdapter={storageAdapter}
+          readOnly={readOnly}
         />
       </div>
     </div>
