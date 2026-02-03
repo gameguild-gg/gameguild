@@ -501,6 +501,9 @@ int main() {
     tcp::resolver resolver(io_context);
     auto endpoints = resolver.resolve("example.com", "80");
 
+    // or use IP directly
+    // auto endpoints = tcp::endpoint(boost::asio::ip::make_address("127.0.0.1"), 12345);
+
     // Connect (throws on failure)
     boost::asio::connect(socket, endpoints);
 
