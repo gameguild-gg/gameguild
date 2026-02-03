@@ -71,6 +71,7 @@ interface AdvancedMultiBlockEditorProps {
   preferences?: ProjectPreferences
   onPreferencesChange?: (preferences: ProjectPreferences) => void
   currentProjectId?: string
+  readOnly?: boolean
 }
 
 export function AdvancedMultiBlockEditor({
@@ -87,6 +88,7 @@ export function AdvancedMultiBlockEditor({
   preferences,
   onPreferencesChange,
   currentProjectId,
+  readOnly = false,
 }: AdvancedMultiBlockEditorProps) {
   const blocks = sortBlocks(Object.keys(blockStates))
 
@@ -411,6 +413,7 @@ export function AdvancedMultiBlockEditor({
             blockId={maximizedBlock}
             currentProjectType={currentProjectType}
             storageAdapter={storageAdapter}
+            readOnly={readOnly}
           />
         </div>
       </div>
@@ -507,6 +510,7 @@ export function AdvancedMultiBlockEditor({
               activeId={activeId}
               onTogglePanelDirection={handleTogglePanelDirection}
               customRestrictions={preferences?.global?.restrictions}
+              readOnly={readOnly}
             />
           </div>
         </div>
@@ -638,6 +642,7 @@ export function AdvancedMultiBlockEditor({
                         activeId={activeId}
                         onTogglePanelDirection={handleTogglePanelDirection}
                         customRestrictions={preferences?.global?.restrictions}
+                        readOnly={readOnly}
                       />
                     )}
                   </Panel>
@@ -706,6 +711,7 @@ interface DraggablePanelContentProps {
   activeId: string | null
   onTogglePanelDirection: (panelId: string) => void
   customRestrictions?: any
+  readOnly?: boolean
 }
 
 function DraggablePanelContent({
@@ -730,6 +736,7 @@ function DraggablePanelContent({
   activeId,
   onTogglePanelDirection,
   customRestrictions,
+  readOnly = false,
 }: DraggablePanelContentProps) {
   const [activeTab, setActiveTab] = useState(panel.blockIds[0] || "")
   const panelDirection = panel.direction || "horizontal"
@@ -882,6 +889,7 @@ function DraggablePanelContent({
               storageAdapter={storageAdapter}
               panelId={panel.id}
               customRestrictions={customRestrictions}
+              readOnly={readOnly}
             />
           </div>
         </>
@@ -967,6 +975,7 @@ function DraggablePanelContent({
                     storageAdapter={storageAdapter}
                     panelId={panel.id}
                     customRestrictions={customRestrictions}
+                    readOnly={readOnly}
                   />
                 </div>
               </div>
@@ -1067,6 +1076,7 @@ function DraggablePanelContent({
                 storageAdapter={storageAdapter}
                 panelId={panel.id}
                 customRestrictions={customRestrictions}
+                readOnly={readOnly}
               />
             </div>
           ))}

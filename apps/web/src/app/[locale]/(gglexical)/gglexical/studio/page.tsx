@@ -2,7 +2,8 @@
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Save, Eye, Blocks, Home } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Save, Eye, Blocks, Home, History, RotateCcw } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -33,6 +34,7 @@ import { type ProjectMode } from "@/lib/storage/editor/project-modes"
 import { detectProjectLayout, extractEditorStates, createProjectData } from "@/lib/storage/editor/layout-detector"
 import { getLayoutFromType, type ProjectType, type InternalLayout, PROJECT_TYPES } from "@/lib/storage/editor/project-types"
 import { ExitConfirmDialog } from "@/components/editor/extras/dialogs/exit-confirm-dialog"
+import { ProjectHistoryDialog } from "@/components/editor/extras/dialogs/project-history-dialog"
 import { PreviewRenderer } from "@/components/editor/extras/preview/preview-renderer"
 import { PreviewRendererType2 } from "@/components/editor/extras/preview/preview-renderer-type2"
 import { PreviewRendererSlideshowContinuous } from "@/components/editor/extras/preview/preview-renderer-slideshow-continuous"
@@ -151,6 +153,12 @@ export default function Page() {
   
   const [nextUrl, setNextUrl] = useState<string | null>(null)
   const [exitDialogOpen, setExitDialogOpen] = useState(false)
+
+  // History viewing state
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false)
+  const [isViewingHistory, setIsViewingHistory] = useState(false)
+  const [currentViewingSha, setCurrentViewingSha] = useState<string | null>(null)
+  const [headProjectData, setHeadProjectData] = useState<string | null>(null) // Store HEAD data when viewing history
 
   const handleLinkNavigation = (event: React.MouseEvent<HTMLAnchorElement>, url: string) => {
     if (event.ctrlKey || event.metaKey || event.button === 1) {
@@ -531,16 +539,22 @@ export default function Page() {
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(false)
 
   const handleSaveRef = useRef(handleSave)
+  const isViewingHistoryRef = useRef(isViewingHistory)
 
   useEffect(() => {
     // Update the ref when handleSave changes
     handleSaveRef.current = handleSave
+    isViewingHistoryRef.current = isViewingHistory
   })
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.key === "s") {
         event.preventDefault() // Prevent browser's default save dialog
+        // Block save when viewing history (read-only mode)
+        if (isViewingHistoryRef.current) {
+          return
+        }
         handleSaveRef.current()
       }
     }
@@ -554,7 +568,8 @@ export default function Page() {
 
   // Auto-save functionality
   useEffect(() => {
-    if (!autoSaveEnabled || !currentProjectId || !isDbInitialized) return
+    // Block auto-save when viewing history (read-only mode)
+    if (!autoSaveEnabled || !currentProjectId || !isDbInitialized || isViewingHistory) return
 
     // Check if we have any content to save
     const hasContent = currentLayout === "single" 
@@ -615,7 +630,7 @@ export default function Page() {
     }, 2000) // Auto-save after 2 seconds of inactivity
 
     return () => clearTimeout(autoSaveTimer)
-  }, [editorState, blockStates, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime])
+  }, [editorState, blockStates, autoSaveEnabled, currentProjectId, currentProjectName, projectTags, isDbInitialized, currentLayout, currentProjectType, currentProjectStorageType, lastProjectLoadTime, isViewingHistory])
 
 
 
@@ -780,6 +795,215 @@ export default function Page() {
     }
   }
 
+  // History management handlers
+  const handleLoadCommit = async (sha: string) => {
+    if (!currentProjectId) return
+
+    try {
+      // Check if this commit is HEAD (first commit in history)
+      const history = await dbStorage.current.listHistory(currentProjectId)
+      const isHead = history.length > 0 && history[0]?.sha === sha
+      
+      // If loading HEAD, just return to normal mode (not read-only)
+      if (isHead) {
+        // If already viewing history, restore HEAD data
+        if (isViewingHistory && headProjectData) {
+          const layoutInfo = detectProjectLayout(headProjectData)
+          const states = extractEditorStates(headProjectData, currentProjectType)
+          
+          if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
+            setSlideshowStructure(layoutInfo.slideshowData)
+            setCurrentSlideIndex(0)
+          } else if (currentLayout === "single" && states.blocks.b1) {
+            setEditorState(JSON.stringify(states.blocks.b1))
+            if (editorRef.current) {
+              const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+              const lexicalState = cellsToLexical(states.blocks.b1)
+              const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
+              editorRef.current.setEditorState(editorState)
+            }
+          } else if (currentLayout === "multiple" && states.blocks) {
+            const newBlockStates: Record<string, string> = {}
+            Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
+              if (blockState) {
+                newBlockStates[blockId] = JSON.stringify(blockState)
+              }
+            })
+            setBlockStates(newBlockStates)
+          }
+        }
+        
+        setIsViewingHistory(false)
+        setCurrentViewingSha(null)
+        setHeadProjectData(null)
+        
+        toast.success("Viewing latest version", {
+          description: "You can edit the project",
+          duration: 2000,
+          icon: "✏️",
+        })
+        return
+      }
+      
+      // Store current HEAD data if not already viewing history
+      if (!isViewingHistory) {
+        let currentData: string
+        if (currentLayout === "slideshow" && slideshowStructure) {
+          currentData = serializeSlideshowStructure(slideshowStructure)
+        } else {
+          const blocks: Record<string, any> = {}
+          if (currentLayout === "single") {
+            blocks.b1 = editorState ? JSON.parse(editorState) : null
+          } else {
+            Object.entries(blockStates).forEach(([blockId, state]) => {
+              blocks[blockId] = state ? JSON.parse(state) : null
+            })
+          }
+          currentData = createProjectData(currentProjectType, { blocks })
+        }
+        setHeadProjectData(currentData)
+      }
+
+      // Load the commit data
+      const commitData = await dbStorage.current.loadFromHistory(currentProjectId, sha)
+      if (!commitData) {
+        toast.error("Failed to load commit", {
+          description: "The historical version could not be found",
+          duration: 3000,
+        })
+        return
+      }
+      
+      if (!commitData.data || !commitData.type) {
+        toast.error("Invalid historical data", {
+          description: "This commit contains incomplete data. It may be from an older version.",
+          duration: 4000,
+        })
+        console.error("Invalid commit data:", { hasData: !!commitData.data, hasType: !!commitData.type, sha })
+        return
+      }
+
+      // Load into editor (similar to onProjectLoad)
+      const layoutInfo = detectProjectLayout(commitData.data)
+      const states = extractEditorStates(commitData.data, commitData.type)
+      
+      if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
+        setSlideshowStructure(layoutInfo.slideshowData)
+        setCurrentSlideIndex(0)
+      } else if (currentLayout === "single" && states.blocks.b1) {
+        setEditorState(JSON.stringify(states.blocks.b1))
+        if (editorRef.current) {
+          const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+          const lexicalState = cellsToLexical(states.blocks.b1)
+          const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
+          editorRef.current.setEditorState(editorState)
+        }
+      } else if (currentLayout === "multiple" && states.blocks) {
+        const newBlockStates: Record<string, string> = {}
+        Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
+          if (blockState) {
+            newBlockStates[blockId] = JSON.stringify(blockState)
+          }
+        })
+        setBlockStates(newBlockStates)
+      }
+
+      setIsViewingHistory(true)
+      setCurrentViewingSha(sha)
+      
+      toast.info("Viewing historical version", {
+        description: "This is read-only. Return to latest to edit.",
+        duration: 3000,
+        icon: "📜",
+      })
+    } catch (error) {
+      console.error("Failed to load commit:", error)
+      toast.error("Failed to load historical version", {
+        description: error instanceof Error ? error.message : "Unknown error",
+        duration: 4000,
+      })
+    }
+  }
+
+  const handleLoadSnapshot = async (tag: string) => {
+    if (!currentProjectId) return
+
+    // Store current HEAD data if not already viewing history
+    if (!isViewingHistory) {
+      let currentData: string
+      if (currentLayout === "slideshow" && slideshowStructure) {
+        currentData = serializeSlideshowStructure(slideshowStructure)
+      } else {
+        const blocks: Record<string, any> = {}
+        if (currentLayout === "single") {
+          blocks.b1 = editorState ? JSON.parse(editorState) : null
+        } else {
+          Object.entries(blockStates).forEach(([blockId, state]) => {
+            blocks[blockId] = state ? JSON.parse(state) : null
+          })
+        }
+        currentData = createProjectData(currentProjectType, { blocks })
+      }
+      setHeadProjectData(currentData)
+    }
+
+    // Load the snapshot
+    const snapshots = await dbStorage.current.listSnapshots(currentProjectId)
+    const snapshot = snapshots.find(s => s.tag === tag)
+    if (snapshot) {
+      await handleLoadCommit(snapshot.sha)
+    }
+  }
+
+  const handleReturnToHead = async () => {
+    if (!currentProjectId || !headProjectData) return
+
+    // Restore HEAD data
+    const layoutInfo = detectProjectLayout(headProjectData)
+    const states = extractEditorStates(headProjectData, currentProjectType)
+    
+    if (layoutInfo.hasSlides && layoutInfo.slideshowData) {
+      setSlideshowStructure(layoutInfo.slideshowData)
+      setCurrentSlideIndex(0)
+    } else if (currentLayout === "single" && states.blocks.b1) {
+      setEditorState(JSON.stringify(states.blocks.b1))
+      if (editorRef.current) {
+        const { cellsToLexical } = require("@/lib/storage/editor/cell-structure")
+        const lexicalState = cellsToLexical(states.blocks.b1)
+        const editorState = editorRef.current.parseEditorState(JSON.stringify(lexicalState))
+        editorRef.current.setEditorState(editorState)
+      }
+    } else if (currentLayout === "multiple" && states.blocks) {
+      const newBlockStates: Record<string, string> = {}
+      Object.entries(states.blocks).forEach(([blockId, blockState]: [string, any]) => {
+        if (blockState) {
+          newBlockStates[blockId] = JSON.stringify(blockState)
+        }
+      })
+      setBlockStates(newBlockStates)
+    }
+
+    setIsViewingHistory(false)
+    setCurrentViewingSha(null)
+    setHeadProjectData(null)
+    
+    toast.success("Returned to latest version", {
+      description: "You can now edit the project",
+      duration: 2000,
+      icon: "✏️",
+    })
+  }
+
+  const handleCreateSnapshot = async (name?: string) => {
+    if (!currentProjectId) return
+    
+    // First save current state
+    await handleSave()
+    
+    // Then create snapshot
+    await dbStorage.current.createSnapshot(currentProjectId, name)
+  }
+
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -857,7 +1081,8 @@ export default function Page() {
                     size="sm"
                     onClick={handleSave}
                     className="gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
-                    disabled={!isDbInitialized}
+                    disabled={!isDbInitialized || isViewingHistory}
+                    title={isViewingHistory ? "Return to latest to save" : "Save project"}
                   >
                     <Save className="h-4 w-4" />
                     Save
@@ -1022,6 +1247,18 @@ export default function Page() {
                     Preview
                   </Button>
 
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setHistoryDialogOpen(true)}
+                    className="gap-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 bg-transparent"
+                    disabled={!currentProjectId}
+                    title="View history and snapshots"
+                  >
+                    <History className="h-4 w-4" />
+                    History
+                  </Button>
+
                   {/* Preview Mode Selector (Slideshow Layout Only) */}
                   {currentLayout === "slideshow" && slideshowStructure && (
                     <PreviewModeSelector
@@ -1057,6 +1294,35 @@ export default function Page() {
                 </div>
               </div>
             </div>
+
+            {/* History Viewing Banner */}
+            {isViewingHistory && (
+              <div className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+                <div className="flex items-center gap-2">
+                  <History className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                  <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                    Viewing historical version
+                  </span>
+                  {currentViewingSha && (
+                    <Badge variant="outline" className="font-mono text-xs">
+                      {currentViewingSha.substring(0, 7)}
+                    </Badge>
+                  )}
+                  <span className="text-xs text-amber-600 dark:text-amber-400">
+                    (Read-only)
+                  </span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReturnToHead}
+                  className="gap-2 bg-white dark:bg-gray-800 border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Return to Latest
+                </Button>
+              </div>
+            )}
 
             <CreateProjectDialog
               open={createDialogOpen}
@@ -1178,6 +1444,7 @@ export default function Page() {
                 storageAdapter={storageAdapter}
                 preferences={currentProjectPreferences}
                 onPreferencesChange={handlePreferencesChange}
+                readOnly={isViewingHistory}
               />
             ) : currentLayout === "single" ? (
               <EditorLayoutType1
@@ -1191,6 +1458,7 @@ export default function Page() {
                 mode={currentProjectMode}
                 currentProjectType={currentProjectType}
                 storageAdapter={storageAdapter}
+                readOnly={isViewingHistory}
               />
             ) : (
               <EditorLayoutType2
@@ -1239,6 +1507,7 @@ export default function Page() {
                 preferences={currentProjectPreferences}
                 onPreferencesChange={handlePreferencesChange}
                 currentProjectId={currentProjectId}
+                readOnly={isViewingHistory}
               />
             )}
           </div>
@@ -1329,6 +1598,22 @@ export default function Page() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* History Dialog */}
+      <ProjectHistoryDialog
+        open={historyDialogOpen}
+        onOpenChange={setHistoryDialogOpen}
+        projectId={currentProjectId}
+        projectName={currentProjectName}
+        isViewingHistory={isViewingHistory}
+        currentViewingSha={currentViewingSha}
+        onLoadCommit={handleLoadCommit}
+        onLoadSnapshot={handleLoadSnapshot}
+        onReturnToHead={handleReturnToHead}
+        onCreateSnapshot={handleCreateSnapshot}
+        listHistory={(id) => dbStorage.current.listHistory(id)}
+        listSnapshots={(id) => dbStorage.current.listSnapshots(id)}
+      />
     </>
   )
 }

@@ -1,12 +1,14 @@
 import { SyncManager } from "../../sync/editor/sync-manager"
 import { GoogleDriveSync } from "../../sync/editor/google-drive-sync"
 import { HashManager } from "../../sync/editor/hash-manager"
+import { getHistoryManager, type CommitInfo, type SnapshotInfo } from "../git"
 import type { ProjectPreferences } from "./project-preferences"
 import { type ProjectType, PROJECT_TYPES } from "./project-types"
 import { type StorageType, STORAGE_TYPES, type SyncStatus, SYNC_STATUS } from "./storage-types"
 
 export type { ProjectPreferences } from "./project-preferences"
 export type { StorageType, SyncStatus } from "./storage-types"
+export type { CommitInfo, SnapshotInfo } from "../git"
 
 export interface ProjectData {
   id: string
@@ -228,6 +230,17 @@ export class EnhancedStorageAdapter {
     }
     // For local storage, no additional sync needed
 
+    // Auto-commit to Git for history tracking
+    try {
+      const historyManager = getHistoryManager()
+      // Commit the full project data object (not just the data field)
+      // This ensures we can restore complete project state from history
+      await historyManager.commitProject(id, JSON.stringify(projectData))
+    } catch (error) {
+      console.warn("Git commit failed (non-blocking):", error)
+      // Git commit failure should not block the save operation
+    }
+
     console.log(`Saved project "${name}" (${id}) to ${storageType} - Size: ${this.formatSize(projectData.size)}`)
   }
 
@@ -401,6 +414,14 @@ export class EnhancedStorageAdapter {
 
     // Delete from IndexedDB
     await this.deleteFromIndexedDB(id)
+
+    // Delete Git history
+    try {
+      const historyManager = getHistoryManager()
+      await historyManager.deleteProjectRepo(id)
+    } catch (error) {
+      console.warn("Failed to delete Git repo (non-blocking):", error)
+    }
 
     // Update tag relationships
     if (tagsToRemove.length > 0) {
@@ -864,6 +885,170 @@ export class EnhancedStorageAdapter {
 
   onSyncError(callback: (error: Error) => void): void {
     this.syncManager.onSyncError(callback)
+  }
+
+  // ==========================================
+  // Git History & Snapshot Management
+  // ==========================================
+
+  /**
+   * Create a snapshot (tag) of the current project state
+   * @param id - Project ID
+   * @param name - Snapshot name (optional, auto-generated if not provided)
+   */
+  async createSnapshot(id: string, name?: string): Promise<SnapshotInfo | null> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const project = await this.loadFromIndexedDB(id)
+    if (!project) {
+      console.error(`Cannot create snapshot: Project ${id} not found`)
+      return null
+    }
+
+    try {
+      const historyManager = getHistoryManager()
+      
+      // Generate tag name if not provided
+      let tag: string
+      if (name) {
+        tag = name
+      } else {
+        const version = await historyManager.getNextVersionNumber(id, project.name)
+        tag = `${project.name}-v${version}`
+      }
+
+      const snapshot = await historyManager.createSnapshot(id, tag)
+      console.log(`Created snapshot "${snapshot.tag}" for project "${project.name}"`)
+      return snapshot
+    } catch (error) {
+      console.error(`Failed to create snapshot for project ${id}:`, error)
+      throw error
+    }
+  }
+
+  /**
+   * List all snapshots for a project
+   */
+  async listSnapshots(id: string): Promise<SnapshotInfo[]> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.listSnapshots(id)
+  }
+
+  /**
+   * List commit history for a project
+   * @param id - Project ID
+   * @param maxCount - Maximum number of commits to return (default 50)
+   */
+  async listHistory(id: string, maxCount: number = 50): Promise<CommitInfo[]> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.listHistory(id, maxCount)
+  }
+
+  /**
+   * Load a snapshot and replace the current IndexedDB state
+   * @param id - Project ID
+   * @param tag - Snapshot tag to load
+   */
+  async loadFromSnapshot(id: string, tag: string): Promise<ProjectData | null> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    const snapshotData = await historyManager.loadSnapshot(id, tag)
+    
+    if (!snapshotData) {
+      console.error(`Snapshot "${tag}" not found for project ${id}`)
+      return null
+    }
+
+    // Parse the snapshot data
+    let projectData: ProjectData
+    try {
+      projectData = JSON.parse(snapshotData)
+    } catch (error) {
+      console.error(`Failed to parse snapshot data for ${tag}:`, error)
+      return null
+    }
+
+    // Ensure required fields and update timestamp
+    const now = new Date().toISOString()
+    const updatedProject: ProjectData = {
+      ...projectData,
+      id,
+      updatedAt: now,
+      hash: await HashManager.generateHash(projectData.data),
+      syncStatus: SYNC_STATUS.PENDING,
+    }
+
+    // Save to IndexedDB (replaces current state)
+    await this.saveToIndexedDB(updatedProject)
+
+    console.log(`Loaded snapshot "${tag}" for project "${updatedProject.name}" - now the current version`)
+    return updatedProject
+  }
+
+  /**
+   * Load a specific commit from history for viewing (READ-ONLY)
+   * Does NOT modify IndexedDB - just returns the historical data for display
+   * @param id - Project ID
+   * @param sha - Commit SHA to load
+   */
+  async loadFromHistory(id: string, sha: string): Promise<ProjectData | null> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    const commitData = await historyManager.loadCommit(id, sha)
+    
+    if (!commitData) {
+      console.error(`Commit ${sha} not found for project ${id}`)
+      return null
+    }
+
+    // Parse the commit data
+    let projectData: ProjectData
+    try {
+      projectData = JSON.parse(commitData)
+    } catch (error) {
+      console.error(`Failed to parse commit data for ${sha}:`, error)
+      return null
+    }
+
+    // Return the historical data AS-IS for viewing (don't modify anything)
+    console.log(`Loaded commit ${sha.substring(0, 7)} for project "${projectData.name}" - viewing historical version (read-only)`)
+    return projectData
+  }
+
+  /**
+   * Delete a snapshot
+   */
+  async deleteSnapshot(id: string, tag: string): Promise<boolean> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.deleteSnapshot(id, tag)
+  }
+
+  /**
+   * Check if a project has any snapshots
+   */
+  async hasSnapshots(id: string): Promise<boolean> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.hasSnapshots(id)
+  }
+
+  /**
+   * Check if a project has any history
+   */
+  async hasHistory(id: string): Promise<boolean> {
+    if (!this.isInitialized) throw new Error("Storage adapter not initialized")
+
+    const historyManager = getHistoryManager()
+    return await historyManager.hasHistory(id)
   }
 
   // Utility methods
