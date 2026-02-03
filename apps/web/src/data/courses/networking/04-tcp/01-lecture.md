@@ -879,6 +879,38 @@ void handle_client(std::shared_ptr<tcp::socket> socket,
 - Automatic cleanup when last reference is released
 - No memory leaks from dangling pointers
 
+### Move Semantics with Sockets
+
+::: tip "Use std::move() When Passing Sockets"
+
+If you're facing compilation errors when creating a `shared_ptr` to wrap a socket or session, you likely need **move semantics**.
+
+**Problem:**
+
+```cpp
+tcp::socket socket(io_context);
+acceptor.accept(socket);
+
+// ERROR: tcp::socket is not copyable!
+auto client = std::make_shared<ClientSession>(socket);
+```
+
+**Solution:**
+
+```cpp
+tcp::socket socket(io_context);
+acceptor.accept(socket);
+
+// CORRECT: Move the socket into the shared_ptr
+auto client = std::make_shared<ClientSession>(std::move(socket));
+```
+
+**Why?** Sockets (and many I/O objects) own unique resources (file descriptors, handles). They **cannot be copied**, but they **can be moved**. `std::move()` transfers ownership without copying.
+
+Move semantics can seem complex at first, but they're incredibly powerful for resource management. For a deeper understanding, watch: [Move Semantics in C++](https://www.youtube.com/watch?v=ehMg6zvXuMY)
+
+:::
+
 ### Beginner-Friendly Pattern: Request-Response
 
 For even simpler multi-client handling, consider a request-response pattern:
