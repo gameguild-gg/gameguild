@@ -15,6 +15,11 @@ import networkingWeek03LectureReveal from './03-udp/01-reveal.md';
 import networkingWeek03ReadingsMd from './03-udp/02-readings.md';
 import networkingWeek03QuizMd from './03-udp/03-quiz.md';
 import networkingWeek03AssignmentMd from './03-udp/04-assignment.md';
+import networkingWeek04LectureReveal from './04-tcp/00-reveal.md';
+import networkingWeek04LectureMd from './04-tcp/01-lecture.md';
+import networkingWeek04ReadingsMd from './04-tcp/02-readings.md';
+import networkingWeek04QuizMd from './04-tcp/03-quiz.md';
+import networkingWeek04AssignmentMd from './04-tcp/04-assignment.md';
 import networkingSyllabus from './syllabus.md';
 
 export const networkingProgram: Program = {
@@ -447,10 +452,126 @@ export const networkingWeek03Assignment: ProgramContent & { slug: string } = {
     updatedAt: '2023-01-01T00:00:00Z',
 };
 
+export const networkingWeek04Intro: ProgramContent & { slug: string } = {
+    id: 'week-04',
+    slug: 'week-04',
+    programId: 'networking-program-1',
+    parentId: undefined,
+    title: 'Week 04 — TCP and Stream Sockets',
+    description: 'TCP protocol, connection establishment, reliability mechanisms, flow/congestion control, and Boost.Asio TCP programming.',
+    type: ProgramContentType.REVEAL,
+    body: networkingWeek04LectureReveal,
+    sortOrder: 5,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 90,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: undefined,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04LectureContent: ProgramContent & { slug: string } = {
+    id: 'week-04-lecture',
+    slug: 'lecture',
+    programId: 'networking-program-1',
+    parentId: 'week-04',
+    title: 'Lecture Notes',
+    description: 'Detailed lecture notes on TCP protocol, connection management, and multi-client server implementation.',
+    type: 0, // Page
+    body: networkingWeek04LectureMd,
+    sortOrder: 1,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 60,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04Readings: ProgramContent & { slug: string } = {
+    id: 'week-04-readings',
+    slug: 'readings',
+    programId: 'networking-program-1',
+    parentId: 'week-04',
+    title: 'Readings',
+    description: 'Required readings on TCP protocol, stream sockets, and connection management.',
+    type: 0, // Page
+    body: networkingWeek04ReadingsMd,
+    sortOrder: 2,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 150,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04Quiz: ProgramContent & { slug: string } = {
+    id: 'week-04-quiz',
+    slug: 'quiz',
+    programId: 'networking-program-1',
+    parentId: 'week-04',
+    title: 'Quiz 04',
+    description: 'Test your understanding of TCP protocol, connection states, and stream sockets.',
+    type: 0, // Page
+    body: networkingWeek04QuizMd,
+    sortOrder: 3,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 30,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
+export const networkingWeek04Assignment: ProgramContent & { slug: string } = {
+    id: 'week-04-assignment',
+    slug: 'assignment',
+    programId: 'networking-program-1',
+    parentId: 'week-04',
+    title: 'Assignment 04',
+    description: 'Build a multi-client TCP chatroom with Boost.Asio.',
+    type: 0, // Page
+    body: networkingWeek04AssignmentMd,
+    sortOrder: 4,
+    isRequired: true,
+    gradingMethod: 0, // None
+    maxPoints: null,
+    estimatedMinutes: 120,
+    visibility: 1, // Published
+    program: networkingProgram,
+    parent: networkingWeek04Intro,
+    children: [],
+    contentInteractions: [],
+    createdAt: '2023-01-01T00:00:00Z',
+    updatedAt: '2023-01-01T00:00:00Z',
+};
+
 networkingWeek01Intro.children = [networkingWeek01Readings, networkingWeek01Quiz, networkingWeek01Setup, networkingWeek01Assignment];
 networkingWeek02Intro.children = [networkingWeek02LectureSlides, networkingWeek02Readings, networkingWeek02Quiz, networkingWeek02Assignment];
 networkingWeek03Intro.children = [networkingWeek03LectureSlides, networkingWeek03Readings, networkingWeek03Quiz, networkingWeek03Assignment];
-networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro];
+networkingWeek04Intro.children = [networkingWeek04LectureContent, networkingWeek04Readings, networkingWeek04Quiz, networkingWeek04Assignment];
+networkingProgram.programContents = [networkingSyllabusContent, networkingWeek01Intro, networkingWeek02Intro, networkingWeek03Intro, networkingWeek04Intro];
 networkingProduct.productPrograms = [networkingProductProgram];
 
 export default networkingProgram;
