@@ -25,73 +25,8 @@ By the end of this course, students will be able to:
 
 ## Course Schedule
 
-### Week 1: Introduction to Data Analysis
+WiP
 
-- What is data analysis?
-- The data analysis pipeline
-- Setting up your environment (Python, Jupyter, pandas)
-
-### Week 2: Data Visualization Fundamentals
-
-- Introduction to matplotlib and seaborn
-- Creating basic charts (line, bar, scatter, histogram)
-- Customizing visualizations
-
-### Week 3: Working with Pandas
-
-- DataFrames and Series
-- Loading and saving data
-- Basic data operations
-
-### Week 4: Data Cleaning
-
-- Handling missing values
-- Dealing with duplicates
-- Data type conversions
-
-### Week 5: Exploratory Data Analysis (EDA)
-
-- Descriptive statistics
-- Correlation analysis
-- Pattern identification
-
-### Week 6: Advanced Visualization
-
-- Multi-dimensional visualizations
-- Interactive plots
-- Dashboard creation
-
-### Week 7: Statistical Analysis
-
-- Hypothesis testing
-- Confidence intervals
-- Statistical significance
-
-### Week 8: Introduction to Machine Learning
-
-- Supervised vs unsupervised learning
-- Linear regression basics
-- Model evaluation metrics
-
-### Week 9: Data Storytelling
-
-- Communicating insights
-- Creating reports
-- Presentation best practices
-
-### Week 10: Capstone Project
-
-- Apply all learned techniques
-- Real-world dataset analysis
-- Final presentation
-
-## Grading
-
-| Component          | Weight |
-| ------------------ | ------ |
-| Weekly Assignments | 40%    |
-| Midterm Project    | 25%    |
-| Final Project      | 35%    |
 
 ## Required Tools
 
