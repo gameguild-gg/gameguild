@@ -35,6 +35,7 @@ interface EditorLayoutSlideshowProps {
   storageAdapter?: any
   preferences?: ProjectPreferences
   onPreferencesChange?: (preferences: ProjectPreferences) => void
+  readOnly?: boolean
 }
 
 export function EditorLayoutSlideshow({
@@ -51,6 +52,7 @@ export function EditorLayoutSlideshow({
   storageAdapter,
   preferences,
   onPreferencesChange,
+  readOnly = false,
 }: EditorLayoutSlideshowProps) {
   const slideContainerRefs = useRef<Map<string, HTMLDivElement>>(new Map())
 
@@ -139,10 +141,11 @@ export function EditorLayoutSlideshow({
           slides={structure.slides}
           currentSlideIndex={currentSlideIndex}
           onSlideSelect={handleSidebarSlideSelect}
-          onSlideAdd={handleSlideAdd}
-          onSlideRemove={handleSlideRemove}
-          onSlideReorder={handleSlideReorder}
-          onSlideNameChange={handleSlideNameChange}
+          onSlideAdd={readOnly ? undefined : handleSlideAdd}
+          onSlideRemove={readOnly ? undefined : handleSlideRemove}
+          onSlideReorder={readOnly ? undefined : handleSlideReorder}
+          onSlideNameChange={readOnly ? undefined : handleSlideNameChange}
+          readOnly={readOnly}
         />
       </div>
 
@@ -233,23 +236,26 @@ export function EditorLayoutSlideshow({
                     currentProjectType={currentProjectType}
                     storageAdapter={storageAdapter}
                     preferences={preferences}
-                    onPreferencesChange={onPreferencesChange}
+                    onPreferencesChange={readOnly ? undefined : onPreferencesChange}
+                    readOnly={readOnly}
                   />
                 </div>
               </div>
 
-              {/* Add Slide Button */}
-              <div className="flex justify-center my-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAddSlideAtPosition(index + 1)}
-                  className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Slide
-                </Button>
-              </div>
+              {/* Add Slide Button - hidden in readOnly mode */}
+              {!readOnly && (
+                <div className="flex justify-center my-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleAddSlideAtPosition(index + 1)}
+                    className="gap-2 bg-white dark:bg-gray-800 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Slide
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
