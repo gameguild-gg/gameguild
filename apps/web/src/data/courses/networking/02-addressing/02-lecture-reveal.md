@@ -136,6 +136,43 @@ You'll encounter IPv6 in modern deployments and infrastructure.
 
 ---
 
+## IPv4 vs IPv6 Header Differences
+
+| Feature            | IPv4                     | IPv6                     |
+| ------------------ | ------------------------ | ------------------------ |
+| Header Size        | 20-60 bytes (variable)   | 40 bytes (fixed)         |
+| Address Size       | 32 bits                  | 128 bits                 |
+| **Header Checksum**| ✅ Yes                   | ❌ No                    |
+| Fragmentation      | By routers               | By source only           |
+
+---
+
+## Why No Checksum in IPv6?
+
+<!-- .slide: data-auto-animate -->
+
+**IPv4 Problem:**
+
+- Routers recalculate checksum at **every hop**
+- TTL changes → checksum must change
+- Performance bottleneck!
+
+---
+
+## Why No Checksum in IPv6?
+
+<!-- .slide: data-auto-animate -->
+
+**IPv6 Solution:**
+
+- Remove header checksum entirely
+- Link layers (Ethernet) already have CRCs
+- Transport layer (TCP/UDP) must handle integrity
+
+> **Consequence:** UDP checksum is **mandatory** in IPv6!
+
+---
+
 ## Part 2: Subnetting
 
 ---
