@@ -272,6 +272,126 @@ ORDER BY order_date;
 
 ---
 
+## Grouping by Date/Time Periods
+
+Time-based aggregation is one of the most common reporting patterns. Use `DATE_TRUNC` and `EXTRACT` to group data by different time periods.
+
+### Group by Day, Week, Month, Year
+
+```sql
+-- Daily order counts
+SELECT
+    DATE(created_at) AS day,
+    COUNT(*) AS orders,
+    SUM(total_amount) AS revenue
+FROM orders
+GROUP BY DATE(created_at)
+ORDER BY day;
+
+-- Weekly summary (weeks start on Monday)
+SELECT
+    DATE_TRUNC('week', created_at) AS week_start,
+    COUNT(*) AS orders,
+    SUM(total_amount) AS revenue
+FROM orders
+GROUP BY DATE_TRUNC('week', created_at)
+ORDER BY week_start;
+
+-- Monthly summary
+SELECT
+    DATE_TRUNC('month', created_at) AS month,
+    COUNT(*) AS orders,
+    SUM(total_amount) AS revenue,
+    ROUND(AVG(total_amount), 2) AS avg_order_value
+FROM orders
+GROUP BY DATE_TRUNC('month', created_at)
+ORDER BY month;
+
+-- Yearly summary
+SELECT
+    EXTRACT(YEAR FROM created_at) AS year,
+    COUNT(*) AS orders,
+    SUM(total_amount) AS revenue
+FROM orders
+GROUP BY EXTRACT(YEAR FROM created_at)
+ORDER BY year;
+```
+
+### Combine Year + Month for Reporting
+
+```sql
+-- Year-month breakdown with formatting
+SELECT
+    TO_CHAR(created_at, 'YYYY-MM') AS year_month,
+    TO_CHAR(created_at, 'Mon YYYY') AS month_name,
+    COUNT(*) AS orders,
+    SUM(total_amount) AS revenue
+FROM orders
+GROUP BY
+    TO_CHAR(created_at, 'YYYY-MM'),
+    TO_CHAR(created_at, 'Mon YYYY')
+ORDER BY year_month;
+```
+
+### Group by Day of Week
+
+```sql
+-- Which days are busiest?
+SELECT
+    EXTRACT(ISODOW FROM created_at) AS day_num,  -- 1=Mon, 7=Sun
+    TO_CHAR(created_at, 'Day') AS day_name,
+    COUNT(*) AS orders,
+    ROUND(AVG(total_amount), 2) AS avg_order
+FROM orders
+GROUP BY
+    EXTRACT(ISODOW FROM created_at),
+    TO_CHAR(created_at, 'Day')
+ORDER BY day_num;
+```
+
+### Group by Hour (for intra-day analysis)
+
+```sql
+-- Peak hours analysis
+SELECT
+    EXTRACT(HOUR FROM created_at) AS hour,
+    COUNT(*) AS orders,
+    SUM(total_amount) AS revenue
+FROM orders
+GROUP BY EXTRACT(HOUR FROM created_at)
+ORDER BY hour;
+```
+
+### Filter + Group by Date
+
+Combine `WHERE` for row filtering with `GROUP BY` for date aggregation:
+
+```sql
+-- Last 30 days, grouped by week
+SELECT
+    DATE_TRUNC('week', created_at) AS week,
+    COUNT(*) AS orders,
+    SUM(total_amount) AS revenue
+FROM orders
+WHERE created_at >= NOW() - INTERVAL '30 days'
+GROUP BY DATE_TRUNC('week', created_at)
+ORDER BY week;
+
+-- Specific year, grouped by quarter
+SELECT
+    EXTRACT(QUARTER FROM created_at) AS quarter,
+    COUNT(*) AS orders,
+    SUM(total_amount) AS revenue
+FROM orders
+WHERE created_at >= '2025-01-01' AND created_at < '2026-01-01'
+GROUP BY EXTRACT(QUARTER FROM created_at)
+ORDER BY quarter;
+```
+
+> **Tip:** For best index performance, filter dates with range comparisons (`>=` and `<`) rather than functions like `EXTRACT(YEAR FROM created_at) = 2025`.
+
+---
+
 ## HAVING
 
 `HAVING` filters groups after aggregation. It's like `WHERE` but for groups.
