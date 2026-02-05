@@ -32,10 +32,11 @@ Beej's Guide uses C and POSIX/Linux system calls directly. In this course, we'll
 
 ## Interactive Practice
 
-| Resource                                                                                    | Time   | What it does                                            |
-| ------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------- |
-| [Wireshark UDP capture lab](https://wiki.wireshark.org/SampleCaptures) (download `dns.cap`) | 20 min | Analyze real UDP packets, examine headers and checksums |
-| [Kurose/Ross UDP Lab](https://gaia.cs.umass.edu/kurose_ross/interactive/UDP.php)            | 15 min | Self-quiz on UDP segment structure and checksum         |
+| Resource                                                                                                 | Time   | What it does                                            |
+| -------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------- |
+| [Wireshark UDP capture lab](https://wiki.wireshark.org/SampleCaptures) (download `dns.cap`)              | 20 min | Analyze real UDP packets, examine headers and checksums |
+| [Kurose/Ross UDP Mux/Demux](https://gaia.cs.umass.edu/kurose_ross/interactive/UDP_Mux_Demux.php)         | 15 min | Self-quiz on UDP multiplexing and demultiplexing        |
+| [Kurose/Ross Internet Checksum](https://gaia.cs.umass.edu/kurose_ross/interactive/internet_checksum.php) | 15 min | Self-quiz on checksum calculation (used by UDP)         |
 
 ---
 
