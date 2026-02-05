@@ -485,50 +485,51 @@ FROM users;
 
 ---
 
+## Date/Time Data Types
+
+PostgreSQL provides several date/time types for different use cases:
+
+| Type          | Storage  | Description               | Example                    |
+| ------------- | -------- | ------------------------- | -------------------------- |
+| `DATE`        | 4 bytes  | Date only (no time)       | `'2026-02-05'`             |
+| `TIME`        | 8 bytes  | Time only (no date)       | `'14:30:00'`               |
+| `TIMESTAMP`   | 8 bytes  | Date + time (no timezone) | `'2026-02-05 14:30:00'`    |
+| `TIMESTAMPTZ` | 8 bytes  | Date + time + timezone    | `'2026-02-05 14:30:00-05'` |
+| `INTERVAL`    | 16 bytes | Time duration             | `'1 year 2 months 3 days'` |
+
+> **Best Practice:** Use `TIMESTAMPTZ` for real-world events. It handles daylight saving time automatically and stores everything in UTC internally.
+
+---
+
 ## Date/Time Functions
 
 ### Current Date and Time
 
 ```sql
 SELECT
-    CURRENT_DATE,           -- 2026-01-26
+    CURRENT_DATE,           -- 2026-02-05
     CURRENT_TIME,           -- 14:30:00.123456-05:00
-    CURRENT_TIMESTAMP,      -- 2026-01-26 14:30:00.123456-05:00
+    CURRENT_TIMESTAMP,      -- 2026-02-05 14:30:00.123456-05:00
     NOW(),                  -- Same as CURRENT_TIMESTAMP
     LOCALTIME,              -- Time without timezone
     LOCALTIMESTAMP;         -- Timestamp without timezone
 ```
 
-### Extracting Date Parts
+**Transaction time vs Wall clock time:**
 
 ```sql
-SELECT
-    created_at,
-    EXTRACT(YEAR FROM created_at) AS year,
-    EXTRACT(MONTH FROM created_at) AS month,
-    EXTRACT(DAY FROM created_at) AS day,
-    EXTRACT(HOUR FROM created_at) AS hour,
-    EXTRACT(DOW FROM created_at) AS day_of_week,  -- 0=Sunday
-    EXTRACT(DOY FROM created_at) AS day_of_year
-FROM orders;
+-- NOW() returns the same value throughout a transaction
+SELECT NOW(), pg_sleep(2), NOW();  -- Both NOW() return identical values!
 
--- DATE_PART is equivalent
-SELECT DATE_PART('month', created_at) FROM orders;
+-- clock_timestamp() returns actual current time (changes during transaction)
+SELECT clock_timestamp();
 ```
 
-### Date Truncation
+---
 
-```sql
-SELECT
-    DATE_TRUNC('year', created_at) AS year_start,
-    DATE_TRUNC('month', created_at) AS month_start,
-    DATE_TRUNC('week', created_at) AS week_start,
-    DATE_TRUNC('day', created_at) AS day_start,
-    DATE_TRUNC('hour', created_at) AS hour_start
-FROM orders;
-```
+### Date Arithmetic with INTERVAL
 
-### Date Arithmetic
+`INTERVAL` represents a duration of time. You can add/subtract intervals from dates and timestamps.
 
 ```sql
 -- Add/subtract intervals
@@ -538,13 +539,179 @@ SELECT
     NOW() + INTERVAL '3 months' AS three_months_later,
     NOW() - INTERVAL '2 hours 30 minutes' AS earlier;
 
--- Age between dates
-SELECT AGE(NOW(), created_at) AS account_age FROM users;
+-- Combine intervals
+SELECT INTERVAL '1 year' + INTERVAL '6 months';  -- 1 year 6 mons
 
--- Days between dates
-SELECT created_at::date - '2026-01-01'::date AS days_since_jan1
+-- Multiply intervals
+SELECT INTERVAL '1 day' * 7;  -- 7 days
+
+-- Subtract dates (returns integer - number of days)
+SELECT '2026-02-28'::DATE - '2026-02-01'::DATE;  -- 27
+
+-- Subtract timestamps (returns interval)
+SELECT '2026-02-05 15:00'::TIMESTAMP - '2026-02-05 10:30'::TIMESTAMP;
+-- Result: 04:30:00
+```
+
+### INTERVAL Syntax Variations
+
+```sql
+-- PostgreSQL verbose format (most readable)
+INTERVAL '1 year 2 months 3 days 4 hours 5 minutes 6 seconds'
+
+-- ISO 8601 format
+INTERVAL 'P1Y2M3DT4H5M6S'   -- 1 year, 2 months, 3 days, 4 hours, 5 min, 6 sec
+
+-- Shorthand (single unit)
+INTERVAL '30 days'
+INTERVAL '6 hours'
+INTERVAL '90 minutes'
+
+-- Fun fact: PostgreSQL understands these too!
+INTERVAL '1 week'            -- 7 days
+INTERVAL '1 fortnight'       -- 14 days
+```
+
+### AGE Function
+
+Calculate the difference between two dates as a human-readable interval:
+
+```sql
+-- AGE(end, start) returns interval
+SELECT AGE('2026-03-15', '2025-01-10');
+-- Result: 1 year 2 mons 5 days
+
+-- AGE(timestamp) calculates from current date
+SELECT AGE(birth_date) FROM users;
+-- Result: 25 years 3 mons 12 days (example)
+
+-- Get age in years as integer
+SELECT EXTRACT(YEAR FROM AGE(birth_date)) AS age_years FROM users;
+```
+
+---
+
+### Extracting Date Parts with EXTRACT
+
+Pull specific components from a date or timestamp:
+
+```sql
+SELECT
+    created_at,
+    EXTRACT(YEAR FROM created_at) AS year,
+    EXTRACT(MONTH FROM created_at) AS month,
+    EXTRACT(DAY FROM created_at) AS day,
+    EXTRACT(HOUR FROM created_at) AS hour,
+    EXTRACT(MINUTE FROM created_at) AS minute,
+    EXTRACT(SECOND FROM created_at) AS second
 FROM orders;
 ```
+
+**Useful EXTRACT fields:**
+
+| Field     | Description                       | Example Value |
+| --------- | --------------------------------- | ------------- |
+| `YEAR`    | Year                              | 2026          |
+| `MONTH`   | Month (1-12)                      | 2             |
+| `DAY`     | Day of month (1-31)               | 5             |
+| `HOUR`    | Hour (0-23)                       | 14            |
+| `MINUTE`  | Minute (0-59)                     | 30            |
+| `SECOND`  | Second (0-59)                     | 45            |
+| `DOW`     | Day of week (0=Sunday, 6=Sat)     | 4             |
+| `ISODOW`  | ISO day of week (1=Monday, 7=Sun) | 4             |
+| `DOY`     | Day of year (1-366)               | 36            |
+| `WEEK`    | ISO week number (1-53)            | 6             |
+| `QUARTER` | Quarter (1-4)                     | 1             |
+| `EPOCH`   | Unix timestamp (seconds)          | 1770422400    |
+
+```sql
+-- DATE_PART is equivalent to EXTRACT
+SELECT DATE_PART('month', created_at) FROM orders;
+
+-- Get Unix timestamp
+SELECT EXTRACT(EPOCH FROM NOW());  -- Seconds since 1970-01-01
+```
+
+---
+
+### Date Truncation with DATE_TRUNC
+
+Rounds down a timestamp to the start of the specified unit:
+
+```sql
+-- Assuming NOW() = '2026-02-05 14:35:42'
+SELECT
+    DATE_TRUNC('year', NOW()),     -- 2026-01-01 00:00:00
+    DATE_TRUNC('quarter', NOW()),  -- 2026-01-01 00:00:00
+    DATE_TRUNC('month', NOW()),    -- 2026-02-01 00:00:00
+    DATE_TRUNC('week', NOW()),     -- 2026-02-02 00:00:00 (Monday!)
+    DATE_TRUNC('day', NOW()),      -- 2026-02-05 00:00:00
+    DATE_TRUNC('hour', NOW()),     -- 2026-02-05 14:00:00
+    DATE_TRUNC('minute', NOW());   -- 2026-02-05 14:35:00
+```
+
+> **Note:** `DATE_TRUNC('week', ...)` returns **Monday** (ISO 8601 standard), not Sunday.
+
+---
+
+### Date Formatting with TO_CHAR
+
+Convert dates/timestamps to formatted strings:
+
+```sql
+SELECT
+    TO_CHAR(NOW(), 'YYYY-MM-DD') AS iso_date,           -- 2026-02-05
+    TO_CHAR(NOW(), 'Month DD, YYYY') AS long_date,      -- February  05, 2026
+    TO_CHAR(NOW(), 'FMMonth DD, YYYY') AS no_padding,   -- February 5, 2026
+    TO_CHAR(NOW(), 'Day') AS weekday,                   -- Thursday
+    TO_CHAR(NOW(), 'Dy') AS weekday_short,              -- Thu
+    TO_CHAR(NOW(), 'HH24:MI:SS') AS time_24h,           -- 14:35:42
+    TO_CHAR(NOW(), 'HH12:MI AM') AS time_12h            -- 02:35 PM
+FROM orders;
+```
+
+**Common TO_CHAR Format Codes:**
+
+| Code    | Meaning                | Example  |
+| ------- | ---------------------- | -------- |
+| `YYYY`  | 4-digit year           | 2026     |
+| `YY`    | 2-digit year           | 26       |
+| `MM`    | Month number (01-12)   | 02       |
+| `Mon`   | Abbreviated month      | Feb      |
+| `Month` | Full month (padded)    | February |
+| `DD`    | Day of month (01-31)   | 05       |
+| `Day`   | Full day name (padded) | Thursday |
+| `Dy`    | Abbreviated day        | Thu      |
+| `HH24`  | Hour (00-23)           | 14       |
+| `HH12`  | Hour (01-12)           | 02       |
+| `MI`    | Minutes (00-59)        | 35       |
+| `SS`    | Seconds (00-59)        | 42       |
+| `AM`    | AM/PM indicator        | PM       |
+| `TZ`    | Timezone abbreviation  | EST      |
+
+> **Tip:** Prefix format codes with `FM` to remove padding. `FMMonth` → "February" instead of "February "
+
+---
+
+### Parsing Strings to Dates
+
+Convert string values to date/timestamp types:
+
+```sql
+-- TO_DATE: string → DATE
+SELECT TO_DATE('05-02-2026', 'DD-MM-YYYY');     -- 2026-02-05
+SELECT TO_DATE('Feb 5, 2026', 'Mon DD, YYYY');  -- 2026-02-05
+
+-- TO_TIMESTAMP: string → TIMESTAMP
+SELECT TO_TIMESTAMP('2026/02/05 14:30', 'YYYY/MM/DD HH24:MI');
+
+-- Casting (requires ISO format YYYY-MM-DD)
+SELECT '2026-02-05'::DATE;
+SELECT '2026-02-05 14:30:00'::TIMESTAMP;
+SELECT '2026-02-05 14:30:00-05'::TIMESTAMPTZ;
+```
+
+---
 
 ### Filtering by Date
 
@@ -564,18 +731,40 @@ WHERE created_at >= NOW() - INTERVAL '7 days';
 -- Orders from specific year
 SELECT * FROM orders
 WHERE EXTRACT(YEAR FROM created_at) = 2026;
+
+-- Weekdays only (Monday=1 through Friday=5)
+SELECT * FROM orders
+WHERE EXTRACT(ISODOW FROM created_at) BETWEEN 1 AND 5;
+
+-- Business hours only
+SELECT * FROM orders
+WHERE EXTRACT(HOUR FROM created_at) BETWEEN 9 AND 17;
 ```
 
-### Date Formatting
+### Date Filtering Best Practices
+
+⚠️ **Avoid functions on indexed columns:**
 
 ```sql
-SELECT
-    TO_CHAR(created_at, 'YYYY-MM-DD') AS iso_date,
-    TO_CHAR(created_at, 'Month DD, YYYY') AS long_date,
-    TO_CHAR(created_at, 'HH12:MI AM') AS time_12h,
-    TO_CHAR(created_at, 'Day') AS weekday_name
-FROM orders;
+-- Bad: Can't use index on created_at
+WHERE EXTRACT(YEAR FROM created_at) = 2026
+WHERE DATE_TRUNC('day', created_at) = '2026-02-05'
+WHERE DATE(created_at) = '2026-02-05'
 ```
+
+✅ **Use range comparisons instead:**
+
+```sql
+-- Good: Uses index efficiently
+WHERE created_at >= '2026-01-01' AND created_at < '2027-01-01'
+WHERE created_at >= '2026-02-05' AND created_at < '2026-02-06'
+
+-- For "last month" queries, use half-open ranges
+WHERE created_at >= DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+  AND created_at <  DATE_TRUNC('month', NOW())
+```
+
+> **Half-open ranges** `[start, end)` avoid boundary issues with timestamps that have time components.
 
 ---
 
