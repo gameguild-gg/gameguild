@@ -72,6 +72,18 @@ title IPv6 Packet Header
 IPv6 is simpler: no checksum (handled by transport layer), no fragmentation fields (handled by extension headers), fixed 40-byte header.
 :::
 
+### Why Did IPv6 Remove the Header Checksum?
+
+You might notice IPv4 has a **Header Checksum** field, but IPv6 does not. This was an intentional design decision:
+
+1. **Performance**: In IPv4, routers must recalculate the header checksum at **every hop** because the TTL (Time To Live) field decrements. This was a significant CPU burden for high-speed routers.
+
+2. **Redundancy**: Modern link layers (Ethernet, WiFi) already include their own CRC error detection, making the IP checksum somewhat redundant.
+
+3. **End-to-End Principle**: Error detection is pushed to the transport layer (TCP/UDP) and applications, where it's needed anyway.
+
+**Important consequence:** Since IPv6 has no header checksum, the **UDP checksum becomes mandatory** in IPv6 (it's optional in IPv4). Without it, there would be no error detection at all! This will be covered in detail in the UDP week.
+
 ---
 
 ## Part 1: IP Addressing (Tuesday)

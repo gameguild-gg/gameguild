@@ -70,6 +70,54 @@ packet-beta
 
 ---
 
+## Why Optional in IPv4, Mandatory in IPv6?
+
+<!-- .slide: data-auto-animate -->
+
+| Protocol | IP Header Checksum | UDP Checksum |
+| -------- | ------------------ | ------------ |
+| **IPv4** | ✅ Yes | Optional |
+| **IPv6** | ❌ No  | **Mandatory** |
+
+---
+
+## IPv4: Has IP Header Checksum
+
+<!-- .slide: data-auto-animate -->
+
+- IPv4 header includes a 16-bit checksum
+- Provides *some* error detection at IP layer
+- UDP checksum was made optional for speed
+- Setting checksum = 0 means "not computed"
+
+---
+
+## IPv6: No IP Header Checksum
+
+<!-- .slide: data-auto-animate -->
+
+Why remove it?
+
+- Routers recalculated checksum at **every hop** (TTL changes)
+- Performance bottleneck for high-speed routing
+- Link layers (Ethernet, WiFi) already have CRCs
+
+**Result:** Transport layer **must** provide integrity checking
+
+---
+
+## The Bottom Line
+
+<!-- .slide: data-auto-animate -->
+
+> In IPv6, if UDP doesn't checksum, **nothing** verifies integrity!
+
+That's why IPv6 makes UDP checksum **mandatory**.
+
+All-zeros checksum in IPv6 = packet dropped.
+
+---
+
 ## Checksum: Developer Perspective
 
 <!-- .slide: data-auto-animate -->

@@ -49,7 +49,33 @@ packet-beta
 
 ### UDP Checksum
 
-The UDP checksum verifies data integrity using the [Internet Checksum algorithm (RFC 1071)](https://datatracker.ietf.org/doc/html/rfc1071). It covers a **pseudo-header** (source/destination IP, protocol, length), the UDP header, and the entire payload. While in IPv4 the checksum on UDP is optional, in IPv6 it's mandatory.
+The UDP checksum verifies data integrity using the [Internet Checksum algorithm (RFC 1071)](https://datatracker.ietf.org/doc/html/rfc1071). It covers a **pseudo-header** (source/destination IP, protocol, length), the UDP header, and the entire payload.
+
+#### Why is UDP Checksum Optional in IPv4 but Mandatory in IPv6?
+
+This is a common question, and the answer lies in the IP layer design:
+
+| Protocol | IP Header Checksum | UDP Checksum Requirement |
+| -------- | ------------------ | ------------------------ |
+| **IPv4** | ✅ Yes (covers IP header only) | Optional (can be 0) |
+| **IPv6** | ❌ No | **Mandatory** |
+
+**IPv4** includes a header checksum field that provides basic error detection at the IP layer. This checksum only covers the IP header (not the payload), but it provides *some* protection. The designers of IPv4 made UDP checksum optional because:
+1. The IPv4 header checksum catches many errors
+2. Some applications (like early voice/video) prioritized speed over integrity
+3. Setting checksum to 0 indicated "no checksum computed"
+
+**IPv6** removed the IP header checksum entirely for efficiency:
+- Routers had to recalculate the IPv4 checksum at every hop (because TTL changes)
+- This was a performance bottleneck for high-speed routers
+- Modern link layers (Ethernet, WiFi) already have their own CRCs
+- Removing it simplified router processing
+
+But removing the IP checksum means **no error detection at the network layer**. To compensate, IPv6 **requires** the transport layer (UDP, TCP) to provide integrity checking. An all-zeros UDP checksum in IPv6 is **illegal** and the packet will be dropped.
+
+::: tip "Bottom Line"
+In IPv6, if you don't use the UDP checksum, there's **nothing** verifying your packet wasn't corrupted in transit. That's why it's mandatory.
+:::
 
 **As a dev, you don't need to calculate it.** The OS handles checksum computation on send and verification on receive. Corrupted packets are silently dropped before your application sees them. Modern NICs even offload this to hardware, which is why Wireshark may show "checksum incorrect" when capturing locally (the NIC computes it after the capture point).
 
