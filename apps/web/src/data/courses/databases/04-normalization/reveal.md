@@ -797,6 +797,41 @@ CREATE TABLE orders (
 
 ---
 
+## Referential Actions
+
+What happens when you delete or update a **parent** row?
+
+| Action          | ON DELETE                        | ON UPDATE                         |
+| --------------- | -------------------------------- | --------------------------------- |
+| **RESTRICT**    | ❌ Block if children exist       | ❌ Block if children reference it |
+| **CASCADE**     | 🗑️ Delete all children           | 🔄 Update FK in all children      |
+| **SET NULL**    | ∅ Set FK to NULL in children     | ∅ Set FK to NULL in children      |
+| **SET DEFAULT** | 📋 Set FK to default in children | 📋 Set FK to default in children  |
+
+---
+
+## CASCADE in Action
+
+```sql
+-- Setup: orders reference customers
+CREATE TABLE orders (
+    order_id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES customers(customer_id)
+        ON DELETE CASCADE
+);
+
+-- Customer #5 has 3 orders
+DELETE FROM customers WHERE customer_id = 5;
+-- Result: Customer #5 AND all 3 orders are deleted!
+
+-- Without CASCADE (RESTRICT), this would fail:
+-- ERROR: update or delete violates foreign key constraint
+```
+
+> ⚠️ **Warning:** CASCADE can cause unexpected mass deletions. Use carefully!
+
+---
+
 ## UNIQUE & CHECK Constraints
 
 ```sql
