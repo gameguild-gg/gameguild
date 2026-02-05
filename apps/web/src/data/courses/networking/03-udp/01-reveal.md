@@ -14,7 +14,6 @@
 
 ## UDP: User Datagram Protocol
 
-<!-- .slide: data-auto-animate -->
 
 Defined in **RFC 768** (only 3 pages!)
 
@@ -22,7 +21,6 @@ Defined in **RFC 768** (only 3 pages!)
 
 ## UDP Characteristics
 
-<!-- .slide: data-auto-animate -->
 
 - **Connectionless** - no handshake
 - **Unreliable** - no ACKs, no retransmission
@@ -33,7 +31,6 @@ Defined in **RFC 768** (only 3 pages!)
 
 ## UDP Header Format
 
-<!-- .slide: data-auto-animate -->
 
 ```mermaid
 packet-beta
@@ -48,7 +45,6 @@ packet-beta
 
 ## UDP Header Fields
 
-<!-- .slide: data-auto-animate -->
 
 | Field       | Size    | Description                        |
 | ----------- | ------- | ---------------------------------- |
@@ -61,66 +57,30 @@ packet-beta
 
 ## UDP Checksum
 
-<!-- .slide: data-auto-animate -->
 
 - Verifies data integrity (RFC 1071)
 - Covers pseudo-header + UDP header + payload
-- **IPv4**: Optional
-- **IPv6**: Mandatory
+- **IPv4**: Optional (IP header has its own checksum)
+- **IPv6**: Mandatory (no IP checksum → transport must verify)
 
 ---
 
-## Why Optional in IPv4, Mandatory in IPv6?
+## Why Mandatory in IPv6?
 
-<!-- .slide: data-auto-animate -->
 
-| Protocol | IP Header Checksum | UDP Checksum |
-| -------- | ------------------ | ------------ |
-| **IPv4** | ✅ Yes | Optional |
-| **IPv6** | ❌ No  | **Mandatory** |
+| Protocol | IP Header Checksum | UDP Checksum  |
+| -------- | ------------------ | ------------- |
+| **IPv4** | ✅ Yes             | Optional      |
+| **IPv6** | ❌ No              | **Mandatory** |
 
----
+IPv6 removed IP checksum for router performance (recalculated every hop).
 
-## IPv4: Has IP Header Checksum
-
-<!-- .slide: data-auto-animate -->
-
-- IPv4 header includes a 16-bit checksum
-- Provides *some* error detection at IP layer
-- UDP checksum was made optional for speed
-- Setting checksum = 0 means "not computed"
-
----
-
-## IPv6: No IP Header Checksum
-
-<!-- .slide: data-auto-animate -->
-
-Why remove it?
-
-- Routers recalculated checksum at **every hop** (TTL changes)
-- Performance bottleneck for high-speed routing
-- Link layers (Ethernet, WiFi) already have CRCs
-
-**Result:** Transport layer **must** provide integrity checking
-
----
-
-## The Bottom Line
-
-<!-- .slide: data-auto-animate -->
-
-> In IPv6, if UDP doesn't checksum, **nothing** verifies integrity!
-
-That's why IPv6 makes UDP checksum **mandatory**.
-
-All-zeros checksum in IPv6 = packet dropped.
+No IP checksum → transport layer **must** verify integrity.
 
 ---
 
 ## Checksum: Developer Perspective
 
-<!-- .slide: data-auto-animate -->
 
 **You don't calculate it!**
 
@@ -133,7 +93,6 @@ All-zeros checksum in IPv6 = packet dropped.
 
 ## Maximum Transmission Unit (MTU)
 
-<!-- .slide: data-auto-animate -->
 
 Largest packet size without fragmentation
 
@@ -148,7 +107,6 @@ Largest packet size without fragmentation
 
 ## Calculating Safe UDP Payload
 
-<!-- .slide: data-auto-animate -->
 
 ```text
 Ethernet MTU:           1500 bytes
@@ -162,7 +120,6 @@ Safe UDP payload:       1472 bytes
 
 ## Conservative Payload (IPv6)
 
-<!-- .slide: data-auto-animate -->
 
 ```text
 Safe minimum MTU:       1280 bytes
@@ -176,7 +133,6 @@ Conservative payload:   1232 bytes
 
 ## What If You Exceed MTU?
 
-<!-- .slide: data-auto-animate -->
 
 **IPv4**: Packet gets **fragmented**
 
@@ -192,7 +148,6 @@ Conservative payload:   1232 bytes
 
 ## The Magic Number: 1200 bytes
 
-<!-- .slide: data-auto-animate -->
 
 Glenn Fiedler's recommendation:
 
@@ -206,7 +161,6 @@ Glenn Fiedler's recommendation:
 
 ## TCP vs UDP
 
-<!-- .slide: data-auto-animate -->
 
 ```mermaid
 graph LR
@@ -225,7 +179,6 @@ graph LR
 
 ## When to Use UDP?
 
-<!-- .slide: data-auto-animate -->
 
 | Use Case        | Why UDP?                                |
 | --------------- | --------------------------------------- |
@@ -238,7 +191,6 @@ graph LR
 
 ## Glenn Fiedler's Rule
 
-<!-- .slide: data-auto-animate -->
 
 > "If you're making a real-time game, you should use UDP, not TCP."
 
@@ -254,7 +206,6 @@ With UDP, implement only the reliability you need.
 
 ## What is a Socket?
 
-<!-- .slide: data-auto-animate -->
 
 An **endpoint** for communication
 
@@ -267,7 +218,6 @@ graph LR
 
 ## Socket Identification
 
-<!-- .slide: data-auto-animate -->
 
 Sockets are identified by:
 
@@ -279,7 +229,6 @@ Sockets are identified by:
 
 ## Socket Types
 
-<!-- .slide: data-auto-animate -->
 
 | Type     | Constant      | Protocol | Description           |
 | -------- | ------------- | -------- | --------------------- |
@@ -290,7 +239,6 @@ Sockets are identified by:
 
 ## UDP Socket Flow
 
-<!-- .slide: data-auto-animate -->
 
 ```mermaid
 graph TD
@@ -314,7 +262,6 @@ graph TD
 
 ## BSD Sockets vs Boost.Asio
 
-<!-- .slide: data-auto-animate -->
 
 | BSD Sockets  | Boost.Asio                            |
 | ------------ | ------------------------------------- |
@@ -327,7 +274,6 @@ graph TD
 
 ## Create and Bind a Socket (Server)
 
-<!-- .slide: data-auto-animate -->
 
 ```cpp
 #include <boost/asio.hpp>
@@ -346,7 +292,6 @@ udp::socket socket(
 
 ## Ephemeral Ports: Let the OS Choose
 
-<!-- .slide: data-auto-animate -->
 
 Clients don't need a specific port. Bind to port **0**:
 
@@ -364,7 +309,6 @@ std::cout << "Bound to port: "
 
 ## Why Use Ephemeral Ports?
 
-<!-- .slide: data-auto-animate -->
 
 - **No port conflicts** - OS guarantees available port
 - **Security** - Harder to predict client ports
@@ -375,7 +319,6 @@ std::cout << "Bound to port: "
 
 ## Fixed vs Ephemeral Ports
 
-<!-- .slide: data-auto-animate -->
 
 | Use Case   | Port Strategy                                     |
 | ---------- | ------------------------------------------------- |
@@ -387,7 +330,6 @@ std::cout << "Bound to port: "
 
 ## send_to(): Send a Datagram
 
-<!-- .slide: data-auto-animate -->
 
 ```cpp
 std::string message = "Hello, UDP!";
@@ -403,7 +345,6 @@ socket.send_to(boost::asio::buffer(message), destination);
 
 ## receive_from(): Receive a Datagram
 
-<!-- .slide: data-auto-animate -->
 
 ```cpp
 char buffer[1200];
@@ -419,7 +360,6 @@ size_t bytes = socket.receive_from(
 
 ## Key Insight
 
-<!-- .slide: data-auto-animate -->
 
 `receive_from()` tells you **who sent the packet**
 
@@ -435,7 +375,6 @@ This is how UDP servers know where to respond!
 
 ## Echo Server: The Simplest UDP Server
 
-<!-- .slide: data-auto-animate -->
 
 Receive a message → Send it back
 
@@ -453,7 +392,6 @@ sequenceDiagram
 
 ## Echo Server Pseudocode
 
-<!-- .slide: data-auto-animate -->
 
 ```text
 // Server
@@ -468,7 +406,6 @@ loop:
 
 ## Echo Client Pseudocode
 
-<!-- .slide: data-auto-animate -->
 
 ```text
 // Client
@@ -482,7 +419,6 @@ print(response)  // "Hello"
 
 ## Complete Echo Server
 
-<!-- .slide: data-auto-animate -->
 
 ```cpp
 int main() {
@@ -508,7 +444,6 @@ int main() {
 
 ## What is Broadcast?
 
-<!-- .slide: data-auto-animate -->
 
 Send a packet to **all hosts** on the local network
 
@@ -518,7 +453,6 @@ Perfect for discovering servers without knowing their IP
 
 ## Broadcast Addresses
 
-<!-- .slide: data-auto-animate -->
 
 | Address           | Scope                           |
 | ----------------- | ------------------------------- |
@@ -531,7 +465,6 @@ Perfect for discovering servers without knowing their IP
 
 ## Enabling Broadcast
 
-<!-- .slide: data-auto-animate -->
 
 By default, sockets **can't** send to broadcast addresses
 
@@ -548,7 +481,6 @@ socket.set_option(
 
 ## Two-Step Socket Setup
 
-<!-- .slide: data-auto-animate -->
 
 When you need to set options before binding:
 
@@ -563,7 +495,6 @@ socket.bind(udp::endpoint(udp::v4(), 0));
 
 ## Disable Broadcast After Discovery
 
-<!-- .slide: data-auto-animate -->
 
 After finding a server:
 
@@ -576,7 +507,6 @@ socket.send_to(buffer, server_endpoint);
 
 ## Discovery Pattern
 
-<!-- .slide: data-auto-animate -->
 
 ```mermaid
 sequenceDiagram
@@ -596,7 +526,6 @@ sequenceDiagram
 
 ## Discovery: Server Side
 
-<!-- .slide: data-auto-animate -->
 
 ```text
 socket = udp::socket(io_context, endpoint(udp::v4(), 9999))
@@ -611,7 +540,6 @@ loop:
 
 ## Discovery: Client Side
 
-<!-- .slide: data-auto-animate -->
 
 ```text
 socket = udp::socket(io_context, udp::v4())
@@ -629,7 +557,6 @@ while not timeout:
 
 ## Broadcast Limitations
 
-<!-- .slide: data-auto-animate -->
 
 - Only works on **local network**
 - Some networks/firewalls block it
@@ -644,7 +571,6 @@ while not timeout:
 
 ## Pitfall 1: Buffer Too Small
 
-<!-- .slide: data-auto-animate -->
 
 UDP datagrams are **atomic**
 
@@ -663,7 +589,6 @@ char buffer[MAX_UDP_PAYLOAD];
 
 ## Pitfall 2: Blocking Forever
 
-<!-- .slide: data-auto-animate -->
 
 `receive_from()` blocks forever by default
 
@@ -684,7 +609,6 @@ if (ec == boost::asio::error::would_block) {
 
 ## Pitfall 3: Broadcast Without Option
 
-<!-- .slide: data-auto-animate -->
 
 ```cpp
 // This throws an exception!
@@ -701,7 +625,6 @@ socket.send_to(buffer, broadcast_endpoint);  // Works!
 
 ## Pitfall 4: Ignoring Errors
 
-<!-- .slide: data-auto-animate -->
 
 ```cpp
 // Bad - throws on failure
