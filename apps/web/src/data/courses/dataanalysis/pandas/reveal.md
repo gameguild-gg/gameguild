@@ -94,22 +94,12 @@ A **one-dimensional** labeled array
 
 Think of it as a **single column** in a spreadsheet
 
-```mermaid
-block-beta
-    columns 2
-    block:header
-        columns 2
-        h1["Index"]
-        h2["Value"]
-    end
-    block:data
-        columns 2
-        i0["0"] v0["🎮 Mario"]
-        i1["1"] v1["🎮 Zelda"]
-        i2["2"] v2["🎮 Pokemon"]
-        i3["3"] v3["🎮 Metroid"]
-    end
-```
+| Index |   Value    |
+| :---: | :--------: |
+|   0   |  🎮 Mario  |
+|   1   |  🎮 Zelda  |
+|   2   | 🎮 Pokemon |
+|   3   | 🎮 Metroid |
 
 ---
 
