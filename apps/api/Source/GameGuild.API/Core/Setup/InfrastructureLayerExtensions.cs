@@ -11,6 +11,7 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Context;
 using GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer;
 using GameGuild.Configuration.InfrastructureLayer;
+using GameGuild.Diagnostics;
 using GameGuild.Resources;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,7 +35,7 @@ public static class InfrastructureLayerExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
-        var logger = CreateStartupLogger();
+        var logger = StartupLogger.Create();
         builder.Services.AddInfrastructureLayer(builder.Configuration, logger);
 
         return builder;
@@ -53,7 +54,7 @@ public static class InfrastructureLayerExtensions
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentNullException.ThrowIfNull(configureOptions);
 
-        var logger = CreateStartupLogger();
+        var logger = StartupLogger.Create();
         builder.Services.AddInfrastructureLayer(builder.Configuration, logger, configureOptions);
 
         return builder;
@@ -409,15 +410,6 @@ public static class InfrastructureLayerExtensions
         // Also handle consecutive uppercase letters
         formatted = Regex.Replace(formatted, "([A-Z]+)([A-Z][a-z])", "$1 $2");
         return formatted;
-    }
-
-    /// <summary>
-    ///     Creates a logger for startup diagnostics.
-    /// </summary>
-    private static ILogger CreateStartupLogger()
-    {
-        using var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
-        return loggerFactory.CreateLogger("GameGuild.API.Startup");
     }
 
     #endregion
