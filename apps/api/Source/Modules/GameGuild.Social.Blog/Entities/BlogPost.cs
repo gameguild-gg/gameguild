@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Social.Blog;
 
@@ -40,9 +39,7 @@ public class BlogPost : EntityBase
             ViewsCount = 0,
             LikesCount = 0,
             CommentsCount = 0,
-            ReadTimeMinutes = CalculateReadTime(content),
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            ReadTimeMinutes = CalculateReadTime(content)
         };
     }
 

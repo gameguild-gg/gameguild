@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Social.Feed;
 
@@ -39,9 +38,7 @@ public class FeedItem : EntityBase
             ContentCreatedAt = contentCreatedAt,
             RelevanceScore = relevanceScore,
             IsRead = false,
-            IsHidden = false,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsHidden = false
         };
     }
 
