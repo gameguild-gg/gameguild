@@ -48,7 +48,7 @@ public class GetWebhookEventHandler(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error getting webhook event {EventId}", query.EventId);
-            return null;
+            throw;
         }
     }
 }

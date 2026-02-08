@@ -1,4 +1,4 @@
-﻿using Asp.Versioning;
+using Asp.Versioning;
 
 
 using GameGuild.CQRS;
@@ -12,12 +12,11 @@ namespace GameGuild.Commerce.Billing;
 /// <summary>
 ///     Controller for handling billing webhooks from external payment providers
 /// </summary>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/billing/webhooks")]
 [Tags("billing/webhooks")]
 [AllowAnonymous]
-public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWebhooksController> logger) : ControllerBase
+public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWebhooksController> logger) : BaseApiController
 {
     /// <summary>
     ///     Handle Google Pay webhook events for transaction notifications
@@ -88,12 +87,6 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
 
             return Unauthorized(new { error = "Invalid signature" });
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error processing Google Pay webhook");
-
-            return StatusCode(500, new { error = "Webhook processing failed" });
-        }
     }
 
     /// <summary>
@@ -116,43 +109,35 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> HandleApplePayWebhook(CancellationToken ct)
     {
-        try
+        using var reader = new StreamReader(Request.Body);
+        var payload = await reader.ReadToEndAsync(ct);
+
+        var merchantId = Request.Headers["Apple-Pay-Merchant-Id"].ToString();
+        var signature = Request.Headers["Apple-Pay-Signature"].ToString();
+
+        if (string.IsNullOrEmpty(merchantId))
         {
-            using var reader = new StreamReader(Request.Body);
-            var payload = await reader.ReadToEndAsync(ct);
-
-            var merchantId = Request.Headers["Apple-Pay-Merchant-Id"].ToString();
-            var signature = Request.Headers["Apple-Pay-Signature"].ToString();
-
-            if (string.IsNullOrEmpty(merchantId))
-            {
-                logger.LogWarning("Missing Apple Pay merchant ID header");
-                return BadRequest(new { error = "Missing merchant ID header" });
-            }
-
-            if (string.IsNullOrEmpty(signature))
-            {
-                logger.LogWarning("Missing Apple Pay signature header");
-                return BadRequest(new { error = "Missing signature header" });
-            }
-
-            logger.LogInformation("Processing Apple Pay webhook for merchant: {MerchantId}", merchantId);
-
-            var result = await sender.Send(
-                new ProcessApplePayWebhookCommand(payload, merchantId, signature), ct).ConfigureAwait(false);
-
-            if (result.Processed || result.WasAlreadyProcessed)
-            {
-                return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
-            }
-
-            return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
+            logger.LogWarning("Missing Apple Pay merchant ID header");
+            return BadRequest(new { error = "Missing merchant ID header" });
         }
-        catch (Exception ex)
+
+        if (string.IsNullOrEmpty(signature))
         {
-            logger.LogError(ex, "Error processing Apple Pay webhook");
-            return StatusCode(500, new { error = "Webhook processing failed" });
+            logger.LogWarning("Missing Apple Pay signature header");
+            return BadRequest(new { error = "Missing signature header" });
         }
+
+        logger.LogInformation("Processing Apple Pay webhook for merchant: {MerchantId}", merchantId);
+
+        var result = await sender.Send(
+            new ProcessApplePayWebhookCommand(payload, merchantId, signature), ct).ConfigureAwait(false);
+
+        if (result.Processed || result.WasAlreadyProcessed)
+        {
+            return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
+        }
+
+        return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
     }
     /// <summary>
     ///     Handle Stripe webhook events with signature verification
@@ -199,12 +184,6 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
 
             return BadRequest(new { error = "Invalid signature" });
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error processing Stripe webhook");
-
-            return StatusCode(500);
-        }
     }
 
     /// <summary>
@@ -228,47 +207,38 @@ public sealed class BillingWebhooksController(ISender sender, ILogger<BillingWeb
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> HandlePayPalWebhook(CancellationToken ct)
     {
-        try
+        using var reader = new StreamReader(Request.Body);
+        var payload = await reader.ReadToEndAsync(ct);
+
+        // PayPal webhook requires specific headers for signature verification
+        var transmissionId = Request.Headers["PayPal-Transmission-Id"].ToString();
+        var transmissionTime = Request.Headers["PayPal-Transmission-Time"].ToString();
+        var transmissionSig = Request.Headers["PayPal-Transmission-Sig"].ToString();
+        var certUrl = Request.Headers["PayPal-Cert-Url"].ToString();
+        var authAlgo = Request.Headers["PayPal-Auth-Algo"].ToString();
+
+        if (string.IsNullOrEmpty(transmissionId) || 
+            string.IsNullOrEmpty(transmissionTime) || 
+            string.IsNullOrEmpty(transmissionSig))
         {
-            using var reader = new StreamReader(Request.Body);
-            var payload = await reader.ReadToEndAsync(ct);
-
-            // PayPal webhook requires specific headers for signature verification
-            var transmissionId = Request.Headers["PayPal-Transmission-Id"].ToString();
-            var transmissionTime = Request.Headers["PayPal-Transmission-Time"].ToString();
-            var transmissionSig = Request.Headers["PayPal-Transmission-Sig"].ToString();
-            var certUrl = Request.Headers["PayPal-Cert-Url"].ToString();
-            var authAlgo = Request.Headers["PayPal-Auth-Algo"].ToString();
-
-            if (string.IsNullOrEmpty(transmissionId) || 
-                string.IsNullOrEmpty(transmissionTime) || 
-                string.IsNullOrEmpty(transmissionSig))
-            {
-                logger.LogWarning("Missing required PayPal IPN headers");
-                return BadRequest(new { error = "Missing required PayPal headers" });
-            }
-
-            var result = await sender.Send(new ProcessPayPalWebhookCommand(
-                payload, 
-                transmissionId, 
-                transmissionSig, 
-                transmissionTime,
-                string.IsNullOrEmpty(certUrl) ? null : certUrl,
-                string.IsNullOrEmpty(authAlgo) ? null : authAlgo), ct).ConfigureAwait(false);
-
-            if (result.Processed || result.WasAlreadyProcessed)
-            {
-                return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
-            }
-
-            return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
+            logger.LogWarning("Missing required PayPal IPN headers");
+            return BadRequest(new { error = "Missing required PayPal headers" });
         }
-        catch (Exception ex)
+
+        var result = await sender.Send(new ProcessPayPalWebhookCommand(
+            payload, 
+            transmissionId, 
+            transmissionSig, 
+            transmissionTime,
+            string.IsNullOrEmpty(certUrl) ? null : certUrl,
+            string.IsNullOrEmpty(authAlgo) ? null : authAlgo), ct);
+
+        if (result.Processed || result.WasAlreadyProcessed)
         {
-            logger.LogError(ex, "Error processing PayPal webhook");
-
-            return StatusCode(500);
+            return Ok(new { received = true, processed = result.Processed, eventId = result.EventId });
         }
+
+        return StatusCode(500, new { error = result.ErrorMessage, requiresRetry = result.RequiresRetry });
     }
 
     /// <summary>

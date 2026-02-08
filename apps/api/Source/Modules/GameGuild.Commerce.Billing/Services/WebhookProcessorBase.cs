@@ -100,7 +100,7 @@ public abstract class WebhookProcessorBase
         {
             try
             {
-                var ownershipValid = await validateSubscriptionOwnership(tenantId, subscriptionExternalId);
+                var ownershipValid = await validateSubscriptionOwnership(tenantId, subscriptionExternalId).ConfigureAwait(false);
 
                 if (!ownershipValid)
                 {
@@ -292,6 +292,7 @@ public abstract class WebhookProcessorBase
 
                     await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
                 }
+                throw;
             }
         }
 

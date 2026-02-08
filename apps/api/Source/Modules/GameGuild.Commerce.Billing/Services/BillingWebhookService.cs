@@ -1,5 +1,4 @@
 using GameGuild.Commerce.Subscriptions;
-using GameGuild.ValueObjects;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Commerce.Billing;
@@ -55,7 +54,7 @@ public abstract class BillingWebhookService : IBillingWebhookService
                 amount: new Money(payload.Amount, "USD"),
                 startDate: payload.StartDate,
                 trialDays: null
-            ).ConfigureAwait(false);
+            );
 
             // Set external IDs for future webhook correlation
             await _externalIdService.SetExternalIdsAsync(

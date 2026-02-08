@@ -25,6 +25,10 @@ public static class ServiceCollectionExtensions
         // Register repositories
         services.AddScoped<IBillingWebhookRepository, BillingWebhookRepository>();
 
+        // Register Apple sub-services
+        services.AddSingleton<IAppleJwsVerificationService, AppleJwsVerificationService>();
+        services.AddSingleton<IAppleStoreAuthService, AppleStoreAuthService>();
+
         // Register verification services
         services.AddHttpClient<IPayPalSignatureVerificationService, PayPalSignatureVerificationService>();
         services.AddHttpClient<IApplePayReceiptValidationService, ApplePayReceiptValidationService>();

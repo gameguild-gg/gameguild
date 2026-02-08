@@ -91,7 +91,7 @@ public class PayPalBillingWebhookService : BillingWebhookService
                 certUrl,
                 authAlgo,
                 payload,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken);
 
             if (!verificationResult.IsValid)
             {
