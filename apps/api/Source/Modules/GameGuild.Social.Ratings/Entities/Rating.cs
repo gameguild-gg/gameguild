@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using GameGuild.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Social.Ratings;
@@ -81,9 +80,7 @@ public class Rating : EntityBase
             IsVerified = isVerified,
             HelpfulCount = 0,
             ReportCount = 0,
-            ModerationStatus = RatingModerationStatus.Approved,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            ModerationStatus = RatingModerationStatus.Approved
         };
     }
 
@@ -153,9 +150,7 @@ public class RatingHelpfulVote : EntityBase
             Id = Guid.NewGuid(),
             RatingId = ratingId,
             UserId = userId,
-            IsHelpful = isHelpful,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            IsHelpful = isHelpful
         };
     }
 
@@ -226,9 +221,7 @@ public class RatingSummary : EntityBase
             FourStar = 0,
             FiveStar = 0,
             TotalReviews = 0,
-            LastCalculatedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastCalculatedAt = DateTime.UtcNow
         };
     }
 

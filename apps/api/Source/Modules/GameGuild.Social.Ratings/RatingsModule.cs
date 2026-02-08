@@ -12,7 +12,12 @@ public static class RatingsModule
     /// </summary>
     public static IServiceCollection AddRatingsModule(this IServiceCollection services)
     {
-        // Register services
+        // Register focused sub-services
+        services.AddScoped<IRatingCrudService, RatingCrudService>();
+        services.AddScoped<IRatingQueryService, RatingQueryService>();
+        services.AddScoped<IRatingModerationService, RatingModerationService>();
+
+        // Register facade for backward compatibility (controllers, GraphQL resolvers)
         services.AddScoped<IRatingService, RatingService>();
 
         return services;

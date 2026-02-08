@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Social.Reactions;
 
@@ -22,9 +21,7 @@ public class Reaction : EntityBase
             UserId = userId,
             TargetId = targetId,
             TargetType = targetType,
-            Type = type,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Type = type
         };
     }
 

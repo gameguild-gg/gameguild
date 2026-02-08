@@ -6,10 +6,9 @@ namespace GameGuild.Social.Ratings;
 /// <summary>
 /// REST API controller for the polymorphic rating system
 /// </summary>
-[ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class RatingsController : ControllerBase
+public class RatingsController : BaseApiController
 {
     private readonly IRatingService _ratingService;
 
