@@ -1,8 +1,8 @@
 using Asp.Versioning;
-using GameGuild.Enums;
 using GameGuild.Identity.Authorization;
 using GameGuild.Learning.Attributes;
 using GameGuild.Learning.Filters;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GameGuild.Learning.Experience.LearningPaths;
@@ -21,12 +21,12 @@ namespace GameGuild.Learning.Experience.LearningPaths;
 /// Admin endpoints for path management
 /// User endpoints for enrollment and progress
 /// </remarks>
-[ApiController]
 [ApiVersion("1.0")]
 [Route("v{version:apiVersion}/learning-paths")]
 [LxpCapabilityFilter]
 [LxpCapability(LxpCapabilities.LearningPaths)]
-public class LearningPathController(ILearningPathService learningPathService) : ControllerBase
+[Authorize]
+public class LearningPathController(ILearningPathService learningPathService) : BaseApiController
 {
     // ===== PUBLIC DISCOVERY ENDPOINTS =====
 

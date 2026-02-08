@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Learning.Experience.LearningPaths;
 
@@ -43,9 +42,7 @@ public class LearningPath : EntityBase
             IsPublished = false,
             IsFeatured = false,
             EnrollmentCount = 0,
-            CompletionCount = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CompletionCount = 0
         };
     }
 
@@ -117,9 +114,7 @@ public class LearningPathEnrollment : EntityBase
             CoursesCompleted = 0,
             TotalCourses = totalCourses,
             EnrolledAt = DateTime.UtcNow,
-            Status = LearningPathEnrollmentStatus.InProgress,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            Status = LearningPathEnrollmentStatus.InProgress
         };
     }
 

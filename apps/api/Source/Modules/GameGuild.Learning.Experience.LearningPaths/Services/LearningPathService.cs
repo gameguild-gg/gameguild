@@ -11,32 +11,32 @@ public class LearningPathService(IMediator mediator) : ILearningPathService
 
     public async Task<LearningPath?> GetPathByIdAsync(Guid id, bool includeCourses = false)
     {
-        return await mediator.Send(new GetPathByIdQuery(id, includeCourses));
+        return await mediator.Send(new GetPathByIdQuery(id, includeCourses)).ConfigureAwait(false);
     }
 
     public async Task<LearningPath?> GetPathBySlugAsync(string slug, Guid? tenantId = null)
     {
-        return await mediator.Send(new GetPathBySlugQuery(slug, tenantId));
+        return await mediator.Send(new GetPathBySlugQuery(slug, tenantId)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPath>> GetPublishedPathsAsync(Guid? tenantId = null, LearningPathDifficulty? difficulty = null, int skip = 0, int take = 50)
     {
-        return await mediator.Send(new GetPublishedPathsQuery(tenantId, difficulty, skip, take));
+        return await mediator.Send(new GetPublishedPathsQuery(tenantId, difficulty, skip, take)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPath>> GetFeaturedPathsAsync(Guid? tenantId = null, int take = 10)
     {
-        return await mediator.Send(new GetFeaturedPathsQuery(tenantId, take));
+        return await mediator.Send(new GetFeaturedPathsQuery(tenantId, take)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPath>> GetPathsByCreatorAsync(Guid creatorId, bool includeUnpublished = false, int skip = 0, int take = 50)
     {
-        return await mediator.Send(new GetPathsByCreatorQuery(creatorId, includeUnpublished, skip, take));
+        return await mediator.Send(new GetPathsByCreatorQuery(creatorId, includeUnpublished, skip, take)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPath>> SearchPathsAsync(string searchTerm, Guid? tenantId = null, LearningPathDifficulty? difficulty = null, int skip = 0, int take = 50)
     {
-        return await mediator.Send(new SearchPathsQuery(searchTerm, tenantId, difficulty, skip, take));
+        return await mediator.Send(new SearchPathsQuery(searchTerm, tenantId, difficulty, skip, take)).ConfigureAwait(false);
     }
 
     public async Task<LearningPath> CreatePathAsync(CreateLearningPathDto dto, Guid creatorId, Guid? tenantId = null)
@@ -67,19 +67,19 @@ public class LearningPathService(IMediator mediator) : ILearningPathService
 
     public async Task<bool> DeletePathAsync(Guid id)
     {
-        return await mediator.Send(new DeleteLearningPathCommand(id));
+        return await mediator.Send(new DeleteLearningPathCommand(id)).ConfigureAwait(false);
     }
 
     // ===== LIFECYCLE =====
 
     public async Task<LearningPath?> PublishPathAsync(Guid id)
     {
-        return await mediator.Send(new PublishLearningPathCommand(id));
+        return await mediator.Send(new PublishLearningPathCommand(id)).ConfigureAwait(false);
     }
 
     public async Task<LearningPath?> UnpublishPathAsync(Guid id)
     {
-        return await mediator.Send(new UnpublishLearningPathCommand(id));
+        return await mediator.Send(new UnpublishLearningPathCommand(id)).ConfigureAwait(false);
     }
 
     // ===== COURSE MANAGEMENT =====
@@ -91,82 +91,82 @@ public class LearningPathService(IMediator mediator) : ILearningPathService
             CourseId: dto.CourseId,
             Order: dto.Order,
             IsRequired: dto.IsRequired
-        ));
+        )).ConfigureAwait(false);
     }
 
     public async Task<bool> RemoveCourseFromPathAsync(Guid pathId, Guid courseId)
     {
-        return await mediator.Send(new RemoveCourseFromPathCommand(pathId, courseId));
+        return await mediator.Send(new RemoveCourseFromPathCommand(pathId, courseId)).ConfigureAwait(false);
     }
 
     public async Task<LearningPath?> ReorderCoursesAsync(Guid pathId, ReorderCoursesDto dto)
     {
-        return await mediator.Send(new ReorderPathCoursesCommand(pathId, dto.Courses));
+        return await mediator.Send(new ReorderPathCoursesCommand(pathId, dto.Courses)).ConfigureAwait(false);
     }
 
     // ===== ENROLLMENT =====
 
     public async Task<LearningPathEnrollment> EnrollAsync(Guid pathId, Guid userId)
     {
-        return await mediator.Send(new EnrollInPathCommand(pathId, userId));
+        return await mediator.Send(new EnrollInPathCommand(pathId, userId)).ConfigureAwait(false);
     }
 
     public async Task<bool> UnenrollAsync(Guid pathId, Guid userId)
     {
-        return await mediator.Send(new UnenrollFromPathCommand(pathId, userId));
+        return await mediator.Send(new UnenrollFromPathCommand(pathId, userId)).ConfigureAwait(false);
     }
 
     public async Task<LearningPathEnrollment?> UpdateProgressAsync(Guid pathId, Guid userId, UpdatePathProgressDto dto)
     {
-        return await mediator.Send(new UpdatePathProgressCommand(pathId, userId, dto.CoursesCompleted));
+        return await mediator.Send(new UpdatePathProgressCommand(pathId, userId, dto.CoursesCompleted)).ConfigureAwait(false);
     }
 
     public async Task<LearningPathEnrollment?> CompletePathAsync(Guid pathId, Guid userId)
     {
-        return await mediator.Send(new CompletePathCommand(pathId, userId));
+        return await mediator.Send(new CompletePathCommand(pathId, userId)).ConfigureAwait(false);
     }
 
     public async Task<bool> AbandonPathAsync(Guid pathId, Guid userId)
     {
-        return await mediator.Send(new AbandonPathCommand(pathId, userId));
+        return await mediator.Send(new AbandonPathCommand(pathId, userId)).ConfigureAwait(false);
     }
 
     // ===== ENROLLMENT QUERIES =====
 
     public async Task<bool> IsEnrolledAsync(Guid pathId, Guid userId)
     {
-        return await mediator.Send(new CheckPathEnrollmentQuery(userId, pathId));
+        return await mediator.Send(new CheckPathEnrollmentQuery(userId, pathId)).ConfigureAwait(false);
     }
 
     public async Task<LearningPathEnrollment?> GetEnrollmentAsync(Guid pathId, Guid userId)
     {
-        return await mediator.Send(new GetUserPathEnrollmentQuery(userId, pathId));
+        return await mediator.Send(new GetUserPathEnrollmentQuery(userId, pathId)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPathEnrollment>> GetUserEnrollmentsAsync(Guid userId, LearningPathEnrollmentStatus? status = null, int skip = 0, int take = 50)
     {
-        return await mediator.Send(new GetUserEnrolledPathsQuery(userId, status, skip, take));
+        return await mediator.Send(new GetUserEnrolledPathsQuery(userId, status, skip, take)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPathEnrollment>> GetPathEnrollmentsAsync(Guid pathId, LearningPathEnrollmentStatus? status = null, int skip = 0, int take = 50)
     {
-        return await mediator.Send(new GetPathEnrollmentsQuery(pathId, status, skip, take));
+        return await mediator.Send(new GetPathEnrollmentsQuery(pathId, status, skip, take)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPathEnrollment>> GetUserCompletedPathsAsync(Guid userId, int skip = 0, int take = 20)
     {
-        return await mediator.Send(new GetUserCompletedPathsQuery(userId, skip, take));
+        return await mediator.Send(new GetUserCompletedPathsQuery(userId, skip, take)).ConfigureAwait(false);
     }
 
     // ===== STATISTICS =====
 
     public async Task<LearningPathStatisticsDto?> GetPathStatisticsAsync(Guid pathId)
     {
-        return await mediator.Send(new GetPathStatisticsQuery(pathId));
+        return await mediator.Send(new GetPathStatisticsQuery(pathId)).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPath>> GetPopularPathsAsync(Guid? tenantId = null, int daysBack = 30, int take = 10)
     {
-        return await mediator.Send(new GetPopularPathsQuery(tenantId, daysBack, take));
+        return await mediator.Send(new GetPopularPathsQuery(tenantId, daysBack, take)).ConfigureAwait(false);
     }
 }

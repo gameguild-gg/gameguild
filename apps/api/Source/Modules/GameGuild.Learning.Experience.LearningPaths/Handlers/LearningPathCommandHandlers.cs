@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -35,7 +34,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         // Ensure slug uniqueness
         var existingSlug = await context.Set<LearningPath>()
             .Where(lp => lp.Slug == slug && lp.DeletedAt == null)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         if (existingSlug != null)
         {
@@ -51,7 +50,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         );
 
         context.Set<LearningPath>().Add(learningPath);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Created learning path with ID: {Id}", learningPath.Id);
         return learningPath;
@@ -63,7 +62,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
 
         var learningPath = await context.Set<LearningPath>()
             .Where(lp => lp.DeletedAt == null)
-            .FirstOrDefaultAsync(lp => lp.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(lp => lp.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (learningPath == null)
         {
@@ -73,7 +72,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
 
         // Note: Entity would need Update methods for proper encapsulation
         context.Set<LearningPath>().Update(learningPath);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated learning path: {Id}", request.Id);
         return learningPath;
@@ -84,7 +83,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         logger.LogInformation("Deleting learning path: {Id}", request.Id);
 
         var learningPath = await context.Set<LearningPath>()
-            .FirstOrDefaultAsync(lp => lp.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(lp => lp.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (learningPath == null)
         {
@@ -93,7 +92,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         }
 
         learningPath.SoftDelete();
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Deleted learning path: {Id}", request.Id);
         return true;
@@ -108,7 +107,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         var learningPath = await context.Set<LearningPath>()
             .Include(lp => lp.Courses)
             .Where(lp => lp.DeletedAt == null)
-            .FirstOrDefaultAsync(lp => lp.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(lp => lp.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (learningPath == null)
         {
@@ -124,7 +123,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         }
 
         learningPath.Publish();
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Published learning path: {Id}", request.Id);
         return learningPath;
@@ -136,7 +135,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
 
         var learningPath = await context.Set<LearningPath>()
             .Where(lp => lp.DeletedAt == null)
-            .FirstOrDefaultAsync(lp => lp.Id == request.Id, cancellationToken);
+            .FirstOrDefaultAsync(lp => lp.Id == request.Id, cancellationToken).ConfigureAwait(false);
 
         if (learningPath == null)
         {
@@ -145,7 +144,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         }
 
         learningPath.Unpublish();
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Unpublished learning path: {Id}", request.Id);
         return learningPath;
@@ -160,7 +159,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         var learningPath = await context.Set<LearningPath>()
             .Include(lp => lp.Courses)
             .Where(lp => lp.DeletedAt == null)
-            .FirstOrDefaultAsync(lp => lp.Id == request.LearningPathId, cancellationToken);
+            .FirstOrDefaultAsync(lp => lp.Id == request.LearningPathId, cancellationToken).ConfigureAwait(false);
 
         if (learningPath == null)
         {
@@ -176,7 +175,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         }
 
         learningPath.AddCourse(request.CourseId, request.Order, request.IsRequired);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Added course {CourseId} to path {PathId}", request.CourseId, request.LearningPathId);
         return learningPath;
@@ -187,7 +186,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         logger.LogInformation("Removing course {CourseId} from path {PathId}", request.CourseId, request.LearningPathId);
 
         var course = await context.Set<LearningPathCourse>()
-            .FirstOrDefaultAsync(c => c.LearningPathId == request.LearningPathId && c.CourseId == request.CourseId, cancellationToken);
+            .FirstOrDefaultAsync(c => c.LearningPathId == request.LearningPathId && c.CourseId == request.CourseId, cancellationToken).ConfigureAwait(false);
 
         if (course == null)
         {
@@ -196,7 +195,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         }
 
         context.Set<LearningPathCourse>().Remove(course);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Removed course {CourseId} from path {PathId}", request.CourseId, request.LearningPathId);
         return true;
@@ -209,7 +208,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         var learningPath = await context.Set<LearningPath>()
             .Include(lp => lp.Courses)
             .Where(lp => lp.DeletedAt == null)
-            .FirstOrDefaultAsync(lp => lp.Id == request.LearningPathId, cancellationToken);
+            .FirstOrDefaultAsync(lp => lp.Id == request.LearningPathId, cancellationToken).ConfigureAwait(false);
 
         if (learningPath == null)
         {
@@ -228,7 +227,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
             }
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Reordered courses in path: {PathId}", request.LearningPathId);
         return learningPath;
@@ -243,7 +242,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         var learningPath = await context.Set<LearningPath>()
             .Include(lp => lp.Courses)
             .Where(lp => lp.DeletedAt == null && lp.IsPublished)
-            .FirstOrDefaultAsync(lp => lp.Id == request.LearningPathId, cancellationToken);
+            .FirstOrDefaultAsync(lp => lp.Id == request.LearningPathId, cancellationToken).ConfigureAwait(false);
 
         if (learningPath == null)
         {
@@ -252,7 +251,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
 
         // Check if already enrolled
         var existingEnrollment = await context.Set<LearningPathEnrollment>()
-            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (existingEnrollment != null)
         {
@@ -267,7 +266,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         );
 
         context.Set<LearningPathEnrollment>().Add(enrollment);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Enrolled user {UserId} in path {PathId}", request.UserId, request.LearningPathId);
         return enrollment;
@@ -278,7 +277,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         logger.LogInformation("Unenrolling user {UserId} from path {PathId}", request.UserId, request.LearningPathId);
 
         var enrollment = await context.Set<LearningPathEnrollment>()
-            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (enrollment == null)
         {
@@ -287,7 +286,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         }
 
         enrollment.SoftDelete();
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Unenrolled user {UserId} from path {PathId}", request.UserId, request.LearningPathId);
         return true;
@@ -300,7 +299,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
 
         var enrollment = await context.Set<LearningPathEnrollment>()
             .Where(e => e.DeletedAt == null)
-            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (enrollment == null)
         {
@@ -309,7 +308,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         }
 
         enrollment.UpdateProgress(request.CoursesCompleted);
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Updated progress for user {UserId} in path {PathId}", request.UserId, request.LearningPathId);
         return enrollment;
@@ -321,7 +320,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
 
         var enrollment = await context.Set<LearningPathEnrollment>()
             .Where(e => e.DeletedAt == null)
-            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (enrollment == null)
         {
@@ -330,7 +329,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         }
 
         enrollment.Complete();
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Completed path {PathId} for user {UserId}", request.LearningPathId, request.UserId);
         return enrollment;
@@ -342,7 +341,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
 
         var enrollment = await context.Set<LearningPathEnrollment>()
             .Where(e => e.DeletedAt == null)
-            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken);
+            .FirstOrDefaultAsync(e => e.LearningPathId == request.LearningPathId && e.UserId == request.UserId, cancellationToken).ConfigureAwait(false);
 
         if (enrollment == null)
         {
@@ -351,7 +350,7 @@ public class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<
         }
 
         // Note: Entity would need Abandon method for proper encapsulation
-        await context.SaveChangesAsync(cancellationToken);
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("User {UserId} abandoned path {PathId}", request.UserId, request.LearningPathId);
         return true;

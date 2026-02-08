@@ -1,4 +1,3 @@
-using GameGuild.Abstractions;
 using GameGuild.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -50,7 +49,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
             .ThenByDescending(lp => lp.EnrollmentCount)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Found {Count} published learning paths", result.Count);
         return result;
@@ -69,7 +68,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
             query = query.Where(lp => lp.TenantId == request.TenantId || lp.TenantId == null);
         }
 
-        return await query.FirstOrDefaultAsync(cancellationToken);
+        return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<LearningPath?> Handle(GetPathByIdQuery request, CancellationToken cancellationToken)
@@ -84,7 +83,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
             query = query.Include(lp => lp.Courses);
         }
 
-        return await query.FirstOrDefaultAsync(cancellationToken);
+        return await query.FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPath>> Handle(GetFeaturedPathsQuery request, CancellationToken cancellationToken)
@@ -103,7 +102,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
         return await query
             .OrderByDescending(lp => lp.EnrollmentCount)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPath>> Handle(GetPathsByCreatorQuery request, CancellationToken cancellationToken)
@@ -123,7 +122,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
             .OrderByDescending(lp => lp.CreatedAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPath>> Handle(GetAllPathsQuery request, CancellationToken cancellationToken)
@@ -149,7 +148,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
             .ThenByDescending(lp => lp.CreatedAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPath>> Handle(SearchPathsQuery request, CancellationToken cancellationToken)
@@ -179,7 +178,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
             .ThenByDescending(lp => lp.EnrollmentCount)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Found {Count} learning paths for search: {SearchTerm}", result.Count, request.SearchTerm);
         return result;
@@ -203,7 +202,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
             .OrderByDescending(e => e.EnrolledAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<LearningPathEnrollment?> Handle(GetUserPathEnrollmentQuery request, CancellationToken cancellationToken)
@@ -212,7 +211,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
 
         return await context.Set<LearningPathEnrollment>()
             .Where(e => e.DeletedAt == null)
-            .FirstOrDefaultAsync(e => e.UserId == request.UserId && e.LearningPathId == request.LearningPathId, cancellationToken);
+            .FirstOrDefaultAsync(e => e.UserId == request.UserId && e.LearningPathId == request.LearningPathId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> Handle(CheckPathEnrollmentQuery request, CancellationToken cancellationToken)
@@ -221,7 +220,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
 
         return await context.Set<LearningPathEnrollment>()
             .Where(e => e.DeletedAt == null)
-            .AnyAsync(e => e.UserId == request.UserId && e.LearningPathId == request.LearningPathId, cancellationToken);
+            .AnyAsync(e => e.UserId == request.UserId && e.LearningPathId == request.LearningPathId, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IEnumerable<LearningPathEnrollment>> Handle(GetPathEnrollmentsQuery request, CancellationToken cancellationToken)
@@ -240,7 +239,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
             .OrderByDescending(e => e.EnrolledAt)
             .Skip(request.Skip)
             .Take(request.Take)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<LearningPathEnrollmentDto?> Handle(GetUserPathProgressQuery request, CancellationToken cancellationToken)
@@ -249,7 +248,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
 
         var enrollment = await context.Set<LearningPathEnrollment>()
             .Where(e => e.DeletedAt == null)
-            .FirstOrDefaultAsync(e => e.UserId == request.UserId && e.LearningPathId == request.LearningPathId, cancellationToken);
+            .FirstOrDefaultAsync(e => e.UserId == request.UserId && e.LearningPathId == request.LearningPathId, cancellationToken).ConfigureAwait(false);
 
         return enrollment?.ToDto();
     }
@@ -262,13 +261,13 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
 
         var path = await context.Set<LearningPath>()
             .Where(lp => lp.DeletedAt == null && lp.Id == request.LearningPathId)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
         if (path == null) return null;
 
         var enrollments = await context.Set<LearningPathEnrollment>()
             .Where(e => e.DeletedAt == null && e.LearningPathId == request.LearningPathId)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
         var totalEnrollments = enrollments.Count;
         var activeEnrollments = enrollments.Count(e => e.Status == LearningPathEnrollmentStatus.InProgress);
@@ -321,7 +320,7 @@ public class LearningPathQueryHandlers(IApplicationDbContext context, ILogger<Le
             query = query.Where(lp => lp.TenantId == request.TenantId || lp.TenantId == null);
         }
 
-        var paths = await query.ToListAsync(cancellationToken);
+        var paths = await query.ToListAsync(cancellationToken).ConfigureAwait(false);
 
         // Order by the enrollment count
         return paths.OrderBy(p => popularPathIds.IndexOf(p.Id));
