@@ -1,4 +1,3 @@
-using GameGuild.Entities;
 
 namespace GameGuild.Tags;
 
@@ -32,6 +31,6 @@ public class TagProficiency : EntityBase
     public bool IsActive { get; set; } = true;
 
     // Navigation properties
-    // TODO: Re-enable when Certificates module is implemented
+    // PLANNED: Re-enable when Certificates module is implemented (depends on GameGuild.Certificates)
     // public virtual ICollection<CertificateTag> CertificateTags { get; set; } = new List<CertificateTag>();
 }
